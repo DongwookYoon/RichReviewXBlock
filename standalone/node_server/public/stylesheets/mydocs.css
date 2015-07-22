@@ -1,0 +1,75 @@
+
+#mydocs{
+    margin-top: 23px;
+}
+
+#mydocs > h5{
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-style: italic;
+    font-weight: bold;
+    font-size: 25px;
+    margin-top:25px;
+}
+
+.panel-title{
+    line-height: 1.2;
+}
+
+.doc-title-editable{
+    font-size: 14px;
+
+}
+
+.panel-heading-property{
+    margin-bottom: 10px;
+}
+.pdficon{
+    color: darkred;
+}
+.pdflink:hover{
+    color: darkred;
+}
+
+.panel-doc > .panel-heading:hover {
+    background: #EEEEEE;
+}
+.panel-doc.selected > .panel-heading {
+    background: gainsboro;
+}
+
+.panel-doc > .panel-body > .doc-btns{
+    max-height: 0;
+    display:none;
+}
+.panel-doc.selected > .panel-body > .doc-btns{
+    max-height: 200px;
+    display:block;
+}
+
+.group-row:hover{
+    background: #f3f9fe;
+}
+.group-row.selected{
+    background: #e3f2ff;
+}
+
+.group-row.selected > .group-title > a.group-users-icon{
+    color: black;
+}
+
+.group-row > .group-btns {
+    -webkit-transform: scale(0,1);
+    -moz-transform: scale(0,1);
+    transform: scale(0,1);
+    -webkit-transition: all 0.1s ease-out;
+    -moz-transition: all 0.1s ease-out;
+    transition: all 0.1s ease-out;
+}
+.group-row.selected > .group-btns {
+    -webkit-transform: scale(1);
+    -moz-transform: scale(1);
+    transform: scale(1);
+    -webkit-transition: all 0.1s ease-out;
+    -moz-transition: all 0.1s ease-out;
+    transition: all 0.1s ease-out;
+}

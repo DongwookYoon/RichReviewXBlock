@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="utils.js"></script>
+    <script src="../lib_ext/recorder/recorder.js"></script>
+    <script src="../r2/audio_utils.js"></script>
+    <script src="socket.js"></script>
+    <script src="transcriptutils.js"></script>
+    <script src="handlemicrophone.js"></script>
+    <script src="test_audio_utils.js"></script>
+    <style>
+        #playbar {
+            width:500px;
+            height:10px;
+        }
+        #transcript_textbox {
+            width:350px;
+            height:50px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Unit Test for r2/audio_utils.js</h1>
+    <h2>Recording</h2>
+    <button id="recording_start_btn">Start</button>
+    <!--<button id="recording_stop_btn" onclick="clickRecordingStop()">Stop</button>-->
+    <p><a id="wav_file_url" target="_blank"></a></p>
+    <h2>Replaying</h2>
+    <canvas id="playbar" width="500" height="10"></canvas>
+    <h2>From the Web</h2>
+    <input type="text" class="online-url-field" width="500" />
+    <button id="transcribe-web" onclick="transcribeOnlineURL()">Transcribe</button>
+    <h2>Transcription</h2>
+    <textarea id="transcript_textbox"></textarea>
+    <div style="display: none;">
+        <form class="upload-form" id="fileupload" method="POST" enctype="multipart/form-data" action="/">
+            <input class="url-input" name="url" type="hidden">someurl</input>
+        </form>
+    </div>
+</body>
+</html>

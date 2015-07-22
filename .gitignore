@@ -1,0 +1,43 @@
+led / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+
+# PyCharm and WebStorm cache
+*.idea
+*.DS_Store
+
+# Distribution / packaging
+.Python
+env/
+bin/
+build/
+develop-eggs/
+dist/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Django stuff:
+*.log
+*.pot
+
+#mupla C builds
+mupla/mupdf-1.6-source/
+
+#standlone
+standalone/node_server/ssl/
+standalone/node_server/cache/
+standalone/node_server/_temp/

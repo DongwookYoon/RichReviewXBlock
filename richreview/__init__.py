@@ -1,0 +1,1 @@
+from .richreview import RichReviewXBlock

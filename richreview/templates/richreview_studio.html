@@ -1,0 +1,50 @@
+<div class="richreview_block">
+    <div class="r2_dashboard">
+        <h1>RichReview Studio</h1>
+        <p>
+            xblock_id: {{ xblock_id }}
+        </p>
+        <p>
+            student_id: {{ student_id }}
+        </p>
+        <p>
+            user_is_staff: {{ user_is_staff }}
+        </p>
+        <p>
+            discussion_docid: {{ discussion_docid }}
+        </p>
+        <p>
+            students_of_group: {{ students_of_group }}
+        </p>
+        <p>
+            group_of_student: {{ group_of_student }}
+        </p>
+        <button id="test_a_studio">Button A</button>
+        <button id="test_b_studio">Button B</button>
+    </div>
+
+    <div class="r2_pdfupload">
+        <h1>PDF Upload</h1>
+        <div id="pdfupload">
+            <form id="pdfupload_form" method="post" enctype="multipart/form-data">
+                <input type="file" name="pdffile"/><br>
+            </form>
+            <button id="pdf_upload_button">Upload</button>
+            {% if is_pdf_ready %}
+                <button id="pdf_delete_button">Delete</button>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if is_pdf_ready %}
+    <div class="r2_pdfdownload">
+        <h1>PDF Download</h1>
+        <button><a href="{{pdf_url}}">PDF</a></button>
+    </div>
+    {% endif %}
+    <div id="multicolumn">
+        <canvas id="maincanvas">
+        </canvas>
+    </div>
+
+</div>

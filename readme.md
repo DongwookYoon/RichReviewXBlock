@@ -3,7 +3,7 @@ This XBlock is a edX course applet that allows multimodal annotation over a shar
 
 ## Installing RichReviewXBlock
 
-RichReview serves annotation data via file system abstraction. For this, you will want to set DJFS environment variable of /edx/app/edxapp/{cms,lms}.env.json files like this.
+RichReview serves annotation data via file system abstraction. For this, you will want to set DJFS environment variable of /edx/app/edxapp/{cms,lms}.auth.json files like this.
 
 If you want to use local storage, like this.
 
@@ -25,9 +25,17 @@ or if you want to use Amazon S3 storage instead, like this.
 
 Then install this XBlock:
 
+    pip install git+git://github.com/DongwookYoon/RichReviewXBlock.git
+    
+or
+
     pip install sudo -u edxapp git clone https://github.com/DongwookYoon/RichReviewXBlock.git
     pip install sudo -u RichReviewXBlock/
+    
 
+In the studio, go to a course's setting, and add "richreview" to the Advanced Module List.
+
+Now you are all ready to add RichReview module to your course.
 
 ## License
 

@@ -59,19 +59,20 @@ class RichReviewXBlock(XBlock):
             key_id = djfs_settings["aws_access_key_id"],
             secret_key = djfs_settings["aws_secret_access_key"]
         )
-        """
-        s3website.clear("richreview_web_app")
 
         dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+        #s3website.clear("richreview_web_app")
         s3website.update(
             local_path = dir + "/webapps/app_richreview",
             prefix = "richreview_web_app"
         )
 
+        #s3website.clear("multicolumn_web_app")
         s3website.update(
             local_path = dir + "/webapps/app_multicolumn",
             prefix = "multicolumn_web_app"
-        )"""
+        )
 
         richreview_app_url =  s3website.get_url("richreview_web_app")
         multicolumn_app_url =  s3website.get_url("multicolumn_web_app")

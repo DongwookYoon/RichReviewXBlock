@@ -69,7 +69,12 @@ var loadRichReview = function(runtime, element){
     var app_url = "";
     promisifyXBlockRuntime(runtime, element, "app_addr", {}).then(
         function(resp){
-            app_url = location.protocol + "//" + resp["url"];
+            if (resp["url"][0] === '/'){
+                app_url = resp["url"];
+            }
+            else{
+                app_url = location.protocol + "//" + resp["url"];
+            }
             return loadJsScript(app_url+"/load.js", "js")
         }
     ).then(

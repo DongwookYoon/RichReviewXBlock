@@ -48,8 +48,10 @@ class RichReviewXBlock(XBlock):
                          'directory_root' : 'common/static/djpyfs',
                          'url_root' : '/static/djpyfs'}
     if djfs_settings["type"] == "osfs":
-        richreview_app_url =  get_url(fs, "richreview_web_app")  if fs.exists("richreview_web_app") else  load_webapp(fs, "/static/app_richreview", "richreview_web_app", ignore=[])
-        multicolumn_app_url =  get_url(fs, "multicolumn_web_app") if fs.exists("multicolumn_web_app") else load_webapp(fs, "/static/app_multicolumn", "multicolumn_web_app", ignore=[])
+        #richreview_app_url =  get_url(fs, "richreview_web_app")  if fs.exists("richreview_web_app") else load_webapp(fs, "/webapps/richreview", "richreview_web_app", ignore=[])
+        #multicolumn_app_url =  get_url(fs, "multicolumn_web_app") if fs.exists("multicolumn_web_app") else load_webapp(fs, "/webapps/multicolumn", "multicolumn_web_app", ignore=[])
+        richreview_app_url =  load_webapp(fs, "/webapps/richreview", "richreview_web_app", ignore=[])
+        multicolumn_app_url =  load_webapp(fs, "/webapps/multicolumn", "multicolumn_web_app", ignore=[])
     elif djfs_settings["type"] == "s3fs":
         s3website = pys3website.s3website(
             bucket_name = "richreview.edx",

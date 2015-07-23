@@ -230,7 +230,7 @@
 
         var scale = r2.viewCtrl.scale;
 
-        r2.viewCtrl.resizeView(app_container_size, doc_yx_ratio, {left:100.0, rght:100.0});
+        r2.viewCtrl.resizeView(app_container_size, doc_yx_ratio, {left:0.0, rght:0.0});
         r2.dom.resizeDom(scale, app_container_size, r2.viewCtrl.page_size_scaled, r2.viewCtrl.page_margins, r2.viewCtrl.canv_px_size);
 
         if(r2.onScreenButtons){

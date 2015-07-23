@@ -74,7 +74,17 @@ function RichReviewXBlockStudio(runtime, element) {
     var runMultiColumnAnalyzer = function(ctx){
         $("#multicolumn").toggleClass("show", true);
 
-        loadJsScript(location.protocol + "//" + ctx.multicolumn_webapp_url + "/load.js", "js").then(
+
+        var url = "";
+        if (ctx.multicolumn_webapp_url[0] === '/'){
+            url = ctx.multicolumn_webapp_url + '/load.js';
+        }
+        else{
+            url = location.protocol + "//" + ctx.multicolumn_webapp_url+"/load.js";
+        }
+        console.log("load multicolumn web app: ", url);
+
+        loadJsScript(url, "js").then(
                     function(){
                         (function(Pla) {
                             Pla.ctx = ctx;
@@ -96,7 +106,15 @@ function RichReviewXBlockStudio(runtime, element) {
                                 alert(JSON.stringify(err));
                             };
 
-                            Pla.loadApp(location.protocol + "//" + ctx.multicolumn_webapp_url+"/");
+                            var url = "";
+                            if (ctx.multicolumn_webapp_url[0] === '/'){
+                                url = ctx.multicolumn_webapp_url + '/';
+                            }
+                            else{
+                                url = location.protocol + "//" + ctx.multicolumn_webapp_url+"/";
+                            }
+
+                            Pla.loadApp(url);
                         }(window.Pla = window.Pla || {}));
                     }
                 );

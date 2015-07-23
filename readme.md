@@ -12,11 +12,11 @@ RichReview serves annotation data via [django-pyfs](https://github.com/pmitros/d
 ##### Using Local file storage
 Set DJFS like this:
 
-    DJFS = {
-        'type': 'osfs',
-        'directory_root': 'common/static/djpyfs',
-        'url_root': '/static/djpyfs'
-    }
+    "DJFS": {
+        "directory_root": "common/static/djpyfs",
+        "type": "osfs",
+        "url_root": "/static/{platform_revision}/djpyfs"
+    },
 
 Note that this setting places the local directory under the common, so that LMS can have access to the PDF files that CMS registered.
 

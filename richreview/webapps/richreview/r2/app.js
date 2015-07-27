@@ -237,12 +237,11 @@
                 function (){
                     r2.coverMsg.Show([
                         "Failed to set up your mic. Please check the following:",
-                        "-",
                         "1. Your machine's mic is working.",
                         "2. Your browser was updated to the latest version.",
-                        "3. You didn't block 'richreview.net' in 'Setting -> Advanced Setting -> Privacy -> Content Settings -> Media -> Manage exceptions...'.",
-                        "-",
-                        "If nothing helps, please report this to the manager (dy252@cornell.edu)."
+                        "3. Go to the Chrome setting by copy and paste  chrome://settings/content  to the address bar,",
+                        "And, in the Media -> Manage exceptions..., remove blocks of microphone resources to our website.",
+                        "If nothing helps, please report this to the manager (dy252@cornell.edu). Thank you."
                     ]);
                     throw new Error("Failed to set up your mic.");
                 }

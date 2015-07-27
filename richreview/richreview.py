@@ -14,7 +14,7 @@ from boto.s3.connection import Location
 from pys3website import pys3website
 
 from util import *
-from webapploader import load_webapp
+from osfs_utils import upload_webapp, clear_webapp, osfs_mkdir, osfs_copy_file, osfs_save_formfile
 from mupla_ctype import mupla_ctype
 
 RESOURCE_EXPIRATION_TIME = 7200 # 2 hours
@@ -41,8 +41,11 @@ class RichReviewXBlock(XBlock):
                          'directory_root' : 'common/static/djpyfs',
                          'url_root' : '/static/djpyfs'}
     if djfs_settings["type"] == "osfs":
-        richreview_app_url =  load_webapp(fs, "/webapps/richreview", "richreview_web_app", ignore=[])
-        multicolumn_app_url =  load_webapp(fs, "/webapps/multicolumn", "multicolumn_web_app", ignore=[])
+        clear_webapp(fs, 'richreview_web_app')
+        richreview_app_url =  upload_webapp(fs, "/webapps/richreview", "richreview_web_app", exclude=r'^\.')
+
+        clear_webapp(fs, 'multicolumn_web_app')
+        multicolumn_app_url =  upload_webapp(fs, "/webapps/multicolumn", "multicolumn_web_app", exclude=r'^\.')
 
     elif djfs_settings["type"] == "s3fs":
         s3website = pys3website.s3website(
@@ -56,13 +59,13 @@ class RichReviewXBlock(XBlock):
 
         dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-        #s3website.clear("richreview_web_app")
+        s3website.clear("richreview_web_app")
         s3website.update(
             local_path = dir + "/webapps/app_richreview",
             prefix = "richreview_web_app"
         )
 
-        #s3website.clear("multicolumn_web_app")
+        s3website.clear("multicolumn_web_app")
         s3website.update(
             local_path = dir + "/webapps/app_multicolumn",
             prefix = "multicolumn_web_app"
@@ -301,23 +304,6 @@ class RichReviewXBlock(XBlock):
             ))
         frag.initialize_js('RichReviewXBlockStudio', "abcd")
         return frag
-
-    @XBlock.json_handler
-    def test(self, request, suffix=''):
-        """
-        Never mind of this interactive button action handler for development.
-        """
-        if request["op"] == "reload_webapp":
-            self.multicolumn_app_url =  load_webapp(self.fs, "/static/app_multicolumn", "multicolumn_web_app", ignore=[])
-        elif request["op"] == "test_mupla":
-            tmp_path = "/tmp/" + uuid4().hex + ".pdf"
-            with self.fs.open(self.pdf_path, "rb") as src:
-                with open(tmp_path, "wb") as dst:
-                    dst.write(src.read())
-                    dst.close()
-                    js = mupla_ctype.PyMuPlaRun(tmp_path)
-                src.close()
-        return {"response": 'ok'}
 
     def get_mupla(self):
         tmp_path = "/tmp/" + uuid4().hex + ".pdf"

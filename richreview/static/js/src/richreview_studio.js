@@ -46,8 +46,38 @@ function RichReviewXBlockStudio(runtime, element) {
         var pdfupload_url = runtime.handlerUrl(element, 'pdfupload');
         var pdfjsupload_url = runtime.handlerUrl(element, 'pdfjsupload');
 
+        var uiCtrl = (function(){
+            var pub = {};
+
+            pub.bgnUploading = function(){
+                $("#multicolumn").toggleClass('show', true);
+                $('#r2_pdfupload').toggleClass('uploading', true);
+                $('#existing_doc').toggleClass('hide', true);
+            };
+
+            pub.endUploading = function(msg){
+                $('#r2_pdfupload').toggleClass('uploading', false);
+                $('#r2_studio_block').toggleClass('uploaded', true);
+                $("#multicolumn").toggleClass('show', false);
+                alert(msg);
+            };
+
+            pub.bgnDeleting = function(){
+                $('#existing_doc').toggleClass('deleting', true);
+            };
+
+            pub.endDeleting = function(msg){
+                $('#existing_doc').toggleClass('deleting', false);
+                alert(msg);
+                $('#existing_doc').toggleClass('hide');
+            };
+
+            return pub;
+        })();
+
         $("#pdf_upload_button").click(
             function(){
+                uiCtrl.bgnUploading();
                 var $form = $("#pdfupload_form");
                 if($form.find("input")[0].files.length === 0){
                     alert("Please select a PDF file and a JS file");
@@ -86,8 +116,6 @@ function RichReviewXBlockStudio(runtime, element) {
         };
 
         var runMultiColumnAnalyzer = function(ctx){
-            $("#multicolumn").toggleClass("show", true);
-
             var webapp_url = normalizeUrl(ctx.multicolumn_webapp_url);
 
             loadJsScript(webapp_url + '/load.js', 'js').then(
@@ -100,11 +128,11 @@ function RichReviewXBlockStudio(runtime, element) {
                         Pla.override.done = function(pla_result){
                             promisifyXBlockRuntime(runtime, element, "pdfjsupload", pla_result).then(
                                 function(resp){
-                                    alert("The PDF file was successfully uploaded.");
+                                    uiCtrl.endUploading("The PDF file was successfully uploaded.");
                                 }
                             ).catch(
-                                function(resp){
-                                    alert("Error");
+                                function(err){
+                                    uiCtrl.endUploading(err);
                                 }
                             );
                         };
@@ -120,32 +148,13 @@ function RichReviewXBlockStudio(runtime, element) {
 
         $("#pdf_delete_button").click(
             function(){
+                uiCtrl.bgnDeleting();
+
                 promisifyXBlockRuntime(runtime, element, "pdfdelete", {}).then(
                     function(){
-                        alert('Files were deleted successfully');
-                        $('#existing_doc').toggleClass('hide');
+                        uiCtrl.endDeleting('Files were deleted successfully');
                     }
                 ).catch(
-                    function(err){
-                        alert(JSON.stringify(err));
-                    }
-                );
-            }
-        );
-
-        $("#test_a").click(
-            function(){
-                promisifyXBlockRuntime(runtime, element, "test", {op: "reload_webapp"}).catch(
-                    function(err){
-                        alert(JSON.stringify(err));
-                    }
-                );
-            }
-        );
-
-        $("#test_b").click(
-            function(){
-                promisifyXBlockRuntime(runtime, element, "test", {op: "test_mupla"}).catch(
                     function(err){
                         alert(JSON.stringify(err));
                     }

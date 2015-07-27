@@ -294,6 +294,7 @@ class RichReviewXBlock(XBlock):
                     'discussion_docid': self.discussion_docid,
 
                     'is_pdf_ready': self.is_pdf_ready,
+                    'is_debug': True,
                     'pdf_url': self.fs.get_url(self.pdf_path, RESOURCE_EXPIRATION_TIME),
                     'pdfjs_url': self.fs.get_url(self.pdfjs_path, RESOURCE_EXPIRATION_TIME),
                 }

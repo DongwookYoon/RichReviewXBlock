@@ -1,5 +1,9 @@
 /* CSS for RichReviewXBlock */
 
+/*
+* Student View
+*/
+
 #r2_app_container{
     width:100%;
     height:800px;
@@ -24,15 +28,27 @@
     font-size: 12px;
 }
 
-.r2_pdfupload > div > form {
+
+#existing_doc.hide {
+    display: none;
+}
+
+/* Studio View */
+
+.r2_studio_row_block{
+    padding: 10px;
+}
+
+#r2_pdfupload > div > form {
+    border: 1px dotted #BCBCBC;
     display: inline-block;
     width: 250px;
 }
 
-.r2_pdfupload > div > form > input {
+#r2_pdfupload > div > form > input {
+    width: 250px;
     font: normal normal normal 11px/normal '.HelveticaNeueDeskInterface-Regular';
 }
-
 
 #multicolumn{
     width: 100%;

@@ -123,6 +123,7 @@ function RichReviewXBlockStudio(runtime, element) {
                 promisifyXBlockRuntime(runtime, element, "pdfdelete", {}).then(
                     function(){
                         alert('Files were deleted successfully');
+                        $('#existing_doc').toggleClass('hide');
                     }
                 ).catch(
                     function(err){

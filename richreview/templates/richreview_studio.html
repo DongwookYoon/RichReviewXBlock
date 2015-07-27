@@ -1,54 +1,52 @@
-<div class="richreview_block">
-    <div id="multicolumn">
-        <canvas id="maincanvas">
-        </canvas>
-    </div>
+<div class='richreview_block'>
 
-    <div class="r2_pdfupload">
-        <h1>PDF Upload</h1>
-        <div id="pdfupload">
-            <form id="pdfupload_form" method="post" enctype="multipart/form-data">
-                <input type="file" name="pdffile"/><br>
+    {% if is_pdf_ready %}
+        <div id='existing_doc' class='r2_studio_row_block'>
+            <h1>Current Document</h1>
+            <p>We have an existing PDF document that you've uploaded.</p>
+            <button><a href='{{pdf_url}}'>Download</a></button>
+            <button id='pdf_delete_button'>Delete</button>
+        </div>
+    {% endif %}
+
+    <div id='r2_pdfupload' class='r2_studio_row_block'>
+        <h1>Submit a New Document</h1>
+        <div id='multicolumn'>
+            <canvas id='maincanvas'>
+            </canvas>
+        </div>
+        <p>You can upload a new document. Please select a PDF file and click 'Submit'.</p>
+        <div id='pdfupload'>
+            <form id='pdfupload_form' method='post' enctype='multipart/form-data'>
+                <input type='file' name='pdffile' accept='application/pdf'/><br>
             </form>
-            <button id="pdf_upload_button">Upload</button>
-            {% if is_pdf_ready %}
-                <button id="pdf_delete_button">Delete</button>
-            {% endif %}
+            <button id='pdf_upload_button'>Submit</button>
         </div>
     </div>
 
-    {% if is_pdf_ready %}
-    <div class="r2_pdfdownload">
-        <h1>PDF Download</h1>
-        <button><a href="{{pdf_url}}">PDF</a></button>
-    </div>
-    {% endif %}
-
-
-
     <!-- Dash board for the debugging purpose -->
-    <div class="r2_dashboard">
-        <h1>RichReview Studio Dashboard for Debug</h1>
-        <p>
-            xblock_id: {{ xblock_id }}
-        </p>
-        <p>
-            student_id: {{ student_id }}
-        </p>
-        <p>
-            user_is_staff: {{ user_is_staff }}
-        </p>
-        <p>
-            discussion_docid: {{ discussion_docid }}
-        </p>
-        <p>
-            students_of_group: {{ students_of_group }}
-        </p>
-        <p>
-            group_of_student: {{ group_of_student }}
-        </p>
-        <button id="test_a_studio">Button A</button>
-        <button id="test_b_studio">Button B</button>
-    </div>
+    {% if is_debug %}
+        <div id='r2_dashboard' class='r2_studio_row_block'>
+            <h1>Debug Monitor</h1>
+            <p>
+                xblock_id: {{ xblock_id }}
+            </p>
+            <p>
+                student_id: {{ student_id }}
+            </p>
+            <p>
+                user_is_staff: {{ user_is_staff }}
+            </p>
+            <p>
+                discussion_docid: {{ discussion_docid }}
+            </p>
+            <p>
+                students_of_group: {{ students_of_group }}
+            </p>
+            <p>
+                group_of_student: {{ group_of_student }}
+            </p>
+        </div>
+    {% endif %}
 
 </div>

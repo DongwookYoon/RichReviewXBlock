@@ -45,7 +45,6 @@ function RichReviewXBlock(runtime, element) {
         };
 
         var normalizeUrl = function(url){
-            console.log('before:', url);
             var protocols = {x:'http://', o:'https://'};
             if(location.protocol === protocols.x){
                 protocols.x = [protocols.o, protocols.o = protocols.x][0]; // swap
@@ -54,7 +53,6 @@ function RichReviewXBlock(runtime, element) {
             if(url.substring(0, protocols.x.length) === protocols.x){
                 url = protocols.o + url.substring(protocols.x.length);
             }
-            console.log('after:', url);
             return url;
         };
 

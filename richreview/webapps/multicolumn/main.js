@@ -49,7 +49,9 @@
             document.onkeydown = onKeyDown;
             document.onmouseup = onMouseUp;
 
-            var promise = Pla.model.initModel(Pla.ctx.pdf_url, Pla.ctx.js_url);
+            var promise = Pla.model.initModel(
+                Pla.util.normalizeUrl(Pla.ctx.pdf_url),
+                Pla.util.normalizeUrl(Pla.ctx.js_url));
             page_layout_js = new Array(Pla.model.getNumPages());
             return promise;
         };

@@ -3,8 +3,6 @@
 import os
 from util import osfs_mkdir
 
-
-
 def upload(fs, app_path_abs, uploadpath, filepath):
     with open(os.path.join(app_path_abs, filepath), "rb") as src:
         print 'upload', filepath

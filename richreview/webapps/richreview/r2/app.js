@@ -264,7 +264,7 @@
             r2.modalWindowLoading.showModalWindow();
             r2.modalWindowLoading.bgnDownloadingMetafile();
             return r2.util.getUrlData(
-                r2.ctx.pdfjs_url,
+                r2.util.normalizeUrl(r2.ctx.pdfjs_url),
                 "",
                 function (progress){
                     r2.modalWindowLoading.setDocProgress(progress);
@@ -304,7 +304,7 @@
         }
 
         function getDocPdf(){
-            return r2.util.getPdf(r2.ctx.pdf_url);
+            return r2.util.getPdf(r2.util.normalizeUrl(r2.ctx.pdf_url));
         }
 
         /** init r2 after loading document */

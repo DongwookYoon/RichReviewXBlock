@@ -17,14 +17,7 @@ from util import *
 from webapploader import load_webapp
 from mupla_ctype import mupla_ctype
 
-
-def get_url(fs, path):
-    url = fs.get_url(path, 3600)
-    print 'before', url
-    if url[0:5] == "https":
-        url = "http"+url[5:]
-    print 'after', url
-    return url
+RESOURCE_EXPIRATION_TIME = 7200 # 2 hours
 
 class RichReviewXBlock(XBlock):
     """
@@ -48,10 +41,9 @@ class RichReviewXBlock(XBlock):
                          'directory_root' : 'common/static/djpyfs',
                          'url_root' : '/static/djpyfs'}
     if djfs_settings["type"] == "osfs":
-        #richreview_app_url =  get_url(fs, "richreview_web_app")  if fs.exists("richreview_web_app") else load_webapp(fs, "/webapps/richreview", "richreview_web_app", ignore=[])
-        #multicolumn_app_url =  get_url(fs, "multicolumn_web_app") if fs.exists("multicolumn_web_app") else load_webapp(fs, "/webapps/multicolumn", "multicolumn_web_app", ignore=[])
         richreview_app_url =  load_webapp(fs, "/webapps/richreview", "richreview_web_app", ignore=[])
         multicolumn_app_url =  load_webapp(fs, "/webapps/multicolumn", "multicolumn_web_app", ignore=[])
+
     elif djfs_settings["type"] == "s3fs":
         s3website = pys3website.s3website(
             bucket_name = "richreview.edx",
@@ -119,8 +111,6 @@ class RichReviewXBlock(XBlock):
         default={},
         scope=Scope.user_state_summary
     )
-
-
 
     @property
     def course_id(self):
@@ -249,7 +239,10 @@ class RichReviewXBlock(XBlock):
         cmds = self.cmds_of_group[groupid][int(cmds_downloaded_n):]
         for idx, cmd in enumerate(cmds):
             if cmd["op"] == "CreateComment" and cmd["type"] == "CommentAudio":
-                cmds[idx]["data"]["audiofileurl"] = get_url(self.fs, self.get_audio_filepath(groupid, cmd["user"] + "_"+cmd["data"]["aid"]))
+                cmds[idx]["data"]["audiofileurl"] = self.fs.get_url(
+                    self.get_audio_filepath(groupid, cmd["user"] + "_"+cmd["data"]["aid"]),
+                    RESOURCE_EXPIRATION_TIME
+                )
         cmd_str = []
         for cmd in cmds:
             cmd_str.append(json.dumps(cmd))
@@ -275,8 +268,7 @@ class RichReviewXBlock(XBlock):
                     'group_of_student': str(self.group_of_student),
                     'discussion_docid': self.discussion_docid,
 
-                    'is_pdf_ready': self.is_pdf_ready,
-                    'app': self.richreview_app_url
+                    'is_pdf_ready': self.is_pdf_ready
                 }
             ))
 
@@ -302,8 +294,8 @@ class RichReviewXBlock(XBlock):
                     'discussion_docid': self.discussion_docid,
 
                     'is_pdf_ready': self.is_pdf_ready,
-                    'pdf_url': get_url(self.fs, self.pdf_path),
-                    'pdfjs_url': get_url(self.fs, self.pdfjs_path),
+                    'pdf_url': self.fs.get_url(self.pdf_path, RESOURCE_EXPIRATION_TIME),
+                    'pdfjs_url': self.fs.get_url(self.pdfjs_path, RESOURCE_EXPIRATION_TIME),
                 }
             ))
         frag.initialize_js('RichReviewXBlockStudio', "abcd")
@@ -360,8 +352,8 @@ class RichReviewXBlock(XBlock):
                     f_js.close()
 
             return Response(json_body={
-                "pdf_url": get_url(self.fs, mupla_pdfs_folder_path+"/merged.pdf"),
-                "js_url": get_url(self.fs, mupla_pdfs_folder_path+"/merged.js"),
+                "pdf_url": self.fs.get_url(mupla_pdfs_folder_path+"/merged.pdf", RESOURCE_EXPIRATION_TIME),
+                "js_url": self.fs.get_url(mupla_pdfs_folder_path+"/merged.js", RESOURCE_EXPIRATION_TIME),
                 "multicolumn_webapp_url": self.multicolumn_app_url,
             })
         except Exception:
@@ -391,14 +383,15 @@ class RichReviewXBlock(XBlock):
     @XBlock.json_handler
     def get_richreview_context(self, req, suffix=''):
         """
-        Serves the  context for loading the RichReview app
+        Serves RichReview web app contexts
         """
         return {
             "pdfid": self.discussion_docid,
             "docid": self.xblock_id,
             "groupid": self.group_id,
-            "pdf_url": get_url(self.fs, self.pdf_path),
-            "pdfjs_url": get_url(self.fs, self.pdfjs_path)
+            "app_url":self.richreview_app_url,
+            "pdf_url": self.fs.get_url(self.pdf_path, RESOURCE_EXPIRATION_TIME),
+            "pdfjs_url": self.fs.get_url(self.pdfjs_path, RESOURCE_EXPIRATION_TIME)
         }
 
     @XBlock.handler
@@ -426,13 +419,6 @@ class RichReviewXBlock(XBlock):
             f.write(audio_data.decode('base64'))
             f.close()
         return Response()
-
-    @XBlock.json_handler
-    def app_addr(self, request, suffix=''):
-        """
-        Provides static address of the RichReview web application
-        """
-        return {"url":self.richreview_app_url}
 
     def get_users_data(self, groupid):
 

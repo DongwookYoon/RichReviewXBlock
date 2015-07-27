@@ -115,6 +115,18 @@
             this.init(querystring);
         };
 
+        pub.normalizeUrl = function(url){
+            var protocols = {x:'http://', o:'https://'};
+            if(location.protocol === protocols.x){
+                protocols.x = [protocols.o, protocols.o = protocols.x][0]; // swap
+            }
+
+            if(url.substring(0, protocols.x.length) === protocols.x){
+                url = protocols.o + url.substring(protocols.x.length);
+            }
+            return url;
+        };
+
         pub.epoch1601to1970 = function (t_1970){
             var epoch_1601 = new Date(Date.UTC(1601,0,1)).getTime();
             return t_1970+epoch_1601;

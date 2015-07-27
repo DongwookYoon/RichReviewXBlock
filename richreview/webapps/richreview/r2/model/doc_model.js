@@ -1455,7 +1455,7 @@
         this._spotlights.push(spotlight);
     };
     r2.Annot.prototype.GetAudioFileUrl = function(){
-        return this._audiofileurl;
+        return r2.util.normalizeUrl(this._audiofileurl);
     };
     r2.Annot.prototype.SetRecordingAudioFileUrl = function(url, blob){
         this._audiofileurl = url;

@@ -104,7 +104,6 @@
         currCallback(blob, buffer);
       }
       else {
-        console.log("CB", e.data);
         currCallback(e.data);
       }
     }

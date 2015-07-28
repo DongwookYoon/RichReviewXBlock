@@ -44,14 +44,17 @@ function RichReviewXBlock(runtime, element) {
             });
         };
 
+
         var normalizeUrl = function(url){
             var protocols = {x:'http://', o:'https://'};
-            if(location.protocol === protocols.x){
+            if(location.protocol + '//' === protocols.x){
                 protocols.x = [protocols.o, protocols.o = protocols.x][0]; // swap
             }
-
             if(url.substring(0, protocols.x.length) === protocols.x){
                 url = protocols.o + url.substring(protocols.x.length);
+            }
+            else if(url[0] !== '/'){
+                url = protocols.o + url;
             }
             return url;
         };

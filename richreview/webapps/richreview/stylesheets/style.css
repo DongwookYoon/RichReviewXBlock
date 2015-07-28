@@ -468,14 +468,11 @@ a:active {
 }
 
 #dashboard > .row > div > div > .btn {
-  font-size: 16px;
-  height: 30px;
+
 }
 
 #dashboard > .row > div > div > #btn-cheatsheet {
   text-transform:none;
-  padding:4px 5px 9px 5px;
-  font-size:12px;
 }
 
 #dashboard > #main_row {

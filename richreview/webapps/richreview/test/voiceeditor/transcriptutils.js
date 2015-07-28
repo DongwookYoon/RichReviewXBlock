@@ -106,14 +106,17 @@ var TranscriptUtils = (function () {
      * @returns {Array}
      */
     pub.parseTimestamps = function (timestamps, prevEnd) {
-        var times = [];
+        var times = [], word;
         if (prevEnd >= 0) {
-            times.push(TranscriptUtils.spaceWordInterval(prevEnd, timestamps[0][1]));
+            times.push(TranscriptUtils.spaceWordInterval(prevEnd, timestamps[0][1], 0));
         }
         for (var k = 0; k < timestamps.length; k++) {
-            times.push(new Timestamp(0, ' ' + timestamps[k][0] + ' ', timestamps[k][1], timestamps[k][2]));
+            word = timestamps[k][0];
+            if (word == '%HESITATION')
+                word = '???';
+            times.push(new Timestamp(0, ' ' + word + ' ', timestamps[k][1], timestamps[k][2]));
             if (k < timestamps.length - 1 && timestamps[k + 1][1] - timestamps[k][2] > 0)
-                times.push(TranscriptUtils.spaceWordInterval(timestamps[k][2], timestamps[k + 1][1]));
+                times.push(TranscriptUtils.spaceWordInterval(timestamps[k][2], timestamps[k + 1][1], 0));
         }
         return times;
     };
@@ -129,14 +132,14 @@ var TranscriptUtils = (function () {
         textObject.empty();
         for (var i = 0; i < wordIntervals.length; i++) {
             if (removeSpecials_(wordIntervals[i].word).trim().length) {
-                textObject.append('<span class="annotationToken' + (visible ? ' annotBordered' : '') + '">' +
+                textObject.append('<span class="annotation-token' + (visible ? ' annot-bordered' : '') + '">' +
                     wordIntervals[i].word + '</span>');
             } else {
                 if (visible) {
-                    textObject.append('<span class="annotationSpace annotBordered">' +
+                    textObject.append('<span class="annotation-space annot-bordered">' +
                         wordIntervals[i].word.replace(' ', '&nbsp;') + '</span>');
                 } else {
-                    textObject.append('<span class="annotationSpace">' +
+                    textObject.append('<span class="annotation-space">' +
                         wordIntervals[i].word.replace(/\s+/g, '&nbsp;') + '</span>');
                 }
             }
@@ -145,14 +148,14 @@ var TranscriptUtils = (function () {
 
     /**
      * Inserts the displayString into the tokenized contents of textObject in a quasi-tokenized form. The tokens don't yet
-     * represent timestamps, so they are tagged with the `annotTemporary` class.
+     * represent timestamps, so they are tagged with the `annot-temporary` class.
      * @param textObject
      * @param displayString
      * @param insertPoint
      * @returns {number} - The number of tokens inserted.
      */
     pub.insertTemporaryTranscriptionTokens = function(textObject, displayString, insertPoint) {
-        textObject.find('.annotTemporary').remove();
+        textObject.find('.annot-temporary').remove();
         var words = removeSpecials_(displayString).split(/\s+/);
         var returnNode = null;
 
@@ -163,7 +166,7 @@ var TranscriptUtils = (function () {
             if (words[i].length) {
                 // Add each word as a span
                 s = document.createElement('span');
-                s.className = 'annotationToken annotTemporary annotBordered';
+                s.className = 'annotation-token annot-temporary annot-bordered';
                 s.appendChild(document.createTextNode(words[i]));
                 if (boundaryNode) {
                     textObject[0].insertBefore(s, boundaryNode);
@@ -186,9 +189,9 @@ var TranscriptUtils = (function () {
             // Add the remainder of the string in a span
             s = document.createElement('span');
             if (displayString.trim().length) {
-                s.className = 'annotationSpace annotTemporary annotBordered';
+                s.className = 'annotation-space annot-temporary annot-bordered';
             } else {
-                s.className = 'annotTemporary';
+                s.className = 'annot-temporary';
             }
             s.appendChild(document.createTextNode(displayString));
             if (boundaryNode) {
@@ -213,8 +216,10 @@ var TranscriptUtils = (function () {
         }
     };
 
-    pub.spaceWordInterval = function (startTime, endTime) {
+    pub.spaceWordInterval = function (startTime, endTime, resource) {
         var numSpaces = Math.ceil((endTime - startTime) / SPACE_CHAR_DURATION);
+        if (typeof resource !== 'undefined')
+            return new Timestamp(resource, (new Array(numSpaces + 1)).join(' '), startTime, endTime);
         return new Timestamp(SPACE_RESOURCE, (new Array(numSpaces + 1)).join(' '), 0, endTime - startTime);
     };
 

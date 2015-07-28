@@ -34,7 +34,7 @@ p.fixedWidth {
     height: 36px;
 }
 
-.toolbarButton {
+.toolbar-button {
     position: relative;
     top: -2px;
 }
@@ -44,12 +44,13 @@ p.fixedWidth {
     top: 6px;
 }
 
-.editingArea {
+.editing-area {
     padding: 12px 16px 16px 12px;
     margin: 0 0 0 0;
+    position: relative;
 }
 
-#transcriptView {
+.transcript-view {
     /*resize: none;*/
     width: 100%;
     height: 100%;
@@ -60,68 +61,109 @@ p.fixedWidth {
     box-sizing: border-box;         /* Opera/IE 8+ */
     line-height: 200%;
     overflow: auto;
-    min-height: 100px;
-    max-height: 500px;
     word-wrap: break-word;
 }
 
-.transcriptView::selection {
+.transcript-view::selection {
     background: transparent;
 }
 
-.transcriptView::-moz-selection {
+.transcript-view::-moz-selection {
     background: transparent;
 }
 
 /* Annotation symbols */
 
-.annotationToken::selection {
+.annotation-token::selection {
     background: transparent;
 }
 
-.annotationToken::-moz-selection {
+.annotation-token::-moz-selection {
     background: transparent;
 }
 
-.annotationSpace::selection {
+.annotation-space::selection {
     background: transparent;
 }
 
-.annotationSpace::-moz-selection {
+.annotation-space::-moz-selection {
     background: transparent;
 }
 
-.annotationSelected {
+.annotation-selected {
     background-color: #4398ea !important;
     border: 1px solid #58a4ea !important;
 }
 
-.annotationHighlighted {
+.annotation-highlighted {
     background-color: #b398ea !important;
     border: 1px solid #8b61ea !important;
 }
 
-.annotationDimmed {
+.annotation-dimmed {
     opacity: 0.5;
 }
 
-.annotationSpace.annotBordered {
+.annotation-space {
     border-radius: 3px;
+}
+
+.annotation-space.annot-bordered {
     border: 1px solid #2bd363;
     background-color: #a5f6b4;
     /*padding: 0 2px 0 2px;
     margin: 0 2px 0 2px;*/
 }
 
-.annotationToken {
+.annotation-token {
+    border-radius: 3px;
     word-wrap: normal;
     display: inline-block;
     padding: 2px 2px 2px 2px;
     line-height: 1.2em;
 }
 
-.annotationToken.annotBordered {
-    border-radius: 3px;
+.annotation-token.annot-bordered {
     border: 1px solid #58a4ea;
     background-color: #a5d3f6;
+}
+
+.revision-label {
+    display: none;
+}
+
+#revision-input {
+    background: transparent;
+    border: none;
+    font-size: 0.9em;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+}
+
+#revision-box {
+    position: absolute;
+    display: none;
+    padding: 1px;
+    border: 1px solid #DFDFDF;
+    border-radius: 5px;
+    background-color: #FEFEFE;
+    box-shadow: 0 3px 3px gray;
+}
+
+.annot-template {
+    display: none;
+}
+
+.loading-label {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    font-style: italic;
+    opacity: 60%;
+    color: white;
+    height: 20px;
+    top: 6px;
+    left: 0;
+    right: 0;
 }

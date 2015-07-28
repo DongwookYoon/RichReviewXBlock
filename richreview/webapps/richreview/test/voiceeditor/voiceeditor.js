@@ -73,42 +73,60 @@ var drawAnnotationCanvas_ = function (annotationArea) {
     ctx.restore();
 };
 
+var currentPlaybackController = null;
 
-var VoiceAnnotationController = function (annotationElement, editable) {
+var AnnotationControllerState = {
+    normal: "ACSNormal",
+    loading: "ACSLoading"
+};
+
+var VoiceAnnotationController = function (annotationElement, editable, staticBlob, staticIntervals) {
 
     var areaElement = $(annotationElement),
         audiovisual = areaElement.find('.audiovisual'),
         avHandler = new Audiovisual(audiovisual[0]),
         viewContext = null,
         currentlyRecording = false,
+        socketClosed = true,
         transcriptFinalized = false,
         playbackTimestampIndex = -1,
         playbackJustStarted = false,
-        annotEditor = this;
+        _this = this,
+        transcriptManager = null,
+        recordingProcessTimeout = null;
+
+    if (!editable) {
+        this.staticAudioBlob = staticBlob;
+        this.staticWordIntervals = staticIntervals;
+    }
+
+    this.mode = AnnotationControllerState.normal;
 
     this.initTextAreaEditing = function (transcriptView) {
-        TranscriptTextArea.onDeletion = function (textArea, deletionRange, cb) {
+        transcriptManager.revisionBox = areaElement.find('#revision-box');
+        transcriptManager.onDeletion = function (textArea, deletionRange, cb) {
             if (!AudioCoordinator.renderedWordIntervals)
                 return;
             if (r2.audioPlayer.isPlaying())
-                annotEditor.stopAudio();
+                _this.stopAudio();
+            if (currentlyRecording)
+                _this.stopRecording(areaElement.find('.recording_start_btn'));
 
             var deletedStamps, beginTime, endTime, currentText;
             if (deletionRange.end - deletionRange.start >= AudioCoordinator.renderedWordIntervals.length - 1) {
                 deletedStamps = AudioCoordinator.timeStamps;
                 AudioCoordinator.timeStamps = [];
             } else {
-                console.log(deletionRange.start, deletionRange.end, AudioCoordinator.timeStamps[deletionRange.start]);
                 deletedStamps = AudioCoordinator.timeStamps.slice(deletionRange.start, deletionRange.end + 1);
                 AudioCoordinator.timeStamps.splice(deletionRange.start, deletionRange.end - deletionRange.start + 1);
             }
 
             // Save these timestamps in case the user wants to change the transcript instead of deleting the audio.
             if (deletedStamps.length > 1 || TranscriptUtils.isWordString(deletedStamps[0].word)) {
-                if (TranscriptTextArea.selectionContext['ts'])
-                    TranscriptTextArea.selectionContext['ts'] = deletedStamps.concat(TranscriptTextArea.selectionContext['ts']);
+                if (transcriptManager.selectionContext['ts'])
+                    transcriptManager.selectionContext['ts'] = deletedStamps.concat(transcriptManager.selectionContext['ts']);
                 else
-                    TranscriptTextArea.selectionContext['ts'] = deletedStamps;
+                    transcriptManager.selectionContext['ts'] = deletedStamps;
             }
 
             beginTime = AudioCoordinator.renderedWordIntervals[deletionRange.start].startTime;
@@ -116,22 +134,24 @@ var VoiceAnnotationController = function (annotationElement, editable) {
             currentlyTranscribedText = transcriptView.text().trim();
             TranscriptUtils.formatTranscriptionTokens(transcriptView,
                 AudioCoordinator.renderWordIntervals(),
-                TranscriptTextArea.showsTokenBorders);
+                transcriptManager.editable);
             drawAnnotationCanvas_(areaElement[0]);
             if (cb)
                 cb();
 
             currentText = transcriptView.text();
+            areaElement.find('.play_btn').implicitDisable();
             AudioCoordinator.renderAudio(function (finalBlob, wordIntervals) {
+                areaElement.find('.play_btn').implicitEnable();
                 if (transcriptView.text() != currentText) {
                     return;
                 }
-                if (!finalBlob) {
+                if (!finalBlob || !wordIntervals.length) {
                     avHandler.clear();
                 } else {
                     r2.audioRecorder.parseWAV(finalBlob, function (wavInfo) {
                         avHandler.wordIntervals = wordIntervals;
-                        var line = TranscriptTextArea.lineSelection();
+                        var line = transcriptManager.lineSelection();
                         avHandler.beginVisible = AudioCoordinator.renderedWordIntervals[line.start].startTime;
                         avHandler.endVisible = AudioCoordinator.renderedWordIntervals[line.end].endTime;
                         if (wordIntervals.length)
@@ -141,42 +161,61 @@ var VoiceAnnotationController = function (annotationElement, editable) {
             });
         };
 
-        TranscriptTextArea.onEdit = function (textArea, nodeRange, contents, overwrite) {
+        transcriptManager.onEdit = function (textArea, nodeRange, contents, overwrite) {
+            if (nodeRange.start < 0)
+                nodeRange.start = 0;
+            if (nodeRange.end < 0)
+                nodeRange.end = 0;
             if (r2.audioPlayer.isPlaying()) {
-                annotEditor.stopAudio();
-
-                // If it is a space, we should assume it was intended to stop the audio.
-                if (nodeRange.start == nodeRange.end) {
-                    var selOffset = TranscriptTextArea.currentWordSelectionIndex();
-                    if (contents.slice(selOffset - 1, selOffset).replace(/\s/g, " ") == " ")
-                        return { shouldEdit: false };
-                } else if (contents.replace(/\s/g, " ") == " ")
-                    return { shouldEdit: false };
+                _this.stopAudio();
             }
+            if (currentlyRecording)
+                _this.stopRecording(areaElement.find('.recording_start_btn'));
 
             var startTS = AudioCoordinator.timeStamps[nodeRange.start],
-                endTS = AudioCoordinator.timeStamps[nodeRange.end];
-            if (nodeRange.start == nodeRange.end) {
-                var selCtx = TranscriptTextArea.selectionContext['ts'],
-                    deltaSegment, nextTS,
-                    completion = function (finalBlob, wordIntervals) {
-                        drawAnnotationCanvas_(areaElement[0]);
-                        r2.audioRecorder.parseWAV(finalBlob, function (wavInfo) {
-                            avHandler.setAudioFrames(wavInfo.samples);
-                            avHandler.wordIntervals = wordIntervals;
-                            var line = TranscriptTextArea.lineSelection();
-                            avHandler.beginVisible = wordIntervals[line.start].startTime;
-                            avHandler.endVisible = wordIntervals[line.end].endTime;
-                            avHandler.renderWaveform();
-                            audiovisual.mousedown(waveformMouseDown);
-                        });
-                    };
+                endTS = AudioCoordinator.timeStamps[nodeRange.end],
+                completion = function (finalBlob, wordIntervals) {
+                    drawAnnotationCanvas_(areaElement[0]);
+                    r2.audioRecorder.parseWAV(finalBlob, function (wavInfo) {
+                        avHandler.setAudioFrames(wavInfo.samples);
+                        avHandler.wordIntervals = wordIntervals;
+                        avHandler.selectedInterval = transcriptManager.currentWordSelection();
+                        if (!avHandler.selectedInterval.multipleSelect) {
+                            avHandler.selectedInterval.start++;
+                            avHandler.selectedInterval.end++;
+                        }
+                        var line = transcriptManager.lineSelection();
+                        avHandler.beginVisible = wordIntervals[line.start].startTime;
+                        avHandler.endVisible = wordIntervals[line.end].endTime;
+                        avHandler.renderWaveform();
+                        audiovisual.mousedown(waveformMouseDown);
+                    });
+                };
+            if (!overwrite) {
+                var selCtx = transcriptManager.selectionContext['ts'],
+                    deltaSegment, nextTS;
 
-                if (TranscriptTextArea.currentWordSelectionIndex() > 0)
+                if (transcriptManager.currentWordSelectionIndex() > 0)
                     deltaSegment = contents.slice(startTS.word.length);
                 else
                     deltaSegment = contents.slice(0, 1);
-                if (selCtx && deltaSegment.trim().length) {
+                if (!deltaSegment.length) {
+                    // Special case: the text is being entered at the first position in the text view.
+                    AudioCoordinator.timeStamps.splice(nodeRange.start, 0, TranscriptUtils.spaceWordInterval(0, SPACE_CHAR_DURATION));
+                    TranscriptUtils.formatTranscriptionTokens(transcriptManager.textArea,
+                        AudioCoordinator.renderWordIntervals(),
+                        transcriptManager.editable);
+                    AudioCoordinator.renderAudio(completion);
+                    console.log(AudioCoordinator.timeStamps, nodeRange);
+                    return {
+                        shouldEdit: true,
+                        selection: {
+                            node: transcriptManager.textArea[0].childNodes[nodeRange.start],
+                            offset: 1
+                        }
+                    };
+                }
+                else if (selCtx && deltaSegment.trim().length) {
                     // The user wants to edit the transcript, so we should restore the recording segments he/she just deleted.
                     var diffIdx, insertedTS;
                     for (diffIdx = 0; diffIdx < selCtx.length; diffIdx++) {
@@ -186,13 +225,9 @@ var VoiceAnnotationController = function (annotationElement, editable) {
                     selCtx = selCtx.slice(0, diffIdx);
                     insertedTS = new Timestamp(selCtx[0].resourceID, contents.slice(startTS.word.length), selCtx[0].startTime, selCtx[selCtx.length - 1].endTime);
                     AudioCoordinator.timeStamps.splice(nodeRange.start + 1, 0, insertedTS);
-                    for (var i = 0; i < AudioCoordinator.timeStamps.length; i++) {
-                        if (AudioCoordinator.timeStamps[i].word == "%HESITATION")
-                            AudioCoordinator.timeStamps[i].word = " ";
-                    }
-                    TranscriptUtils.formatTranscriptionTokens(TranscriptTextArea.textArea,
+                    TranscriptUtils.formatTranscriptionTokens(transcriptManager.textArea,
                         AudioCoordinator.timeStamps,
-                        TranscriptTextArea.showsTokenBorders);
+                        transcriptManager.editable);
 
                     AudioCoordinator.renderAudio(function (blob, wordIntervals) {
                         if (!blob) {
@@ -203,13 +238,13 @@ var VoiceAnnotationController = function (annotationElement, editable) {
                     });
 
                     return { shouldEdit: true,
-                        selection: { node: TranscriptTextArea.textArea[0].childNodes[nodeRange.start + 1], offset: insertedTS.word.length}};
+                        selection: { node: transcriptManager.textArea[0].childNodes[nodeRange.start + 1], offset: insertedTS.word.length}};
                 } else {
                     // Check if we should be inserting the text into the beginning of the subsequent token instead of the
                     // end of the current token.
                     var beginning = false;
-                    if (TranscriptTextArea.currentWordSelectionIndex() > 0 &&
-                        nodeRange.start < AudioCoordinator.timeStamps.length - 1 && !overwrite) {
+                    if (transcriptManager.currentWordSelectionIndex() > 0 &&
+                        nodeRange.start < AudioCoordinator.timeStamps.length - 1) {
                         nextTS = AudioCoordinator.timeStamps[nodeRange.start + 1];
                         if (TranscriptUtils.isWordString(deltaSegment)) {
                             if (TranscriptUtils.isWordString(nextTS.word) && !TranscriptUtils.isWordString(startTS.word)) {
@@ -225,37 +260,38 @@ var VoiceAnnotationController = function (annotationElement, editable) {
                                 startTS = nextTS;
                                 endTS = nextTS;
                                 contents = deltaSegment + nextTS.word;
+                                console.log(JSON.stringify(AudioCoordinator.timeStamps));
                             } else if (TranscriptUtils.isWordString(startTS.word)) {
                                 AudioCoordinator.timeStamps.splice(nodeRange.start + 1, 0, TranscriptUtils.spaceWordInterval(0, SPACE_CHAR_DURATION));
-                                TranscriptUtils.formatTranscriptionTokens(TranscriptTextArea.textArea,
+                                TranscriptUtils.formatTranscriptionTokens(transcriptManager.textArea,
                                     AudioCoordinator.renderWordIntervals(),
-                                    TranscriptTextArea.showsTokenBorders);
+                                    transcriptManager.editable);
                                 AudioCoordinator.renderAudio(completion);
                                 return {
                                     shouldEdit: true,
                                     selection: {
-                                        node: TranscriptTextArea.textArea[0].childNodes[nodeRange.start + 1],
+                                        node: transcriptManager.textArea[0].childNodes[nodeRange.start + 1],
                                         offset: 1
                                     }
-                                }
+                                };
                             }
                         }
                     }
+
                     startTS.word = contents;
-                    if (!startTS.word.trim().length) {
-                        console.log("Contents:", JSON.stringify(startTS.word));
+                    if (!TranscriptUtils.isWordString(startTS.word)) {
                         AudioCoordinator.renderAudio(completion);
                     }
                     if (beginning) {
                         drawAnnotationCanvas_(areaElement[0]);
-                        TranscriptUtils.updateTranscriptionTokens(TranscriptTextArea.textArea,
-                            TranscriptTextArea.textArea[0].childNodes[nodeRange.start],
-                            TranscriptTextArea.textArea[0].childNodes[nodeRange.start + 1],
+                        TranscriptUtils.updateTranscriptionTokens(transcriptManager.textArea,
+                            transcriptManager.textArea[0].childNodes[nodeRange.start],
+                            transcriptManager.textArea[0].childNodes[nodeRange.start + 1],
                             AudioCoordinator.timeStamps.slice(nodeRange.start, nodeRange.start + 2));
                         return {
                             shouldEdit: true,
                             selection: {
-                                node: TranscriptTextArea.textArea[0].childNodes[nodeRange.start + 1],
+                                node: transcriptManager.textArea[0].childNodes[nodeRange.start + 1],
                                 offset: deltaSegment.length
                             }
                         };
@@ -263,15 +299,36 @@ var VoiceAnnotationController = function (annotationElement, editable) {
                 }
             } else {
                 var resID = startTS.resourceID;
-                for (i = nodeRange.start + 1; i <= nodeRange.end; i++) {
-                    if (AudioCoordinator.timeStamps[i].resourceID != resID) {
-                        alert("You can't delete words from different recordings at the same time.");
-                        return { shouldEdit: false };
+                endTS = startTS;    // Increment the endTS to be the last non-space token
+                for (var i = nodeRange.start + 1; i <= nodeRange.end; i++) {
+                    var ts = AudioCoordinator.timeStamps[i];
+                    if (resID == SPACE_RESOURCE) {
+                        resID = ts.resourceID;
+                        startTS = ts;
+                    }
+                    if (ts.resourceID != SPACE_RESOURCE) {
+                        if (ts.resourceID != resID) {
+                            alert("You can't delete words from different recordings at the same time.");
+                            return { shouldEdit: false };
+                        } else {
+                            endTS = ts;
+                        }
                     }
                 }
-                AudioCoordinator.timeStamps.splice(nodeRange.start, nodeRange.end - nodeRange.start + 1, new Timestamp(resID, contents, startTS.startTime, endTS.endTime));
+                console.log(startTS, endTS);
+                if (contents.trim().length)
+                    AudioCoordinator.timeStamps.splice(
+                        nodeRange.start,
+                        nodeRange.end - nodeRange.start + 1,
+                        new Timestamp(resID, contents, startTS.startTime, endTS.endTime));
+                else
+                    AudioCoordinator.timeStamps.splice(
+                        nodeRange.start,
+                        nodeRange.end - nodeRange.start + 1,
+                        TranscriptUtils.spaceWordInterval(0, SPACE_CHAR_DURATION)
+                    );
             }
-            drawAnnotationCanvas_(areaElement[0]);
+            AudioCoordinator.renderAudio(completion);
             return { shouldEdit: true };
         };
     };
@@ -279,35 +336,49 @@ var VoiceAnnotationController = function (annotationElement, editable) {
     this.initialize = function () {
         drawAnnotationCanvas_(areaElement[0]);
 
-        var transcriptView = areaElement.find('#transcriptView');
-        TranscriptTextArea.init(transcriptView);
-        if (this.editable)
+        var transcriptView = areaElement.find('.transcript-view');
+        transcriptManager = new TranscriptTextArea(transcriptView);
+        if (this.editable) {
             this.initTextAreaEditing(transcriptView);
-        else {
-            TranscriptTextArea.showsTokenBorders = false;
-            TranscriptTextArea.textArea.removeAttr('contenteditable').blur();
+            transcriptView.css('min-height', '100px');
+            transcriptView.css('max-height', '500px');
         }
-        TranscriptTextArea.onSelectionChange = function () {
-            var line = TranscriptTextArea.lineSelection();
-            var wordIntervals = AudioCoordinator.renderedWordIntervals;
+        else {
+            transcriptManager.editable = false;
+            transcriptManager.textArea.removeAttr('contenteditable').blur();
+        }
+        transcriptManager.onSelectionChange = function (textArea, selectionRange) {
+            if (currentlyRecording)
+                return;
+            var line = transcriptManager.lineSelection(),
+                wordIntervals = _this.getPlaybackInfo().intervals;
             if (wordIntervals && wordIntervals.length > 0) {
                 avHandler.beginVisible = wordIntervals[line.start].startTime;
                 avHandler.endVisible = (wordIntervals[line.end] || wordIntervals[wordIntervals.length - 1]).endTime;
+                avHandler.selectedInterval = transcriptManager.currentWordSelection();
+                if (!avHandler.selectedInterval.multipleSelect) {
+                    avHandler.selectedInterval.start++;
+                    avHandler.selectedInterval.end++;
+                }
                 avHandler.renderWaveform();
             } else {
                 avHandler.clear();
             }
         };
 
-        TranscriptTextArea.onPlay = function (textArea, nodeIdx) {
-            var time = nodeIdx < AudioCoordinator.renderedWordIntervals.length - 1 ?
-            AudioCoordinator.renderedWordIntervals[nodeIdx].startTime * 1000 : 0;
-            annotEditor.playAudio(time);
-            window.requestAnimFrame(drawAudiovisual);
+        transcriptManager.onPlay = function (textArea, nodeIdx) {
+            if (r2.audioPlayer.isPlaying()) {
+                _this.stopAudio();
+            } else {
+                var intervals = _this.getPlaybackInfo().intervals;
+                var time = nodeIdx < intervals.length - 1 ? intervals[nodeIdx].startTime * 1000 : 0;
+                _this.playAudio(time);
+                window.requestAnimFrame(drawAudiovisual);
+            }
         };
 
         avHandler.clear();
-        r2.audioRecorder.Init("../").catch(
+        r2.audioRecorder.Init("../../").catch(
             function(err){
                 alert(err.message);
             }
@@ -316,10 +387,11 @@ var VoiceAnnotationController = function (annotationElement, editable) {
         //Comment out the below statement to go back to traditional one-time transcription
         r2.audioRecorder.liveRecording = true;
 
-        AudioCoordinator.init();
+        if (this.editable)
+            AudioCoordinator.init();
         window.requestAnimFrame(drawAudiovisual);
 
-        areaElement.find('#play_btn').mousedown(function (e) {
+        areaElement.find('.play_btn').mousedown(function (e) {
             var ae = document.activeElement;
             setTimeout(function() {
                 ae.focus();
@@ -327,10 +399,48 @@ var VoiceAnnotationController = function (annotationElement, editable) {
         });
 
         initRecordButton();
+        this.disableView();
     };
 
     this.initializeWithContext = function (ctx) {
         viewContext = ctx;
+        this.enableView();
+        _this.exitLoadingMode();
+    };
+
+    this.refreshConsumerView = function () {
+        if (this.editable)
+            return;
+        var playInfo = this.getPlaybackInfo();
+        TranscriptUtils.formatTranscriptionTokens(transcriptManager.textArea, playInfo.intervals, transcriptManager.editable);
+        transcriptManager.textArea.find('.annotation-token, .annotation-space').click(function (e) {
+            if (r2.audioPlayer.isPlaying()) {
+                var nodeIdx = transcriptManager.positionOfNode(e.target);
+                var time = nodeIdx < playInfo.intervals.length - 1 ? playInfo.intervals[nodeIdx].startTime * 1000 : 0;
+                _this.playAudio(time);
+                window.requestAnimFrame(drawAudiovisual);
+            }
+        });
+        drawAnnotationCanvas_(areaElement[0]);
+        r2.audioRecorder.parseWAV(playInfo.blob, function (wavInfo) {
+            var line = transcriptManager.lineSelection();
+            avHandler.setAudioFrames(wavInfo.samples);
+            avHandler.wordIntervals = playInfo.intervals;
+            avHandler.beginVisible = playInfo.intervals[line.start].startTime;
+            avHandler.endVisible = playInfo.intervals[line.end].endTime;
+            avHandler.renderWaveform();
+
+            audiovisual.mousedown(waveformMouseDown);
+        });
+    };
+
+    this.getPlaybackInfo = function () {
+        if (this.editable) {
+            return { blob: AudioCoordinator.renderedAudioBlob,
+                    intervals: AudioCoordinator.renderedWordIntervals };
+        } else {
+            return { blob: this.staticAudioBlob, intervals: this.staticWordIntervals };
+        }
     };
 
     this.onFinished = function (audioBlob, transcription) {};
@@ -351,10 +461,38 @@ var VoiceAnnotationController = function (annotationElement, editable) {
         recordingBuffer = null;
         transcriptInsertLocation = 0;
         avHandler.clear();
-        AudioCoordinator.init();
-        TranscriptTextArea.textArea.empty();
+        if (this.editable)
+            AudioCoordinator.init();
+        transcriptManager.textArea.empty();
         drawAnnotationCanvas_(areaElement[0]);
     };
+
+    this.enterLoadingMode = function(loadText) {
+        this.mode = AnnotationControllerState.loading;
+        var loadLabel = areaElement.find('.loading-label');
+        if (loadText)
+            loadLabel.text(loadText);
+        else
+            loadLabel.text('Loading...');
+        loadLabel.fadeIn(150);
+        this.disableView();
+    };
+
+    this.exitLoadingMode = function() {
+        this.mode = AnnotationControllerState.normal;
+        areaElement.find('.loading-label').fadeOut(150);
+        this.enableView();
+    };
+
+    this.disableView = function () {
+        areaElement.css('pointer-events', 'none');
+    };
+
+    this.enableView = function () {
+        areaElement.css('pointer-events', 'auto');
+    };
+
+    // Recording
 
     /**
      * Called right after audio rendering finishes (to display the information).
@@ -362,33 +500,31 @@ var VoiceAnnotationController = function (annotationElement, editable) {
      * @param wordIntervals
      */
     function renderCompletion (finalBlob, wordIntervals) {
-        var transcriptView = TranscriptTextArea.textArea;
+        var transcriptView = transcriptManager.textArea;
         currentlyTranscribedText = transcriptView.text().trim();
         for (var i = 0; i < wordIntervals.length; i++) {
-            if (wordIntervals[i].word == "%HESITATION")
+            if (wordIntervals[i].word == "%%HESITATION") {
+                console.log("Hesitation. REMOVING");
                 wordIntervals[i].word = " ";
-        }
-        TranscriptUtils.formatTranscriptionTokens(transcriptView, wordIntervals, TranscriptTextArea.showsTokenBorders);
-        TranscriptTextArea.textArea.find('.annotationToken, .annotationSpace').click(function (e) {
-            if (r2.audioPlayer.isPlaying()) {
-                var nodeIdx = TranscriptTextArea.positionOfNode(e.target);
-                var time = nodeIdx < AudioCoordinator.renderedWordIntervals.length - 1 ?
-                AudioCoordinator.renderedWordIntervals[nodeIdx].startTime * 1000 : 0;
-                annotEditor.playAudio(time);
-                window.requestAnimFrame(drawAudiovisual);
             }
-        });
+        }
+        TranscriptUtils.formatTranscriptionTokens(transcriptView, wordIntervals, transcriptManager.editable);
         drawAnnotationCanvas_(areaElement[0]);
-        TranscriptTextArea.setCursorWordPosition(Math.min(transcriptInsertLocation + runningWordIntervals.length, wordIntervals.length));
+        transcriptManager.setCursorWordPosition(Math.min(transcriptInsertLocation + runningWordIntervals.length, wordIntervals.length));
         transcriptInsertLocation = 0;
 
+        currentlyRecording = false;
+
         r2.audioRecorder.parseWAV(finalBlob, function (wavInfo) {
-            var line = TranscriptTextArea.lineSelection();
+            var line = transcriptManager.lineSelection();
             avHandler.setAudioFrames(wavInfo.samples);
             avHandler.wordIntervals = wordIntervals;
             avHandler.beginVisible = wordIntervals[line.start].startTime;
             avHandler.endVisible = wordIntervals[line.end].endTime;
             avHandler.renderWaveform();
+
+            areaElement.find('.recording_start_btn').stopLoadingBlink();
+            _this.exitLoadingMode();
 
             audiovisual.mousedown(waveformMouseDown);
         });
@@ -398,11 +534,16 @@ var VoiceAnnotationController = function (annotationElement, editable) {
      * Called right after recording finishes.
      */
     var finishRecording = function() {
-        if (!finishedRecordingUrl)
-            return;
 
-        var transcriptView = TranscriptTextArea.textArea,
+        if (!finishedRecordingUrl) {
+            console.error("No recording URL. What happened?");
+            return;
+        }
+
+        var transcriptView = transcriptManager.textArea,
             duration, cb;
+
+        _this.exitLoadingMode();
         if (testingRawAudio && !testingRenderer) {
             duration = recordingBuffer.length / (2 * r2.audioRecorder.RECORDER_SAMPLE_RATE);
             runningWordIntervals.push(new Timestamp(0, '. ', runningWordIntervals[runningWordIntervals.length - 1].endTime, duration));
@@ -418,7 +559,6 @@ var VoiceAnnotationController = function (annotationElement, editable) {
         }
         else {
             cb = function () {
-                console.log("Running intervals before render:", JSON.stringify(runningWordIntervals));
                 var delta = AudioCoordinator.mergeSpaceGroups();
                 if (transcriptInsertLocation)
                     transcriptInsertLocation -= delta;
@@ -426,17 +566,20 @@ var VoiceAnnotationController = function (annotationElement, editable) {
             };
 
             duration = recordingBuffer.length / (2 * r2.audioRecorder.RECORDER_SAMPLE_RATE);
-            if (document.activeElement == transcriptView[0]) {
+            if (!runningWordIntervals.length) {
+                areaElement.find('.recording_start_btn').stopLoadingBlink();
+                _this.exitLoadingMode();
+            } else if (document.activeElement == transcriptView[0]) {
                 // Insert the current recording into the time interval dictated by transcriptInsertLocation
                 if (runningWordIntervals.length && runningWordIntervals[0].startTime > 0)
-                    runningWordIntervals.splice(0, 0, TranscriptUtils.spaceWordInterval(0, runningWordIntervals[0].startTime));
+                    runningWordIntervals.splice(0, 0, TranscriptUtils.spaceWordInterval(0, runningWordIntervals[0].startTime, 0));
                 if (duration - runningWordIntervals[runningWordIntervals.length - 1].endTime > 0)
-                    runningWordIntervals.push(TranscriptUtils.spaceWordInterval(runningWordIntervals[runningWordIntervals.length - 1].endTime, duration));
+                    runningWordIntervals.push(TranscriptUtils.spaceWordInterval(runningWordIntervals[runningWordIntervals.length - 1].endTime, duration, 0));
                 AudioCoordinator.insertAudioResource(finishedRecordingUrl, transcriptInsertLocation, runningWordIntervals, cb);
             } else {
                 // Add the current recording at the end of the working annotation
                 if (duration - runningWordIntervals[runningWordIntervals.length - 1].endTime > 0)
-                    runningWordIntervals.push(TranscriptUtils.spaceWordInterval(runningWordIntervals[runningWordIntervals.length - 1].endTime, duration));
+                    runningWordIntervals.push(TranscriptUtils.spaceWordInterval(runningWordIntervals[runningWordIntervals.length - 1].endTime, duration, 0));
                 AudioCoordinator.appendAudioResource(finishedRecordingUrl, runningWordIntervals, cb);
                 finishedRecordingUrl = null;
             }
@@ -449,13 +592,13 @@ var VoiceAnnotationController = function (annotationElement, editable) {
      */
     var transcriptionCallback_ = function (transcription, final, timestamps) {
 
-        var transcriptView = TranscriptTextArea.textArea;
+        var transcriptView = transcriptManager.textArea;
         if (document.activeElement === transcriptView[0]) {
             var offset = TranscriptUtils.insertTemporaryTranscriptionTokens(transcriptView, ' ' + transcription + ' ', transcriptInsertLocation);
-            TranscriptTextArea.setCursorWordPosition(Math.max(0, transcriptInsertLocation + offset));
+            transcriptManager.setCursorWordPosition(Math.max(0, transcriptInsertLocation + offset));
         }
         else {
-            TranscriptUtils.insertTemporaryTranscriptionTokens(transcriptView, transcription, TranscriptTextArea.textArea[0].childNodes.length);
+            TranscriptUtils.insertTemporaryTranscriptionTokens(transcriptView, transcription, transcriptManager.textArea[0].childNodes.length);
         }
 
         transcriptFinalized = final;
@@ -468,6 +611,10 @@ var VoiceAnnotationController = function (annotationElement, editable) {
             else if (timestamps[0][1] > 0)
                 prevEnd = 0;
             runningWordIntervals = runningWordIntervals.concat(TranscriptUtils.parseTimestamps(timestamps, prevEnd));
+            if (transcriptFinalized && socketClosed && finishedRecordingUrl) {
+                clearTimeout(recordingProcessTimeout);
+                finishRecording();
+            }
         }
 
         // Redraw annotation canvas in case it was resized
@@ -479,12 +626,13 @@ var VoiceAnnotationController = function (annotationElement, editable) {
 
     this.startRecording = function(recordButton) {
         if (!recordButton)
-            recordButton = areaElement.find('#recording_start_btn');
+            recordButton = areaElement.find('.recording_start_btn');
         var currentModel = localStorage.getItem('currentModel'),
-            transcriptView = TranscriptTextArea.textArea,
+            transcriptView = transcriptManager.textArea,
             selectionRange;
 
-        areaElement.find('#play_btn').attr('disabled', true);
+        recordButton.startLoadingBlink();
+        areaElement.find('.play_btn').implicitDisable();
 
         if (testingRawAudio) {
             // Circumvent the default recording behavior for testing purposes
@@ -492,16 +640,19 @@ var VoiceAnnotationController = function (annotationElement, editable) {
             this.transcriptAudio(viewContext, audio);
         }
         else if (r2.audioRecorder.liveRecording) {
+            this.disableView();
             runningWordIntervals = [];
             currentlyTranscribedText = transcriptView.text();
+            finishedRecordingUrl = null;
+            recordingBuffer = null;
 
             // If necessary, insert the new recording at the current word selection
             if (document.activeElement == transcriptView.get(0)) {
-                selectionRange = TranscriptTextArea.currentWordSelection();
+                selectionRange = transcriptManager.currentWordSelection();
                 if (selectionRange.start == selectionRange.end) {
-                    TranscriptTextArea.dimAll();
+                    transcriptManager.dimAll();
                     transcriptInsertLocation = selectionRange.start;
-                    if (TranscriptTextArea.currentWordSelectionIndex() > 0)
+                    if (transcriptManager.currentWordSelectionIndex() > 0)
                         transcriptInsertLocation++;
                 }
             }
@@ -510,6 +661,8 @@ var VoiceAnnotationController = function (annotationElement, editable) {
             handleMicrophone(viewContext.token, currentModel, r2.audioRecorder, function(err, socket) {
                 // Opened callback
 
+                socketClosed = false;
+                _this.enableView();
                 if (err) {
                     var msg = 'Error: ' + err.message;
                     console.log(msg);
@@ -525,11 +678,19 @@ var VoiceAnnotationController = function (annotationElement, editable) {
             }, transcriptionCallback_, function() {
                 // Socket close callback
 
-                if (transcriptFinalized)
-                    finishRecording();
-                else {
-                    alert("We didn't quite catch that. Please try again!");
-                    AudioCoordinator.renderAudio(renderCompletion);
+                socketClosed = true;
+                if (socketClosed && finishedRecordingUrl) {
+                    if (transcriptFinalized)
+                        finishRecording();
+                    else {
+                        recordingProcessTimeout = setTimeout(function () {
+                            alert("We didn't quite catch that. Please try again!");
+                            AudioCoordinator.renderAudio(renderCompletion);
+                            areaElement.find('.recording_start_btn').stopLoadingBlink();
+                            _this.exitLoadingMode();
+                            currentlyRecording = false;
+                        }, 3000);
+                    }
                 }
 
             });
@@ -541,12 +702,44 @@ var VoiceAnnotationController = function (annotationElement, editable) {
         }
     };
 
+    this.stopRecording = function (recordButton) {
+        /* Stop the recording, but don't necessarily finish the recording process (may still be processing
+         data from Bluemix) */
+        recordButton.text('Record');
+        areaElement.find('.play_btn').implicitEnable();
+        this.enterLoadingMode('Processing...');
+        $.publish('hardsocketstop');
+        r2.audioRecorder.EndRecording(function(url, blob, buffer){
+            finishedRecordingUrl = url;
+            recordingBuffer = buffer.subarray(44);
+
+            //For regular, non-streamed transcriptions:
+            if (r2.audioRecorder.liveRecording == false) {
+                _this.transcriptAudio(viewContext, finishedRecordingUrl);
+            } else {
+                if (socketClosed && finishedRecordingUrl) {
+                    if (transcriptFinalized)
+                        finishRecording();
+                    else {
+                        recordingProcessTimeout = setTimeout(function () {
+                            alert("We didn't quite catch that. Please try again!");
+                            AudioCoordinator.renderAudio(renderCompletion);
+                            areaElement.find('.recording_start_btn').stopLoadingBlink();
+                            _this.exitLoadingMode();
+                            currentlyRecording = false;
+                        }, 3000);
+                    }
+                }
+            }
+        });
+    };
+
     /**
      * Initializes the record button, and also configures the behaviors of the microphone and the transcript
      * text box.
      */
     var initRecordButton = function() {
-        var recordButton = areaElement.find('#recording_start_btn');
+        var recordButton = areaElement.find('.recording_start_btn');
 
         // Prevent the record button from stealing focus
         recordButton.mousedown(function (e) {
@@ -568,37 +761,23 @@ var VoiceAnnotationController = function (annotationElement, editable) {
                     return;
 
                 if (!currentlyRecording) {
-                    annotEditor.startRecording(recordButton);
+                    _this.startRecording(recordButton);
                 } else {
-                    /* Stop the recording, but don't necessarily finish the recording process (may still be processing
-                     data from Bluemix) */
-                    recordButton.text('Record');
-                    areaElement.find('#play_btn').attr('disabled', false);
-                    $.publish('hardsocketstop');
-                    r2.audioRecorder.EndRecording(function(url, blob, buffer){
-                        finishedRecordingUrl = url;
-                        recordingBuffer = buffer.subarray(44);
-
-                        //For regular, non-streamed transcriptions:
-                        if (r2.audioRecorder.liveRecording == false) {
-                            annotEditor.transcriptAudio(viewContext, finishedRecordingUrl);
-                        }
-                    });
-                    currentlyRecording = false;
+                    _this.stopRecording(recordButton);
                 }
             }
         })());
     };
 
     /**
-     * This is a method for sending full WAV audio files to Bluemix to transcribe. Change the hardcoded URL in utils.js
+     * This is a method for sending full WAV audio files to Bluemix to transcribe. Change the hardcoded URL in misc_utils.js
      * to the correct server, and make sure to add Access-Control-Allow-Origin headers to the result in that server.
      * Also, the URL you provide needs to be accessible from another origin, so it cannot be a blob.
      * @param ctx - The session context containing the authentication token
      * @param audio - a URL pointing to an audio file
      */
     this.transcriptAudio = function (ctx, audio) {
-        var transcriptView = TranscriptTextArea.textArea,
+        var transcriptView = transcriptManager.textArea,
             xhr = new XMLHttpRequest();
         runningWordIntervals = [];
 
@@ -651,12 +830,12 @@ var VoiceAnnotationController = function (annotationElement, editable) {
     this.doneButtonPressed = function (event) {
         if (AudioCoordinator.timeStamps.length) {
             AudioCoordinator.renderAudio(function (blob) {
-                annotEditor.onFinished(blob, TranscriptTextArea.textArea.text().replace(/ +/g, ' ').trim());
-                annotEditor.clear();
+                _this.onFinished(blob, transcriptManager.textArea.text().replace(/ +/g, ' ').trim(), AudioCoordinator.renderedWordIntervals);
+                _this.clear();
             });
         } else {
-            annotEditor.onFinished(null, '');
-            annotEditor.clear();
+            _this.onFinished(null, '', []);
+            _this.clear();
         }
     };
 
@@ -665,36 +844,55 @@ var VoiceAnnotationController = function (annotationElement, editable) {
             playbackJustStarted = false;
             this.stopAudio();
         } else {
+            var intervals = _this.getPlaybackInfo().intervals;
+            if (intervals && intervals.length) {
+                areaElement.find('.play_btn').startLoadingBlink();
+                this.disableView();
+            }
+            else
+                return;
             var startPoint = 0;
-            if (document.activeElement == TranscriptTextArea.textArea.get(0)) {
-                startPoint = TranscriptTextArea.currentWordSelection().start;
-                if (startPoint >= TranscriptTextArea.textArea[0].childNodes.length - 1)
+            if (transcriptManager.currentWordSelection().start >= 0) {
+                console.log("Playing:", transcriptManager.currentWordSelection());
+                startPoint = transcriptManager.currentWordSelection().start;
+                if (startPoint >= transcriptManager.textArea[0].childNodes.length - 1)
                     startPoint = 0;
             }
-            AudioCoordinator.renderAudio(function (finalBlob, wordIntervals) {
-                avHandler.wordIntervals = wordIntervals;
+            var cb = function () {
+                avHandler.wordIntervals = intervals;
                 if (startPoint > 0) {
-                    annotEditor.playAudio(wordIntervals[startPoint].startTime * 1000);
+                    _this.playAudio(avHandler.wordIntervals[startPoint].startTime * 1000);
                 } else {
-                    annotEditor.playAudio(0);
+                    _this.playAudio(0);
                 }
-            });
+            };
+            if (this.editable) {
+                AudioCoordinator.renderAudio(cb);
+            } else {
+                cb();
+            }
         }
     };
 
     this.playAudio = function (startTime) {
-        r2.audioPlayer.play(Math.random() * 10, (window.URL || window.webkitURL).createObjectURL(AudioCoordinator.renderedAudioBlob), startTime);
+        var playInfo = this.getPlaybackInfo();
+        r2.audioPlayer.play(Math.random() * 10, (window.URL || window.webkitURL).createObjectURL(playInfo.blob),
+            startTime, undefined, function () {
+                areaElement.find('.play_btn').stopLoadingBlink();
+                _this.enableView();
+                currentPlaybackController = _this;
+            });
         var startIdx;
-        for (startIdx = 0; startIdx < AudioCoordinator.renderedWordIntervals.length; startIdx++) {
-            if (AudioCoordinator.renderedWordIntervals[startIdx].endTime > startTime / 1000)
+        for (startIdx = 0; startIdx < playInfo.intervals.length; startIdx++) {
+            if (playInfo.intervals[startIdx].endTime > startTime / 1000)
                 break;
         }
         playbackTimestampIndex = startIdx;
         playbackJustStarted = true;
         window.requestAnimFrame(drawAudiovisual);
 
-        areaElement.find('#play_btn').text('Stop');
-        areaElement.find('#recording_start_btn').attr('disabled', true);
+        areaElement.find('.play_btn').text('Stop');
+        areaElement.find('.recording_start_btn').implicitDisable();
     };
 
     this.stopAudio = function () {
@@ -706,45 +904,55 @@ var VoiceAnnotationController = function (annotationElement, editable) {
         avHandler.renderWaveform();
 
         playbackTimestampIndex = -1;
-        TranscriptTextArea.unhighlightAll();
-        areaElement.find('#play_btn').text('Play');
-        areaElement.find('#recording_start_btn').attr('disabled', false);
+        transcriptManager.unhighlightAll();
+        areaElement.find('.play_btn').text('Play');
+        areaElement.find('.recording_start_btn').implicitEnable();
     };
 
     var waveformMouseDown = function (event){
-        AudioCoordinator.renderAudio(function (finalBlob, wordIntervals) {
-            avHandler.wordIntervals = wordIntervals;
+        var cb = function () {
+            avHandler.wordIntervals = _this.getPlaybackInfo().intervals;
             var start = avHandler.beginVisible,
                 end = avHandler.endVisible;
             var time = 1000 * (start + (end - start) * event.offsetX/audiovisual.width());
-            annotEditor.playAudio(time);
+            _this.playAudio(time);
             window.requestAnimFrame(drawAudiovisual);
-        });
+        };
+        if (_this.editable)
+            AudioCoordinator.renderAudio(cb);
+        else
+            cb();
     };
 
-    function drawAudiovisual () {
-        window.requestAnimFrame(drawAudiovisual);
+    this.updateAudioPlayback = function () {
         if (r2.audioPlayer.isPlaying()) {
-            var ts = AudioCoordinator.renderedWordIntervals[playbackTimestampIndex],
+            var intervals = this.getPlaybackInfo().intervals;
+            var ts = intervals[playbackTimestampIndex],
                 line;
             if (ts && r2.audioPlayer.getPlaybackTime() / 1000 >= ts.endTime) {
                 playbackTimestampIndex++;
                 playbackJustStarted = false;
-                if (playbackTimestampIndex >= AudioCoordinator.renderedWordIntervals.length)
-                    TranscriptTextArea.unhighlightAll();
+                if (playbackTimestampIndex >= intervals.length)
+                    transcriptManager.unhighlightAll();
                 else
-                    TranscriptTextArea.highlightWord(playbackTimestampIndex);
+                    transcriptManager.highlightWord(playbackTimestampIndex);
             } else {
-                TranscriptTextArea.highlightWord(playbackTimestampIndex);
+                transcriptManager.highlightWord(playbackTimestampIndex);
             }
-            line = TranscriptTextArea.lineSelection(playbackTimestampIndex);
-            avHandler.beginVisible = AudioCoordinator.renderedWordIntervals[line.start].startTime;
-            avHandler.endVisible = AudioCoordinator.renderedWordIntervals[line.end].endTime;
+            line = transcriptManager.lineSelection(playbackTimestampIndex);
+            avHandler.beginVisible = intervals[line.start].startTime;
+            avHandler.endVisible = intervals[line.end].endTime;
             avHandler.renderWaveform(r2.audioPlayer.getPlaybackTime() / r2.audioPlayer.getDuration());
         } else if (!playbackJustStarted) {
-            annotEditor.stopAudio();
+            this.stopAudio();
         }
-    }
+    };
 
     this.initialize();
 };
+
+function drawAudiovisual () {
+    window.requestAnimFrame(drawAudiovisual);
+    if (currentPlaybackController)
+        currentPlaybackController.updateAudioPlayback();
+}

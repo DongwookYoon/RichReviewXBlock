@@ -1,6 +1,6 @@
 'use strict';
 // Change this URL to match the back end coordinating the authentication and speech-to-text services.
-var SERVER_URL = 'http://127.0.0.1:8000/';
+var SERVER_URL = 'http://127.0.0.1:5000/';
 
 var utils = (function() {
     var pub = {};
@@ -118,3 +118,31 @@ var utils = (function() {
 
     return pub;
 }());
+
+$.fn.startLoadingBlink = function () {
+    this.attr('_nw_blinking', true);
+    var _this = this;
+    var animateBlink = function() {
+        _this.animate({opacity:'1'}, 600);
+        _this.animate({opacity:'0.7'}, 600, animateBlink);
+    };
+    animateBlink();
+    return this;
+};
+
+$.fn.stopLoadingBlink = function () {
+    this.stop(true);
+    this.css('opacity', 1);
+    this.attr('_nw_blinking', false);
+    return this;
+};
+
+$.fn.implicitDisable = function () {
+    this.css('pointer-events', 'none');
+    return this;
+};
+
+$.fn.implicitEnable = function () {
+    this.css('pointer-events', 'auto');
+    return this;
+};

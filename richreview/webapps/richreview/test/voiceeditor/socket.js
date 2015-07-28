@@ -15,7 +15,7 @@
  */
 /*global $:false */
 
-//Depends on the utils object in utils.js
+//Depends on the utils object in misc_utils.js
 
 // Mini WS callback API, so we can initialize
 // with model and token in URI, plus
@@ -100,13 +100,11 @@ var socket = (function() {
           throw new Error("No authorization token is currently available");
         }
         utils.getAuthInfo(function(authInfo) {
-          if (err) {
-            $.publish('hardsocketstop');
-            return false;
-          }
           console.log('Fetching additional token...');
           options.token = token;
           initSocket(options, onopen, onlistening, onmessage, onerror, onclose);
+        }, function (err) {
+          $.publish('hardsocketstop');
         });
         return false;
       }

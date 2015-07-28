@@ -94,7 +94,7 @@ class RichReviewXBlock(XBlock):
     # This dictionary maps each student to a group in parallel with students_of_group
     # Usage: Use self.assign_group() to update
     group_of_student = Dict(
-        help = "",
+        help = "list of students in each group",
         default={},
         scope=Scope.user_state_summary
     )
@@ -102,7 +102,7 @@ class RichReviewXBlock(XBlock):
     # This dictionary maps each groups to the id of the document (.PDF) that they are supposed to discuss
     # Usage: pdf_of_group[<groupid>] == <pdfid>
     doc_of_group = Dict(
-        help = "",
+        help = "Id of the pdf assigned to each group",
         default={},
         scope=Scope.user_state_summary
     )
@@ -110,7 +110,7 @@ class RichReviewXBlock(XBlock):
     #This dictionary stores the list of comments & commands for each group
     # Usage: cmds_of_group[<groupid>] == [<cmd0>, <cmd1>, ... ]
     cmds_of_group = Dict(
-        help = "",
+        help = "list of annotation data (JSON format) in a chronological order",
         default={},
         scope=Scope.user_state_summary
     )

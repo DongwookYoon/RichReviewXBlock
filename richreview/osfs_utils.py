@@ -51,4 +51,5 @@ def upload_webapp(fs, src_path, dst_path_root, exclude):
 
 
 def clear_webapp(fs, target_path):
-    fs.removedir(target_path, recursive = True, force = True)
+    if fs.exists(target_path):
+        fs.removedir(target_path, recursive = True, force = True)

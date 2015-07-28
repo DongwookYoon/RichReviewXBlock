@@ -227,6 +227,9 @@ class RichReviewXBlock(XBlock):
             }
 
     def init_cmds(self, groupid):
+        """
+        Creat a new cmd slot for the group, if it is not there.
+        """
         if not groupid in self.cmds_of_group:
             self.cmds_of_group[groupid] = []
 
@@ -349,6 +352,9 @@ class RichReviewXBlock(XBlock):
 
     @XBlock.json_handler
     def pdfjsupload(self, data, suffix=""):
+        """
+        Receives the analyzed layout data from the MultiColumn analysis engine.
+        """
         with self.fs.open(self.pdfjs_path, "wb") as f:
             json.dump(data, f)
             f.close()

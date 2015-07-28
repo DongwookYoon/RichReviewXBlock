@@ -182,7 +182,7 @@ class RichReviewXBlock(XBlock):
         """
         self.discussion_docid is set to SHA1 of the PDF file ** after ** the staff upload the file.
         """
-        return self.discussion_docid != ""
+        return self.discussion_docid != "" and self.fs.exists(self.pdf_path) and self.fs.exists(self.pdfjs_path)
 
     def get_audio_filepath(self, groupid, audio_filename):
         return self.xblock_path + "/" + groupid + "/" + audio_filename + ".wav"

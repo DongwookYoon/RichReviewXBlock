@@ -35,7 +35,6 @@ var r2Ctrl = {};
         pub.isTap = function(pt){
             var d = pub.pos_dn.subtract(pt, true);
             d = Math.sqrt(d.x * d.x + d.y * d.y) * r2.viewCtrl.page_width_noscale;
-            console.log(d);
             return d < r2Const.MOUSE_CLICK_DIST_CRITERIA;
         };
 
@@ -47,7 +46,7 @@ var r2Ctrl = {};
                         pub.mode = r2.MouseModeEnum.LDN;
                         pub.pos_dn = new_mouse_pt;
                         if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
-                            if(r2App.ctrlkey_dn)
+                            if(r2.keyboard.ctrlkey_dn)
                                 recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
                         }
                         else if(r2App.mode == r2App.AppModeEnum.RECORDING){
@@ -193,13 +192,14 @@ var r2Ctrl = {};
         var pub = {};
 
         pub.mode = r2.KeyboardModeEnum.NORMAL;
+        pub.ctrlkey_dn = false;
 
         pub.handleDn = function(event){
             if(r2App.mode == r2App.AppModeEnum.IDLE && pub.mode == r2.KeyboardModeEnum.NORMAL){
                 switch(event.which){
                     case 17: // left ctrl
                     case 25: // rght ctrl
-                        r2App.ctrlkey_dn = true;
+                        pub.ctrlkey_dn = true;
                         break;
                     case 37:
                         r2.clickPrevPage();
@@ -215,7 +215,7 @@ var r2Ctrl = {};
                 switch(event.which){
                     case 17: // left ctrl
                     case 25: // rght ctrl
-                        r2App.ctrlkey_dn = true;
+                        pub.ctrlkey_dn = true;
                         break;
                     case 37:
                         r2.clickPrevPage();
@@ -256,7 +256,7 @@ var r2Ctrl = {};
                         }
                         break;
                     case '\r': // enter
-                        if (r2App.ctrlkey_dn) {
+                        if (pub.ctrlkey_dn) {
                             createPieceKeyboard(isprivate = true);
                             r2.log.Log_Simple("CreatePieceKeyboard_Private_Enter");
                         }
@@ -278,7 +278,7 @@ var r2Ctrl = {};
                     case '\r': // enter
                         r2.log.Log_AudioStop('enter_0', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
                         r2.rich_audio.stop();
-                        if (r2App.ctrlkey_dn) {
+                        if (pub.ctrlkey_dn) {
                             createPieceKeyboard(isprivate = true);
                             r2.log.Log_Simple("CreatePieceKeyboard_Private_Enter");
                         }
@@ -301,7 +301,7 @@ var r2Ctrl = {};
             switch(event.which){
                 case 17: // left ctrl
                 case 25: // rght ctrl
-                    r2App.ctrlkey_dn = false;
+                    pub.ctrlkey_dn = false;
                     break;
                 case 107:
                     if(pub.mode == r2.KeyboardModeEnum.NORMAL)
@@ -338,7 +338,7 @@ var r2Ctrl = {};
             $(btn_audio.icon).toggleClass("fa-microphone", true);
             btn_audio.onmouseup = function(event){
                 event.preventDefault();
-                if(event.which != 1 || r2App.ctrlkey_dn){return;}
+                if(event.which != 1 || r2.keyboard.ctrlkey_dn){return;}
                 if(r2App.mode == r2App.AppModeEnum.RECORDING){
                     r2.recordingStop(toupload = true);
                     r2.log.Log_Simple("Recording_Stop_OnScrBtn");
@@ -355,9 +355,9 @@ var r2Ctrl = {};
             btn_text.onmouseup = function(event){
                 event.preventDefault();
 
-                if(event.which != 1 || r2App.ctrlkey_dn){return;}
-                createPieceKeyboard(isprivate = r2App.ctrlkey_dn);
-                if(r2App.ctrlkey_dn){
+                if(event.which != 1 || r2.keyboard.ctrlkey_dn){return;}
+                createPieceKeyboard(isprivate = r2.keyboard.ctrlkey_dn);
+                if(r2.keyboard.ctrlkey_dn){
                     r2.log.Log_Simple("CreatePieceKeyboard_Private_OnScrBtn");
                 }
                 else{

@@ -124,7 +124,6 @@
         return rtn;
     };
     r2.Obj.prototype.HitTest = function(pt){
-
         var rtn = [];
         if(this._isvisible){
             for(var i = 0; i < this.child.length; ++i){
@@ -138,7 +137,6 @@
         }
         return rtn;
     };
-
     r2.Obj.prototype.GetPieceByHitTest = function(pt){
         var l = this.HitTest(pt);
         if(l.length > 0 && l[0].IsPiece) {
@@ -147,6 +145,21 @@
         else{
             return null;
         }
+    };
+    r2.Obj.prototype.GetPieceOfClosestBottom = function(pt, dy_obj){
+        if (typeof dy_obj === 'undefined'){
+            dy_obj = [Number.POSITIVE_INFINITY, null];
+        }
+        var dy = Math.abs(this.pos.y + this.size.y - pt.y);
+        if( (dy <= dy_obj[0]) &&
+            ( this.pos.x < pt.x && pt.x < this.pos.x + this.size.x )){
+            dy_obj[0] = dy;
+            dy_obj[1] = this;
+        }
+        for(var i = 0; i < this.child.length; ++i){
+            this.child[i].GetPieceOfClosestBottom(pt, dy_obj);
+        }
+        return dy_obj;
     };
     r2.Obj.prototype.RemoveAnnot = function(annotid){
         for(var i = 0; i < this.child.length; ++i){
@@ -458,6 +471,21 @@
 
         return this.size;
     };
+    r2.Piece.prototype.GetPieceOfClosestBottom = function(pt, dy_obj){
+        if (typeof dy_obj === 'undefined'){
+            dy_obj = [Number.POSITIVE_INFINITY, null];
+        }
+        var dy = Math.abs(this.pos.y + this._cnt_size.y - pt.y);
+        if( (dy <= dy_obj[0]) &&
+            ( this.pos.x < pt.x && pt.x < this.pos.x + this._cnt_size.x )){
+            dy_obj[0] = dy;
+            dy_obj[1] = this;
+        }
+        for(var i = 0; i < this.child.length; ++i){
+            this.child[i].GetPieceOfClosestBottom(pt, dy_obj);
+        }
+        return dy_obj;
+    };
     r2.Piece.prototype.SearchPiece = function(id){
         if (this._id == id)
             return this;
@@ -524,22 +552,41 @@
 
         if(this._visible) {
             var colors = this.GetSelectedColors();
-
             var x_bgn = this.pos.x + this.GetTtIndent();
+            var x0, x1, y;
 
+            x0 = x_offset + x_bgn;
+            x1 = x_offset + this.pos.x + this._ttX + this._ttW;
+            y = this.pos.y + this._cnt_size.y;
+
+            // line
             canvas_ctx.beginPath();
-            canvas_ctx.moveTo(x_offset+x_bgn, this.pos.y);
-            canvas_ctx.lineTo(x_offset+x_bgn, this.pos.y+this._cnt_size.y);
-            canvas_ctx.lineTo(x_offset+this.pos.x + this._ttX + this._ttW, this.pos.y+this._cnt_size.y);
+            canvas_ctx.moveTo(x0, y);
+            canvas_ctx.lineTo(x1, y);
 
-            canvas_ctx.shadowBlur = 4.011;
+            canvas_ctx.shadowBlur = 0;
             canvas_ctx.shadowColor = colors[0];
             canvas_ctx.strokeStyle = colors[1];
-            canvas_ctx.lineWidth = r2Const.PIECE_LINE_WIDTH;
+            canvas_ctx.lineWidth = r2Const.PIECE_SELECTION_LINE_WIDTH;
             canvas_ctx.lineCap = 'butt';
             canvas_ctx.lineJoin = 'miter';
             canvas_ctx.stroke();
             canvas_ctx.shadowBlur = 0;
+
+            var tri_w = 0.01;
+            var tri_h_half = 0.005;
+
+            var path=new Path2D();
+            path.moveTo(x0, y);
+            path.lineTo(x0-tri_w, y-tri_h_half);
+            path.lineTo(x0-tri_w, y+tri_h_half);
+
+            path.moveTo(x1, y);
+            path.lineTo(x1+tri_w, y+tri_h_half);
+            path.lineTo(x1+tri_w, y-tri_h_half);
+
+            canvas_ctx.fillStyle = colors[1];
+            canvas_ctx.fill(path);
         }
     };
     /**

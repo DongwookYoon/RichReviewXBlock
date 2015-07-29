@@ -389,7 +389,7 @@
 
             r2.dom.setContextMenuEvent(
                 function(){
-                    return !r2App.ctrlkey_dn; // disables the context menu when <Ctrl> key is pressed.
+                    return !r2.keyboard.ctrlkey_dn; // disables the context menu when <Ctrl> key is pressed.
                 }
             );
         }

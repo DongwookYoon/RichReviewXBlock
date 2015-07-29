@@ -7,6 +7,7 @@ var r2Const = (function () {
     // piece
     pub.PIECE_LINE_WIDTH = 0.00075;
     pub.PIECE_LINE_DASH = 0.01;
+    pub.PIECE_SELECTION_LINE_WIDTH = 0.0015;
     pub.PIECE_TEXTTEARING_INDENT = 0.012;
 
     // piece audio
@@ -120,9 +121,6 @@ var r2App = (function() {
     pub.splight_prerender = null;
     pub.splight_prerender_ctx = null;
 
-
-    pub.ctrlkey_dn = false;
-
     pub.docid = null;
     pub.groupid = null;
 
@@ -156,9 +154,9 @@ var r2App = (function() {
         };
 
         pub.update = function(cur_mouse_pt){
-            var piece = r2App.cur_page.GetPieceByHitTest(r2.viewCtrl.mapScrToDoc(cur_mouse_pt));
-            if(selected_piece !== piece){
-                selected_piece = piece;
+            var piece_dy_obj = r2App.cur_page.GetPieceOfClosestBottom(r2.viewCtrl.mapScrToDoc(cur_mouse_pt));
+            if(selected_piece !== piece_dy_obj[1]){ // piece[0] is dy, piece[1] is the obj.
+                selected_piece = piece_dy_obj[1];
                 r2App.invalidate_dynamic_scene = true;
                 r2App.invalidate_dom = true;
             }
@@ -189,8 +187,8 @@ var r2App = (function() {
     }());
 
     pub.SetCurPdfPageN = function(i){
-        this.cur_pdf_pagen = i;
-        this.cur_page = this.doc.GetPage(this.cur_pdf_pagen);
+        pub.cur_pdf_pagen = i;
+        pub.cur_page = pub.doc.GetPage(pub.cur_pdf_pagen);
     };
 
     return pub;

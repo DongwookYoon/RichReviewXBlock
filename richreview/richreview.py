@@ -5,7 +5,7 @@ import json
 from uuid import uuid4
 
 from xblock.core import XBlock
-from xblock.fields import Scope, String, Dict
+from xblock.fields import Scope, String, Dict, List, RemoteScope
 from xblock.fragment import Fragment
 from djpyfs import djpyfs
 from django.conf import settings
@@ -109,11 +109,19 @@ class RichReviewXBlock(XBlock):
 
     #This dictionary stores the list of comments & commands for each group
     # Usage: cmds_of_group[<groupid>] == [<cmd0>, <cmd1>, ... ]
-    cmds_of_group = Dict(
+    cmds_of_group = List(
         help = "list of annotation data (JSON format) in a chronological order",
-        default={},
-        scope=Scope.user_state_summary
+        default=[],
+        scope=Scope.user_state,
+        remote_scope=RemoteScope.course_users
     )
+
+    shared_cmds_of_group = List.Query(
+        field_name='cmds_of_group'
+    )
+
+
+
 
     @property
     def course_id(self):
@@ -234,15 +242,22 @@ class RichReviewXBlock(XBlock):
             self.cmds_of_group[groupid] = []
 
     def add_cmd(self, cmd, groupid):
-        self.init_cmds(groupid)
-        self.cmds_of_group[groupid].append(json.loads(cmd))
+        # self.init_cmds(groupid)
+        # self.cmds_of_group[groupid].append(json.loads(cmd))
+        group_cmds = self.shared_cmds_of_group.get(user_id=groupid)
+        group_cmds.append(json.loads(cmd))
+        self.shared_cmds_of_group.set(value=group_cmds, user_id=groupid)
 
     def get_cmds(self, groupid, cmds_downloaded_n):
         """
         Get new cmds that has been updated after the last download.
         """
-        self.init_cmds(groupid)
-        cmds = self.cmds_of_group[groupid][int(cmds_downloaded_n):]
+        # self.init_cmds(groupid)
+        # cmds = self.cmds_of_group[groupid][int(cmds_downloaded_n):]
+
+        group_cmds = self.shared_cmds_of_group.get(user_id=groupid)
+        cmds = group_cmds[int(cmds_downloaded_n):]
+        
         for idx, cmd in enumerate(cmds):
             if cmd["op"] == "CreateComment" and cmd["type"] == "CommentAudio":
                 cmds[idx]["data"]["audiofileurl"] = self.fs.get_url(

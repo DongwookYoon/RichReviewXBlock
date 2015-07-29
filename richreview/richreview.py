@@ -120,9 +120,6 @@ class RichReviewXBlock(XBlock):
         field_name='cmds_of_group'
     )
 
-
-
-
     @property
     def course_id(self):
         try:
@@ -203,7 +200,8 @@ class RichReviewXBlock(XBlock):
         for groupid in self.students_of_group:
             if len(self.students_of_group[groupid]) < 5: #hardcoded maximum number of users in a group
                 return groupid
-        new_groupid = uuid4().hex
+        # new_groupid = uuid4().hex
+        new_groupid = self.anonymous_student_id
         self.students_of_group[new_groupid] = []
         self.doc_of_group[new_groupid] = self.discussion_docid
         return new_groupid

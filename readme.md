@@ -10,15 +10,23 @@ RichReviewXBlock is an [XBlock](http://xblock.readthedocs.org/en/latest/) implem
 RichReview serves annotation data via [django-pyfs](https://github.com/pmitros/django-pyfs) file system abstraction. There are two options for the file storage database: your server's local storage or [Amazon S3 storage](http://aws.amazon.com/s3/). For this, you will want to set DJFS environment variable. It's in /edx/app/edxapp/{cms,lms}.auth.json files.
 
 ##### Using Local file storage
-Set DJFS like this (as it is including {platform_revision}):
+Set DJFS of cms.auth.json like this (as it is including {platform_revision}):
 
     "DJFS": {
         "directory_root": "common/static/djpyfs",
         "type": "osfs",
         "url_root": "/static/{platform_revision}/djpyfs"
     },
+    
+Set DJFS of lms.auth.json like this (not that there's no {platform_revision}):
 
-Note that this setting places the local directory under the common, so that LMS can have access to the PDF files that CMS registered.
+    "DJFS": {
+        "directory_root": "common/static/djpyfs",
+        "type": "osfs",
+        "url_root": "/static/djpyfs"
+    },
+
+This setting places the local directory under the common, so that LMS can have access to the PDF files uploaded from CMS.
 
 ##### Using Amazon S3 storage
 Set DJFS like this:

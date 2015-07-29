@@ -53,8 +53,8 @@ function Timestamp(id, w, time_start, time_end) {
         return _word;
     });
     this.__defineSetter__("word", function(val) {
-        if (_resourceID == SPACE_RESOURCE) {
-            endTime = val.length * SPACE_CHAR_DURATION;
+        if (!TranscriptUtils.isWordString(val)) {
+            endTime = startTime + val.length * SPACE_CHAR_DURATION;
         }
         _word = val;
     });
@@ -421,7 +421,9 @@ var AudioCoordinator = (function () {
     pub.mergeSpaceGroups = function () {
         var i = 0,
             firstSpaceIdx = -1,
-            origLength = pub.timeStamps.length;
+            origLength = pub.timeStamps.length,
+            slice,
+            groupTS;
         while (i < pub.timeStamps.length) {
             if (!TranscriptUtils.isWordString(pub.timeStamps[i].word)) {
                 if (firstSpaceIdx < 0) {
@@ -429,8 +431,8 @@ var AudioCoordinator = (function () {
                 }
             } else {
                 if (firstSpaceIdx > 0 && i - firstSpaceIdx > 1) {
-                    var slice = pub.timeStamps.slice(firstSpaceIdx, i);
-                    var groupTS = new (Function.prototype.bind.apply(
+                    slice = pub.timeStamps.slice(firstSpaceIdx, i);
+                    groupTS = new (Function.prototype.bind.apply(
                         TimestampGroup,
                         [null, slice.map(function(item) { return item.word; }).join('')].concat(slice)));
                     console.log("replacing timestamps", firstSpaceIdx, "through", i, "with", groupTS);
@@ -440,6 +442,15 @@ var AudioCoordinator = (function () {
                 firstSpaceIdx = -1;
             }
             i++;
+        }
+        if (firstSpaceIdx > 0 && i - firstSpaceIdx > 1) {
+            slice = pub.timeStamps.slice(firstSpaceIdx, i);
+            groupTS = new (Function.prototype.bind.apply(
+                TimestampGroup,
+                [null, slice.map(function(item) { return item.word; }).join('')].concat(slice)));
+            console.log("replacing timestamps", firstSpaceIdx, "through", i, "with", groupTS);
+            pub.timeStamps.splice(firstSpaceIdx, i - firstSpaceIdx, groupTS);
+            i = firstSpaceIdx;
         }
 
         return origLength - pub.timeStamps.length;
@@ -513,6 +524,8 @@ var AudioCoordinator = (function () {
         if (audioInfo.totalTime == 0) {
             pub.renderedWordIntervals = [];
             pub.renderedAudioBlob = null;
+            if (cb)
+                cb(pub.renderedAudioBlob, pub.renderedWordIntervals);
             return;
         }
 
@@ -535,7 +548,8 @@ var AudioCoordinator = (function () {
                 wordIntervals = pub.renderWordIntervals();
                 pub.renderedWordIntervals = wordIntervals;
                 pub.renderedAudioBlob = blob;
-                cb(blob, wordIntervals);
+                if (cb)
+                    cb(blob, wordIntervals);
             }
         };
 
@@ -595,14 +609,38 @@ var AudioCoordinator = (function () {
                 }
                 totSubSamples += audioInfo.overlapFrames / 2;
 
-                var samples = new Int8Array(totSubSamples);
-                var offset = 0;
+                var samples = new Int8Array(totSubSamples),
+                    offset = 0;
                 for (n = 0; n < tsGroups[i].length; n++) {
-                    var subSamples = wavInfo.samples.subarray(
-                        Math.floor(tsGroups[i][n].startTime * audioInfo.sampleRate) * 2,
-                        Math.floor(tsGroups[i][n].endTime * audioInfo.sampleRate) * 2);
+                    var maxSample = Number.POSITIVE_INFINITY,
+                        startSample, endSample, subSamples;
+                    if (!TranscriptUtils.isWordString(tsGroups[i][n].word)) {
+                        // Find this timestamp in the original audio resource, and look for the next word timestamp.
+                        var lookingForWord = false;
+                        for (var m = 0; m < _audioFiles[idx].wordIntervals.length; m++) {
+                            if (lookingForWord) {
+                                if (TranscriptUtils.isWordString(_audioFiles[idx].wordIntervals[m].word))
+                                    break;
+                            } else if (_audioFiles[idx].wordIntervals[m].startTime >= tsGroups[i][n].startTime - 0.001) {
+                                lookingForWord = true;
+                            }
+                        }
+                        if (m < _audioFiles[idx].wordIntervals.length)
+                            maxSample = Math.floor(_audioFiles[idx].wordIntervals[m].startTime * audioInfo.sampleRate) * 2;
+                        else if (m == _audioFiles[idx].wordIntervals.length)
+                            maxSample = Math.floor(_audioFiles[idx].wordIntervals[m - 1].endTime * audioInfo.sampleRate) * 2;
+                    }
+                    startSample = Math.floor(tsGroups[i][n].startTime * audioInfo.sampleRate) * 2;
+                    endSample = Math.floor(tsGroups[i][n].endTime * audioInfo.sampleRate) * 2;
+                    if (endSample > maxSample) {
+                        subSamples = new Int8Array(endSample - startSample);
+                        subSamples.set(wavInfo.samples.subarray(startSample, maxSample));
+                        for (var p = maxSample; p < endSample; p++)
+                            subSamples[p] = 0;
+                    } else {
+                        subSamples = wavInfo.samples.subarray(startSample, endSample);
+                    }
                     samples.set(subSamples, offset);
-
                     offset += subSamples.length;
                     runningTime += tsGroups[i][n].duration;
                 }

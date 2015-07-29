@@ -12,12 +12,28 @@ var Audiovisual = function (canvasElement) {
      * Set endVisible to -1 to default to the end of the buffer.
      * @type {number}
      */
-    this.beginVisible = 0;
-    this.endVisible = -1;
+    var beginVisible = 0,
+        endVisible = -1;
+    this.__defineGetter__('beginVisible', function() { return beginVisible; });
+    this.__defineSetter__('beginVisible', function(val) {
+        audioPower_ = [];
+        beginVisible = val;
+    });
+    this.__defineGetter__('endVisible', function() { return endVisible; });
+    this.__defineSetter__('endVisible', function(val) {
+        audioPower_ = [];
+        endVisible = val;
+    });
+
     this.sampleRate = 22050;
     this.canvas = canvasElement;
+    this.selectedInterval = {
+        start: -1,
+        end: -1
+    };
 
-    var audioPower_ = [];
+    var audioPower_ = [],
+        _this = this;
 
     /**
      * Clears the Audiovisual canvas to prepare for a new audio session.
@@ -37,7 +53,8 @@ var Audiovisual = function (canvasElement) {
      */
     var calculateAudioPower_ = function (frameGranularity) {
         var squaresSum = 0;
-        var min = Number.POSITIVE_INFINITY, max = Number.NEGATIVE_INFINITY, value;
+        var min = Number.POSITIVE_INFINITY, max = Number.NEGATIVE_INFINITY, value,
+            beginFrame = Math.floor();
 
         for (var i = 0; i < audioFrames.length; i += 2) {
             var beginValue = Math.abs(audioFrames[i] << 8 + (audioFrames[i + 1]));
@@ -139,7 +156,7 @@ var Audiovisual = function (canvasElement) {
         if (typeof endX === 'undefined')
             endX = this.canvas.width;
         ctx.save();
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = "#EEEEEE";
         ctx.lineWidth = 1.0;
         for (var i = 0; i < this.wordIntervals.length; i++) {
             if (this.wordIntervals[i].startTime < startTime)
@@ -218,7 +235,7 @@ var Audiovisual = function (canvasElement) {
 
             av.setAudioFrames(newFrames);
             if (!audioPower_.length) {
-                calculateAudioPower_(newFrames.length / av.canvas.width);
+                calculateAudioPower_(Math.floor(((_this.endVisible - _this.beginVisible) * _this.sampleRate * 4) / av.canvas.width));
             }
             boundFrames = av.boundaryFrames_();
             start = boundFrames.start;
@@ -246,7 +263,8 @@ var Audiovisual = function (canvasElement) {
      * @optional progress - The fraction of the waveform which should be filled in (not accounting for scale factors).
      */
     this.renderWaveform = function (progress) {
-        var ctx = this.canvas.getContext('2d');
+        var ctx = this.canvas.getContext('2d'),
+            start, end;
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         ctx.strokeStyle = "white";
         ctx.lineWidth = 2.0;
@@ -258,35 +276,46 @@ var Audiovisual = function (canvasElement) {
         ctx.stroke();
         ctx.closePath();
 
+        if (this.selectedInterval.start >= 0 && this.selectedInterval.multipleSelect) {
+            ctx.fillStyle = "rgba(165, 211, 246, 0.6)";
+            ctx.beginPath();
+            var leftX = (this.wordIntervals[this.selectedInterval.start].startTime - this.beginVisible) * this.canvas.width / (this.endVisible - this.beginVisible),
+                rightX = (this.wordIntervals[this.selectedInterval.end].endTime - this.beginVisible) * this.canvas.width / (this.endVisible - this.beginVisible);
+            ctx.moveTo(leftX, 0);
+            ctx.lineTo(leftX, this.canvas.height);
+            ctx.lineTo(rightX, this.canvas.height);
+            ctx.lineTo(rightX, 0);
+            ctx.lineTo(leftX, 0);
+            ctx.fill();
+            ctx.closePath();
+        }
+
         if (audioFrames.length > 2) {
             if (!audioPower_.length) {
-                calculateAudioPower_(audioFrames.length / this.canvas.width);
+                calculateAudioPower_(Math.floor(((this.endVisible - this.beginVisible) * this.sampleRate * 4) / av.canvas.width));
             }
             var boundFrames = this.boundaryFrames_();
-            var start = boundFrames.start,
-                end = boundFrames.end;
+            start = boundFrames.start;
+            end = boundFrames.end;
             var frameWidth = this.canvas.width / (end - start);
 
             this.renderWaveformSegment_(ctx, start, end);
 
             if (progress) {
-                ctx.fillStyle = "rgba(255, 255, 255, 0.3";
-                ctx.strokeStyle = "transparent";
+                ctx.fillStyle = "#b398ea";
+                ctx.strokeStyle = "#b398ea";
                 ctx.beginPath();
                 ctx.moveTo(0, this.canvas.height);
                 var frameX = 0;
                 for (var i = start; i < audioPower_.length * progress; i++, frameX += frameWidth) {
                     var frameY = this.canvas.height - (audioPower_[i] * this.canvas.height);
                     // For bezier curves:
-                    /*ctx.bezierCurveTo(
-                        frameX, frameY,
-                        frameX + frameWidth, this.canvas.height - (audioPower_[i + 1] * this.canvas.height),
-                        frameX + 2 * frameWidth, this.canvas.height - (audioPower_[i + 2] * this.canvas.height));
-                    frameX += 3 * frameWidth;*/
+
                     ctx.lineTo(frameX, frameY);
                 }
-                ctx.lineTo(frameX - frameWidth, this.canvas.height);
+                ctx.lineTo((audioPower_.length * progress - start) * frameWidth, this.canvas.height);
                 ctx.lineTo(0, this.canvas.height);
+                ctx.stroke();
                 ctx.fill();
                 ctx.closePath();
             }
@@ -300,5 +329,16 @@ var Audiovisual = function (canvasElement) {
             }
             this.renderWordIntervalBoundaries_(ctx, start, end);
         }
+
+        if (this.selectedInterval.start >= 0 && this.selectedInterval.start < this.wordIntervals.length && !this.selectedInterval.multipleSelect) {
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 2.0;
+            ctx.beginPath();
+            var centerX = (this.wordIntervals[this.selectedInterval.start].startTime - this.beginVisible) * this.canvas.width / (this.endVisible - this.beginVisible);
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, this.canvas.height);
+            ctx.stroke();
+            ctx.closePath();
+        }
     };
-}
+};

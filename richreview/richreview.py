@@ -49,7 +49,7 @@ class RichReviewXBlock(XBlock):
 
     elif djfs_settings["type"] == "s3fs":
         s3website = pys3website.s3website(
-            bucket_name = "richreview.edx",
+            bucket_name = settings.DJFS['bucket'],
             location = Location.DEFAULT,
             index_page = "index.html",
             err_page = "error.html",
@@ -61,13 +61,13 @@ class RichReviewXBlock(XBlock):
 
         s3website.clear("richreview_web_app")
         s3website.update(
-            local_path = dir + "/webapps/app_richreview",
+            local_path = dir + "/richreview/webapps/richreview",
             prefix = "richreview_web_app"
         )
 
         s3website.clear("multicolumn_web_app")
         s3website.update(
-            local_path = dir + "/webapps/app_multicolumn",
+            local_path = dir + "/richreview/webapps/multicolumn",
             prefix = "multicolumn_web_app"
         )
 

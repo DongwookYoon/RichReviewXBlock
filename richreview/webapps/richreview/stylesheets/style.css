@@ -14,6 +14,10 @@
   #position: absolute;
 }
 
+#r2_app_container i {
+  font-style: normal;
+}
+
 #r2_view {
   width: 100%;
   position: relative;
@@ -464,15 +468,11 @@ a:active {
 }
 
 #dashboard > .row > div > div > .btn {
-  font-size: 16px;
-  padding: 0 9px 9px 9px;
-  height: 30px;
+
 }
 
 #dashboard > .row > div > div > #btn-cheatsheet {
   text-transform:none;
-  padding:4px 5px 9px 5px;
-  font-size:12px;
 }
 
 #dashboard > #main_row {
@@ -519,10 +519,8 @@ a:active {
 
 
 #page_nav_input {
-  width: 25px;
-  text-align: right;
-  padding: 0;
-  height: 1.2em;
+  width: 33px;
+  text-align: center;
 }
 
 #rendering_spinner{

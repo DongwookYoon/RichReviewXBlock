@@ -5,10 +5,12 @@
 'use strict';
 
 var annotEditor = null;
+var annotViewers = [];
+var viewContext = null;
 
 window.onload = function() {
 
-    annotEditor = new VoiceAnnotationController($('.annot_producer#1')[0], false);
+    annotEditor = new VoiceAnnotationController($('.annot_producer#1')[0], true);
 
     //Get the username, password, and token for the Bluemix server using getAuthInfo (gets the information from the backend)
     utils.getAuthInfo(function(authInfo) {
@@ -24,7 +26,7 @@ window.onload = function() {
             password: authInfo.password
         };
 
-        var viewContext = {
+        viewContext = {
             currentModel: 'en-US_BroadbandModel',
             //models: models,
             token: authInfo.token
@@ -40,7 +42,7 @@ window.onload = function() {
 
         annotEditor.initializeWithContext(viewContext);
         console.log("Now ready");
-        annotEditor.transcriptAudio(viewContext, "https://dl.dropboxusercontent.com/u/6125532/RSI/quickbrownfox3.wav");
+        //annotEditor.transcriptAudio(viewContext, "https://dl.dropboxusercontent.com/u/6125532/RSI/quickbrownfox3.wav");
 
     }, function (error) {
         alert("Cannot record audio because there was no server authentication.");
@@ -67,15 +69,28 @@ window.onload = function() {
         "smartphones keep people from escaping their work, even on vacation."
     ];
     annotEditor.onFinished = function (blob, transcription, wordIntervals) {
-        if (userTestStage > 0) {
+        if (userTestStage >= 0 && blob && wordIntervals) {
             r2.audioRecorder.downloadAudioFile(blob, (new Date()).toString() + '.wav');
-            console.log("Transcribed:", transcription);
-            if (userTestStage == 1) {
+            var viewerArea = document.getElementById('consumerAnnotation').getElementsByClassName('annotation_area')[0].cloneNode(true);
+            viewerArea.id = (annotViewers.length + 2).toString();
+            console.log(viewerArea);
+            document.body.insertBefore(viewerArea, $('.annot_producer#1')[0]);
+            console.log("Transcribed:", wordIntervals);
+            var controller = new VoiceAnnotationController(viewerArea, false);
+            controller.initializeWithContext(viewContext);
+            controller.staticAudioBlob = blob;
+            controller.staticWordIntervals = wordIntervals;
+            controller.refreshConsumerView();
+            annotViewers.push(controller);
+
+            annotEditor.clear();
+
+            /*if (userTestStage == 1) {
                 alert('You finished the practice recording. Click OK to move to the 10-minute task.');
             } else if (userTestStage == 2) {
                 alert('Thank you for participating in the pilot study!');
                 return;
-            }
+            }*/
         }
         var qIdx, question;
         $('.instruction').css('display', 'inherit');
@@ -93,6 +108,12 @@ window.onload = function() {
 
 };
 
+function consumerPlayButtonPressed (target) {
+    var annotArea = $(target).closest('.annot_consumer');
+    console.log(annotArea);
+    var editor = annotViewers[annotArea[0].id - 2];
+    editor.playButtonPressed(event);
+}
 
 // render timer
 window.requestAnimFrame = (function () {

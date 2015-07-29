@@ -119,7 +119,7 @@
 
         pub.normalizeUrl = function(url){
             var protocols = {x:'http://', o:'https://'};
-            if(location.protocol === protocols.x){
+            if(location.protocol + '//' === protocols.x){
                 protocols.x = [protocols.o, protocols.o = protocols.x][0]; // swap
             }
 

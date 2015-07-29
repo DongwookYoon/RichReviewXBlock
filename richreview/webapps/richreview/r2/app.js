@@ -32,7 +32,7 @@
                     r2App.invalidate_static_scene = false;
                 }
 
-                if(r2App.mode !== r2App.AppModeEnum.IDLE || r2App.cur_recording_spotlight !== null){
+                if(r2App.mode !== r2App.AppModeEnum.IDLE || r2.spotlightCtrl.nowRecording()){
                     r2App.invalidate_dynamic_scene = true;
                 }
                 if(r2App.invalidate_dynamic_scene){
@@ -136,22 +136,19 @@
             r2App.cur_page.RunRecursive('drawInkReplaying', [r2.annot_canv_ctx]);
 
             r2App.cur_page.drawReplayBlob(r2.annot_canv_ctx);
-            if(r2App.cur_recording_spotlight_pt){
-                r2.Spotlight.Cache.prototype.drawMovingBlob(
-                    r2App.cur_recording_spotlight_pt,
-                    r2App.cur_recording_spotlight_pt,
-                    r2App.mode === r2App.AppModeEnum.RECORDING ? false : true, // isprivate
-                    r2App.mode === r2App.AppModeEnum.RECORDING ? r2.userGroup.cur_user.color_splight_dynamic : r2.userGroup.cur_user.color_splight_private,
-                    r2.annot_canv_ctx
-                );
-            }
+
+            r2.spotlightCtrl.drawDynamicSceneBlob(
+                r2.annot_canv_ctx,
+                r2App.mode === r2App.AppModeEnum.RECORDING ? false : true, // isprivate
+                r2App.mode === r2App.AppModeEnum.RECORDING ? r2.userGroup.cur_user.color_splight_dynamic : r2.userGroup.cur_user.color_splight_private
+            );
+
             if(r2App.cur_recording_pieceaudios){
                 for(var i = 0; i < r2App.cur_recording_pieceaudios.length; ++i){
                     r2App.cur_recording_pieceaudios[i].DrawPieceDynamic(null, r2.annot_canv_ctx, true); // force
                 }
             }
-            if(r2App.cur_recording_spotlight)
-                r2App.cur_recording_spotlight.Draw(r2.annot_canv_ctx);
+            r2.spotlightCtrl.drawDynamicSceneTraces(r2.annot_canv_ctx);
 
             r2App.pieceSelector.draw(r2.annot_canv_ctx);
         }

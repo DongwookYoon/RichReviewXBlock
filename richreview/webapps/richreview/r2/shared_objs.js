@@ -112,10 +112,6 @@ var r2App = (function() {
     pub.cur_recording_annot = null;
     pub.cur_recording_pieceaudios = null;
     pub.cur_recording_minmax = [0.05, 0.25];
-    pub.cur_recording_spotlight = null;
-    pub.cur_recording_spotlight_segment = null;
-    pub.cur_recording_spotlight_segment_piece = null;
-    pub.cur_recording_spotlight_pt = null;
     pub.cur_focused_piece_keyboard = null;
 
     pub.splight_prerender = null;

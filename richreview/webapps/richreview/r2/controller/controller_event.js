@@ -47,10 +47,10 @@ var r2Ctrl = {};
                         pub.pos_dn = new_mouse_pt;
                         if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
                             if(r2.keyboard.ctrlkey_dn)
-                                recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
+                                r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
                         }
                         else if(r2App.mode == r2App.AppModeEnum.RECORDING){
-                            recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
+                            r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                         }
                         break;
                     case 3: // rght click
@@ -71,10 +71,10 @@ var r2Ctrl = {};
             }
             else if(pub.mode == r2.MouseModeEnum.LDN){
                 if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
-                    recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
+                    r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
                 }
                 else if(r2App.mode == r2App.AppModeEnum.RECORDING){
-                    recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
+                    r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                 }
             }
             else if(pub.mode == r2.MouseModeEnum.RDN){
@@ -101,13 +101,13 @@ var r2Ctrl = {};
                     if (pub.isTap(new_mouse_pt)) {
                         pub.handleTimeIndexingUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt));
                     }
-                    if(recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight)){
+                    if(r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight)){
                         r2App.annot_private_spotlight.timeLastChanged = (new Date()).getTime();
                         r2App.annot_private_spotlight.changed = true;
                     }
                 }
                 else if(r2App.mode == r2App.AppModeEnum.RECORDING){
-                    recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
+                    r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                 }
                 pub.mode = r2.MouseModeEnum.HOVER;
             }
@@ -461,6 +461,116 @@ var r2Ctrl = {};
         return pub;
     })();
 
+    r2.spotlightCtrl = (function(){
+        var pub = {};
+
+        var cur_recording_spotlight = null;
+        var cur_recording_spotlight_segment = null;
+        var cur_recording_spotlight_segment_piece = null;
+        var cur_recording_spotlight_pt = null;
+
+        pub.nowRecording = function(){
+            return cur_recording_spotlight !== null;
+        };
+
+        pub.drawDynamicSceneBlob = function(canv_ctx, isprivate, color){
+            if(cur_recording_spotlight_pt){
+                r2.Spotlight.Cache.prototype.drawMovingBlob(
+                    cur_recording_spotlight_pt,
+                    cur_recording_spotlight_pt,
+                    isprivate,
+                    color,
+                    canv_ctx
+                );
+            }
+        };
+
+        pub.drawDynamicSceneTraces = function(canv_ctx){
+            if(cur_recording_spotlight !== null)
+                cur_recording_spotlight.Draw(canv_ctx);
+        };
+
+        pub.recordingSpotlightDn = function(pt, target_annot){
+            var piece = r2App.cur_page.GetPieceByHitTest(pt);
+            if(piece){
+                var spotlight = new r2.Spotlight();
+                spotlight.SetSpotlight(
+                    target_annot.GetUsername(),
+                    target_annot.GetId(),
+                    r2App.cur_pdf_pagen,
+                    r2App.cur_time,
+                    r2App.cur_time-target_annot.GetBgnTime(),
+                    r2App.cur_time-target_annot.GetBgnTime());
+
+                var segment  = new r2.Spotlight.Segment();
+                segment.SetSegment(piece.GetId(), [pt.subtract(piece.pos, true)]);
+
+                spotlight.AddSegment(segment);
+
+                cur_recording_spotlight = spotlight;
+                cur_recording_spotlight_segment = segment;
+                cur_recording_spotlight_segment_piece = piece;
+                cur_recording_spotlight_pt = pt;
+            }
+        };
+        pub.recordingSpotlightMv = function(pt, target_annot){
+            if(cur_recording_spotlight && cur_recording_spotlight_segment){
+                var piece = r2App.cur_page.GetPieceByHitTest(pt);
+                if(piece === cur_recording_spotlight_segment_piece){
+                    if(piece){
+                        // add point
+                        cur_recording_spotlight_segment.AddPt(pt.subtract(piece.pos, true));
+                        cur_recording_spotlight.t_end = r2App.cur_time-target_annot.GetBgnTime();
+                    }
+                    else{
+                        // cut segment
+                        cur_recording_spotlight_segment = null;
+                    }
+                }
+                else{
+                    // cut segment
+                    cur_recording_spotlight_segment = null;
+                    if(piece){
+                        // add new segment and add point
+                        var segment  = new r2.Spotlight.Segment();
+                        segment.SetSegment(piece.GetId(), [pt.subtract(piece.pos, true)]);
+                        if(segment.GetNumPts()>0){
+                            cur_recording_spotlight.AddSegment(segment);
+                        }
+                        cur_recording_spotlight_segment = segment;
+                        cur_recording_spotlight.t_end = r2App.cur_time-target_annot.GetBgnTime();
+                    }
+                }
+                cur_recording_spotlight_segment_piece = piece;
+                cur_recording_spotlight_pt = pt;
+            }
+        };
+
+        pub.recordingSpotlightUp = function(pt, target_annot){
+            if(cur_recording_spotlight){
+                if(cur_recording_spotlight_segment){
+                    cur_recording_spotlight_segment = null;
+                }
+                if(cur_recording_spotlight.segments.length>0){
+                    target_annot.AddSpotlight(cur_recording_spotlight, toupload = true);
+                }
+                cur_recording_spotlight_pt = null;
+                r2App.cur_page.refreshSpotlightPrerender();
+
+                cur_recording_spotlight = null;
+                r2App.invalidate_static_scene = true;
+                r2App.invalidate_dynamic_scene = true;
+                return true;
+            }
+            else{
+                cur_recording_spotlight = null;
+                return false;
+            }
+        };
+
+        return pub;
+    }());
+
     var replacePieceAudioToPieceKeyboard = function(){
         var annotid = r2App.cur_recording_annot.GetId();
         r2.recordingStop(toupload = false);
@@ -468,84 +578,6 @@ var r2Ctrl = {};
         r2.log.Log_Simple("CreatePieceKeyboard_Public_Enter");
         r2.removeAnnot(annotid, askuser = false, mute = true);
         createPieceKeyboard(isprivate = false);
-    };
-
-    var recordingSpotlightDn = function(pt, target_annot){
-        var piece = r2App.cur_page.GetPieceByHitTest(pt);
-        if(piece){
-            var spotlight = new r2.Spotlight();
-            spotlight.SetSpotlight(
-                target_annot.GetUsername(),
-                target_annot.GetId(),
-                r2App.cur_pdf_pagen,
-                r2App.cur_time,
-                r2App.cur_time-target_annot.GetBgnTime(),
-                r2App.cur_time-target_annot.GetBgnTime());
-
-            var segment  = new r2.Spotlight.Segment();
-            segment.SetSegment(piece.GetId(), [pt.subtract(piece.pos, true)]);
-
-            spotlight.AddSegment(segment);
-
-            r2App.cur_recording_spotlight = spotlight;
-            r2App.cur_recording_spotlight_segment = segment;
-            r2App.cur_recording_spotlight_segment_piece = piece;
-            r2App.cur_recording_spotlight_pt = pt;
-        }
-    };
-    var recordingSpotlightMv = function(pt, target_annot){
-        if(r2App.cur_recording_spotlight && r2App.cur_recording_spotlight_segment){
-            var piece = r2App.cur_page.GetPieceByHitTest(pt);
-            if(piece === r2App.cur_recording_spotlight_segment_piece){
-                if(piece){
-                    // add point
-                    r2App.cur_recording_spotlight_segment.AddPt(pt.subtract(piece.pos, true));
-                    r2App.cur_recording_spotlight.t_end = r2App.cur_time-target_annot.GetBgnTime();
-                }
-                else{
-                    // cut segment
-                    r2App.cur_recording_spotlight_segment = null;
-                }
-            }
-            else{
-                // cut segment
-                r2App.cur_recording_spotlight_segment = null;
-                if(piece){
-                    // add new segment and add point
-                    var segment  = new r2.Spotlight.Segment();
-                    segment.SetSegment(piece.GetId(), [pt.subtract(piece.pos, true)]);
-                    if(segment.GetNumPts()>0){
-                        r2App.cur_recording_spotlight.AddSegment(segment);
-                    }
-                    r2App.cur_recording_spotlight_segment = segment;
-                    r2App.cur_recording_spotlight.t_end = r2App.cur_time-target_annot.GetBgnTime();
-                }
-            }
-            r2App.cur_recording_spotlight_segment_piece = piece;
-            r2App.cur_recording_spotlight_pt = pt;
-        }
-    };
-
-    var recordingSpotlightUp = function(pt, target_annot){
-        if(r2App.cur_recording_spotlight){
-            if(r2App.cur_recording_spotlight_segment){
-                r2App.cur_recording_spotlight_segment = null;
-            }
-            if(r2App.cur_recording_spotlight.segments.length>0){
-                target_annot.AddSpotlight(r2App.cur_recording_spotlight, toupload = true);
-            }
-            r2App.cur_recording_spotlight_pt = null;
-            r2App.cur_page.refreshSpotlightPrerender();
-
-            r2App.cur_recording_spotlight = null;
-            r2App.invalidate_static_scene = true;
-            r2App.invalidate_dynamic_scene = true;
-            return true;
-        }
-        else{
-            r2App.cur_recording_spotlight = null;
-            return false;
-        }
     };
 
     var createPieceKeyboard = function(isprivate){

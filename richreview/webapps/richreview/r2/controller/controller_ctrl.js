@@ -48,7 +48,6 @@
 
         r2App.mode = r2App.AppModeEnum.RECORDING;
         $('#recording_indicator').css("display","block");
-        r2.onScreenButtons.MicToStop();
         r2.dom.recordingBgn();
 
         r2App.invalidate_page_layout = true;
@@ -68,7 +67,6 @@
 
         r2App.mode = r2App.AppModeEnum.IDLE;
         $('#recording_indicator').css("display","none");
-        r2.onScreenButtons.StopToMic();
         r2.dom.recordingEnd();
 
         r2App.invalidate_static_scene = true;
@@ -233,9 +231,6 @@
         r2.viewCtrl.resizeView(app_container_size, doc_yx_ratio, {left:0.0, rght:0.0});
         r2.dom.resizeDom(scale, app_container_size, r2.viewCtrl.page_size_scaled, r2.viewCtrl.page_margins, r2.viewCtrl.canv_px_size);
 
-        if(r2.onScreenButtons){
-            r2.onScreenButtons.ResizeDom();
-        }
         if(r2App.cur_page){
             r2App.cur_page.RunRecursive("ResizeDom", []);
         }

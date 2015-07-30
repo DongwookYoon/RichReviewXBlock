@@ -155,7 +155,6 @@
 
         function updateDom(){
             r2App.cur_page.RunRecursive('updateDom', [r2.annot_canv_ctx]);
-            r2.onScreenButtons.updateDom();
         }
 
         return pub;

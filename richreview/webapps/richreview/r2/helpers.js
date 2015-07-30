@@ -578,7 +578,6 @@
 
             $("#observer_indicator").css("display", pub.cur_user.isguest ? "block" : "none");
             r2.onScreenButtons.SetUserColor(r2.userGroup.cur_user);
-            r2.onScreenButtons.ResizeDom();
             r2App.invalidate_size = true;
         };
 

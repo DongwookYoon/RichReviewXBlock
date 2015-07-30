@@ -338,22 +338,30 @@ var r2Ctrl = {};
 
         r2.HtmlTemplate.add('onscrbtns');
 
-        var btn_audio = null;
-        var btn_text = null;
-        var btn_audio_size = 0;
-        var btn_text_size = 0;
         var mode = modeEnum.HIDDEN;
         var show_pos_x = 0.0;
 
+        var $btns_dom = null;
+        var $voice_btn_dom = null;
+        var $text_btn_dom = null;
+
 
         pub.Init = function(){
-            if(btn_audio != null || btn_text != null){
-                r2.dom.removeFromPageDom(btn_audio);
-                r2.dom.removeFromPageDom(btn_text);
-            }
-            btn_audio = CreateBtn();
-            $(btn_audio.icon).toggleClass("fa-microphone", true);
-            btn_audio.onmouseup = function(event){
+            $btns_dom = $('#onscrbtns');
+            $voice_btn_dom = $btns_dom.find('.voice_comment_btn');
+            $text_btn_dom = $btns_dom.find('.text_comment_btn');
+        };
+
+        pub.SetUserColor = function(user){
+            $voice_btn_dom.mouseover(function(){
+                $voice_btn_dom.find('.fa-btn-bg').css('color', user.color_onscrbtn_hover);
+                $voice_btn_dom.find('span').css('color', user.color_onscrbtn_hover);
+            });
+            $voice_btn_dom.mouseout(function(){
+                $voice_btn_dom.find('.fa-btn-bg').css('color', user.color_onscrbtn_normal);
+                $voice_btn_dom.find('span').css('color', user.color_onscrbtn_normal);
+            });
+            $voice_btn_dom.mouseup(function(event){
                 event.preventDefault();
                 if(event.which != 1 || r2.keyboard.ctrlkey_dn){return;}
                 if(r2App.mode == r2App.AppModeEnum.RECORDING){
@@ -365,11 +373,18 @@ var r2Ctrl = {};
                     r2.log.Log_Simple("Recording_Bgn_OnScrBtn");
                 }
                 pub.mode = r2.MouseModeEnum.HOVER; // should set mouse mode here, since we are calling stopPropagation().
-            };
-            btn_text = CreateBtn();
+                hideDom();
+            });
 
-            $(btn_text.icon).toggleClass("fa-keyboard-o", true);
-            btn_text.onmouseup = function(event){
+            $text_btn_dom.mouseover(function(){
+                $text_btn_dom.find('.fa-btn-bg').css('color', user.color_onscrbtn_hover);
+                $text_btn_dom.find('span').css('color', user.color_onscrbtn_hover);
+            });
+            $text_btn_dom.mouseout(function(){
+                $text_btn_dom.find('.fa-btn-bg').css('color', user.color_onscrbtn_normal);
+                $text_btn_dom.find('span').css('color', user.color_onscrbtn_normal);
+            });
+            $text_btn_dom.mouseup(function(event){
                 event.preventDefault();
 
                 if(event.which != 1 || r2.keyboard.ctrlkey_dn){return;}
@@ -381,105 +396,18 @@ var r2Ctrl = {};
                     r2.log.Log_Simple("CreatePieceKeyboard_Public_OnScrBtn");
                 }
                 pub.mode = r2.MouseModeEnum.HOVER; // should set mouse mode here, since we are calling stopPropagation().
-            };
-        };
-
-        pub.SetUserColor = function(user){
-            btn_audio.style.color = user.color_onscrbtn_normal;
-            btn_audio.circle.style.color = user.color_onscrbtn_normal;
-            btn_audio.onmouseover = function(){
-                btn_audio.circle.style.color = user.color_onscrbtn_hover;
-            };
-            btn_audio.onmouseout = function(){
-                btn_audio.circle.style.color = user.color_onscrbtn_normal;
-            };
-            btn_text.style.color = user.color_onscrbtn_normal;
-            btn_text.circle.style.color = user.color_onscrbtn_normal;
-            btn_text.onmouseover = function(){
-                btn_text.circle.style.color = user.color_onscrbtn_hover;
-            };
-            btn_text.onmouseout = function(){
-                btn_text.circle.style.color = user.color_onscrbtn_normal;
-            };
-        };
+                hideDom();
+            })
 
 
-
-        var CreateBtn = function(){
-            var btn = document.createElement('div');
-            btn.className += 'r2_onscreen_btn fa-stack fa-lg';
-            btn.circle = document.createElement('a');
-            btn.circle.className += 'center_vertical fa fa-circle fa-stack-2x';
-            btn.circle.href = "javascript:void(0)";
-            btn.appendChild(btn.circle);
-            btn.icon = document.createElement('a');
-            btn.icon.className += 'center_vertical fa fa-inverse fa-stack-1x';
-            btn.icon.href = "javascript:void(0)";
-            btn.appendChild(btn.icon);
-
-            r2.dom.appendToPageDom(btn);
-
-            btn.resizeBtnDom = function(){
-                this.style.fontSize = r2.viewCtrl.mapDocToDomScale(r2Const.ONSCRBTN_SIZE) + 'px';
-                this.style.width = r2.viewCtrl.mapDocToDomScale(r2Const.ONSCRBTN_SIZE) + 'px';
-                this.style.height = r2.viewCtrl.mapDocToDomScale(r2Const.ONSCRBTN_SIZE) + 'px';
-            };
-            btn.resizeBtnDom();
-            btn.icon.style.fontSize = '2em';
-            btn.icon.style.color = 'white';
-            btn.icon.style.fontFamily = 'FontAwesome';
-            btn.circle.style.fontSize = '3.4em';
-            btn.circle.style.fontFamily = 'FontAwesome';
-            btn.onmousedown = function(event){
-                if(event.which == 1){
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                else if(event.which == 3){
-                    r2.mouse.handleDn(event);
-                }
-            };
-            return btn;
         };
 
         pub.ResizeDom = function(){
-            if(btn_audio != null && btn_text != null){
-                var selected_piece = r2App.pieceSelector.get();
-                btn_audio.resizeBtnDom();
-                btn_text.resizeBtnDom();
-                btn_audio_size = new Vec2(btn_audio.clientWidth, btn_audio.clientHeight);
-                btn_text_size = new Vec2(btn_text.clientWidth, btn_text.clientHeight);
-            }
-        };
 
-        pub.MicToStop = function(){
-            btn_audio.icon.classList.toggle('fa-microphone', false);
-            btn_audio.icon.classList.toggle('fa-square', true);
-        };
-        pub.StopToMic = function(){
-            btn_audio.icon.classList.toggle('fa-microphone', true);
-            btn_audio.icon.classList.toggle('fa-square', false);
         };
 
         pub.updateDom = function(){
-            showDom();
-            moveDom(0.5, 0.5);
-            return;
-            var x, y;
-            var selected_piece = r2App.pieceSelector.get();
-            if(selected_piece && !selected_piece.IsPrivate()){
-                x = selected_piece.pos.x + selected_piece.GetTtIndent()+selected_piece.GetTtIndentedWidth();
-                y = selected_piece.pos.y + selected_piece._cnt_size.y;
-            }
-            else{
-                x = -100;
-                y = -100;
-            }
-            var pos = r2.viewCtrl.mapDocToDom(Vec2(x,y));
-            btn_audio.style.left = Math.floor(pos.x - btn_audio_size.x) + 'px';
-            btn_audio.style.top = Math.floor(pos.y - btn_audio_size.y*0.9)+ 'px';
-            btn_text.style.left = Math.floor(pos.x - btn_text_size.x*2.0) + 'px';
-            btn_text.style.top = Math.floor(pos.y - btn_text_size.y*0.9)+ 'px';
+
         };
 
         pub.drawDnMv = function(mouse_dn, mouse_mv){
@@ -503,21 +431,18 @@ var r2Ctrl = {};
         };
 
         var hideDom = function(){
-            btn_audio.style.display = 'none';
-            btn_text.style.display = 'none';
+            $btns_dom.css('display', 'none');
         };
 
         var showDom = function(){
-            btn_audio.style.display = 'inline-block';
-            btn_text.style.display = 'inline-block';
+            $btns_dom.css('display', 'inline-block');
+            $btns_dom[0].focus();
         };
 
         var moveDom = function(x, y){
             var pos = r2.viewCtrl.mapDocToDom(Vec2(x, y));
-            btn_audio.style.left = Math.floor(pos.x) + 'px';
-            btn_audio.style.top = Math.floor(pos.y - btn_text_size.y*0.5)+ 'px';
-            btn_text.style.left = Math.floor(pos.x - btn_text_size.x) + 'px';
-            btn_text.style.top = Math.floor(pos.y - btn_text_size.y*0.5)+ 'px';
+            $btns_dom.css('left', Math.floor(pos.x) + 'px');
+            $btns_dom.css('top', Math.floor(pos.y)+ 'px');
             mode = modeEnum.VISIBLE;
         };
 

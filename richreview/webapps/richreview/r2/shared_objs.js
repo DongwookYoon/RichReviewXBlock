@@ -150,6 +150,7 @@ var r2App = (function() {
         };
 
         pub.update = function(cur_mouse_pt){
+            if(r2.mouse.mode !== r2.MouseModeEnum.HOVER){return}
             var piece_dy_obj = r2App.cur_page.GetPieceOfClosestBottom(r2.viewCtrl.mapScrToDoc(cur_mouse_pt));
             if(selected_piece !== piece_dy_obj[1]){ // piece[0] is dy, piece[1] is the obj.
                 selected_piece = piece_dy_obj[1];

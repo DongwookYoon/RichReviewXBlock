@@ -364,22 +364,61 @@ a:active {
     width: 350px;
 }
 
-.r2_onscreen_btn {
-  position: absolute;
-  -webkit-transition: none;
-  -moz-transition: none;
-  transition: none;
-  z-index: 3;
-  text-align: center;
-}
+/* on screen drag down buttons */
 
 #onscrbtns{
-  display: inline-block;
+  display: none; /* javascript switches this to inline-block*/
   position: absolute;
-  left: 0;
-  top: 0;
   z-index: 3;
 }
+
+#onscrbtns > .comment_btn {
+  text-decoration: none;
+  font-size: 0.75em;
+  background-color: rgba(255,255,255,0.95);
+  padding: 0.3em;
+
+  background-color: #FAFAFA;
+  border-radius: 0.15em;
+}
+
+#onscrbtns > .text_comment_btn {
+  position: relative;
+  right: 51%;
+  top: -0.5em;
+}
+#onscrbtns > .voice_comment_btn {
+  position: relative;
+  left: -51%;
+  top: -0.5em;
+}
+
+#onscrbtns > .comment_btn > span {
+  font-size: 1em;
+  color: darkgray;
+}
+
+#onscrbtns > .comment_btn > .fa-stack > .fa-btn-icon {
+  color: white;
+}
+
+#onscrbtns > .comment_btn > .fa-stack > .fa-btn-bg {
+  color: darkgray;
+}
+
+
+#onscrbtns > .comment_btn:hover > span {
+  color: black;
+}
+
+#onscrbtns > .comment_btn:hover > .fa-stack > .fa-btn-icon {
+  color: white;
+}
+
+#onscrbtns > .comment_btn:hover > .fa-stack > .fa-btn-bg {
+  color: black;
+}
+
 
 .center_vertical{
   top: 50%;

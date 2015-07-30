@@ -71,7 +71,12 @@ var r2Ctrl = {};
             }
             else if(pub.mode == r2.MouseModeEnum.LDN){
                 if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
-                    r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
+                    if(r2.spotlightCtrl.nowRecording()){
+                        r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
+                    }
+                    else{
+                        r2.onScreenButtons.drawDnMv(pub.pos_dn, new_mouse_pt);
+                    }
                 }
                 else if(r2App.mode == r2App.AppModeEnum.RECORDING){
                     r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
@@ -324,10 +329,22 @@ var r2Ctrl = {};
 
     r2.onScreenButtons = (function(){
         var pub = {};
+
+        var modeEnum = {
+            HIDDEN : 0,
+            VISIBLE : 1
+        };
+        var VERTICAL_DRAG_CRITERIA = 0.03;
+
+        r2.HtmlTemplate.add('onscrbtns');
+
         var btn_audio = null;
         var btn_text = null;
         var btn_audio_size = 0;
         var btn_text_size = 0;
+        var mode = modeEnum.HIDDEN;
+        var show_pos_x = 0.0;
+
 
         pub.Init = function(){
             if(btn_audio != null || btn_text != null){
@@ -386,6 +403,8 @@ var r2Ctrl = {};
             };
         };
 
+
+
         var CreateBtn = function(){
             var btn = document.createElement('div');
             btn.className += 'r2_onscreen_btn fa-stack fa-lg';
@@ -402,12 +421,14 @@ var r2Ctrl = {};
 
             btn.resizeBtnDom = function(){
                 this.style.fontSize = r2.viewCtrl.mapDocToDomScale(r2Const.ONSCRBTN_SIZE) + 'px';
+                this.style.width = r2.viewCtrl.mapDocToDomScale(r2Const.ONSCRBTN_SIZE) + 'px';
+                this.style.height = r2.viewCtrl.mapDocToDomScale(r2Const.ONSCRBTN_SIZE) + 'px';
             };
             btn.resizeBtnDom();
-            btn.icon.style.fontSize = '1em';
+            btn.icon.style.fontSize = '2em';
             btn.icon.style.color = 'white';
             btn.icon.style.fontFamily = 'FontAwesome';
-            btn.circle.style.fontSize = '1.7em';
+            btn.circle.style.fontSize = '3.4em';
             btn.circle.style.fontFamily = 'FontAwesome';
             btn.onmousedown = function(event){
                 if(event.which == 1){
@@ -441,6 +462,9 @@ var r2Ctrl = {};
         };
 
         pub.updateDom = function(){
+            showDom();
+            moveDom(0.5, 0.5);
+            return;
             var x, y;
             var selected_piece = r2App.pieceSelector.get();
             if(selected_piece && !selected_piece.IsPrivate()){
@@ -454,8 +478,47 @@ var r2Ctrl = {};
             var pos = r2.viewCtrl.mapDocToDom(Vec2(x,y));
             btn_audio.style.left = Math.floor(pos.x - btn_audio_size.x) + 'px';
             btn_audio.style.top = Math.floor(pos.y - btn_audio_size.y*0.9)+ 'px';
-            btn_text.style.left = Math.floor(pos.x - btn_text_size.x*1.8) + 'px';
+            btn_text.style.left = Math.floor(pos.x - btn_text_size.x*2.0) + 'px';
             btn_text.style.top = Math.floor(pos.y - btn_text_size.y*0.9)+ 'px';
+        };
+
+        pub.drawDnMv = function(mouse_dn, mouse_mv){
+            if(mode === modeEnum.VISIBLE){
+                if(mouse_mv.y < mouse_dn.y + VERTICAL_DRAG_CRITERIA){
+                    mode = modeEnum.HIDDEN;
+                    hideDom();
+                }
+                else{
+                    moveDom(show_pos_x, mouse_mv.y);
+                }
+            }
+            else if(mode === modeEnum.HIDDEN){
+                if(mouse_mv.y > mouse_dn.y + VERTICAL_DRAG_CRITERIA){
+                    show_pos_x = mouse_mv.x;
+                    mode = modeEnum.VISIBLE;
+                    showDom();
+                    moveDom(mouse_mv);
+                }
+            }
+        };
+
+        var hideDom = function(){
+            btn_audio.style.display = 'none';
+            btn_text.style.display = 'none';
+        };
+
+        var showDom = function(){
+            btn_audio.style.display = 'inline-block';
+            btn_text.style.display = 'inline-block';
+        };
+
+        var moveDom = function(x, y){
+            var pos = r2.viewCtrl.mapDocToDom(Vec2(x, y));
+            btn_audio.style.left = Math.floor(pos.x) + 'px';
+            btn_audio.style.top = Math.floor(pos.y - btn_text_size.y*0.5)+ 'px';
+            btn_text.style.left = Math.floor(pos.x - btn_text_size.x) + 'px';
+            btn_text.style.top = Math.floor(pos.y - btn_text_size.y*0.5)+ 'px';
+            mode = modeEnum.VISIBLE;
         };
 
         return pub;

@@ -370,7 +370,17 @@ a:active {
   -moz-transition: none;
   transition: none;
   z-index: 3;
+  text-align: center;
 }
+
+#onscrbtns{
+  display: inline-block;
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+}
+
 .center_vertical{
   top: 50%;
   -webkit-transform: translateY(-50%);

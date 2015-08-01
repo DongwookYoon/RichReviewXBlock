@@ -15,7 +15,7 @@ mupla.so: mupla.o $(OBJ)
 	$(CC) -shared -o mupla.so mupla.o $(OBJ) 
 
 test: test.c
-	$(CC) -o test test.c -L. $(INC) mupla.so -lm $(LDFLAGS)
+	$(CC) -o test test.c -L. ./mupla.so -lm $(LDFLAGS)
 
 clean:
 	rm -f mupla.o mupla.so test

@@ -11,7 +11,8 @@ Note that this stack is NOT running on edX-platform, although it is distributed 
 The Django server interfaces with our MuPla engine through [ctypes](https://docs.python.org/2/library/ctypes.html) interface. To this end, you will want to compile the library to get a shared library (/mupla/mupla/mupla.so). For this, go to /mupla and run 'make'. It might take a few minutes. If you have the .so file, then you are done for this step!
 ### SSL
 No matter you'd want to run the full stack on a cloud server or a local machine, it will require SSL certificates and keys in the **/node_server/ssl/** directory.
-/node_server/bin/wwwrichreview_net.crt, richreview_net.key, root.crt
+richreview_net.crt, richreview_net.key, root.crt
+
 ### Redis
 [redis](http://redis.io)
 ### Azure Storage

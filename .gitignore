@@ -34,6 +34,7 @@ pip-delete-this-directory.txt
 *.pot
 
 #mupla C builds
+*/.*
 mupla/mupdf-1.6-source/
 mupla/mupla/mupla.o
 

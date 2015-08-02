@@ -61,8 +61,8 @@ Then install this XBlock (note that this operation can take up several minutes).
     pip install git+git://github.com/DongwookYoon/RichReviewXBlock.git
 or
 
-    pip install sudo -u edxapp git clone https://github.com/DongwookYoon/RichReviewXBlock.git
-    pip install sudo -u edxapp RichReviewXBlock/
+    pip install git clone https://github.com/DongwookYoon/RichReviewXBlock.git
+    pip install RichReviewXBlock/
 
 ### Studio Course Setting
 

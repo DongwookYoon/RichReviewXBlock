@@ -1,32 +1,88 @@
-# RichReview Full Stack
-This stand alone folder is a full stack implementation of a node js back-end to server the RichReview annotation system. For a demonstration please visit http://richreview.net.
+# RichReview Framework
 
-Note that this stack is NOT running on edX-platform, although it is distributed in the [RichReviewXBlock](https://github.com/DongwookYoon/RichReviewXBlock) package. This server consists of the following components:
-* /node_server - This Node.js server is the major back-end that host the RichReview service
-* /django_server - This Django server will run in your server locally, and serve a part of PDF processing.
-* /richreview/webapps - This is a front-end JavaScript application that the Node.js server will load and serve statically. FYI, this codeset is shared between this standalone fullstack and the XBlock.
+This is the Node.js version of the RichReview framework. It contains the three major modules:
 
-## Installing
-### MuPla (Page Layout Analysis) engine
-The Django server interfaces with our MuPla engine through [ctypes](https://docs.python.org/2/library/ctypes.html) interface. To this end, you will want to compile the library to get a shared library (/mupla/mupla/mupla.so). For this, go to /mupla and run 'make'. It might take a few minutes. If you have the .so file, then you are done for this step!
-### SSL
-No matter you'd want to run the full stack on a cloud server or a local machine, it will require SSL certificates and keys in the **/node_server/ssl/** directory.
-richreview_net.crt, richreview_net.key, root.crt
+* **Node.js backend** for data services (see /)
+* **RichReview Web App** frontend (see https://github.com/DongwookYoon/RichReviewWebApp)
+* **PDF Multicolumn Analyzer Web App** frontend (see /apps/MultiColumn)
 
-### Redis
-[redis](http://redis.io)
-### Azure Storage
-### CORS settings
-The Azure Storage basically doesn't allow access from external domains other then registered. So you will want to enlist your own domain or https://localhost:8000 to the CORS exceptions.
-Cynapta offers a very conveient [helper tool](http://blog.cynapta.com/2013/12/cynapta-azure-cors-helper-free-tool-to-manage-cors-rules-for-windows-azure-blob-storage/).
+RichReview Web App will be managed as a separate git repo, because there might be multiple frameworks sharing the same web app codebase. For this Node.js framework, please fork the web app into 'apps/RichReviewWebApp'. I intentionally didn't use the git submodule for the sake of simplicity. 
 
-## How to run
 
-##### Azure Storage
-##### Node.js
+# Installing
+To reduce [command line bullshiteries](http://pgbovine.net/command-line-bullshittery.htm) we will run the node server on a virtual machine that will serve as a controlled environment.
+
+## Virtual Machine Setup
+Firstly, install Vagrant and VirtualBox (also recommend reading the first few chapters of this [Vagrant docs](http://docs.vagrantup.com/v2/getting-started/index.html)). Then creat a box at any directory (say ~/r2ubuntu).
+
+    cd ~/r2ubuntu
+    vagrant init hashicorp/precise32
+    vagrant plugin install vagrant-vbguest
+
+
+
+You need to setup port forwarding, so that the server running in the guest machine can be accessible from the host machine. Set a few lines into ~/r2ubuntu/Vagrantfile (note there are indentations with two spaces). Also the last line will sync your host machine's directory with the guest so that you can edit the code from the host machine.
+
+      config.vm.network :forwarded_port, guest: 8001, host: 8001, auto_correct: true
+      config.vm.network :forwarded_port, guest: 8002, host: 8002, auto_correct: true
+      config.vm.synced_folder "<your local path, say /usr/dwyoon/RichReviewXBlock>", "/RichReviewXBlock"
+
+Now, run cd to ~/r2ubuntu and start up the guest machine:
+
+    vagrant up
+
+If all is well, you will see messages like this. If not, you will want to resolve the port conflict(s):
+
+    ...
+    default: 8001 => 8001 (adapter 1)
+    default: 8002 => 8002 (adapter 1)
+
+The virtual machine is now ready. Let's ssh into the guest machine:
+
+    vagrant ssh
+
+## Installing Libraries in Guest Machine
+git, Node.js, npm, and Django are required to run RichReview server Let's install'em:
+
+    sudo apt-get install git
+    sudo apt-get install Django==1.8.3
+    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.25.4/install.sh | bash
+    nvm install stable
+
+## Fetch and Pull the Server Code
+Fetch and pull the remote repository into the /RichReviewXBlock:
+
+    git init
+    git remote add origin https://github.com/DongwookYoon/RichReviewXBlock.git
+    git fetch origin
+    git checkout -b master --track origin/master
+
+Compile mupla. This C module analyzes a PDF file's page layout:
+
+    cd /RichReviewXBlock/mupla
+    make
+
+## Generate Certificate
+Before running the system you will need the following files under **RichReviewXBlock/standalone/node_server/ssl/**:
+
+* **root.crt** - the intermediate certificate for the root CA
+* **richreview_net.crt** - private server certificate
+* **richreview_net.key** - private server key
+* **google_open_id.json** - Google OpenID Connect credential
+* **azure_keys.json** - Azure Blob Storage access keys
+
+Why do you need these? Firstly, the **.crt** and **.key** files are for the standard SSL authentication. Secondly, we authenticates RichReview users with Google OpenID Connect authentication, and **google_open_id.json** is for this OAuth credential. You can simply generate your own at [Google Developers Console](https://console.developers.google.com/project). Remember that the login redirection is to *'/login-oauth2-return'*. Finally, **azure_keys.json** has JSON dictionary for Azure datastorage accesskeys. 'blob_storage_key' key has an access key for the Azure Blob Storage (see [how to get the key](http://justazure.com/azure-blob-storage-part-two-getting-started/)), and 'sql_key_tedious' key has a 'tedious' login information for the Azure SQL datastorage (see an [example](https://github.com/pekim/tedious/wiki/Connect-to-sql-in-azure)).
+
+# Run
+
+This is the easiest part. Change your directory to **/RichReviewWeb/bin** and run **www**!
+> node www
+
+In the host machine, open a browser and check ‘localhost:8080’:
 
 ## License
 The code in this repository is licensed under the AGPL license unless otherwise noted.
 
 ## Reporting Issues
+
 Please email dy252@cornell.edu.

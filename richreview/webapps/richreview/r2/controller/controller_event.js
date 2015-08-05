@@ -266,8 +266,10 @@ var r2Ctrl = {};
                             r2.log.Log_Simple("CreatePieceKeyboard_Private_Enter");
                         }
                         else {
-                            r2App.recording_trigger = true;
-                            r2.log.Log_Simple("Recording_Bgn_Enter");
+                            if(!r2App.pieceSelector.isNull()){
+                                r2App.recordingTrigger.set(r2App.pieceSelector.get());
+                                r2.log.Log_Simple("Recording_Bgn_Enter");
+                            }
                         }
                         break;
                     default:
@@ -288,8 +290,10 @@ var r2Ctrl = {};
                             r2.log.Log_Simple("CreatePieceKeyboard_Private_Enter");
                         }
                         else {
-                            r2App.recording_trigger = true;
-                            r2.log.Log_Simple("Recording_Bgn_Enter");
+                            if(!r2App.pieceSelector.isNull()){
+                                r2App.recordingTrigger.set(r2App.pieceSelector.get());
+                                r2.log.Log_Simple("Recording_Bgn_Enter");
+                            }
                         }
                         break;
                     default:
@@ -369,8 +373,10 @@ var r2Ctrl = {};
                     r2.log.Log_Simple("Recording_Stop_OnScrBtn");
                 }
                 else{
-                    r2App.recording_trigger = true;
-                    r2.log.Log_Simple("Recording_Bgn_OnScrBtn");
+                    if(!r2App.pieceSelector.isNull()){
+                        r2App.recordingTrigger.set(r2App.pieceSelector.get());
+                        r2.log.Log_Simple("Recording_Bgn_OnScrBtn");
+                    }
                 }
                 pub.mode = r2.MouseModeEnum.HOVER; // should set mouse mode here, since we are calling stopPropagation().
                 hideDom();

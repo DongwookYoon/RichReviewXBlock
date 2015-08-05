@@ -24,14 +24,17 @@
         return pub;
     }());
 
-    r2.recordingBgn = function(){
+    r2.recordingBgn = function(target_piece){
         r2.audioRecorder.BgnRecording();
 
-        var anchorpiece = r2App.pieceSelector.get();
+        r2App.cur_recording_anchor_piece = target_piece;
+        var anchorpiece = target_piece;
 
         r2App.cur_recording_annot = new r2.Annot();
         var annotid = new Date(r2App.cur_time).toISOString();
-        r2App.cur_recording_annot.SetAnnot(annotid, anchorpiece.GetId(), r2App.cur_time, r2App.cur_time, [], r2.userGroup.cur_user.name, "");
+        r2App.cur_recording_annot.SetAnnot(
+            annotid, anchorpiece.GetId(), r2App.cur_time, r2App.cur_time, [], r2.userGroup.cur_user.name, ""
+        );
         r2App.annots[annotid] = r2App.cur_recording_annot;
 
         var pieceaudio = new r2.PieceAudio();
@@ -89,7 +92,8 @@
             var timePerPiece = r2Const.PIECEAUDIO_TIME_PER_WIDTH*r2.util.lastOf(r2App.cur_recording_pieceaudios).GetTtIndentedWidth();
             var idx = Math.ceil(r2App.cur_recording_annot.GetDuration()/timePerPiece);
             if(r2App.cur_recording_pieceaudios.length < idx){
-                var anchorpiece = r2App.pieceSelector.get();
+                var anchorpiece = r2App.cur_recording_anchor_piece;
+
                 var pieceaudio = new r2.PieceAudio();
                 var annot = r2App.cur_recording_annot;
                 pieceaudio.SetPiece(

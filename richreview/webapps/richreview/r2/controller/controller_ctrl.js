@@ -39,7 +39,8 @@
             Sha1.hash(annotid+" ProxyWaveform "+0),
             r2App.cur_recording_annot.GetBgnTime(),
             anchorpiece.GetNewPieceSize(),
-            anchorpiece.GetTTData());
+            anchorpiece.GetTTData()
+        );
         pieceaudio.SetPieceAudio(annotid, r2.userGroup.cur_user.name, 0, 0);
 
         r2App.cur_recording_pieceaudios = [];
@@ -49,6 +50,12 @@
         r2App.mode = r2App.AppModeEnum.RECORDING;
         $('#recording_indicator').css("display","block");
         r2.dom.recordingBgn();
+
+
+        /* dom */
+        r2.dom_model.createCommentVoice(r2App.cur_pdf_pagen, anchorpiece.GetId(), annotid);
+        r2.dom_model.appendPieceVoice(annotid, r2App.cur_recording_annot.GetBgnTime());
+
 
         r2App.invalidate_page_layout = true;
     };
@@ -102,6 +109,9 @@
                 anchorpiece.AddChildrenAtFront(r2App.cur_recording_pieceaudios);
 
                 r2App.invalidate_page_layout = true;
+
+                /* dom */
+                r2.dom_model.appendPieceVoice(annot.GetId(), r2App.cur_recording_annot.GetBgnTime());
             }
             r2.PieceAudio.prototype.NormalizePieceAudio(r2App.cur_recording_pieceaudios, refresh_all = false);
         });

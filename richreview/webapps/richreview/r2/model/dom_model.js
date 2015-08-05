@@ -186,7 +186,7 @@
             return false;
         };
 
-        pub.createCommentVoice = function(cmd){
+        pub.createCommentVoice = function(n_page, anchor_id, annot_id){
             // time: 2014-12-21T13...
             // user: 'red user'
             // op: 'CreateComment'
@@ -197,25 +197,23 @@
             // data: {aid: ..., duration: t, waveform_sample: [0, 100, 99, 98 ...], Spotlights: [Spotlight, Spotlight, ...] };
             // Spotlight: {t_bgn:..., t_end:..., npage: 0, segments: [Segment, Segment, ...]}
             // Spotlight.Segment: {pid: ..., pts: [Vec2, Vec2, ...]}
+            var annot_id_esc = r2.util.escapeDomId(annot_id);
 
-            var $anchor = $tc_pages[cmd.anchorTo.page].find('#'+cmd.anchorTo.id);
+            var $anchor = $tc_pages[n_page].find('#'+anchor_id);
             var dom_anchor = $anchor.get(0);
             if(dom_anchor){
                 var $comment = appendComment($anchor, 'tc_comment_voice');
-                $comment.attr('id', escapeDomId(cmd.data.aid));
+                $comment.attr('id', annot_id_esc);
                 $anchor.children().first().after($comment);
-                var time_per_piece = r2Const.PIECEAUDIO_TIME_PER_WIDTH*dom_anchor.pp.tt_w;
-                var n_pieces = Math.ceil(cmd.data.duration/time_per_piece);
-                for(var i = 0; i < n_pieces; ++i){
-                    pub.appendPieceVoice(escapeDomId(cmd.data.aid), cmd.time);
-                }
                 return true;
             }
             return false;
         };
 
         pub.appendPieceVoice = function(annot_id, time){
-            var $comment = $('#' + annot_id);
+            var annot_id_esc = r2.util.escapeDomId(annot_id);
+
+            var $comment = $('#' + annot_id_esc);
             var dom_comment = $comment.get(0);
             if(dom_comment){
                 var i = $comment.find('.tc_piece').length;
@@ -313,10 +311,6 @@
             $radialBtn.attr("tabindex", 0);
 
             $target.append($radialBtn);
-        };
-
-        var escapeDomId = function(s){
-            return s.replace(/\.|\-/g, '_');
         };
 
         pub.init = function(doc_json){

@@ -304,9 +304,10 @@
             var anchorpage = doc.GetPage(cmd.anchorTo.page);
             var anchorpiece = getAnchorPiece(anchorpage, cmd);
 
-            r2.dom_model.createCommentVoice(cmd);
 
             if(anchorpiece){
+                r2.dom_model.createCommentVoice(cmd.anchorTo.page, cmd.anchorTo.id, cmd.data.aid); /* dom */
+
                 var annot = new r2.Annot();
                 annot.SetAnnot(cmd.data.aid, anchorpiece.GetId(), cmd.time, cmd.data.duration, cmd.data.waveform_sample, cmd.user, cmd.data.audiofileurl);
                 r2App.annots[cmd.data.aid] = annot;
@@ -315,6 +316,8 @@
                 var l = [];
 
                 for(var i = 0; i < nPiece; ++i){
+                    r2.dom_model.appendPieceVoice(cmd.data.aid, cmd.time); /* dom */
+
                     var pieceaudio = new r2.PieceAudio();
                     pieceaudio.SetPiece(
                         Sha1.hash(cmd.data.aid + " PieceAudio " + i),

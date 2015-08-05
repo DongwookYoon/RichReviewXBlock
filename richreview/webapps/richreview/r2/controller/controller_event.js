@@ -585,8 +585,12 @@ var r2Ctrl = {};
                 Sha1.hash(annotid+" PieceKeyboard 0"),
                 r2App.cur_time,
                 anchorpiece.GetNewPieceSize(),
-                anchorpiece.GetTTData());
-            piecekeyboard.SetPieceKeyboard(annotid, r2.userGroup.cur_user.name, '', isprivate, anchorpiece.IsOnLeftColumn());
+                anchorpiece.GetTTData()
+            );
+
+            piecekeyboard.SetPieceKeyboard(
+                anchorpiece.GetId(), annotid, r2.userGroup.cur_user.name, '', isprivate, anchorpiece.IsOnLeftColumn()
+            );
             anchorpiece.AddChildAtFront(piecekeyboard);
             r2App.cur_page.Relayout();
             piecekeyboard.updateDom();

@@ -274,10 +274,45 @@
 
         function setDocs(docjs_str){
             var docjs = JSON.parse(docjs_str);
+
+            var doc_json_upgrade_legacy = function(docjs){
+                for(var i = 0; i < docjs['pages'].length; ++i){
+                    var pagejs = docjs['pages'][i];
+                    pagejs.bbox = [pagejs.v0[0], pagejs.v0[1], pagejs.v1[0], pagejs.v1[1]];
+
+                    pagejs.rgns = [];
+                    for(var j = 0; j < pagejs.regions.length; ++j){
+                        var rgnjs = pagejs.regions[j];
+                        pagejs.rgns.push(rgnjs);
+                        rgnjs.rects = [];
+                        var tt_x0 = Number.NEGATIVE_INFINITY;
+                        var tt_x1 = Number.POSITIVE_INFINITY;
+
+                        for(var k = 0; k < rgnjs.pieces.length; ++k){
+                            var piecejs = rgnjs.pieces[k];
+                            if(piecejs.Type === 'PieceText'){
+                                var rect = [piecejs.v0[0], piecejs.v0[1], piecejs.v1[0], piecejs.v1[1]];
+                                rect.id = piecejs.id;
+                                rgnjs.rects.push(rect);
+                            }
+                            tt_x0 = Math.max(tt_x0, piecejs.tt_x0);
+                            tt_x1 = Math.min(tt_x1, piecejs.tt_x1);
+                        }
+                        rgnjs.ttX = tt_x0;
+                        rgnjs.ttW = tt_x1-tt_x0;
+                    }
+                }
+                return docjs;
+            };
+
+
             if(docjs.hasOwnProperty("ver") && docjs.ver >= 6){
+                r2.dom_model.init(docjs);
                 return setFromJs(docjs);
             }
             else{
+                doc_json_upgrade_legacy(docjs);
+                r2.dom_model.init(docjs);
                 return setFromLegacyDoc(docjs);
             }
 

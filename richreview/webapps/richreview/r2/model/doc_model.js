@@ -1026,8 +1026,6 @@
         this.dom_span = null;
         this.dom_pre = null;
         this.dom_textarea = null;
-        this.dom_btn_rmv = null;
-        this.dom_btn_pub = null;
 
         this.__private_shift_x = null;
         this._isprivate = false;
@@ -1127,22 +1125,33 @@
         cmd.target = this.GetTargetData();
         return cmd;
     };
-    r2.PieceKeyboard.prototype.SetPieceKeyboard = function(annotid, username, text, isprivate, isOnLeftColumn){
+    r2.PieceKeyboard.prototype.SetPieceKeyboard = function(anchor_pid, annotid, username, text, isprivate, isOnLeftColumn){
         this._annotid = annotid;
         this._username = username;
 
-        this.CreateDom();
+        var dom = this.CreateDom();
         this.SetText(text);
         this._isprivate = isprivate;
         if(this._isprivate){
-            $(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(true, isOnLeftColumn));
+            //$(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(true, isOnLeftColumn));
         }
         else{
-            $(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(false, isOnLeftColumn));
+            //$(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(false, isOnLeftColumn));
         }
         if(this._username != r2.userGroup.cur_user.name){
             $(this.dom_textarea).prop('readonly', true);
         }
+
+        r2.dom_model.appendPieceKeyboard(
+            this.GetId(),
+            anchor_pid,
+            this._creationTime,
+            dom
+        );
+
+        this.UpdateSizeWithTextInput();
+
+        return dom;
     };
     r2.PieceKeyboard.prototype.GetAnnotId = function(){
         if(this._annotid != null){
@@ -1173,6 +1182,12 @@
         this.dom.classList.toggle('r2_piecekeyboard', true);
         this.dom.classList.toggle('unselectable', true);
 
+        this.dom_tr = document.createElement('div');
+        this.dom_tr.classList.toggle('r2_peicekeyboard_tr', true);
+        this.dom_tr.classList.toggle('unselectable', true);
+        this.dom.appendChild(this.dom_tr);
+
+
         this.dom_pre = document.createElement('pre');
         this.dom_pre.classList.toggle('r2_piecekeyboard_pre', true);
         this.dom_pre.classList.toggle('unselectable', true);
@@ -1181,25 +1196,19 @@
         this.dom_span.classList.toggle('unselectable', true);
         this.dom_pre.appendChild(this.dom_span);
         this.dom_pre.appendChild(document.createElement('br'));
-        this.dom.appendChild(this.dom_pre);
+        this.dom_tr.appendChild(this.dom_pre);
 
         this.dom_textarea = document.createElement('textarea');
         this.dom_textarea.classList.toggle('r2_piecekeyboard_textarea', true);
         this.dom_textarea.classList.toggle('unselectable', true);
         this.dom_textarea.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
-        this.dom.appendChild(this.dom_textarea);
+        this.dom_tr.appendChild(this.dom_textarea);
 
-        this.dom_btn_rmv = document.createElement('a');
-        this.dom_btn_rmv.className += 'r2_piecekeyboard_btn_rmv fa fa-times-circle';
-        this.dom_btn_rmv.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
-        this.dom_btn_rmv.onmousedown = this.OnBtnRmv.bind(this);
-        this.dom.appendChild(this.dom_btn_rmv);
+        $(this.dom_tr).css('left', this.GetTtIndent()+'em');
+        $(this.dom_tr).css('width', this.GetTtIndentedWidth()+'em');
 
-        this.dom_btn_pub = document.createElement('a');
-        this.dom_btn_pub.className += 'r2_piecekeyboard_btn_rmv fa fa-share-square';
-        this.dom_btn_pub.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
-        this.dom_btn_pub.onmousedown = this.OnBtnPub.bind(this);
-        this.dom.appendChild(this.dom_btn_pub);
+        //fa-times-circle
+        //fa-share-square
 
         ///////////////
         this.AddEventHandle = function () {
@@ -1217,8 +1226,6 @@
                     r2.keyboard.mode = r2.KeyboardModeEnum.NORMAL;
                     r2App.cur_focused_piece_keyboard = null;
                     this.dom_textarea.style.boxShadow = "none";
-                    this.dom_btn_rmv.style.display = "none";
-                    this.dom_btn_pub.style.display = "none";
                     $(this.dom).css("pointer-events", 'none');
                     if(this.__contentschanged){
                         r2Sync.PushToUploadCmd(this.ExportToTextChange());
@@ -1227,22 +1234,18 @@
                 }.bind(this), false);
                 this.dom_textarea.addEventListener('focus', function() {
                     if(this._username != r2.userGroup.cur_user.name){
-                        $(this.dom_textarea).blur();
+                        $(this.dom_textarea).blur(); // unfocus
                         return;
                     }
                     r2.keyboard.mode = r2.KeyboardModeEnum.FOCUSED;
                     r2App.cur_focused_piece_keyboard = this;
-                    var color;
-                    if(this._isprivate){
-                        color = r2.userGroup.GetUser(this._username).color_piecekeyboard_private_box_shadow;
-                    }
-                    else{
-                        color = r2.userGroup.GetUser(this._username).color_piecekeyboard_box_shadow;
-                    }
+                    var color = this._isprivate ?
+                            r2.userGroup.GetUser(this._username).color_piecekeyboard_private_box_shadow :
+                            r2.userGroup.GetUser(this._username).color_piecekeyboard_box_shadow;
                     this.dom_textarea.style.boxShadow = "0 0 0.2em "+color+" inset, 0 0 0.2em "+color;
                     if(this._username == r2.userGroup.cur_user.name) {
-                        this.dom_btn_rmv.style.display = "block";
-                        this.dom_btn_pub.style.display = "block";
+                        //this.dom_btn_rmv.style.display = "block";
+                        //this.dom_btn_pub.style.display = "block";
                     }
                     $(this.dom).css("pointer-events", 'auto');
                 }.bind(this), false);
@@ -1251,8 +1254,10 @@
 
         this.AddEventHandle();
 
-        r2.dom.appendToPageDom(this.dom);
+        //r2.dom.appendToPageDom(this.dom);
         this.ResizeDom();
+
+        return this.dom;
     };
 
     r2.PieceKeyboard.prototype.OnBtnRmv = function(){
@@ -1279,10 +1284,10 @@
     };
     r2.PieceKeyboard.prototype.UpdateForPubPrivate = function(){
         if(this._isprivate){
-            $(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(true, this.IsOnLeftColumn()));
+            //$(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(true, this.IsOnLeftColumn()));
         }
         else{
-            $(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(false, this.IsOnLeftColumn()));
+            //$(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(false, this.IsOnLeftColumn()));
         }
         this.dom_textarea.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
     };
@@ -1339,27 +1344,21 @@
         }
     };
     r2.PieceKeyboard.prototype.HideDoms = function(){
-        this.dom.style.left = -10.0 * r2.viewCtrl.page_width_noscale + 'px';
-        this.dom.style.top = -10.0 * r2.viewCtrl.page_width_noscale  + 'px';
+        //this.dom.style.left = -10.0 * r2.viewCtrl.page_width_noscale + 'px';
+        //this.dom.style.top = -10.0 * r2.viewCtrl.page_width_noscale  + 'px';
     };
 
     r2.PieceKeyboard.prototype.UpdateSizeWithTextInput = function(){
         var new_height = r2.viewCtrl.mapDomToDocScale(this.dom.clientHeight);
         if(this._cnt_size.y != new_height){
             this._cnt_size.y = new_height;
+            console.log('>>>> ',new_height);
             return true;
         }
         return false;
     };
     r2.PieceKeyboard.prototype.ResizeDom = function(){
-        var fontsize = r2.viewCtrl.mapDocToDomScale(r2Const.PIECEKEYBOARD_FONTSIZE) + 'px';
-        this.dom_textarea.style.fontSize = fontsize;
-        this.dom_pre.style.fontSize = fontsize;
-        this.dom_btn_rmv.style.fontSize = fontsize;
-        this.dom_btn_pub.style.fontSize = fontsize;
-
         var w = r2.viewCtrl.mapDocToDomScale(this.GetTtIndentedWidth());
-        this.dom.style.width = w + 'px';
         this.__dom_size = new Vec2(w, this.dom.clientHeight);
         this.UpdateSizeWithTextInput();
     };
@@ -1386,6 +1385,7 @@
         }
     };
     r2.PieceKeyboard.prototype.updateDom = function(){
+        return;
         var scale = r2.viewCtrl.scale;
         var x_shift = this._isprivate ? this.GetPrivateShiftX() : 0;
         if(!this._isvisible){
@@ -1395,11 +1395,6 @@
         var p = r2.viewCtrl.mapDocToDom(Vec2(this.pos.x+this.GetTtIndent() + x_shift, this.pos.y));
         this.dom.style.left = p.x + 'px';
         this.dom.style.top = p.y  + 'px';
-
-        this.dom_btn_rmv.style.left = this.__dom_size.x + scale*x_shift + 'px';
-        this.dom_btn_rmv.style.top = 0;
-        this.dom_btn_pub.style.left = this.__dom_size.x + scale*x_shift + 'px';
-        this.dom_btn_pub.style.top = this.__dom_size.y - scale*13 + 'px';
     };
 
     /*

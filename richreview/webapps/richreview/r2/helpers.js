@@ -844,6 +844,7 @@
             r2App.invalidate_page_layout = true;
 
             updatePageNavBar();
+            r2.dom_model.setCurPage(n);
         }
 
         function updatePageNavBar(){

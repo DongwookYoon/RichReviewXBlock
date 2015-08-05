@@ -268,6 +268,7 @@
             // anchorTo: {type: 'PieceText', id: pid, page: 2} or
             //           {type: 'CommentAudio', id: annotId, page: 2, time: [t0, t1]}
             // data: {pid: id, height: 0.1}
+            r2.dom_model.createTextTearing(cmd);
 
             if(r2App.pieces_cache.hasOwnProperty(cmd.data.pid)){return;}
             var anchorpage = doc.GetPage(cmd.anchorTo.page);
@@ -303,6 +304,8 @@
             var anchorpage = doc.GetPage(cmd.anchorTo.page);
             var anchorpiece = getAnchorPiece(anchorpage, cmd);
 
+            r2.dom_model.createCommentVoice(cmd);
+
             if(anchorpiece){
                 var annot = new r2.Annot();
                 annot.SetAnnot(cmd.data.aid, anchorpiece.GetId(), cmd.time, cmd.data.duration, cmd.data.waveform_sample, cmd.user, cmd.data.audiofileurl);
@@ -317,7 +320,8 @@
                         Sha1.hash(cmd.data.aid + " PieceAudio " + i),
                         (new Date(cmd.time)).getTime(),
                         anchorpiece.GetNewPieceSize(),
-                        anchorpiece.GetTTData());
+                        anchorpiece.GetTTData()
+                    );
                     pieceaudio.SetPieceAudio(cmd.data.aid, cmd.user, i*timePerPiece, Math.min(cmd.data.duration, (i+1)*timePerPiece));
                     l.push(pieceaudio);
                 }
@@ -393,8 +397,11 @@
                     anchorpiece.GetNewPieceSize(),
                     anchorpiece.GetTTData()
                 );
-                piecekeyboard.SetPieceKeyboard(cmd.data.aid, cmd.user, cmd.data.text, cmd.data.isprivate, anchorpiece.IsOnLeftColumn());
+                var dom_piecekeyboard = piecekeyboard.SetPieceKeyboard(
+                    anchorpiece.GetId(), cmd.data.aid, cmd.user, cmd.data.text, cmd.data.isprivate, anchorpiece.IsOnLeftColumn()
+                );
                 anchorpiece.AddChildrenChronologically([piecekeyboard]);
+
                 if(anchorpage.GetNumPage()!=r2App.cur_pdf_pagen)
                     piecekeyboard.HideDoms();
                 return true;

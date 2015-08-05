@@ -45,6 +45,7 @@
             ["r2/utils.js", "js"],
             ["r2/helpers.js", "js"],
             ["r2/shared_objs.js", "js"],
+            ["r2/model/dom_model.js", "js"],
             ["r2/model/doc_model_legacy.js", "js"],
             ["r2/model/doc_model.js", "js"],
             ["r2/controller/controller_cmds.js", "js"],

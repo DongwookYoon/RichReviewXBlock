@@ -75,7 +75,7 @@ Why do you need these? Firstly, the **.crt** and **.key** files are for the stan
 
 # Run
 
-This is the easiest part. Change your directory to **/RichReviewWeb/bin** and run **www**!
+This is the easiest part. Change your directory to **/RichReviewXBlock/standalone/node_server/www** and run **www**!
 > node www
 
 In the host machine, open a browser and check ‘localhost:8080’:

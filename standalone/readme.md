@@ -13,7 +13,7 @@ RichReview Web App will be managed as a separate git repo, because there might b
 To reduce [command line bullshiteries](http://pgbovine.net/command-line-bullshittery.htm) we will run the node server on a virtual machine that will serve as a controlled environment.
 
 ## Virtual Machine Setup
-Firstly, install Vagrant and VirtualBox (also recommend reading the first few chapters of this [Vagrant docs](http://docs.vagrantup.com/v2/getting-started/index.html)). Then creat a box at any directory (say ~/r2ubuntu).
+Firstly, install Vagrant and VirtualBox (also recommend reading the first few chapters of this [Vagrant docs](http://docs.vagrantup.com/v2/getting-started/index.html)). Then create a box at any directory (say ~/r2ubuntu).
 
     cd ~/r2ubuntu
     vagrant init hashicorp/precise32
@@ -44,14 +44,19 @@ The virtual machine is now ready. Let's ssh into the guest machine:
 ## Installing Libraries in Guest Machine
 git, Node.js, npm, and Django are required to run RichReview server Let's install'em:
 
+    sudo apt-get update
     sudo apt-get install git
-    sudo apt-get install Django==1.8.3
+    sudo apt-get install python-django
+    sudo apt-get install curl
     curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.25.4/install.sh | bash
+    exit
+    vagrant ssh
     nvm install stable
 
 ## Fetch and Pull the Server Code
 Fetch and pull the remote repository into the /RichReviewXBlock:
 
+    cd /RichReviewXBlock
     git init
     git remote add origin https://github.com/DongwookYoon/RichReviewXBlock.git
     git fetch origin
@@ -78,7 +83,7 @@ Why do you need these? Firstly, the **.crt** and **.key** files are for the stan
 This is the easiest part. Change your directory to **/RichReviewXBlock/standalone/node_server/www** and run **www**!
 > node www
 
-In the host machine, open a browser and check ‘localhost:8080’:
+In the host machine, open a browser and check ‘localhost:8001’:
 
 ## License
 The code in this repository is licensed under the AGPL license unless otherwise noted.

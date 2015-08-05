@@ -374,6 +374,7 @@ a:active {
   display: none; /* javascript switches this to inline-block*/
   position: absolute;
   z-index: 3;
+  width: 50em;
 }
 
 #onscrbtns > .comment_btn {

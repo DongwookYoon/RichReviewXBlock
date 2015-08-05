@@ -404,8 +404,6 @@ var r2Ctrl = {};
                 pub.mode = r2.MouseModeEnum.HOVER; // should set mouse mode here, since we are calling stopPropagation().
                 hideDom();
             })
-
-
         };
 
         pub.ResizeDom = function(){

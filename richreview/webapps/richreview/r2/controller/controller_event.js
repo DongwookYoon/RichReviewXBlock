@@ -435,7 +435,6 @@ var r2Ctrl = {};
         };
 
         var hideDom = function(){
-            return;
             $btns_dom.css('display', 'none');
         };
 

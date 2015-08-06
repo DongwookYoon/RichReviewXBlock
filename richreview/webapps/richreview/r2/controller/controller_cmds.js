@@ -306,7 +306,7 @@
 
 
             if(anchorpiece){
-                r2.dom_model.createCommentVoice(cmd.anchorTo.page, cmd.anchorTo.id, cmd.data.aid); /* dom */
+                r2.dom_model.createCommentVoice(cmd.anchorTo.page, anchorpiece.GetId(), cmd.data.aid); /* dom */
 
                 var annot = new r2.Annot();
                 annot.SetAnnot(cmd.data.aid, anchorpiece.GetId(), cmd.time, cmd.data.duration, cmd.data.waveform_sample, cmd.user, cmd.data.audiofileurl);
@@ -320,7 +320,7 @@
 
                     var pieceaudio = new r2.PieceAudio();
                     pieceaudio.SetPiece(
-                        Sha1.hash(cmd.data.aid + " PieceAudio " + i),
+                        r2.nameHash.getPieceVoice(cmd.data.aid, i),
                         (new Date(cmd.time)).getTime(),
                         anchorpiece.GetNewPieceSize(),
                         anchorpiece.GetTTData()

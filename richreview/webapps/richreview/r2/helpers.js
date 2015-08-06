@@ -4,6 +4,7 @@
 
 /** @namespace r2 */
 (function(r2){
+    'use strict';
 
     /** Html Template Class */
     r2.HtmlTemplate = (function(){
@@ -534,9 +535,9 @@
             this.color_splight_private = this.GetHtmlColor(this.color_normal, 0.2);
             this.color_stroke_dynamic_future = this.GetHtmlColor(this.color_dark, 0.5);
             this.color_stroke_dynamic_past = this.GetHtmlColor(this.color_dark, 1.0);
+            this.color_radial_menu_selected = this.GetHtmlColor(this.color_normal, 1.0);
             this.color_radial_menu_unselected = this.GetHtmlColor(this.color_light, 0.8);
             this.color_audiopiece_guideline_html = this.GetHtmlColor(this.color_light, 0.6);
-            this.color_radial_menu_selected = this.GetHtmlColor(this.color_normal, 1.0);
             this.color_piecekeyboard_box_shadow = this.GetHtmlColor(this.color_normal, 0.8);
             this.color_piecekeyboard_private_box_shadow = 'rgba(64,64,64, 0.8)';
             this.color_piecekeyboard_text = this.GetHtmlColor(this.color_dark, 1.0);
@@ -557,6 +558,7 @@
             if(groupdata == null){
                 throw new Error("Cannot load the group data from the server.");
             }
+            var type;
 
             pub.Clear();
             pub.AddUser( r2Const.LEGACY_USERNAME, "Legacy User", "legacy@email.com", type = "legacy");
@@ -683,7 +685,7 @@
                 fps = 0;
             }
             else{
-                delta = (new Date().getTime() - lastRenderCalledTime)/1000;
+                var delta = (new Date().getTime() - lastRenderCalledTime)/1000;
                 lastRenderCalledTime = Date.now();
                 fps = 1/delta;
             }
@@ -1130,6 +1132,93 @@
 
     }());
 
+    r2.radialMenu = (function(){
+        var pub = {};
+
+        var menus = [];
+
+        pub.create = function(rm_id, rm_size, cb, btn_center_fa_font){
+            if(typeof btn_center_fa_font === 'undefined')
+                btn_center_fa_font = 'fa-bars';
+
+            var $menu = $(document.createElement('nav'));
+            $menu.addClass('rm_menu');
+            $menu.attr('id', rm_id);
+            $menu.css('font-size', rm_size+'em');
+
+            var $btn_radials = $(document.createElement('nav'));
+            $btn_radials.addClass('rm_btn_raidial');
+            $menu.append($btn_radials);
+
+            var $btn_center = $(document.createElement('a'));
+            $btn_center.addClass('rm_btn_center').addClass('rm_btn');
+            $btn_center.attr('href', 'javascript:void(0);');
+            $btn_center.append(createIcon(btn_center_fa_font));
+            if(typeof cb !== 'undefined'){$btn_center.click(closeRadialMenuAndRun($menu,cb));}
+            $menu.append($btn_center);
+            menus.push($menu);
+            return $menu;
+        };
+
+        pub.addBtnCircular = function($menu, fa_font, cb){
+            var $btn = $(document.createElement('a'));
+            $btn.addClass('rm_btn');
+            $btn.attr('href', 'javascript:void(0);');
+            $btn.append(createIcon(fa_font));
+            $btn.click(closeRadialMenuAndRun($menu, cb));
+            $menu.find('.rm_btn_raidial').append($btn);
+            setBtnRadialPos($menu);
+        };
+
+        pub.setColors = function($menu, normal, selected){
+            $menu.find('.rm_btn').css('background', normal);
+            $menu.find('.rm_btn').mouseover(function(){
+                $(this).css('background', selected);
+            });
+            $menu.find('.rm_btn').mouseout(function(){
+                $(this).css('background', normal);
+            });
+        };
+
+        var createIcon = function(fa_font){
+            var $icon = $(document.createElement('i'));
+            $icon.addClass('fa').addClass('fa-2x').addClass(fa_font);
+            return $icon;
+        };
+
+        var setBtnRadialPos = function($menu){
+            var items = $menu.find('.rm_btn_raidial a');
+            var l = items.length;
+            items.each(function( i ){
+                $(this).first().css('left', (50 - 35*Math.cos(-0.5*Math.PI - 2*(1/l)*i*Math.PI)).toFixed(2) + "%");
+                $(this).first().css('top', (50 + 35*Math.sin(-0.5* Math.PI - 2*(1/l)*i*Math.PI)).toFixed(2) + "%");
+            });
+
+            $menu.find('.rm_btn_center').unbind("mouseenter");
+            $menu.find('.rm_btn_center').unbind("mouseleave");
+
+            $menu.find('.rm_btn_center').mouseenter(function(e) {
+                e.preventDefault();
+                menus.forEach(function($m){$m.toggleClass('open', false);});
+                $menu.toggleClass('open', true);
+            });
+            $menu.find('.rm_btn_raidial').mouseleave(function(e) {
+                e.preventDefault();
+                $menu.toggleClass('open', false);
+            });
+        };
+
+        var closeRadialMenuAndRun = function($menu, cb){
+            return function(){
+                $menu.toggleClass('open', false);
+                cb();
+            };
+        };
+
+        return pub;
+    }());
+
+
     r2.viewCtrl = (function(){
         var pub = {};
 
@@ -1256,7 +1345,6 @@
 
         /**
          * Adopt HTML DOM size to the giveen setting
-         * @param view_ratio - y/x ratio of the page model from r2.doc_model
          * @returns {Vec2}
          */
         pub.resizeDom = function(scale, app_container_size, page_size, page_margins, canv_px_size){
@@ -1345,6 +1433,16 @@
             }
         }
 
+
+        return pub;
+    }());
+
+    r2.nameHash = (function(){
+        var pub = {};
+
+        pub.getPieceVoice = function(annot_id, i){
+            return Sha1.hash(annot_id + ' PieceAudio ' + i);
+        };
 
         return pub;
     }());

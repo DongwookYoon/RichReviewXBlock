@@ -39,7 +39,7 @@
 
         var pieceaudio = new r2.PieceAudio();
         pieceaudio.SetPiece(
-            Sha1.hash(annotid+" ProxyWaveform "+0),
+            r2.nameHash.getPieceVoice(annotid, 0),
             r2App.cur_recording_annot.GetBgnTime(),
             anchorpiece.GetNewPieceSize(),
             anchorpiece.GetTTData()
@@ -97,7 +97,7 @@
                 var pieceaudio = new r2.PieceAudio();
                 var annot = r2App.cur_recording_annot;
                 pieceaudio.SetPiece(
-                    Sha1.hash(r2App.cur_recording_annot.GetId() + " PieceAudio " + idx),
+                    r2.nameHash.getPieceVoice(r2App.cur_recording_annot.GetId(), idx),
                     r2App.cur_recording_annot.GetBgnTime(),
                     anchorpiece.GetNewPieceSize(),
                     anchorpiece.GetTTData()
@@ -131,6 +131,9 @@
         }
         else{
             if (askuser == false || confirm('Do you really want to delete this comment?')) {
+                r2.dom_model.remove(annotid);
+                var annot = r2App.annots[annotid];
+                console.log('>>>>delete:', annotid, r2App.annots[annotid]);
                 r2App.doc.RunRecursive("RemoveAnnot", [annotid]);
                 delete r2App.annots[annotid];
                 r2App.invalidate_page_layout = true;

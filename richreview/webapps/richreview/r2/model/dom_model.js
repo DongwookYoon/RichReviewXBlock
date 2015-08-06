@@ -205,6 +205,7 @@
                 var $comment = appendComment($anchor, 'tc_comment_voice');
                 $comment.attr('id', annot_id_esc);
                 $anchor.children().first().after($comment);
+                console.log('hihi');
                 return true;
             }
             return false;
@@ -220,7 +221,7 @@
                 var $anchor = $comment.parent();
                 var dom_anchor = $anchor.get(0);
 
-                var id = Sha1.hash(annot_id + " PieceAudio " + i);
+                var id = r2.nameHash.getPieceVoice(annot_id, i);
 
                 var $piece = $(document.createElement('div'));
                 $piece.toggleClass('tc_piece', true);
@@ -237,7 +238,6 @@
 
                 var $content = $(document.createElement('div'));
                 $content.toggleClass('tc_content', true);
-                $content.toggleClass('tc_piece_text', true);
                 $content.height(r2Const.PIECEAUDIO_HEIGHT+'em');
                 $content.width($anchor.get(0).pp.w+'em');
 
@@ -246,12 +246,15 @@
             }
         };
 
-        pub.appendPieceKeyboard = function(pid, anchor_id, creation_time, dom_piecekeyboard){
+        pub.appendPieceKeyboard = function(username, annot_id, pid, anchor_id, creation_time, dom_piecekeyboard){
+            var user = r2.userGroup.GetUser(username);
+            var annot_id_esc = r2.util.escapeDomId(annot_id);
             var $anchor = $('#'+anchor_id);
             var $dom_piecekeyboard = $(dom_piecekeyboard);
             var dom_anchor = $anchor.get(0);
             if(dom_anchor){
                 var $comment = appendComment($anchor, 'tc_comment_keyboard');
+                $comment.attr('id', annot_id_esc);
                 var $piece = $(document.createElement('div'));
                 $piece.toggleClass('tc_piece', true);
                 $piece.attr('id', pid);
@@ -269,12 +272,41 @@
                 $dom_piecekeyboard.toggleClass('tc_content', true);
                 $dom_piecekeyboard.toggleClass('tc_piece_keyboard', true);
                 $dom_piecekeyboard.css('width', dom_anchor.pp.w+'em');
-
                 $comment.append($piece);
+
+                {/* add menu */
+                    var $menu = r2.radialMenu.create('rm_'+pid, 0.0005, function(){;}, 'fa-keyboard-o');
+                    r2.radialMenu.addBtnCircular($menu, 'fa-chevron-up', function(){;});
+                    r2.radialMenu.addBtnCircular($menu, 'fa-twitter', function(){;});
+                    r2.radialMenu.addBtnCircular($menu, 'fa-chevron-down', function(){alert('home');});
+                    r2.radialMenu.addBtnCircular($menu, 'fa-trash', function(){
+                        if(r2.userGroup.cur_user.name === username){
+                            if(r2.removeAnnot(annot_id, true, false)){ // askuser, mute
+                                //r2Sync.PushToUploadCmd(this.ExportToCmdDeleteComment());
+                                r2.log.Log_Simple("RemoveAnnot_Text_OnScrBtn");
+                            }
+                        }
+                        else{
+                            alert("You can only delete your own comments.")
+                        }
+                    });
+                    r2.radialMenu.setColors($menu, user.color_radial_menu_unselected, user.color_radial_menu_selected);
+
+                    $menu.css('left', '60em');
+                    $menu.css('top', '23em');
+
+                    $comment.append($menu);
+                }
+
                 $anchor.children().first().after($comment);
                 return true;
             }
             return false;
+        };
+
+        pub.remove = function(annot_id){
+            var annot_id_esc = r2.util.escapeDomId(annot_id);
+            $('#'+annot_id_esc).remove();
         };
 
         var setPieceProperties = function($target, id, time, w, tt_depth, tt_x, tt_w){

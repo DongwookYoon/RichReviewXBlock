@@ -916,4 +916,121 @@ body::-webkit-scrollbar-corner {
   border: none; /* remove btn style*/
 }
 
+.tc_comment_text {
+  background: rgba(255,0,0, 0.1);
+}
+.tc_comment_keyboard {
+  background: rgba(0,255,0, 0.2);
+}
+.tc_comment_voice {
+  background: rgba(0,0,255, 0.2);
+}
 
+/*
+* radial menu
+*/
+.rm_menu {
+  width: 0;
+  height: 0;
+  margin: 0 auto;
+  position: absolute;
+  border-radius: 50%; /* background circle */
+  pointer-events: none;
+  overflow: visible;
+  z-index: 10;
+}
+
+.rm_menu.open {
+  z-index: 11;
+}
+
+.rm_btn {
+  box-sizing: initial;
+}
+
+.rm_btn > i {
+  color: black;
+}
+
+.rm_btn_raidial {
+  width: 150em;
+  height: 150em;
+  opacity: 0;
+
+  top: -150em;
+  left: -150em;
+
+  -webkit-transform: translate(-75em, -75em) scale(0);
+  -moz-transform: translate(-75em, -75em) scale(0);
+  transform: translate(-75em, -75em) scale(0);
+
+  -webkit-transition: all 0.2s ease-out;
+  -moz-transition: all 0.2s ease-out;
+  transition: all 0.2s ease-out;
+
+  border-radius: 50%; /* background circle */
+  pointer-events: auto;
+}
+
+.rm_menu.open > .rm_btn_raidial {
+  opacity: 1;
+  background: rgba(127,127,127, 0.2);
+
+  top: -150em;
+  left: -150em;
+
+  -webkit-transition: all 0.1s ease-out;
+  -moz-transition: all 0.1s ease-out;
+  transition: all 0.1s ease-out;
+
+
+  -webkit-transform: translate(-75em, -75em) scale(1);
+  -moz-transform: translate(-75em, -75em) scale(1);
+  transform: translate(-75em, -75em) scale(1);
+}
+
+.rm_btn_raidial a {
+  text-decoration: none;
+  color: white;
+  display: block;
+  height: 30em;
+  width: 30em;
+  line-height: 30em;
+  margin-left: -25em;
+  margin-top: -25em;
+  padding: 10em;
+
+  position: absolute;
+  text-align: center;
+
+  border-radius: 50%; /* background circle */
+  background: #666;
+}
+
+.rm_btn_raidial > a > i {
+  font-size: 30em;
+}
+
+.rm_btn_center {
+  position: absolute;
+  display: block;
+
+  height: 30em;
+  width: 30em;
+  line-height: 30em;
+  padding: 10em; /* 30+2*10 === 50px (width)*/
+
+  top: calc(50% - 25em);
+  left: calc(50% - 25em);
+  text-decoration: none;
+  text-align: center;
+  color: #000;
+
+  border-radius: 50%; /* background circle */
+  background: gray;
+  pointer-events: auto;
+}
+
+.rm_btn_center > i {
+  font-size: 30em;
+}

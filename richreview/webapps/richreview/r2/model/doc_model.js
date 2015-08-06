@@ -1036,9 +1036,6 @@
     r2.PieceKeyboard.prototype = Object.create(r2.Piece.prototype);
 
     r2.PieceKeyboard.prototype.Destructor = function(){
-        if(this.dom){
-            r2.dom.removeFromPageDom(this.dom);
-        }
         r2.Piece.prototype.Destructor.apply(this);
     };
     r2.PieceKeyboard.prototype.GetAnchorTo = function(){
@@ -1143,6 +1140,8 @@
         }
 
         r2.dom_model.appendPieceKeyboard(
+            this._username,
+            this._annotid,
             this.GetId(),
             anchor_pid,
             this._creationTime,

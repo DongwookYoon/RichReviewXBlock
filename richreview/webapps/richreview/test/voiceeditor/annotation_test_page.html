@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="annotation_test.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="misc_utils.js"></script>
     <script src="../../lib_ext/recorder/recorder.js"></script>
@@ -15,16 +14,18 @@
     <script src="audiotextarea.js"></script>
     <script src="voiceeditor.js"></script>
     <script src="annotation_test.js"></script>
-    <title>Audio Annotation</title>
+    <link rel="stylesheet" href="annotation_test.css" />
+    <link rel="stylesheet" href="../../lib_ext/font-awesome.4.3.0/css/font-awesome.min.css">
+    <title>Audio Discussion</title>
 </head>
-<body>
+<p>
 <div id="consumerAnnotation" class="annot-template">
         <div class="annotation_area annot_consumer" id="2">
         <canvas class="annotationBorder" width="500px" style="height:100%; width: 100%; position: absolute; top:0; left:0; right: 0"></canvas>
         <canvas class="annotationToolbar" width="500px" height="54px"></canvas>
         <div class="annotationContentViews">
             <div class="toolbarViews">
-                <button class="toolbar-button play_btn" onclick="consumerPlayButtonPressed(this)">Play</button>
+                <button class="toolbar-button play_btn" onclick="consumerPlayButtonPressed(this)"><i class="fa fa-play"></i></button>
                 &nbsp;&nbsp;
                 <canvas class="audiovisual" width="410px" height="24px"></canvas>
                 &nbsp;&nbsp;
@@ -43,13 +44,14 @@
         the statement. Explain your reasoning for the position you take. If necessary, edit your recording to ensure
         that it is presentable. <span id="time_limit">You will have 3 minutes to complete this task.</span></p>
     <p class="fixedWidth instruction">Please click the &#10004; button to advance.</p>
+    <button onclick="loadAudioFromDropbox()" id="loadseed">Load Seed</button>
     <div class="annotation_area annot_producer" id="1">
         <canvas class="annotationBorder" width="500px" style="height:100%; width: 100%; position: absolute; top:0; left:0; right: 0"></canvas>
         <canvas class="annotationToolbar" width="500px" height="54px"></canvas>
         <div class="annotationContentViews">
             <div class="toolbarViews">
-                <button class="toolbar-button play_btn" onclick="annotEditor.playButtonPressed()">Play</button>
-                <button class="toolbar-button recording_start_btn">Record</button>
+                <button class="toolbar-button play_btn" onclick="annotEditor.playButtonPressed()"><i class="fa fa-play"></i></button>
+                <button class="toolbar-button recording_start_btn"><i class="fa fa-microphone"></i></button>
                 &nbsp;&nbsp;
                 <canvas class="audiovisual" width="320px" height="24px"></canvas>
                 <div class="loading-label">Loading...</div>

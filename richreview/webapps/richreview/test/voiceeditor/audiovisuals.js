@@ -16,12 +16,14 @@ var Audiovisual = function (canvasElement) {
         endVisible = -1;
     this.__defineGetter__('beginVisible', function() { return beginVisible; });
     this.__defineSetter__('beginVisible', function(val) {
-        audioPower_ = [];
+        if (beginVisible != val)
+            audioPower_ = [];
         beginVisible = val;
     });
     this.__defineGetter__('endVisible', function() { return endVisible; });
     this.__defineSetter__('endVisible', function(val) {
-        audioPower_ = [];
+        if (endVisible != val)
+            audioPower_ = [];
         endVisible = val;
     });
 
@@ -53,8 +55,7 @@ var Audiovisual = function (canvasElement) {
      */
     var calculateAudioPower_ = function (frameGranularity) {
         var squaresSum = 0;
-        var min = Number.POSITIVE_INFINITY, max = Number.NEGATIVE_INFINITY, value,
-            beginFrame = Math.floor();
+        var min = Number.POSITIVE_INFINITY, max = Number.NEGATIVE_INFINITY, value;
 
         for (var i = 0; i < audioFrames.length; i += 2) {
             var beginValue = Math.abs(audioFrames[i] << 8 + (audioFrames[i + 1]));

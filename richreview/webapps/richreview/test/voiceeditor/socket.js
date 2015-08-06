@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/*global $:false */
-
 //Depends on the utils object in misc_utils.js
 
 // Mini WS callback API, so we can initialize

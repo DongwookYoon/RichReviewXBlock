@@ -341,12 +341,12 @@ var VoiceAnnotationController = function (annotationElement, editable, staticBlo
         if (this.editable) {
             this.initTextAreaEditing(transcriptView);
             transcriptView.css('min-height', '100px');
-            transcriptView.css('max-height', '500px');
         }
         else {
             transcriptManager.editable = false;
             transcriptManager.textArea.removeAttr('contenteditable').blur();
         }
+        transcriptView.css('max-height', '500px');
         transcriptManager.onSelectionChange = function (textArea, selectionRange) {
             if (currentlyRecording)
                 return;
@@ -371,7 +371,7 @@ var VoiceAnnotationController = function (annotationElement, editable, staticBlo
                 _this.stopAudio();
             } else {
                 var intervals = _this.getPlaybackInfo().intervals;
-                var time = nodeIdx < intervals.length - 1 ? intervals[nodeIdx].startTime * 1000 : 0;
+                var time = nodeIdx < intervals.length - 1 ? intervals[Math.max(nodeIdx, 0)].startTime * 1000 : 0;
                 _this.playAudio(time);
                 window.requestAnimFrame(drawAudiovisual);
             }
@@ -524,6 +524,7 @@ var VoiceAnnotationController = function (annotationElement, editable, staticBlo
             avHandler.renderWaveform();
 
             areaElement.find('.recording_start_btn').stopLoadingBlink();
+            areaElement.find('.play_btn').implicitEnable();
             _this.exitLoadingMode();
 
             audiovisual.mousedown(waveformMouseDown);
@@ -568,7 +569,9 @@ var VoiceAnnotationController = function (annotationElement, editable, staticBlo
             duration = recordingBuffer.length / (2 * r2.audioRecorder.RECORDER_SAMPLE_RATE);
             if (!runningWordIntervals.length) {
                 areaElement.find('.recording_start_btn').stopLoadingBlink();
+                areaElement.find('.play_btn').implicitEnable();
                 _this.exitLoadingMode();
+                currentlyRecording = false;
             } else if (document.activeElement == transcriptView[0]) {
                 // Insert the current recording into the time interval dictated by transcriptInsertLocation
                 if (runningWordIntervals.length && runningWordIntervals[0].startTime > 0)
@@ -580,7 +583,22 @@ var VoiceAnnotationController = function (annotationElement, editable, staticBlo
                 // Add the current recording at the end of the working annotation
                 if (duration - runningWordIntervals[runningWordIntervals.length - 1].endTime > 0)
                     runningWordIntervals.push(TranscriptUtils.spaceWordInterval(runningWordIntervals[runningWordIntervals.length - 1].endTime, duration, 0));
-                AudioCoordinator.appendAudioResource(finishedRecordingUrl, runningWordIntervals, cb);
+                if (_this.editable) {
+                    AudioCoordinator.appendAudioResource(finishedRecordingUrl, runningWordIntervals, cb);
+                } else {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('GET', finishedRecordingUrl, true);
+                    xhr.responseType = 'blob';
+                    xhr.onload = function(e) {
+                        if (this.status == 200) {
+                            _this.staticAudioBlob = this.response;
+                            _this.staticWordIntervals = runningWordIntervals.slice(0);
+                            _this.refreshConsumerView();
+                        }
+                    };
+                    xhr.send();
+
+                }
                 finishedRecordingUrl = null;
             }
         }
@@ -651,7 +669,7 @@ var VoiceAnnotationController = function (annotationElement, editable, staticBlo
                 selectionRange = transcriptManager.currentWordSelection();
                 if (selectionRange.start == selectionRange.end) {
                     transcriptManager.dimAll();
-                    transcriptInsertLocation = selectionRange.start;
+                    transcriptInsertLocation = Math.max(0, selectionRange.start);
                     if (transcriptManager.currentWordSelectionIndex() > 0)
                         transcriptInsertLocation++;
                 }
@@ -669,7 +687,7 @@ var VoiceAnnotationController = function (annotationElement, editable, staticBlo
                     alert(msg);
                     currentlyRecording = false;
                 } else {
-                    recordButton.text('Stop');
+                    recordButton.html('<i class="fa fa-stop"></i>');
                     console.log('starting mic');
                     r2.audioRecorder.BgnRecording();
                     currentlyRecording = true;
@@ -687,6 +705,7 @@ var VoiceAnnotationController = function (annotationElement, editable, staticBlo
                             alert("We didn't quite catch that. Please try again!");
                             AudioCoordinator.renderAudio(renderCompletion);
                             areaElement.find('.recording_start_btn').stopLoadingBlink();
+                            areaElement.find('.play_btn').implicitEnable();
                             _this.exitLoadingMode();
                             currentlyRecording = false;
                         }, 3000);
@@ -695,7 +714,7 @@ var VoiceAnnotationController = function (annotationElement, editable, staticBlo
 
             });
         } else {
-            recordButton.text('Stop');
+            recordButton.html('<i class="fa fa-stop"></i>');
             console.log('starting mic');
             r2.audioRecorder.BgnRecording();
             currentlyRecording = true;
@@ -705,8 +724,7 @@ var VoiceAnnotationController = function (annotationElement, editable, staticBlo
     this.stopRecording = function (recordButton) {
         /* Stop the recording, but don't necessarily finish the recording process (may still be processing
          data from Bluemix) */
-        recordButton.text('Record');
-        areaElement.find('.play_btn').implicitEnable();
+        recordButton.html('<i class="fa fa-microphone"></i>');
         this.enterLoadingMode('Processing...');
         $.publish('hardsocketstop');
         r2.audioRecorder.EndRecording(function(url, blob, buffer){
@@ -725,6 +743,7 @@ var VoiceAnnotationController = function (annotationElement, editable, staticBlo
                             alert("We didn't quite catch that. Please try again!");
                             AudioCoordinator.renderAudio(renderCompletion);
                             areaElement.find('.recording_start_btn').stopLoadingBlink();
+                            areaElement.find('.play_btn').implicitEnable();
                             _this.exitLoadingMode();
                             currentlyRecording = false;
                         }, 3000);
@@ -749,24 +768,21 @@ var VoiceAnnotationController = function (annotationElement, editable, staticBlo
             }, 1);
         });
 
-        recordButton.click((function() {
-            return function(evt) {
+        recordButton.click(function(evt) {
+            // Prevent default anchor behavior
+            evt.preventDefault();
 
-                // Prevent default anchor behavior
-                evt.preventDefault();
+            if (r2.audioPlayer.isPlaying())
+                return;
+            if (!viewContext)
+                return;
 
-                if (r2.audioPlayer.isPlaying())
-                    return;
-                if (!viewContext)
-                    return;
-
-                if (!currentlyRecording) {
-                    _this.startRecording(recordButton);
-                } else {
-                    _this.stopRecording(recordButton);
-                }
+            if (!currentlyRecording) {
+                _this.startRecording(recordButton);
+            } else {
+                _this.stopRecording(recordButton);
             }
-        })());
+        });
     };
 
     /**
@@ -786,7 +802,6 @@ var VoiceAnnotationController = function (annotationElement, editable, staticBlo
         xhr.onload = function(e) {
             if (this.status == 200) {
                 var blob = this.response;
-                finishedRecordingUrl = (window.URL || window.webkitURL).createObjectURL(blob);
                 /* We will use this method to establish a socket connection to IBM Watson, even though we are not
                 using the microphone (that's why null is passed for the `mic` parameter).
                  */
@@ -815,6 +830,7 @@ var VoiceAnnotationController = function (annotationElement, editable, staticBlo
 
                         r2.audioRecorder.parseWAV(blob, function (wavInfo) {
                             recordingBuffer = wavInfo.samples;
+                            finishedRecordingUrl = (window.URL || window.webkitURL).createObjectURL(blob);
                             finishRecording();
                         });
 
@@ -891,7 +907,7 @@ var VoiceAnnotationController = function (annotationElement, editable, staticBlo
         playbackJustStarted = true;
         window.requestAnimFrame(drawAudiovisual);
 
-        areaElement.find('.play_btn').text('Stop');
+        areaElement.find('.play_btn').html('<i class="fa fa-stop"></i>');
         areaElement.find('.recording_start_btn').implicitDisable();
     };
 
@@ -899,14 +915,13 @@ var VoiceAnnotationController = function (annotationElement, editable, staticBlo
         if (playbackJustStarted)
             return;
         if (playbackTimestampIndex != -1) {
+            avHandler.renderWaveform();
             r2.audioPlayer.stop();
+            playbackTimestampIndex = -1;
+            transcriptManager.unhighlightAll();
+            areaElement.find('.play_btn').html('<i class="fa fa-play"></i>');
+            areaElement.find('.recording_start_btn').implicitEnable();
         }
-        avHandler.renderWaveform();
-
-        playbackTimestampIndex = -1;
-        transcriptManager.unhighlightAll();
-        areaElement.find('.play_btn').text('Play');
-        areaElement.find('.recording_start_btn').implicitEnable();
     };
 
     var waveformMouseDown = function (event){

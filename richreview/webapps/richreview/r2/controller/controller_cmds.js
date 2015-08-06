@@ -392,7 +392,7 @@
             var anchorpage = doc.GetPage(cmd.anchorTo.page);
 
             var anchorpiece = getAnchorPiece(anchorpage, cmd);
-            if(anchorpiece){
+            if(anchorpiece && !cmd.data.isprivate){
                 var piecekeyboard = new r2.PieceKeyboard();
                 piecekeyboard.SetPiece(
                     cmd.data.pid,

@@ -1141,18 +1141,19 @@
             if(typeof btn_center_fa_font === 'undefined')
                 btn_center_fa_font = 'fa-bars';
 
-            var $menu = $(document.createElement('nav'));
+            var $menu = $(document.createElement('div'));
             $menu.addClass('rm_menu');
             $menu.attr('id', rm_id);
             $menu.css('font-size', rm_size+'em');
 
-            var $btn_radials = $(document.createElement('nav'));
+            var $btn_radials = $(document.createElement('div'));
             $btn_radials.addClass('rm_btn_raidial');
             $menu.append($btn_radials);
 
             var $btn_center = $(document.createElement('a'));
             $btn_center.addClass('rm_btn_center').addClass('rm_btn');
             $btn_center.attr('href', 'javascript:void(0);');
+            $btn_center.attr("tabindex", 0);
             $btn_center.append(createIcon(btn_center_fa_font));
             if(typeof cb !== 'undefined'){$btn_center.click(closeRadialMenuAndRun($menu,cb));}
             $menu.append($btn_center);
@@ -1164,6 +1165,7 @@
             var $btn = $(document.createElement('a'));
             $btn.addClass('rm_btn');
             $btn.attr('href', 'javascript:void(0);');
+            $btn.attr("tabindex", 0);
             $btn.append(createIcon(fa_font));
             $btn.click(closeRadialMenuAndRun($menu, cb));
             $menu.find('.rm_btn_raidial').append($btn);
@@ -1205,6 +1207,12 @@
             $menu.find('.rm_btn_raidial').mouseleave(function(e) {
                 e.preventDefault();
                 $menu.toggleClass('open', false);
+            });
+
+            $menu.find('.rm_btn').focus(function(e){
+                e.preventDefault();
+                menus.forEach(function($m){$m.toggleClass('open', false);});
+                $menu.toggleClass('open', true);
             });
         };
 

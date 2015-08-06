@@ -132,10 +132,15 @@
         else{
             if (askuser == false || confirm('Do you really want to delete this comment?')) {
                 r2.dom_model.remove(annotid);
-                var annot = r2App.annots[annotid];
-                console.log('>>>>delete:', annotid, r2App.annots[annotid]);
                 r2App.doc.RunRecursive("RemoveAnnot", [annotid]);
-                delete r2App.annots[annotid];
+                if(r2App.annots[annotid]){ /* when a voice comment */
+                    var annot = r2App.annots[annotid];
+                    console.log('>>>>delete:', annotid, r2App.annots[annotid]);
+                    delete r2App.annots[annotid];
+                }
+                else{ /* when a typewritten comment*/
+
+                }
                 r2App.invalidate_page_layout = true;
                 return true;
             }

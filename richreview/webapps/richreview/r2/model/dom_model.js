@@ -246,7 +246,7 @@
             }
         };
 
-        pub.appendPieceKeyboard = function(username, annot_id, pid, anchor_id, creation_time, dom_piecekeyboard){
+        pub.appendPieceKeyboard = function(username, annot_id, pid, anchor_id, creation_time, dom_piecekeyboard, doc_model_piecekeyboard){
             var user = r2.userGroup.GetUser(username);
             var annot_id_esc = r2.util.escapeDomId(annot_id);
             var $anchor = $('#'+anchor_id);
@@ -275,14 +275,17 @@
                 $comment.append($piece);
 
                 {/* add menu */
-                    var $menu = r2.radialMenu.create('rm_'+pid, 0.0005, function(){;}, 'fa-keyboard-o');
-                    r2.radialMenu.addBtnCircular($menu, 'fa-chevron-up', function(){;});
-                    r2.radialMenu.addBtnCircular($menu, 'fa-twitter', function(){;});
-                    r2.radialMenu.addBtnCircular($menu, 'fa-chevron-down', function(){alert('home');});
-                    r2.radialMenu.addBtnCircular($menu, 'fa-trash', function(){
+                    var rm_ratio = getPieceRatio($piece);
+                    var rm_size = rm_ratio*0.0008;
+
+                    var $rm = r2.radialMenu.create('rm_'+pid, rm_size, function(){;}, 'fa-keyboard-o');
+                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-up', function(){;});
+                    r2.radialMenu.addBtnCircular($rm, 'fa-twitter', function(){;});
+                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-down', function(){alert('home');});
+                    r2.radialMenu.addBtnCircular($rm, 'fa-trash', function(){
                         if(r2.userGroup.cur_user.name === username){
                             if(r2.removeAnnot(annot_id, true, false)){ // askuser, mute
-                                //r2Sync.PushToUploadCmd(this.ExportToCmdDeleteComment());
+                                r2Sync.PushToUploadCmd(doc_model_piecekeyboard.ExportToCmdDeleteComment());
                                 r2.log.Log_Simple("RemoveAnnot_Text_OnScrBtn");
                             }
                         }
@@ -290,12 +293,13 @@
                             alert("You can only delete your own comments.")
                         }
                     });
-                    r2.radialMenu.setColors($menu, user.color_radial_menu_unselected, user.color_radial_menu_selected);
+                    r2.radialMenu.setColors($rm, user.color_radial_menu_unselected, user.color_radial_menu_selected);
 
-                    $menu.css('left', '60em');
-                    $menu.css('top', '23em');
+                    var rm_x = getPieceTtIndentX($piece)-r2Const.RADIALMENU_OFFSET_X*rm_ratio;
 
-                    $comment.append($menu);
+                    $rm.css('left', (rm_x-rm_size*0.5)/rm_size+'em');
+
+                    $comment.prepend($rm);
                 }
 
                 $anchor.children().first().after($comment);
@@ -318,6 +322,11 @@
             dom.pp.tt_depth = tt_depth;
             dom.pp.tt_x = tt_x;
             dom.pp.tt_w = tt_w;
+        };
+
+        var getPieceRatio = function($piece){
+            var dom = $piece.get(0);
+            return Math.pow(0.8, dom.pp.tt_depth - 1);
         };
 
         var getPieceTtIndentX = function($piece){

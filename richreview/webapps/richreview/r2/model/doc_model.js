@@ -1145,7 +1145,8 @@
             this.GetId(),
             anchor_pid,
             this._creationTime,
-            dom
+            dom,
+            this
         );
 
         this.UpdateSizeWithTextInput();
@@ -1351,7 +1352,6 @@
         var new_height = r2.viewCtrl.mapDomToDocScale(this.dom.clientHeight);
         if(this._cnt_size.y != new_height){
             this._cnt_size.y = new_height;
-            console.log('>>>> ',new_height);
             return true;
         }
         return false;

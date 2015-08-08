@@ -170,6 +170,10 @@
                 }
             ).then(
                 function(){
+                    return initAudioPlayer();
+                }
+            ).then(
+                function(){
                     return initAudioRecorder(path_prefix);
                 }
             ).then(
@@ -218,6 +222,20 @@
                     throw new Error("RichReviewWebApp only supports the Chrome browser.");
                 }
             }
+        }
+
+        function initAudioPlayer(){
+            r2.audioPlayer.cbPlay(
+                function(annot_id){
+                    r2.dom_model.cbAudioPlay(annot_id);
+                }
+            );
+            r2.audioPlayer.cbStop(
+                function(annot_id){
+                    r2.dom_model.cbAudioStop(annot_id);
+                }
+            );
+            return;
         }
 
         function initAudioRecorder(path_prefix){

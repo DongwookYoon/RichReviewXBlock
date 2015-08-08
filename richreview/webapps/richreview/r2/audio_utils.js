@@ -28,6 +28,8 @@
         var status = pub.Status.UNINITIALIZE;
         var last_status = null;
         var cur_cmd = null;
+        var cbPlay = null;
+        var cbStop = null;
 
         var processCmd = function(){
             if(cmd_q.length != 0){
@@ -37,10 +39,16 @@
                         loadAudioFile(cmd);
                         break;
                     case Cmd.PAUSE:
+                        if(cbStop){
+                            cbStop(pub.getCurAudioFileId());
+                        }
                         status = pub.Status.STOPPED;
                         m_audio.pause();
                         break;
                     case Cmd.PLAY:
+                        if(cbPlay){
+                            cbPlay(pub.getCurAudioFileId());
+                        }
                         if(m_audio.readyState != 0){ // != HAVE_NOTHING
                             status = pub.Status.PLAYING;
                             m_audio.play();
@@ -169,6 +177,14 @@
                 cmd_q.push(createCmd(Cmd.PAUSE));
                 processCmd();
             }
+        };
+
+        pub.cbPlay = function(cb){
+            cbPlay = cb;
+        };
+
+        pub.cbStop = function(cb){
+            cbStop = cb;
         };
 
         return pub;

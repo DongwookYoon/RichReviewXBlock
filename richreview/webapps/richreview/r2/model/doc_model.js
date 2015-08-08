@@ -150,12 +150,6 @@
         if (typeof dy_obj === 'undefined'){
             dy_obj = [Number.POSITIVE_INFINITY, null];
         }
-        var dy = Math.abs(this.pos.y + this.size.y - pt.y);
-        if( (dy <= dy_obj[0]) &&
-            ( this.pos.x < pt.x && pt.x < this.pos.x + this.size.x )){
-            dy_obj[0] = dy;
-            dy_obj[1] = this;
-        }
         for(var i = 0; i < this.child.length; ++i){
             this.child[i].GetPieceOfClosestBottom(pt, dy_obj);
         }

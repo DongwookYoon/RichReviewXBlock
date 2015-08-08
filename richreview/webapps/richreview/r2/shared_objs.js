@@ -160,8 +160,12 @@ var r2App = (function() {
         };
 
         pub.draw = function(canvas_ctx){
-            if(selected_piece)
-                selected_piece.DrawSelected(canvas_ctx);
+            if(selected_piece){
+                if(selected_piece.DrawSelected){
+                    selected_piece.DrawSelected(canvas_ctx);
+                }
+            }
+
         };
 
         return pub;

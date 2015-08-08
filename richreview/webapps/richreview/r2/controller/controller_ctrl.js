@@ -11,10 +11,10 @@
             r2.audioPlayer.play(
                 annot_id, r2App.annots[annot_id].GetAudioFileUrl(), time,
                 function(){
-                    r2App.annots[annot_id].GetRadialMenu().LoadingAudioBgn(); // cb_loading_bgn
+                    // cb_loading_bgn
                 },
                 function(){
-                    r2App.annots[annot_id].GetRadialMenu().LoadingAudioEnd(); // cb_loading_end
+                    // cb_loading_end
                 }
             );
         };
@@ -56,7 +56,7 @@
 
 
         /* dom */
-        r2.dom_model.createCommentVoice(r2App.cur_pdf_pagen, anchorpiece.GetId(), annotid);
+        r2.dom_model.createCommentVoice(r2App.cur_pdf_pagen, anchorpiece.GetId(), annotid, r2.userGroup.cur_user, true); /* live_recording = true */
         r2.dom_model.appendPieceVoice(annotid, r2App.cur_recording_annot.GetBgnTime());
 
 

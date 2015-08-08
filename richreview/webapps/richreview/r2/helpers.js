@@ -836,7 +836,6 @@
                 r2.rich_audio.stop();
             }
 
-            r2App.selected_radialmenu = null;
             r2App.pieceSelector.reset();
             if(r2App.cur_page)
                 r2App.cur_page.RunRecursive('HideDoms');
@@ -1137,10 +1136,7 @@
 
         var menus = [];
 
-        pub.create = function(rm_id, rm_size, cb, btn_center_fa_font){
-            if(typeof btn_center_fa_font === 'undefined')
-                btn_center_fa_font = 'fa-bars';
-
+        pub.create = function(rm_id, rm_size, btn_center_fa_font, cb){
             var $menu = $(document.createElement('div'));
             $menu.addClass('rm_menu');
             $menu.attr('id', rm_id);
@@ -1173,18 +1169,31 @@
         };
 
         pub.setColors = function($menu, normal, selected){
-            $menu.find('.rm_btn').css('background', normal);
-            $menu.find('.rm_btn').mouseover(function(){
-                $(this).css('background', selected);
-            });
-            $menu.find('.rm_btn').mouseout(function(){
+            var setColorNormal = function(){
                 $(this).css('background', normal);
-            });
+            };
+            var setColorSelected = function(){
+                $(this).css('background', selected);
+            };
+
+            $menu.find('.rm_btn').css('background', normal);
+            $menu.find('.rm_btn').mouseover(setColorSelected);
+            $menu.find('.rm_btn').mouseout(setColorNormal);
+            $menu.find('.rm_btn').focus(setColorSelected);
+            $menu.find('.rm_btn').blur(setColorNormal);
+        };
+
+        pub.changeCenterIcon = function(rm_id, fa_font){
+            var $icon = $('#'+rm_id).find('.rm_btn_center').find('i');
+            $icon.toggleClass($icon[0].fa_font, false);
+            $icon.toggleClass(fa_font, true);
+            $icon[0].fa_font = fa_font;
         };
 
         var createIcon = function(fa_font){
             var $icon = $(document.createElement('i'));
             $icon.addClass('fa').addClass('fa-2x').addClass(fa_font);
+            $icon[0].fa_font = fa_font;
             return $icon;
         };
 
@@ -1199,12 +1208,10 @@
             $menu.find('.rm_btn_center').unbind("mouseenter");
             $menu.find('.rm_btn_center').unbind("mouseleave");
 
-            $menu.find('.rm_btn_center').mouseenter(function(e) {
+            $menu.on('mouseenter',function(e) {
                 e.preventDefault();
-                menus.forEach(function($m){$m.toggleClass('open', false);});
                 $menu.toggleClass('open', true);
-            });
-            $menu.find('.rm_btn_raidial').mouseleave(function(e) {
+            }).on('mouseleave',function(e) {
                 e.preventDefault();
                 $menu.toggleClass('open', false);
             });

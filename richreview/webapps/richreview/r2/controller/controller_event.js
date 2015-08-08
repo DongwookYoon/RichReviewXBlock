@@ -196,6 +196,31 @@ var r2Ctrl = {};
     r2.keyboard = (function(){
         var pub = {};
 
+        var CONST = {
+            KEY_LEFT: 37,
+            KEY_RGHT: 39,
+            KEY_UP: 38,
+            KEY_DN: 40,
+            KEY_HOM: 36,
+            KEY_END: 35,
+            KEY_PAGEUP: 33,
+            KEY_PAGEDN: 34,
+
+            KEY_C: 67,
+            KEY_X: 88,
+            KEY_Z: 90,
+
+            KEY_BSPACE: 8,
+            KEY_DEL: 46,
+
+            KEY_SPACE: 32,
+            KEY_ENTER: 13,
+
+            KEY_SHIFT: 16,
+            KEY_CTRL: 17,
+            KEY_CMD: 91
+        };
+
         pub.mode = r2.KeyboardModeEnum.NORMAL;
         pub.ctrlkey_dn = false;
 

@@ -306,7 +306,7 @@
 
 
             if(anchorpiece){
-                r2.dom_model.createCommentVoice(cmd.anchorTo.page, anchorpiece.GetId(), cmd.data.aid); /* dom */
+                r2.dom_model.createCommentVoice(cmd.anchorTo.page, anchorpiece.GetId(), cmd.data.aid, r2.userGroup.GetUser(cmd.user), false); /* live_recording = false */
 
                 var annot = new r2.Annot();
                 annot.SetAnnot(cmd.data.aid, anchorpiece.GetId(), cmd.time, cmd.data.duration, cmd.data.waveform_sample, cmd.user, cmd.data.audiofileurl);

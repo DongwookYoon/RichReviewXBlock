@@ -186,7 +186,7 @@
             return false;
         };
 
-        pub.createCommentVoice = function(n_page, anchor_id, annot_id){
+        pub.createCommentVoice = function(n_page, anchor_id, annot_id, user, live_recording){
             // time: 2014-12-21T13...
             // user: 'red user'
             // op: 'CreateComment'
@@ -205,7 +205,75 @@
                 var $comment = appendComment($anchor, 'tc_comment_voice');
                 $comment.attr('id', annot_id_esc);
                 $anchor.children().first().after($comment);
-                console.log('hihi');
+
+
+                { /* add menu */
+                    var rm_ratio = getCommentRmRatio($comment);
+                    var rm_size = rm_ratio*0.00063;
+                    var rm_btn_size = 30;
+
+                    var $rm = r2.radialMenu.create('rm_'+annot_id_esc, rm_size, (live_recording === true ? 'fa-stop' : 'fa-play'), function(){
+                        if (r2App.mode === r2App.AppModeEnum.IDLE) {
+                            r2.rich_audio.play(annot_id, -1);
+                            r2.radialMenu.changeCenterIcon('rm_'+annot_id_esc, 'fa-pause');
+                            r2.log.Log_AudioPlay('radialmenu', annot_id, r2.audioPlayer.getPlaybackTime());
+                        }
+                        else if (r2App.mode === r2App.AppModeEnum.REPLAYING) {
+                            r2.radialMenu.changeCenterIcon('rm_'+r2.util.escapeDomId(r2.audioPlayer.getCurAudioFileId()), 'fa-play');
+
+                            if (r2App.cur_annot_id === annot_id) {
+                                r2.log.Log_AudioStop('radialmenu', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
+                                r2.rich_audio.stop();
+                            }
+                            else {
+                                r2.rich_audio.play(annot_id, -1);
+                                r2.log.Log_AudioPlay('radialmenu', annot_id, r2.audioPlayer.getPlaybackTime());
+                                r2.radialMenu.changeCenterIcon('rm_'+annot_id_esc, 'fa-pause');
+                            }
+
+                        }
+                        else if(r2App.mode === r2App.AppModeEnum.RECORDING && annot_id === r2App.cur_recording_annot.GetId()){
+                            r2.recordingStop(true); /* to upload */
+                            r2.log.Log_Simple("Recording_Stop_RadialMenu");
+                            r2.radialMenu.changeCenterIcon('rm_'+annot_id_esc, 'fa-play');
+                        }
+                    });
+                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-up', function(){
+                        ;
+                    });
+                    r2.radialMenu.addBtnCircular($rm, 'fa-link', function(){
+                        var lnk = r2App.server_url+"viewer?access_code=" + r2.ctx["pdfid"] +
+                            "&docid=" + r2.ctx["docid"] +
+                            "&groupid=" + r2.ctx["groupid"] +
+                            "&comment=" +encodeURIComponent(annot_id);
+                        window.prompt("Link to the Comment", lnk);
+                    });
+                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-down', function(){
+                        ;
+                    });
+                    r2.radialMenu.addBtnCircular($rm, 'fa-trash', function(){
+                        if(r2.userGroup.cur_user === user.name){
+                            var annottodelete = r2App.annots[annot_id];
+                            if(r2.removeAnnot(annot_id, true, false)){ // askuser, mute
+                                r2Sync.PushToUploadCmd(annottodelete.ExportToCmdDeleteComment());
+                                r2.log.Log_Simple("RemoveAnnot_Audio_RadialMenu");
+                            }
+                        }
+                        else{
+                            alert("You can only delete your own comments.")
+                        }
+                    });
+                    r2.radialMenu.setColors($rm, user.color_radial_menu_unselected, user.color_radial_menu_selected);
+
+                    var rm_x = getCommentTtIndentX($comment)-r2Const.RADIALMENU_OFFSET_X*rm_ratio;
+
+                    $rm.css('left', (rm_x)/rm_size+'em');
+                    //$rm.css('top', (rm_size*0.4*rm_btn_size)/rm_size+'em');
+
+                    $comment.prepend($rm);
+                }
+
+
                 return true;
             }
             return false;
@@ -275,13 +343,26 @@
                 $comment.append($piece);
 
                 {/* add menu */
-                    var rm_ratio = getPieceRatio($piece);
-                    var rm_size = rm_ratio*0.0008;
+                    var rm_ratio = getPieceRmRatio($piece);
+                    var rm_size = rm_ratio*0.00063;
+                    var rm_btn_size = 30;
 
-                    var $rm = r2.radialMenu.create('rm_'+pid, rm_size, function(){;}, 'fa-keyboard-o');
-                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-up', function(){;});
-                    r2.radialMenu.addBtnCircular($rm, 'fa-twitter', function(){;});
-                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-down', function(){alert('home');});
+                    var $rm = r2.radialMenu.create('rm_'+pid, rm_size, 'fa-keyboard-o', function(){
+                            doc_model_piecekeyboard.edit();
+                    });
+                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-up', function(){
+                            ;
+                    });
+                    r2.radialMenu.addBtnCircular($rm, 'fa-link', function(){
+                        var lnk = r2App.server_url+"viewer?access_code=" + r2.ctx["pdfid"] +
+                            "&docid=" + r2.ctx["docid"] +
+                            "&groupid=" + r2.ctx["groupid"] +
+                            "&comment=" +encodeURIComponent(annot_id);
+                        window.prompt("Link to the Comment", lnk);
+                    });
+                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-down', function(){
+                        ;
+                    });
                     r2.radialMenu.addBtnCircular($rm, 'fa-trash', function(){
                         if(r2.userGroup.cur_user.name === username){
                             if(r2.removeAnnot(annot_id, true, false)){ // askuser, mute
@@ -297,7 +378,8 @@
 
                     var rm_x = getPieceTtIndentX($piece)-r2Const.RADIALMENU_OFFSET_X*rm_ratio;
 
-                    $rm.css('left', (rm_x-rm_size*0.5)/rm_size+'em');
+                    $rm.css('left', (rm_x)/rm_size+'em');
+                    //$rm.css('top', (rm_size*0.4*rm_btn_size)/rm_size+'em');
 
                     $comment.prepend($rm);
                 }
@@ -324,35 +406,36 @@
             dom.pp.tt_w = tt_w;
         };
 
-        var getPieceRatio = function($piece){
+        var getRmRatio = function(tt_depth){
+            return Math.pow(0.8, tt_depth - 1);
+        };
+
+        var getCommentRmRatio = function($comment){
+            var $anchor = $comment.parent();
+            var dom_anchor = $anchor.get(0);
+            return getRmRatio(dom_anchor.pp.tt_depth + 1);
+        };
+
+        var getPieceRmRatio = function($piece){
             var dom = $piece.get(0);
-            return Math.pow(0.8, dom.pp.tt_depth - 1);
+            return getRmRatio(dom.pp.tt_depth);
+        };
+
+        var getTtIndentX = function(tt_depth, tt_x){
+            return tt_x + (tt_depth === 0 ? 0 : tt_depth - 1)*r2Const.PIECE_TEXTTEARING_INDENT;
+        };
+
+        var getCommentTtIndentX = function($comment){
+            var $anchor = $comment.parent();
+            var dom_anchor = $anchor.get(0);
+            return getTtIndentX(dom_anchor.pp.tt_depth + 1, dom_anchor.pp.tt_x);
         };
 
         var getPieceTtIndentX = function($piece){
             var dom = $piece.get(0);
-            var d;
-            if(dom.pp.tt_depth == 0){
-                d = 0;
-            }
-            else{
-                d = dom.pp.tt_depth-1;
-            }
-            return dom.pp.tt_x + d*r2Const.PIECE_TEXTTEARING_INDENT;
+            return getTtIndentX(dom.pp.tt_depth, dom.pp.tt_x);
         };
 
-        var getPieceTtIndentedWidth = function($piece){
-            var dom = $piece.get(0);
-            return dom.pp.tt_x + dom.pp.tt_w - getPieceTtIndentX($piece);
-        };
-
-        var appendBtn = function($target){
-            $radialBtn = $(document.createElement('div'));
-            $radialBtn.toggleClass('radialBtn');
-            $radialBtn.attr("tabindex", 0);
-
-            $target.append($radialBtn);
-        };
 
         pub.init = function(doc_json){
             $tc_doc = $('#tc_doc');

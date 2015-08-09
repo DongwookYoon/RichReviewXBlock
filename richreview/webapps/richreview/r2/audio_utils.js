@@ -71,6 +71,9 @@
             m_audio.addEventListener('ended', function() {
                 if(r2.log)
                     r2.log.Log_AudioStop('auto', pub.getCurAudioFileId(), pub.getPlaybackTime());
+                if(cbStop){
+                    cbStop(pub.getCurAudioFileId());
+                }
                 status = pub.Status.STOPPED;
             }, false);
             m_audio.addEventListener('canplaythrough', function() {
@@ -92,6 +95,9 @@
                     cur_cmd.cb_loading_end();
                 cur_cmd = null;
                 m_audio = null;
+                if(cbStop){
+                    cbStop(pub.getCurAudioFileId());
+                }
                 status = pub.Status.STOPPED;
                 cmd_q.shift(); // remove the play at the head
                 processCmd();

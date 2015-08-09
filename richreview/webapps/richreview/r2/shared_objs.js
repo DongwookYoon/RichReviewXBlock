@@ -164,6 +164,9 @@ var r2App = (function() {
                 if(selected_piece.DrawSelected){
                     selected_piece.DrawSelected(canvas_ctx);
                 }
+                else{
+                    console.log(selected_piece);
+                }
             }
 
         };

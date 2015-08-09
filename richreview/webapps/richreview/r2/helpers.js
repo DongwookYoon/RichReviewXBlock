@@ -1140,10 +1140,6 @@
             $menu.attr('id', rm_id);
             $menu.css('font-size', rm_size+'em');
 
-            var $btn_radials = $(document.createElement('div'));
-            $btn_radials.addClass('rm_btn_raidial');
-            $menu.append($btn_radials);
-
             var $btn_center = $(document.createElement('a'));
             $btn_center.addClass('rm_btn_center').addClass('rm_btn');
             $btn_center.attr('href', 'javascript:void(0);');
@@ -1151,6 +1147,11 @@
             $btn_center.append(createIcon(btn_center_fa_font));
             if(typeof cb !== 'undefined'){$btn_center.click(closeRadialMenuAndRun($menu,cb));}
             $menu.append($btn_center);
+
+            var $btn_radials = $(document.createElement('div'));
+            $btn_radials.addClass('rm_btn_raidial');
+            $menu.append($btn_radials);
+
             menus.push($menu);
             return $menu;
         };
@@ -1163,6 +1164,8 @@
             $btn.append(createIcon(fa_font));
             $btn.click(closeRadialMenuAndRun($menu, cb));
             $menu.find('.rm_btn_raidial').append($btn);
+
+
             setBtnRadialPos($menu);
         };
 
@@ -1179,6 +1182,17 @@
             $menu.find('.rm_btn').mouseout(setColorNormal);
             $menu.find('.rm_btn').focus(setColorSelected);
             $menu.find('.rm_btn').blur(setColorNormal);
+            $menu.find('.rm_btn').mouseenter(function(e) {
+                $(this).focus();
+            });
+            $menu.find('.rm_btn').mouseover(function(e) {
+                e.stopPropagation();
+            });
+            $menu.find('.rm_btn_raidial').mouseover(function(e) {
+                e.stopPropagation();
+            });
+
+
         };
 
         pub.changeCenterIcon = function(rm_id, fa_font){
@@ -1207,17 +1221,17 @@
             $menu.find('.rm_btn_center').unbind("mouseleave");
 
             $menu.on('mouseenter',function(e) {
-                e.preventDefault();
                 $menu.toggleClass('open', true);
             }).on('mouseleave',function(e) {
-                e.preventDefault();
                 $menu.toggleClass('open', false);
             });
 
-            $menu.find('.rm_btn').focus(function(e){
-                e.preventDefault();
+            $menu.find('.rm_btn').on('focus', function(e){
                 menus.forEach(function($m){$m.toggleClass('open', false);});
                 $menu.toggleClass('open', true);
+            }).on('blur', function(e){
+                menus.forEach(function($m){$m.toggleClass('open', false);});
+                $menu.toggleClass('open', false);
             });
         };
 

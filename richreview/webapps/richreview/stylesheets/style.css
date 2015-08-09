@@ -940,15 +940,16 @@ body::-webkit-scrollbar-corner {
   border-radius: 50%; /* background circle */
   pointer-events: none;
   overflow: visible;
-  z-index: 10;
+  z-index: 8;
 }
 
 .rm_menu.open {
-  z-index: 11;
+  z-index: 10;
 }
 
 .rm_btn {
   box-sizing: initial;
+  z-index: 9;
 }
 
 .rm_btn > i {
@@ -956,8 +957,10 @@ body::-webkit-scrollbar-corner {
 }
 
 .rm_btn:focus {
-  box-shadow: inset 0 0 2em 2em rgba(76, 76, 76, 0.4);
-  outline:none;
+  outline-color: rgb(77, 144, 254); // #4D90FE
+  outline-offset: -2px;
+  outline-style: auto;
+  outline-width: 5px;
 }
 
 .rm_btn_raidial {

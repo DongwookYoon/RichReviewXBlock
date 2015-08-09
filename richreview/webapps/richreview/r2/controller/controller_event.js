@@ -349,9 +349,14 @@ var r2Ctrl = {};
                 }
             }
             else if(r2App.mode == r2App.AppModeEnum.RECORDING) {
-                if (event.which == CONST.KEY_ENTER || event.which == CONST.KEY_SPACE) { // enter or space
-                    r2.recordingStop(toupload = true);
-                    r2.log.Log_Simple("Recording_Stop_Enter");
+                switch (event.which) {
+                    case CONST.KEY_SPACE:
+                    case CONST.KEY_ENTER:
+                        r2.recordingStop(toupload = true);
+                        r2.log.Log_Simple("Recording_Stop");
+                        break;
+                    default:
+                        break;
                 }
             }
 

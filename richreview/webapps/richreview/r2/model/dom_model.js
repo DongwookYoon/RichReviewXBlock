@@ -88,6 +88,12 @@
             var loadCommentText = function(rect, page_bbox, npage, nrgn, npt, ttX, ttW){
                 var $comment = $(document.createElement('div'));
                 $comment.toggleClass('tc_comment', true);
+
+                $comment.on('mouseenter',function(e) {
+                    $comment.focus();
+                    e.stopPropagation();
+                });
+
                 $comment.toggleClass('tc_comment_text', true);
                 $comment.attr("tabindex", 0);
 
@@ -141,6 +147,11 @@
             $comment.toggleClass(cls, true);
             $comment.attr("tabindex", 0);
 
+            $comment.on('mouseover',function(e) {
+                $comment.focus();
+                e.stopPropagation();
+            });
+
             $target.append($comment);
             return $comment;
         };
@@ -161,6 +172,7 @@
 
                 var $piece = $(document.createElement('div'));
                 $piece.toggleClass('tc_piece', true);
+
                 $piece.attr('id', cmd.data.pid);
                 setPieceProperties(
                     $piece,
@@ -289,6 +301,7 @@
 
                 var $piece = $(document.createElement('div'));
                 $piece.toggleClass('tc_piece', true);
+
                 $piece.attr('id', id);
                 setPieceProperties(
                     $piece,
@@ -484,6 +497,22 @@
             return null;
         };
 
+        var getPrevRmBtn = function($rm_btn){
+            return getRmBtnOffset($rm_btn, -1);
+        };
+        var getNextRmBtn = function($rm_btn){
+            return getRmBtnOffset($rm_btn, +1);
+        };
+        var getRmBtnOffset = function($rm_btn, offset){
+            var $l = $rm_btn.parents('.rm_menu').find('.rm_btn');
+            for(var i = 0, l = $l.length; i < l; ++i){
+                if($rm_btn[0] === $l[i]){
+                    return $($l[(i+offset+l)%l]);
+                }
+            }
+            return null;
+        };
+
 
         pub.focusNext = function(){
             var $focused = $(':focus');
@@ -503,6 +532,9 @@
                         $focused.parent().parent().find('.tc_comment').first().focus();
                     }
                 }
+            }
+            else if($focused.hasClass('rm_btn')){
+                getNextRmBtn($focused).focus();
             }
             else{
                 $tc_cur_page.find('.tc_comment').first().focus();
@@ -528,6 +560,9 @@
                 }
 
             }
+            else if($focused.hasClass('rm_btn')){
+                getPrevRmBtn($focused).focus();
+            }
             else{
                 $tc_cur_page.find('.tc_comment').last().focus();
             }
@@ -550,6 +585,9 @@
                 if($up.hasClass('tc_comment')){
                     $up.focus();
                 }
+            }
+            else if($focused.hasClass('rm_btn')){
+                $focused.parents('.tc_comment').focus();
             }
         };
 

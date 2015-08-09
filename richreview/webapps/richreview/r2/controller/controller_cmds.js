@@ -353,8 +353,6 @@
                     var toupload;
                     annot.AddSpotlight(spotlight, toupload = false);
                 }
-                if(anchorpage.GetNumPage()!=r2App.cur_pdf_pagen)
-                    l[0].HideDoms();
                 return true;
             }
             return false;
@@ -404,9 +402,6 @@
                     anchorpiece.GetId(), cmd.data.aid, cmd.user, cmd.data.text, cmd.data.isprivate, anchorpiece.IsOnLeftColumn()
                 );
                 anchorpiece.AddChildrenChronologically([piecekeyboard]);
-
-                if(anchorpage.GetNumPage()!=r2App.cur_pdf_pagen)
-                    piecekeyboard.HideDoms();
                 return true;
             }
             return false;
@@ -460,8 +455,6 @@
             var target = doc.GetTargetPiece(cmd.target);
             if(target){
                 target.SetText(cmd.data);
-                if(target.GetNumPage()!=r2App.cur_pdf_pagen)
-                    target.HideDoms();
                 return true;
             }
             return false;

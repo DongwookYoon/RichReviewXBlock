@@ -11,10 +11,8 @@
             r2.audioPlayer.play(
                 annot_id, r2App.annots[annot_id].GetAudioFileUrl(), time,
                 function(){
-                    // cb_loading_bgn
                 },
                 function(){
-                    // cb_loading_end
                 }
             );
         };

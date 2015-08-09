@@ -227,15 +227,30 @@ var r2Ctrl = {};
         pub.handleDn = function(event){
             if(r2App.mode == r2App.AppModeEnum.IDLE && pub.mode == r2.KeyboardModeEnum.NORMAL){
                 switch(event.which){
-                    case 17: // left ctrl
-                    case 25: // rght ctrl
+                    case CONST.KEY_CTRL: // left ctrl
                         pub.ctrlkey_dn = true;
                         break;
-                    case 37:
+                    case CONST.KEY_PAGEUP:
                         r2.clickPrevPage();
                         break;
-                    case 39:
+                    case CONST.KEY_PAGEDN:
                         r2.clickNextPage();
+                        break;
+                    case CONST.KEY_DN:
+                        r2.dom_model.focusNext();
+                        event.preventDefault();
+                        break;
+                    case CONST.KEY_UP:
+                        r2.dom_model.focusPrev();
+                        event.preventDefault();
+                        break;
+                    case CONST.KEY_LEFT:
+                        r2.dom_model.focusUp();
+                        event.preventDefault();
+                        break;
+                    case CONST.KEY_RGHT:
+                        r2.dom_model.focusIn();
+                        event.preventDefault();
                         break;
                     default:
                         break;
@@ -243,22 +258,31 @@ var r2Ctrl = {};
             }
             if(r2App.mode == r2App.AppModeEnum.REPLAYING && pub.mode == r2.KeyboardModeEnum.NORMAL){
                 switch(event.which){
-                    case 17: // left ctrl
-                    case 25: // rght ctrl
+                    case CONST.KEY_CTRL: // left ctrl
                         pub.ctrlkey_dn = true;
                         break;
-                    case 37:
-                        r2.clickPrevPage();
+                    case CONST.KEY_DN:
+                        r2.dom_model.focusNext();
+                        event.preventDefault();
                         break;
-                    case 39:
-                        r2.clickNextPage();
+                    case CONST.KEY_UP:
+                        r2.dom_model.focusPrev();
+                        event.preventDefault();
+                        break;
+                    case CONST.KEY_LEFT:
+                        r2.dom_model.focusUp();
+                        event.preventDefault();
+                        break;
+                    case CONST.KEY_RGHT:
+                        r2.dom_model.focusIn();
+                        event.preventDefault();
                         break;
                     default:
                         break;
                 }
             }
             else if(r2App.mode == r2App.AppModeEnum.RECORDING){
-                if(event.which == 13 || event.which == 32){ // enter or space
+                if(event.which == CONST.KEY_ENTER || event.which == CONST.KEY_SPACE){ // enter or space
                     // for Recording_Stop() when key up;
                 }
                 else{
@@ -269,23 +293,22 @@ var r2Ctrl = {};
             }
 
             if( pub.mode === r2.KeyboardModeEnum.NORMAL &&
-                    (event.which === 13 || event.which === 32) ){
+                    (event.which === CONST.KEY_ENTER || event.which === CONST.KEY_SPACE) ){
                 event.preventDefault();
                 event.stopPropagation();
             }
         };
 
         pub.handleUp = function(event){
-            var key_str = String.fromCharCode(event.which);
             if (r2App.mode == r2App.AppModeEnum.IDLE && pub.mode == r2.KeyboardModeEnum.NORMAL) {
-                switch (key_str) {
-                    case ' ':
+                switch (event.which) {
+                    case CONST.KEY_SPACE:
                         if (r2App.cur_annot_id) {
                             r2.rich_audio.play(r2App.cur_annot_id, -1);
                             r2.log.Log_AudioPlay('space', r2App.cur_annot_id, r2.audioPlayer.getPlaybackTime());
                         }
                         break;
-                    case '\r': // enter
+                    case CONST.KEY_ENTER: // enter
                         if (pub.ctrlkey_dn) {
                             createPieceKeyboard(isprivate = true);
                             r2.log.Log_Simple("CreatePieceKeyboard_Private_Enter");
@@ -302,12 +325,12 @@ var r2Ctrl = {};
                 }
             }
             else if (r2App.mode == r2App.AppModeEnum.REPLAYING && pub.mode == r2.KeyboardModeEnum.NORMAL) {
-                switch (key_str) {
-                    case ' ':
+                switch (event.which) {
+                    case CONST.KEY_SPACE:
                         r2.log.Log_AudioStop('space', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
                         r2.rich_audio.stop();
                         break;
-                    case '\r': // enter
+                    case CONST.KEY_ENTER: // enter
                         r2.log.Log_AudioStop('enter_0', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
                         r2.rich_audio.stop();
                         if (pub.ctrlkey_dn) {
@@ -326,15 +349,14 @@ var r2Ctrl = {};
                 }
             }
             else if(r2App.mode == r2App.AppModeEnum.RECORDING) {
-                if (event.which == 13 || event.which == 32) { // enter or space
+                if (event.which == CONST.KEY_ENTER || event.which == CONST.KEY_SPACE) { // enter or space
                     r2.recordingStop(toupload = true);
                     r2.log.Log_Simple("Recording_Stop_Enter");
                 }
             }
 
             switch(event.which){
-                case 17: // left ctrl
-                case 25: // rght ctrl
+                case CONST.KEY_CTRL: // left ctrl
                     pub.ctrlkey_dn = false;
                     break;
                 case 107:
@@ -432,10 +454,6 @@ var r2Ctrl = {};
         };
 
         pub.ResizeDom = function(){
-
-        };
-
-        pub.updateDom = function(){
 
         };
 

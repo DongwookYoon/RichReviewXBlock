@@ -464,7 +464,94 @@
         pub.cbAudioStop = function(annot_id){
             r2.radialMenu.changeCenterIcon('rm_'+r2.util.escapeDomId(annot_id), 'fa-play');
             r2.log.Log_AudioStop('radialmenu', annot_id, r2.audioPlayer.getPlaybackTime());
-        }
+        };
+
+
+
+        var getPrevTcCols = function($tc_cols){
+            return getTcColsOffset($tc_cols, -1);
+        };
+        var getNextTcCols = function($tc_cols){
+            return getTcColsOffset($tc_cols, +1);
+        };
+        var getTcColsOffset = function($tc_cols, offset){
+            var $l = $tc_cols.parent().parent().find('.tc_cols');
+            for(var i = 0, l = $l.length; i < l; ++i){
+                if($tc_cols[0] === $l[i]){
+                    return $($l[(i+offset+l)%l]);
+                }
+            }
+            return null;
+        };
+
+
+        pub.focusNext = function(){
+            var $focused = $(':focus');
+            if($focused.hasClass('tc_comment')){
+                var $next  = $focused.next('.tc_comment');
+                console.log($next);
+                if($next.length !== 0){
+                    $next.focus();
+                    console.log('new_focus:', $next);
+                }
+                else{
+                    if($focused.parent().hasClass('tc_cols')){ // when it's a topmost comment/text,
+                        var nextTcCols = getNextTcCols($focused.parent());
+                        nextTcCols.find('.tc_comment').first().focus();
+                    }
+                    else{ // when it's a nested comment
+                        $focused.parent().parent().find('.tc_comment').first().focus();
+                    }
+                }
+            }
+            else{
+                $tc_cur_page.find('.tc_comment').first().focus();
+            }
+        };
+
+        pub.focusPrev = function(){
+            var $focused = $(':focus');
+            if($focused.hasClass('tc_comment')){
+                var $prev  = $focused.prev();
+                if($prev.length !== 0){
+                    $prev.focus();
+                }
+                else{
+                    if($focused.parent().hasClass('tc_cols')){ // when it's a topmost comment/text,
+                        var nextTcCols = getPrevTcCols($focused.parent());
+                        nextTcCols.find('.tc_comment').last().focus();
+                    }
+                    else{ // when it's a nested comment
+                        $focused.parent().parent().find('.tc_comment').last().focus();
+                    }
+
+                }
+
+            }
+            else{
+                $tc_cur_page.find('.tc_comment').last().focus();
+            }
+        };
+
+        pub.focusIn = function(){
+            var $focused = $(':focus');
+            if($focused.hasClass('tc_comment')){
+                var $in = $focused.find('.tc_comment');
+                if($in.length !== 0){
+                    $in.first().focus();
+                }
+            }
+        };
+
+        pub.focusUp = function(){
+            var $focused = $(':focus');
+            if($focused.hasClass('tc_comment')){
+                var $up = $focused.parent().parent();
+                if($up.hasClass('tc_comment')){
+                    $up.focus();
+                }
+            }
+        };
 
         return pub;
     }())

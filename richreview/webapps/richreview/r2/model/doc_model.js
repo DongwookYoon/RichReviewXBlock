@@ -798,10 +798,6 @@
         }
         return rtn;
     };
-    r2.PieceAudio.prototype.HideDoms = function(){
-    };
-    r2.PieceAudio.prototype.updateDom = function(){
-    };
     r2.PieceAudio.prototype.GetTimeBgn = function(){
         return this._t_bgn;
     };
@@ -1322,10 +1318,6 @@
             }
             r2.Piece.prototype.DrawSelected.apply(this, [canvas_ctx, x_offset]);
         }
-    };
-    r2.PieceKeyboard.prototype.HideDoms = function(){
-        //this.dom.style.left = -10.0 * r2.viewCtrl.page_width_noscale + 'px';
-        //this.dom.style.top = -10.0 * r2.viewCtrl.page_width_noscale  + 'px';
     };
 
     r2.PieceKeyboard.prototype.UpdateSizeWithTextInput = function(){

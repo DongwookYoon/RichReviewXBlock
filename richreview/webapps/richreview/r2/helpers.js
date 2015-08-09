@@ -837,8 +837,6 @@
             }
 
             r2App.pieceSelector.reset();
-            if(r2App.cur_page)
-                r2App.cur_page.RunRecursive('HideDoms');
 
             r2App.SetCurPdfPageN(n);
             r2App.cur_page.RunRecursive("ResizeDom", []);

@@ -1143,7 +1143,7 @@
             var $btn_center = $(document.createElement('a'));
             $btn_center.addClass('rm_btn_center').addClass('rm_btn');
             $btn_center.attr('href', 'javascript:void(0);');
-            $btn_center.attr("tabindex", 0);
+            r2.dom_model.setFocusable($btn_center);
             $btn_center.append(createIcon(btn_center_fa_font));
             if(typeof cb !== 'undefined'){$btn_center.click(closeRadialMenuAndRun($menu,cb));}
             $menu.append($btn_center);
@@ -1160,7 +1160,7 @@
             var $btn = $(document.createElement('a'));
             $btn.addClass('rm_btn');
             $btn.attr('href', 'javascript:void(0);');
-            $btn.attr("tabindex", 0);
+            r2.dom_model.setFocusable($btn);
             $btn.append(createIcon(fa_font));
             $btn.click(closeRadialMenuAndRun($menu, cb));
             $menu.find('.rm_btn_raidial').append($btn);

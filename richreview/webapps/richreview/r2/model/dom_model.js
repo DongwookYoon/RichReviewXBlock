@@ -95,7 +95,8 @@
                 });
 
                 $comment.toggleClass('tc_comment_text', true);
-                $comment.attr("tabindex", 0);
+                r2.dom_model.setFocusable($comment);
+                $comment.attr('alt', typeof rect[4] === 'string' ? rect[4] : '(empty)')
 
                 var $piece = $(document.createElement('div'));
                 $piece.toggleClass('tc_piece', true);
@@ -145,7 +146,7 @@
             var $comment = $(document.createElement('div'));
             $comment.toggleClass('tc_comment', true);
             $comment.toggleClass(cls, true);
-            $comment.attr("tabindex", 0);
+            r2.dom_model.setFocusable($comment);
 
             $comment.on('mouseover',function(e) {
                 $comment.focus();
@@ -589,6 +590,21 @@
             else if($focused.hasClass('rm_btn')){
                 $focused.parents('.tc_comment').focus();
             }
+        };
+
+        pub.setFocusable = function($target){
+            $target.attr('tabindex', 0);
+            $target.on(
+                'focus',
+                function(evt){
+                    $(this).css('outline', '#4D90FE solid 2px');
+                }
+            ).on(
+                'blur',
+                function(evt){
+                    $(this).css('outline', 'none');
+                }
+            );
         };
 
         return pub;

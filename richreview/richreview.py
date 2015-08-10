@@ -327,7 +327,7 @@ class RichReviewXBlock(XBlock):
         Handles PDF upload request from the studio
         """
         try:
-            temp_path = self.xblock_path + "/_temp.file"
+            temp_path = self.xblock_path + '/' + uuid4().hex + '.pdf'
             osfs_save_formfile(self.fs, temp_path, request.POST['pdffile'].file)
             with self.fs.open(temp_path, "rb") as f:
                 h = hashlib.sha1()
@@ -343,6 +343,7 @@ class RichReviewXBlock(XBlock):
                 with self.fs.open(mupla_pdfs_folder_path + "/merged.js", "wb") as f_js:
                     json.dump(self.get_mupla(), f_js)
                     f_js.close()
+                f.close()
 
             return Response(json_body={
                 "pdf_url": self.fs.get_url(mupla_pdfs_folder_path+"/merged.pdf", RESOURCE_EXPIRATION_TIME),

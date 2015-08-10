@@ -69,7 +69,7 @@
                             }
                         ).catch(
                             function(err){
-                                cur_page = Pla.model.getNumPages(); // terminate the iteration
+                                console.log("Error: batchRunPla, page: ", cur_page);
                                 reject(err);
                             }
                         );
@@ -77,7 +77,7 @@
                     else{
                         cur_page -= 1;
 
-                        console.log("batchRunPla, resolve");
+                        console.log("batchRunPla, resolve ", page_layout_js);
                         resolve(
                             {
                                 ver: 6.0,
@@ -135,12 +135,53 @@
                 page_layout_js[cur_page] = {
                     bbox: page.mupla_data.bbox,
                     rgns: texttearing_pieces};
-            }).catch(Pla.util.handleErr);
+                return 0;
+            });
         };
 
         var setText = function(tt_pieces, mupla_data){
-            console.log(tt_pieces);
-            console.log(mupla_data);
+            var overlappingArea = function(x, y){
+                var l, t, r, b;
+                l = Math.max(x[0], y[0]);
+                t = Math.max(x[1], y[1]);
+                r = Math.min(x[2], y[2]);
+                b = Math.min(x[3], y[3]);
+                return (r>l && b>t) ? (r-l)*(b-t) : 0.0;
+            };
+
+            var setTextLine = function(bbox, text){
+                var best = null; var best_area = 0.0;
+                for(var i = 0, li = tt_pieces.length; i < li; ++i){
+                    var region = tt_pieces[i];
+                    for(var j = 0, lj = region.rects.length; j < lj; j ++){
+                        var area = overlappingArea(bbox, region.rects[j]);
+                        if(area > best_area){
+                            best = region.rects[j];
+                            best_area = area;
+                        }
+                    }
+                }
+                if(best){
+                    if(best[4]){
+                        best[4] += '\n'+text;
+                    }
+                    else{
+                        best.push(text);
+                    }
+                }
+            };
+
+            for(var i = 0, li = mupla_data.tblocks.length; i < li; ++i){
+                var block = mupla_data.tblocks[i];
+                for(var j = 0, lj = block.lines.length; j < lj; j ++){
+                    var line = block.lines[j];
+                    setTextLine(line.bbox, line.text);
+                    console.log(line.bbox, line.text);
+                }
+            }
+
+            console.log('tt:', tt_pieces);
+            console.log('md:', mupla_data);
         };
 
         var preprocessTextBoxes = function(mupla, pdfjs_canv_size){

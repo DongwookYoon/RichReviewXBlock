@@ -45,7 +45,8 @@
                         new Vec2( // texcoordRB
                             rect[2]/ratioX,
                             1.0-rect[3]/ratioY
-                        )
+                        ),
+                        rect[4]
                     ]
                 );
                 return piecetext;
@@ -459,6 +460,7 @@
             }
             return false;
         };
+
         var changeProperty_PieceKeyboardPubPrivate = function(doc, cmd){
             // time: 2014-12-21T13...
             // user: 'red user'

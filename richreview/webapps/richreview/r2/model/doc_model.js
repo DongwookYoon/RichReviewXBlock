@@ -636,9 +636,10 @@
         anchorCmd.page = this.GetNumPage();
         return anchorCmd;
     };
-    r2.PieceText.prototype.SetPieceText = function(texCoordLT, texCoordRB){
+    r2.PieceText.prototype.SetPieceText = function(texCoordLT, texCoordRB, text){
         this._texCoordLT = texCoordLT;
         this._texCoordRB = texCoordRB;
+        this._text = typeof text === 'string' ? text : '(empty)';
     };
     r2.PieceText.prototype.SetVisibility = function(visible){
         r2.Obj.prototype.SetVisibility.apply(this, [visible]);

@@ -68,7 +68,10 @@
                                 job();
                             }
                         ).catch(
-                            reject
+                            function(err){
+                                cur_page = Pla.model.getNumPages(); // terminate the iteration
+                                reject(err);
+                            }
                         );
                     }
                     else{
@@ -116,6 +119,8 @@
                     max_wght_group.alley
                 );
 
+                setText(texttearing_pieces, page.mupla_data);
+
                 render_ctx.rects = rects;
                 render_ctx.alley_range = alley_range;
                 render_ctx.ycuts = Pla.rectUtil.projectOnYaxisAndGetCuts(rects);
@@ -131,6 +136,11 @@
                     bbox: page.mupla_data.bbox,
                     rgns: texttearing_pieces};
             }).catch(Pla.util.handleErr);
+        };
+
+        var setText = function(tt_pieces, mupla_data){
+            console.log(tt_pieces);
+            console.log(mupla_data);
         };
 
         var preprocessTextBoxes = function(mupla, pdfjs_canv_size){

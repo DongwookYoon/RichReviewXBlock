@@ -57,6 +57,7 @@ class RichReviewXBlock(XBlock):
             secret_key = djfs_settings["aws_secret_access_key"]
         )
 
+
         dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
         s3website.clear("richreview_web_app")
@@ -70,6 +71,8 @@ class RichReviewXBlock(XBlock):
             local_path = dir + "/richreview/webapps/multicolumn",
             prefix = "multicolumn_web_app"
         )
+        """
+        """
 
         richreview_app_url =  s3website.get_url("richreview_web_app")
         multicolumn_app_url =  s3website.get_url("multicolumn_web_app")
@@ -262,8 +265,6 @@ class RichReviewXBlock(XBlock):
         frag = Fragment()
         frag.add_css(load_resource("static/css/richreview.css"))
         frag.add_javascript(load_resource("static/js/src/richreview_student.js"))
-
-        frag.add_javascript_url(self.runtime.local_resource_url(self, "public/pdf.js"))
         frag.add_content(render_template(
                 "templates/richreview_student.html",
                 {
@@ -303,6 +304,8 @@ class RichReviewXBlock(XBlock):
                     'is_debug': True,
                     'pdf_url': self.fs.get_url(self.pdf_path, RESOURCE_EXPIRATION_TIME),
                     'pdfjs_url': self.fs.get_url(self.pdfjs_path, RESOURCE_EXPIRATION_TIME),
+
+                    'loader_gif_url': self.runtime.local_resource_url(self, "public/ajax-loader.gif")
                 }
             ))
         frag.initialize_js('RichReviewXBlockStudio', "abcd")

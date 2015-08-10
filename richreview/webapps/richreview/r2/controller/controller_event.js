@@ -232,9 +232,11 @@ var r2Ctrl = {};
                         break;
                     case CONST.KEY_PAGEUP:
                         r2.clickPrevPage();
+                        event.preventDefault();
                         break;
                     case CONST.KEY_PAGEDN:
                         r2.clickNextPage();
+                        event.preventDefault();
                         break;
                     case CONST.KEY_DN:
                         r2.dom_model.focusNext();

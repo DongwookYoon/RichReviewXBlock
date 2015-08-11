@@ -311,6 +311,9 @@
         pub.appendPieceKeyboard = function(username, annot_id, pid, anchor_id, creation_time, dom_piecekeyboard, doc_model_piecekeyboard){
             var user = r2.userGroup.GetUser(username);
             var annot_id_esc = r2.util.escapeDomId(annot_id);
+            if($('#'+annot_id_esc).length !== 0){
+                return true;
+            }
             var $anchor = $('#'+anchor_id);
             var $dom_piecekeyboard = $(dom_piecekeyboard);
             var dom_anchor = $anchor.get(0);

@@ -836,6 +836,8 @@
                 r2.rich_audio.stop();
             }
 
+            r2.dom_model.setCurPage(n);
+
             r2App.pieceSelector.reset();
 
             r2App.SetCurPdfPageN(n);
@@ -843,7 +845,6 @@
             r2App.invalidate_page_layout = true;
 
             updatePageNavBar();
-            r2.dom_model.setCurPage(n);
         }
 
         function updatePageNavBar(){

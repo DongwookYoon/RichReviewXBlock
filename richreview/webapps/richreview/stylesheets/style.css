@@ -918,7 +918,6 @@ body::-webkit-scrollbar-corner {
 }
 
 /* coloring dom_model for debugging
-
 .tc_comment_text {
   background: rgba(255,0,0, 0.1);
 }
@@ -929,6 +928,7 @@ body::-webkit-scrollbar-corner {
   background: rgba(0,0,255, 0.2);
 }
 */
+
 /*
 * radial menu
 */

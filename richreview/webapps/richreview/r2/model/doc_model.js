@@ -1322,7 +1322,17 @@
     };
 
     r2.PieceKeyboard.prototype.UpdateSizeWithTextInput = function(){
-        var new_height = r2.viewCtrl.mapDomToDocScale(this.dom.clientHeight);
+        var realHeight = function($target){
+            var $next = $target.next();
+            if($next.length !== 0){
+                return $next.offset().top-$target.offset().top;
+            }
+            else{
+                return $target.innerHeight();
+            }
+        };
+
+        var new_height = r2.viewCtrl.mapDomToDocScale(realHeight($(this.dom)));
         if(this._cnt_size.y != new_height){
             this._cnt_size.y = new_height;
             return true;

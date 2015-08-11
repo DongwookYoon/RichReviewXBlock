@@ -95,7 +95,7 @@
                 var pieceaudio = new r2.PieceAudio();
                 var annot = r2App.cur_recording_annot;
                 pieceaudio.SetPiece(
-                    r2.nameHash.getPieceVoice(r2App.cur_recording_annot.GetId(), idx),
+                    r2.nameHash.getPieceVoice(r2App.cur_recording_annot.GetId(), idx-1),
                     r2App.cur_recording_annot.GetBgnTime(),
                     anchorpiece.GetNewPieceSize(),
                     anchorpiece.GetTTData()

@@ -431,6 +431,8 @@ a:active {
   transform: translateY(-50%);
 }
 
+/* cheatsheet style */
+
 #cheatsheet {
   display: none;
   color: white;
@@ -453,6 +455,10 @@ a:active {
 #cheatsheet > a{
   display: none;
   float: right;
+}
+
+#cheatsheet > p{
+  color: white;
 }
 
 #cheatsheet.anchored > a{
@@ -502,6 +508,8 @@ a:active {
   z-index: 11;
   pointer-events: none;
 }
+
+/* dashboard style */
 
 #dashboard {
   width: 100%;
@@ -574,6 +582,7 @@ a:active {
 #page_nav_input {
   width: 33px;
   text-align: center;
+  vertical-align: middle;
 }
 
 #rendering_spinner{

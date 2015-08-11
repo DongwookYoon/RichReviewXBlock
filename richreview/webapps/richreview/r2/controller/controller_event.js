@@ -174,7 +174,8 @@ var r2Ctrl = {};
 
             KEY_SHIFT: 16,
             KEY_CTRL: 17,
-            KEY_CMD: 91
+            KEY_CMD: 91,
+            KEY_ESC: 27
         };
 
         pub.mode = r2.KeyboardModeEnum.NORMAL;
@@ -332,6 +333,10 @@ var r2Ctrl = {};
                     break;
                 default:
                     break;
+            }
+
+            if(event.which === CONST.KEY_ESC){
+                r2.dom_model.focusEsc();
             }
         };
 

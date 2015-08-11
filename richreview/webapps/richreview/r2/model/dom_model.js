@@ -503,10 +503,8 @@
             var $focused = $(':focus');
             if($focused.hasClass('tc_comment')){
                 var $next  = $focused.next('.tc_comment');
-                console.log($next);
                 if($next.length !== 0){
                     $next.focus();
-                    console.log('new_focus:', $next);
                 }
                 else{
                     if($focused.parent().hasClass('tc_cols')){ // when it's a topmost comment/text,
@@ -529,17 +527,17 @@
         pub.focusPrev = function(){
             var $focused = $(':focus');
             if($focused.hasClass('tc_comment')){
-                var $prev  = $focused.prev();
+                var $prev  = $focused.prev('.tc_comment');
                 if($prev.length !== 0){
                     $prev.focus();
                 }
                 else{
                     if($focused.parent().hasClass('tc_cols')){ // when it's a topmost comment/text,
                         var nextTcCols = getPrevTcCols($focused.parent());
-                        nextTcCols.find('.tc_comment').last().focus();
+                        nextTcCols.children().filter('.tc_comment').last().focus();
                     }
                     else{ // when it's a nested comment
-                        $focused.parent().parent().find('.tc_comment').last().focus();
+                        $focused.parent().children().filter('.tc_comment').last().focus();
                     }
 
                 }
@@ -573,6 +571,16 @@
             }
             else if($focused.hasClass('rm_btn')){
                 $focused.parents('.tc_comment').focus();
+            }
+        };
+
+        pub.focusEsc = function(){
+            var $focused = $(':focus');
+            if($focused.hasClass('r2_piecekeyboard_textarea')){
+                $focused.parent().parent().parent().parent().focus();
+            }
+            else if($focused.hasClass('rm_btn')){
+                $focused.parents('.tc_comment').first().focus();
             }
         };
 

@@ -275,6 +275,7 @@ class RichReviewXBlock(XBlock):
                     'group_of_student': str(self.group_of_student),
                     'discussion_docid': self.discussion_docid,
 
+                    'is_debug': False,
                     'is_pdf_ready': self.is_pdf_ready
                 }
             ))
@@ -301,7 +302,7 @@ class RichReviewXBlock(XBlock):
                     'discussion_docid': self.discussion_docid,
 
                     'is_pdf_ready': self.is_pdf_ready,
-                    'is_debug': True,
+                    'is_debug': False,
                     'pdf_url': self.fs.get_url(self.pdf_path, RESOURCE_EXPIRATION_TIME),
                     'pdfjs_url': self.fs.get_url(self.pdfjs_path, RESOURCE_EXPIRATION_TIME),
 

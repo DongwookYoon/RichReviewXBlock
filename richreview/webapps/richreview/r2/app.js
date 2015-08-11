@@ -215,12 +215,6 @@
                     ]);
                     throw new Error("RichReviewWebApp does not support mobile platform yet.");
                 }
-                else if(!bowser.chrome){
-                    r2.coverMsg.Show([
-                        "RichReviewWebApp only supports the Chrome browser."
-                    ]);
-                    throw new Error("RichReviewWebApp only supports the Chrome browser.");
-                }
             }
         }
 
@@ -252,7 +246,7 @@
                         "Failed to set up your mic. Please check the following:",
                         "1. Your machine's mic is working.",
                         "2. Your browser was updated to the latest version.",
-                        "3. Go to the Chrome setting by copy and paste  chrome://settings/content  to the address bar,",
+                        "3. Go to the Browser setting by copy and paste  chrome://settings/content  to the address bar,",
                         "And, in the Media -> Manage exceptions..., remove blocks of microphone resources to our website.",
                         "If nothing helps, please report this to the manager (dy252@cornell.edu). Thank you."
                     ]);

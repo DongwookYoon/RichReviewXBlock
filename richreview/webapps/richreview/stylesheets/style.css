@@ -918,7 +918,7 @@ body::-webkit-scrollbar-corner {
 }
 
 /* coloring dom_model for debugging
-*/
+
 .tc_comment_text {
   background: rgba(255,0,0, 0.1);
 }
@@ -928,7 +928,7 @@ body::-webkit-scrollbar-corner {
 .tc_comment_voice {
   background: rgba(0,0,255, 0.2);
 }
-
+*/
 /*
 * radial menu
 */
@@ -957,10 +957,10 @@ body::-webkit-scrollbar-corner {
 }
 
 .rm_btn:focus {
-  outline-color: rgb(77, 144, 254); // #4D90FE
+  outline-color: rgba(77, 144, 254, 0.5); // #4D90FE
   outline-offset: -2px;
   outline-style: auto;
-  outline-width: 5px;
+  outline-width: 3px;
 }
 
 .rm_btn_raidial {

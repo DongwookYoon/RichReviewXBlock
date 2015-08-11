@@ -77,26 +77,16 @@
                 $tight_col.toggleClass('tc_tight', true);
 
                 for(var i = 0; i < region_json.rects.length; i ++){
-                    var $comment_text = loadCommentText(region_json.rects[i], page_bbox, npage, nrgn, i, region_json.ttX, region_json.ttW);
-                    $tight_col.append($comment_text)
+                    loadCommentText($tight_col, region_json.rects[i], page_bbox, npage, nrgn, i, region_json.ttX, region_json.ttW);
                 }
 
                 return $tight_col;
             };
 
 
-            var loadCommentText = function(rect, page_bbox, npage, nrgn, npt, ttX, ttW){
-                var $comment = $(document.createElement('div'));
-                $comment.toggleClass('tc_comment', true);
-
-                $comment.on('mouseenter',function(e) {
-                    $comment.focus();
-                    e.stopPropagation();
-                });
-
-                $comment.toggleClass('tc_comment_text', true);
-                r2.dom_model.setFocusable($comment);
-                $comment.attr('alt', typeof rect[4] === 'string' ? rect[4] : '(empty)')
+            var loadCommentText = function($tight_col, rect, page_bbox, npage, nrgn, npt, ttX, ttW){
+                var $comment = appendComment($tight_col, 'tc_comment_text');
+                $comment.attr('alt', typeof rect[4] === 'string' ? rect[4] : '(empty)');
 
                 var $piece = $(document.createElement('div'));
                 $piece.toggleClass('tc_piece', true);
@@ -135,7 +125,6 @@
 
                 $piece.append($content);
                 $comment.append($piece);
-                return $comment;
             };
 
             return pub_loader;
@@ -147,11 +136,6 @@
             $comment.toggleClass('tc_comment', true);
             $comment.toggleClass(cls, true);
             r2.dom_model.setFocusable($comment);
-
-            $comment.on('mouseover',function(e) {
-                $comment.focus();
-                e.stopPropagation();
-            });
 
             $target.append($comment);
             return $comment;
@@ -272,7 +256,7 @@
                             alert("You can only delete your own comments.")
                         }
                     });
-                    r2.radialMenu.setColors($rm, user.color_radial_menu_unselected, user.color_radial_menu_selected);
+                    r2.radialMenu.finishInit($rm, user.color_radial_menu_unselected, user.color_radial_menu_selected);
 
                     var rm_x = getCommentTtIndentX($comment)-r2Const.RADIALMENU_OFFSET_X*rm_ratio;
 
@@ -384,7 +368,7 @@
                             alert("You can only delete your own comments.")
                         }
                     });
-                    r2.radialMenu.setColors($rm, user.color_radial_menu_unselected, user.color_radial_menu_selected);
+                    r2.radialMenu.finishInit($rm, user.color_radial_menu_unselected, user.color_radial_menu_selected);
 
                     var rm_x = getPieceTtIndentX($piece)-r2Const.RADIALMENU_OFFSET_X*rm_ratio;
 
@@ -597,7 +581,7 @@
             $target.on(
                 'focus',
                 function(evt){
-                    $(this).css('outline', '#4D90FE solid 2px');
+                    $(this).css('outline', 'rgba(77, 144, 254, 0.5) solid 1px');
                 }
             ).on(
                 'blur',

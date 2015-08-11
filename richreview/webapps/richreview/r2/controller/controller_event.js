@@ -9,9 +9,7 @@ var r2Ctrl = {};
 
     r2.MouseModeEnum = {
         HOVER : 0,
-        RADIALMENU : 1,
-        LDN : 2,
-        RDN : 3
+        LDN : 2
     };
 
     r2.mouse = (function(){
@@ -19,6 +17,11 @@ var r2Ctrl = {};
 
         pub.mode = r2.MouseModeEnum.HOVER;
         pub.pos_dn = new Vec2(0,0);
+
+        var in_menu = false;
+
+        pub.inMenu = function(){in_menu = true;};
+        pub.outMenu = function(){in_menu = false;};
 
         pub.setDomEvents = function(){
             r2.dom.setMouseEventHandlers(
@@ -53,10 +56,6 @@ var r2Ctrl = {};
                             r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                         }
                         break;
-                    case 3: // rght click
-                        //pub.mode = r2.MouseModeEnum.RDN;
-                        //pub.pos_dn = new_mouse_pt;
-                        break;
                     default:
                         break;
                 }
@@ -82,28 +81,19 @@ var r2Ctrl = {};
                     r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                 }
             }
-            else if(pub.mode == r2.MouseModeEnum.RDN){
-                // move viewpoint by diff
-                //r2.viewCtrl.pos.add(new_mouse_pt.subtract(r2App.cur_mouse_pt, true));
-            }
-            else if(pub.mode == r2.MouseModeEnum.RADIALMENU){
-                pub.handleRadialMenuMv(event)
-            }
 
-            if(pub.mode !== r2.MouseModeEnum.RADIALMENU){
-                r2App.cur_mouse_pt = new_mouse_pt;
-            }
+            r2App.cur_mouse_pt = new_mouse_pt;
         };
 
         pub.handleUp = function(event){
             var new_mouse_pt = pub.getPos(event);
 
             if(pub.mode == r2.MouseModeEnum.HOVER){
-                // do nothing, there's something gone wierd.
+                // do nothing, there's something weird.
             }
             else if(pub.mode == r2.MouseModeEnum.LDN){
                 if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
-                    if (pub.isTap(new_mouse_pt)) {
+                    if (!in_menu && pub.isTap(new_mouse_pt)) {
                         pub.handleTimeIndexingUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt));
                     }
                     if(r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight)){
@@ -116,52 +106,18 @@ var r2Ctrl = {};
                 }
                 pub.mode = r2.MouseModeEnum.HOVER;
             }
-            else if(pub.mode == r2.MouseModeEnum.RDN){
-                if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
-                    if (pub.isTap(new_mouse_pt)) {
-                        pub.handleTimeIndexingUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt));
-                    }
-                    else {
-                        r2.log.Log_Nav("mouse");
-                    }
-                }
-                pub.mode = r2.MouseModeEnum.HOVER;
-            }
-            else if(pub.mode == r2.MouseModeEnum.RADIALMENU){
-                pub.handleRadialMenuUp(event);
-            }
 
             r2App.cur_mouse_pt = new_mouse_pt;
         };
-
-        pub.handleRadialMenuMv = function(event){
-            if (r2App.selected_radialmenu && event.which == 1) {
-                var pt = r2.viewCtrl.mapScrToDoc(pub.getPos(event));
-                r2App.selected_radialmenu.OnMouseDrag(pt);
-                return true;
-            }
-            else {
-                return false;
-            }
-        };
-
-        pub.handleRadialMenuUp = function(event){
-            if (r2App.selected_radialmenu && event.which == 1) {
-                var pt = r2.viewCtrl.mapScrToDoc(pub.getPos(event));
-                r2App.selected_radialmenu.OnMouseUp_MenuItem(pt);
-                return true;
-            }
-            return false;
-        };
-
 
         pub.handleTimeIndexingUp = function(pt){
             var l = r2App.cur_page.HitTest(pt);
             if(l.length == 0){return;}
 
+            var playback;
             var obj_front = l[0];
             if(obj_front instanceof r2.PieceAudio){
-                var playback = obj_front.GetPlayback(pt);
+                playback = obj_front.GetPlayback(pt);
                 if(playback){
                     r2.rich_audio.play(playback.annot, playback.t);
                     r2.log.Log_AudioPlay('indexing_wf', playback.annot, playback.t);
@@ -174,7 +130,7 @@ var r2Ctrl = {};
                 var spotlights = [];
                 l.forEach(function(item){if(item instanceof r2.Spotlight.Cache){spotlights.push(item);}});
                 for(var i = 0; spotlight = spotlights[i]; ++i){
-                    var playback = spotlight.GetPlayback(pt);
+                    playback = spotlight.GetPlayback(pt);
                     if(playback){
                         r2.rich_audio.play(playback.annot, playback.t);
                         r2.log.Log_AudioPlay('indexing_sp', playback.annot, playback.t);
@@ -368,11 +324,11 @@ var r2Ctrl = {};
                     break;
                 case 107:
                     if(pub.mode == r2.KeyboardModeEnum.NORMAL)
-                        r2.clickZoomIn();
+                        r2.zoom.in();
                     break;
                 case 109:
                     if(pub.mode == r2.KeyboardModeEnum.NORMAL)
-                        r2.clickZoomOut();
+                        r2.zoom.out();
                     break;
                 default:
                     break;

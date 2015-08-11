@@ -1169,7 +1169,7 @@
             setBtnRadialPos($menu);
         };
 
-        pub.setColors = function($menu, normal, selected){
+        pub.finishInit = function($menu, normal, selected){
             var setColorNormal = function(){
                 $(this).css('background', normal);
             };
@@ -1182,17 +1182,6 @@
             $menu.find('.rm_btn').mouseout(setColorNormal);
             $menu.find('.rm_btn').focus(setColorSelected);
             $menu.find('.rm_btn').blur(setColorNormal);
-            $menu.find('.rm_btn').mouseenter(function(e) {
-                $(this).focus();
-            });
-            $menu.find('.rm_btn').mouseover(function(e) {
-                e.stopPropagation();
-            });
-            $menu.find('.rm_btn_raidial').mouseover(function(e) {
-                e.stopPropagation();
-            });
-
-
         };
 
         pub.changeCenterIcon = function(rm_id, fa_font){
@@ -1217,12 +1206,12 @@
                 $(this).first().css('top', (50 + 35*Math.sin(-0.5* Math.PI - 2*(1/l)*i*Math.PI)).toFixed(2) + "%");
             });
 
-            $menu.find('.rm_btn_center').unbind("mouseenter");
-            $menu.find('.rm_btn_center').unbind("mouseleave");
 
             $menu.on('mouseenter',function(e) {
+                r2.mouse.inMenu();
                 $menu.toggleClass('open', true);
             }).on('mouseleave',function(e) {
+                r2.mouse.outMenu();
                 $menu.toggleClass('open', false);
             });
 
@@ -1237,6 +1226,7 @@
 
         var closeRadialMenuAndRun = function($menu, cb){
             return function(){
+                r2.mouse.outMenu();
                 $menu.toggleClass('open', false);
                 cb();
             };

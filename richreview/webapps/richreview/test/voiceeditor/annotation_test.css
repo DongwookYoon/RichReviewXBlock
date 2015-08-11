@@ -36,7 +36,16 @@ p.fixedWidth {
 
 .toolbar-button {
     position: relative;
-    top: -2px;
+    top: 0;
+    border: none;
+    background: transparent;
+    color: white;
+    font-size: large;
+}
+
+.toolbar-button:active {
+    color: black;
+    opacity: 0.3;
 }
 
 .audiovisual {

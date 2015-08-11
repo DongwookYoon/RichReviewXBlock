@@ -106,6 +106,8 @@ var r2App = (function() {
     pub.annot_private_spotlight = null;
     pub.pieces_cache = {};
 
+    pub.cur_recording_anchor_piece = null;
+
     pub.selected_piece = null;
     pub.selected_radialmenu = null;
 
@@ -119,8 +121,6 @@ var r2App = (function() {
 
     pub.docid = null;
     pub.groupid = null;
-
-    pub.recording_trigger = false;
 
     pub.url_queries = new r2.util.urlQuery(location.search);
 
@@ -160,8 +160,38 @@ var r2App = (function() {
         };
 
         pub.draw = function(canvas_ctx){
-            if(selected_piece)
-                selected_piece.DrawSelected(canvas_ctx);
+            if(selected_piece){
+                if(selected_piece.DrawSelected){
+                    selected_piece.DrawSelected(canvas_ctx);
+                }
+                else{
+                    console.log(selected_piece);
+                }
+            }
+
+        };
+
+        return pub;
+    }());
+
+    pub.recordingTrigger = (function(){
+        var pub = {};
+
+        var triggered = false;
+        var target = null;
+
+        pub.set = function(target_piece){
+            triggered = true;
+            target = target_piece;
+        };
+
+        pub.isReady = function(){
+            return triggered;
+        };
+
+        pub.bgn = function(){
+            triggered = false;
+            r2.recordingBgn(target);
         };
 
         return pub;

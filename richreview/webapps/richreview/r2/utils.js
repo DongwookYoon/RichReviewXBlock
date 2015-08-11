@@ -282,6 +282,11 @@
                 });
             });
         };
+
+        pub.escapeDomId = function(s){
+            return s.replace(/\.|\-|T|\:/g, '_');
+        };
+
         return pub;
     }());
 

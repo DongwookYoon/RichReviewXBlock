@@ -45,7 +45,8 @@
                         new Vec2( // texcoordRB
                             rect[2]/ratioX,
                             1.0-rect[3]/ratioY
-                        )
+                        ),
+                        rect[4]
                     ]
                 );
                 return piecetext;
@@ -268,6 +269,7 @@
             // anchorTo: {type: 'PieceText', id: pid, page: 2} or
             //           {type: 'CommentAudio', id: annotId, page: 2, time: [t0, t1]}
             // data: {pid: id, height: 0.1}
+            r2.dom_model.createTextTearing(cmd);
 
             if(r2App.pieces_cache.hasOwnProperty(cmd.data.pid)){return;}
             var anchorpage = doc.GetPage(cmd.anchorTo.page);
@@ -303,7 +305,10 @@
             var anchorpage = doc.GetPage(cmd.anchorTo.page);
             var anchorpiece = getAnchorPiece(anchorpage, cmd);
 
+
             if(anchorpiece){
+                r2.dom_model.createCommentVoice(cmd.anchorTo.page, anchorpiece.GetId(), cmd.data.aid, r2.userGroup.GetUser(cmd.user), false); /* live_recording = false */
+
                 var annot = new r2.Annot();
                 annot.SetAnnot(cmd.data.aid, anchorpiece.GetId(), cmd.time, cmd.data.duration, cmd.data.waveform_sample, cmd.user, cmd.data.audiofileurl);
                 r2App.annots[cmd.data.aid] = annot;
@@ -312,12 +317,15 @@
                 var l = [];
 
                 for(var i = 0; i < nPiece; ++i){
+                    r2.dom_model.appendPieceVoice(cmd.data.aid, cmd.time); /* dom */
+
                     var pieceaudio = new r2.PieceAudio();
                     pieceaudio.SetPiece(
-                        Sha1.hash(cmd.data.aid + " PieceAudio " + i),
+                        r2.nameHash.getPieceVoice(cmd.data.aid, i),
                         (new Date(cmd.time)).getTime(),
                         anchorpiece.GetNewPieceSize(),
-                        anchorpiece.GetTTData());
+                        anchorpiece.GetTTData()
+                    );
                     pieceaudio.SetPieceAudio(cmd.data.aid, cmd.user, i*timePerPiece, Math.min(cmd.data.duration, (i+1)*timePerPiece));
                     l.push(pieceaudio);
                 }
@@ -346,8 +354,6 @@
                     var toupload;
                     annot.AddSpotlight(spotlight, toupload = false);
                 }
-                if(anchorpage.GetNumPage()!=r2App.cur_pdf_pagen)
-                    l[0].HideDoms();
                 return true;
             }
             return false;
@@ -385,7 +391,7 @@
             var anchorpage = doc.GetPage(cmd.anchorTo.page);
 
             var anchorpiece = getAnchorPiece(anchorpage, cmd);
-            if(anchorpiece){
+            if(anchorpiece && !cmd.data.isprivate){
                 var piecekeyboard = new r2.PieceKeyboard();
                 piecekeyboard.SetPiece(
                     cmd.data.pid,
@@ -393,10 +399,10 @@
                     anchorpiece.GetNewPieceSize(),
                     anchorpiece.GetTTData()
                 );
-                piecekeyboard.SetPieceKeyboard(cmd.data.aid, cmd.user, cmd.data.text, cmd.data.isprivate, anchorpiece.IsOnLeftColumn());
+                var dom_piecekeyboard = piecekeyboard.SetPieceKeyboard(
+                    anchorpiece.GetId(), cmd.data.aid, cmd.user, cmd.data.text, cmd.data.isprivate, anchorpiece.IsOnLeftColumn()
+                );
                 anchorpiece.AddChildrenChronologically([piecekeyboard]);
-                if(anchorpage.GetNumPage()!=r2App.cur_pdf_pagen)
-                    piecekeyboard.HideDoms();
                 return true;
             }
             return false;
@@ -450,12 +456,11 @@
             var target = doc.GetTargetPiece(cmd.target);
             if(target){
                 target.SetText(cmd.data);
-                if(target.GetNumPage()!=r2App.cur_pdf_pagen)
-                    target.HideDoms();
                 return true;
             }
             return false;
         };
+
         var changeProperty_PieceKeyboardPubPrivate = function(doc, cmd){
             // time: 2014-12-21T13...
             // user: 'red user'

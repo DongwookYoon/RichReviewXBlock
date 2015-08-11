@@ -204,7 +204,7 @@ var TranscriptTextArea = function (ta) {
         return range;
     };
 
-    var snappedSelectionCaret = function (selInfo, direction) {
+    var snappedSelectionCaret = function (selInfo, event, direction) {
         // Round the selection so that if it's on a word, it's always at the beginning or end of the word.
         if (direction == 1) {
             if (selInfo.offset == 0) {
@@ -221,7 +221,7 @@ var TranscriptTextArea = function (ta) {
                 }
             }
         } else if (direction == 2) {
-            if (selInfo.offset >= selInfo.node.textContent.length - 1) {
+            if (selInfo.offset > 1 || (selInfo.node.textContent.length == 1 && selInfo.offset > 0)) {
                 if (selInfo.node.nextSibling) {
                     return {node: selInfo.node.nextSibling, offset: selInfo.node.nextSibling.textContent.length};
                 } else {
@@ -241,11 +241,19 @@ var TranscriptTextArea = function (ta) {
             return nearestNodeVertically(selInfo.node, selInfo.offset == 0, 2);
         } else {
             if (selInfo.node) {
-                if (selInfo.offset < selInfo.node.textContent.length / 2) {
+                var offset = _this.textArea.offset(),
+                    locX = event.pageX - offset.left,
+                    nodeLocation = selInfo.node.getBoundingClientRect(),
+                    textLocation = _this.textArea[0].getBoundingClientRect();
+                if (locX < nodeLocation.left - textLocation.left + nodeLocation.width / 2.0)
+                    return {node: selInfo.node, offset: 0};
+                else
+                    return {node: selInfo.node, offset: selInfo.node.textContent.length};
+                /*if (selInfo.offset < selInfo.node.textContent.length / 2) {
                     return {node: selInfo.node, offset: 0};
                 } else {
                     return {node: selInfo.node, offset: selInfo.node.textContent.length};
-                }
+                }*/
             }
         }
         return selInfo;
@@ -358,7 +366,7 @@ var TranscriptTextArea = function (ta) {
             }
 
             if (e.type == 'mouseup' || (direction && !e.shiftKey)) {
-                var newSel = snappedSelectionCaret(selectionInfo, direction);
+                var newSel = snappedSelectionCaret(selectionInfo, e, direction);
                 if (direction && (newSel.node != selectionInfo.node || newSel.offset != selectionInfo.offset)) {
                     e.preventDefault();
                 }
@@ -711,10 +719,16 @@ var TranscriptTextArea = function (ta) {
                     multipleSelect: true
                 };
             } else {
-                var selectionInfo = caretNodeLocation_(window.getSelection());
-                var idx = this.positionOfNode(selectionInfo.node);
-                if (selectionInfo.offset == 0)
-                    idx--;
+                var selectionInfo = caretNodeLocation_(window.getSelection()),
+                    idx;
+                if (selectionInfo.node) {
+                    idx = this.positionOfNode(selectionInfo.node);
+                    if (selectionInfo.offset == 0)
+                        idx--;
+                }
+                else {
+                    idx = -1;
+                }
                 currentWordSelection_ = {
                     start: idx,
                     end: idx,
@@ -736,6 +750,8 @@ var TranscriptTextArea = function (ta) {
      */
     this.positionOfNode = function(node) {
         var idx = 0;
+        if (!node)
+            return 0;
         while( (node = node.previousSibling) != null )
             idx++;
         return idx;
@@ -833,8 +849,11 @@ var TranscriptTextArea = function (ta) {
         }
         if (pos <= this.textArea.get(0).childNodes.length - 1)
             moveCursor_(this.textArea.get(0).childNodes[pos], 0);
-        else
-            moveCursor_(this.textArea.get(0).childNodes[pos - 1], this.textArea.get(0).childNodes[pos - 1].textContent.length);
+        else {
+            var last = this.textArea.get(0).childNodes.length - 1;
+            moveCursor_(this.textArea.get(0).childNodes[last],
+                this.textArea.get(0).childNodes[last].textContent.length);
+        }
     };
 
     /**
@@ -880,7 +899,8 @@ var TranscriptTextArea = function (ta) {
      * Styles all nodes in the text area to be unhighlighted.
      */
     this.unhighlightAll = function () {
-        this.textArea.children().removeClass('annotation-highlighted');
+        if (highlightedNode_)
+            $(highlightedNode_).removeClass('annotation-highlighted');
         highlightedNode_ = null;
     };
 

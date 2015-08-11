@@ -150,12 +150,6 @@
         if (typeof dy_obj === 'undefined'){
             dy_obj = [Number.POSITIVE_INFINITY, null];
         }
-        var dy = Math.abs(this.pos.y + this.size.y - pt.y);
-        if( (dy <= dy_obj[0]) &&
-            ( this.pos.x < pt.x && pt.x < this.pos.x + this.size.x )){
-            dy_obj[0] = dy;
-            dy_obj[1] = this;
-        }
         for(var i = 0; i < this.child.length; ++i){
             this.child[i].GetPieceOfClosestBottom(pt, dy_obj);
         }
@@ -642,9 +636,10 @@
         anchorCmd.page = this.GetNumPage();
         return anchorCmd;
     };
-    r2.PieceText.prototype.SetPieceText = function(texCoordLT, texCoordRB){
+    r2.PieceText.prototype.SetPieceText = function(texCoordLT, texCoordRB, text){
         this._texCoordLT = texCoordLT;
         this._texCoordRB = texCoordRB;
+        this._text = typeof text === 'string' ? text : '(empty)';
     };
     r2.PieceText.prototype.SetVisibility = function(visible){
         r2.Obj.prototype.SetVisibility.apply(this, [visible]);
@@ -741,7 +736,6 @@
         this._t_end = 0;
         this._audio_dbs = [];
         this._audio_dbs_recording = [];
-        this._radialmenu = null;
 
         this.__annot = null;
     };
@@ -757,8 +751,6 @@
         return anchorCmd;
     };
     r2.PieceAudio.prototype.Destructor = function(){
-        if(this._radialmenu)
-            this._radialmenu.Destructor();
         r2.Piece.prototype.Destructor.apply(this);
     };
     r2.PieceAudio.prototype.GetAnnot = function(){
@@ -778,7 +770,7 @@
             return result;
         }
         else{
-            if(this._radialmenu != null && this._annotid == annotid){
+            if(this._annotid == annotid){ // ToDo check it returns the first piece
                 return this;
             }
             else{
@@ -807,16 +799,6 @@
         }
         return rtn;
     };
-    r2.PieceAudio.prototype.HideDoms = function(){
-        if(this._radialmenu){
-            this._radialmenu.HideDoms();
-        }
-    };
-    r2.PieceAudio.prototype.updateDom = function(){
-        if(this._radialmenu){
-            this._radialmenu.updateDom();
-        }
-    };
     r2.PieceAudio.prototype.GetTimeBgn = function(){
         return this._t_bgn;
     };
@@ -842,10 +824,6 @@
                 this._audio_dbs.push(0);
             }
         }
-
-        if(this._t_bgn==0 && this._radialmenu == null){
-            this._radialmenu = new r2.AnnotRadialMenu(this._annotid);
-        }
     };
     r2.PieceAudio.prototype.UpdateAudioDbsRecording = function(t_end){
         this._t_end = t_end;
@@ -865,9 +843,6 @@
     };
     r2.PieceAudio.prototype.Relayout = function(origin){
         var rtn = r2.Piece.prototype.Relayout.apply(this, [origin]);
-        if(this._radialmenu){
-            this._radialmenu.Relayout();
-        }
         return rtn;
     };
     r2.PieceAudio.prototype.DrawPiece = function(){
@@ -897,8 +872,10 @@
         }
         r2.canv_ctx.beginPath();
 
+
         r2.canv_ctx.moveTo(x_bgn, y_bgn+cnt_size_y);
         r2.canv_ctx.lineTo(x_bgn+this.GetTtIndentedWidth(), y_bgn+cnt_size_y);
+
 
         r2.canv_ctx.strokeStyle = this.GetAnnot().GetUser().color_light_html;
         r2.canv_ctx.lineWidth = r2Const.PIECEAUDIO_LINE_WIDTH;
@@ -906,7 +883,8 @@
         r2.canv_ctx.lineJoin = 'round';
         r2.canv_ctx.stroke();
 
-        if(this._radialmenu) {
+
+        if(this._t_bgn === 0) {
             var pieceaudios = this.GetParent().GatherPieceAudioByAnnotId(this._annotid);
             var lastpiece = pieceaudios[pieceaudios.length-1];
             var last_y = lastpiece.pos.y+lastpiece.GetContentSize().y-r2Const.PIECEAUDIO_LINE_WIDTH;
@@ -928,10 +906,6 @@
             r2.canv_ctx.lineCap = 'round';
             r2.canv_ctx.lineJoin = 'round';
             r2.canv_ctx.stroke();
-        }
-
-        if(this._radialmenu){
-            this._radialmenu.Draw();
         }
     };
     r2.PieceAudio.prototype.DrawPieceDynamic = function(cur_annot_id, canvas_ctx, force){
@@ -1026,8 +1000,6 @@
         this.dom_span = null;
         this.dom_pre = null;
         this.dom_textarea = null;
-        this.dom_btn_rmv = null;
-        this.dom_btn_pub = null;
 
         this.__private_shift_x = null;
         this._isprivate = false;
@@ -1038,9 +1010,6 @@
     r2.PieceKeyboard.prototype = Object.create(r2.Piece.prototype);
 
     r2.PieceKeyboard.prototype.Destructor = function(){
-        if(this.dom){
-            r2.dom.removeFromPageDom(this.dom);
-        }
         r2.Piece.prototype.Destructor.apply(this);
     };
     r2.PieceKeyboard.prototype.GetAnchorTo = function(){
@@ -1127,22 +1096,36 @@
         cmd.target = this.GetTargetData();
         return cmd;
     };
-    r2.PieceKeyboard.prototype.SetPieceKeyboard = function(annotid, username, text, isprivate, isOnLeftColumn){
+    r2.PieceKeyboard.prototype.SetPieceKeyboard = function(anchor_pid, annotid, username, text, isprivate, isOnLeftColumn){
         this._annotid = annotid;
         this._username = username;
 
-        this.CreateDom();
+        var dom = this.CreateDom();
         this.SetText(text);
         this._isprivate = isprivate;
         if(this._isprivate){
-            $(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(true, isOnLeftColumn));
+            //$(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(true, isOnLeftColumn));
         }
         else{
-            $(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(false, isOnLeftColumn));
+            //$(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(false, isOnLeftColumn));
         }
         if(this._username != r2.userGroup.cur_user.name){
             $(this.dom_textarea).prop('readonly', true);
         }
+
+        r2.dom_model.appendPieceKeyboard(
+            this._username,
+            this._annotid,
+            this.GetId(),
+            anchor_pid,
+            this._creationTime,
+            dom,
+            this
+        );
+
+        this.UpdateSizeWithTextInput();
+
+        return dom;
     };
     r2.PieceKeyboard.prototype.GetAnnotId = function(){
         if(this._annotid != null){
@@ -1173,6 +1156,12 @@
         this.dom.classList.toggle('r2_piecekeyboard', true);
         this.dom.classList.toggle('unselectable', true);
 
+        this.dom_tr = document.createElement('div');
+        this.dom_tr.classList.toggle('r2_peicekeyboard_tr', true);
+        this.dom_tr.classList.toggle('unselectable', true);
+        this.dom.appendChild(this.dom_tr);
+
+
         this.dom_pre = document.createElement('pre');
         this.dom_pre.classList.toggle('r2_piecekeyboard_pre', true);
         this.dom_pre.classList.toggle('unselectable', true);
@@ -1181,25 +1170,19 @@
         this.dom_span.classList.toggle('unselectable', true);
         this.dom_pre.appendChild(this.dom_span);
         this.dom_pre.appendChild(document.createElement('br'));
-        this.dom.appendChild(this.dom_pre);
+        this.dom_tr.appendChild(this.dom_pre);
 
         this.dom_textarea = document.createElement('textarea');
         this.dom_textarea.classList.toggle('r2_piecekeyboard_textarea', true);
         this.dom_textarea.classList.toggle('unselectable', true);
         this.dom_textarea.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
-        this.dom.appendChild(this.dom_textarea);
+        this.dom_tr.appendChild(this.dom_textarea);
 
-        this.dom_btn_rmv = document.createElement('a');
-        this.dom_btn_rmv.className += 'r2_piecekeyboard_btn_rmv fa fa-times-circle';
-        this.dom_btn_rmv.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
-        this.dom_btn_rmv.onmousedown = this.OnBtnRmv.bind(this);
-        this.dom.appendChild(this.dom_btn_rmv);
+        $(this.dom_tr).css('left', this.GetTtIndent()+'em');
+        $(this.dom_tr).css('width', this.GetTtIndentedWidth()+'em');
 
-        this.dom_btn_pub = document.createElement('a');
-        this.dom_btn_pub.className += 'r2_piecekeyboard_btn_rmv fa fa-share-square';
-        this.dom_btn_pub.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
-        this.dom_btn_pub.onmousedown = this.OnBtnPub.bind(this);
-        this.dom.appendChild(this.dom_btn_pub);
+        //fa-times-circle
+        //fa-share-square
 
         ///////////////
         this.AddEventHandle = function () {
@@ -1217,8 +1200,6 @@
                     r2.keyboard.mode = r2.KeyboardModeEnum.NORMAL;
                     r2App.cur_focused_piece_keyboard = null;
                     this.dom_textarea.style.boxShadow = "none";
-                    this.dom_btn_rmv.style.display = "none";
-                    this.dom_btn_pub.style.display = "none";
                     $(this.dom).css("pointer-events", 'none');
                     if(this.__contentschanged){
                         r2Sync.PushToUploadCmd(this.ExportToTextChange());
@@ -1227,22 +1208,18 @@
                 }.bind(this), false);
                 this.dom_textarea.addEventListener('focus', function() {
                     if(this._username != r2.userGroup.cur_user.name){
-                        $(this.dom_textarea).blur();
+                        $(this.dom_textarea).blur(); // unfocus
                         return;
                     }
                     r2.keyboard.mode = r2.KeyboardModeEnum.FOCUSED;
                     r2App.cur_focused_piece_keyboard = this;
-                    var color;
-                    if(this._isprivate){
-                        color = r2.userGroup.GetUser(this._username).color_piecekeyboard_private_box_shadow;
-                    }
-                    else{
-                        color = r2.userGroup.GetUser(this._username).color_piecekeyboard_box_shadow;
-                    }
+                    var color = this._isprivate ?
+                            r2.userGroup.GetUser(this._username).color_piecekeyboard_private_box_shadow :
+                            r2.userGroup.GetUser(this._username).color_piecekeyboard_box_shadow;
                     this.dom_textarea.style.boxShadow = "0 0 0.2em "+color+" inset, 0 0 0.2em "+color;
                     if(this._username == r2.userGroup.cur_user.name) {
-                        this.dom_btn_rmv.style.display = "block";
-                        this.dom_btn_pub.style.display = "block";
+                        //this.dom_btn_rmv.style.display = "block";
+                        //this.dom_btn_pub.style.display = "block";
                     }
                     $(this.dom).css("pointer-events", 'auto');
                 }.bind(this), false);
@@ -1251,8 +1228,13 @@
 
         this.AddEventHandle();
 
-        r2.dom.appendToPageDom(this.dom);
+        //r2.dom.appendToPageDom(this.dom);
         this.ResizeDom();
+
+        return this.dom;
+    };
+    r2.PieceKeyboard.prototype.edit = function(){
+        this.dom_textarea.focus();
     };
 
     r2.PieceKeyboard.prototype.OnBtnRmv = function(){
@@ -1279,10 +1261,10 @@
     };
     r2.PieceKeyboard.prototype.UpdateForPubPrivate = function(){
         if(this._isprivate){
-            $(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(true, this.IsOnLeftColumn()));
+            //$(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(true, this.IsOnLeftColumn()));
         }
         else{
-            $(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(false, this.IsOnLeftColumn()));
+            //$(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(false, this.IsOnLeftColumn()));
         }
         this.dom_textarea.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
     };
@@ -1338,10 +1320,6 @@
             r2.Piece.prototype.DrawSelected.apply(this, [canvas_ctx, x_offset]);
         }
     };
-    r2.PieceKeyboard.prototype.HideDoms = function(){
-        this.dom.style.left = -10.0 * r2.viewCtrl.page_width_noscale + 'px';
-        this.dom.style.top = -10.0 * r2.viewCtrl.page_width_noscale  + 'px';
-    };
 
     r2.PieceKeyboard.prototype.UpdateSizeWithTextInput = function(){
         var new_height = r2.viewCtrl.mapDomToDocScale(this.dom.clientHeight);
@@ -1352,14 +1330,7 @@
         return false;
     };
     r2.PieceKeyboard.prototype.ResizeDom = function(){
-        var fontsize = r2.viewCtrl.mapDocToDomScale(r2Const.PIECEKEYBOARD_FONTSIZE) + 'px';
-        this.dom_textarea.style.fontSize = fontsize;
-        this.dom_pre.style.fontSize = fontsize;
-        this.dom_btn_rmv.style.fontSize = fontsize;
-        this.dom_btn_pub.style.fontSize = fontsize;
-
         var w = r2.viewCtrl.mapDocToDomScale(this.GetTtIndentedWidth());
-        this.dom.style.width = w + 'px';
         this.__dom_size = new Vec2(w, this.dom.clientHeight);
         this.UpdateSizeWithTextInput();
     };
@@ -1386,6 +1357,7 @@
         }
     };
     r2.PieceKeyboard.prototype.updateDom = function(){
+        return;
         var scale = r2.viewCtrl.scale;
         var x_shift = this._isprivate ? this.GetPrivateShiftX() : 0;
         if(!this._isvisible){
@@ -1395,11 +1367,6 @@
         var p = r2.viewCtrl.mapDocToDom(Vec2(this.pos.x+this.GetTtIndent() + x_shift, this.pos.y));
         this.dom.style.left = p.x + 'px';
         this.dom.style.top = p.y  + 'px';
-
-        this.dom_btn_rmv.style.left = this.__dom_size.x + scale*x_shift + 'px';
-        this.dom_btn_rmv.style.top = 0;
-        this.dom_btn_pub.style.left = this.__dom_size.x + scale*x_shift + 'px';
-        this.dom_btn_pub.style.top = this.__dom_size.y - scale*13 + 'px';
     };
 
     /*
@@ -1414,12 +1381,8 @@
         this._username = null;
         this._spotlights = [];
         this._audiofileurl = "";
-        this.__radialmenu = null;
     };
 
-    r2.Annot.prototype.GetRadialMenu = function(){
-        return this.__radialmenu;
-    };
     r2.Annot.prototype.ExportToCmd = function(){
         // time: 2014-12-21T13...
         // user: 'red user'
@@ -1508,9 +1471,6 @@
         this._audiofileurl = url;
         this._reacordingaudioblob = blob;
     };
-    r2.Annot.prototype.SetAnnotRadialMenu = function(annotradialmenu){
-        this.__radialmenu = annotradialmenu;
-    };
 
     r2.Annot.prototype.SampleAudioDbs = function(msec) {
         var x = this._audio_dbs.length*(msec/this._duration);
@@ -1534,9 +1494,6 @@
     };
 
 
-    /*
-     * AnnotRadialMenu
-     */
     r2.AnnotPrivateSpotlight = function() {
         r2.Annot.call(this);
         this.isPrivateSpotlight = true;
@@ -1586,249 +1543,6 @@
         }
     };
 
-
-    /*
-     * AnnotRadialMenu
-     */
-    r2.AnnotRadialMenu = function(annotid){
-        this._annotid = annotid;
-        this._user = r2App.annots[this._annotid].GetUser();
-        r2App.annots[this._annotid].SetAnnotRadialMenu(this);
-        this._pos = new Vec2(0,0);
-
-        var doms = this.CreateDom();
-        this._nav = doms[0];
-        this._menu_btn = doms[1];
-        this._circle = doms[2];
-        this._selecteditem = -2; // -2 for nothing, -1 for the center button, radial menu starts from 0
-
-        this._radius = r2Const.RADIALMENU_RADIUS;
-
-        this.__pieceaudio = null; // use GetPiece();
-        this.__lastcenterbtnclass = 'fa-play';
-
-        this._menu_btn.onmousedown = this.OnMouseDown.bind(this);
-        this._menu_btn.onmouseup = this.OnMouseUp_CenterBtn.bind(this);
-    };
-
-    r2.AnnotRadialMenu.prototype.Destructor = function(){
-        r2.dom.removeFromPageDom(this._nav);
-    };
-    r2.AnnotRadialMenu.prototype.GetPiece = function(){
-        if(this.__pieceaudio == null){
-            this.__pieceaudio = r2App.cur_page.SearchPieceAudioByAnnotId(this._annotid, -1);
-        }
-        return this.__pieceaudio;
-    };
-    r2.AnnotRadialMenu.prototype.CreateDom = function(){
-        var nav = document.createElement('nav');
-        nav.className += 'nav-circular-menu';
-
-        var circle = document.createElement('div');
-        circle.className += 'circle';
-        nav.appendChild(circle);
-
-        var menu_button = document.createElement('a');
-        menu_button.className += 'menu-button menu-button-play fa fa-play';
-        menu_button.style.background = this._user.color_radial_menu_unselected;
-        nav.appendChild(menu_button);
-
-        var items = [];
-        var i, l;
-        for(i = 0, l = r2Const.RADIAL_MENU_ITEM_N; i < l; ++i){
-            items.push(document.createElement('a'));
-            circle.appendChild(items[i]);
-            items[i].style.left = (50 - 35*Math.cos(-0.5 * Math.PI - 2*(1/l)*i*Math.PI)).toFixed(4) + "%";
-            items[i].style.top = (50 + 35*Math.sin(-0.5 * Math.PI - 2*(1/l)*i*Math.PI)).toFixed(4) + "%";
-        }
-        items[0].className += 'menu-button fa fa-chevron-up';
-        items[1].className += 'menu-button fa fa-link';
-        items[2].className += 'menu-button fa fa-chevron-down';
-        items[3].className += 'menu-button fa fa-trash';
-
-        r2.dom.appendToPageDom(nav);
-        return [nav, menu_button, circle];
-    };
-
-    r2.AnnotRadialMenu.prototype.LoadingAudioBgn = function(){
-        $(this._menu_btn).toggleClass("loading", true);
-    };
-
-    r2.AnnotRadialMenu.prototype.LoadingAudioEnd = function(){
-        $(this._menu_btn).toggleClass("loading", false);
-    };
-
-    r2.AnnotRadialMenu.prototype.selectItem = function(n){
-      if(this._selecteditem != n){
-          this._selecteditem = n;
-          this.setHighlight(this._menu_btn, -1 === n);
-          for(var i = 0; i < r2Const.RADIAL_MENU_ITEM_N; ++i){
-              this.setHighlight(this._circle.childNodes[i], i === n);
-          }
-      }
-    };
-    r2.AnnotRadialMenu.prototype.getSelectedItem = function(){
-        return this._selecteditem;
-    };
-    r2.AnnotRadialMenu.prototype.setHighlight = function(item, flag){
-        item.classList.toggle('highlight', flag);
-        item.style.background = flag ? this._user.color_radial_menu_selected : this._user.color_radial_menu_unselected;
-    };
-
-    r2.AnnotRadialMenu.prototype.Draw = function(){
-
-    };
-    r2.AnnotRadialMenu.prototype.updateDom = function(){
-        if(this.__pieceaudio){
-            var ratio = Math.pow(0.8, this.__pieceaudio.GetTtDepth() - 1);
-            this._radius = r2.viewCtrl.scale * r2Const.RADIALMENU_RADIUS * ratio;
-            var dom_pos = r2.viewCtrl.mapDocToDom(this._pos);
-            this._nav.style.left = dom_pos.x + 'px';
-            this._nav.style.top = dom_pos.y  + 'px';
-            this._nav.style.fontSize = r2.viewCtrl.mapDocToDomScale(r2Const.RADIALMENU_SIZE * ratio) + 'px';
-
-            if(r2App.mode == r2App.AppModeEnum.REPLAYING && this._annotid == r2App.cur_annot_id){
-                this.SetIconByType('fa-pause');
-            }
-            else if(r2App.mode == r2App.AppModeEnum.RECORDING && this._annotid == r2App.cur_recording_annot.GetId()){
-                this.SetIconByType('fa-stop');
-            }
-            else{
-                this.SetIconByType('fa-play');
-            }
-        }
-    };
-    r2.AnnotRadialMenu.prototype.HideDoms = function(){
-        this._nav.style.left = -10.0 * r2.viewCtrl.page_width_noscale + 'px';
-        this._nav.style.top = -10.0 * r2.viewCtrl.page_width_noscale  + 'px';
-    };
-    r2.AnnotRadialMenu.prototype.SetIconByType = function(type){
-        if(this.__lastcenterbtnclass != type){
-            this._menu_btn.classList.toggle(this.__lastcenterbtnclass, false);
-            this._menu_btn.classList.toggle(type, true);
-            this.__lastcenterbtnclass = type;
-        }
-    };
-    r2.AnnotRadialMenu.prototype.Relayout = function(){
-        var piece = this.GetPiece();
-        if(piece){
-            var ratio = Math.pow(0.8, this.__pieceaudio.GetTtDepth() - 1);
-            this._pos.x = piece.pos.x+piece.GetTtIndent()-r2Const.RADIALMENU_OFFSET_X*ratio;
-            this._pos.y = piece.pos.y;
-        }
-    };
-    r2.AnnotRadialMenu.prototype.OnMouseDown = function(event) {
-        event.preventDefault();
-        if(r2.mouse.mode == r2.MouseModeEnum.HOVER && event.which == 1){ // on left click
-            r2.mouse.mode = r2.MouseModeEnum.RADIALMENU;
-
-            r2App.selected_radialmenu = this;
-            this.selectItem(-1);
-            if(r2App.mode != r2App.AppModeEnum.RECORDING){
-                this._circle.classList.toggle('open', true);
-            }
-        }
-    };
-    r2.AnnotRadialMenu.prototype.OnMouseDrag = function(_pt){
-        if(this._pos.distance(_pt)<this._radius){
-            event.preventDefault();
-            return this.OnMouseDrag_OverCenterBtn();
-        }
-        else{
-            var idx = (Math.atan2(_pt.y-this._pos.y, _pt.x-this._pos.x)/(2*Math.PI/r2Const.RADIAL_MENU_ITEM_N))+(0.5+r2Const.RADIAL_MENU_ITEM_N/4);
-            idx = parseInt(idx+r2Const.RADIAL_MENU_ITEM_N)%r2Const.RADIAL_MENU_ITEM_N;
-            return this.OnMouseDrag_OverMenuItem(idx);
-        }
-    };
-    r2.AnnotRadialMenu.prototype.OnMouseDrag_OverCenterBtn = function(){
-        this.selectItem(-1);
-        return false;
-    };
-    r2.AnnotRadialMenu.prototype.OnMouseDrag_OverMenuItem = function(n){
-        this.selectItem(n);
-        switch (n){
-            case 0: // collapse
-                /*this.GetPiece().GetParent().GatherPieceAudioByAnnotId(this._annotid).forEach(function(piece){
-                    piece.SetVisibility(false);
-                });
-                r2App.invalidate_page_layout = true;
-                */
-                return true;
-                break;
-            case 2: // expand
-                /*this.GetPiece().GetParent().GatherPieceAudioByAnnotId(this._annotid).forEach(function(piece){
-                    piece.SetVisibility(true);
-                });
-                r2App.invalidate_page_layout = true;
-                */
-                return true;
-                break;
-            default :
-                break;
-        }
-        return false;
-    };
-    r2.AnnotRadialMenu.prototype.OnMouseUp_CenterBtn = function(event){
-        event.preventDefault();
-
-        if(r2.mouse.mode != r2.MouseModeEnum.RADIALMENU){return;}
-        if (r2App.mode == r2App.AppModeEnum.IDLE) {
-            r2.rich_audio.play(this._annotid, -1);
-            r2.log.Log_AudioPlay('radialmenu', this._annotid, r2.audioPlayer.getPlaybackTime());
-        }
-        else if (r2App.mode == r2App.AppModeEnum.REPLAYING) {
-            if (r2App.cur_annot_id == this._annotid) {
-                r2.log.Log_AudioStop('radialmenu', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
-                r2.rich_audio.stop();
-            }
-            else {
-                r2.rich_audio.play(this._annotid, -1);
-                r2.log.Log_AudioPlay('radialmenu', this._annotid, r2.audioPlayer.getPlaybackTime());
-            }
-        }
-        else if(r2App.mode == r2App.AppModeEnum.RECORDING && this._annotid == r2App.cur_recording_annot.GetId()){
-            r2.recordingStop(true); //toupload
-            r2.log.Log_Simple("Recording_Stop_RadialMenu");
-        }
-    };
-    r2.AnnotRadialMenu.prototype.OnMouseUp_MenuItem = function(_pt){
-        if(r2.mouse.mode != r2.MouseModeEnum.RADIALMENU){return;}
-
-        var d = this._pos.distance(_pt);
-        if(d>0.02){ // btn radius
-            switch(this.getSelectedItem()){
-                case 0:
-                    break;
-                case 1:
-                    var lnk = r2App.server_url+"viewer?access_code=" + r2.ctx["pdfid"] +
-                            "&docid=" + r2.ctx["docid"] +
-                            "&groupid=" + r2.ctx["groupid"] +
-                            "&comment=" +encodeURIComponent(this._annotid);
-                    window.prompt("Link to the Comment", lnk);
-                    break;
-                case 2:
-                    break;
-                case 3:
-                    if(r2.userGroup.cur_user === this._user){
-                        var annottodelete = r2App.annots[this._annotid];
-                        if(r2.removeAnnot(this._annotid, true, false)){ // askuser, mute
-                            r2Sync.PushToUploadCmd(annottodelete.ExportToCmdDeleteComment());
-                            r2.log.Log_Simple("RemoveAnnot_Audio_RadialMenu");
-                        }
-                    }
-                    else{
-                        alert("You can only delete your own comments.")
-                    }
-                    break;
-            }
-        }
-
-        r2.mouse.mode = r2.MouseModeEnum.HOVER;
-
-        r2App.selected_radialmenu = null;
-        this.selectItem(-2);
-        this._circle.classList.toggle('open', false);
-    };
 
     /*
      * Ink

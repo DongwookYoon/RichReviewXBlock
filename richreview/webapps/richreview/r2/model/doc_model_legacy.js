@@ -831,7 +831,8 @@ var r2Legacy = {
         //           {type: 'CommentAudio', id: annotId, page: 2, time: [t0, t1]}
         // data: {pid: id, height: 0.1}
 
-        if(this.size.y != 0){
+        //if(this.size.y != 0)
+        {
             cmd.time = this._annotId != '' ? annots[this._annotId].GetRecordBgnTime() : 0;
             cmd.user = r2Const.LEGACY_USERNAME;
             cmd.op = 'CreateComment';
@@ -879,7 +880,7 @@ var r2Legacy = {
             cmd.data = {};
 
             if(parent instanceof PieceText){ //
-                cmd.anchorTo = parent.GetAnchorTo();
+                cmd.anchorTo = this.GetAnchorTo();
                 cmd.data.aid = this._annotId;
                 cmd.data.duration = annot.GetRecordDuration();
                 cmd.data.waveform_sample = annot._audio_dbs;

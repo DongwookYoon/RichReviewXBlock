@@ -29,13 +29,11 @@
 
     r2.loadApp = function(path_prefix){
         var scripts = [
-            //["lib_ext/bootstrap-3.2.0-dist/css/bootstrap.min.css", "css"],
             ["lib_ext/font-awesome.4.3.0/css/font-awesome.min.css", "css"],
             ["lib_ext/font-awesome-animation.min.css", "css"],
             ["lib_ext/jquery-ui-1.11.4/jquery-ui.css", "css"],
             ["lib_ext/jquery-ui-1.11.4/jquery-ui.js", "js"],
             ["stylesheets/style.css", "css"],
-            //["lib_ext/bootstrap-3.2.0-dist/js/bootstrap.min.js", "js"],
             ["lib_ext/pdfjs/pdf.js", "js"],
             ["lib_ext/recorder/recorder.js", "js"],
             ["lib_ext/sha1.js", "js"],
@@ -45,6 +43,7 @@
             ["r2/utils.js", "js"],
             ["r2/helpers.js", "js"],
             ["r2/shared_objs.js", "js"],
+            ["r2/model/dom_model.js", "js"],
             ["r2/model/doc_model_legacy.js", "js"],
             ["r2/model/doc_model.js", "js"],
             ["r2/controller/controller_cmds.js", "js"],

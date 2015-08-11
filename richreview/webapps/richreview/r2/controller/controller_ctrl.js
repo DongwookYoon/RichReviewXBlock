@@ -11,10 +11,8 @@
             r2.audioPlayer.play(
                 annot_id, r2App.annots[annot_id].GetAudioFileUrl(), time,
                 function(){
-                    r2App.annots[annot_id].GetRadialMenu().LoadingAudioBgn(); // cb_loading_bgn
                 },
                 function(){
-                    r2App.annots[annot_id].GetRadialMenu().LoadingAudioEnd(); // cb_loading_end
                 }
             );
         };
@@ -24,22 +22,26 @@
         return pub;
     }());
 
-    r2.recordingBgn = function(){
+    r2.recordingBgn = function(target_piece){
         r2.audioRecorder.BgnRecording();
 
-        var anchorpiece = r2App.pieceSelector.get();
+        r2App.cur_recording_anchor_piece = target_piece;
+        var anchorpiece = target_piece;
 
         r2App.cur_recording_annot = new r2.Annot();
         var annotid = new Date(r2App.cur_time).toISOString();
-        r2App.cur_recording_annot.SetAnnot(annotid, anchorpiece.GetId(), r2App.cur_time, r2App.cur_time, [], r2.userGroup.cur_user.name, "");
+        r2App.cur_recording_annot.SetAnnot(
+            annotid, anchorpiece.GetId(), r2App.cur_time, r2App.cur_time, [], r2.userGroup.cur_user.name, ""
+        );
         r2App.annots[annotid] = r2App.cur_recording_annot;
 
         var pieceaudio = new r2.PieceAudio();
         pieceaudio.SetPiece(
-            Sha1.hash(annotid+" ProxyWaveform "+0),
+            r2.nameHash.getPieceVoice(annotid, 0),
             r2App.cur_recording_annot.GetBgnTime(),
             anchorpiece.GetNewPieceSize(),
-            anchorpiece.GetTTData());
+            anchorpiece.GetTTData()
+        );
         pieceaudio.SetPieceAudio(annotid, r2.userGroup.cur_user.name, 0, 0);
 
         r2App.cur_recording_pieceaudios = [];
@@ -49,6 +51,12 @@
         r2App.mode = r2App.AppModeEnum.RECORDING;
         $('#recording_indicator').css("display","block");
         r2.dom.recordingBgn();
+
+
+        /* dom */
+        r2.dom_model.createCommentVoice(r2App.cur_pdf_pagen, anchorpiece.GetId(), annotid, r2.userGroup.cur_user, true); /* live_recording = true */
+        r2.dom_model.appendPieceVoice(annotid, r2App.cur_recording_annot.GetBgnTime());
+
 
         r2App.invalidate_page_layout = true;
     };
@@ -82,11 +90,12 @@
             var timePerPiece = r2Const.PIECEAUDIO_TIME_PER_WIDTH*r2.util.lastOf(r2App.cur_recording_pieceaudios).GetTtIndentedWidth();
             var idx = Math.ceil(r2App.cur_recording_annot.GetDuration()/timePerPiece);
             if(r2App.cur_recording_pieceaudios.length < idx){
-                var anchorpiece = r2App.pieceSelector.get();
+                var anchorpiece = r2App.cur_recording_anchor_piece;
+
                 var pieceaudio = new r2.PieceAudio();
                 var annot = r2App.cur_recording_annot;
                 pieceaudio.SetPiece(
-                    Sha1.hash(r2App.cur_recording_annot.GetId() + " PieceAudio " + idx),
+                    r2.nameHash.getPieceVoice(r2App.cur_recording_annot.GetId(), idx),
                     r2App.cur_recording_annot.GetBgnTime(),
                     anchorpiece.GetNewPieceSize(),
                     anchorpiece.GetTTData()
@@ -102,6 +111,9 @@
                 anchorpiece.AddChildrenAtFront(r2App.cur_recording_pieceaudios);
 
                 r2App.invalidate_page_layout = true;
+
+                /* dom */
+                r2.dom_model.appendPieceVoice(annot.GetId(), r2App.cur_recording_annot.GetBgnTime());
             }
             r2.PieceAudio.prototype.NormalizePieceAudio(r2App.cur_recording_pieceaudios, refresh_all = false);
         });
@@ -117,8 +129,16 @@
         }
         else{
             if (askuser == false || confirm('Do you really want to delete this comment?')) {
+                r2.dom_model.remove(annotid);
                 r2App.doc.RunRecursive("RemoveAnnot", [annotid]);
-                delete r2App.annots[annotid];
+                if(r2App.annots[annotid]){ /* when a voice comment */
+                    var annot = r2App.annots[annotid];
+                    console.log('>>>>delete:', annotid, r2App.annots[annotid]);
+                    delete r2App.annots[annotid];
+                }
+                else{ /* when a typewritten comment*/
+
+                }
                 r2App.invalidate_page_layout = true;
                 return true;
             }
@@ -229,6 +249,8 @@
         var scale = r2.viewCtrl.scale;
 
         r2.viewCtrl.resizeView(app_container_size, doc_yx_ratio, {left:0.0, rght:0.0});
+        r2.dom_model.resize(r2.viewCtrl.page_size_scaled.x);
+
         r2.dom.resizeDom(scale, app_container_size, r2.viewCtrl.page_size_scaled, r2.viewCtrl.page_margins, r2.viewCtrl.canv_px_size);
 
         if(r2App.cur_page){
@@ -236,6 +258,8 @@
         }
         r2App.invalidate_static_scene = true;
         r2App.invalidate_dynamic_scene = true;
+
+
 
         r2.log.Log_RefreshCanvasSize();
     };

@@ -196,21 +196,63 @@ var r2Ctrl = {};
     r2.keyboard = (function(){
         var pub = {};
 
+        var CONST = {
+            KEY_LEFT: 37,
+            KEY_RGHT: 39,
+            KEY_UP: 38,
+            KEY_DN: 40,
+            KEY_HOM: 36,
+            KEY_END: 35,
+            KEY_PAGEUP: 33,
+            KEY_PAGEDN: 34,
+
+            KEY_C: 67,
+            KEY_X: 88,
+            KEY_Z: 90,
+
+            KEY_BSPACE: 8,
+            KEY_DEL: 46,
+
+            KEY_SPACE: 32,
+            KEY_ENTER: 13,
+
+            KEY_SHIFT: 16,
+            KEY_CTRL: 17,
+            KEY_CMD: 91
+        };
+
         pub.mode = r2.KeyboardModeEnum.NORMAL;
         pub.ctrlkey_dn = false;
 
         pub.handleDn = function(event){
             if(r2App.mode == r2App.AppModeEnum.IDLE && pub.mode == r2.KeyboardModeEnum.NORMAL){
                 switch(event.which){
-                    case 17: // left ctrl
-                    case 25: // rght ctrl
+                    case CONST.KEY_CTRL: // left ctrl
                         pub.ctrlkey_dn = true;
                         break;
-                    case 37:
+                    case CONST.KEY_PAGEUP:
                         r2.clickPrevPage();
+                        event.preventDefault();
                         break;
-                    case 39:
+                    case CONST.KEY_PAGEDN:
                         r2.clickNextPage();
+                        event.preventDefault();
+                        break;
+                    case CONST.KEY_DN:
+                        r2.dom_model.focusNext();
+                        event.preventDefault();
+                        break;
+                    case CONST.KEY_UP:
+                        r2.dom_model.focusPrev();
+                        event.preventDefault();
+                        break;
+                    case CONST.KEY_LEFT:
+                        r2.dom_model.focusUp();
+                        event.preventDefault();
+                        break;
+                    case CONST.KEY_RGHT:
+                        r2.dom_model.focusIn();
+                        event.preventDefault();
                         break;
                     default:
                         break;
@@ -218,22 +260,31 @@ var r2Ctrl = {};
             }
             if(r2App.mode == r2App.AppModeEnum.REPLAYING && pub.mode == r2.KeyboardModeEnum.NORMAL){
                 switch(event.which){
-                    case 17: // left ctrl
-                    case 25: // rght ctrl
+                    case CONST.KEY_CTRL: // left ctrl
                         pub.ctrlkey_dn = true;
                         break;
-                    case 37:
-                        r2.clickPrevPage();
+                    case CONST.KEY_DN:
+                        r2.dom_model.focusNext();
+                        event.preventDefault();
                         break;
-                    case 39:
-                        r2.clickNextPage();
+                    case CONST.KEY_UP:
+                        r2.dom_model.focusPrev();
+                        event.preventDefault();
+                        break;
+                    case CONST.KEY_LEFT:
+                        r2.dom_model.focusUp();
+                        event.preventDefault();
+                        break;
+                    case CONST.KEY_RGHT:
+                        r2.dom_model.focusIn();
+                        event.preventDefault();
                         break;
                     default:
                         break;
                 }
             }
             else if(r2App.mode == r2App.AppModeEnum.RECORDING){
-                if(event.which == 13 || event.which == 32){ // enter or space
+                if(event.which == CONST.KEY_ENTER || event.which == CONST.KEY_SPACE){ // enter or space
                     // for Recording_Stop() when key up;
                 }
                 else{
@@ -244,30 +295,31 @@ var r2Ctrl = {};
             }
 
             if( pub.mode === r2.KeyboardModeEnum.NORMAL &&
-                    (event.which === 13 || event.which === 32) ){
+                    (event.which === CONST.KEY_ENTER || event.which === CONST.KEY_SPACE) ){
                 event.preventDefault();
                 event.stopPropagation();
             }
         };
 
         pub.handleUp = function(event){
-            var key_str = String.fromCharCode(event.which);
             if (r2App.mode == r2App.AppModeEnum.IDLE && pub.mode == r2.KeyboardModeEnum.NORMAL) {
-                switch (key_str) {
-                    case ' ':
+                switch (event.which) {
+                    case CONST.KEY_SPACE:
                         if (r2App.cur_annot_id) {
                             r2.rich_audio.play(r2App.cur_annot_id, -1);
                             r2.log.Log_AudioPlay('space', r2App.cur_annot_id, r2.audioPlayer.getPlaybackTime());
                         }
                         break;
-                    case '\r': // enter
+                    case CONST.KEY_ENTER: // enter
                         if (pub.ctrlkey_dn) {
                             createPieceKeyboard(isprivate = true);
                             r2.log.Log_Simple("CreatePieceKeyboard_Private_Enter");
                         }
                         else {
-                            r2App.recording_trigger = true;
-                            r2.log.Log_Simple("Recording_Bgn_Enter");
+                            if(!r2App.pieceSelector.isNull()){
+                                r2App.recordingTrigger.set(r2App.pieceSelector.get());
+                                r2.log.Log_Simple("Recording_Bgn_Enter");
+                            }
                         }
                         break;
                     default:
@@ -275,12 +327,12 @@ var r2Ctrl = {};
                 }
             }
             else if (r2App.mode == r2App.AppModeEnum.REPLAYING && pub.mode == r2.KeyboardModeEnum.NORMAL) {
-                switch (key_str) {
-                    case ' ':
+                switch (event.which) {
+                    case CONST.KEY_SPACE:
                         r2.log.Log_AudioStop('space', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
                         r2.rich_audio.stop();
                         break;
-                    case '\r': // enter
+                    case CONST.KEY_ENTER: // enter
                         r2.log.Log_AudioStop('enter_0', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
                         r2.rich_audio.stop();
                         if (pub.ctrlkey_dn) {
@@ -288,8 +340,10 @@ var r2Ctrl = {};
                             r2.log.Log_Simple("CreatePieceKeyboard_Private_Enter");
                         }
                         else {
-                            r2App.recording_trigger = true;
-                            r2.log.Log_Simple("Recording_Bgn_Enter");
+                            if(!r2App.pieceSelector.isNull()){
+                                r2App.recordingTrigger.set(r2App.pieceSelector.get());
+                                r2.log.Log_Simple("Recording_Bgn_Enter");
+                            }
                         }
                         break;
                     default:
@@ -297,15 +351,19 @@ var r2Ctrl = {};
                 }
             }
             else if(r2App.mode == r2App.AppModeEnum.RECORDING) {
-                if (event.which == 13 || event.which == 32) { // enter or space
-                    r2.recordingStop(toupload = true);
-                    r2.log.Log_Simple("Recording_Stop_Enter");
+                switch (event.which) {
+                    case CONST.KEY_SPACE:
+                    case CONST.KEY_ENTER:
+                        r2.recordingStop(toupload = true);
+                        r2.log.Log_Simple("Recording_Stop");
+                        break;
+                    default:
+                        break;
                 }
             }
 
             switch(event.which){
-                case 17: // left ctrl
-                case 25: // rght ctrl
+                case CONST.KEY_CTRL: // left ctrl
                     pub.ctrlkey_dn = false;
                     break;
                 case 107:
@@ -369,8 +427,10 @@ var r2Ctrl = {};
                     r2.log.Log_Simple("Recording_Stop_OnScrBtn");
                 }
                 else{
-                    r2App.recording_trigger = true;
-                    r2.log.Log_Simple("Recording_Bgn_OnScrBtn");
+                    if(!r2App.pieceSelector.isNull()){
+                        r2App.recordingTrigger.set(r2App.pieceSelector.get());
+                        r2.log.Log_Simple("Recording_Bgn_OnScrBtn");
+                    }
                 }
                 pub.mode = r2.MouseModeEnum.HOVER; // should set mouse mode here, since we are calling stopPropagation().
                 hideDom();
@@ -398,15 +458,9 @@ var r2Ctrl = {};
                 pub.mode = r2.MouseModeEnum.HOVER; // should set mouse mode here, since we are calling stopPropagation().
                 hideDom();
             })
-
-
         };
 
         pub.ResizeDom = function(){
-
-        };
-
-        pub.updateDom = function(){
 
         };
 
@@ -585,8 +639,12 @@ var r2Ctrl = {};
                 Sha1.hash(annotid+" PieceKeyboard 0"),
                 r2App.cur_time,
                 anchorpiece.GetNewPieceSize(),
-                anchorpiece.GetTTData());
-            piecekeyboard.SetPieceKeyboard(annotid, r2.userGroup.cur_user.name, '', isprivate, anchorpiece.IsOnLeftColumn());
+                anchorpiece.GetTTData()
+            );
+
+            piecekeyboard.SetPieceKeyboard(
+                anchorpiece.GetId(), annotid, r2.userGroup.cur_user.name, '', isprivate, anchorpiece.IsOnLeftColumn()
+            );
             anchorpiece.AddChildAtFront(piecekeyboard);
             r2App.cur_page.Relayout();
             piecekeyboard.updateDom();

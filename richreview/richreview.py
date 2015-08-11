@@ -57,6 +57,7 @@ class RichReviewXBlock(XBlock):
             secret_key = djfs_settings["aws_secret_access_key"]
         )
 
+
         dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
         s3website.clear("richreview_web_app")
@@ -70,6 +71,8 @@ class RichReviewXBlock(XBlock):
             local_path = dir + "/richreview/webapps/multicolumn",
             prefix = "multicolumn_web_app"
         )
+        """
+        """
 
         richreview_app_url =  s3website.get_url("richreview_web_app")
         multicolumn_app_url =  s3website.get_url("multicolumn_web_app")
@@ -262,8 +265,6 @@ class RichReviewXBlock(XBlock):
         frag = Fragment()
         frag.add_css(load_resource("static/css/richreview.css"))
         frag.add_javascript(load_resource("static/js/src/richreview_student.js"))
-
-        frag.add_javascript_url(self.runtime.local_resource_url(self, "public/pdf.js"))
         frag.add_content(render_template(
                 "templates/richreview_student.html",
                 {
@@ -303,6 +304,8 @@ class RichReviewXBlock(XBlock):
                     'is_debug': True,
                     'pdf_url': self.fs.get_url(self.pdf_path, RESOURCE_EXPIRATION_TIME),
                     'pdfjs_url': self.fs.get_url(self.pdfjs_path, RESOURCE_EXPIRATION_TIME),
+
+                    'loader_gif_url': self.runtime.local_resource_url(self, "public/ajax-loader.gif")
                 }
             ))
         frag.initialize_js('RichReviewXBlockStudio', "abcd")
@@ -324,7 +327,7 @@ class RichReviewXBlock(XBlock):
         Handles PDF upload request from the studio
         """
         try:
-            temp_path = self.xblock_path + "/_temp.file"
+            temp_path = self.xblock_path + '/' + uuid4().hex + '.pdf'
             osfs_save_formfile(self.fs, temp_path, request.POST['pdffile'].file)
             with self.fs.open(temp_path, "rb") as f:
                 h = hashlib.sha1()
@@ -340,6 +343,7 @@ class RichReviewXBlock(XBlock):
                 with self.fs.open(mupla_pdfs_folder_path + "/merged.js", "wb") as f_js:
                     json.dump(self.get_mupla(), f_js)
                     f_js.close()
+                f.close()
 
             return Response(json_body={
                 "pdf_url": self.fs.get_url(mupla_pdfs_folder_path+"/merged.pdf", RESOURCE_EXPIRATION_TIME),

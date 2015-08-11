@@ -130,6 +130,7 @@ function RichReviewXBlockStudio(runtime, element) {
 
                         Pla.override = {};
                         Pla.override.done = function(pla_result){
+                            console.log('Pla.override.done', pla_result);
                             promisifyXBlockRuntime(runtime, element, "pdfjsupload", pla_result).then(
                                 function(resp){
                                     uiCtrl.endUploading("The PDF file was successfully uploaded.");

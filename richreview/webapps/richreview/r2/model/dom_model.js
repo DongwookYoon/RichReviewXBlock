@@ -12,16 +12,12 @@
         var $tc_pages = [];
         var $tc_cur_page = null;
 
-        pub.init = function(doc_json){
+        pub.init = function(doc){
             $tc_doc = $('#tc_doc');
 
-            loader.loadDoc(doc_json);
+            loader.loadDoc(doc);
 
-            $tc_cur_page = $tc_pages[0];
-            for(var i = 0; i < $tc_pages.length; ++i){
-                $tc_pages[i].css('display','none');
-            }
-            $tc_cur_page.css('display','none');
+            pub.setCurPage(0);
         };
 
         pub.resize = function(width){
@@ -30,7 +26,8 @@
         };
 
         pub.setCurPage = function(n){
-            $tc_cur_page.css('display','none');
+            if($tc_cur_page)
+                $tc_cur_page.css('display','none');
             $tc_cur_page = $tc_pages[n];
             $tc_cur_page.css('display','block');
         };
@@ -54,16 +51,17 @@
         var loader = (function(){
             var pub_loader = {};
 
-            pub_loader.loadDoc = function(doc_json){
-                for(var i = 0; i < doc_json.pages.length; ++i){
-                    var page_json = doc_json.pages[i];
-                    var $tc_page = loadPage(page_json, i);
+            pub_loader.loadDoc = function(doc){
+
+                for(var i = 0, l = doc.GetNumPages(); i < l; ++i){
+                    var page = doc.GetPage(i);
+                    var $tc_page = loadPage(page, i);
                     $tc_doc.append($tc_page);
                     $tc_pages.push($tc_page);
                 }
             };
 
-            var loadPage = function(page_json, npage){
+            var loadPage = function(page, npage){
                 var $tc_page = $(document.createElement('div'));
                 $tc_page.toggleClass('tc_page', true);
 
@@ -81,18 +79,13 @@
                 $body_row = appendTightRow($tc_page);
                 $foot_row = appendTightRow($tc_page);
 
-                var page_bbox = new Vec2(
-                    (page_json.bbox[2]-page_json.bbox[0]),
-                    (page_json.bbox[3]-page_json.bbox[1])
-                );
-
-                var $head = loadRegion('tc_head', page_json.rgns[0], page_bbox, npage, 0);
+                var $head = loadRegion('tc_head', page.GetRegion(0));
                 $head_row.append($head);
-                var $left = loadRegion('tc_left', page_json.rgns[1], page_bbox, npage, 1);
+                var $left = loadRegion('tc_left', page.GetRegion(1));
                 $body_row.append($left);
-                var $rght = loadRegion('tc_rght', page_json.rgns[2], page_bbox, npage, 2);
+                var $rght = loadRegion('tc_rght', page.GetRegion(2));
                 $body_row.append($rght);
-                var $foot = loadRegion('tc_foot', page_json.rgns[3], page_bbox, npage, 3);
+                var $foot = loadRegion('tc_foot', page.GetRegion(3));
                 $foot_row.append($foot);
 
                 $tc_page.regions = [];
@@ -108,14 +101,16 @@
                 return $tc_page;
             };
 
-            var loadRegion = function(cls, region_json, page_bbox, npage, nrgn){
+            var loadRegion = function(cls, region){
                 var $tight_col = $(document.createElement('div'));
                 $tight_col.toggleClass(cls, true);
                 $tight_col.toggleClass('tc_cols', true);
                 $tight_col.toggleClass('tc_tight', true);
 
-                for(var i = 0; i < region_json.rects.length; i ++){
-                    pub.createBodyText($tight_col, region_json.rects[i], page_bbox, npage, nrgn, i, region_json.ttX, region_json.ttW);
+                for(var i = 0, l = region.child.length; i < l; i ++){
+                    var piece_text = region.child[i];
+                    if(! (piece_text instanceof  r2.PieceText)){throw new Error('invalid input file');}
+                    pub.createBodyText($tight_col, piece_text);
                 }
 
                 return $tight_col;
@@ -125,36 +120,18 @@
         }());
 
 
-        pub.createBodyText = function($tight_col, rect, page_bbox, npage, nrgn, npt, ttX, ttW){
+        pub.createBodyText = function($tight_col, piece_text){
             var $comment = appendComment($tight_col, 'tc_comment_text');
-            $comment.attr('alt', typeof rect[4] === 'string' ? rect[4] : '(empty)');
+            $comment.attr('alt', typeof piece_text[4] === 'string' ? piece_text[4] : '(empty)');
 
             var $piece = $(document.createElement('div'));
             $piece.toggleClass('tc_piece', true);
 
-            var id = typeof rect.id !== 'undefined' ? rect.id : Sha1.hash("P"+npage+"_R"+nrgn+"_L"+npt);
+            var id = piece_text.GetId();
             var creationTime = 0;
-            var content_size = new Vec2(
-                (rect[2]-rect[0])/page_bbox.x,
-                (rect[3]-rect[1])/page_bbox.x
-            );
+            var content_size = piece_text.GetContentSize();
 
-            var tt_size = [
-                0, // ttDepth
-                (ttX-rect[0])/page_bbox.x, // ttX
-                ttW/page_bbox.x // ttW
-            ];
-
-            var tex_coord = [
-                new Vec2( // texcoordLT
-                    rect[0]/page_bbox.x,
-                    1.0-rect[1]/page_bbox.y
-                ),
-                new Vec2( // texcoordRB
-                    rect[2]/page_bbox.x,
-                    1.0-rect[3]/page_bbox.y
-                )
-            ];
+            var tt_size = piece_text.GetCurTtData();
 
             $piece.attr('id', id);
             setPieceProperties($piece, id, creationTime, content_size.x, 0, tt_size[1], tt_size[2]);
@@ -236,42 +213,48 @@
                     var rm_size = rm_ratio*0.00063;
                     var rm_btn_size = 30;
 
-                    var $rm = r2.radialMenu.create('rm_'+annot_id_esc, rm_size, (live_recording === true ? 'fa-stop' : 'fa-play'), function(){
-                        if(r2App.mode === r2App.AppModeEnum.RECORDING){
-                            if(annot_id === r2App.cur_recording_annot.GetId()){
-                                r2.recordingStop(true); /* to upload */
-                                r2.log.Log_Simple("Recording_Stop_RadialMenu");
-                                r2.radialMenu.changeCenterIcon('rm_'+annot_id_esc, 'fa-play');
-                            }
-                        }
-                        else{
-                            if (r2App.mode === r2App.AppModeEnum.IDLE) {
-                                r2.rich_audio.play(annot_id, -1);
-                            }
-                            else if (r2App.mode === r2App.AppModeEnum.REPLAYING) {
-                                if (r2App.cur_annot_id === annot_id) {
-                                    r2.rich_audio.stop();
+                    var $rm = r2.radialMenu.create(
+                        'rm_'+annot_id_esc,
+                        rm_size,
+                        (live_recording === true ? 'fa-stop' : 'fa-play'),
+                        'play/stop',
+                        function(){
+                            if(r2App.mode === r2App.AppModeEnum.RECORDING){
+                                if(annot_id === r2App.cur_recording_annot.GetId()){
+                                    r2.recordingStop(true); /* to upload */
+                                    r2.log.Log_Simple("Recording_Stop_RadialMenu");
+                                    r2.radialMenu.changeCenterIcon('rm_'+annot_id_esc, 'fa-play');
                                 }
-                                else {
+                            }
+                            else{
+                                if (r2App.mode === r2App.AppModeEnum.IDLE) {
                                     r2.rich_audio.play(annot_id, -1);
                                 }
+                                else if (r2App.mode === r2App.AppModeEnum.REPLAYING) {
+                                    if (r2App.cur_annot_id === annot_id) {
+                                        r2.rich_audio.stop();
+                                    }
+                                    else {
+                                        r2.rich_audio.play(annot_id, -1);
+                                    }
+                                }
                             }
                         }
-                    });
-                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-up', function(){
+                    );
+                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-up', 'fold layout', function(){
                         ;
                     });
-                    r2.radialMenu.addBtnCircular($rm, 'fa-link', function(){
+                    r2.radialMenu.addBtnCircular($rm, 'fa-link', 'share', function(){
                         var lnk = r2App.server_url+"viewer?access_code=" + r2.ctx["pdfid"] +
                             "&docid=" + r2.ctx["docid"] +
                             "&groupid=" + r2.ctx["groupid"] +
                             "&comment=" +encodeURIComponent(annot_id);
                         window.prompt("Link to the Comment", lnk);
                     });
-                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-down', function(){
+                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-down', 'expand layout', function(){
                         ;
                     });
-                    r2.radialMenu.addBtnCircular($rm, 'fa-trash', function(){
+                    r2.radialMenu.addBtnCircular($rm, 'fa-trash', 'erase', function(){
                         if(r2.userGroup.cur_user === user.name){
                             var annottodelete = r2App.annots[annot_id];
                             if(r2.removeAnnot(annot_id, true, false)){ // askuser, mute
@@ -309,7 +292,7 @@
                 var $anchor = $comment.parent();
                 var dom_anchor = $anchor.get(0);
 
-                var id = r2.nameHash.getPieceVoice(annot_id, i);
+                var id = r2.pieceHashId.voice(annot_id, i);
 
                 var $piece = $(document.createElement('div'));
                 $piece.toggleClass('tc_piece', true);
@@ -371,23 +354,23 @@
                     var rm_size = rm_ratio*0.00063;
                     var rm_btn_size = 30;
 
-                    var $rm = r2.radialMenu.create('rm_'+pid, rm_size, 'fa-keyboard-o', function(){
+                    var $rm = r2.radialMenu.create('rm_'+pid, rm_size, 'fa-keyboard-o', 'edit', function(){
                             doc_model_piecekeyboard.edit();
                     });
-                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-up', function(){
+                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-up', 'fold layout', function(){
                             ;
                     });
-                    r2.radialMenu.addBtnCircular($rm, 'fa-link', function(){
+                    r2.radialMenu.addBtnCircular($rm, 'fa-link', 'share', function(){
                         var lnk = r2App.server_url+"viewer?access_code=" + r2.ctx["pdfid"] +
                             "&docid=" + r2.ctx["docid"] +
                             "&groupid=" + r2.ctx["groupid"] +
                             "&comment=" +encodeURIComponent(annot_id);
                         window.prompt("Link to the Comment", lnk);
                     });
-                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-down', function(){
+                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-down', 'expand layout', function(){
                         ;
                     });
-                    r2.radialMenu.addBtnCircular($rm, 'fa-trash', function(){
+                    r2.radialMenu.addBtnCircular($rm, 'fa-trash', 'erase', function(){
                         if(r2.userGroup.cur_user.name === username){
                             if(r2.removeAnnot(annot_id, true, false)){ // askuser, mute
                                 r2Sync.PushToUploadCmd(doc_model_piecekeyboard.ExportToCmdDeleteComment());

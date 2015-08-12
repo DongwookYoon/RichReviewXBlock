@@ -37,7 +37,7 @@
 
         var pieceaudio = new r2.PieceAudio();
         pieceaudio.SetPiece(
-            r2.nameHash.getPieceVoice(annotid, 0),
+            r2.pieceHashId.voice(annotid, 0),
             r2App.cur_recording_annot.GetBgnTime(),
             anchorpiece.GetNewPieceSize(),
             anchorpiece.GetTTData()
@@ -95,7 +95,7 @@
                 var pieceaudio = new r2.PieceAudio();
                 var annot = r2App.cur_recording_annot;
                 pieceaudio.SetPiece(
-                    r2.nameHash.getPieceVoice(r2App.cur_recording_annot.GetId(), idx-1),
+                    r2.pieceHashId.voice(r2App.cur_recording_annot.GetId(), idx-1),
                     r2App.cur_recording_annot.GetBgnTime(),
                     anchorpiece.GetNewPieceSize(),
                     anchorpiece.GetTTData()

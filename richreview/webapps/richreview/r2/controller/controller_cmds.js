@@ -22,7 +22,7 @@
                 r2.PieceText.prototype.SetPiece.apply(
                     piecetext,
                     [
-                        Sha1.hash("P"+npage+"_R"+nrgn+"_L"+npt), // id
+                        r2.pieceHashId.text(npage, nrgn, npt), // id
                         0, // creationTime
                         new Vec2(
                             (rect[2]-rect[0])/ratioX,
@@ -321,7 +321,7 @@
 
                     var pieceaudio = new r2.PieceAudio();
                     pieceaudio.SetPiece(
-                        r2.nameHash.getPieceVoice(cmd.data.aid, i),
+                        r2.pieceHashId.voice(cmd.data.aid, i),
                         (new Date(cmd.time)).getTime(),
                         anchorpiece.GetNewPieceSize(),
                         anchorpiece.GetTTData()

@@ -226,6 +226,9 @@
     r2.Page.prototype.GetNumPage = function(){
         return this._num;
     };
+    r2.Page.prototype.GetRegion = function(i){
+        return this.child[i];
+    };
     r2.Page.prototype.Relayout = function(){
         var rt = this.child[0];
         var rl = this.child[1];
@@ -426,6 +429,9 @@
     };
     r2.Piece.prototype.GetNewPieceSize = function(){
         return new Vec2(this._cnt_size.x, r2Const.PIECEAUDIO_HEIGHT);
+    };
+    r2.Piece.prototype.GetCurTtData = function(){
+        return [this._ttDepth, this._ttX, this._ttW];
     };
     r2.Piece.prototype.GetTTData = function(){
         return [this._ttDepth+1, this._ttX, this._ttW];

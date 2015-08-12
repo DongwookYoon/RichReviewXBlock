@@ -1135,7 +1135,7 @@
 
         var menus = [];
 
-        pub.create = function(rm_id, rm_size, btn_center_fa_font, cb){
+        pub.create = function(rm_id, rm_size, btn_center_fa_font, btn_alt, cb){
             var $menu = $(document.createElement('div'));
             $menu.addClass('rm_menu');
             $menu.attr('id', rm_id);
@@ -1144,6 +1144,7 @@
             var $btn_center = $(document.createElement('a'));
             $btn_center.addClass('rm_btn_center').addClass('rm_btn');
             $btn_center.attr('href', 'javascript:void(0);');
+            $btn_center.attr('alt', btn_alt);
             r2.dom_model.keyNav.setFocusable($btn_center);
             $btn_center.append(createIcon(btn_center_fa_font));
             if(typeof cb !== 'undefined'){$btn_center.click(closeRadialMenuAndRun($menu,cb));}
@@ -1157,15 +1158,15 @@
             return $menu;
         };
 
-        pub.addBtnCircular = function($menu, fa_font, cb){
+        pub.addBtnCircular = function($menu, fa_font, alt, cb){
             var $btn = $(document.createElement('a'));
             $btn.addClass('rm_btn');
             $btn.attr('href', 'javascript:void(0);');
+            $btn.attr('alt', alt);
             r2.dom_model.keyNav.setFocusable($btn);
             $btn.append(createIcon(fa_font));
             $btn.click(closeRadialMenuAndRun($menu, cb));
             $menu.find('.rm_btn_raidial').append($btn);
-
 
             setBtnRadialPos($menu);
         };
@@ -1478,11 +1479,19 @@
         return pub;
     }());
 
-    r2.nameHash = (function(){
+    r2.pieceHashId = (function(){
         var pub = {};
 
-        pub.getPieceVoice = function(annot_id, i){
+        pub.voice = function(annot_id, i){
             return Sha1.hash(annot_id + ' PieceAudio ' + i);
+        };
+
+        pub.text = function(npage, nrgn, npt){
+            return Sha1.hash("P"+npage+"_R"+nrgn+"_L"+npt);
+        };
+
+        pub.keyboard = function(annotid){
+            return Sha1.hash(annotid+" PieceKeyboard 0")
         };
 
         return pub;

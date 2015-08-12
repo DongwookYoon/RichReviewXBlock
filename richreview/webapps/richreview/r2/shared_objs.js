@@ -108,9 +108,6 @@ var r2App = (function() {
 
     pub.cur_recording_anchor_piece = null;
 
-    pub.selected_piece = null;
-    pub.selected_radialmenu = null;
-
     pub.cur_recording_annot = null;
     pub.cur_recording_pieceaudios = null;
     pub.cur_recording_minmax = [0.05, 0.25];
@@ -168,7 +165,6 @@ var r2App = (function() {
                     console.log(selected_piece);
                 }
             }
-
         };
 
         return pub;

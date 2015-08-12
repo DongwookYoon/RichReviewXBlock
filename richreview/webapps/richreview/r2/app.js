@@ -318,23 +318,23 @@
 
 
             if(docjs.hasOwnProperty("ver") && docjs.ver >= 6){
-                r2.dom_model.init(docjs);
                 return setFromJs(docjs);
             }
             else{
                 doc_json_upgrade_legacy(docjs);
-                r2.dom_model.init(docjs);
                 return setFromLegacyDoc(docjs);
             }
 
             function setFromJs(docjs){
                 r2App.doc = r2.createDoc.createR2DocFromDocJs(docjs);
+                r2.dom_model.init(r2App.doc);
             }
 
             function setFromLegacyDoc(docjs){
                 return r2Legacy.SetDoc(docjs).then(
                     function(){
                         r2App.doc = r2.createDoc.extractDocFromLegacyDoc(r2Legacy.doc);
+                        r2.dom_model.init(r2App.doc);
                         var cmds = r2.createDoc.extractCmdsFromLegacyDoc(r2Legacy.doc);
                         for(var i = 0; i < cmds.length; ++i){
                             r2.cmd.executeCmd(r2App.doc, cmds[i], true, false); // legacy_user_only, skip_self

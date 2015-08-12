@@ -234,23 +234,23 @@ var r2Ctrl = {};
                     event.preventDefault();
                     break;
                 case CONST.KEY_DN:
-                    r2.dom_model.focusNext();
+                    r2.dom_model.keyNav.next();
                     event.preventDefault();
                     break;
                 case CONST.KEY_UP:
-                    r2.dom_model.focusPrev();
+                    r2.dom_model.keyNav.prev();
                     event.preventDefault();
                     break;
                 case CONST.KEY_LEFT:
-                    r2.dom_model.focusUp();
+                    r2.dom_model.keyNav.up();
                     event.preventDefault();
                     break;
                 case CONST.KEY_RGHT:
-                    r2.dom_model.focusIn();
+                    r2.dom_model.keyNav.in();
                     event.preventDefault();
                     break;
                 case CONST.KEY_ESC:
-                    r2.dom_model.focusEsc();
+                    r2.dom_model.keyNav.esc();
                     event.preventDefault();
                     break;
                 default:

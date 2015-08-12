@@ -12,6 +12,44 @@
         var $tc_pages = [];
         var $tc_cur_page = null;
 
+        pub.init = function(doc_json){
+            $tc_doc = $('#tc_doc');
+
+            loader.loadDoc(doc_json);
+
+            $tc_cur_page = $tc_pages[0];
+            for(var i = 0; i < $tc_pages.length; ++i){
+                $tc_pages[i].css('display','none');
+            }
+            $tc_cur_page.css('display','none');
+        };
+
+        pub.resize = function(width){
+            if($tc_cur_page)
+                $tc_cur_page.css('font-size', width+'px');
+        };
+
+        pub.setCurPage = function(n){
+            $tc_cur_page.css('display','none');
+            $tc_cur_page = $tc_pages[n];
+            $tc_cur_page.css('display','block');
+        };
+
+        pub.cbAudioPlay = function(annot_id){
+            r2.radialMenu.changeCenterIcon('rm_'+r2.util.escapeDomId(annot_id), 'fa-pause');
+            r2.log.Log_AudioPlay('radialmenu', annot_id, r2.audioPlayer.getPlaybackTime());
+        };
+
+        pub.cbAudioStop = function(annot_id){
+            r2.radialMenu.changeCenterIcon('rm_'+r2.util.escapeDomId(annot_id), 'fa-play');
+            r2.log.Log_AudioStop('radialmenu', annot_id, r2.audioPlayer.getPlaybackTime());
+        };
+
+        pub.remove = function(annot_id){
+            var annot_id_esc = r2.util.escapeDomId(annot_id);
+            $('#'+annot_id_esc).remove();
+        };
+
         /* submodule for data loading bgn */
         var loader = (function(){
             var pub_loader = {};
@@ -77,68 +115,57 @@
                 $tight_col.toggleClass('tc_tight', true);
 
                 for(var i = 0; i < region_json.rects.length; i ++){
-                    loadCommentText($tight_col, region_json.rects[i], page_bbox, npage, nrgn, i, region_json.ttX, region_json.ttW);
+                    pub.createBodyText($tight_col, region_json.rects[i], page_bbox, npage, nrgn, i, region_json.ttX, region_json.ttW);
                 }
 
                 return $tight_col;
             };
 
-
-            var loadCommentText = function($tight_col, rect, page_bbox, npage, nrgn, npt, ttX, ttW){
-                var $comment = appendComment($tight_col, 'tc_comment_text');
-                $comment.attr('alt', typeof rect[4] === 'string' ? rect[4] : '(empty)');
-
-                var $piece = $(document.createElement('div'));
-                $piece.toggleClass('tc_piece', true);
-
-                var id = typeof rect.id !== 'undefined' ? rect.id : Sha1.hash("P"+npage+"_R"+nrgn+"_L"+npt);
-                var creationTime = 0;
-                var content_size = new Vec2(
-                    (rect[2]-rect[0])/page_bbox.x,
-                    (rect[3]-rect[1])/page_bbox.x
-                );
-
-                var tt_size = [
-                    0, // ttDepth
-                    (ttX-rect[0])/page_bbox.x, // ttX
-                    ttW/page_bbox.x // ttW
-                ];
-
-                var tex_coord = [
-                    new Vec2( // texcoordLT
-                        rect[0]/page_bbox.x,
-                        1.0-rect[1]/page_bbox.y
-                    ),
-                    new Vec2( // texcoordRB
-                        rect[2]/page_bbox.x,
-                        1.0-rect[3]/page_bbox.y
-                    )
-                ];
-
-                $piece.attr('id', id);
-                setPieceProperties($piece, id, creationTime, content_size.x, 0, tt_size[1], tt_size[2]);
-
-                var $content = $(document.createElement('div'));
-                $content.toggleClass('tc_content', true);
-                $content.width(content_size.x+'em');
-                $content.height(content_size.y+'em');
-
-                $piece.append($content);
-                $comment.append($piece);
-            };
-
             return pub_loader;
         }());
-        /* submodule for data loading end */
 
-        var appendComment = function($target, cls){
-            var $comment = $(document.createElement('div'));
-            $comment.toggleClass('tc_comment', true);
-            $comment.toggleClass(cls, true);
-            r2.dom_model.setFocusable($comment);
 
-            $target.append($comment);
-            return $comment;
+        pub.createBodyText = function($tight_col, rect, page_bbox, npage, nrgn, npt, ttX, ttW){
+            var $comment = appendComment($tight_col, 'tc_comment_text');
+            $comment.attr('alt', typeof rect[4] === 'string' ? rect[4] : '(empty)');
+
+            var $piece = $(document.createElement('div'));
+            $piece.toggleClass('tc_piece', true);
+
+            var id = typeof rect.id !== 'undefined' ? rect.id : Sha1.hash("P"+npage+"_R"+nrgn+"_L"+npt);
+            var creationTime = 0;
+            var content_size = new Vec2(
+                (rect[2]-rect[0])/page_bbox.x,
+                (rect[3]-rect[1])/page_bbox.x
+            );
+
+            var tt_size = [
+                0, // ttDepth
+                (ttX-rect[0])/page_bbox.x, // ttX
+                ttW/page_bbox.x // ttW
+            ];
+
+            var tex_coord = [
+                new Vec2( // texcoordLT
+                    rect[0]/page_bbox.x,
+                    1.0-rect[1]/page_bbox.y
+                ),
+                new Vec2( // texcoordRB
+                    rect[2]/page_bbox.x,
+                    1.0-rect[3]/page_bbox.y
+                )
+            ];
+
+            $piece.attr('id', id);
+            setPieceProperties($piece, id, creationTime, content_size.x, 0, tt_size[1], tt_size[2]);
+
+            var $content = $(document.createElement('div'));
+            $content.toggleClass('tc_content', true);
+            $content.width(content_size.x+'em');
+            $content.height(content_size.y+'em');
+
+            $piece.append($content);
+            $comment.append($piece);
         };
 
         pub.createTextTearing = function(cmd){
@@ -387,9 +414,15 @@
             return false;
         };
 
-        pub.remove = function(annot_id){
-            var annot_id_esc = r2.util.escapeDomId(annot_id);
-            $('#'+annot_id_esc).remove();
+
+        var appendComment = function($target, cls){
+            var $comment = $(document.createElement('div'));
+            $comment.toggleClass('tc_comment', true);
+            $comment.toggleClass(cls, true);
+            pub.keyNav.setFocusable($comment);
+
+            $target.append($comment);
+            return $comment;
         };
 
         var setPieceProperties = function($target, id, time, w, tt_depth, tt_x, tt_w){
@@ -434,157 +467,128 @@
         };
 
 
-        pub.init = function(doc_json){
-            $tc_doc = $('#tc_doc');
+        pub.keyNav = (function(){
+            var pub_kn = {};
 
-            loader.loadDoc(doc_json);
-
-            $tc_cur_page = $tc_pages[0];
-            for(var i = 0; i < $tc_pages.length; ++i){
-                $tc_pages[i].css('display','none');
-            }
-            $tc_cur_page.css('display','none');
-        };
-
-        pub.resize = function(width){
-            if($tc_cur_page)
-                $tc_cur_page.css('font-size', width+'px');
-        };
-
-        pub.setCurPage = function(n){
-            $tc_cur_page.css('display','none');
-            $tc_cur_page = $tc_pages[n];
-            $tc_cur_page.css('display','block');
-        };
-
-        pub.cbAudioPlay = function(annot_id){
-            r2.radialMenu.changeCenterIcon('rm_'+r2.util.escapeDomId(annot_id), 'fa-pause');
-            r2.log.Log_AudioPlay('radialmenu', annot_id, r2.audioPlayer.getPlaybackTime());
-        };
-
-        pub.cbAudioStop = function(annot_id){
-            r2.radialMenu.changeCenterIcon('rm_'+r2.util.escapeDomId(annot_id), 'fa-play');
-            r2.log.Log_AudioStop('radialmenu', annot_id, r2.audioPlayer.getPlaybackTime());
-        };
-
-
-
-        var getPrevTcCols = function($tc_cols){
-            return getTcColsOffset($tc_cols, -1);
-        };
-        var getNextTcCols = function($tc_cols){
-            return getTcColsOffset($tc_cols, +1);
-        };
-        var getTcColsOffset = function($tc_cols, offset){
-            var $l = $tc_cols.parent().parent().find('.tc_cols');
-            for(var i = 0, l = $l.length; i < l; ++i){
-                if($tc_cols[0] === $l[i]){
-                    return $($l[(i+offset+l)%l]);
+            pub_kn.next = function(){
+                var $focused = $(':focus');
+                if($focused.hasClass('tc_comment')){
+                    var $next  = $focused.next('.tc_comment');
+                    if($next.length !== 0){
+                        $next.focus();
+                    }
+                    else{
+                        if($focused.parent().hasClass('tc_cols')){ // when it's a topmost comment/text,
+                            var nextTcCols = getNextTcCols($focused.parent());
+                            nextTcCols.find('.tc_comment').first().focus();
+                        }
+                        else{ // when it's a nested comment
+                            $focused.parent().parent().find('.tc_comment').first().focus();
+                        }
+                    }
                 }
-            }
-            return null;
-        };
-
-        pub.focusNext = function(){
-            var $focused = $(':focus');
-            if($focused.hasClass('tc_comment')){
-                var $next  = $focused.next('.tc_comment');
-                if($next.length !== 0){
-                    $next.focus();
+                else if($focused.hasClass('rm_btn')){
+                    r2.radialMenu.getNextRmBtn($focused).focus();
                 }
                 else{
-                    if($focused.parent().hasClass('tc_cols')){ // when it's a topmost comment/text,
-                        var nextTcCols = getNextTcCols($focused.parent());
-                        nextTcCols.find('.tc_comment').first().focus();
+                    $tc_cur_page.find('.tc_comment').first().focus();
+                }
+            };
+
+            pub_kn.prev = function(){
+                var $focused = $(':focus');
+                if($focused.hasClass('tc_comment')){
+                    var $prev  = $focused.prev('.tc_comment');
+                    if($prev.length !== 0){
+                        $prev.focus();
                     }
-                    else{ // when it's a nested comment
-                        $focused.parent().parent().find('.tc_comment').first().focus();
+                    else{
+                        if($focused.parent().hasClass('tc_cols')){ // when it's a topmost comment/text,
+                            var nextTcCols = getPrevTcCols($focused.parent());
+                            nextTcCols.children().filter('.tc_comment').last().focus();
+                        }
+                        else{ // when it's a nested comment
+                            $focused.parent().children().filter('.tc_comment').last().focus();
+                        }
                     }
                 }
-            }
-            else if($focused.hasClass('rm_btn')){
-                r2.radialMenu.getNextRmBtn($focused).focus();
-            }
-            else{
-                $tc_cur_page.find('.tc_comment').first().focus();
-            }
-        };
-
-        pub.focusPrev = function(){
-            var $focused = $(':focus');
-            if($focused.hasClass('tc_comment')){
-                var $prev  = $focused.prev('.tc_comment');
-                if($prev.length !== 0){
-                    $prev.focus();
+                else if($focused.hasClass('rm_btn')){
+                    r2.radialMenu.getPrevRmBtn($focused).focus();
                 }
                 else{
-                    if($focused.parent().hasClass('tc_cols')){ // when it's a topmost comment/text,
-                        var nextTcCols = getPrevTcCols($focused.parent());
-                        nextTcCols.children().filter('.tc_comment').last().focus();
+                    $tc_cur_page.find('.tc_comment').last().focus();
+                }
+            };
+
+            pub_kn.in = function(){
+                var $focused = $(':focus');
+                if($focused.hasClass('tc_comment')){
+                    var $in = $focused.find('.tc_comment');
+                    if($in.length !== 0){
+                        $in.first().focus();
                     }
-                    else{ // when it's a nested comment
-                        $focused.parent().children().filter('.tc_comment').last().focus();
+                }
+                else if($focused.hasClass('rm_btn')){
+                    r2.radialMenu.getNextRmBtn($focused).focus();
+                }
+            };
+
+            pub_kn.up = function(){
+                var $focused = $(':focus');
+                if($focused.hasClass('tc_comment')){
+                    var $up = $focused.parent().parent();
+                    if($up.hasClass('tc_comment')){
+                        $up.focus();
                     }
                 }
-            }
-            else if($focused.hasClass('rm_btn')){
-                r2.radialMenu.getPrevRmBtn($focused).focus();
-            }
-            else{
-                $tc_cur_page.find('.tc_comment').last().focus();
-            }
-        };
-
-        pub.focusIn = function(){
-            var $focused = $(':focus');
-            if($focused.hasClass('tc_comment')){
-                var $in = $focused.find('.tc_comment');
-                if($in.length !== 0){
-                    $in.first().focus();
+                else if($focused.hasClass('rm_btn')){
+                    r2.radialMenu.getPrevRmBtn($focused).focus();
                 }
-            }
-            else if($focused.hasClass('rm_btn')){
-                r2.radialMenu.getNextRmBtn($focused).focus();
-            }
-        };
+            };
 
-        pub.focusUp = function(){
-            var $focused = $(':focus');
-            if($focused.hasClass('tc_comment')){
-                var $up = $focused.parent().parent();
-                if($up.hasClass('tc_comment')){
-                    $up.focus();
+            pub_kn.esc = function(){
+                var $focused = $(':focus');
+                if($focused.hasClass('r2_piecekeyboard_textarea')){
+                    $focused.parent().parent().parent().parent().focus();
                 }
-            }
-            else if($focused.hasClass('rm_btn')){
-                r2.radialMenu.getPrevRmBtn($focused).focus();
-            }
-        };
+                else if($focused.hasClass('rm_btn')){
+                    $focused.parents('.tc_comment').first().focus();
+                }
+            };
 
-        pub.focusEsc = function(){
-            var $focused = $(':focus');
-            if($focused.hasClass('r2_piecekeyboard_textarea')){
-                $focused.parent().parent().parent().parent().focus();
-            }
-            else if($focused.hasClass('rm_btn')){
-                $focused.parents('.tc_comment').first().focus();
-            }
-        };
+            pub_kn.setFocusable = function($target){
+                $target.attr('tabindex', 0);
+                $target.on(
+                    'focus',
+                    function(evt){
+                        $(this).css('outline', 'rgba(77, 144, 254, 0.5) solid 1px');
+                    }
+                ).on(
+                    'blur',
+                    function(evt){
+                        $(this).css('outline', 'none');
+                    }
+                );
+            };
 
-        pub.setFocusable = function($target){
-            $target.attr('tabindex', 0);
-            $target.on(
-                'focus',
-                function(evt){
-                    $(this).css('outline', 'rgba(77, 144, 254, 0.5) solid 1px');
+            var getPrevTcCols = function($tc_cols){
+                return getTcColsOffset($tc_cols, -1);
+            };
+            var getNextTcCols = function($tc_cols){
+                return getTcColsOffset($tc_cols, +1);
+            };
+            var getTcColsOffset = function($tc_cols, offset){
+                var $l = $tc_cols.parent().parent().find('.tc_cols');
+                for(var i = 0, l = $l.length; i < l; ++i){
+                    if($tc_cols[0] === $l[i]){
+                        return $($l[(i+offset+l)%l]);
+                    }
                 }
-            ).on(
-                'blur',
-                function(evt){
-                    $(this).css('outline', 'none');
-                }
-            );
-        };
+                return null;
+            };
+
+            return pub_kn;
+        }());
 
         return pub;
     }())

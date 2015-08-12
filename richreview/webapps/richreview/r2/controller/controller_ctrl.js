@@ -37,7 +37,7 @@
 
         var pieceaudio = new r2.PieceAudio();
         pieceaudio.SetPiece(
-            r2.nameHash.getPieceVoice(annotid, 0),
+            r2.pieceHashId.voice(annotid, 0),
             r2App.cur_recording_annot.GetBgnTime(),
             anchorpiece.GetNewPieceSize(),
             anchorpiece.GetTTData()
@@ -54,8 +54,8 @@
 
 
         /* dom */
-        r2.dom_model.createCommentVoice(r2App.cur_pdf_pagen, anchorpiece.GetId(), annotid, r2.userGroup.cur_user, true); /* live_recording = true */
-        r2.dom_model.appendPieceVoice(annotid, r2App.cur_recording_annot.GetBgnTime());
+        r2.dom_model.createCommentVoice(r2App.cur_recording_annot, r2App.cur_pdf_pagen, true); /* live_recording = true */
+        r2.dom_model.appendPieceVoice(annotid, 0, r2App.cur_recording_annot.GetBgnTime());
 
 
         r2App.invalidate_page_layout = true;
@@ -88,14 +88,14 @@
             r2.util.lastOf(r2App.cur_recording_pieceaudios).UpdateAudioDbsRecording(r2App.cur_time-r2App.cur_recording_annot.GetBgnTime());
 
             var timePerPiece = r2Const.PIECEAUDIO_TIME_PER_WIDTH*r2.util.lastOf(r2App.cur_recording_pieceaudios).GetTtIndentedWidth();
-            var idx = Math.ceil(r2App.cur_recording_annot.GetDuration()/timePerPiece);
-            if(r2App.cur_recording_pieceaudios.length < idx){
+            var npiece = Math.ceil(r2App.cur_recording_annot.GetDuration()/timePerPiece);
+            if(r2App.cur_recording_pieceaudios.length < npiece){
                 var anchorpiece = r2App.cur_recording_anchor_piece;
 
                 var pieceaudio = new r2.PieceAudio();
                 var annot = r2App.cur_recording_annot;
                 pieceaudio.SetPiece(
-                    r2.nameHash.getPieceVoice(r2App.cur_recording_annot.GetId(), idx-1),
+                    r2.pieceHashId.voice(r2App.cur_recording_annot.GetId(), npiece-1),
                     r2App.cur_recording_annot.GetBgnTime(),
                     anchorpiece.GetNewPieceSize(),
                     anchorpiece.GetTTData()
@@ -103,7 +103,7 @@
                 pieceaudio.SetPieceAudio(
                     annot.GetId(),
                     r2.userGroup.cur_user.name,
-                    (idx-1)*timePerPiece,
+                    (npiece-1)*timePerPiece,
                     r2App.cur_time-annot.GetBgnTime());
 
 
@@ -113,7 +113,7 @@
                 r2App.invalidate_page_layout = true;
 
                 /* dom */
-                r2.dom_model.appendPieceVoice(annot.GetId(), r2App.cur_recording_annot.GetBgnTime());
+                r2.dom_model.appendPieceVoice(annot.GetId(), npiece-1, r2App.cur_recording_annot.GetBgnTime());
             }
             r2.PieceAudio.prototype.NormalizePieceAudio(r2App.cur_recording_pieceaudios, refresh_all = false);
         });

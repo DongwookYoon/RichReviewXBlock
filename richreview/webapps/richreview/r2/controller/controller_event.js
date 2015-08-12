@@ -198,10 +198,6 @@ var r2Ctrl = {};
             return;
         };
 
-        var getMode = function(){
-            return mode;
-        };
-
         pub.handleDn = function(event){
             updateMode();
             if(r2App.mode === r2App.AppModeEnum.IDLE && mode === r2.KeyboardModeEnum.NORMAL){
@@ -601,7 +597,7 @@ var r2Ctrl = {};
             var annotid = new Date(r2App.cur_time).toISOString();
             var piecekeyboard = new r2.PieceKeyboard();
             piecekeyboard.SetPiece(
-                Sha1.hash(annotid+" PieceKeyboard 0"),
+                r2.pieceHashId.keyboard(annotid),
                 r2App.cur_time,
                 anchorpiece.GetNewPieceSize(),
                 anchorpiece.GetTTData()

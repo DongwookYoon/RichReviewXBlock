@@ -22,7 +22,7 @@
                 r2.PieceText.prototype.SetPiece.apply(
                     piecetext,
                     [
-                        Sha1.hash("P"+npage+"_R"+nrgn+"_L"+npt), // id
+                        r2.pieceHashId.text(npage, nrgn, npt), // id
                         0, // creationTime
                         new Vec2(
                             (rect[2]-rect[0])/ratioX,
@@ -269,7 +269,6 @@
             // anchorTo: {type: 'PieceText', id: pid, page: 2} or
             //           {type: 'CommentAudio', id: annotId, page: 2, time: [t0, t1]}
             // data: {pid: id, height: 0.1}
-            r2.dom_model.createTextTearing(cmd);
 
             if(r2App.pieces_cache.hasOwnProperty(cmd.data.pid)){return;}
             var anchorpage = doc.GetPage(cmd.anchorTo.page);
@@ -284,6 +283,8 @@
                 );
                 pieceteared.SetPieceTeared(cmd.user);
                 anchorpiece.AddChildrenChronologically([pieceteared]);
+
+                r2.dom_model.createTextTearing(pieceteared);
                 return true;
             }
             return false;
@@ -307,21 +308,22 @@
 
 
             if(anchorpiece){
-                r2.dom_model.createCommentVoice(cmd.anchorTo.page, anchorpiece.GetId(), cmd.data.aid, r2.userGroup.GetUser(cmd.user), false); /* live_recording = false */
+
 
                 var annot = new r2.Annot();
                 annot.SetAnnot(cmd.data.aid, anchorpiece.GetId(), cmd.time, cmd.data.duration, cmd.data.waveform_sample, cmd.user, cmd.data.audiofileurl);
                 r2App.annots[cmd.data.aid] = annot;
-                var timePerPiece = r2Const.PIECEAUDIO_TIME_PER_WIDTH*anchorpiece.GetTtWidth();
-                var nPiece = Math.ceil(cmd.data.duration/timePerPiece);
-                var l = [];
+                r2.dom_model.createCommentVoice(annot, cmd.anchorTo.page, false); /* live_recording = false */
 
-                for(var i = 0; i < nPiece; ++i){
-                    r2.dom_model.appendPieceVoice(cmd.data.aid, cmd.time); /* dom */
+                var timePerPiece = r2Const.PIECEAUDIO_TIME_PER_WIDTH*anchorpiece.GetTtWidth();
+                var npiece = Math.ceil(cmd.data.duration/timePerPiece);
+                var l = [];
+                for(var i = 0; i < npiece; ++i){
+                    r2.dom_model.appendPieceVoice(cmd.data.aid, i, cmd.time); /* dom */
 
                     var pieceaudio = new r2.PieceAudio();
                     pieceaudio.SetPiece(
-                        r2.nameHash.getPieceVoice(cmd.data.aid, i),
+                        r2.pieceHashId.voice(cmd.data.aid, i),
                         (new Date(cmd.time)).getTime(),
                         anchorpiece.GetNewPieceSize(),
                         anchorpiece.GetTTData()

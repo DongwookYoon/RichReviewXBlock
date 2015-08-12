@@ -485,23 +485,6 @@
             return null;
         };
 
-        var getPrevRmBtn = function($rm_btn){
-            return getRmBtnOffset($rm_btn, -1);
-        };
-        var getNextRmBtn = function($rm_btn){
-            return getRmBtnOffset($rm_btn, +1);
-        };
-        var getRmBtnOffset = function($rm_btn, offset){
-            var $l = $rm_btn.parents('.rm_menu').find('.rm_btn');
-            for(var i = 0, l = $l.length; i < l; ++i){
-                if($rm_btn[0] === $l[i]){
-                    return $($l[(i+offset+l)%l]);
-                }
-            }
-            return null;
-        };
-
-
         pub.focusNext = function(){
             var $focused = $(':focus');
             if($focused.hasClass('tc_comment')){
@@ -520,7 +503,7 @@
                 }
             }
             else if($focused.hasClass('rm_btn')){
-                getNextRmBtn($focused).focus();
+                r2.radialMenu.getNextRmBtn($focused).focus();
             }
             else{
                 $tc_cur_page.find('.tc_comment').first().focus();
@@ -542,12 +525,10 @@
                     else{ // when it's a nested comment
                         $focused.parent().children().filter('.tc_comment').last().focus();
                     }
-
                 }
-
             }
             else if($focused.hasClass('rm_btn')){
-                getPrevRmBtn($focused).focus();
+                r2.radialMenu.getPrevRmBtn($focused).focus();
             }
             else{
                 $tc_cur_page.find('.tc_comment').last().focus();
@@ -562,6 +543,9 @@
                     $in.first().focus();
                 }
             }
+            else if($focused.hasClass('rm_btn')){
+                r2.radialMenu.getNextRmBtn($focused).focus();
+            }
         };
 
         pub.focusUp = function(){
@@ -573,7 +557,7 @@
                 }
             }
             else if($focused.hasClass('rm_btn')){
-                $focused.parents('.tc_comment').focus();
+                r2.radialMenu.getPrevRmBtn($focused).focus();
             }
         };
 

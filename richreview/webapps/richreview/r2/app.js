@@ -278,7 +278,6 @@
             ).then(
                 function(docjs){
                     r2.modalWindowLoading.endDownloadingMetafile();
-                    console.log(r2.ctx.pdfjs_url, docjs);
                     return docjs;
                 }
             );
@@ -413,7 +412,7 @@
             // prevent data loss
             window.onbeforeunload = function () {
                 r2.log.Consume(false); // delayed
-                var now_tying = r2.keyboard.mode == r2.KeyboardModeEnum.FOCUSED &&
+                var now_tying = r2.keyboard.getMode() === r2.KeyboardModeEnum.FOCUSED &&
                     r2App.cur_focused_piece_keyboard != null &&
                     r2App.cur_focused_piece_keyboard.WasChanged();
                 var now_uploading = r2Sync.NowUploading();

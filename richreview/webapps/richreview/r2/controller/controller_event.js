@@ -146,7 +146,8 @@ var r2Ctrl = {};
 
     r2.KeyboardModeEnum = {
         FOCUSED : 0,
-        NORMAL : 1
+        NORMAL : 1,
+        ON_BTN : 2
     };
 
     r2.keyboard = (function(){
@@ -178,70 +179,39 @@ var r2Ctrl = {};
             KEY_ESC: 27
         };
 
-        pub.mode = r2.KeyboardModeEnum.NORMAL;
+        var mode = r2.KeyboardModeEnum.NORMAL;
         pub.ctrlkey_dn = false;
 
+        var updateMode = function(){
+            $focus = $(':focus');
+            if($focus.length !== 0){
+                if($focus.hasClass('r2_piecekeyboard_textarea')){
+                    mode = r2.KeyboardModeEnum.FOCUSED;
+                    return;
+                }
+                else if($focus.hasClass('rm_btn')){
+                    mode = r2.KeyboardModeEnum.ON_BTN;
+                    return;
+                }
+            }
+            mode = r2.KeyboardModeEnum.NORMAL;
+            return;
+        };
+
+        var getMode = function(){
+            return mode;
+        };
+
         pub.handleDn = function(event){
-            if(r2App.mode == r2App.AppModeEnum.IDLE && pub.mode == r2.KeyboardModeEnum.NORMAL){
-                switch(event.which){
-                    case CONST.KEY_CTRL: // left ctrl
-                        pub.ctrlkey_dn = true;
-                        break;
-                    case CONST.KEY_PAGEUP:
-                        r2.clickPrevPage();
-                        event.preventDefault();
-                        break;
-                    case CONST.KEY_PAGEDN:
-                        r2.clickNextPage();
-                        event.preventDefault();
-                        break;
-                    case CONST.KEY_DN:
-                        r2.dom_model.focusNext();
-                        event.preventDefault();
-                        break;
-                    case CONST.KEY_UP:
-                        r2.dom_model.focusPrev();
-                        event.preventDefault();
-                        break;
-                    case CONST.KEY_LEFT:
-                        r2.dom_model.focusUp();
-                        event.preventDefault();
-                        break;
-                    case CONST.KEY_RGHT:
-                        r2.dom_model.focusIn();
-                        event.preventDefault();
-                        break;
-                    default:
-                        break;
-                }
+            updateMode();
+            if(r2App.mode === r2App.AppModeEnum.IDLE && mode === r2.KeyboardModeEnum.NORMAL){
+                ;
             }
-            if(r2App.mode == r2App.AppModeEnum.REPLAYING && pub.mode == r2.KeyboardModeEnum.NORMAL){
-                switch(event.which){
-                    case CONST.KEY_CTRL: // left ctrl
-                        pub.ctrlkey_dn = true;
-                        break;
-                    case CONST.KEY_DN:
-                        r2.dom_model.focusNext();
-                        event.preventDefault();
-                        break;
-                    case CONST.KEY_UP:
-                        r2.dom_model.focusPrev();
-                        event.preventDefault();
-                        break;
-                    case CONST.KEY_LEFT:
-                        r2.dom_model.focusUp();
-                        event.preventDefault();
-                        break;
-                    case CONST.KEY_RGHT:
-                        r2.dom_model.focusIn();
-                        event.preventDefault();
-                        break;
-                    default:
-                        break;
-                }
+            else if(r2App.mode === r2App.AppModeEnum.REPLAYING && mode === r2.KeyboardModeEnum.NORMAL){
+                ;
             }
-            else if(r2App.mode == r2App.AppModeEnum.RECORDING){
-                if(event.which == CONST.KEY_ENTER || event.which == CONST.KEY_SPACE){ // enter or space
+            else if(r2App.mode === r2App.AppModeEnum.RECORDING){
+                if(event.which === CONST.KEY_ENTER || event.which === CONST.KEY_SPACE){ // enter or space
                     // for Recording_Stop() when key up;
                 }
                 else{
@@ -251,7 +221,43 @@ var r2Ctrl = {};
                 }
             }
 
-            if( pub.mode === r2.KeyboardModeEnum.NORMAL &&
+            switch(event.which){
+                case CONST.KEY_CTRL: // left ctrl
+                    pub.ctrlkey_dn = true;
+                    break;
+                case CONST.KEY_PAGEUP:
+                    r2.clickPrevPage();
+                    event.preventDefault();
+                    break;
+                case CONST.KEY_PAGEDN:
+                    r2.clickNextPage();
+                    event.preventDefault();
+                    break;
+                case CONST.KEY_DN:
+                    r2.dom_model.focusNext();
+                    event.preventDefault();
+                    break;
+                case CONST.KEY_UP:
+                    r2.dom_model.focusPrev();
+                    event.preventDefault();
+                    break;
+                case CONST.KEY_LEFT:
+                    r2.dom_model.focusUp();
+                    event.preventDefault();
+                    break;
+                case CONST.KEY_RGHT:
+                    r2.dom_model.focusIn();
+                    event.preventDefault();
+                    break;
+                case CONST.KEY_ESC:
+                    r2.dom_model.focusEsc();
+                    event.preventDefault();
+                    break;
+                default:
+                    break;
+            }
+
+            if( mode === r2.KeyboardModeEnum.NORMAL &&
                     (event.which === CONST.KEY_ENTER || event.which === CONST.KEY_SPACE) ){
                 event.preventDefault();
                 event.stopPropagation();
@@ -259,7 +265,9 @@ var r2Ctrl = {};
         };
 
         pub.handleUp = function(event){
-            if (r2App.mode == r2App.AppModeEnum.IDLE && pub.mode == r2.KeyboardModeEnum.NORMAL) {
+            updateMode();
+
+            if (r2App.mode == r2App.AppModeEnum.IDLE && mode == r2.KeyboardModeEnum.NORMAL) {
                 switch (event.which) {
                     case CONST.KEY_SPACE:
                         if (r2App.cur_annot_id) {
@@ -283,7 +291,7 @@ var r2Ctrl = {};
                         break;
                 }
             }
-            else if (r2App.mode == r2App.AppModeEnum.REPLAYING && pub.mode == r2.KeyboardModeEnum.NORMAL) {
+            else if (r2App.mode == r2App.AppModeEnum.REPLAYING && mode == r2.KeyboardModeEnum.NORMAL) {
                 switch (event.which) {
                     case CONST.KEY_SPACE:
                         r2.log.Log_AudioStop('space', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
@@ -324,19 +332,15 @@ var r2Ctrl = {};
                     pub.ctrlkey_dn = false;
                     break;
                 case 107:
-                    if(pub.mode == r2.KeyboardModeEnum.NORMAL)
+                    if(mode == r2.KeyboardModeEnum.NORMAL)
                         r2.zoom.in();
                     break;
                 case 109:
-                    if(pub.mode == r2.KeyboardModeEnum.NORMAL)
+                    if(mode == r2.KeyboardModeEnum.NORMAL)
                         r2.zoom.out();
                     break;
                 default:
                     break;
-            }
-
-            if(event.which === CONST.KEY_ESC){
-                r2.dom_model.focusEsc();
             }
         };
 

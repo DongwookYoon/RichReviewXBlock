@@ -1192,6 +1192,25 @@
             $icon[0].fa_font = fa_font;
         };
 
+
+        pub.getPrevRmBtn = function($rm_btn){
+            return getRmBtnOffset($rm_btn, -1);
+        };
+
+        pub.getNextRmBtn = function($rm_btn){
+            return getRmBtnOffset($rm_btn, +1);
+        };
+
+        var getRmBtnOffset = function($rm_btn, offset){
+            var $l = $rm_btn.parents('.rm_menu').find('.rm_btn');
+            for(var i = 0, l = $l.length; i < l; ++i){
+                if($rm_btn[0] === $l[i]){
+                    return $($l[(i+offset+l)%l]);
+                }
+            }
+            return null;
+        };
+
         var createIcon = function(fa_font){
             var $icon = $(document.createElement('i'));
             $icon.addClass('fa').addClass('fa-2x').addClass(fa_font);
@@ -1207,22 +1226,26 @@
                 $(this).first().css('top', (50 + 35*Math.sin(-0.5* Math.PI - 2*(1/l)*i*Math.PI)).toFixed(2) + "%");
             });
 
-
             $menu.on('mouseenter',function(e) {
                 r2.mouse.inMenu();
                 $menu.toggleClass('open', true);
             }).on('mouseleave',function(e) {
                 r2.mouse.outMenu();
                 $menu.toggleClass('open', false);
+                $menu.find('.rm_btn').blur();
             });
 
             $menu.find('.rm_btn').on('focus', function(e){
-                menus.forEach(function($m){$m.toggleClass('open', false);});
-                $menu.toggleClass('open', true);
+                updateMenuOpenStatus($menu);
             }).on('blur', function(e){
-                menus.forEach(function($m){$m.toggleClass('open', false);});
-                $menu.toggleClass('open', false);
+                updateMenuOpenStatus($menu);
             });
+        };
+
+        var updateMenuOpenStatus = function($menu){
+            setTimeout(function(){
+                $menu.toggleClass('open', $menu.find(':focus').length !== 0);
+            }, 10);
         };
 
         var closeRadialMenuAndRun = function($menu, cb){

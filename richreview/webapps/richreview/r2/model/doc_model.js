@@ -1197,7 +1197,6 @@
                     }
                 }.bind(this), false);
                 this.dom_textarea.addEventListener('focusout', function() {
-                    r2.keyboard.mode = r2.KeyboardModeEnum.NORMAL;
                     r2App.cur_focused_piece_keyboard = null;
                     this.dom_textarea.style.boxShadow = "none";
                     $(this.dom).css("pointer-events", 'none');
@@ -1211,7 +1210,6 @@
                         $(this.dom_textarea).blur(); // unfocus
                         return;
                     }
-                    r2.keyboard.mode = r2.KeyboardModeEnum.FOCUSED;
                     r2App.cur_focused_piece_keyboard = this;
                     var color = this._isprivate ?
                             r2.userGroup.GetUser(this._username).color_piecekeyboard_private_box_shadow :
@@ -1237,25 +1235,6 @@
         this.dom_textarea.focus();
     };
 
-    r2.PieceKeyboard.prototype.OnBtnRmv = function(){
-        r2.keyboard.mode = r2.KeyboardModeEnum.NORMAL;
-
-        if(r2.userGroup.cur_user.name === this._username){
-            if(r2.removeAnnot(this._annotid, true, false)){ // askuser, mute
-                r2Sync.PushToUploadCmd(this.ExportToCmdDeleteComment());
-                r2.log.Log_Simple("RemoveAnnot_Text_OnScrBtn");
-            }
-        }
-        else{
-            alert("You can only delete your own comments.")
-        }
-    };
-    r2.PieceKeyboard.prototype.OnBtnPub = function(){
-        r2.keyboard.mode = r2.KeyboardModeEnum.NORMAL;
-        this._isprivate = !this._isprivate;
-        this.UpdateForPubPrivate();
-        r2Sync.PushToUploadCmd(this.ExportToCmdPubPrivate());
-    };
     r2.PieceKeyboard.prototype.SetPubPrivate = function(isprivate){
         this._isprivate = isprivate;
     };

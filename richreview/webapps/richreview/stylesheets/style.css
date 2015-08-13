@@ -881,7 +881,6 @@ body::-webkit-scrollbar-corner {
 
 .tc_page .tc_comment:focus {
   /*background: rgba(255,0,0,0.1);*/
-  /*box-shadow: inset 0 0 0.0015em 0.003em rgba(0, 0, 0, 0.4);*/
   /*outline:none;*/
 }
 .tc_page .tc_piece:focus {
@@ -927,7 +926,6 @@ body::-webkit-scrollbar-corner {
 }
 
 /* coloring dom_model for debugging
-*/
 .tc_comment_text {
   background: rgba(255,0,0, 0.1);
 }
@@ -937,6 +935,7 @@ body::-webkit-scrollbar-corner {
 .tc_comment_voice {
   background: rgba(0,0,255, 0.2);
 }
+*/
 
 /*
 * radial menu

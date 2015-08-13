@@ -195,6 +195,10 @@ var r2Ctrl = {};
                     mode = r2.KeyboardModeEnum.ON_BTN;
                     return;
                 }
+                else if($focus.hasClass('btn-dashboard')){
+                    mode = r2.KeyboardModeEnum.ON_BTN;
+                    return;
+                }
             }
             mode = r2.KeyboardModeEnum.NORMAL;
             return;
@@ -232,23 +236,23 @@ var r2Ctrl = {};
                     event.preventDefault();
                     break;
                 case CONST.KEY_DN:
-                    r2.dom_model.keyNav.next();
+                    r2.dom_model.focusCtrl.next();
                     event.preventDefault();
                     break;
                 case CONST.KEY_UP:
-                    r2.dom_model.keyNav.prev();
+                    r2.dom_model.focusCtrl.prev();
                     event.preventDefault();
                     break;
                 case CONST.KEY_LEFT:
-                    r2.dom_model.keyNav.up();
+                    r2.dom_model.focusCtrl.up();
                     event.preventDefault();
                     break;
                 case CONST.KEY_RGHT:
-                    r2.dom_model.keyNav.in();
+                    r2.dom_model.focusCtrl.in();
                     event.preventDefault();
                     break;
                 case CONST.KEY_ESC:
-                    r2.dom_model.keyNav.esc();
+                    r2.dom_model.focusCtrl.esc();
                     event.preventDefault();
                     break;
                 default:
@@ -263,7 +267,6 @@ var r2Ctrl = {};
         };
 
         pub.handleUp = function(event){
-            updateMode();
 
             if (r2App.mode == r2App.AppModeEnum.IDLE && mode == r2.KeyboardModeEnum.NORMAL) {
                 switch (event.which) {

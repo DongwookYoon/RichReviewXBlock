@@ -400,7 +400,7 @@
             var $comment = $(document.createElement('div'));
             $comment.toggleClass('tc_comment', true);
             $comment.toggleClass(cls, true);
-            pub.keyNav.setFocusable($comment);
+            pub.focusCtrl.setFocusable($comment);
 
             $target.append($comment);
             return $comment;
@@ -454,10 +454,14 @@
         };
 
 
-        pub.keyNav = (function(){
-            var pub_kn = {};
+        pub.focusCtrl = (function(){
+            var pub_fc = {};
 
-            pub_kn.next = function(){
+            pub_fc.focusPiece = function(annot_id){
+                $tc_cur_page.find('#'+r2.util.escapeDomId(annot_id)).focus();
+            };
+
+            pub_fc.next = function(){
                 var $focused = $(':focus');
                 if($focused.hasClass('tc_comment')){
                     var $next  = $focused.next('.tc_comment');
@@ -482,7 +486,7 @@
                 }
             };
 
-            pub_kn.prev = function(){
+            pub_fc.prev = function(){
                 var $focused = $(':focus');
                 if($focused.hasClass('tc_comment')){
                     var $prev  = $focused.prev('.tc_comment');
@@ -507,7 +511,7 @@
                 }
             };
 
-            pub_kn.in = function(){
+            pub_fc.in = function(){
                 var $focused = $(':focus');
                 if($focused.hasClass('tc_comment')){
                     var $in = $focused.find('.tc_comment');
@@ -520,7 +524,7 @@
                 }
             };
 
-            pub_kn.up = function(){
+            pub_fc.up = function(){
                 var $focused = $(':focus');
                 if($focused.hasClass('tc_comment')){
                     var $up = $focused.parent().parent();
@@ -533,7 +537,7 @@
                 }
             };
 
-            pub_kn.esc = function(){
+            pub_fc.esc = function(){
                 var $focused = $(':focus');
                 if($focused.hasClass('r2_piecekeyboard_textarea')){
                     $focused.parent().parent().parent().parent().focus();
@@ -543,7 +547,7 @@
                 }
             };
 
-            pub_kn.setFocusable = function($target){
+            pub_fc.setFocusable = function($target){
                 $target.attr('tabindex', 0);
                 $target.on(
                     'focus',
@@ -574,7 +578,7 @@
                 return null;
             };
 
-            return pub_kn;
+            return pub_fc;
         }());
 
         return pub;

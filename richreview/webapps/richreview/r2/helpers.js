@@ -263,47 +263,51 @@
         var pub = {};
 
         function addItem(userid, type, annotid){
-            var container = $("#dashboard-comment-history")[0];
-            var $a = $(document.createElement("a"));
-            $a.attr("userid", userid);
-            $a.attr("annotid", annotid);
-            $a.attr("href", "javascript:void(0);");
-            $a.toggleClass("dashboard-comments-icon");
+            var container = $('#dashboard-comment-history')[0];
+            var $a = $(document.createElement('a'));
+            $a.attr('userid', userid);
+            $a.attr('annotid', annotid);
+            $a.attr('href', 'javascript:void(0);');
+            $a.addClass('dashboard-comments-icon');
+            $a.addClass('btn-dashboard');
 
-            var $i = $(document.createElement("i"));
-            $i.toggleClass("fa");
-            $i.toggleClass("fa-lg");
-            $i.css("color", r2.userGroup.GetUser(userid).color_meta_comment_list_normal);
+            var $i = $(document.createElement('i'));
+            $i.addClass('fa');
+            $i.addClass('fa-lg');
+            $i.css('color', r2.userGroup.GetUser(userid).color_meta_comment_list_normal);
             $a.append($i);
             $i.hover(
                 function () {
-                    $i.css("color", r2.userGroup.GetUser(userid).color_meta_comment_list_hover);
+                    $i.css('color', r2.userGroup.GetUser(userid).color_meta_comment_list_hover);
                 },
                 function () {
-                    $i.css("color", r2.userGroup.GetUser(userid).color_meta_comment_list_normal);
+                    $i.css('color', r2.userGroup.GetUser(userid).color_meta_comment_list_normal);
                 }
             );
 
-            if(type=="audio"){
-                $i.toggleClass("fa-volume-up");
+            if(type==='audio'){
+                $a.attr('alt', 'link to an audio comment');
+                $i.toggleClass('fa-volume-up');
                 $(container).prepend($a);
                 $a.click(function(){
                     var searchresult = r2App.doc.SearchPieceByAnnotId(annotid);
                     if(searchresult){
+                        r2.dom_model.focusCtrl.focusPiece(annotid);
                         r2.turnPageAndSetFocus(searchresult);
                         r2.log.Log_CommentHistory("audio", annotid);
                     }
                 });
             }
-            else if(type=="text"){
-                $i.toggleClass("fa-edit");
+            else if(type==='text'){
+                $a.attr('alt', 'link to a text comment');
+                $i.toggleClass('fa-edit');
                 $(container).prepend($a);
                 $a.click(function(){
                     var searchresult = r2App.doc.SearchPieceByAnnotId(annotid);
                     if(searchresult){
+                        r2.dom_model.focusCtrl.focusPiece(annotid);
                         r2.turnPageAndSetFocus(searchresult);
-
-                        r2.log.Log_CommentHistory("text", annotid);
+                        r2.log.Log_CommentHistory('text', annotid);
                     }
                 });
             }
@@ -1145,7 +1149,7 @@
             $btn_center.addClass('rm_btn_center').addClass('rm_btn');
             $btn_center.attr('href', 'javascript:void(0);');
             $btn_center.attr('alt', btn_alt);
-            r2.dom_model.keyNav.setFocusable($btn_center);
+            r2.dom_model.focusCtrl.setFocusable($btn_center);
             $btn_center.append(createIcon(btn_center_fa_font));
             if(typeof cb !== 'undefined'){$btn_center.click(closeRadialMenuAndRun($menu,cb));}
             $menu.append($btn_center);
@@ -1163,7 +1167,7 @@
             $btn.addClass('rm_btn');
             $btn.attr('href', 'javascript:void(0);');
             $btn.attr('alt', alt);
-            r2.dom_model.keyNav.setFocusable($btn);
+            r2.dom_model.focusCtrl.setFocusable($btn);
             $btn.append(createIcon(fa_font));
             $btn.click(closeRadialMenuAndRun($menu, cb));
             $menu.find('.rm_btn_raidial').append($btn);

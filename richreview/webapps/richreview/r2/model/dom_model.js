@@ -456,6 +456,7 @@
 
         pub.focusCtrl = (function(){
             var pub_fc = {};
+            var last_focused_comment = null;
 
             pub_fc.focusPiece = function(annot_id){
                 $tc_cur_page.find('#'+r2.util.escapeDomId(annot_id)).focus();
@@ -545,6 +546,15 @@
                 else if($focused.hasClass('rm_btn')){
                     $focused.parents('.tc_comment').first().focus();
                 }
+                else if($focused.hasClass('tc_comment')){
+                    $('#dashboard-comments-title').focus();
+                }
+                else{
+                    if(last_focused_comment !==0){
+                        last_focused_comment.focus();
+                    }
+                }
+
             };
 
             pub_fc.setFocusable = function($target){
@@ -554,6 +564,7 @@
                     function(evt){
                         $(this).css('outline', 'rgba(77, 144, 254, 0.5) solid 1px');
                         $(this).css('box-shadow', 'inset 0 0 0 0.003em rgba(77, 144, 254, 0.5)');
+                        last_focused_comment = $(this);
                     }
                 ).on(
                     'blur',

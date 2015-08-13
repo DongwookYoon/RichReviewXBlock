@@ -1161,16 +1161,18 @@
         this.dom = document.createElement('div');
         this.dom.classList.toggle('r2_piecekeyboard', true);
         this.dom.classList.toggle('unselectable', true);
+        this.dom.setAttribute('aria-label', 'text comment');
+        this.dom.setAttribute('role', 'article');
 
         this.dom_tr = document.createElement('div');
         this.dom_tr.classList.toggle('r2_peicekeyboard_tr', true);
         this.dom_tr.classList.toggle('unselectable', true);
         this.dom.appendChild(this.dom_tr);
 
-
         this.dom_pre = document.createElement('pre');
         this.dom_pre.classList.toggle('r2_piecekeyboard_pre', true);
         this.dom_pre.classList.toggle('unselectable', true);
+        this.dom_pre.setAttribute('aria-hidden', true);
 
         this.dom_span = document.createElement('span');
         this.dom_span.classList.toggle('unselectable', true);
@@ -1178,10 +1180,14 @@
         this.dom_pre.appendChild(document.createElement('br'));
         this.dom_tr.appendChild(this.dom_pre);
 
+
         this.dom_textarea = document.createElement('textarea');
         this.dom_textarea.classList.toggle('r2_piecekeyboard_textarea', true);
         this.dom_textarea.classList.toggle('unselectable', true);
         this.dom_textarea.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
+        if(this._username != r2.userGroup.cur_user.name){
+            this.dom_textarea.setAttribute('readonly', 'readonly');
+        }
         this.dom_tr.appendChild(this.dom_textarea);
 
         $(this.dom_tr).css('left', this.GetTtIndent()+'em');
@@ -1212,10 +1218,6 @@
                     }
                 }.bind(this), false);
                 this.dom_textarea.addEventListener('focus', function() {
-                    if(this._username != r2.userGroup.cur_user.name){
-                        $(this.dom_textarea).blur(); // unfocus
-                        return;
-                    }
                     r2App.cur_focused_piece_keyboard = this;
                     var color = this._isprivate ?
                             r2.userGroup.GetUser(this._username).color_piecekeyboard_private_box_shadow :

@@ -222,42 +222,57 @@ var r2Ctrl = {};
                     }
                 }
             }
-
-            switch(event.which){
-                case CONST.KEY_CTRL: // left ctrl
-                    pub.ctrlkey_dn = true;
-                    break;
-                case CONST.KEY_PAGEUP:
-                    r2.clickPrevPage();
-                    event.preventDefault();
-                    break;
-                case CONST.KEY_PAGEDN:
-                    r2.clickNextPage();
-                    event.preventDefault();
-                    break;
-                case CONST.KEY_DN:
-                    r2.dom_model.focusCtrl.next();
-                    event.preventDefault();
-                    break;
-                case CONST.KEY_UP:
-                    r2.dom_model.focusCtrl.prev();
-                    event.preventDefault();
-                    break;
-                case CONST.KEY_LEFT:
-                    r2.dom_model.focusCtrl.up();
-                    event.preventDefault();
-                    break;
-                case CONST.KEY_RGHT:
-                    r2.dom_model.focusCtrl.in();
-                    event.preventDefault();
-                    break;
-                case CONST.KEY_ESC:
-                    r2.dom_model.focusCtrl.esc();
-                    event.preventDefault();
-                    break;
-                default:
-                    break;
+            if(mode !== r2.KeyboardModeEnum.FOCUSED){
+                switch(event.which){
+                    case CONST.KEY_CTRL: // left ctrl
+                        pub.ctrlkey_dn = true;
+                        break;
+                    case CONST.KEY_PAGEUP:
+                        r2.clickPrevPage();
+                        event.preventDefault();
+                        break;
+                    case CONST.KEY_PAGEDN:
+                        r2.clickNextPage();
+                        event.preventDefault();
+                        break;
+                    case CONST.KEY_DN:
+                        r2.dom_model.focusCtrl.next();
+                        event.preventDefault();
+                        break;
+                    case CONST.KEY_UP:
+                        r2.dom_model.focusCtrl.prev();
+                        event.preventDefault();
+                        break;
+                    case CONST.KEY_LEFT:
+                        r2.dom_model.focusCtrl.up();
+                        event.preventDefault();
+                        break;
+                    case CONST.KEY_RGHT:
+                        r2.dom_model.focusCtrl.in();
+                        event.preventDefault();
+                        break;
+                    case CONST.KEY_ESC:
+                        r2.dom_model.focusCtrl.esc();
+                        event.preventDefault();
+                        break;
+                    default:
+                        break;
+                }
             }
+            else{ // when focused
+                switch(event.which){
+                    case CONST.KEY_CTRL: // left ctrl
+                        pub.ctrlkey_dn = true;
+                        break;
+                    case CONST.KEY_ESC:
+                        r2.dom_model.focusCtrl.esc();
+                        event.preventDefault();
+                        break;
+                    default:
+                        break;
+                }
+            }
+
 
             if( mode === r2.KeyboardModeEnum.NORMAL &&
                     (event.which === CONST.KEY_ENTER || event.which === CONST.KEY_SPACE) ){

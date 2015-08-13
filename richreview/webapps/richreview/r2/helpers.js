@@ -286,7 +286,7 @@
             );
 
             if(type==='audio'){
-                $a.attr('alt', 'link to an audio comment');
+                $a.attr('aria-label', 'audio comment');
                 $i.toggleClass('fa-volume-up');
                 $(container).prepend($a);
                 $a.click(function(){
@@ -299,7 +299,7 @@
                 });
             }
             else if(type==='text'){
-                $a.attr('alt', 'link to a text comment');
+                $a.attr('aria-label', 'text comment');
                 $i.toggleClass('fa-edit');
                 $(container).prepend($a);
                 $a.click(function(){
@@ -1143,12 +1143,14 @@
             var $menu = $(document.createElement('div'));
             $menu.addClass('rm_menu');
             $menu.attr('id', rm_id);
+            $menu.attr('aria-label', 'menu');
             $menu.css('font-size', rm_size+'em');
 
             var $btn_center = $(document.createElement('a'));
             $btn_center.addClass('rm_btn_center').addClass('rm_btn');
             $btn_center.attr('href', 'javascript:void(0);');
-            $btn_center.attr('alt', btn_alt);
+            $btn_center.attr('aria-label', btn_alt);
+            $btn_center.attr('role', 'button');
             r2.dom_model.focusCtrl.setFocusable($btn_center);
             $btn_center.append(createIcon(btn_center_fa_font));
             if(typeof cb !== 'undefined'){$btn_center.click(closeRadialMenuAndRun($menu,cb));}
@@ -1166,7 +1168,8 @@
             var $btn = $(document.createElement('a'));
             $btn.addClass('rm_btn');
             $btn.attr('href', 'javascript:void(0);');
-            $btn.attr('alt', alt);
+            $btn.attr('aria-label', alt);
+            $btn.attr('role', 'button');
             r2.dom_model.focusCtrl.setFocusable($btn);
             $btn.append(createIcon(fa_font));
             $btn.click(closeRadialMenuAndRun($menu, cb));

@@ -127,8 +127,8 @@
 
         pub.createBodyText = function($tight_col, piece_text){
             var $comment = appendComment($tight_col, 'tc_comment_text');
-            $comment.attr('alt', typeof piece_text[4] === 'string' ? piece_text[4] : '(empty)');
-
+            $comment.attr('aria-label', typeof piece_text[4] === 'string' ? piece_text[4] : 'empty texts');
+            $comment.attr('role', 'document');
             var $piece = $(document.createElement('div'));
             $piece.toggleClass('tc_piece', true);
 
@@ -164,6 +164,8 @@
             var dom_anchor = $anchor.get(0);
             if(dom_anchor){
                 var $comment = appendComment($anchor, 'tc_comment_texttearing');
+                $comment.attr('aria-label', 'whitespace');
+                $comment.attr('role', 'document');
                 var id = piece_teared.GetId();
 
                 var $piece = $(document.createElement('div'));
@@ -205,6 +207,8 @@
             if(dom_anchor){
                 var $comment = appendComment($anchor, 'tc_comment_voice');
                 $comment.attr('id', annot_id_esc);
+                $comment.attr('aria-label', 'voice comment');
+                $comment.attr('role', 'article');
                 $anchor.children().first().after($comment);
 
                 { /* add menu */
@@ -216,7 +220,7 @@
                         'rm_'+annot_id_esc,
                         rm_size,
                         (live_recording === true ? 'fa-stop' : 'fa-play'),
-                        'play/stop',
+                        'play or stop audio',
                         function(){
                             if(r2App.mode === r2App.AppModeEnum.RECORDING){
                                 if(annot_id === r2App.cur_recording_annot.GetId()){
@@ -352,7 +356,7 @@
                     var rm_size = rm_ratio*0.00063;
                     var rm_btn_size = 30;
 
-                    var $rm = r2.radialMenu.create('rm_'+pid, rm_size, 'fa-keyboard-o', 'edit', function(){
+                    var $rm = r2.radialMenu.create('rm_'+pid, rm_size, 'fa-keyboard-o', 'edit text comment', function(){
                             doc_model_piecekeyboard.edit();
                     });
                     r2.radialMenu.addBtnCircular($rm, 'fa-chevron-up', 'fold layout', function(){

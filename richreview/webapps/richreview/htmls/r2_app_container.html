@@ -22,7 +22,7 @@
     <div class="horizontal_line"></div>
     <div id="browse_row" class="row">
         <div id="dashboard_users">
-            <div class="dashboard-title" tabindex="0" alt="user list">
+            <div class="dashboard-title" tabindex="0" aria-label="user list">
                 <a>
                     Users
                 </a>
@@ -30,7 +30,7 @@
             <!-- here comes user icons, 'dashboard-btn's -->
         </div>
         <div id="browse_comments">
-            <div id="dashboard-comments-title" style="float:left;" class="dashboard-title" tabindex="0" alt="comment history">
+            <div id="dashboard-comments-title" style="float:left;" class="dashboard-title" tabindex="0" aria-label="comment history">
                 Comment History
             </div>
             <div id="dashboard-comment-history" style="white-space:nowrap;overflow-x:scroll;">
@@ -43,8 +43,8 @@
         <div style="float:left;margin: 0 12px;" >
             <div>
                 <button id="btn-cheatsheet" onclick="r2.clickHowTo()" class="btn btn-sm btn-primary btn-dashboard"
-                   data-toggle="tooltip" data-html="true" data-container="body" data-placement="bottom" alt="UI cheat sheat"
-                   title="Click!">
+                   data-toggle="tooltip" data-html="true" data-container="body" data-placement="bottom"
+                        aria-label="UI cheat sheat">
                     Cheatsheet
                 </button>
             </div>
@@ -52,9 +52,9 @@
 
         <div style="float: right;margin: 0 12px;">
             <div>
-                <button onclick="r2.clickPlay()" class="btn btn-sm btn-primary btn-dashboard" alt="play">
+                <button onclick="r2.clickPlay()" class="btn btn-sm btn-primary btn-dashboard" aria-label="play">
                     <i class="fa fa-play"></i></button>
-                <button onclick="r2.clickStop()" class="btn btn-sm btn-primary btn-dashboard" alt="stop">
+                <button onclick="r2.clickStop()" class="btn btn-sm btn-primary btn-dashboard" aria-label="stop">
                     <i class="fa fa-pause"></i></button>
             </div>
         </div>
@@ -62,23 +62,23 @@
         <div >
             <div style="display:inline-block;">
                 <button id="page_nav_prev" onclick="r2.clickPrevPage()" class="btn btn-sm btn-primary btn-dashboard"
-                        alt="prev page">
+                        aria-label="prev page">
                     <i class="fa fa-chevron-left"></i></button>
                 <button id="page_nav_next" onclick="r2.clickNextPage()" class="btn btn-sm btn-primary btn-dashboard"
-                        alt="next page">
+                        aria-label="next page">
                     <i class="fa fa-chevron-right"></i></button>
             </div>
             <div style="display:inline-block;margin:0 11px;">
                 page
-                <input id="page_nav_input" class="btn-dashboard" type="text" value="1" alt="jump to a page">
+                <input id="page_nav_input" class="btn-dashboard" type="text" value="1" aria-label="jump to a page">
                 <div id="page_nav_count" style="display:inline-block;">
                     of 1
                 </div>
             </div>
             <div style="display:inline-block;">
-                <button onclick="r2.zoom.in()" class="btn btn-sm btn-primary btn-dashboard" alt="zoom-in">
+                <button onclick="r2.zoom.in()" class="btn btn-sm btn-primary btn-dashboard" aria-label="zoom-in">
                     <i class="fa fa-plus"></i></button>
-                <button onclick="r2.zoom.out()" class="btn btn-sm btn-primary btn-dashboard" alt="zoom-out">
+                <button onclick="r2.zoom.out()" class="btn btn-sm btn-primary btn-dashboard" aria-label="zoom-out">
                     <i class="fa fa-minus"></i></button>
             </div>
         </div>

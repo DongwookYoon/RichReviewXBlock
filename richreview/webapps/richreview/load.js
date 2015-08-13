@@ -29,10 +29,10 @@
 
     r2.loadApp = function(path_prefix){
         var scripts = [
-            ["lib_ext/font-awesome.4.3.0/css/font-awesome.min.css", "css"],
+            ["https://code.jquery.com/ui/1.11.4/themes/ui-lightness/jquery-ui.css", "css"],
+            ["https://code.jquery.com/ui/1.11.4/jquery-ui.js", "js"],
+            ["https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css", "css"],
             ["lib_ext/font-awesome-animation.min.css", "css"],
-            ["lib_ext/jquery-ui-1.11.4/jquery-ui.css", "css"],
-            ["lib_ext/jquery-ui-1.11.4/jquery-ui.js", "js"],
             ["stylesheets/style.css", "css"],
             ["lib_ext/pdfjs/pdf.js", "js"],
             ["lib_ext/recorder/recorder.js", "js"],
@@ -55,7 +55,14 @@
 
         var job = function(i){
             if(i !== scripts.length){
-                return r2.loadJsScript(path_prefix+scripts[i][0], scripts[i][1]).then(
+                var path = scripts[i][0].substring(0, 8);
+                if(scripts[i][0].substring(0, 7)==='http://' || scripts[i][0].substring(0, 8)==='https://'){
+                    path = scripts[i][0];
+                }
+                else{
+                    path = path_prefix+scripts[i][0];
+                }
+                return r2.loadJsScript(path, scripts[i][1]).then(
                     function(){
                         return job(i+1);
                     }

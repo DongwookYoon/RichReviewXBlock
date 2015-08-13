@@ -42,6 +42,11 @@
             r2.log.Log_AudioStop('radialmenu', annot_id, r2.audioPlayer.getPlaybackTime());
         };
 
+        pub.cbRecordingStop = function(annot_id){
+            r2.radialMenu.changeCenterIcon('rm_'+r2.util.escapeDomId(annot_id), 'fa-play');
+            r2.log.Log_AudioStop('radialmenu', annot_id, r2.audioPlayer.getPlaybackTime());
+        };
+
         pub.remove = function(annot_id){
             var annot_id_esc = r2.util.escapeDomId(annot_id);
             $('#'+annot_id_esc).remove();
@@ -142,6 +147,7 @@
             $content.height(content_size.y+'em');
 
             $piece.append($content);
+            setFocusSelection($comment, id);
             $comment.append($piece);
         };
 
@@ -158,14 +164,15 @@
             var dom_anchor = $anchor.get(0);
             if(dom_anchor){
                 var $comment = appendComment($anchor, 'tc_comment_texttearing');
+                var id = piece_teared.GetId();
 
                 var $piece = $(document.createElement('div'));
                 $piece.toggleClass('tc_piece', true);
 
-                $piece.attr('id', piece_teared.GetId());
+                $piece.attr('id', id);
                 setPieceProperties(
                     $piece,
-                    piece_teared.GetId(),
+                    id,
                     0,
                     dom_anchor.pp.w,
                     dom_anchor.pp.tt_depth+1,
@@ -178,8 +185,9 @@
                 $content.toggleClass('tc_piece_text', true);
                 $content.height(piece_teared.GetContentSize().y+'em');
                 $content.width(dom_anchor.pp.w+'em');
-
                 $piece.append($content);
+
+                setFocusSelection($comment, id);
                 $comment.append($piece);
                 $anchor.children().first().after($comment);
                 return true;
@@ -198,7 +206,6 @@
                 var $comment = appendComment($anchor, 'tc_comment_voice');
                 $comment.attr('id', annot_id_esc);
                 $anchor.children().first().after($comment);
-
 
                 { /* add menu */
                     var rm_ratio = getCommentRmRatio($comment);
@@ -303,6 +310,7 @@
                 $content.width($anchor.get(0).pp.w+'em');
 
                 $piece.append($content);
+                setFocusSelection($comment, id);
                 $comment.append($piece);
             }
         };
@@ -336,6 +344,7 @@
                 $dom_piecekeyboard.toggleClass('tc_content', true);
                 $dom_piecekeyboard.toggleClass('tc_piece_keyboard', true);
                 $dom_piecekeyboard.css('width', dom_anchor.pp.w+'em');
+                setFocusSelection($comment, pid);
                 $comment.append($piece);
 
                 {/* add menu */
@@ -395,6 +404,12 @@
 
             $target.append($comment);
             return $comment;
+        };
+
+        var setFocusSelection = function($comment, pid){
+            $comment.off('focusin').on('focusin', function(){
+                r2App.pieceSelector.set(pid);
+            });
         };
 
         var setPieceProperties = function($target, id, time, w, tt_depth, tt_x, tt_w){

@@ -122,31 +122,37 @@ var r2App = (function() {
     pub.url_queries = new r2.util.urlQuery(location.search);
 
     pub.pieceSelector = (function(){
-        var pub = {};
+        var pub_ps = {};
 
         var selected_piece = null;
 
-        pub.get = function(){
+        pub_ps.get = function(){
             return selected_piece;
         };
 
-        pub.set = function(piece){
-            selected_piece = piece;
+        pub_ps.set = function(piece){
+            if(typeof piece === 'string'){
+                selected_piece = pub.pieces_cache[piece];
+            }
+            else{
+                selected_piece = piece;
+            }
+            r2App.invalidate_dynamic_scene = true;
         };
 
-        pub.reset = function(){
+        pub_ps.reset = function(){
             selected_piece = null;
         };
 
-        pub.isNull = function(){
+        pub_ps.isNull = function(){
             return selected_piece === null;
         };
 
-        pub.isSelected = function(piece){
+        pub_ps.isSelected = function(piece){
             return selected_piece !== null && piece === selected_piece;
         };
 
-        pub.update = function(cur_mouse_pt){
+        pub_ps.update = function(cur_mouse_pt){
             if(r2.mouse.mode !== r2.MouseModeEnum.HOVER){return}
             var piece_dy_obj = r2App.cur_page.GetPieceOfClosestBottom(r2.viewCtrl.mapScrToDoc(cur_mouse_pt));
             if(selected_piece !== piece_dy_obj[1]){ // piece[0] is dy, piece[1] is the obj.
@@ -156,18 +162,15 @@ var r2App = (function() {
             }
         };
 
-        pub.draw = function(canvas_ctx){
+        pub_ps.draw = function(canvas_ctx){
             if(selected_piece){
                 if(selected_piece.DrawSelected){
                     selected_piece.DrawSelected(canvas_ctx);
                 }
-                else{
-                    console.log(selected_piece);
-                }
             }
         };
 
-        return pub;
+        return pub_ps;
     }());
 
     pub.recordingTrigger = (function(){

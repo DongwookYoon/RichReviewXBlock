@@ -67,6 +67,8 @@ var r2Ctrl = {};
             var new_mouse_pt = pub.getPos(event);
 
             if(pub.mode == r2.MouseModeEnum.HOVER){
+                // select piece
+                r2App.pieceSelector.update(r2App.cur_mouse_pt);
             }
             else if(pub.mode == r2.MouseModeEnum.LDN){
                 if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){

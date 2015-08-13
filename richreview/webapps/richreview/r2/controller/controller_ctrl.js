@@ -69,6 +69,7 @@
                     r2Sync.PushToUploadCmd(this.ExportToCmd());
             }.bind(r2App.cur_recording_annot));
         r2.PieceAudio.prototype.NormalizePieceAudio(r2App.cur_recording_pieceaudios, refresh_all = true);
+        r2.dom_model.cbRecordingStop(r2App.cur_recording_annot.GetId());
 
         r2App.cur_recording_annot = null;
         r2App.cur_recording_pieceaudios = null;

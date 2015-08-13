@@ -68,9 +68,6 @@
                 // upload and download cmds
                 r2Sync.loop();
 
-                // select piece
-                r2App.pieceSelector.update(r2App.cur_mouse_pt);
-
                 triggerReservedRecordingBgn();
             }
             else if(r2App.mode == r2App.AppModeEnum.RECORDING){

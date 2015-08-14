@@ -3,16 +3,6 @@
  */
 
 
-function loadRichReviewIframe(r2_ctx){
-    document.getElementById('r2_iframe').onload = function() {
-        (function(r2){
-            r2.platform = 'Azure';
-            r2.ctx = JSON.parse(decodeURIComponent(r2_ctx));
-            r2.loadApp();
-        }(document.getElementById('r2_iframe').contentWindow.r2 = document.getElementById('r2_iframe').contentWindow.r2 || {}));
-    }
-}
-
 function loadRichReview(r2_ctx) {
     loadJsScript("/static_viewer/load.js", "js").then(
         function(){
@@ -20,7 +10,8 @@ function loadRichReview(r2_ctx) {
                 r2.platform = 'Azure';
                 r2.scroll_wrapper = document.getElementById('r2_app_page');
                 r2.ctx = JSON.parse(decodeURIComponent(r2_ctx));
-                r2.loadApp("/static_viewer/");
+                console.log('r2.ctx', r2.ctx.app_urls);
+                r2.loadApp(r2.ctx.app_urls);
             }(window.r2 = window.r2 || {}));
         }
     );

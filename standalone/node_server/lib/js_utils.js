@@ -319,3 +319,33 @@ exports.getHostname = (function(){
         return url;
     };
 }());
+
+exports.walkSync = function(dir, filelist) {
+  var fs = fs || require('fs'),
+      files = fs.readdirSync(dir);
+  filelist = filelist || [];
+  files.forEach(function(item) {
+    if (fs.statSync(dir + item).isDirectory()) {
+      filelist = exports.walkSync(dir + item + '/', filelist);
+    }
+    else {
+      filelist.push(dir + item);
+    }
+  });
+  return filelist;
+};
+
+exports.getWebAppUrls = function(path, exclude){
+    var filelist = [];
+    exports.walkSync(path+'/', filelist);
+    filelist.forEach(function(file, i){
+        filelist[i] = file.substring(path.length+1);
+    });
+    var urls = {};
+    filelist.forEach(function(file, i) {
+        if(file.match(exclude)===null){
+            urls[file] = '/static_viewer/' + file;
+        }
+    });
+    return urls;
+};

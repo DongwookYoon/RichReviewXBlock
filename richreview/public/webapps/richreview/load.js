@@ -27,30 +27,30 @@
         });
     };
 
-    r2.loadApp = function(path_prefix){
+    r2.loadApp = function(resource_urls){
         var scripts = [
-            ["https://code.jquery.com/ui/1.11.4/themes/ui-lightness/jquery-ui.css", "css"],
-            ["https://code.jquery.com/ui/1.11.4/jquery-ui.js", "js"],
-            ["https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css", "css"],
-            ["lib_ext/font-awesome-animation.min.css", "css"],
-            ["stylesheets/style.css", "css"],
-            ["lib_ext/pdfjs/pdf.js", "js"],
-            ["lib_ext/recorder/recorder.js", "js"],
-            ["lib_ext/sha1.js", "js"],
-            ["lib_ext/vec2.min.js", "js"],
-            ["lib_ext/bowser.min.js", "js"],
-            ["r2/audio_utils.js", "js"],
-            ["r2/utils.js", "js"],
-            ["r2/helpers.js", "js"],
-            ["r2/shared_objs.js", "js"],
-            ["r2/model/dom_model.js", "js"],
-            ["r2/model/doc_model_legacy.js", "js"],
-            ["r2/model/doc_model.js", "js"],
-            ["r2/controller/controller_cmds.js", "js"],
-            ["r2/controller/controller_dbs.js", "js"],
-            ["r2/controller/controller_event.js", "js"],
-            ["r2/controller/controller_ctrl.js", "js"],
-            ["r2/app.js", "js"]
+            ['https://code.jquery.com/ui/1.11.4/themes/ui-lightness/jquery-ui.css', 'css'],
+            ['https://code.jquery.com/ui/1.11.4/jquery-ui.js', 'js'],
+            ['https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css', 'css'],
+            ['lib_ext/font-awesome-animation.min.css', 'css'],
+            ['stylesheets/style.css', 'css'],
+            ['lib_ext/pdfjs/pdf.js', 'js'],
+            ['lib_ext/recorder/recorder.js', 'js'],
+            ['lib_ext/sha1.js', 'js'],
+            ['lib_ext/vec2.min.js', 'js'],
+            ['lib_ext/bowser.min.js', 'js'],
+            ['r2/audio_utils.js', 'js'],
+            ['r2/utils.js', 'js'],
+            ['r2/helpers.js', 'js'],
+            ['r2/shared_objs.js', 'js'],
+            ['r2/model/dom_model.js', 'js'],
+            ['r2/model/doc_model_legacy.js', 'js'],
+            ['r2/model/doc_model.js', 'js'],
+            ['r2/controller/controller_cmds.js', 'js'],
+            ['r2/controller/controller_dbs.js', 'js'],
+            ['r2/controller/controller_event.js', 'js'],
+            ['r2/controller/controller_ctrl.js', 'js'],
+            ['r2/app.js', 'js']
         ];
 
         var job = function(i){
@@ -60,7 +60,7 @@
                     path = scripts[i][0];
                 }
                 else{
-                    path = path_prefix+scripts[i][0];
+                    path = resource_urls[scripts[i][0]];
                 }
                 return r2.loadJsScript(path, scripts[i][1]).then(
                     function(){
@@ -69,12 +69,13 @@
                 );
             }
             else{
-                PDFJS.workerSrc = path_prefix + "lib_ext/pdfjs/pdf.worker.js";
-                return r2.main.Run(path_prefix);
+                PDFJS.workerSrc = resource_urls['lib_ext/pdfjs/pdf.worker.js'];
+                return r2.main.Run(resource_urls);
             }
         };
         job(0).catch(
             function(err){
+                console.log(err);
                 alert(err);
                 //ToDo redirect back to the webpage when failed to load a resource.
             }

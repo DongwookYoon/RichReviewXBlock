@@ -12,11 +12,11 @@
 
         var l = [];
 
-        pub.initHT = function(path_prefix){
+        pub.initHT = function(resource_urls){
             return new Promise(function(resolve, reject){
                 var job = function(i){
                     if(i < l.length){
-                        pub.loadOnce(path_prefix, l[i]).then(
+                        pub.loadOnce(resource_urls, l[i]).then(
                             function(){
                                 job(i+1);
                             }
@@ -36,9 +36,13 @@
             l.push(name);
         };
 
-        pub.loadOnce = function(path_prefix, name){
-            return r2.util.getUrlData(path_prefix + "htmls/" + name + ".html", "").then(
+        pub.loadOnce = function(resource_urls, name){
+            console.log('htmls/' + name + '.xml');
+            console.log(resource_urls['htmls/' + name + '.xml']);
+            return r2.util.getUrlData(resource_urls['htmls/' + name + '.xml'], '').then(
                 function(resp) {
+                    console.log('resp:', resp);
+                    console.log('done');
                     $("#" + name).html(resp);
                     return null;
                 }

@@ -49,6 +49,18 @@ def upload_webapp(fs, src_path, dst_path_root, exclude):
 
     return fs.get_url(dst_path_root, 3600)
 
+def get_local_resource_list(src_path, exclude):
+    filelist = []
+    exclude_pattern = re.compile(exclude)
+    src_path_abs = os.path.dirname(os.path.realpath(__file__))+src_path
+
+    for dir, dirs, files in os.walk(src_path_abs):
+        for file in files:
+            path = os.path.join(dir, file)[len(src_path_abs)+1:]
+            if(not exclude_pattern.match(path)):
+                filelist.append(path)
+    return filelist
+
 
 def clear_webapp(fs, target_path):
     if fs.exists(target_path):

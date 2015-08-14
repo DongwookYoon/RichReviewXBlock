@@ -160,10 +160,10 @@
     r2.main = (function(){
         var pub = {};
 
-        pub.Run = function(path_prefix) {
-            r2.HtmlTemplate.initHT(path_prefix).then(
+        pub.Run = function(resource_urls) {
+            r2.HtmlTemplate.initHT(resource_urls).then(
                 function(){
-                    return checkPlatform(path_prefix);
+                    return checkPlatform();
                 }
             ).then(
                 function(){
@@ -171,7 +171,7 @@
                 }
             ).then(
                 function(){
-                    return initAudioRecorder(path_prefix);
+                    return initAudioRecorder(resource_urls);
                 }
             ).then(
                 function(){
@@ -229,11 +229,11 @@
             return;
         }
 
-        function initAudioRecorder(path_prefix){
+        function initAudioRecorder(resource_urls){
             if(r2.ctx["pmo"] !== "") { // pass mobile is not set
                 return;
             }
-            return r2.audioRecorder.Init(path_prefix).then(
+            return r2.audioRecorder.Init(resource_urls).then(
                 function(){
                     r2.coverMsg.Show([""]);
                 }

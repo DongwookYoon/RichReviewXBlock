@@ -5,7 +5,6 @@ function RichReviewXBlock(runtime, element) {
 
     (function($, Promise){
 
-
         var loadJsScript = function(url, type){
             return new Promise(function(resolve, reject){
                 var elem = null;
@@ -44,29 +43,13 @@ function RichReviewXBlock(runtime, element) {
             });
         };
 
-
-        var normalizeUrl = function(url){
-            var protocols = {x:'http://', o:'https://'};
-            if(location.protocol + '//' === protocols.x){
-                protocols.x = [protocols.o, protocols.o = protocols.x][0]; // swap
-            }
-            if(url.substring(0, protocols.x.length) === protocols.x){
-                url = protocols.o + url.substring(protocols.x.length);
-            }
-            else if(url[0] !== '/'){
-                url = protocols.o + url;
-            }
-            return url;
-        };
-
         var loadRichReview = function(runtime, element){
             var r2_ctx;
             promisifyXBlockRuntime(runtime, element, "get_richreview_context", {}).then(
                 function(resp){
                     r2_ctx = resp;
-                    r2_ctx.app_url = normalizeUrl(r2_ctx.app_url);
-
-                    return loadJsScript(r2_ctx.app_url+"/load.js", "js");
+                    console.log(r2_ctx);
+                    return loadJsScript(r2_ctx.app_urls['load.js'], 'js');
                 }
             ).then(
                 function(){
@@ -78,7 +61,8 @@ function RichReviewXBlock(runtime, element) {
                         r2.ctx.upload_audio_url = runtime.handlerUrl(element, 'upload_audio')+'?';
                         r2.ctx.pmo = "";
                         r2.ctx.comment = "";
-                        r2.loadApp(r2_ctx.app_url+"/");
+                        console.log(r2_ctx.app_urls);
+                        r2.loadApp(r2_ctx.app_urls);
                     }(window.r2 = window.r2 || {}));
                 }
             ).catch(

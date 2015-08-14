@@ -62,6 +62,7 @@
                     var page = doc.GetPage(i);
                     var $tc_page = loadPage(page, i);
                     $tc_doc.append($tc_page);
+                    $tc_page.css('display','none');
                     $tc_pages.push($tc_page);
                 }
             };

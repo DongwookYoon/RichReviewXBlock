@@ -14,7 +14,7 @@ from boto.s3.connection import Location
 from pys3website import pys3website
 
 from util import *
-from osfs_utils import upload_webapp, clear_webapp, osfs_mkdir, osfs_copy_file, osfs_save_formfile
+from osfs_utils import upload_webapp, clear_webapp, osfs_mkdir, osfs_copy_file, osfs_save_formfile, get_local_resource_list
 from mupla_ctype import mupla_ctype
 
 RESOURCE_EXPIRATION_TIME = 7200 # 2 hours
@@ -42,12 +42,14 @@ class RichReviewXBlock(XBlock):
                          'url_root' : '/static/djpyfs'}
     if djfs_settings["type"] == "osfs":
         clear_webapp(fs, 'richreview_web_app')
-        richreview_app_url =  upload_webapp(fs, "/webapps/richreview", "richreview_web_app", exclude=r'^\.')
+        richreview_app_url =  upload_webapp(fs, "/webapps/richreview", "richreview_web_app", exclude=r'(^\.)|(^test\/.*)')
 
         clear_webapp(fs, 'multicolumn_web_app')
-        multicolumn_app_url =  upload_webapp(fs, "/webapps/multicolumn", "multicolumn_web_app", exclude=r'^\.')
+        multicolumn_app_url =  upload_webapp(fs, "/webapps/multicolumn", "multicolumn_web_app", exclude=r'(^\.)|(^test\/.*)')
 
     elif djfs_settings["type"] == "s3fs":
+        richreview_app_files = get_local_resource_list('/public/webapps/richreview', exclude=r'(\..*)|(^test\/.*)')
+        """
         s3website = pys3website.s3website(
             bucket_name = settings.DJFS['bucket'],
             location = Location.DEFAULT,
@@ -72,10 +74,10 @@ class RichReviewXBlock(XBlock):
             prefix = "multicolumn_web_app"
         )
         """
-        """
 
-        richreview_app_url =  s3website.get_url("richreview_web_app")
-        multicolumn_app_url =  s3website.get_url("multicolumn_web_app")
+
+        #//richreview_app_urls =  s3website.get_url("richreview_web_app")
+        #multicolumn_app_url =  s3website.get_url("multicolumn_web_app")
 
     # SHA1 hash of the PDF file under discussion.
     # This value will be updated when a new file is uploaded from the Studio view.
@@ -186,6 +188,13 @@ class RichReviewXBlock(XBlock):
         self.discussion_docid is set to SHA1 of the PDF file ** after ** the staff upload the file.
         """
         return self.discussion_docid != "" and self.fs.exists(self.pdf_path) and self.fs.exists(self.pdfjs_path)
+
+    @property
+    def richreview_app_urls(self):
+        urls = {}
+        for file in self.richreview_app_files:
+            urls[file] = self.runtime.local_resource_url(self, 'public/webapps/richreview/'+file)
+        return urls
 
     def get_audio_filepath(self, groupid, audio_filename):
         return self.xblock_path + "/" + groupid + "/" + audio_filename + ".wav"
@@ -383,11 +392,12 @@ class RichReviewXBlock(XBlock):
         """
         Serves RichReview web app contexts
         """
+        print '>>>>'
         return {
             "pdfid": self.discussion_docid,
             "docid": self.xblock_id,
             "groupid": self.group_id,
-            "app_url":self.richreview_app_url,
+            "app_urls":self.richreview_app_urls,
             "pdf_url": self.fs.get_url(self.pdf_path, RESOURCE_EXPIRATION_TIME),
             "pdfjs_url": self.fs.get_url(self.pdfjs_path, RESOURCE_EXPIRATION_TIME)
         }

@@ -1,7 +1,7 @@
 (function(Pla) {
     "use strict";
 
-    Pla.loadApp = function(path_prefix){
+    Pla.loadApp = function(resource_urls){
         var scripts = [
             ["pdfjs/pdf.js", "js"],
             ["bowser/bowser.min.js", "js"],
@@ -38,14 +38,14 @@
 
         var job = function(i){
             if(i !== scripts.length){
-                return Pla.loadJsScript(path_prefix+scripts[i][0], scripts[i][1]).then(
+                return Pla.loadJsScript(resource_urls[scripts[i][0]], scripts[i][1]).then(
                     function(){
                         return job(i+1);
                     }
                 );
             }
             else{
-                PDFJS.workerSrc = path_prefix+'pdfjs/pdf.worker.js';
+                PDFJS.workerSrc = resource_urls['pdfjs/pdf.worker.js'];
                 return Pla.ctrl.start();
             }
         };

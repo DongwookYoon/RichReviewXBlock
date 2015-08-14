@@ -176,12 +176,8 @@
                 for(var j = 0, lj = block.lines.length; j < lj; j ++){
                     var line = block.lines[j];
                     setTextLine(line.bbox, line.text);
-                    console.log(line.bbox, line.text);
                 }
             }
-
-            console.log('tt:', tt_pieces);
-            console.log('md:', mupla_data);
         };
 
         var preprocessTextBoxes = function(mupla, pdfjs_canv_size){

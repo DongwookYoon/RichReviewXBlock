@@ -48,7 +48,6 @@ function RichReviewXBlock(runtime, element) {
             promisifyXBlockRuntime(runtime, element, "get_richreview_context", {}).then(
                 function(resp){
                     r2_ctx = resp;
-                    console.log(r2_ctx);
                     return loadJsScript(r2_ctx.app_urls['load.js'], 'js');
                 }
             ).then(
@@ -61,7 +60,6 @@ function RichReviewXBlock(runtime, element) {
                         r2.ctx.upload_audio_url = runtime.handlerUrl(element, 'upload_audio')+'?';
                         r2.ctx.pmo = "";
                         r2.ctx.comment = "";
-                        console.log(r2_ctx.app_urls);
                         r2.loadApp(r2_ctx.app_urls);
                     }(window.r2 = window.r2 || {}));
                 }

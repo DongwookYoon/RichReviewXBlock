@@ -37,12 +37,8 @@
         };
 
         pub.loadOnce = function(resource_urls, name){
-            console.log('htmls/' + name + '.xml');
-            console.log(resource_urls['htmls/' + name + '.xml']);
             return r2.util.getUrlData(resource_urls['htmls/' + name + '.xml'], '').then(
                 function(resp) {
-                    console.log('resp:', resp);
-                    console.log('done');
                     $("#" + name).html(resp);
                     return null;
                 }

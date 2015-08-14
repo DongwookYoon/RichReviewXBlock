@@ -48,7 +48,7 @@ class RichReviewXBlock(XBlock):
         multicolumn_app_url =  upload_webapp(fs, "/webapps/multicolumn", "multicolumn_web_app", exclude=r'(^\.)|(^test\/.*)')
 
     elif djfs_settings["type"] == "s3fs":
-        richreview_app_files = get_local_resource_list('/public/webapps/richreview', exclude=r'(\..*)|(^test\/.*)')
+
         """
         s3website = pys3website.s3website(
             bucket_name = settings.DJFS['bucket'],
@@ -191,10 +191,20 @@ class RichReviewXBlock(XBlock):
 
     @property
     def richreview_app_urls(self):
+        return self.get_webapp_urls('public/webapps/richreview', exclude=r'(\..*)|(^test\/.*)')
+
+    @property
+    def multicolumn_app_urls(self):
+        return self.get_webapp_urls('public/webapps/multicolumn', exclude=r'\..*')
+
+    def get_webapp_urls(self, path, exclude):
+        files = get_local_resource_list('/'+path, exclude)
         urls = {}
-        for file in self.richreview_app_files:
-            urls[file] = self.runtime.local_resource_url(self, 'public/webapps/richreview/'+file)
+        for file in files:
+            print file
+            urls[file] = self.runtime.local_resource_url(self, path+'/'+file)
         return urls
+
 
     def get_audio_filepath(self, groupid, audio_filename):
         return self.xblock_path + "/" + groupid + "/" + audio_filename + ".wav"
@@ -358,7 +368,7 @@ class RichReviewXBlock(XBlock):
             return Response(json_body={
                 "pdf_url": self.fs.get_url(mupla_pdfs_folder_path+"/merged.pdf", RESOURCE_EXPIRATION_TIME),
                 "js_url": self.fs.get_url(mupla_pdfs_folder_path+"/merged.js", RESOURCE_EXPIRATION_TIME),
-                "multicolumn_webapp_url": self.multicolumn_app_url,
+                "multicolumn_webapp_urls": self.multicolumn_app_urls,
             })
         except Exception:
             print(traceback.format_exc())

@@ -103,26 +103,9 @@ function RichReviewXBlockStudio(runtime, element) {
             }
         );
 
-        var normalizeUrl = function(url){
-            var protocols = {x:'http://', o:'https://'};
-            if(location.protocol + '//' === protocols.x){
-                protocols.x = [protocols.o, protocols.o = protocols.x][0]; // swap
-            }
-            if(url.substring(0, protocols.x.length) === protocols.x){
-                url = protocols.o + url.substring(protocols.x.length);
-            }
-            else if(url[0] !== '/'){
-                url = protocols.o + url;
-            }
-            return url;
-        };
-
         var runMultiColumnAnalyzer = function(ctx){
-            console.log(ctx.multicolumn_webapp_url);
-            var webapp_url = normalizeUrl(ctx.multicolumn_webapp_url);
-            console.log(webapp_url);
 
-            loadJsScript(webapp_url + '/load.js', 'js').then(
+            loadJsScript(ctx.multicolumn_webapp_urls['load.js'], 'js').then(
                 function(){
                     (function(Pla) {
                         Pla.ctx = ctx;
@@ -144,7 +127,7 @@ function RichReviewXBlockStudio(runtime, element) {
                         Pla.override.error = function(err){
                             alert(JSON.stringify(err));
                         };
-                        Pla.loadApp(webapp_url + '/');
+                        Pla.loadApp(ctx.multicolumn_webapp_urls);
                     }(window.Pla = window.Pla || {}));
                 }
             );

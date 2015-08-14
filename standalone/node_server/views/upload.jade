@@ -1,0 +1,46 @@
+//
+   Created by Dongwook on 12/13/2014.
+
+extends __layout_cprght
+
+block content_with_cprght
+   div(id="multicolumn")
+      canvas(id="maincanvas")
+   .well.upload-well
+      .upload-select
+         h5.upload-select-text
+            |Select File(s), or
+         input#file_input.file(type="file" name="files[]" multiple)
+      .upload-drag-drop
+         h5
+            |Drag and Drop File(s)
+         #drop_zone.upload-drop-zone
+            span.upload-drop-zone-helper
+            h5.upload-drop-zone-text
+               |To Here
+      .upload-list
+         h5.upload-list-text.float_left
+            |And Click the Submit Button
+         .clear-both
+         .progress.upload-progress
+            .progress-bar(role="progress-bar")
+               |0% complete
+         .ul.list-group.upload-group#ul_filelist
+            .li.list-group-item.upload-item
+               p.upload-item-text
+                  |No File to Upload
+               .clear-both
+         button.btn.btn-primary.float_right#btn_submit
+            i.fa.fa-upload.faa-flash.animated
+            |&nbsp;&nbsp;Submit
+         .clear-both
+         h5
+            i.fa.fa-info-circle
+            |&nbsp;<i>What will happen to my PDF file(s) ? </i>
+         p
+            |Your files(s) will be uploaded to our server, and then, you will be able to share or manage them in our My Docs menu.
+
+   script(type='text/javascript', src="/js/util_helper.js")
+   script(type='text/javascript', src="/js/upload_helper.js")
+   link(rel='stylesheet', href='/stylesheets/upload.css')
+   link(rel="stylesheet" href="/static_viewer/lib_ext/font-awesome-animation.min.css")

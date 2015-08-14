@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="misc_utils.js"></script>
+    <script src="../../lib_ext/recorder/recorder.js"></script>
+    <script src="../../r2/audio_utils.js"></script>
+    <script src="socket.js"></script>
+    <script src="transcriptutils.js"></script>
+    <script src="handlemicrophone.js"></script>
+    <script src="audiocoordinator.js"></script>
+    <script src="audiovisuals.js"></script>
+    <script src="audiotextarea.js"></script>
+    <script src="voiceeditor.js"></script>
+    <script src="annotation_test.js"></script>
+    <link rel="stylesheet" href="annotation_test.css" />
+    <link rel="stylesheet" href="../../lib_ext/font-awesome.4.3.0/css/font-awesome.min.css">
+    <title>Audio Discussion</title>
+</head>
+<p>
+<div id="consumerAnnotation" class="annot-template">
+        <div class="annotation_area annot_consumer" id="2">
+        <canvas class="annotationBorder" width="500px" style="height:100%; width: 100%; position: absolute; top:0; left:0; right: 0"></canvas>
+        <canvas class="annotationToolbar" width="500px" height="54px"></canvas>
+        <div class="annotationContentViews">
+            <div class="toolbarViews">
+                <button class="toolbar-button play_btn" onclick="consumerPlayButtonPressed(this)"><i class="fa fa-play"></i></button>
+                &nbsp;&nbsp;
+                <canvas class="audiovisual" width="410px" height="24px"></canvas>
+                &nbsp;&nbsp;
+            </div>
+            <div class="editing-area">
+                <div class="transcript-view"></div>
+            </div>
+        </div>
+    </div>
+</div>
+    <h1>An Annotation Website</h1>
+    <p class="fixedWidth" id="questionBank">Contrary to what you might think, audio annotations can be quite useful for expressing your ideas to others over
+    text. This application uses an audio annotation system, as you can see below.</p>
+    <hr width="500px" align="left" />
+    <p class="fixedWidth instruction">Record a <em>brief response</em> in which you discuss the extent to which you agree or disagree with
+        the statement. Explain your reasoning for the position you take. If necessary, edit your recording to ensure
+        that it is presentable. <span id="time_limit">You will have 3 minutes to complete this task.</span></p>
+    <p class="fixedWidth instruction">Please click the &#10004; button to advance.</p>
+    <button onclick="loadAudioFromDropbox()" id="loadseed">Load Seed</button>
+    <div class="annotation_area annot_producer" id="1">
+        <canvas class="annotationBorder" width="500px" style="height:100%; width: 100%; position: absolute; top:0; left:0; right: 0"></canvas>
+        <canvas class="annotationToolbar" width="500px" height="54px"></canvas>
+        <div class="annotationContentViews">
+            <div class="toolbarViews">
+                <button class="toolbar-button play_btn" onclick="annotEditor.playButtonPressed()"><i class="fa fa-play"></i></button>
+                <button class="toolbar-button recording_start_btn"><i class="fa fa-microphone"></i></button>
+                &nbsp;&nbsp;
+                <canvas class="audiovisual" width="320px" height="24px"></canvas>
+                <div class="loading-label">Loading...</div>
+                &nbsp;&nbsp;
+                <!--<button class="toolbarButton" id="cancel_btn" onclick="alert('You canceled the recording')" style="position: relative; top: -2px;">&#10008;</button>-->
+                <button class="toolbar-button done_btn" onclick="annotEditor.doneButtonPressed()">&#10004;</button>
+            </div>
+            <div class="editing-area">
+                <div class="transcript-view" contenteditable="true" spellcheck="false"></div>
+                <div id="revision-box">
+                    <label class="revision-label" for="revision-input">Edit Word</label>
+                    <input type="text" id="revision-input" name="revision">
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--<p class="fixedWidth">This is more text that would fit underneath the audio annotation.</p>-->
+</body>
+</html>

@@ -1,139 +1,154 @@
 /* Javascript for RichReviewXBlock. */
 
-
-
-var loadJsScript = function(url, type){
-    return new Promise(function(resolve, reject){
-        var elem = null;
-        if(type === 'js'){
-            elem = document.createElement('script');
-            elem.type = 'text/javascript';
-            elem.src = url;
-        }
-        else if(type === 'css'){
-            elem = document.createElement('link');
-            elem.rel = 'stylesheet';
-            elem.type = 'text/CSS';
-            elem.href = url;
-        }
-        if(elem){
-            elem.onreadystatechange = resolve;
-            elem.onload = resolve;
-            elem.onerror = function(){reject(new Error("Cannot load a resource file:" + url));};
-            document.getElementsByTagName('head')[0].appendChild(elem);
-        }
-        else{
-            reject(new Error("Cannot load a resource file:" + url));
-        }
-    });
-};
-
-var promisifyXBlockRuntime = function(runtime, element, handle_name, json_data){
-    return new Promise(function(resolve, reject){
-        $.ajax({
-            url: runtime.handlerUrl(element, handle_name),
-            type: "POST",
-            data: JSON.stringify(json_data),
-            success: resolve,
-            error: reject
-        });
-    });
-};
-
 function RichReviewXBlockStudio(runtime, element) {
-    var pdfupload_url = runtime.handlerUrl(element, 'pdfupload');
-    var pdfjsupload_url = runtime.handlerUrl(element, 'pdfjsupload');
+    "use strict";
 
-    $("#pdf_upload_button").click(
-        function(){
-            $form = $("#pdfupload_form");
-            if($form.find("input")[0].files.length ==0){
-                alert("Please select a PDF file and a JS file");
-                return;
-            }
+    (function($, Promise){
 
-            var formData = new FormData($form[0]);
-            $.ajax(
-                {
-                    url: pdfupload_url,
-                    type: "POST",
-                    data: formData,
-                    success: function(resp){
-                        runMultiColumnAnalyzer(resp);
-                    },
-                    error: function(err){
-                        alert(JSON.stringify(err));
-                    },
-                    processData: false,
-                    contentType: false
+        var loadJsScript = function(url, type){
+            return new Promise(function(resolve, reject){
+                var elem = null;
+                if(type === 'js'){
+                    elem = document.createElement('script');
+                    elem.type = 'text/javascript';
+                    elem.src = url;
                 }
-            )
-        }
-    );
+                else if(type === 'css'){
+                    elem = document.createElement('link');
+                    elem.rel = 'stylesheet';
+                    elem.type = 'text/CSS';
+                    elem.href = url;
+                }
+                if(elem){
+                    elem.onreadystatechange = resolve;
+                    elem.onload = resolve;
+                    elem.onerror = function(){reject(new Error("Cannot load a resource file:" + url));};
+                    document.getElementsByTagName('head')[0].appendChild(elem);
+                }
+                else{
+                    reject(new Error("Cannot load a resource file:" + url));
+                }
+            });
+        };
 
-    var runMultiColumnAnalyzer = function(ctx){
-        $("#multicolumn").toggleClass("show", true);
+        var promisifyXBlockRuntime = function(runtime, element, handle_name, json_data){
+            return new Promise(function(resolve, reject){
+                $.ajax({
+                    url: runtime.handlerUrl(element, handle_name),
+                    type: "POST",
+                    data: JSON.stringify(json_data),
+                    success: resolve,
+                    error: reject
+                });
+            });
+        };
 
-        loadJsScript(location.protocol + "//" + ctx.multicolumn_webapp_url + "/load.js", "js").then(
-                    function(){
-                        (function(Pla) {
-                            Pla.ctx = ctx;
-                            Pla.ctx.doc_layout_upload_url = pdfjsupload_url;
+        var pdfupload_url = runtime.handlerUrl(element, 'pdfupload');
+        var pdfjsupload_url = runtime.handlerUrl(element, 'pdfjsupload');
 
-                            Pla.override = {};
-                            Pla.override.done = function(pla_result){
-                                promisifyXBlockRuntime(runtime, element, "pdfjsupload", pla_result).then(
-                                    function(resp){
-                                        alert("The PDF file was successfully uploaded.");
-                                    }
-                                ).catch(
-                                    function(resp){
-                                        alert("Error");
-                                    }
-                                );
-                            };
-                            Pla.override.error = function(err){
-                                alert(JSON.stringify(err));
-                            };
+        var uiCtrl = (function(){
+            var pub = {};
 
-                            Pla.loadApp(location.protocol + "//" + ctx.multicolumn_webapp_url+"/");
-                        }(window.Pla = window.Pla || {}));
+            pub.bgnUploading = function(){
+                $("#multicolumn").toggleClass('show', true);
+                $('#r2_pdfupload').toggleClass('uploading', true);
+                $('#existing_doc').toggleClass('hide', true);
+            };
+
+            pub.endUploading = function(msg){
+                $('#r2_pdfupload').toggleClass('uploading', false);
+                $('#r2_studio_block').toggleClass('uploaded', true);
+                $("#multicolumn").toggleClass('show', false);
+                alert(msg);
+            };
+
+            pub.bgnDeleting = function(){
+                $('#existing_doc').toggleClass('deleting', true);
+            };
+
+            pub.endDeleting = function(msg){
+                $('#existing_doc').toggleClass('deleting', false);
+                alert(msg);
+                $('#existing_doc').toggleClass('hide');
+            };
+
+            return pub;
+        })();
+
+        $("#pdf_upload_button").click(
+            function(){
+                uiCtrl.bgnUploading();
+                var $form = $("#pdfupload_form");
+                if($form.find("input")[0].files.length === 0){
+                    alert("Please select a PDF file and a JS file");
+                    return;
+                }
+
+                var formData = new FormData($form[0]);
+                $.ajax(
+                    {
+                        url: pdfupload_url,
+                        type: "POST",
+                        data: formData,
+                        success: function(resp){
+                            runMultiColumnAnalyzer(resp);
+                        },
+                        error: function(err){
+                            alert(JSON.stringify(err));
+                        },
+                        processData: false,
+                        contentType: false
                     }
                 );
+            }
+        );
 
-    };
+        var runMultiColumnAnalyzer = function(ctx){
 
-    $("#pdf_delete_button").click(
-        function(){
-            promisifyXBlockRuntime(runtime, element, "pdfdelete", {}).then(
+            loadJsScript(ctx.multicolumn_webapp_urls['load.js'], 'js').then(
                 function(){
-                    alert('Files were deleted successfully');
-                }
-            ).catch(
-                function(err){
-                    alert(JSON.stringify(err));
-                }
-            );
-        }
-    );
+                    (function(Pla) {
+                        Pla.ctx = ctx;
+                        Pla.ctx.doc_layout_upload_url = pdfjsupload_url;
 
-    $("#test_a").click(
-        function(){
-            promisifyXBlockRuntime(runtime, element, "test", {op: "reload_webapp"}).catch(
-                function(err){
-                    alert(JSON.stringify(err));
+                        Pla.override = {};
+                        Pla.override.done = function(pla_result){
+                            console.log('Pla.override.done', pla_result);
+                            promisifyXBlockRuntime(runtime, element, "pdfjsupload", pla_result).then(
+                                function(resp){
+                                    uiCtrl.endUploading("The PDF file was successfully uploaded.");
+                                }
+                            ).catch(
+                                function(err){
+                                    uiCtrl.endUploading(err);
+                                }
+                            );
+                        };
+                        Pla.override.error = function(err){
+                            alert(JSON.stringify(err));
+                        };
+                        Pla.loadApp(ctx.multicolumn_webapp_urls);
+                    }(window.Pla = window.Pla || {}));
                 }
             );
-        }
-    );
 
-    $("#test_b").click(
-        function(){
-            promisifyXBlockRuntime(runtime, element, "test", {op: "test_mupla"}).catch(
-                function(err){
-                    alert(JSON.stringify(err));
-                }
-            );
-        }
-    );
+        };
+
+        $("#pdf_delete_button").click(
+            function(){
+                uiCtrl.bgnDeleting();
+
+                promisifyXBlockRuntime(runtime, element, "pdfdelete", {}).then(
+                    function(){
+                        uiCtrl.endDeleting('Files were deleted successfully');
+                    }
+                ).catch(
+                    function(err){
+                        alert(JSON.stringify(err));
+                    }
+                );
+            }
+        );
+
+    }(jQuery, Promise));
 }

@@ -1,0 +1,54 @@
+﻿extends __layout_cprght
+
+block content_with_cprght
+    h4='My Repository'
+    // use maxin http://jade-lang.com/reference/mixins/
+        
+    #accordion.panel-group
+        .panel.panel-default
+            each container in doc_containers
+                .panel-heading
+                    .panel-title
+                        .row.vcenter
+                            .col-xs-8
+                                a(data-toggle="collapse" data-parent="#accordion" href='#'+container.c_id)
+                                    p.docs_cont_title.float_left
+                                        |#{container.nick}
+                                    .float_right
+                                        p.docs_cont_title_small.align_right
+                                            |#{container.last_uploaded + ' / ' + container.blobs.length+ ' files'}
+                                        p.docs_cont_title_small.align_right
+                                            |#{container.c_id}
+                            .col-xs-4
+                                .btn-group.btn_docs
+                                    a.btn.docs_cont_btn.btn-danger.dropdown-toggle(data-toggle="dropdown")
+                                        |<span class="glyphicon glyphicon glyphicon-trash docs_cont_btn_icon" aria-hidden="true"></span>
+                                        span.caret
+                                    ul.dropdown-menu(role="menu")
+                                        li
+                                            a(href=HOST + 'docs?op=delete&c=' + container.c_id)
+                                                | I confirm. Go ahead!
+                                a.btn_docs.docs_cont_btn.btn.btn-primary(href=HOST+'downloader?access_code='+container.c_id)
+                                    |<span class="glyphicon glyphicon glyphicon-cloud-download docs_cont_btn_icon" aria-hidden="true"></span>
+                                a.btn_docs.docs_cont_btn.btn.btn-primary(href=HOST+'viewer?access_code='+container.c_id)
+                                    |<span class="glyphicon glyphicon glyphicon-eye-open docs_cont_btn_icon" aria-hidden="true"></span>
+                div.panel-collapse.collapse(id=container.c_id)
+                        .panel-body
+                            //p= JSON.stringify(cont_blobs)
+                            table.table.table-striped.table-hover
+                                thead
+                                    tr
+                                        th= '#'
+                                        th= 'Filename'
+                                        th= 'Size (kb)'
+                                        th= 'Last Modified'
+                                tbody
+                                    -var i = 0
+                                    for blob in container.blobs
+                                        tr
+                                            td= i++
+                                            td
+                                                a(href=BLOB_HOST + container.c_id + '/' + blob.name)
+                                                    |#{blob.name}
+                                            td= blob.properties['content-length']/1000
+                                            td= blob.properties['last-modified']

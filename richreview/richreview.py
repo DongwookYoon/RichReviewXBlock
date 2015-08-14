@@ -5,7 +5,7 @@ import json
 from uuid import uuid4
 
 from xblock.core import XBlock
-from xblock.fields import Scope, String, Dict, List, RemoteScope
+from xblock.fields import Scope, String, Dict, List
 from xblock.fragment import Fragment
 from djpyfs import djpyfs
 from django.conf import settings
@@ -109,13 +109,15 @@ class RichReviewXBlock(XBlock):
 
     #This dictionary stores the list of comments & commands for each group
     # Usage: cmds_of_group[<groupid>] == [<cmd0>, <cmd1>, ... ]
+    # Define a shared field
     cmds_of_group = List(
         help = "list of annotation data (JSON format) in a chronological order",
         default=[],
         scope=Scope.user_state,
-        remote_scope=RemoteScope.course_users
+        shared=True
     )
 
+    # Define a query to access the shared field
     shared_cmds_of_group = List.Query(
         field_name='cmds_of_group'
     )
@@ -242,6 +244,7 @@ class RichReviewXBlock(XBlock):
     def add_cmd(self, cmd, groupid):
         # self.init_cmds(groupid)
         # self.cmds_of_group[groupid].append(json.loads(cmd))
+        
         group_cmds = self.shared_cmds_of_group.get(user_id=groupid)
         group_cmds.append(json.loads(cmd))
         self.shared_cmds_of_group.set(value=group_cmds, user_id=groupid)

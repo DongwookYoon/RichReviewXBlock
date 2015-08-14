@@ -647,6 +647,9 @@
         this._texCoordRB = texCoordRB;
         this._text = typeof text === 'string' ? text : '(empty)';
     };
+    r2.PieceText.prototype.GetPieceText = function(){
+        return this._text;
+    };
     r2.PieceText.prototype.SetVisibility = function(visible){
         r2.Obj.prototype.SetVisibility.apply(this, [visible]);
         this._isvisible = true;

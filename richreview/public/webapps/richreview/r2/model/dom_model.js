@@ -128,7 +128,8 @@
 
         pub.createBodyText = function($tight_col, piece_text){
             var $comment = appendComment($tight_col, 'tc_comment_text');
-            $comment.attr('aria-label', typeof piece_text[4] === 'string' ? piece_text[4] : 'empty texts');
+            console.log(piece_text);
+            $comment.attr('aria-label', typeof piece_text.GetPieceText() === 'string' ? piece_text.GetPieceText() : 'empty texts');
             $comment.attr('role', 'document');
             var $piece = $(document.createElement('div'));
             $piece.toggleClass('tc_piece', true);
@@ -357,7 +358,7 @@
                     var rm_size = rm_ratio*0.00063;
                     var rm_btn_size = 30;
 
-                    var $rm = r2.radialMenu.create('rm_'+pid, rm_size, 'fa-keyboard-o', 'edit text comment', function(){
+                    var $rm = r2.radialMenu.create('rm_'+pid, rm_size, 'fa-keyboard-o', 'select text comment', function(){
                             doc_model_piecekeyboard.edit();
                     });
                     r2.radialMenu.addBtnCircular($rm, 'fa-chevron-up', 'fold layout', function(){

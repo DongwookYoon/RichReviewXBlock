@@ -35,7 +35,7 @@ setup(
         'richreview',
     ],
     install_requires=[
-        'PYPDF2', 'pys3website', 'XBlock'
+        'PYPDF2', 'XBlock'
     ],
     entry_points={
         'xblock.v1': [

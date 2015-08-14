@@ -10,11 +10,9 @@ from xblock.fragment import Fragment
 from djpyfs import djpyfs
 from django.conf import settings
 from webob.response import Response
-from boto.s3.connection import Location
-from pys3website import pys3website
 
 from util import *
-from osfs_utils import upload_webapp, clear_webapp, osfs_mkdir, osfs_copy_file, osfs_save_formfile, get_local_resource_list
+from osfs_utils import osfs_mkdir, osfs_copy_file, osfs_save_formfile, get_local_resource_list
 from mupla_ctype import mupla_ctype
 
 RESOURCE_EXPIRATION_TIME = 7200 # 2 hours
@@ -40,44 +38,6 @@ class RichReviewXBlock(XBlock):
         djfs_settings = {'type' : 'osfs',
                          'directory_root' : 'common/static/djpyfs',
                          'url_root' : '/static/djpyfs'}
-    if djfs_settings["type"] == "osfs":
-        clear_webapp(fs, 'richreview_web_app')
-        richreview_app_url =  upload_webapp(fs, "/webapps/richreview", "richreview_web_app", exclude=r'(^\.)|(^test\/.*)')
-
-        clear_webapp(fs, 'multicolumn_web_app')
-        multicolumn_app_url =  upload_webapp(fs, "/webapps/multicolumn", "multicolumn_web_app", exclude=r'(^\.)|(^test\/.*)')
-
-    elif djfs_settings["type"] == "s3fs":
-
-        """
-        s3website = pys3website.s3website(
-            bucket_name = settings.DJFS['bucket'],
-            location = Location.DEFAULT,
-            index_page = "index.html",
-            err_page = "error.html",
-            key_id = djfs_settings["aws_access_key_id"],
-            secret_key = djfs_settings["aws_secret_access_key"]
-        )
-
-
-        dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-
-        s3website.clear("richreview_web_app")
-        s3website.update(
-            local_path = dir + "/richreview/webapps/richreview",
-            prefix = "richreview_web_app"
-        )
-
-        s3website.clear("multicolumn_web_app")
-        s3website.update(
-            local_path = dir + "/richreview/webapps/multicolumn",
-            prefix = "multicolumn_web_app"
-        )
-        """
-
-
-        #//richreview_app_urls =  s3website.get_url("richreview_web_app")
-        #multicolumn_app_url =  s3website.get_url("multicolumn_web_app")
 
     # SHA1 hash of the PDF file under discussion.
     # This value will be updated when a new file is uploaded from the Studio view.
@@ -201,7 +161,6 @@ class RichReviewXBlock(XBlock):
         files = get_local_resource_list('/'+path, exclude)
         urls = {}
         for file in files:
-            print file
             urls[file] = self.runtime.local_resource_url(self, path+'/'+file)
         return urls
 
@@ -402,7 +361,6 @@ class RichReviewXBlock(XBlock):
         """
         Serves RichReview web app contexts
         """
-        print '>>>>'
         return {
             "pdfid": self.discussion_docid,
             "docid": self.xblock_id,

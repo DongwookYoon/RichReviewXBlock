@@ -50,10 +50,16 @@ var resizePageBody = function(){
         height: $(this).height()
     };
     var navbar_rect = $("#r2_navbar")[0].getBoundingClientRect();
-
     var $app_page = $("#r2_app_page");
-    $app_page.width(win_rect.width);
-    $app_page.height(win_rect.height-navbar_rect.height);
+    var $app_container = $('#r2_app_container');
+
+    var w = win_rect.width;
+    var h = win_rect.height-navbar_rect.height;
+
+    $app_page.width(w);
+    $app_page.height(h);
+    $app_container.height(h);
+    console.log(h);
 };
 
 

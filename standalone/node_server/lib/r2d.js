@@ -10,7 +10,6 @@ var redis = require('redis');
 var redisClient = redis.createClient(6379, "richreview.net");
 var js_utils = require('../lib/js_utils.js');
 var Promise = require("promise");
-
 redisClient.auth('rich.reviewer@cornell');
 redisClient.on('error', function(err) {
     // "Redis connection to <hostname>:6379 failed - read ETIMEDOUT";

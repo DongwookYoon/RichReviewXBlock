@@ -1,16 +1,19 @@
 // set azure storage setting
 
-var Promise = require("promise");
 
-var AZURE_AUTH_FILE = '../ssl/azure_keys.json';
+var Promise = require("promise");
+var nconf = require('nconf');
+var env = require('../lib/env');
+
 var BLOB_HOST = 'https://richreview.blob.core.windows.net/';
 var ACCOUNT = 'richreview';
-var nconf = require('nconf');
-nconf.env().file({ file: AZURE_AUTH_FILE });
+
+nconf.env().file({ file: env.config_files.azure_keys });
+
 var sql_key_tedious = nconf.get("sql_key_tedious");
 var blob_storage_key = nconf.get("blob_storage_key");
-if( typeof sql_key_tedious == 'undefined' ||  typeof blob_storage_key == 'undefined' ){
-    throw new Error(AZURE_AUTH_FILE + " not found")
+if( typeof sql_key_tedious === 'undefined' ||  typeof blob_storage_key === 'undefined' ){
+    throw new Error('auth configuration file not found : ' + env.config_files.azure_keys);
 }
 
 var storage = require('azure-storage');
@@ -20,7 +23,6 @@ var request = require('request');
 
 var ConnectionTD = require('tedious').Connection;
 var RequestTD = require('tedious').Request;
-var config = sql_key_tedious;
 
 exports.BlobFileDownload = function(c, b, f, cb){
     var wr = fs.createWriteStream(f);
@@ -48,7 +50,7 @@ exports.BlobFileDownload = function(c, b, f, cb){
 exports.svc = blob_svc;
 exports.BLOB_HOST = BLOB_HOST;
 exports.sqlQuery = function(cmd, callback){
-    var sqlconn = new ConnectionTD(config);
+    var sqlconn = new ConnectionTD(sql_key_tedious);
     sqlconn.on('connect', function(error) {
             if(error){
                 console.log('Error from sqlconn.on');

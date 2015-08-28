@@ -79,7 +79,8 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-var google_oauth = JSON.parse(fs.readFileSync('../ssl/google_open_id.json', 'utf-8'));
+
+var google_oauth = JSON.parse(fs.readFileSync(env.config_files.google_open_id, 'utf-8'));
 passport.use(
     new GoogleStrategy(
         {

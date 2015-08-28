@@ -9,3 +9,11 @@ exports.admin_list = [
 exports.path = {
     'temp_pdfs': '/tmp/richreview/pdfs'
 };
+
+exports.config_files = {
+    azure_keys:     '../ssl/azure_keys.json',
+    google_open_id: '../ssl/google_open_id.json',
+    ssl_key:        '../ssl/richreview_net.key',
+    ssl_cert:       '../ssl/richreview_net.crt',
+    ssl_ca:         '../ssl/root.crt'
+};

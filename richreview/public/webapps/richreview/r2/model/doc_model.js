@@ -251,7 +251,6 @@
         r2App.invalidate_static_scene = true;
         r2App.invalidate_dynamic_scene = true;
         r2App.invalidate_size = true;
-        r2App.invalidate_dom = true;
 
         return this.size;
     };
@@ -1355,18 +1354,6 @@
                 return null;
             }
         }
-    };
-    r2.PieceKeyboard.prototype.updateDom = function(){
-        return;
-        var scale = r2.viewCtrl.scale;
-        var x_shift = this._isprivate ? this.GetPrivateShiftX() : 0;
-        if(!this._isvisible){
-            x_shift = -100;
-        }
-
-        var p = r2.viewCtrl.mapDocToDom(Vec2(this.pos.x+this.GetTtIndent() + x_shift, this.pos.y));
-        this.dom.style.left = p.x + 'px';
-        this.dom.style.top = p.y  + 'px';
     };
 
     /*

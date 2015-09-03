@@ -19,6 +19,7 @@
 
                 if(r2App.invalidate_page_layout){
                     r2App.cur_page.Relayout();
+                    r2.dom_model.relayoutPage();
                     r2App.invalidate_page_layout = false;
                 }
 
@@ -38,11 +39,6 @@
                 if(r2App.invalidate_dynamic_scene){
                     drawDynamicScene();
                     r2App.invalidate_dynamic_scene = false;
-                }
-
-                if(r2App.invalidate_dom){
-                    updateDom();
-                    r2App.invalidate_dom = false;
                 }
             }
             catch(err) {
@@ -91,7 +87,6 @@
                     r2App.mode = r2App.AppModeEnum.REPLAYING;
                 }
                 pub.invalidate_dynamic_scene = true;
-                r2App.invalidate_dom = true;
             }
         };
 
@@ -147,10 +142,6 @@
             r2.spotlightCtrl.drawDynamicSceneTraces(r2.annot_canv_ctx);
 
             r2App.pieceSelector.draw(r2.annot_canv_ctx);
-        }
-
-        function updateDom(){
-            r2App.cur_page.RunRecursive('updateDom', [r2.annot_canv_ctx]);
         }
 
         return pub;

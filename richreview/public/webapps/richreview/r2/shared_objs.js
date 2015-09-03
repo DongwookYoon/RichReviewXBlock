@@ -85,7 +85,6 @@ var r2App = (function() {
     pub.invalidate_dynamic_scene = false;
     pub.invalidate_size = false;
     pub.invalidate_page_layout = false;
-    pub.invalidate_dom = false;
 
     pub.mode = pub.AppModeEnum.IDLE;
 
@@ -158,7 +157,6 @@ var r2App = (function() {
             if(selected_piece !== piece_dy_obj[1]){ // piece[0] is dy, piece[1] is the obj.
                 selected_piece = piece_dy_obj[1];
                 r2App.invalidate_dynamic_scene = true;
-                r2App.invalidate_dom = true;
             }
         };
 

@@ -52,6 +52,9 @@
             $('#'+annot_id_esc).remove();
         };
 
+        pub.relayoutPage = function(){
+        };
+
         /* submodule for data loading bgn */
         var loader = (function(){
             var pub_loader = {};
@@ -189,6 +192,7 @@
                 $content.toggleClass('tc_piece_text', true);
                 $content.height(piece_teared.GetContentSize().y+'em');
                 $content.width(dom_anchor.pp.w+'em');
+                $content[0].dom_model = piece_teared;
                 $piece.append($content);
 
                 setFocusSelection($comment, id);

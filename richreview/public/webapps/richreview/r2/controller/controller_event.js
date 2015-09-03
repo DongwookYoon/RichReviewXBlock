@@ -628,7 +628,6 @@ var r2Ctrl = {};
             );
             anchorpiece.AddChildAtFront(piecekeyboard);
             r2App.cur_page.Relayout();
-            piecekeyboard.updateDom();
             piecekeyboard.Focus();
             r2Sync.PushToUploadCmd(piecekeyboard.ExportToCmd());
 

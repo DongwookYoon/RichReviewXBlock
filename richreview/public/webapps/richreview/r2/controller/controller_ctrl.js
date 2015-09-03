@@ -80,7 +80,6 @@
 
         r2App.invalidate_static_scene = true;
         r2App.invalidate_dynamic_scene = true;
-        r2App.invalidate_dom = true;
     };
 
     r2.recordingUpdate = function(){
@@ -187,7 +186,6 @@
             r2.viewCtrl.scale = new_scale;
 
             r2App.invalidate_size = true;
-            r2App.invalidate_dom = true;
 
             /*
             var cur_pt = new Vec2(0.5, 0.5*r2.viewCtrl.app_container_size.y/r2.viewCtrl.app_container_size.x);

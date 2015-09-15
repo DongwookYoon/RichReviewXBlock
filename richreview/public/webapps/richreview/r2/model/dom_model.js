@@ -53,6 +53,12 @@
         };
 
         pub.relayoutPage = function(){
+            var contents = $tc_cur_page.find('.tc_content');
+            for(var i = 0, l = contents.length; i < l; ++i){
+                if(contents[i].dom_model){
+                    var x = 0;
+                }
+            }
         };
 
         /* submodule for data loading bgn */
@@ -130,7 +136,7 @@
 
 
         pub.createBodyText = function($tight_col, piece_text){
-            var $comment = appendComment($tight_col, 'tc_comment_text');
+            var $comment = appendPieceGroup($tight_col, 'tc_comment_text');
             console.log(piece_text);
             $comment.attr('aria-label', typeof piece_text.GetPieceText() === 'string' ? piece_text.GetPieceText() : 'empty texts');
             $comment.attr('role', 'document');
@@ -168,7 +174,7 @@
             var $anchor = $tc_pages[piece_teared.GetNumPage()].find('#'+piece_teared.GetParent().GetId());
             var dom_anchor = $anchor.get(0);
             if(dom_anchor){
-                var $comment = appendComment($anchor, 'tc_comment_texttearing');
+                var $comment = appendPieceGroup($anchor, 'tc_comment_texttearing');
                 $comment.attr('aria-label', 'whitespace');
                 $comment.attr('role', 'document');
                 var id = piece_teared.GetId();
@@ -211,7 +217,7 @@
             var $anchor = $tc_pages[pagen].find('#'+annot.GetAnchorPid());
             var dom_anchor = $anchor.get(0);
             if(dom_anchor){
-                var $comment = appendComment($anchor, 'tc_comment_voice');
+                var $comment = appendPieceGroup($anchor, 'tc_comment_voice');
                 $comment.attr('id', annot_id_esc);
                 $comment.attr('aria-label', 'voice comment');
                 $comment.attr('role', 'article');
@@ -335,7 +341,7 @@
             var $dom_piecekeyboard = $(dom_piecekeyboard);
             var dom_anchor = $anchor.get(0);
             if(dom_anchor){
-                var $comment = appendComment($anchor, 'tc_comment_keyboard');
+                var $comment = appendPieceGroup($anchor, 'tc_comment_keyboard');
                 $comment.attr('id', annot_id_esc);
                 var $piece = $(document.createElement('div'));
                 $piece.toggleClass('tc_piece', true);
@@ -406,9 +412,9 @@
         };
 
 
-        var appendComment = function($target, cls){
+        var appendPieceGroup = function($target, cls){
             var $comment = $(document.createElement('div'));
-            $comment.toggleClass('tc_comment', true);
+            $comment.toggleClass('tc_piecegroup', true);
             $comment.toggleClass(cls, true);
             pub.focusCtrl.setFocusable($comment);
 
@@ -474,18 +480,18 @@
 
             pub_fc.next = function(){
                 var $focused = $(':focus');
-                if($focused.hasClass('tc_comment')){
-                    var $next  = $focused.next('.tc_comment');
+                if($focused.hasClass('tc_piecegroup')){
+                    var $next  = $focused.next('.tc_piecegroup');
                     if($next.length !== 0){
                         $next.focus();
                     }
                     else{
                         if($focused.parent().hasClass('tc_cols')){ // when it's a topmost comment/text,
                             var nextTcCols = getNextTcCols($focused.parent());
-                            nextTcCols.find('.tc_comment').first().focus();
+                            nextTcCols.find('.tc_piecegroup').first().focus();
                         }
                         else{ // when it's a nested comment
-                            $focused.parent().parent().find('.tc_comment').first().focus();
+                            $focused.parent().parent().find('.tc_piecegroup').first().focus();
                         }
                     }
                 }
@@ -493,24 +499,24 @@
                     r2.radialMenu.getNextRmBtn($focused).focus();
                 }
                 else{
-                    $tc_cur_page.find('.tc_comment').first().focus();
+                    $tc_cur_page.find('.tc_piecegroup').first().focus();
                 }
             };
 
             pub_fc.prev = function(){
                 var $focused = $(':focus');
-                if($focused.hasClass('tc_comment')){
-                    var $prev  = $focused.prev('.tc_comment');
+                if($focused.hasClass('tc_piecegroup')){
+                    var $prev  = $focused.prev('.tc_piecegroup');
                     if($prev.length !== 0){
                         $prev.focus();
                     }
                     else{
                         if($focused.parent().hasClass('tc_cols')){ // when it's a topmost comment/text,
                             var nextTcCols = getPrevTcCols($focused.parent());
-                            nextTcCols.children().filter('.tc_comment').last().focus();
+                            nextTcCols.children().filter('.tc_piecegroup').last().focus();
                         }
                         else{ // when it's a nested comment
-                            $focused.parent().children().filter('.tc_comment').last().focus();
+                            $focused.parent().children().filter('.tc_piecegroup').last().focus();
                         }
                     }
                 }
@@ -518,14 +524,14 @@
                     r2.radialMenu.getPrevRmBtn($focused).focus();
                 }
                 else{
-                    $tc_cur_page.find('.tc_comment').last().focus();
+                    $tc_cur_page.find('.tc_piecegroup').last().focus();
                 }
             };
 
             pub_fc.in = function(){
                 var $focused = $(':focus');
-                if($focused.hasClass('tc_comment')){
-                    var $in = $focused.find('.tc_comment');
+                if($focused.hasClass('tc_piecegroup')){
+                    var $in = $focused.find('.tc_piecegroup');
                     if($in.length !== 0){
                         $in.first().focus();
                     }
@@ -537,9 +543,9 @@
 
             pub_fc.up = function(){
                 var $focused = $(':focus');
-                if($focused.hasClass('tc_comment')){
+                if($focused.hasClass('tc_piecegroup')){
                     var $up = $focused.parent().parent();
-                    if($up.hasClass('tc_comment')){
+                    if($up.hasClass('tc_piecegroup')){
                         $up.focus();
                     }
                 }
@@ -554,9 +560,9 @@
                     $focused.parent().parent().parent().parent().focus();
                 }
                 else if($focused.hasClass('rm_btn')){
-                    $focused.parents('.tc_comment').first().focus();
+                    $focused.parents('.tc_piecegroup').first().focus();
                 }
-                else if($focused.hasClass('tc_comment')){
+                else if($focused.hasClass('tc_piecegroup')){
                     $('#dashboard-comments-title').focus();
                 }
                 else{
@@ -564,7 +570,6 @@
                         last_focused_comment.focus();
                     }
                 }
-
             };
 
             pub_fc.setFocusable = function($target){

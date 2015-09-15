@@ -1,10 +1,16 @@
 import os
+import sys
 import shutil
 import json
+
 from django.http import HttpResponse
-if __name__ != "__main__":
-    from django.views.decorators.csrf import csrf_exempt
-from mupla_ctype import mupla_ctype
+#if __name__ != "__main__":
+#    from django.views.decorators.csrf import csrf_exempt
+
+lib_path = os.path.abspath(os.path.join('..', '..', 'richreview', 'mupla_ctype'))
+sys.path.append(lib_path)
+
+import mupla_ctype
 from PyPDF2 import PdfFileMerger, PdfFileReader
 
 TEMP_PDF = '/tmp/richreview/pdfs/'
@@ -43,7 +49,7 @@ def run_mupla(dir_path):
         f.write(json.dumps(js))
         f.close()
 
-@csrf_exempt
+#@csrf_exempt
 def get_pdf_post(request):
     try:
         if request.POST["mode"] ==  "MergePdfs":
@@ -58,4 +64,7 @@ def get_pdf_post(request):
         return HttpResponse(str(e), content_type="application/json")
 
 if __name__ == "__main__":
-    run_mupla("/tmp/richreview/pdfs/ffb042f0-2ff6-11e5-9731-4b8a5d948e4a")
+    print dir(mupla_ctype)
+    #run_mupla("/tmp/richreview/pdfs/eda28e10-5bc0-11e5-8bc7-b73058174fd3")
+
+

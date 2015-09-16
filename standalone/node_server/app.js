@@ -129,6 +129,7 @@ app.post('/docs',       docs.page);
 app.post('/upload',     upload.post);
 app.post('/support',    support.post);
 app.post('/uploadaudioblob', upload.post_audioblob);
+app.post('/resources',  resources.post);
 
 app.get(
     '/login',

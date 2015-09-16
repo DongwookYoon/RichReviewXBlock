@@ -24,6 +24,27 @@ var request = require('request');
 var ConnectionTD = require('tedious').Connection;
 var RequestTD = require('tedious').Request;
 
+exports.getSas = function(container, blob, expiry){ // expires in seconds
+    // helpful links:
+    // http://www.contentmaster.com/azure/windows-azure-storage-cors/
+    // https://azure.microsoft.com/en-us/documentation/articles/storage-nodejs-how-to-use-blob-storage/#work-with-shared-access-signatures
+    var t_start = new Date();
+    var t_expiry = new Date(t_start);
+    t_expiry.setSeconds(t_start.getSeconds() + expiry);
+    t_start.setSeconds(t_start.getSeconds() - expiry);
+
+    var policy = {
+        AccessPolicy:{
+            Permission: storage.BlobUtilities.SharedAccessPermissions.WRITE,
+            Start: t_start,
+            Expiry: t_expiry
+        }
+    };
+
+    var sas = blob_svc.generateSharedAccessSignature(container, blob, policy);
+    return sas;
+};
+
 exports.BlobFileDownload = function(c, b, f, cb){
     var wr = fs.createWriteStream(f);
     wr.on('finish', function(error){

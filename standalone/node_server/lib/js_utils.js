@@ -146,7 +146,6 @@ exports.LogError = function(where, why){
     console.log('Error from', where, ':', why);
 };
 
-
 exports.ListFolder = function(path, cb){
     try {
         var l = fs.readdirSync(path);
@@ -335,7 +334,7 @@ exports.walkSync = function(dir, filelist) {
   return filelist;
 };
 
-exports.getWebAppUrls = function(path, exclude){
+exports.getWebAppUrls = function(path, prefix, exclude){
     var filelist = [];
     exports.walkSync(path+'/', filelist);
     filelist.forEach(function(file, i){
@@ -344,7 +343,7 @@ exports.getWebAppUrls = function(path, exclude){
     var urls = {};
     filelist.forEach(function(file, i) {
         if(file.match(exclude)===null){
-            urls[file] = '/static_viewer/' + file;
+            urls[file] = prefix + file;
         }
     });
     return urls;

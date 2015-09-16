@@ -4,8 +4,8 @@ import shutil
 import json
 
 from django.http import HttpResponse
-#if __name__ != "__main__":
-#    from django.views.decorators.csrf import csrf_exempt
+if __name__ != "__main__":
+    from django.views.decorators.csrf import csrf_exempt
 
 lib_path = os.path.abspath(os.path.join('..', '..', 'richreview', 'mupla_ctype'))
 sys.path.append(lib_path)
@@ -15,6 +15,8 @@ from PyPDF2 import PdfFileMerger, PdfFileReader
 
 TEMP_PDF = '/tmp/richreview/pdfs/'
 def run_mupla(dir_path):
+    print 'run_mupla'
+    print '>>>> dirpath:', dir_path
     pdfs = []
     filen = 0
 
@@ -41,7 +43,7 @@ def run_mupla(dir_path):
             merger.write(output)
             output.close()
 
-    print 'merged_pdf_path', merged_pdf_path
+    print '>>>> merged_pdf_path', merged_pdf_path
     js = mupla_ctype.PyMuPlaRun(merged_pdf_path)
     if len(js) == 0:
         raise Exception("Invalid PDF file")
@@ -49,8 +51,9 @@ def run_mupla(dir_path):
         f.write(json.dumps(js))
         f.close()
 
-#@csrf_exempt
+@csrf_exempt
 def get_pdf_post(request):
+    print 'here'
     try:
         if request.POST["mode"] ==  "MergePdfs":
             run_mupla(TEMP_PDF + request.POST["uuid"])

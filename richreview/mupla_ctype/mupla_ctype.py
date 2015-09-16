@@ -71,7 +71,7 @@ libmupla.MuPlaRun.restype = MuPlaDoc
 
 def PyMuPlaRun(py_pdf_path):
     try:
-        doc = libmupla.MuPlaRun(py_pdf_path)
+        doc = libmupla.MuPlaRun(c_char_p(py_pdf_path))
         return JsonifyDoc(doc)
     except:
         return []

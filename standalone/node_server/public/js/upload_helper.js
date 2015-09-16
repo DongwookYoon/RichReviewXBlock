@@ -253,42 +253,47 @@ var FileList = (function(){
 
     function loadMultiColumnAnalyzer(){
         $("#multicolumn").toggleClass("show", true);
+        (function(Pla){
+            var doc_url = SERVER_URL + 'mupla_pdfs/' + myuuid + '/';
+            Pla.ctx = {
+                pdf_url: doc_url + 'merged.pdf',
+                js_url: doc_url + 'merged.js'
+            };
+            Pla.override = {};
+            Pla.override.done = function(doc_layout_js){
+                var posting = $.ajax(
+                    {
+                        type: 'POST',
+                        url: DOC_LAYOUT_UPLOAD_URL + "&uuid="+myuuid,
+                        data: JSON.stringify(doc_layout_js),
+                        contentType:"application/jsonrequest"
+                    }
+                );
 
-        return loadJsScript("/static_multicolumn/load.js", "js").then(
-            function(){
-                (function(Pla){
-                    var doc_url = SERVER_URL + 'mupla_pdfs/' + myuuid + '/';
-                    Pla.ctx = {
-                        pdf_url: doc_url + 'merged.pdf',
-                        js_url: doc_url + 'merged.js'
-                    };
-                    Pla.override = {};
-                    Pla.override.done = function(doc_layout_js){
-                        var posting = $.ajax(
-                            {
-                                type: 'POST',
-                                url: DOC_LAYOUT_UPLOAD_URL + "&uuid="+myuuid,
-                                data: JSON.stringify(doc_layout_js),
-                                contentType:"application/jsonrequest"
-                            }
-                        );
+                posting.success(function(group_url){
+                    window.location.replace(group_url);
+                });
 
-                         posting.success(function(group_url){
-                             window.location.replace(group_url);
-                         });
+                posting.fail(function(err){
+                    Helper.Util.HandleError(err);
+                    window.location.replace(SERVER_URL + "upload");
+                });
+            };
+            Pla.override.error = function(){
+                window.location.replace(SERVER_URL + "upload");
+            };
 
-                         posting.fail(function(err){
-                             Helper.Util.HandleError(err);
-                             window.location.replace(SERVER_URL + "upload");
-                         });
-                    };
-                    Pla.override.error = function(){
-                        window.location.replace(SERVER_URL + "upload");
-                    };
-                    Pla.loadApp("/static_multicolumn/");
-                }(window.Pla = window.Pla || {}));
-            }
-        );
+            return loadJsScript("/static_multicolumn/load.js", "js").then(
+                getWebAppUrls // set Pla.app_urls in here
+            ).then(
+                function(){
+                    Pla.loadApp(Pla.app_urls);
+                }
+            );
+
+
+
+        }(window.Pla = window.Pla || {}));
     }
 
     return pub;
@@ -355,3 +360,15 @@ var DropZone = (function(){
     };
 })();
 
+
+var getWebAppUrls = function(){
+    return new Promise(function(resolve, reject){
+        $.get('/resources?op=get_multicolumn_webapp_urls')
+            .success(function(data){
+                Pla.app_urls = data;
+                resolve();
+            }).error(function(jqXHR, textStatus, errorThrown) {
+                reject(errorThrown);
+            });
+    });
+};

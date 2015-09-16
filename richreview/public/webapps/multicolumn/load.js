@@ -27,7 +27,9 @@
                 if(elem){
                     elem.onreadystatechange = resolve;
                     elem.onload = resolve;
-                    elem.onerror = function(){reject(new Error("Cannot load a resource file:" + url));};
+                    elem.onerror = function(){
+                        reject(new Error("Cannot load a resource file:" + url));
+                    };
                     document.getElementsByTagName('head')[0].appendChild(elem);
                 }
                 else{

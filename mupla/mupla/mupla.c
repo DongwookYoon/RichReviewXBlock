@@ -123,9 +123,9 @@ MuPlaPage Get_Page(fz_context* ctx, fz_document* doc,  fz_page* page){
 }
 
 MuPlaDoc MuPlaRun(char* pdf_path){
-    printf("File>>>> %s\n", pdf_path);
     MuPlaDoc mupla_doc;
     printf("C MuPlaRun Ctx Bgn\n");
+    printf(">>>> %s\n", pdf_path);
     fz_context* ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
     fz_try(ctx){
 

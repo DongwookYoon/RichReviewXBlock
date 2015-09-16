@@ -27,6 +27,7 @@ var upload = require('./routes/upload');
 var viewer = require('./routes/viewer');
 var dataviewer = require('./routes/dataviewer');
 var dbs = require('./routes/dbs');
+var resources = require('./routes/resources');
 
 mkdirp('../_temp');
 mkdirp('../cache');
@@ -52,11 +53,11 @@ app.use(
 );
 app.use(
     '/static_viewer',
-    express.static(path.resolve(__dirname, '../../richreview/public/webapps/richreview'), { maxAge: 30*1000 })
+    express.static(path.resolve(__dirname, env.path.webapp_richreview), { maxAge: 30*1000 })
 );
 app.use(
     '/static_multicolumn',
-    express.static(path.resolve(__dirname, '../../richreview/public/webapps/multicolumn'), { maxAge: 30*1000 })
+    express.static(path.resolve(__dirname, env.path.webapp_multicolumn), { maxAge: 30*1000 })
 );
 app.use(
     '/mupla_pdfs',
@@ -119,6 +120,7 @@ app.get('/viewer',      viewer.page);
 app.get('/dataviewer',  dataviewer.get);
 app.get('/docs',        docs.page);
 app.get('/account',     account.get);
+app.get('/resources',   resources.get);
 
 app.post('/dbs',        dbs.post);
 app.post('/account',    account.post);
@@ -338,12 +340,6 @@ UploadFolderToAzureBlobStorage = function(path, container, blobPrefix, cb){
         }
     });
 };
-
-/*
-UploadFolderToAzureBlobStorage("../cache/gif", "data", "gif", function(err, resp){
-    var x  = 0;
-});
-*/
 
 function UploadBlockBlobFromLocalFileList(container, blob_path, file_path, file_list, cb){
     var sucess = 0;

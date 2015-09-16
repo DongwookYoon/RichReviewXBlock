@@ -24,11 +24,12 @@ exports.page = function (req, res) {
     req.session.latestUrl = req.originalUrl;
 
     if(req.user){
+
         res.render(
             'upload',
             {
                 cur_page: 'Upload',
-                user: req.user
+                user: req.user,
             }
         );
     }

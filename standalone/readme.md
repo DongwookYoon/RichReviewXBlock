@@ -48,10 +48,14 @@ git, Node.js, npm, and Django are required to run RichReview server Let's instal
     sudo apt-get install git
     sudo apt-get install python-django
     sudo apt-get install curl
+    sudo apt-get install python-pip
+    sudo pip install -U Django
     curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.25.4/install.sh | bash
     exit
     vagrant ssh
     nvm install stable
+    sudo apt-get install nodejs
+    sudo pip install PyPDF2
 
 ## Fetch and Pull the Server Code
 Fetch and pull the remote repository into the /RichReviewXBlock:

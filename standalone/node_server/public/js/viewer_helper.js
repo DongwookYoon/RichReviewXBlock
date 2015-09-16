@@ -2,19 +2,20 @@
  * Created by dongwookyoon on 6/10/15.
  */
 
-
 function loadRichReview(r2_ctx) {
-    loadJsScript("/static_viewer/load.js", "js").then(
-        function(){
-            (function(r2){
-                r2.platform = 'Azure';
-                r2.scroll_wrapper = document.getElementById('r2_app_page');
-                r2.ctx = JSON.parse(decodeURIComponent(r2_ctx));
-                console.log('r2.ctx', r2.ctx.app_urls);
+    (function(r2){
+        r2.platform = 'Azure';
+        r2.scroll_wrapper = document.getElementById('r2_app_page');
+        r2.ctx = JSON.parse(decodeURIComponent(r2_ctx));
+
+        loadJsScript("/static_viewer/load.js", "js").then(
+            getWebAppUrls
+        ).then(
+            function(){
                 r2.loadApp(r2.ctx.app_urls);
-            }(window.r2 = window.r2 || {}));
-        }
-    );
+            }
+        );
+    }(window.r2 = window.r2 || {}));
 }
 
 var loadJsScript = function(url, type){
@@ -40,6 +41,18 @@ var loadJsScript = function(url, type){
         else{
             reject(new Error("Cannot load a resource file:" + url));
         }
+    });
+};
+
+var getWebAppUrls = function(){
+    return new Promise(function(resolve, reject){
+        $.get('/resources?op=get_richreview_webapp_urls')
+            .success(function(data){
+                r2.ctx.app_urls = data;
+                resolve();
+            }).error(function(jqXHR, textStatus, errorThrown) {
+                reject(errorThrown);
+            });
     });
 };
 

@@ -101,9 +101,13 @@ passport.serializeUser(function(user, done){
     done(null, user.id);
 });
 passport.deserializeUser(function(id, done){
-    R2D.User.prototype.findById(id, function(error, user){
-        done(null, user);
-    });
+    R2D.User.prototype.findById(id).then(
+        function(user){
+            done(null, user);
+        }
+    ).catch(
+        done
+    );
 });
 
 app.get('/',            _pages.about);

@@ -8,15 +8,14 @@ var R2D = require("../lib/r2d.js");
 var azure = require('../lib/azure');
 
 var GetCurUserData = function(req, res, cb){
-    if(req.user){
-        R2D.User.prototype.findById(req.user.id, function(err, userObj){
-            if(err){
-                cb("no user", null);
+    if(req.user) {
+        R2D.User.prototype.findById(req.user.id).then(
+            function(user_obj){
+                cb(null, user_obj);
             }
-            else{
-                cb(null, userObj);
-            }
-        })
+        ).catch(
+            cb
+        );
     }
     else{
         cb(null, null);

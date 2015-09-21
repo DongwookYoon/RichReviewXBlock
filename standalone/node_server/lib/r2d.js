@@ -49,6 +49,30 @@ var User = function(id, nickname, email){
     })
 })();
 User.prototype.Update = function(id, newnick, newemail, cb){
+    this.findById(id).then(
+        function(user){
+            if(newnick == ''){newnick = user.nick;}
+            if(newemail == ''){newemail = user.email;}
+            return RedisClient.HMSET(
+                'usr:' + id,
+                'nick', newnick,
+                'email', newemail
+            );
+        }
+    ).then(
+        function(){
+            user_cache[id].nick = newnick;
+            user_cache[id].email = newemail;
+            cb(null, null);
+            return null;
+        }
+    ).catch(
+        function(err){
+            cb(err, null);
+        }
+    );
+
+    /*
     this.findById(id, function(err, result){
         if(err){cb(err, null);}
         else{
@@ -69,15 +93,17 @@ User.prototype.Update = function(id, newnick, newemail, cb){
             );
 
         }
-    });
+    });*/
 };
 User.prototype.findById = function(id, cb){
-    if(user_cache.hasOwnProperty(id)){
-        cb(null, user_cache[id]);
-    }
-    else{
-        cb('cannot find user by id', null);
-    }
+    return new Promise(function(resolve, reject){
+        if(user_cache.hasOwnProperty(id)) {
+            resolve(id);
+        }
+        else{
+            reject('cannot find the user with the given id'+id);
+        }
+    });
 };
 User.prototype.findOrCreate = function(id, cb){
     if(user_cache.hasOwnProperty(id)){

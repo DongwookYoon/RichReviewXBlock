@@ -620,13 +620,6 @@ var Doc = (function(){
             function(docids){
                 return js_utils.PromiseLoop(public.GetDocById_Promise, docids.map(function(docid){return [docid];})).then(
                     function(doc_objs){
-                        doc_objs.sort(function(a, b){
-                            var keyA = new Date(a.creationTime),
-                                keyB = new Date(b.creationTime);
-                            if(keyA < keyB) return 1;
-                            if(keyA > keyB) return -1;
-                            return 0;
-                        });
                         return doc_objs;
                     }
                 );

@@ -137,7 +137,6 @@
 
         pub.createBodyText = function($tight_col, piece_text){
             var $comment = appendPieceGroup($tight_col, 'tc_comment_text');
-            console.log(piece_text);
             $comment.attr('aria-label', typeof piece_text.GetPieceText() === 'string' ? piece_text.GetPieceText() : 'empty texts');
             $comment.attr('role', 'document');
             var $piece = $(document.createElement('div'));

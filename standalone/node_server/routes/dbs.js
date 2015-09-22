@@ -6,65 +6,68 @@
 var js_utils = require("../lib/js_utils.js");
 var R2D = require("../lib/r2d.js");
 var azure = require('../lib/azure');
+var Promise = require("promise");
 
-var getUserById = function(req){
+var GetMyself = function(req, res){
     if(req.user) {
-        return R2D.User.prototype.findById(req.user.id)
+        R2D.User.prototype.findById(req.user.id).then(
+            function(user_obj){
+                return js_utils.PostResp(res, req, 200, user_obj);
+            }
+        ).catch(
+            function(err){
+                js_utils.PostResp(res, req, 400, err);
+            }
+        );
     }
     else{
-        return new Promise(function(resolve){resolve(null);});
+        js_utils.PostResp(res, req, 200, null);
     }
 };
 
-var GetGroupData_ReUse = function(req, res, cb){
+var GetGroupData = function(req, res){
     var groupid = req.body.groupid;
 
-    getUserById(req).then(
-        function(curUserObj){
-            R2D.Group.GetGroupObj_Promise(groupid).then(
-                function(groupObj){
-                    var groupUsers = []; // now gets the group member profile
-                    var job_getUserData = function(i){
-                        if(i!=groupObj.users.participating.length){
-                            R2D.User.prototype.findById(groupObj.users.participating[i]).then(
-                                function(userObj){
-                                    groupUsers.push(userObj);
-                                    job_getUserData(i+1);
-                                }
-                            ).catch(
-                                cb
-                            );
-                        }
-                        else{
-                            var resp = {self:curUserObj, users:groupUsers, group:groupObj};
-                            cb(null, resp);
-                        }
-                    };
-                    job_getUserData(0);
+    R2D.Group.GetGroupObj_Promise(groupid).then(
+        function(groupObj){
+            var promises = [];
+            groupObj.users.participating.forEach(function(group_member){
+                promises.push(R2D.User.prototype.findById(group_member));
+            });
+            Promise.all(promises).then(
+                function(groupMembers){
+                    var resp = {users:groupMembers, group:groupObj};
+                    js_utils.PostResp(res, req, 200, resp);
                 }
             ).catch(
                 function(err){
-                    var resp = {self:curUserObj, users:null, group:null};
-                    cb(null, resp);
+                    js_utils.PostResp(res, req, 400, err);
                 }
             );
-            return null;
         }
     ).catch(
-        cb
+        function(err){
+            var resp = {users:null, group:null};
+            js_utils.PostResp(res, req, 400, resp);
+        }
     );
 };
 
-
-var GetGroupData = function(req, res){
-    GetGroupData_ReUse(req, res, function(err, resp){
-        if(err){
-            js_utils.PostResp(res, req, 500);
-        }
-        else{
-            js_utils.PostResp(res, req, 200, resp);
-        }
-    });
+var GetDocsOwned = function(req, res){
+    if(req.user){
+        return R2D.Doc.GetDocByUser_Promise(req.user.id).then(
+            function(doc_objs){
+                js_utils.PostResp(res, req, 200, doc_objs);
+            }
+        ).catch(
+            function(err){
+                js_utils.PostResp(res, req, 400, err);
+            }
+        )
+    }
+    else{
+        js_utils.PostResp(res, req, 400, 'you are an unidentified user. please sign in and try again.');
+    }
 };
 
 
@@ -216,46 +219,46 @@ var UploadCmd = function(req, res){
     });
 };
 
-var DownloadCmds_GroupMemberUpdate = function(req, res, groupid_n, cur_members_n, cb){
-    if(cur_members_n == -1){
-        cb(null, null); // waiting for initialization
-    }
-    else{
-        R2D.Group.GetNumUsers("grp:"+groupid_n, function(err, users_n){
-            if(err){cb(err);}
-            else{
-                if(cur_members_n == users_n){
-                    cb(null, null);
-                }
+var DownloadCmds_GroupMemberUpdate = function(req, res, groupid_n, cur_members_n){
+    return new Promise(function(resolve, reject){
+        if(cur_members_n == -1){ // not initialized yet
+            resolve(null);
+        }
+        else{
+            R2D.Group.GetNumUsers("grp:"+groupid_n, function(err, users_n){
+                if(err){reject(err);}
                 else{
-                    GetGroupData_ReUse(req, res, function(err, resp){
-                        if(err){cb(err, null);}
-                        else{
-                            cb(err, resp);
-                        }
-                    });
+                    if(cur_members_n == users_n){
+                        resolve(null); // don't have to update
+                    }
+                    else{ // needs update
+                        return GetGroupData(req, res);
+                    }
                 }
-            }
-        });
-    }
+            });
+        }
+    });
 };
 
 var DownloadCmds = function(req, res){
     var cmds_downloaded_n = req.body.cmds_downloaded_n;
+    var resp = {};
     R2D.Cmd.GetCmds(req.body.groupid_n, cmds_downloaded_n).then(
         function(cmds){
-            DownloadCmds_GroupMemberUpdate(req, res, req.body.groupid_n, req.body.cur_members_n, function(err, resp){
-                if(err){
-                    js_utils.PostResp(res, req, 500, {"cmds":cmds, "users":resp});
-                }
-                else{
-                    js_utils.PostResp(res, req, 200, {"cmds":cmds, "users":resp});
-                }
-            });
+            resp.cmds = cmds;
+        }
+    ).then(
+        function(){
+            return DownloadCmds_GroupMemberUpdate(req, res, req.body.groupid_n, req.body.cur_members_n);
+        }
+    ).then(
+        function(group_update){
+            resp.group_update = group_update;
+            return js_utils.PostResp(res, req, 200, resp);
         }
     ).catch(
         function(err){
-            js_utils.PostResp(res, req, 500, err);
+            js_utils.PostResp(res, req, 400, err);
         }
     );
 };
@@ -332,8 +335,14 @@ var WebAppLog = function(req, res){
 
 exports.post = function(req, res){
     switch(req.query['op']){
+        case "GetMyself":
+            GetMyself(req, res);
+            break;
         case "GetGroupData":
             GetGroupData(req, res);
+            break;
+        case "GetDocsOwned":
+            GetDocsOwned(req, res);
             break;
         case "MyDoc_AddNewGroup":
             MyDoc_AddNewGroup(req, res);

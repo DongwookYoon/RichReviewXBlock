@@ -244,14 +244,21 @@
         }
 
         function initUserSet(){
-            return r2.util.postToDbsServer(
-                'GetGroupData',
-                {docid: r2.ctx["docid"], groupid:"grp:" + r2.ctx["groupid"]}
+            return Promise.all(
+                [
+                    r2.util.postToDbsServer('GetMyself', {}),
+                    r2.util.postToDbsServer('GetGroupData', {docid: r2.ctx["docid"], groupid:"grp:" + r2.ctx["groupid"]})
+                ]
             ).then(
-                function(groupdata){
-                    return r2.userGroup.Set(groupdata)
+                function(rtn){
+                    var myself = rtn[0];
+                    var group = rtn[1];
+                    return r2.userGroup.Set({
+                        self: myself,
+                        users: group.users
+                    })
                 }
-            );
+            )
         }
 
         function getDocMetaData(){

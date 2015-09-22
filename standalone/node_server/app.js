@@ -23,6 +23,7 @@ var mydocs = require('./routes/mydocs');
 var mygroups = require('./routes/mygroups');
 var account = require('./routes/account');
 var docs = require('./routes/docs');
+var doc = require('./routes/doc');
 var upload = require('./routes/upload');
 var viewer = require('./routes/viewer');
 var dataviewer = require('./routes/dataviewer');
@@ -123,6 +124,7 @@ app.get('/upload',      upload.page);
 app.get('/viewer',      viewer.page);
 app.get('/dataviewer',  dataviewer.get);
 app.get('/docs',        docs.page);
+app.get('/doc',         doc.get);
 app.get('/account',     account.get);
 app.get('/resources',   resources.get);
 

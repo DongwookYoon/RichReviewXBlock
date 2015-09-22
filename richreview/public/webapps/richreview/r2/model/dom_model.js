@@ -270,7 +270,7 @@
                         ;
                     });
                     r2.radialMenu.addBtnCircular($rm, 'fa-trash', 'erase', function(){
-                        if(r2.userGroup.cur_user === user.name){
+                        if(r2.userGroup.cur_user.name === user.name){
                             var annottodelete = r2App.annots[annot_id];
                             if(r2.removeAnnot(annot_id, true, false)){ // askuser, mute
                                 r2Sync.PushToUploadCmd(annottodelete.ExportToCmdDeleteComment());

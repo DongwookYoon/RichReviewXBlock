@@ -98,7 +98,7 @@ User.prototype.Update = function(id, newnick, newemail, cb){
 User.prototype.findById = function(id, cb){
     return new Promise(function(resolve, reject){
         if(user_cache.hasOwnProperty(id)) {
-            resolve(id);
+            resolve(user_cache[id]);
         }
         else{
             reject('cannot find the user with the given id'+id);

@@ -26,20 +26,23 @@ var GetUserData_ReUse = function(req, res, cb){
     var groupid = req.body.groupid;
 
     GetCurUserData(req, res, function(err, curUserObj){
-        if(err){cb(err, null);}
+        if(err){
+            cb(err, null);
+        }
         else{
             R2D.Group.GetById(groupid, function(err, groupObj){
                 if(groupObj){
                     var groupUsers = [];
                     var job_getUserData = function(i){
                         if(i!=groupObj.users.participating.length){
-                            R2D.User.prototype.findById(groupObj.users.participating[i], function(err, userObj){
-                                if(err){cb(err, null);}
-                                else{
+                            R2D.User.prototype.findById(groupObj.users.participating[i]).then(
+                                function(userObj){
                                     groupUsers.push(userObj);
                                     job_getUserData(i+1);
                                 }
-                            });
+                            ).catch(
+                                cb
+                            );
                         }
                         else{
                             var resp = {self:curUserObj, users:groupUsers, group:groupObj};

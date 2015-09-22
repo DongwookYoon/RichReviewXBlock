@@ -466,7 +466,7 @@ class RichReviewXBlock(XBlock):
 
     # switch for a database service
     serve_dbs_map = {
-        "GetUserData": serve_dbs_user_data,
+        "GetGroupData": serve_dbs_user_data,
         "GetDocGroups": serve_dbs_doc_groups,
         "WebAppLog": serve_dbs_log,
         "DownloadCmds": serve_dbs_download_cmds,

@@ -7,32 +7,23 @@ var js_utils = require("../lib/js_utils.js");
 var R2D = require("../lib/r2d.js");
 var azure = require('../lib/azure');
 
-var GetCurUserData = function(req, res, cb){
+var getUserById = function(req){
     if(req.user) {
-        R2D.User.prototype.findById(req.user.id).then(
-            function(user_obj){
-                cb(null, user_obj);
-            }
-        ).catch(
-            cb
-        );
+        return R2D.User.prototype.findById(req.user.id)
     }
     else{
-        cb(null, null);
+        return new Promise(function(resolve){resolve(null);});
     }
 };
 
-var GetUserData_ReUse = function(req, res, cb){
+var GetGroupData_ReUse = function(req, res, cb){
     var groupid = req.body.groupid;
 
-    GetCurUserData(req, res, function(err, curUserObj){
-        if(err){
-            cb(err, null);
-        }
-        else{
-            R2D.Group.GetById(groupid, function(err, groupObj){
-                if(groupObj){
-                    var groupUsers = [];
+    getUserById(req).then(
+        function(curUserObj){
+            R2D.Group.GetGroupObj_Promise(groupid).then(
+                function(groupObj){
+                    var groupUsers = []; // now gets the group member profile
                     var job_getUserData = function(i){
                         if(i!=groupObj.users.participating.length){
                             R2D.User.prototype.findById(groupObj.users.participating[i]).then(
@@ -51,19 +42,22 @@ var GetUserData_ReUse = function(req, res, cb){
                     };
                     job_getUserData(0);
                 }
-                else{
+            ).catch(
+                function(err){
                     var resp = {self:curUserObj, users:null, group:null};
                     cb(null, resp);
                 }
-            });
+            );
+            return null;
         }
-
-    });
+    ).catch(
+        cb
+    );
 };
 
 
-var GetUserData = function(req, res){
-    GetUserData_ReUse(req, res, function(err, resp){
+var GetGroupData = function(req, res){
+    GetGroupData_ReUse(req, res, function(err, resp){
         if(err){
             js_utils.PostResp(res, req, 500);
         }
@@ -234,7 +228,7 @@ var DownloadCmds_GroupMemberUpdate = function(req, res, groupid_n, cur_members_n
                     cb(null, null);
                 }
                 else{
-                    GetUserData_ReUse(req, res, function(err, resp){
+                    GetGroupData_ReUse(req, res, function(err, resp){
                         if(err){cb(err, null);}
                         else{
                             cb(err, resp);
@@ -338,8 +332,8 @@ var WebAppLog = function(req, res){
 
 exports.post = function(req, res){
     switch(req.query['op']){
-        case "GetUserData":
-            GetUserData(req, res);
+        case "GetGroupData":
+            GetGroupData(req, res);
             break;
         case "MyDoc_AddNewGroup":
             MyDoc_AddNewGroup(req, res);

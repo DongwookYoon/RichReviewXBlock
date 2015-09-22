@@ -245,7 +245,7 @@
 
         function initUserSet(){
             return r2.util.postToDbsServer(
-                "GetUserData",
+                'GetGroupData',
                 {docid: r2.ctx["docid"], groupid:"grp:" + r2.ctx["groupid"]}
             ).then(
                 function(groupdata){

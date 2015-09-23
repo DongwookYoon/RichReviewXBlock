@@ -1,3 +1,106 @@
 #doc_container {
 
 }
+
+.panel {
+    margin-bottom: 15px;
+}
+
+.r2Doc-loading {
+    margin: 10px;
+    margin-left: 45%;
+    font-size: 16px;
+}
+
+.panel-heading {
+    float: left;
+    width: 100%;
+    background-color: whitesmoke;
+}
+.panel-heading > a {
+    color: black;
+}
+
+.panel-body {
+    clear: both;
+    padding : 0;
+}
+
+
+#my_documents {
+    display: inline-block;
+}
+
+#btn-refresh {
+    display: inline-block;
+    vertical-align: text-bottom;
+}
+
+.btn {
+    text-transform: none;
+    margin-left: 5px;
+    padding: 1px 5px;
+    font-size: 13px;
+    vertical-align: baseline;
+}
+
+.btn > .fa {
+    font-size: 15px;
+}
+
+/* dropdown menu */
+.btn-group {
+    margin-left: 5px;
+    display: inline-flex;
+    vertical-align: baseline;
+}
+.dropdown-menu {
+    min-width: 40px;
+    padding: 0;
+    margin: 0;
+}
+.dropdown-menu > li > a {
+    margin: 0;
+    padding: 1px 5px;
+    font-size: 12px;
+}
+
+.doc_ui {
+    float: right;
+}
+
+.doc_ui > p {
+    margin: 0;
+}
+
+.doc_ui > .btn {
+    margin-left: 5px;
+}
+
+.doc_time_created {
+    display: inline-block;
+}
+
+
+.group_row {
+    padding : 10px 15px 10px 15px ;
+    border-top: solid 1px lightgray;
+}
+.group_row > a {
+    color: black;
+}
+
+.group_ui {
+    float: right;
+}
+
+.member_row {
+    margin-top: 10px;
+}
+
+.member_row > .member_text {
+    display: inline;
+}
+.member_row > .member_empty_text{
+    margin-left: 5px;
+}

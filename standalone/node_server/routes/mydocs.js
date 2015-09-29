@@ -50,7 +50,8 @@ var IsDocExist = function(docObjs, docid){
 
 var GetDocsParticipating = function(req, res, docObjs, cb){
     if(req.user){
-        var docsParticipating = [];
+
+
         R2D.User.prototype.GetGroupNs(req.user.id, function(err, groupNs){
             var job = function(i){
                 if(i == groupNs.length){

@@ -70,6 +70,45 @@ var GetDocsOwned = function(req, res){
     }
 };
 
+var GetDocParticipated = function(req, res){
+    if(req.user){
+        R2D.User.prototype.GetGroupNs(req.user.id).then(
+            function(groupNs){
+                var promises = [];
+                groupNs.forEach(
+                    function(group_id){
+                        promises.push(R2D.Group.GetDocIdByGroupId(group_id));
+                    }
+                );
+                Promise.all(promises).then(
+                    function(docids){
+                        var docids_unique = []; // list to remove potential duplicates
+                        docids.forEach(function(docid){
+                            if(docids_unique.indexOf(docid)===-1){docids_unique.push(docid);}
+                        });
+                        return docids_unique;
+                    }
+                )
+            }
+        ).then(
+            function(docids){
+                return js_utils.PromiseLoop(public.GetDocById_Promise, docids.map(function(docid){return [docid];})).then(
+                    function(doc_objs){
+                        js_utils.PostResp(res, req, 200, doc_objs);
+                    }
+                );
+            }
+        ).catch(
+            function(err){
+                js_utils.PostResp(res, req, 400, err);
+            }
+        );
+    }
+    else{
+        js_utils.PostResp(res, req, 400, 'you are an unidentified user. please sign in and try again.');
+    }
+};
+
 
 var MyDoc_AddNewGroup = function(req, res){
     R2D.Doc.AddNewGroup(req.user.id, req.body.docid).then(
@@ -343,6 +382,9 @@ exports.post = function(req, res){
             break;
         case "GetDocsOwned":
             GetDocsOwned(req, res);
+            break;
+        case "GetDocParticipated":
+            GetDocParticipated(req, res);
             break;
         case "MyDoc_AddNewGroup":
             MyDoc_AddNewGroup(req, res);

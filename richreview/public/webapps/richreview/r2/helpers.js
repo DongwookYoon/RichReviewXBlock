@@ -1449,7 +1449,18 @@
             content.onmousemove = mv;
             content.onmouseup = up;
         };
-
+		pub.setTouchEventHandlers = function(start, mv, end){
+            content.ontouchstart = start;
+            content.ontouchmove = mv;
+            content.ontouchend = end;
+        };
+		pub.setPointerEventHandlers = function(dn, mv, up, en, lv){
+            content.onpointerdown = dn;
+            content.onpointermove = mv;
+            content.onpointerup = up;
+			content.onpointerenter = en;
+            content.onpointerleave = lv;
+        };
         pub.setContextMenuEvent = function(func){
             $(content).on('contextmenu', func);
         };

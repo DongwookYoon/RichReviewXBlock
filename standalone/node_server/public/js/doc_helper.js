@@ -138,7 +138,11 @@
             $btn_add_group.click(function(){
                 postDbs('MyDoc_AddNewGroup', {docid: doc.id}).then(
                     function(resp){
-                        var x = 0;
+                        refreshGroupList(doc, $btn_add_group.closest('.panel'));
+                    }
+                ).catch(
+                    function(err){
+
                     }
                 );
             });
@@ -195,6 +199,12 @@
                 doms.setDropDownBtn($btn_group, 'Delete this document', function(){alert('hi');});
             }
         }
+
+        return refreshGroupList(doc, $panel);
+    };
+
+    var refreshGroupList = function(doc, $panel){
+        $panel.find('.panel-body').remove();
 
         var $panel_body = createNewDomElement('div', ['panel-body'], $panel);
         loadingIcon.appendTo($panel_body);

@@ -114,7 +114,7 @@
             });
         };
 
-        pub.setGroupTitle = function($group_title, group_id){
+        pub.setGroupTitle = function($group_title, group_id, doc){
             $group_title.attr('id', 'grouptitle_'+group_id.substring(4));
             $group_title.attr('data-type', 'text');
             $group_title.attr('data-pk', '1');
@@ -124,10 +124,24 @@
                 tpl: "<input type='text' style='font-family: inherit;font-weight: 400;line-height: 1.1;font-size:16px;width:400px;'>",
                 placement: 'bottom'
             });
+
+            $group_title.attr('title', group_id + '\n' + doc.id + '\npdf:' + doc.pdfid);
         };
 
-        pub.setGroupBtns = function($btn_open, $btn_share, $btn_delete){
+        pub.setGroupOpenClick = function($btn_open, group_data, doc){
+            $btn_open.click(function(){
+                window.open(host + "viewer?access_code=" + doc.pdfid + "&docid=" + doc.id.substring(4) + "&groupid=" + group_data.group.id.substring(4));
+            });
+        };
 
+        pub.setAddGroupClick = function($btn_add_group, doc){
+            $btn_add_group.click(function(){
+                postDbs('MyDoc_AddNewGroup', {docid: doc.id}).then(
+                    function(resp){
+                        var x = 0;
+                    }
+                );
+            });
         };
 
         pub.setDropDownBtn = function($btn_group, dropdn_msg, cb){
@@ -170,6 +184,7 @@
                 var $btn_add_group = createNewDomElement('a', ['btn', 'btn-primary', 'btn-sm'], $doc_ui);
                 {
                     $btn_add_group.append(getIcon('fa-plus-square'));
+                    doms.setAddGroupClick($btn_add_group, doc);
                 }
 
                 var $btn_group = createNewDomElement('div', ['btn-group'], $doc_ui);
@@ -192,24 +207,25 @@
             function(resp){
                 loadingIcon.removeFrom($panel_body);
                 resp.forEach(function(group_data){
-                    setGroupDom(group_data, $panel_body);
+                    setGroupDom(group_data, doc, $panel_body);
                 });
             }
         );
     };
 
-    var setGroupDom = function(group_data, $panel_body){
+    var setGroupDom = function(group_data, doc, $panel_body){
         var $group_row = createNewDomElement('div', ['group_row'], $panel_body);
         {
 
             var $title = createNewDomElement('a', ['group_title'], $group_row);
             $title.text(group_data.group.name);
-            doms.setGroupTitle($title, group_data.group.id);
+            doms.setGroupTitle($title, group_data.group.id, doc);
 
             var $group_ui = createNewDomElement('div', ['group_ui'], $group_row);
             {
                 var $btn_open = createNewDomElement('btn', ['btn', 'btn-primary', 'btn-sm'], $group_ui);
                 $btn_open.text('Open');
+                doms.setGroupOpenClick($btn_open, group_data, doc);
 
                 var $btn_share = createNewDomElement('btn', ['btn', 'btn-info', 'btn-sm'], $group_ui);
                 $btn_share.text('Share');
@@ -220,7 +236,6 @@
                     $btn_delete_all.append(getIcon('fa-trash'));
                 }
                 doms.setDropDownBtn($btn_group, 'Delete this group', function(){alert('hi');});
-
             }
 
             var $member_row = createNewDomElement('div', ['member_row'], $group_row);
@@ -230,7 +245,8 @@
                 if(group_data.users.length){
                     group_data.users.forEach(function(user){
                         var $btn_group = createNewDomElement('div', ['btn-group'], $member_row);
-                        var $btn_user = createNewDomElement('a', ['btn', 'btn-default', 'btn-sm'], $btn_group);
+                        var $btn_user = createNewDomElement('a', ['btn', 'btn-sm'], $btn_group);
+                        $btn_user.toggleClass(user_id === user.id ? 'btn-primary' : 'btn-default', true);
                         $btn_user.text(user.nick);
                         doms.setDropDownBtn($btn_group, 'Remove', function(){alert('hi');});
 

@@ -40,11 +40,11 @@ var User = function(id, nickname, email){
 (function PopulateUserCache(){
     redisClient.KEYS("usr:*", function(err, userids){
         userids.forEach(function(userid){
-            User.prototype.findOrCreate(userid.substring(4), function(err){
-                if(err){
+            User.prototype.findOrCreate(userid.substring(4)).catch(
+                function(err){
                     console.log("Error Loading User Id");
                 }
-            })
+            );
         });
     })
 })();
@@ -71,31 +71,8 @@ User.prototype.Update = function(id, newnick, newemail, cb){
             cb(err, null);
         }
     );
-
-    /*
-    this.findById(id, function(err, result){
-        if(err){cb(err, null);}
-        else{
-            if(newnick == ""){newnick = user_cache[id].nick;}
-            if(newemail == ""){newemail = user_cache[id].email;}
-            redisClient.HMSET(
-                "usr:"+id,
-                'nick', newnick,
-                'email', newemail,
-                function(err, result){
-                    if(err){cb(err, null);}
-                    else {
-                        user_cache[id].nick = newnick;
-                        user_cache[id].email = newemail;
-                        cb(null, null);
-                    }
-                }
-            );
-
-        }
-    });*/
 };
-User.prototype.findById = function(id, cb){
+User.prototype.findById = function(id){
     return new Promise(function(resolve, reject){
         if(user_cache.hasOwnProperty(id)) {
             resolve(user_cache[id]);
@@ -105,46 +82,45 @@ User.prototype.findById = function(id, cb){
         }
     });
 };
-User.prototype.findOrCreate = function(id, cb){
-    if(user_cache.hasOwnProperty(id)){
-        cb(null, user_cache[id]);
-    }
-    else{
-        redisClient.HGETALL("usr:"+id,
-            function(err, result)
-            {
-                if(err){cb(err, null);}
-                else if(err == null && result == null){// no entry
-                    var default_nick = 'user'+id.substr(3, 1)+id.substr(6, 2);
-                    var defailt_mail = 'default@email.com';
-                    redisClient.HMSET(
-                        "usr:"+id,
-                        'nick', default_nick,
-                        'email', defailt_mail,
-                        'groupNs', '[]',
-                        function(err, result){
-                            if(err != null){cb(err, null);}
-                            else{
-                                var newuser = new User(id, default_nick, defailt_mail);
-                                user_cache[id] = (newuser);
-                                cb(null, newuser);
-                            }
-                        }
-                    );
+User.prototype.findOrCreate = function(id){
+    return new Promise(function(resolve, reject){
+        if(user_cache.hasOwnProperty(id)){
+            resolve(user_cache[id]);
+        }
+        else{
+            var nick = '';
+            var mail = '';
+            RedisClient.HGETALL("usr:"+id).then(
+                function(result){
+                    if(result === null){
+                        nick = 'user'+id.substr(3, 1)+id.substr(6, 2); // default nick
+                        mail = 'default@email.com'; // default mail
+                        return RedisClient.HMSET(
+                            "usr:"+id,
+                            'nick', nick,
+                            'email', mail,
+                            'groupNs', '[]'
+                        );
+                    }
+                    else{
+                        nick = result.nick;
+                        mail = result.email;
+                        return null;
+                    }
                 }
-                else{
+            ).then(
+                function(){
                     var newuser = new User(
                         id,
-                        result.nick,
-                        result.email
+                        nick,
+                        mail
                     );
                     user_cache[id] = (newuser);
-                    cb(null, newuser);
+                    resolve(newuser);
                 }
-
-            }
-        );
-    }
+            ).catch(reject);
+        }
+    });
 };
 
 User.prototype.AddGroupToUser = function(userid_n, groupid_n){

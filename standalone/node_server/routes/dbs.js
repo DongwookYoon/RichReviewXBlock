@@ -119,6 +119,30 @@ var GetDocsParticipated = function(req, res){
 
 
 var MyDoc_AddNewGroup = function(req, res){
+    if(req.user){
+        R2D.Doc.GetDocById_Promise(req.body.docid).then(
+            function(doc){
+                if(doc.userid_n === req.user.id){
+                    return R2D.Doc.AddNewGroup(req.user.id, req.body.docid).then(
+                        function(groupid){
+                            js_utils.PostResp(res, req, 200, groupid);
+                        }
+                    );
+                }
+                else{
+                    js_utils.PostResp(res, req, 400, 'you are not authorized to add a new group to this document.');
+                }
+            }
+        ).catch(
+            function(err){
+                js_utils.PostResp(res, req, 400, err);
+            }
+        )
+    }
+    else{
+        js_utils.PostResp(res, req, 400, 'you are an unidentified user. please sign in and try again.');
+    }
+    /*
     R2D.Doc.AddNewGroup(req.user.id, req.body.docid).then(
         function(groupid){
             js_utils.PostResp(res, req, 200, groupid);
@@ -127,7 +151,7 @@ var MyDoc_AddNewGroup = function(req, res){
         function(err){
             js_utils.PostResp(res, req, 500, err);
         }
-    );
+    );*/
 };
 
 var MyDoc_RenameDoc = function(req, res){

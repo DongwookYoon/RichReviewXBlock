@@ -11,19 +11,18 @@
     var refreshDocList = function(){
         cleanDocDom();
         loadingIcon.appendTo($doc_container);
-        postDbs('GetDocsOwned').then(
-            function(resp){
+
+        Promise.all([
+            postDbs('GetDocsOwned'),
+            postDbs('GetDocsParticipated')]
+        ).then(
+            function(doc_lists){
+                return mergeAndSortDocs(doc_lists[0], doc_lists[1]);
+            }
+        ).then(
+            function(docs){
                 loadingIcon.removeFrom($doc_container);
-
-                resp.sort(function(a, b){
-                    if (a.creationTime > b.creationTime)
-                        return -1;
-                    if (a.creationTime < b.creationTime)
-                        return 1;
-                    return 0;
-                });
-
-                var promises = resp.map(function(doc){return setDocDom(doc);});
+                var promises = docs.map(function(doc){return setDocDom(doc);});
                 return Promise.all(promises);
             }
         ).catch(
@@ -31,6 +30,33 @@
                 Helper.Util.HandleError(err);
             }
         );
+    };
+
+    var mergeAndSortDocs = function(a, b){
+        var rtn = [];
+        var is_in = function(docid){
+            for(var i = 0, l = rtn.length; i < l; ++i){
+                if(rtn[i].id === docid){
+                    return true;
+                }
+            }
+            return false;
+        };
+        a.concat(b).forEach(function(doc){
+            if(!is_in(doc.id)){
+                rtn.push(doc);
+            }
+        });
+
+        rtn.sort(function(a, b){
+            if (a.creationTime > b.creationTime)
+                return -1;
+            if (a.creationTime < b.creationTime)
+                return 1;
+            return 0;
+        });
+
+        return rtn;
     };
 
     var loadingIcon = (function(){

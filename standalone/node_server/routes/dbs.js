@@ -70,7 +70,7 @@ var GetDocsOwned = function(req, res){
     }
 };
 
-var GetDocParticipated = function(req, res){
+var GetDocsParticipated = function(req, res){
     if(req.user){
         R2D.User.prototype.GetGroupNs(req.user.id).then(
             function(groupNs){
@@ -80,11 +80,13 @@ var GetDocParticipated = function(req, res){
                         promises.push(R2D.Group.GetDocIdByGroupId(group_id));
                     }
                 );
-                Promise.all(promises).then(
+                return Promise.all(promises).then(
                     function(docids){
                         var docids_unique = []; // list to remove potential duplicates
                         docids.forEach(function(docid){
-                            if(docids_unique.indexOf(docid)===-1){docids_unique.push(docid);}
+                            if(docids_unique.indexOf(docid)===-1){
+                                docids_unique.push(docid);
+                            }
                         });
                         return docids_unique;
                     }
@@ -92,7 +94,13 @@ var GetDocParticipated = function(req, res){
             }
         ).then(
             function(docids){
-                return js_utils.PromiseLoop(public.GetDocById_Promise, docids.map(function(docid){return [docid];})).then(
+                var promises = [];
+                docids.forEach(
+                    function(docid){
+                        promises.push(R2D.Doc.GetDocById_Promise(docid));
+                    }
+                );
+                return Promise.all(promises).then(
                     function(doc_objs){
                         js_utils.PostResp(res, req, 200, doc_objs);
                     }
@@ -383,8 +391,8 @@ exports.post = function(req, res){
         case "GetDocsOwned":
             GetDocsOwned(req, res);
             break;
-        case "GetDocParticipated":
-            GetDocParticipated(req, res);
+        case "GetDocsParticipated":
+            GetDocsParticipated(req, res);
             break;
         case "MyDoc_AddNewGroup":
             MyDoc_AddNewGroup(req, res);

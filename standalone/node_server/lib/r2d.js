@@ -585,6 +585,10 @@ var Doc = (function(){
         );
     };
 
+    public.GetDocIdsByUser = function(userid_n){
+        return RedisClient.KEYS('doc:'+userid_n+'_*');
+    };
+
     public.GetDocByUser_Promise = function(userid_n){
         return RedisClient.KEYS('doc:'+userid_n+'_*').then(
             function(docids){
@@ -596,6 +600,7 @@ var Doc = (function(){
             }
         );
     };
+
     public.AddNewGroup = function(userid_n, docid){
         var groupsObj;
         var groupid;

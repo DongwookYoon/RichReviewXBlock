@@ -16,11 +16,15 @@
             postDbs('GetDocsOwned'),
             postDbs('GetDocsParticipated')]
         ).then(
-            function(doc_lists){
-                return mergeAndSortDocs(doc_lists[0], doc_lists[1]);
+            function(docids_list){
+                var docids = merge(docids_list[0], docids_list[1]);
+                var promises = docids.map(function(docid){return postDbs('GetDocById', {docid:docid});});
+                return Promise.all(promises);
             }
         ).then(
             function(docs){
+                docs = sortDocs(docs);
+
                 loadingIcon.removeFrom($doc_container);
                 var promises = docs.map(function(doc){return setDocDom(doc);});
                 return Promise.all(promises);
@@ -32,31 +36,33 @@
         );
     };
 
-    var mergeAndSortDocs = function(a, b){
+    var merge = function(a, b){
         var rtn = [];
         var is_in = function(docid){
             for(var i = 0, l = rtn.length; i < l; ++i){
-                if(rtn[i].id === docid){
+                if(rtn[i] === docid){
                     return true;
                 }
             }
             return false;
         };
         a.concat(b).forEach(function(doc){
-            if(!is_in(doc.id)){
+            if(!is_in(doc)){
                 rtn.push(doc);
             }
         });
+        return rtn;
+    };
 
-        rtn.sort(function(a, b){
+    var sortDocs = function(l){
+        l.sort(function(a, b){
             if (a.creationTime > b.creationTime)
                 return -1;
             if (a.creationTime < b.creationTime)
                 return 1;
             return 0;
         });
-
-        return rtn;
+        return l;
     };
 
     var loadingIcon = (function(){
@@ -134,15 +140,38 @@
             });
         };
 
+        pub.setGroupDeleteClick = function($btn_delete, group_data, doc){
+            $btn_delete.click(function(){
+                postDbs('DeleteGroup', {groupid_n: group_data.group.id.substring(4), docid_n:doc.id.substring(4)}).then(
+                    function(){
+
+                        return postDbs('GetDocById', {docid:doc.id});;
+                    }
+                ).then(
+                    function(doc){
+                        refreshGroupList(doc, $btn_delete.closest('.panel'));
+                    }
+                ).catch(
+                    function(err){
+                        Helper.Util.HandleError(err);
+                    }
+                );
+            });
+        };
+
         pub.setAddGroupClick = function($btn_add_group, doc){
             $btn_add_group.click(function(){
                 postDbs('MyDoc_AddNewGroup', {docid: doc.id}).then(
                     function(resp){
-                        refreshGroupList(doc, $btn_add_group.closest('.panel'));
+                        return postDbs('GetDocById', {docid:doc.id});
+                    }
+                ).then(
+                    function(resp) {
+                        refreshGroupList(resp, $btn_add_group.closest('.panel'));
                     }
                 ).catch(
                     function(err){
-
+                        Helper.Util.HandleError(err);
                     }
                 );
             });
@@ -241,9 +270,10 @@
                 $btn_share.text('Share');
 
                 var $btn_group = createNewDomElement('div', ['btn-group'], $group_ui);
-                var $btn_delete_all = createNewDomElement('a', ['btn', 'btn-danger', 'btn-sm'], $btn_group);
+                var $btn_delete = createNewDomElement('a', ['btn', 'btn-danger', 'btn-sm'], $btn_group);
+                doms.setGroupDeleteClick($btn_delete, group_data, doc);
                 {
-                    $btn_delete_all.append(getIcon('fa-trash'));
+                    $btn_delete.append(getIcon('fa-trash'));
                 }
                 doms.setDropDownBtn($btn_group, 'Delete this group', function(){alert('hi');});
             }

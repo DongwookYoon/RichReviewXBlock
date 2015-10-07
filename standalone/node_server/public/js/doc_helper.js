@@ -191,6 +191,7 @@
             var $btn_confirm = createNewDomElement('a', ['btn', 'btn-default','btn-sm'], $li);
             $btn_confirm.text(dropdn_msg);
             $btn_confirm.click(cb);
+            return $btn_confirm;
         };
 
         return pub;
@@ -271,11 +272,11 @@
 
                 var $btn_group = createNewDomElement('div', ['btn-group'], $group_ui);
                 var $btn_delete = createNewDomElement('a', ['btn', 'btn-danger', 'btn-sm'], $btn_group);
-                doms.setGroupDeleteClick($btn_delete, group_data, doc);
                 {
                     $btn_delete.append(getIcon('fa-trash'));
                 }
-                doms.setDropDownBtn($btn_group, 'Delete this group', function(){alert('hi');});
+                var $btn_delete_confirm = doms.setDropDownBtn($btn_group, 'Delete this group');
+                doms.setGroupDeleteClick($btn_delete_confirm, group_data, doc);
             }
 
             var $member_row = createNewDomElement('div', ['member_row'], $group_row);

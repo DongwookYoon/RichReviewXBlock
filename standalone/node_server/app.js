@@ -92,7 +92,8 @@ passport.use(
         },
         function (accessToken, refreshToken, profile, done){
             console.log('passport.use');
-            R2D.User.prototype.findOrCreate(profile.id).then(
+            var email = profile.emails.length !== 0 ? profile.emails[0].value : '';
+            R2D.User.prototype.findOrCreate(profile.id, email).then(
                 function(user){
                     done(null, user);
                 }

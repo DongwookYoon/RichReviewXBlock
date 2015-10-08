@@ -27,13 +27,11 @@ crs:math2220_fall2015 = {
         assignment1review: ,
         ...
     }
-    instructors: [<NetId>,<NetId>],
-    students: [<NetId>, ...],
+    instructors: [<email>,<email>],
+    students: [<email>, ...],
 }
 
-stu:math2220_fall2015_<salted_netid> = {
-    usr: <userid>,
-    crs: math2220_fall2015,
+stu:math2220_fall2015_<salted_email> = {
     sub: {
         assignment1: {
             extension: <time>,
@@ -43,22 +41,40 @@ stu:math2220_fall2015_<salted_netid> = {
 }
 
 // file path on the Azure blob storage
-<BLOB_HOST>/math2220_fall2015/<salted_netid>/<SHA1>.pdf
+<BLOB_HOST>/math2220_fall2015/<salted_email>/<SHA1>.pdf
 
 */
 
+var identifyUser = function(req, res){
+    if(req.user){
+        return true;
+    }
+    else{
+        js_utils.PostResp(res, req, 400, 'you are an unidentified user. please sign in and try again.');
+        return false;
+    }
+};
+
+var catchErr = function(foo){
+    foo.catch(
+        function(err){
+            js_utils.PostResp(res, req, 400, err);
+        }
+    )
+};
+
 var cms = {};
 
-cms.isInstructor = function(courseid, email){
-    return RedisClient.HGET('crs:'+courseid, 'instructors').then(
+cms.isInstructor = function(course_id, email){
+    return RedisClient.HGET('crs:'+course_id, 'instructors').then(
         function(instructors){
             return JSON.parse(instructors).indexOf(email) !== -1;
         }
     )
 };
 
-cms.isStudent = function(courseid, email){
-    return RedisClient.HGET('crs:'+courseid, 'students').then(
+cms.isStudent = function(course_id, email){
+    return RedisClient.HGET('crs:'+course_id, 'students').then(
         function(students){
             return JSON.parse(students).indexOf(email) !== -1;
         }
@@ -72,7 +88,7 @@ cms.getSaltedSha1 = function(email){
 };
 
 cms.getCourse = function(req, res){
-    return RedisClient.HGET('crs:'+courseid, 'assignment').then(
+    return RedisClient.HGET('crs:'+course_id, 'assignment').then(
         function(students){
             return JSON.parse(students).indexOf(email) !== -1;
         }
@@ -80,11 +96,54 @@ cms.getCourse = function(req, res){
 };
 
 cms.getAnnouncements = function(req, res){
-    if(req.user){
-
+    if(identifyUser(req, res)){
+        catchErr(
+            RedisClient.HGET('crs:'+req.body.course_id, 'announcements').then(
+                function(announcements){
+                    js_utils.PostResp(res, req, 200, JSON.parse(announcements));
+                    return null;
+                }
+            )
+        );
     }
-    else{
-        js_utils.PostResp(res, req, 400, 'you are an unidentified user. please sign in and try again.');
+};
+
+cms.getSurveys = function(req, res){
+    if(identifyUser(req, res)){
+        catchErr(
+            RedisClient.HGET('crs:'+req.body.course_id, 'surveys').then(
+                function(surveys){
+                    js_utils.PostResp(res, req, 200, JSON.parse(surveys));
+                    return null;
+                }
+            )
+        );
+    }
+};
+
+cms.getSubmissions = function(req, res){
+    if(identifyUser(req, res)){
+        catchErr(
+            RedisClient.HGET('crs:'+req.body.course_id, 'submissions').then(
+                function(submissions){
+                    js_utils.PostResp(res, req, 200, JSON.parse(submissions));
+                    return null;
+                }
+            )
+        );
+    }
+};
+
+cms.getSubmissionStudent = function(req, res){
+    if(identifyUser(req, res)){
+        catchErr(
+            RedisClient.HGET('crs:'+req.body.course_id, 'submissions').then(
+                function(submissions){
+                    js_utils.PostResp(res, req, 200, JSON.parse(submissions));
+                    return null;
+                }
+            )
+        );
     }
 };
 
@@ -100,50 +159,36 @@ cms.submission.setDue = function(req, res){
 
 cms.student = {};
 
-cms.student.addStudent = function(courseid, email){
+cms.student.addStudent = function(course_id, email){
 
 };
 
-cms.student.removeStudent = function(courseid, email){
+cms.student.removeStudent = function(course_id, email){
 
 };
 
-cms.student.extendDue = function(courseid, email, submission, new_due){
+cms.student.extendDue = function(course_id, email, submission, new_due){
 
 };
 
-cms.student.getUploadCtx = function(courseid, netid, submission){
+cms.student.getUploadCtx = function(course_id, netid, submission){
 
 };
 
-cms.student.doneUpload = function(courseid, netid, submission, path){
+cms.student.doneUpload = function(course_id, netid, submission, path){
 
-};
-
-exports.post = function(req, res){
-    switch(req.query['op']){
-        case "getCourse":
-            cms.getCourse(req, res);
-            break;
-        case 'getAnnouncements':
-            cms.getAnnouncements(req, res);
-            break;
-        default:
-            js_utils.PostResp(res, req, 400, "unidentified request: "+req.query['op']);
-            break;
-    }
 };
 
 exports.get = function (req, res) {
     req.session.latestUrl = req.originalUrl;
     if(req.user){
-        var courseid = 'math2220_fall2015';
+        var course_id = 'math2220_fall2015';
         R2D.User.prototype.findById(req.user.id).then(
             function(user){
                 return Promise.all(
                     [
-                        cms.isStudent(courseid, user.email),
-                        cms.isInstructor(courseid, user.email)
+                        cms.isStudent(course_id, user.email),
+                        cms.isInstructor(course_id, user.email)
                     ]
                 ).then(
                     function(result){
@@ -186,5 +231,28 @@ exports.get = function (req, res) {
     }
     else{
         res.redirect('/login');
+    }
+};
+
+exports.post = function(req, res){
+    switch(req.query['op']){
+        case "getCourse":
+            cms.getCourse(req, res);
+            break;
+        case 'getAnnouncements':
+            cms.getAnnouncements(req, res);
+            break;
+        case 'getSurveys':
+            cms.getSurveys(req, res);
+            break;
+        case 'getSubmissions':
+            cms.getSubmissions(req, res);
+            break;
+        case 'getSubmissionStudent':
+            cms.getSubmissionStudent(req, res);
+            break;
+        default:
+            js_utils.PostResp(res, req, 400, "unidentified request: "+req.query['op']);
+            break;
     }
 };

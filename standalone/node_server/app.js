@@ -131,8 +131,7 @@ app.get('/docs',        docs.page);
 app.get('/doc',         doc.get);
 app.get('/account',     account.get);
 app.get('/resources',   resources.get);
-app.get('/math2220',    course.get);
-app.get('/course',    course.get);
+app.get('/math2220_fall2015',    course.get);
 
 app.post('/dbs',        dbs.post);
 app.post('/account',    account.post);
@@ -158,6 +157,13 @@ app.get(
     }
 );
 
+
+app.get(
+    '/math2220',
+    function(req, res) {
+        res.redirect("/math2220_fall2015");
+    }
+);
 
 app.get(
     '/demo',

@@ -1,6 +1,3 @@
-/**
- * Created by dongwook on 9/22/15.
- */
 (function(r2Doc){
     'use strict';
 
@@ -314,10 +311,10 @@
         });
     };
 
-    r2Doc.init = function(blob_host, _host, user){
+    r2Doc.init = function(blob_host, _host, user_data){
         $doc_container = $('#doc_container');
         host = _host;
-        user_id = JSON.parse(decodeURIComponent(user)).id;
+        user_id = JSON.parse(decodeURIComponent(user_data)).id;
         refreshDocList();
 
         var $btn_refresh = $('#btn-refresh');

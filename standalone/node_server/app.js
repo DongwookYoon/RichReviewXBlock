@@ -29,6 +29,7 @@ var viewer = require('./routes/viewer');
 var dataviewer = require('./routes/dataviewer');
 var dbs = require('./routes/dbs');
 var resources = require('./routes/resources');
+var course = require('./routes/course');
 
 mkdirp('../_temp');
 mkdirp('../cache');
@@ -130,6 +131,8 @@ app.get('/docs',        docs.page);
 app.get('/doc',         doc.get);
 app.get('/account',     account.get);
 app.get('/resources',   resources.get);
+app.get('/math2220',    course.get);
+app.get('/course',    course.get);
 
 app.post('/dbs',        dbs.post);
 app.post('/account',    account.post);
@@ -139,6 +142,7 @@ app.post('/upload',     upload.post);
 app.post('/support',    support.post);
 app.post('/uploadaudioblob', upload.post_audioblob);
 app.post('/resources',  resources.post);
+app.post('/course',     course.post);
 
 app.get(
     '/login',

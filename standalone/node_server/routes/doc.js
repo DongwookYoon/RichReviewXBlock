@@ -13,12 +13,14 @@ exports.get = function(req, res){
     if(req.user){
         res.render('doc', {
             cur_page: 'Doc',
+            user: req.user,
             BLOB_HOST: azure.BLOB_HOST,
             HOST: js_utils.getHostname() + "/",
-            user: encodeURIComponent(JSON.stringify(req.user))});
+            user_data: encodeURIComponent(JSON.stringify(req.user))
+            }
+        );
     }
     else{
         res.redirect('/login');
     }
 };
-

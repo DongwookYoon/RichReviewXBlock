@@ -111,3 +111,20 @@
 .member_row > .member_empty_text{
     margin-left: 5px;
 }
+
+
+.member_row > .invite_input {
+    display: inline-flex;
+    margin: 0;
+    padding-left: 10px;
+}
+.member_row > .invite_input .input-group {
+    display: inline-flex;
+}
+.member_row > .invite_input input {
+    font-size: 13px;
+    border: solid 1px lightcyan;
+    width: 100px;
+    height: 22px;
+}
+

@@ -222,8 +222,9 @@ var Group = (function(manager, name, creationDate){
      name
      users {"invited":[noname@gmail.com], "participating":[user:1902839014]}
      */
-    var public = {};
-    public.CreateNewGroup = function(userid_n, docid, creationTime){
+    var pub_grp = {};
+
+    pub_grp.CreateNewGroup = function(userid_n, docid, creationTime){
         return new Promise(function(resolve, reject){
             var groupid = "grp:"+userid_n+"_"+creationTime;
             redisClient.EXISTS(groupid, function(err, resp){
@@ -250,39 +251,49 @@ var Group = (function(manager, name, creationDate){
 
     };
 
-    public.GetById = function(groupid, cb){
+    pub_grp.GetById = function(groupid, cb){
         redisClient.HGETALL(groupid, function(err, groupObj){
             if(err != null || groupObj == null){cb(err);}
             else{
                 groupObj.id = groupid;
                 groupObj.users = JSON.parse(groupObj.users);
-                for(var i = 0; i < groupObj.users.invited.length; ++i) {
-                    groupObj.users.invited[i] = JSON.parse(groupObj.users.invited[i]);
-                }
                 cb(err, groupObj);
             }
         });
     };
 
-
-    public.GetGroupObj_Promise = function(groupid){
+    pub_grp.GetGroupObj_Promise = function(groupid){
         return RedisClient.HGETALL(groupid).then(
             function(groupObj){
                 groupObj.id = groupid;
                 groupObj.users = JSON.parse(groupObj.users);
-                for(var i = 0; i < groupObj.users.invited.length; ++i) {
-                    groupObj.users.invited[i] = JSON.parse(groupObj.users.invited[i]);
-                }
                 return groupObj;
             }
         );
     };
 
-    public.GetDocIdByGroupId = function(groupid_n, cb){
+    pub_grp.InviteUser = function(groupid_n, email){
+        RedisClient.HEXISTS('email_user_lookup', email).then(
+            function(is_exist){
+                if(is_exist){
+                    return RedisClient.HGET('email_user_lookup', email).then(
+                        function(userid){
+                            return pub_grp.AddUserToParticipating(groupid_n, userid.substring(4));
+                        }
+                    );
+                }
+                else{
+                    return pub_grp.AddEmailToInvited(group_id_n, email);
+                }
+            }
+        )
+    };
+
+    pub_grp.GetDocIdByGroupId = function(groupid_n, cb){
         return RedisClient.HGET("grp:"+groupid_n, "docid");
     };
 
-    public.PopulateParticipantObjs = function(groupObj){
+    pub_grp.PopulateParticipantObjs = function(groupObj){
         return new Promise(function (resolve, reject) {
             var argl = [];
             for(var i = 0; i < groupObj.users.participating.length; ++i){
@@ -299,7 +310,7 @@ var Group = (function(manager, name, creationDate){
         );
     };
 
-    public.DeleteGroup = function(groupid_n, docid_n){
+    pub_grp.DeleteGroup = function(groupid_n, docid_n){
         function job(userid_n){
             return User.prototype.RemoveGroupFromUser(userid_n, groupid_n).then(
                 function(){
@@ -319,7 +330,7 @@ var Group = (function(manager, name, creationDate){
         )
     };
 
-    public.DeleteGroupFromDoc = function(groupid_n, docid_n){
+    pub_grp.DeleteGroupFromDoc = function(groupid_n, docid_n){
         return RedisClient.HGET("doc:"+docid_n, 'groups').then( // get group list of doc
             function(groupsStr){
                 var groupsObj = JSON.parse(groupsStr);
@@ -341,7 +352,7 @@ var Group = (function(manager, name, creationDate){
         )
     };
 
-    public.Delete = function(userid_n, docid, groupid, cb){
+    pub_grp.Delete = function(userid_n, docid, groupid, cb){
         redisClient.HGET(docid, 'groups', function(err, groupsStr){
             var groupsObj = JSON.parse(groupsStr);
             var index = groupsObj.indexOf(groupid);
@@ -362,19 +373,19 @@ var Group = (function(manager, name, creationDate){
         });
     };
 
-    public.Rename = function(groupid, newname, cb){
+    pub_grp.Rename = function(groupid, newname, cb){
         redisClient.HSET(groupid, 'name', newname, function(err){
             cb(err);
         });
     };
 
-    public.SetUsersByObj = function(groupid, usersobj, cb){
+    pub_grp.SetUsersByObj = function(groupid, usersobj, cb){
         redisClient.HSET(groupid, "users", JSON.stringify(usersobj), function(err, resp){
             cb(err, resp);
         });
     };
 
-    public.GetNumUsers = function(groupid, cb){
+    pub_grp.GetNumUsers = function(groupid, cb){
         redisClient.HGET(groupid, "users", function(err, usersStr){
             if(err){
                 cb(err, null);
@@ -388,7 +399,7 @@ var Group = (function(manager, name, creationDate){
         });
     };
 
-    public.GetUsersFromGroup = function(groupid_n){
+    pub_grp.GetUsersFromGroup = function(groupid_n){
         return RedisClient.HGET("grp:"+groupid_n, "users").then(
             function(usersStr){
                 return JSON.parse(usersStr);
@@ -396,35 +407,43 @@ var Group = (function(manager, name, creationDate){
         );
     };
 
-    public.AddUserToGroup = function(groupid_n, userid_n){
-        return RedisClient.HGET("grp:"+groupid_n, "users").then(
-            function(usersStr) {
-                var usersObj = JSON.parse(usersStr);
-                if(usersObj == null){
-                    var err = new Error("That's and invalid GroupCode.");
-                    err.push_msg = true;
-                    throw err;
-                }
-                var i = usersObj.participating.indexOf(userid_n);
-                if(usersObj.participating.length == 5){
-                    var err = new Error("There are already maximum number (5) of users in this group.");
-                    err.push_msg = true;
-                    throw err;
-                }
-                else if (i >= 0) {
-                    var err = new Error("You are already a member of the group");
-                    err.push_msg = true;
-                    throw err;
+    pub_grp.AddEmailToInvited = function(groupid_n, email){
+        return RedisClient.HGET('grp:' + groupid_n, 'users').then(
+            function(usersStr){
+                var users = JSON.parse(usersStr);
+                if(users == null){throw 'invalid group id';}
+
+                if( users.invited.indexOf(email) === -1 ){
+                    users.invited.push(email);
+                    return RedisClient.HSET('grp:' + groupid_n, 'users', JSON.stringify(users));
                 }
                 else{
-                    usersObj.participating.push(userid_n);
-                    return RedisClient.HSET("grp:"+groupid_n, 'users', JSON.stringify(usersObj));
+                    return;
                 }
+            }
+        )
+    };
+
+    pub_grp.AddUserToParticipating = function(groupid_n, userid_n){
+        return RedisClient.HGET("grp:"+groupid_n, "users").then(
+            function(usersStr) {
+                var users = JSON.parse(usersStr);
+                if(users == null){throw 'invalid group id';}
+
+                var i = users.participating.indexOf(userid_n);
+                if(users.participating.length == 5){
+                    throw 'there are already maximum number (5) of users in this group.';
+                }
+                else if(i === -1){
+                    users.participating.push(userid_n);
+                    return RedisClient.HSET("grp:"+groupid_n, 'users', JSON.stringify(users));
+                }
+                return null;
             }
         );
     };
 
-    public.RemoveUserFromGroup = function(groupid_n, userid_n){
+    pub_grp.RemoveUserFromGroup = function(groupid_n, userid_n){
         return RedisClient.HGET("grp:"+groupid_n, "users").then( // get group's user list
             function(usersStr){
                 var usersObj = JSON.parse(usersStr);
@@ -440,7 +459,7 @@ var Group = (function(manager, name, creationDate){
         );
     };
 
-    public.GetViewerUrl = function(groupid_n, cb){
+    pub_grp.GetViewerUrl = function(groupid_n, cb){
         redisClient.HGET("grp:"+groupid_n, 'docid', function(err, docid){
             if(err){cb(err);}
             else{
@@ -455,7 +474,7 @@ var Group = (function(manager, name, creationDate){
         });
     };
 
-    return public;
+    return pub_grp;
 })();
 
 
@@ -464,12 +483,12 @@ var Group = (function(manager, name, creationDate){
  * Doc
  */
 var Doc = (function(){
-    var public = {};
+    var pub_doc = {};
 
     //redis doc hash structure
     // userid, creationDate, pdfid, name, groups(list)
 
-    public.CreateNew = function(userid_n, creationTime, pdfid){
+    pub_doc.CreateNew = function(userid_n, creationTime, pdfid){
         var docid = "doc:"+userid_n+"_"+creationTime;
         return RedisClient.EXISTS(docid).then(
             function(isexist){
@@ -500,7 +519,7 @@ var Doc = (function(){
         );
     };
 
-    public.GetDocById_Promise = function(docid){
+    pub_doc.GetDocById_Promise = function(docid){
         return RedisClient.HGETALL(docid).then(
             function(doc_obj){
                 doc_obj.id = docid;
@@ -511,14 +530,14 @@ var Doc = (function(){
         );
     };
 
-    public.GetDocIdsByUser = function(userid_n){
+    pub_doc.GetDocIdsByUser = function(userid_n){
         return RedisClient.KEYS('doc:'+userid_n+'_*');
     };
 
-    public.GetDocByUser_Promise = function(userid_n){
+    pub_doc.GetDocByUser_Promise = function(userid_n){
         return RedisClient.KEYS('doc:'+userid_n+'_*').then(
             function(docids){
-                return js_utils.PromiseLoop(public.GetDocById_Promise, docids.map(function(docid){return [docid];})).then(
+                return js_utils.PromiseLoop(pub_doc.GetDocById_Promise, docids.map(function(docid){return [docid];})).then(
                     function(doc_objs){
                         return doc_objs;
                     }
@@ -527,7 +546,7 @@ var Doc = (function(){
         );
     };
 
-    public.AddNewGroup = function(userid_n, docid){
+    pub_doc.AddNewGroup = function(userid_n, docid){
         var groupsObj;
         var groupid;
 
@@ -553,7 +572,7 @@ var Doc = (function(){
         );
     };
 
-    public.GetDocGroups = function(docid_n){
+    pub_doc.GetDocGroups = function(docid_n){
         return RedisClient.HGET("doc:"+docid_n, "groups").then(
             function(groupsStr){
                 return groupsObj = JSON.parse(groupsStr);
@@ -561,32 +580,32 @@ var Doc = (function(){
         );
     };
 
-    public.Rename = function(docid, newname, cb){
+    pub_doc.Rename = function(docid, newname, cb){
         redisClient.HSET(docid, "name", newname, function(err, resp){
             cb(err, resp);
         });
     };
 
-    public.DeleteDocFromRedis = function(docid_n){
+    pub_doc.DeleteDocFromRedis = function(docid_n){
         return RedisClient.DEL("doc:"+docid_n);
     };
 
-    return public;
+    return pub_doc;
 }());
 
 var Cmd = (function(){
-    var public = {};
+    var pub_cmd = {};
 
-    public.AppendCmd = function(group_id_n, cmdStr, cb){
+    pub_cmd.AppendCmd = function(group_id_n, cmdStr, cb){
         redisClient.RPUSH("cmd:"+group_id_n, cmdStr, function(err){
             cb(err);
         });
     };
-    public.GetCmds = function(groupid_n, cmds_downloaded_n){
+    pub_cmd.GetCmds = function(groupid_n, cmds_downloaded_n){
         return RedisClient.LRANGE("cmd:"+groupid_n, cmds_downloaded_n, -1);
     };
 
-    return public;
+    return pub_cmd;
 })();
 
 var Log = function(group_n, logStr, cb){

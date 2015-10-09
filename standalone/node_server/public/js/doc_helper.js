@@ -156,6 +156,33 @@
             });
         };
 
+        pub.setInviteClick = function($input_group, group_data, doc){
+            var $btn_invite = $input_group.find('button');
+            var $input = $input_group.find('input');
+            $btn_invite.click(function(){
+                postDbs(
+                    'InviteUser',
+                    {
+                        groupid_n: group_data.group.id.substring(4),
+                        docid_n:doc.id.substring(4),
+                        emails:$input[0].value
+                    }
+                ).then(
+                    function(){
+                        return postDbs('GetDocById', {docid:doc.id});;
+                    }
+                ).then(
+                    function(doc){
+                        refreshGroupList(doc, $btn_invite.closest('.panel'));
+                    }
+                ).catch(
+                    function(err){
+                        Helper.Util.HandleError(err);
+                    }
+                );
+            });
+        };
+
         pub.setAddGroupClick = function($btn_add_group, doc){
             $btn_add_group.click(function(){
                 postDbs('MyDoc_AddNewGroup', {docid: doc.id}).then(
@@ -287,12 +314,26 @@
                         $btn_user.toggleClass(user_id === user.id ? 'btn-primary' : 'btn-default', true);
                         $btn_user.text(user.nick);
                         doms.setDropDownBtn($btn_group, 'Remove', function(){alert('hi');});
-
                     });
                 }
                 else{
                     var $no_user = createNewDomElement('a', ['member_empty_text'], $member_row);
                     $no_user.text('This group is empty');
+                }
+                var $form_group = createNewDomElement('div', ['form-group', 'invite_input'], $member_row);
+                {
+                    var $input_group = createNewDomElement('span', ['input-group'], $form_group);
+                    {
+                        //var $label = createNewDomElement('span', ['input-group-addon'], $input_group);
+                        //$label.text('invite');
+
+                        var $input = createNewDomElement('input', ['form-control', 'input-sm'], $input_group);
+                        $input.attr('placeholder', 'invite');
+
+                        var $button = createNewDomElement('button', ['btn', 'btn-default', 'btn-sm'], $input_group);
+                        $button.append(getIcon('fa-plus'));
+                    }
+                    doms.setInviteClick($input_group, group_data, doc);
                 }
             }
         }

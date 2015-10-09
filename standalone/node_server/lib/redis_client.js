@@ -89,6 +89,19 @@ var RedisClient = {
         })
     },
 
+    HEXISTS: function(key, field){
+        return new Promise(function (resolve, reject) {
+            redisClient.HEXISTS(key, field, function(err, rtn){
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    resolve(rtn);
+                }
+            });
+        })
+    },
+
     HMSET: function(){
         var a = [];
         for(var i = 0; i < arguments.length; ++i){

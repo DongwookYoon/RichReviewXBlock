@@ -223,13 +223,55 @@ var DeleteDocument = function(req, res){
     }
 };
 
+
+var InviteUser = function(req, res){
+    if(js_utils.identifyUser(req, res)){
+        R2D.Doc.GetDocById_Promise('doc:'+req.body.docid_n).then(
+            function(doc){
+                if(doc.userid_n === req.user.id){
+                    var emails = req.body.emails;
+                    emails = emails.replace(/[\,\;]/g, ' ');
+                    emails = emails.replace(/\s+/g, " ");
+                    emails = emails.split(' ');
+
+                    emails.forEach(function(email){
+                        if(js_utils.validateEmail(email) === false){
+                            js_utils.PostResp(res, req, 400, '\'' + email + '\' is an invalid email address. please use either of @gmail.com or @cornell.edu.');
+                            return;
+                        }
+                    });
+
+
+                    return Promise.all(
+                        emails.map(function(email){
+                            return R2D.Group.InviteUser(req.body.groupid_n, email);
+                        })
+                    ).then(
+                        function(){
+                            js_utils.PostResp(res, req, 200);
+                        }
+                    );
+                }
+                else{
+                    js_utils.PostResp(res, req, 400, 'you are not authorized to invite a user to this group.');
+                }
+            }
+        ).catch(
+            function(err){
+                js_utils.PostResp(res, req, 400, err);
+            }
+        )
+    }
+
+};
+
 var AddMyselfToGroup = function(req, res){
     if( typeof req.user == "undefined" ||
         typeof req.body.groupcode == "undefined"){
         js_utils.PostResp(res, req, 500);
     }
     else{
-        R2D.Group.AddUserToGroup(req.body.groupcode, req.user.id).then(
+        R2D.Group.AddUserToParticipating(req.body.groupcode, req.user.id).then(
             function(){
                 return R2D.User.prototype.AddGroupToUser(req.user.id, req.body.groupcode);
             }
@@ -421,6 +463,9 @@ exports.post = function(req, res){
             break;
         case "DeleteDocument":
             DeleteDocument(req, res);
+            break;
+        case "InviteUser":
+            InviteUser(req, res);
             break;
         case "AddMyselfToGroup":
             AddMyselfToGroup(req, res);

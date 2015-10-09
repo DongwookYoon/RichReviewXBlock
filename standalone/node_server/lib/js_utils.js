@@ -368,3 +368,19 @@ exports.redirectUnknownUser = function(req, res){
         return false;
     }
 };
+
+exports.validateEmail = function(email){
+    var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if(re.test(email)){
+        if(email.substring(email.length-12).toLowerCase() == "@cornell.edu" ||
+            email.substring(email.length-10).toLowerCase() == "@gmail.com"){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+    else{
+        return false;
+    }
+};

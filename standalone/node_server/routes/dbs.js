@@ -47,8 +47,13 @@ var GetGroupData = function(req, res){
         }
     ).catch(
         function(err){
-            var resp = {users:null, group:null};
-            js_utils.PostResp(res, req, 400, resp);
+            if(groupid == 'grp:'){ // anonymous group
+                var resp = {users:null, group:null};
+                js_utils.PostResp(res, req, 200, resp);
+            }
+            else{
+                js_utils.PostResp(res, req, 400, err);
+            }
         }
     );
 };

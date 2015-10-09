@@ -14,126 +14,160 @@ var RedisClient = require('../lib/redis_client').RedisClient;
 /*
  * User
  */
-var user_cache = {};
 var User = function(id, nickname, email){
     this.id = id;
     this.nick = nickname;
     this.email = email;
 };
-(function populateUserCache(){
-    RedisClient.KEYS("usr:*").then(
-        function(userids){
-            Promise.all(
-                userids.map(function(userid){
-                    return User.prototype.findOrCreate(userid.substring(4))
-                })
-            ).then(
-                function(users){
-                    users.forEach(function(user){user_cache[user.id] = user;})
-                }
-            ).catch(
-                function(err){
-                    console.log(err);
-                }
-            );
+
+(function(){
+    RedisClient.KEYS('usr:*').then(
+        function(keys){
+            console.log('# usr:', keys.length);
         }
     );
 })();
-User.prototype.updateNick = function(id, newnick){
-    if(user_cache.hasOwnProperty(id)){
-        return RedisClient.HMSET(
-            'usr:' + id,
-            'nick', newnick
-        ).then(
-            function(){
-                user_cache[id].nick = newnick;
-                return user_cache[id];
-            }
-        );
-    }
-    else{
-        throw 'internal server error: user not cached';
-    }
-};
-User.prototype.updateEmail = function(id, newemail){
-    if(user_cache.hasOwnProperty(id)){
-        return RedisClient.HMSET(
-            'usr:' + id,
-            'email', newemail
-        ).then(
-            function(){
-                user_cache[id].email = newemail;
-                return user_cache[id];
-            }
-        );
-    }
-    else{
-        throw 'internal server error: user not cached';
-    }
-};
-User.prototype.findById = function(id){
-    return new Promise(function(resolve, reject){
-        if(user_cache.hasOwnProperty(id)) {
-            resolve(user_cache[id]);
+
+(function(){
+    RedisClient.HGETALL('email_user_lookup').then(
+        function(keys){
+            console.log('# email lookups:', Object.keys(keys).length);
         }
-        else{
-            reject('cannot find the user with the given id: '+id);
-        }
-    });
-};
-User.prototype.findOrCreate = function(id, email){
-    return new Promise(function(resolve, reject){
-        var done = function(user){
-            if(typeof email !== 'undefined' && user.email !== email){
-                return User.prototype.updateEmail(id, email).then(
-                    function(){
-                        resolve(user);
-                    }
-                )
+    );
+})();
+
+User.prototype.cache = (function(){
+    var pub = {};
+
+    var cache = {};
+
+    pub.populate = function(){
+        return RedisClient.KEYS("usr:*").then(
+            function(userids){
+                return Promise.all(
+                    userids.map(function(userid){return pub.loadFromDb(userid.substring(4));})
+                );
+            }
+        ).then(
+            function(users){
+                return users;
+            }
+        ).catch(
+            function(err){
+                console.log(err);
+            }
+        )
+    };
+
+    pub.loadFromDb = function(id){
+        return RedisClient.HGETALL("usr:"+id).then(
+            function(result){
+                 var new_user = new User(
+                    id,
+                    result.nick,
+                    result.email
+                );
+                cache[id] = new_user;
+                return new_user;
+            }
+        )
+    };
+
+    pub.get = function(id){
+        return new Promise(function(resolve, reject) {
+            if(cache.hasOwnProperty(id)){
+                resolve(cache[id]);
             }
             else{
-                resolve(user);
+                reject('the user with id:' + id + ' does not exist.');
             }
-        };
+        });
+    };
 
-        if(user_cache.hasOwnProperty(id)){ // cached
-            done(user_cache[id]);
+    pub.populate();
+
+    return pub;
+}());
+
+User.prototype.isExist = function(id){
+    return RedisClient.EXISTS('usr:'+id);
+};
+
+User.prototype.findById = function(id){
+    return User.prototype.cache.get(id);
+};
+
+User.prototype.create = function(id, email){
+    return RedisClient.HMSET(
+        'usr:'+id,
+        'nick', 'user'+id.substr(3, 1)+id.substr(6, 2),
+        'email', email,
+        'groupNs', '[]'
+    ).then(
+        function(){
+            return RedisClient.HMSET(
+                'email_user_lookup',
+                email,
+                'usr:'+id
+            )
+        }
+    ).then(
+        function(){
+            return User.prototype.cache.loadFromDb(id);
+        }
+    );
+};
+
+User.prototype.updateNick = function(id, newnick){
+    return RedisClient.HMSET(
+        'usr:' + id,
+        'nick', newnick
+    ).then(
+        function(){
+            return User.prototype.cache.loadFromDb(id);
+        }
+    );
+};
+
+User.prototype.syncEmail = function(user, newemail){
+    return new Promise(function(resolve, reject){
+        if(user.email === newemail){
+            return resolve(user);
         }
         else{
-            var nick = '';
-            var mail = '';
-            RedisClient.HGETALL("usr:"+id).then(
-                function(result){
-                    if(result === null){
-                        nick = 'user'+id.substr(3, 1)+id.substr(6, 2); // default nick
-                        mail = 'default@email.com'; // default mail
-                        return RedisClient.HMSET(
-                            "usr:"+id,
-                            'nick', nick,
-                            'email', mail,
-                            'groupNs', '[]'
-                        );
-                    }
-                    else{
-                        nick = result.nick;
-                        mail = result.email;
-                        return null;
-                    }
+            return RedisClient.HMSET(
+                'usr:' + user.id,
+                'email',
+                newemail
+            ).then(
+                function(){
+                    return RedisClient.HMSET(
+                        'email_user_lookup',
+                        newemail,
+                        'usr:'+user.id
+                    )
                 }
             ).then(
                 function(){
-                    var newuser = new User(
-                        id,
-                        nick,
-                        mail
-                    );
-                    user_cache[id] = (newuser);
-                    done(newuser);
+                    return RedisClient.HDEL(
+                        'email_user_lookup',
+                        user.email
+                    )
+                }
+            ).then(
+                function(){
+                    return User.prototype.cache.loadFromDb(user.id)
+                }
+            ).then(
+                function(user){
+                    resolve(user);
                 }
             ).catch(reject);
         }
     });
+
 };
+
 User.prototype.AddGroupToUser = function(userid_n, groupid_n){
     return RedisClient.HGET("usr:"+userid_n, "groupNs").then( // get group of the user
         function(groupNsStr){
@@ -151,6 +185,7 @@ User.prototype.AddGroupToUser = function(userid_n, groupid_n){
         }
     );
 };
+
 User.prototype.RemoveGroupFromUser = function(userid_n, groupid_n){
     return RedisClient.HGET("usr:"+userid_n, "groupNs").then( // get user's group list
         function(groupNsStr){
@@ -166,6 +201,7 @@ User.prototype.RemoveGroupFromUser = function(userid_n, groupid_n){
         }
     );
 };
+
 User.prototype.GetGroupNs = function(userid_n, cb){
     return RedisClient.HGET("usr:"+userid_n, "groupNs").then(
         function(groupNsStr){

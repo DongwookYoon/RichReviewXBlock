@@ -23,8 +23,7 @@ var MUPLA_SERVER_LOCAL_URL = "http://127.0.0.1:5000/mupla_serve/";
 exports.page = function (req, res) {
     req.session.latestUrl = req.originalUrl;
 
-    if(req.user){
-
+    if(js_utils.redirectUnknownUser(req, res)){
         res.render(
             'upload',
             {
@@ -32,9 +31,6 @@ exports.page = function (req, res) {
                 user: req.user,
             }
         );
-    }
-    else{
-        res.redirect('/login');
     }
 };
 

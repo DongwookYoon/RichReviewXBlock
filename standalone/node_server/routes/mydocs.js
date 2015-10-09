@@ -50,8 +50,6 @@ var IsDocExist = function(docObjs, docid){
 
 var GetDocsParticipating = function(req, res, docObjs, cb){
     if(req.user){
-
-
         R2D.User.prototype.GetGroupNs(req.user.id, function(err, groupNs){
             var job = function(i){
                 if(i == groupNs.length){
@@ -89,7 +87,7 @@ var GetDocsParticipating = function(req, res, docObjs, cb){
 
 exports.get = function (req, res) {
     req.session.latestUrl = req.originalUrl;
-    if(req.user){
+    if(js_utils.redirectUnknownUser(req, res)){
         GetDocs(req.user.id).then(
             function(docObjs) {
                 return new Promise(function(resolve, reject){
@@ -156,8 +154,5 @@ exports.get = function (req, res) {
                 js_error.HandleError('MyDocs', err, res);
             }
         );
-    }
-    else{
-        res.redirect('/login');
     }
 };

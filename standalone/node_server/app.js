@@ -12,9 +12,9 @@ var fs = require('fs');
 var passport = require('passport');
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 var R2D = require('./lib/r2d.js');
+var redis_client = require('./lib/redis_client.js');
 var env = require('./lib/env.js');
 var RedisStore = require('connect-redis')(expressSession);
-
 
 var _downloader = require('./routes/_downloader');
 var _pages = require('./routes/_pages');
@@ -70,7 +70,7 @@ app.use(
         {
             store: new RedisStore(
                 {
-                    client: R2D.redisClient
+                    client: redis_client.redisClient
                 }),
             secret: 'rich.reviewer@cornell',
             saveUninitialized: true,
@@ -92,9 +92,21 @@ passport.use(
             callbackURL: google_oauth.web.redirect_uris[0]
         },
         function (accessToken, refreshToken, profile, done){
-            console.log('passport.use');
             var email = profile.emails.length !== 0 ? profile.emails[0].value : '';
-            R2D.User.prototype.findOrCreate(profile.id, email).then(
+            R2D.User.prototype.isExist(profile.id).then(
+                function(is_exist){
+                    if(is_exist){
+                        return R2D.User.prototype.findById(profile.id).then(
+                            function(user){
+                                return R2D.User.prototype.syncEmail(user, email);
+                            }
+                        );
+                    }
+                    else{
+                        return R2D.User.prototype.create(profile.id, email);
+                    }
+                }
+            ).then(
                 function(user){
                     done(null, user);
                 }

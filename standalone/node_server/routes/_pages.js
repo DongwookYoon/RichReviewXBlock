@@ -5,7 +5,6 @@ var js_utils = require('../lib/js_utils');
  */
 
 exports.about = function (req, res) {
-    console.log('about');
     req.session.latestUrl = req.originalUrl;
     res.render('_pages_about', {cur_page: 'About', user: req.user });
 };

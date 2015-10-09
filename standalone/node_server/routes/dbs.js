@@ -59,7 +59,7 @@ var GetGroupData = function(req, res){
 };
 
 var GetDocsOwned = function(req, res){
-    if(req.user){
+    if(js_utils.identifyUser(req, res)){
         R2D.Doc.GetDocIdsByUser(req.user.id).then(
             function(docids){
                 js_utils.PostResp(res, req, 200, docids);
@@ -70,13 +70,10 @@ var GetDocsOwned = function(req, res){
             }
         )
     }
-    else{
-        js_utils.PostResp(res, req, 400, 'you are an unidentified user. please sign in and try again.');
-    }
 };
 
 var GetDocsParticipated = function(req, res){
-    if(req.user){
+    if(js_utils.identifyUser(req, res)){
         R2D.User.prototype.GetGroupNs(req.user.id).then(
             function(groupNs){
                 var promises = [];
@@ -104,30 +101,10 @@ var GetDocsParticipated = function(req, res){
             }
         );
     }
-    else{
-        js_utils.PostResp(res, req, 400, 'you are an unidentified user. please sign in and try again.');
-    }
-
-    /*
-     ).then(
-     function(docids){
-     var promises = [];
-     docids.forEach(
-     function(docid){
-     promises.push(R2D.Doc.GetDocById_Promise(docid));
-     }
-     );
-     return Promise.all(promises).then(
-     function(doc_objs){
-     js_utils.PostResp(res, req, 200, doc_objs);
-     }
-     );
-     }
-    * */
 };
 
 var GetDocById = function(req, res){
-    if(req.user){
+    if(js_utils.identifyUser(req, res)){
         R2D.Doc.GetDocById_Promise(req.body.docid).then(
             function(doc_obj){
                 js_utils.PostResp(res, req, 200, doc_obj);
@@ -138,14 +115,11 @@ var GetDocById = function(req, res){
             }
         )
     }
-    else{
-        js_utils.PostResp(res, req, 400, 'you are an unidentified user. please sign in and try again.');
-    }
 };
 
 
 var MyDoc_AddNewGroup = function(req, res){
-    if(req.user){
+    if(js_utils.identifyUser(req, res)){
         R2D.Doc.GetDocById_Promise(req.body.docid).then(
             function(doc){
                 if(doc.userid_n === req.user.id){
@@ -164,9 +138,6 @@ var MyDoc_AddNewGroup = function(req, res){
                 js_utils.PostResp(res, req, 400, err);
             }
         )
-    }
-    else{
-        js_utils.PostResp(res, req, 400, 'you are an unidentified user. please sign in and try again.');
     }
 };
 
@@ -199,7 +170,7 @@ var MyDoc_RenameGroup = function(req, res){
 };
 
 var DeleteGroup = function(req, res){
-    if(req.user){
+    if(js_utils.identifyUser(req, res)){
         R2D.Doc.GetDocById_Promise('doc:'+req.body.docid_n).then(
             function(doc){
                 if(doc.userid_n === req.user.id){
@@ -218,9 +189,6 @@ var DeleteGroup = function(req, res){
                 js_utils.PostResp(res, req, 400, err);
             }
         )
-    }
-    else{
-        js_utils.PostResp(res, req, 400, 'you are an unidentified user. please sign in and try again.');
     }
 };
 
@@ -366,7 +334,7 @@ var GetDocGroups = function(req, res){
 };
 
 var AddNewDoc = function(req, res){
-    if(req.user){
+    if(js_utils.identifyUser(req, res)){
         if(req.body.pdf_id){
             var ctx = {
                 container: req.body.pdf_id,
@@ -407,11 +375,6 @@ var AddNewDoc = function(req, res){
             err.push_msg = true;
             js_utils.PostResp(res, req, 500, err);
         }
-    }
-    else{
-        var err = new Error("Please Login");
-        err.push_msg = true;
-        js_utils.PostResp(res, req, 500, err);
     }
 };
 

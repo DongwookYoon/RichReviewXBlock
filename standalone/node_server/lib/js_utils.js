@@ -348,3 +348,23 @@ exports.getWebAppUrls = function(path, prefix, exclude){
     });
     return urls;
 };
+
+exports.identifyUser = function(req, res){
+    if(req.user){
+        return true;
+    }
+    else{
+        exports.PostResp(res, req, 400, 'you are an unidentified user. please sign in and try again.');
+        return false;
+    }
+};
+
+exports.redirectUnknownUser = function(req, res){
+    if(req.user){
+        return true;
+    }
+    else{
+        res.redirect('/login');
+        return false;
+    }
+};

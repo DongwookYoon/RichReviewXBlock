@@ -10,7 +10,7 @@ var Promise = require("promise");
 
 exports.get = function(req, res){
     req.session.latestUrl = req.originalUrl;
-    if(req.user){
+    if(js_utils.redirectUnknownUser(req, res)){
         res.render('doc', {
             cur_page: 'Doc',
             user: req.user,
@@ -19,8 +19,5 @@ exports.get = function(req, res){
             user_data: encodeURIComponent(JSON.stringify(req.user))
             }
         );
-    }
-    else{
-        res.redirect('/login');
     }
 };

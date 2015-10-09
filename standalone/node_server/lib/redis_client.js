@@ -37,6 +37,19 @@ var RedisClient = {
         });
     },
 
+    HDEL: function(key, field){
+        return new Promise(function(resolve, reject){
+            redisClient.HDEL(key, field, function(err, rtn){
+                if(err){
+                    reject(err);
+                }
+                else{
+                    resolve(rtn);
+                }
+            });
+        });
+    },
+
     HGETALL: function(key) {
         return new Promise(function (resolve, reject) {
             redisClient.HGETALL(key, function (err, rtn) {

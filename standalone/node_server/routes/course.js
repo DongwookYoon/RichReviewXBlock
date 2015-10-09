@@ -45,16 +45,6 @@ stu:math2220_fall2015_<salted_email> = {
 
 */
 
-var identifyUser = function(req, res){
-    if(req.user){
-        return true;
-    }
-    else{
-        js_utils.PostResp(res, req, 400, 'you are an unidentified user. please sign in and try again.');
-        return false;
-    }
-};
-
 var catchErr = function(foo){
     foo.catch(
         function(err){
@@ -96,7 +86,7 @@ cms.getCourse = function(req, res){
 };
 
 cms.getAnnouncements = function(req, res){
-    if(identifyUser(req, res)){
+    if(js_utils.identifyUser(req, res)){
         catchErr(
             RedisClient.HGET('crs:'+req.body.course_id, 'announcements').then(
                 function(announcements){
@@ -109,7 +99,7 @@ cms.getAnnouncements = function(req, res){
 };
 
 cms.getSurveys = function(req, res){
-    if(identifyUser(req, res)){
+    if(js_utils.identifyUser(req, res)){
         catchErr(
             RedisClient.HGET('crs:'+req.body.course_id, 'surveys').then(
                 function(surveys){
@@ -122,7 +112,7 @@ cms.getSurveys = function(req, res){
 };
 
 cms.getSubmissions = function(req, res){
-    if(identifyUser(req, res)){
+    if(js_utils.identifyUser(req, res)){
         catchErr(
             RedisClient.HGET('crs:'+req.body.course_id, 'submissions').then(
                 function(submissions){
@@ -135,7 +125,7 @@ cms.getSubmissions = function(req, res){
 };
 
 cms.getSubmissionStudent = function(req, res){
-    if(identifyUser(req, res)){
+    if(js_utils.identifyUser(req, res)){
         catchErr(
             RedisClient.HGET('crs:'+req.body.course_id, 'submissions').then(
                 function(submissions){
@@ -181,7 +171,7 @@ cms.student.doneUpload = function(course_id, netid, submission, path){
 
 exports.get = function (req, res) {
     req.session.latestUrl = req.originalUrl;
-    if(req.user){
+    if(js_utils.redirectUnknownUser(req, res)){
         var course_id = 'math2220_fall2015';
         R2D.User.prototype.findById(req.user.id).then(
             function(user){
@@ -228,9 +218,6 @@ exports.get = function (req, res) {
                 js_utils.PostResp(res, req, 400, err);
             }
         );
-    }
-    else{
-        res.redirect('/login');
     }
 };
 

@@ -9,158 +9,54 @@ redisClient.on('error', function(err) {
 
 
 /*
- * Ping regularly in order to maintain the connection
+ * Ping timer maintains the connection
  */
-function PingRedisServer()
-{
+(function PingRedisServer(){
     redisClient.ping(redis.print);
     setTimeout(PingRedisServer, 3*60*1000);
-}
-PingRedisServer();
-
+}());
 
 /*
- *  RedisWrapper for Promise
+ *  Promisified RedisWrapper
  */
+var RedisClient = (function(){
+    var pub = {};
 
-var RedisClient = {
-    HGET: function(key, field){
-        return new Promise(function(resolve, reject){
-            redisClient.HGET(key, field, function(err, rtn){
-                if(err){
-                    reject(err);
-                }
-                else{
-                    resolve(rtn);
-                }
+    var commands = [
+        'KEYS',
+        'EXISTS',
+        'DEL',
+        'HGET',
+        'HDEL',
+        'HGETALL',
+        'HEXISTS',
+        'HMSET',
+        'HSET',
+        'LPUSH',
+        'RPUSH',
+        'LREM',
+        'LRANGE'
+    ];
+
+    commands.forEach(function(fstr){
+        pub[fstr] = function(/*arguments*/){
+            var args = Array.prototype.slice.call(arguments);
+            return new Promise(function(resolve, reject){
+                args.push(function(err,rtn){
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        resolve(rtn);
+                    }
+                });
+                redisClient[fstr].apply(redisClient, args);
             });
-        });
-    },
+        };
+    });
 
-    HDEL: function(key, field){
-        return new Promise(function(resolve, reject){
-            redisClient.HDEL(key, field, function(err, rtn){
-                if(err){
-                    reject(err);
-                }
-                else{
-                    resolve(rtn);
-                }
-            });
-        });
-    },
-
-    HGETALL: function(key) {
-        return new Promise(function (resolve, reject) {
-            redisClient.HGETALL(key, function (err, rtn) {
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(rtn);
-                }
-            });
-        })
-    },
-
-    KEYS: function(exp) {
-        return new Promise(function (resolve, reject) {
-            redisClient.KEYS(exp, function (err, rtn) {
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(rtn);
-                }
-            });
-        })
-    },
-
-    EXISTS: function(key){
-        return new Promise(function (resolve, reject) {
-            redisClient.EXISTS(key, function(err, rtn){
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(rtn);
-                }
-            });
-        })
-    },
-
-    HEXISTS: function(key, field){
-        return new Promise(function (resolve, reject) {
-            redisClient.HEXISTS(key, field, function(err, rtn){
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(rtn);
-                }
-            });
-        })
-    },
-
-    HMSET: function(){
-        var a = [];
-        for(var i = 0; i < arguments.length; ++i){
-            a.push(arguments[i]);
-        }
-        return new Promise(function (resolve, reject) {
-            var f = function(err, rtn){
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(rtn);
-                }
-            };
-            a.push(f);
-            redisClient.HMSET.apply(redisClient, a);
-
-        });
-    },
-
-    HSET: function(key, field, value) {
-        return new Promise(function (resolve, reject) {
-            redisClient.HSET(key, field, value, function(err, rtn){
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(rtn);
-                }
-            });
-        });
-    },
-
-    DEL: function(key) {
-        return new Promise(function (resolve, reject) {
-            redisClient.DEL(key, function(err, rtn){
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(rtn);
-                }
-            });
-        });
-    },
-
-    LRANGE: function(key, start, stop){
-        return new Promise(function (resolve, reject) {
-            redisClient.LRANGE(key, start, stop, function(err, rtn){
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(rtn);
-                }
-            });
-        });
-    }
-};
+    return pub;
+}());
 
 exports.redisClient = redisClient;
 exports.RedisClient = RedisClient;

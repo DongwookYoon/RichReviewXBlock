@@ -123,7 +123,9 @@ passport.deserializeUser(function(id, done){
             done(null, user);
         }
     ).catch(
-        done
+        function(err){
+            done(null, null);
+        }
     );
 });
 

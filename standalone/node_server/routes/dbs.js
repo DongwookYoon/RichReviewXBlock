@@ -36,7 +36,7 @@ var GetGroupData = function(req, res){
             });
             Promise.all(promises).then(
                 function(groupMembers){
-                    var resp = {users:groupMembers, group:groupObj};
+                    var resp = {users:groupMembers, invited: groupObj.users.invited ,group:groupObj};
                     js_utils.PostResp(res, req, 200, resp);
                 }
             ).catch(
@@ -241,7 +241,6 @@ var InviteUser = function(req, res){
                         }
                     });
 
-
                     return Promise.all(
                         emails.map(function(email){
                             return R2D.Group.InviteUser(req.body.groupid_n, email);
@@ -262,7 +261,29 @@ var InviteUser = function(req, res){
             }
         )
     }
+};
 
+var CancelInvited = function(req, res){
+    if(js_utils.identifyUser(req, res)){
+        R2D.Group.GetDocObjByGroupId(req.body.groupid_n).then(
+            function(doc){
+                if(doc.userid_n === req.user.id){
+                    return R2D.Group.CancelInvited(req.body.groupid_n, req.body.email).then(
+                        function(){
+                            js_utils.PostResp(res, req, 200);
+                        }
+                    );
+                }
+                else{
+                    js_utils.PostResp(res, req, 400, 'you are not authorized to un-invite the user in this group.');
+                }
+            }
+        ).catch(
+            function(err){
+                js_utils.PostResp(res, req, 400, err);
+            }
+        )
+    }
 };
 
 var AddMyselfToGroup = function(req, res){
@@ -288,27 +309,32 @@ var AddMyselfToGroup = function(req, res){
 };
 
 var RemoveGroupMember = function(req, res){
-    if( typeof req.body.userid_n == "undefined" ||
-        typeof req.body.groupid == "undefined"){
-        js_utils.PostResp(res, req, 500);
-    }
-    else{
-        var groupid_n = req.body.groupid.substring(4);
+    if(js_utils.identifyUser(req, res)){
+        var groupid_n = typeof req.body.groupid === 'string' ? req.body.groupid.substring(4) : '';
         var userid_n = req.body.userid_n;
 
-        R2D.User.prototype.RemoveGroupFromUser(userid_n, groupid_n).then(
-            function(){
-                return R2D.Group.RemoveUserFromGroup(groupid_n, userid_n);
-            }
-        ).then(
-            function(){
-                js_utils.PostResp(res, req, 200);
+        R2D.Group.GetDocObjByGroupId(groupid_n).then(
+            function(doc){
+                if(doc.userid_n === req.user.id){
+                    return R2D.Group.RemoveUserFromGroup(groupid_n, userid_n).then(
+                        function(){
+                            return R2D.User.prototype.RemoveGroupFromUser(userid_n, groupid_n);
+                        }
+                    ).then(
+                        function(){
+                            js_utils.PostResp(res, req, 200);
+                        }
+                    )
+                }
+                else{
+                    js_utils.PostResp(res, req, 400, 'you are not authorized to remove a member of this group.');
+                }
             }
         ).catch(
             function(err){
-                js_utils.PostResp(res, req, 500, err);
+                js_utils.PostResp(res, req, 400, err);
             }
-        );
+        )
     }
 };
 
@@ -466,6 +492,9 @@ exports.post = function(req, res){
             break;
         case "InviteUser":
             InviteUser(req, res);
+            break;
+        case 'CancelInvited':
+            CancelInvited(req, res);
             break;
         case "AddMyselfToGroup":
             AddMyselfToGroup(req, res);

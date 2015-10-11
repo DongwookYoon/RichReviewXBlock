@@ -111,7 +111,9 @@
 .member_row > .member_empty_text{
     margin-left: 5px;
 }
-
+.member_row .btn-invited {
+    font-size: 10px;
+}
 
 .member_row > .invite_input {
     display: inline-flex;

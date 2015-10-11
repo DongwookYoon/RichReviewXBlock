@@ -183,6 +183,24 @@
             });
         };
 
+        pub.setCancelInvitedClick = function($btn_cancel_invited, group_data, doc, email){
+            $btn_cancel_invited.click(function(){
+                postDbs('CancelInvited', {groupid_n: group_data.group.id.substring(4), email: email}).then(
+                    function(resp){
+                        return postDbs('GetDocById', {docid:doc.id});
+                    }
+                ).then(
+                    function(resp) {
+                        refreshGroupList(resp, $btn_cancel_invited.closest('.panel'));
+                    }
+                ).catch(
+                    function(err){
+                        Helper.Util.HandleError(err);
+                    }
+                );
+            });
+        };
+
         pub.setAddGroupClick = function($btn_add_group, doc){
             $btn_add_group.click(function(){
                 postDbs('MyDoc_AddNewGroup', {docid: doc.id}).then(
@@ -192,6 +210,24 @@
                 ).then(
                     function(resp) {
                         refreshGroupList(resp, $btn_add_group.closest('.panel'));
+                    }
+                ).catch(
+                    function(err){
+                        Helper.Util.HandleError(err);
+                    }
+                );
+            });
+        };
+
+        pub.setUserRemoveClick = function($btn_user_remove, group_data, doc, user_id){
+            $btn_user_remove.click(function(){
+                postDbs('RemoveGroupMember', {"groupid": group_data.group.id, "userid_n": user_id}).then(
+                    function(resp){
+                        return postDbs('GetDocById', {docid:doc.id});
+                    }
+                ).then(
+                    function(resp) {
+                        refreshGroupList(resp, $btn_user_remove.closest('.panel'));
                     }
                 ).catch(
                     function(err){
@@ -307,13 +343,22 @@
             {
                 var $text = createNewDomElement('p', ['member_text'], $member_row);
                 $text.append(getIcon('fa-users'));
-                if(group_data.users.length){
+                if(group_data.users.length + group_data.invited.length != 0){
                     group_data.users.forEach(function(user){
                         var $btn_group = createNewDomElement('div', ['btn-group'], $member_row);
                         var $btn_user = createNewDomElement('a', ['btn', 'btn-sm'], $btn_group);
                         $btn_user.toggleClass(user_id === user.id ? 'btn-primary' : 'btn-default', true);
                         $btn_user.text(user.nick);
-                        doms.setDropDownBtn($btn_group, 'Remove', function(){alert('hi');});
+                        var $btn_user_remove = doms.setDropDownBtn($btn_group, 'Remove');
+                        doms.setUserRemoveClick($btn_user_remove, group_data, doc, user.id);
+                    });
+
+                    group_data.invited.forEach(function(email){
+                        var $btn_group = createNewDomElement('div', ['btn-group'], $member_row);
+                        var $btn_user = createNewDomElement('a', ['btn', 'btn-sm', 'btn-invited'], $btn_group);
+                        $btn_user.text(email);
+                        var $btn_cancel_invited = doms.setDropDownBtn($btn_group, 'Cancel invitation');
+                        doms.setCancelInvitedClick($btn_cancel_invited, group_data, doc, email);
                     });
                 }
                 else{

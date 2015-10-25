@@ -1,9 +1,9 @@
 /**
- * Created by Yuan on 10/1/2015.
+ * Created by Yuan on Sep/2015.
  */
 
 var InputTestWebApp = (function(){
-    document.write("1");
+    document.write(window.PointerEvent);
 	$ul = $("#input_test_ul");
     $canv = $("#input_test_canvas");
     /*$canv.mousedown(

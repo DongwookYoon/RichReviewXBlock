@@ -48,13 +48,6 @@
     font-size: 15px;
 }
 
-.panel .editable-click {
-    border-bottom: dashed 1px gray;
-}
-.panel .editable-click:hover {
-    border-bottom: solid 2px dodgerblue;
-}
-
 /* dropdown menu */
 .btn-group {
     margin-left: 5px;

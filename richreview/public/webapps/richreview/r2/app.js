@@ -174,6 +174,7 @@
 
                     r2.onScreenButtons.Init();
                     r2.mouse.setDomEvents();
+					r2.tabletInteraction.tabletInit();
                 }
             ).then(
                 initUserSet
@@ -394,9 +395,10 @@
             });
 
             // disable tablet bumping
-            document.addEventListener("touchmove", function (event) {
+            /*
+			document.addEventListener("touchmove", function (event) {
                 event.preventDefault();
-            });
+            });*/
             var scrollingDiv = document.getElementById('scrollDiv');
             if (scrollingDiv) {
                 scrollingDiv.addEventListener('touchmove', function (event) {

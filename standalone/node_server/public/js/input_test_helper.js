@@ -20,20 +20,28 @@ var InputTestWebApp = (function(){
             ReplaceLi("mouse", "Mv", StringifyMouseType(event.which), event.clientX, event.clientY);
         }
     );
-
+	var touchnowX = 0;
+	var touchnowY = 0;
     $canv.get(0).addEventListener('touchstart', function(event) {
         event.preventDefault();
+		touchnowX = event.changedTouches[0].clientX;
+		touchnowY = event.changedTouches[0].clientY;
         for(var i = 0; i < event.changedTouches.length; ++i){
             var touch = event.changedTouches[i];
+			
             AddLi("touch", "Dn", touch.identifier, touch.clientX, touch.clientY);
         }
     }, false);
 
     $canv.get(0).addEventListener('touchmove', function(event) {
         event.preventDefault();
+		var touch1 = event.changedTouches[0];
+		$(window).moveBy(touch1.clientX-touchnowX,touch1.clientY-touch0.touchnowY);
+		touchnowX = touch1.clientX;
+		touchnowY = touch1.clientY;
         for(var i = 0; i < Math.min(1, event.changedTouches.length); ++i){
             var touch = event.changedTouches[i];
-            ReplaceLi("touch", "Dn", touch.identifier, touch.clientX, touch.clientY);
+            ReplaceLi("touch", "Mv", event.pressure, touch.clientX, touch.clientY);
         }
     }, false);
 

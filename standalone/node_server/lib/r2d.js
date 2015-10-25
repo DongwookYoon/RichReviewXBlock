@@ -183,12 +183,16 @@ User.prototype.RemoveGroupFromUser = function(userid_n, groupid_n){
 };
 
 User.prototype.GetGroupNs = function(userid_n, cb){
-    return RedisClient.HGET("usr:"+userid_n, "groupNs").then(
-        function(groupNsStr){
-            return JSON.parse(groupNsStr);
+    redisClient.HGET("usr:"+userid_n, "groupNs", function(err, groupNsStr){
+        if(err){cb(err, null);}
+        else {
+            var groupNsObj = JSON.parse(groupNsStr);
+            cb(null, groupNsObj);
         }
-    );
+    });
 };
+
+
 
 
 /*
@@ -377,7 +381,9 @@ var Group = (function(manager, name, creationDate){
     };
 
     public.GetDocIdByGroupId = function(groupid_n, cb){
-        return RedisClient.HGET("grp:"+groupid_n, "docid");
+        redisClient.HGET("grp:"+groupid_n, "docid", function(err, docid){
+            cb(err, docid);
+        });
     };
 
     public.PopulateParticipantObjs = function(groupObj){

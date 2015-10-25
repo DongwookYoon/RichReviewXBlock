@@ -575,7 +575,7 @@
             var tri_w = 0.01;
             var tri_h_half = 0.005;
 
-            var path=new Path2D();
+            /*var path=new Path2D();
             path.moveTo(x0, y);
             path.lineTo(x0-tri_w, y-tri_h_half);
             path.lineTo(x0-tri_w, y+tri_h_half);
@@ -585,7 +585,7 @@
             path.lineTo(x1+tri_w, y-tri_h_half);
 
             canvas_ctx.fillStyle = colors[1];
-            canvas_ctx.fill(path);
+            canvas_ctx.fill(path);*/
         }
     };
     /**

@@ -397,6 +397,18 @@
                 r2App.invalidate_size = true;
             });
 
+            // disable tablet bumping
+            /*
+			document.addEventListener("touchmove", function (event) {
+                event.preventDefault();
+            });*/
+            var scrollingDiv = document.getElementById('scrollDiv');
+            if (scrollingDiv) {
+                scrollingDiv.addEventListener('touchmove', function (event) {
+                    event.stopPropagation();
+                });
+            }
+
             // prevent data loss
             window.onbeforeunload = function () {
                 r2.log.Consume(false); // delayed

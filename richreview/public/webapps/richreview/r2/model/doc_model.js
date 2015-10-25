@@ -647,6 +647,10 @@
 
             canvas_ctx.beginPath();
             canvas_ctx.fillStyle = colors[1];
+            /*var path=new Path2D();
+            path.moveTo(x0, y);
+            path.lineTo(x0-tri_w, y-tri_h_half);
+            path.lineTo(x0-tri_w, y+tri_h_half);
 
             canvas_ctx.moveTo(x0, y);
             canvas_ctx.lineTo(x0-tri_w, y-tri_h_half);
@@ -656,6 +660,8 @@
             canvas_ctx.lineTo(x1+tri_w, y-tri_h_half);
 
             canvas_ctx.fill();
+            canvas_ctx.fillStyle = colors[1];
+            canvas_ctx.fill(path);*/
         }
     };
     /**

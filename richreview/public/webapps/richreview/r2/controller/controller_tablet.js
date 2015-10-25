@@ -1,3 +1,5 @@
+/*create by Yuan and Tianwei*/
+/** @namespace r2 */
 (function(r2){
 
 
@@ -5,17 +7,33 @@
         var pub = {};
         var isTabletDisplay = false;
         var isPenSupported =false;
-		pub.curPenHandler = r2.tabletInteraction.generalTablets;
-        pub.detectTabletDisplay = function(e){
+		var in_menu = false;
+		var touchnowX = 0;
+		var touchnowY = 0;
+		pub.inMenu = function(){in_menu = true;};
+        pub.outMenu = function(){in_menu = false;};
+		//pub.curPenHandler = r2.tabletInteraction.penNonSupportedHandler;
+		pub.tabletInit = function(){
             if(isTabletDisplay==true) return;
             isTabletDisplay = true;
+			
             if(window.PointerEvent){
                 isPenSupported = true;
-                pub.curPenHandler = r2.tabletInteraction.penSupportedHandler;
+                r2.tabletInteraction.penSupportedHandler.setDomEvents();
+				pub.curPenHandler = r2.tabletInteraction.penSupportedHandler;
             }
             else {
-                pub.curPenHandler = r2.tabletInteraction.penNonSupportedHandler;
+                r2.tabletInteraction.penNonSupportedHandler.setDomEvents();
+				pub.curPenHandler = r2.tabletInteraction.penNonSupportedHandler;
             }
+			//r2.attach(pub.curPenhandler);
+        };
+        pub.detectTabletDisplay = function(){
+            if(isTabletDisplay==true) return;
+            isTabletDisplay = true;
+			
+            //pub.curPenHandler = r2.tabletInteraction.penNonSupportedHandler.adaptDomEvent();
+            
 			//r2.attach(pub.curPenhandler);
         };
 
@@ -23,45 +41,48 @@
 
         pub.penSupportedHandler = (function(){
             var pub_ps = {};
-			pub.setDomEvents = function(){
+			pub_ps.setDomEvents = function(){
 				r2.dom.setPointerEventHandlers(
-					pub.handleDn,
-					pub.handleMv,
-					pub.handleUp,
-					pub.handleEn,
-					pub.handleLv
+					pub_ps.handleDn,
+					pub_ps.handleMv,
+					pub_ps.handleUp,
+					pub_ps.handleEn,
+					pub_ps.handleLv
 				);
 			};
-			pub.getPos = function(event){
+			pub_ps.getPos = function(event){
 				return r2.viewCtrl.mapBrowserToScr(new Vec2(event.clientX, event.clientY))
 			};
 			//PointerEvent and mouse event togeter
-			pub.handleDn = function(event){
-				switch (e.pointerType) {
+			pub_ps.handleDn = function(event){
+				switch (event.pointerType) {
 					case "mouse":
 						break;
 					case "pen":
+						//alert("test");
 						//do the pen thing
 						break;
 					case "touch":
+						r2.tabletInteraction.touchStart(event);
 						//do the touch thing
+						//alert("t");
 						break;
 					default:
+						alert("strange pointerType");
 						break;
 				}
 			};
 
-			pub.handleMv = function(event){
+			pub_ps.handleMv = function(event){
 				
 			};
 
-			pub.handleUp = function(event){
-				
+			pub_ps.handleUp = function(event){
+
 			};
-			pub.handleEn = function(event){
-				
+			pub_ps.handleEn = function(event){
 			};
-			pub.handleLv = function(event){
+			pub_ps.handleLv = function(event){
 				
 			};
 			return pub_ps;
@@ -69,7 +90,16 @@
 
         pub.penNonSupportedHandler = (function(){
             var pub = {};
-
+			pub.setDomEvents = function(){
+				r2.dom.setTouchEventHandlers(
+					pub.touchStart,
+					pub.touchMove,
+					pub.touchEnd,
+					pub.touchCancel
+				);
+				
+				//r2.dom.setPenEventHandlers
+			};
             pub.hoverTimer = null;
 
             pub.stopTimer = function() {
@@ -111,23 +141,28 @@
                 //TODO
             };
 
-            pub.touchStart = function(evt){
-
-            };
-
-            pub.touchEnd = function(evt) {
-
-            };
-
-            pub.touchMove = function(evt) {
-
-            };
-
+            
             return pub;
 
         }());
 
-
+		pub.touchStart = function(evt){
+			//alert("touchStart");
+        };
+        pub.touchEnd = function(evt) {
+			
+        };
+		pub.touchCancel = function(evt) {
+        };
+        pub.touchMove = function(evt) {
+			/*
+			event.preventDefault();
+			var touch1 = event.changedTouches[0];
+			$(window).moveBy(touch1.clientX-touchnowX,touch1.clientY-touchnowY);
+			touchnowX = touch1.clientX;
+			touchnowY = touch1.clientY;
+			*/
+        };
         return pub;
 
     }());

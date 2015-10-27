@@ -12,8 +12,8 @@ import subprocess
 
 IMAGE_WIDTH = 768
 DPI_TO_PX_RATIO = 72
-FOLDER_NAME = './lined_notebook/lined_notebook.pdf'
-#FOLDER_NAME = './scanned_notebook/scanned_notebook.pdf'
+#FOLDER_NAME = './lined_notebook/lined_notebook.pdf'
+FOLDER_NAME = './scanned_notebook/scanned_notebook.pdf'
 HOUGH_THRESHOLD = 175
 HOUGH_THRESHOLD_AFTER_UNDISTORTION = 250
 HOUGH_THETA_THRESHOLD = 30
@@ -229,16 +229,17 @@ def run2():
     for n in xrange(0, pdf.getNumPages()):
         print 'PDF page:', n
         img, pts = run(pdf, n)
-        cv2.imwrite('./lined_notebook/'+str(n)+'.jpg', img)
+        cv2.imwrite('./scanned_notebook/'+str(n)+'.jpg', img)
     cv2.destroyAllWindows()
 
 def save():
     param = ['convert']
-    for n in xrange(0, 17):
-        param.append('./lined_notebook/'+str(n)+'.jpg')
-    param.append('./lined_notebook/merged.pdf')
+    for n in xrange(0, 3):
+        param.append('./scanned_notebook/'+str(n)+'.jpg')
+    param.append('./scanned_notebook/merged.pdf')
     ret = subprocess.call(param,stdout=subprocess.PIPE)
 
+run2()
 save()
 
 #cv2.findHomography

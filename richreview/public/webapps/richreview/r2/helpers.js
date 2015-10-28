@@ -1146,7 +1146,7 @@
             $menu.addClass('rm_menu');
             $menu.attr('id', rm_id);
             $menu.attr('aria-label', 'menu');
-            $menu.css('font-size', rm_size+'em');
+            $menu.css('font-size', r2Const.RAIDALMENU_FONTSIZE_SCALE*rm_size+'em');
 
             var $btn_center = $(document.createElement('a'));
             $btn_center.addClass('rm_btn_center').addClass('rm_btn');

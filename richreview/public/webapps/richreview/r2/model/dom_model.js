@@ -283,7 +283,7 @@
                     r2.radialMenu.finishInit($rm, user.color_radial_menu_unselected, user.color_radial_menu_selected);
 
                     var rm_x = getCommentTtIndentX($comment)-r2Const.RADIALMENU_OFFSET_X*rm_ratio;
-                    $rm.css('left', (rm_x)/rm_size+'em');
+                    $rm.css('left', (rm_x)/rm_size/r2Const.RAIDALMENU_FONTSIZE_SCALE+'em');
                     $comment.prepend($rm);
                 }
 
@@ -398,7 +398,7 @@
 
                     var rm_x = getPieceTtIndentX($piece)-r2Const.RADIALMENU_OFFSET_X*rm_ratio;
 
-                    $rm.css('left', (rm_x)/rm_size+'em');
+                    $rm.css('left', (rm_x)/rm_size/r2Const.RAIDALMENU_FONTSIZE_SCALE+'em');
                     //$rm.css('top', (rm_size*0.4*rm_btn_size)/rm_size+'em');
 
                     $comment.prepend($rm);

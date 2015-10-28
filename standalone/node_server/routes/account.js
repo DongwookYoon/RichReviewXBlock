@@ -2,6 +2,7 @@
  * Created by yoon on 2/1/15.
  */
 
+var js_utils = require("../lib/js_utils.js");
 var R2D = require('../lib/r2d.js');
 
 exports.get = function (req, res) {
@@ -16,13 +17,17 @@ exports.get = function (req, res) {
 
 exports.post = function(req, res){
     if(req.user){
-        R2D.User.prototype.Update(req.user.id, req.body.nick, req.body.email, function(err, result){
-            if(err){
-                res.send("error while account update");
-            }
-            else{
+        R2D.User.prototype.updateNick(req.user.id, req.body.nick, '').then(
+            function(user){
                 res.render('_pages_account', {cur_page: 'Account', user: req.user });
             }
-        });
+        ).catch(
+            function(err){
+                js_utils.PostResp(res, req, 400, err);
+            }
+        );
+    }
+    else{
+        js_utils.PostResp(res, req, 400, 'you are an unidentified user. please sign in and try again.');
     }
 };

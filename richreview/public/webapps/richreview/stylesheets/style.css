@@ -960,8 +960,9 @@ body::-webkit-scrollbar-corner {
   z-index: 9;
 }
 
-.rm_btn > i {
+.rm_btn > i.fa {
   color: white;
+  display: block;
 }
 
 .rm_btn:focus {
@@ -972,16 +973,16 @@ body::-webkit-scrollbar-corner {
 }
 
 .rm_btn_raidial {
-  width: 150em;
-  height: 150em;
+  width: 1.50em;
+  height: 1.50em;
   opacity: 0;
 
-  top: -150em;
-  left: -150em;
+  top: -1.50em;
+  left: -1.50em;
 
-  -webkit-transform: translate(-75em, -75em) scale(0);
-  -moz-transform: translate(-75em, -75em) scale(0);
-  transform: translate(-75em, -75em) scale(0);
+  -webkit-transform: translate(-0.75em, -0.75em) scale(0);
+  -moz-transform: translate(-0.75em, -0.75em) scale(0);
+  transform: translate(-0.75em, -0.75em) scale(0);
 
   -webkit-transition: all 0.2s ease-out;
   -moz-transition: all 0.2s ease-out;
@@ -995,29 +996,29 @@ body::-webkit-scrollbar-corner {
   opacity: 1;
   background: rgba(255,255,255, 0.4);
 
-  top: -150em;
-  left: -150em;
+  top: -1.50em;
+  left: -1.50em;
 
   -webkit-transition: all 0.1s ease-out;
   -moz-transition: all 0.1s ease-out;
   transition: all 0.1s ease-out;
 
 
-  -webkit-transform: translate(-75em, -75em) scale(1);
-  -moz-transform: translate(-75em, -75em) scale(1);
-  transform: translate(-75em, -75em) scale(1);
+  -webkit-transform: translate(-0.75em, -0.75em) scale(1);
+  -moz-transform: translate(-0.75em, -0.75em) scale(1);
+  transform: translate(-0.75em, -0.75em) scale(1);
 }
 
 .rm_btn_raidial a {
   text-decoration: none;
   color: white;
   display: block;
-  height: 30em;
-  width: 30em;
-  line-height: 30em;
-  margin-left: -25em;
-  margin-top: -25em;
-  padding: 10em;
+  height: 0.30em;
+  width: 0.30em;
+  line-height: 0.30em;
+  margin-left: -0.25em;
+  margin-top: -0.25em;
+  padding: 0.10em;
 
   position: absolute;
   text-align: center;
@@ -1027,20 +1028,20 @@ body::-webkit-scrollbar-corner {
 }
 
 .rm_btn_raidial > a > i {
-  font-size: 30em;
+  font-size: 0.30em;
 }
 
 .rm_btn_center {
   position: absolute;
   display: block;
 
-  height: 30em;
-  width: 30em;
-  line-height: 30em;
-  padding: 10em; /* 30+2*10 === 50px (width)*/
+  height: 0.30em;
+  width: 0.30em;
+  line-height: 0.30em;
+  padding: 0.10em; /* 30+2*10 === 50px (width)*/
 
-  top: calc(50% - 25em);
-  left: calc(50% - 25em);
+  top: calc(50% - 0.25em);
+  left: calc(50% - 0.25em);
   text-decoration: none;
   text-align: center;
   color: #000;
@@ -1051,5 +1052,5 @@ body::-webkit-scrollbar-corner {
 }
 
 .rm_btn_center > i {
-  font-size: 30em;
+  font-size: 0.30em;
 }

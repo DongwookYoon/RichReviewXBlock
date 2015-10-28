@@ -18,6 +18,7 @@ redisClient.on('error', function(err) {
 
 
 /*
+<<<<<<< HEAD
  * Ping regularly in order to maintain the connection
  */
 function PingRedisServer()
@@ -196,6 +197,8 @@ User.prototype.GetGroupNs = function(userid_n, cb){
 
 
 /*
+=======
+>>>>>>> refs/remotes/DongwookYoon/master
  *  RedisWrapper for Promise
  */
 
@@ -310,6 +313,180 @@ var RedisClient = {
             });
         });
     }
+};
+
+/*
+ * Ping regularly in order to maintain the connection
+ */
+function PingRedisServer()
+{
+    redisClient.ping(redis.print);
+    setTimeout(PingRedisServer, 3*60*1000);
+}
+PingRedisServer();
+
+
+/*
+ * User
+ */
+var user_cache = {};
+var User = function(id, nickname, email){
+    this.id = id;
+    this.nick = nickname;
+    this.email = email;
+};
+(function populateUserCache(){
+    RedisClient.KEYS("usr:*").then(
+        function(userids){
+            Promise.all(
+                userids.map(function(userid){
+                    return User.prototype.findOrCreate(userid.substring(4))
+                })
+            ).then(
+                function(users){
+                    users.forEach(function(user){user_cache[user.id] = user;})
+                }
+            ).catch(
+                function(err){
+                    console.log(err);
+                }
+            );
+        }
+    );
+})();
+User.prototype.updateNick = function(id, newnick){
+    if(user_cache.hasOwnProperty(id)){
+        return RedisClient.HMSET(
+            'usr:' + id,
+            'nick', newnick
+        ).then(
+            function(){
+                user_cache[id].nick = newnick;
+                return user_cache[id];
+            }
+        );
+    }
+    else{
+        throw 'internal server error: user not cached';
+    }
+};
+User.prototype.updateEmail = function(id, newemail){
+    if(user_cache.hasOwnProperty(id)){
+        return RedisClient.HMSET(
+            'usr:' + id,
+            'email', newemail
+        ).then(
+            function(){
+                user_cache[id].email = newemail;
+                return user_cache[id];
+            }
+        );
+    }
+    else{
+        throw 'internal server error: user not cached';
+    }
+};
+User.prototype.findById = function(id){
+    return new Promise(function(resolve, reject){
+        if(user_cache.hasOwnProperty(id)) {
+            resolve(user_cache[id]);
+        }
+        else{
+            reject('cannot find the user with the given id: '+id);
+        }
+    });
+};
+User.prototype.findOrCreate = function(id, email){
+    return new Promise(function(resolve, reject){
+        var done = function(user){
+            if(typeof email !== 'undefined' && user.email !== email){
+                return User.prototype.updateEmail(id, email).then(
+                    function(){
+                        resolve(user);
+                    }
+                )
+            }
+            else{
+                resolve(user);
+            }
+        };
+
+        if(user_cache.hasOwnProperty(id)){ // cached
+            done(user_cache[id]);
+        }
+        else{
+            var nick = '';
+            var mail = '';
+            RedisClient.HGETALL("usr:"+id).then(
+                function(result){
+                    if(result === null){
+                        nick = 'user'+id.substr(3, 1)+id.substr(6, 2); // default nick
+                        mail = 'default@email.com'; // default mail
+                        return RedisClient.HMSET(
+                            "usr:"+id,
+                            'nick', nick,
+                            'email', mail,
+                            'groupNs', '[]'
+                        );
+                    }
+                    else{
+                        nick = result.nick;
+                        mail = result.email;
+                        return null;
+                    }
+                }
+            ).then(
+                function(){
+                    var newuser = new User(
+                        id,
+                        nick,
+                        mail
+                    );
+                    user_cache[id] = (newuser);
+                    done(newuser);
+                }
+            ).catch(reject);
+        }
+    });
+};
+User.prototype.AddGroupToUser = function(userid_n, groupid_n){
+    return RedisClient.HGET("usr:"+userid_n, "groupNs").then( // get group of the user
+        function(groupNsStr){
+            var groupNsObj = JSON.parse(groupNsStr);
+            var idx = groupNsObj.indexOf(groupid_n);
+            if(idx < 0){
+                groupNsObj.push(groupid_n);
+                return RedisClient.HSET("usr:"+userid_n, "groupNs", JSON.stringify(groupNsObj));
+            }
+            else{
+                var err = new Error("You are already a member of the group");
+                err.push_msg = true;
+                throw err;
+            }
+        }
+    );
+};
+User.prototype.RemoveGroupFromUser = function(userid_n, groupid_n){
+    return RedisClient.HGET("usr:"+userid_n, "groupNs").then( // get user's group list
+        function(groupNsStr){
+            var groupNsObj = JSON.parse(groupNsStr);
+            var i = groupNsObj.indexOf(groupid_n);
+            if(i < 0){
+                var err = new Error("RemoveGroupMemeber failed: No such user found in the group");
+                err.push_msg = true;
+                throw err;
+            }
+            groupNsObj.splice(i, 1);
+            return RedisClient.HSET("usr:"+userid_n, "groupNs", JSON.stringify(groupNsObj)); // save to user's group list
+        }
+    );
+};
+User.prototype.GetGroupNs = function(userid_n, cb){
+    return RedisClient.HGET("usr:"+userid_n, "groupNs").then(
+        function(groupNsStr){
+            return JSON.parse(groupNsStr);
+        }
+    );
 };
 
 /*
@@ -615,6 +792,10 @@ var Doc = (function(){
         );
     };
 
+    public.GetDocIdsByUser = function(userid_n){
+        return RedisClient.KEYS('doc:'+userid_n+'_*');
+    };
+
     public.GetDocByUser_Promise = function(userid_n){
         return RedisClient.KEYS('doc:'+userid_n+'_*').then(
             function(docids){
@@ -626,6 +807,7 @@ var Doc = (function(){
             }
         );
     };
+
     public.AddNewGroup = function(userid_n, docid){
         var groupsObj;
         var groupid;

@@ -11,19 +11,22 @@
     var refreshDocList = function(){
         cleanDocDom();
         loadingIcon.appendTo($doc_container);
-        postDbs('GetDocsOwned').then(
-            function(resp){
+
+        Promise.all([
+            postDbs('GetDocsOwned'),
+            postDbs('GetDocsParticipated')]
+        ).then(
+            function(docids_list){
+                var docids = merge(docids_list[0], docids_list[1]);
+                var promises = docids.map(function(docid){return postDbs('GetDocById', {docid:docid});});
+                return Promise.all(promises);
+            }
+        ).then(
+            function(docs){
+                docs = sortDocs(docs);
+
                 loadingIcon.removeFrom($doc_container);
-
-                resp.sort(function(a, b){
-                    if (a.creationTime > b.creationTime)
-                        return -1;
-                    if (a.creationTime < b.creationTime)
-                        return 1;
-                    return 0;
-                });
-
-                var promises = resp.map(function(doc){return setDocDom(doc);});
+                var promises = docs.map(function(doc){return setDocDom(doc);});
                 return Promise.all(promises);
             }
         ).catch(
@@ -31,6 +34,35 @@
                 Helper.Util.HandleError(err);
             }
         );
+    };
+
+    var merge = function(a, b){
+        var rtn = [];
+        var is_in = function(docid){
+            for(var i = 0, l = rtn.length; i < l; ++i){
+                if(rtn[i] === docid){
+                    return true;
+                }
+            }
+            return false;
+        };
+        a.concat(b).forEach(function(doc){
+            if(!is_in(doc)){
+                rtn.push(doc);
+            }
+        });
+        return rtn;
+    };
+
+    var sortDocs = function(l){
+        l.sort(function(a, b){
+            if (a.creationTime > b.creationTime)
+                return -1;
+            if (a.creationTime < b.creationTime)
+                return 1;
+            return 0;
+        });
+        return l;
     };
 
     var loadingIcon = (function(){
@@ -88,7 +120,7 @@
             });
         };
 
-        pub.setGroupTitle = function($group_title, group_id){
+        pub.setGroupTitle = function($group_title, group_id, doc){
             $group_title.attr('id', 'grouptitle_'+group_id.substring(4));
             $group_title.attr('data-type', 'text');
             $group_title.attr('data-pk', '1');
@@ -98,10 +130,51 @@
                 tpl: "<input type='text' style='font-family: inherit;font-weight: 400;line-height: 1.1;font-size:16px;width:400px;'>",
                 placement: 'bottom'
             });
+
+            $group_title.attr('title', group_id + '\n' + doc.id + '\npdf:' + doc.pdfid);
         };
 
-        pub.setGroupBtns = function($btn_open, $btn_share, $btn_delete){
+        pub.setGroupOpenClick = function($btn_open, group_data, doc){
+            $btn_open.click(function(){
+                window.open(host + "viewer?access_code=" + doc.pdfid + "&docid=" + doc.id.substring(4) + "&groupid=" + group_data.group.id.substring(4));
+            });
+        };
 
+        pub.setGroupDeleteClick = function($btn_delete, group_data, doc){
+            $btn_delete.click(function(){
+                postDbs('DeleteGroup', {groupid_n: group_data.group.id.substring(4), docid_n:doc.id.substring(4)}).then(
+                    function(){
+
+                        return postDbs('GetDocById', {docid:doc.id});;
+                    }
+                ).then(
+                    function(doc){
+                        refreshGroupList(doc, $btn_delete.closest('.panel'));
+                    }
+                ).catch(
+                    function(err){
+                        Helper.Util.HandleError(err);
+                    }
+                );
+            });
+        };
+
+        pub.setAddGroupClick = function($btn_add_group, doc){
+            $btn_add_group.click(function(){
+                postDbs('MyDoc_AddNewGroup', {docid: doc.id}).then(
+                    function(resp){
+                        return postDbs('GetDocById', {docid:doc.id});
+                    }
+                ).then(
+                    function(resp) {
+                        refreshGroupList(resp, $btn_add_group.closest('.panel'));
+                    }
+                ).catch(
+                    function(err){
+                        Helper.Util.HandleError(err);
+                    }
+                );
+            });
         };
 
         pub.setDropDownBtn = function($btn_group, dropdn_msg, cb){
@@ -118,6 +191,7 @@
             var $btn_confirm = createNewDomElement('a', ['btn', 'btn-default','btn-sm'], $li);
             $btn_confirm.text(dropdn_msg);
             $btn_confirm.click(cb);
+            return $btn_confirm;
         };
 
         return pub;
@@ -144,6 +218,7 @@
                 var $btn_add_group = createNewDomElement('a', ['btn', 'btn-primary', 'btn-sm'], $doc_ui);
                 {
                     $btn_add_group.append(getIcon('fa-plus-square'));
+                    doms.setAddGroupClick($btn_add_group, doc);
                 }
 
                 var $btn_group = createNewDomElement('div', ['btn-group'], $doc_ui);
@@ -154,6 +229,12 @@
                 doms.setDropDownBtn($btn_group, 'Delete this document', function(){alert('hi');});
             }
         }
+
+        return refreshGroupList(doc, $panel);
+    };
+
+    var refreshGroupList = function(doc, $panel){
+        $panel.find('.panel-body').remove();
 
         var $panel_body = createNewDomElement('div', ['panel-body'], $panel);
         loadingIcon.appendTo($panel_body);
@@ -166,35 +247,36 @@
             function(resp){
                 loadingIcon.removeFrom($panel_body);
                 resp.forEach(function(group_data){
-                    setGroupDom(group_data, $panel_body);
+                    setGroupDom(group_data, doc, $panel_body);
                 });
             }
         );
     };
 
-    var setGroupDom = function(group_data, $panel_body){
+    var setGroupDom = function(group_data, doc, $panel_body){
         var $group_row = createNewDomElement('div', ['group_row'], $panel_body);
         {
 
             var $title = createNewDomElement('a', ['group_title'], $group_row);
             $title.text(group_data.group.name);
-            doms.setGroupTitle($title, group_data.group.id);
+            doms.setGroupTitle($title, group_data.group.id, doc);
 
             var $group_ui = createNewDomElement('div', ['group_ui'], $group_row);
             {
                 var $btn_open = createNewDomElement('btn', ['btn', 'btn-primary', 'btn-sm'], $group_ui);
                 $btn_open.text('Open');
+                doms.setGroupOpenClick($btn_open, group_data, doc);
 
                 var $btn_share = createNewDomElement('btn', ['btn', 'btn-info', 'btn-sm'], $group_ui);
                 $btn_share.text('Share');
 
                 var $btn_group = createNewDomElement('div', ['btn-group'], $group_ui);
-                var $btn_delete_all = createNewDomElement('a', ['btn', 'btn-danger', 'btn-sm'], $btn_group);
+                var $btn_delete = createNewDomElement('a', ['btn', 'btn-danger', 'btn-sm'], $btn_group);
                 {
-                    $btn_delete_all.append(getIcon('fa-trash'));
+                    $btn_delete.append(getIcon('fa-trash'));
                 }
-                doms.setDropDownBtn($btn_group, 'Delete this group', function(){alert('hi');});
-
+                var $btn_delete_confirm = doms.setDropDownBtn($btn_group, 'Delete this group');
+                doms.setGroupDeleteClick($btn_delete_confirm, group_data, doc);
             }
 
             var $member_row = createNewDomElement('div', ['member_row'], $group_row);
@@ -204,7 +286,8 @@
                 if(group_data.users.length){
                     group_data.users.forEach(function(user){
                         var $btn_group = createNewDomElement('div', ['btn-group'], $member_row);
-                        var $btn_user = createNewDomElement('a', ['btn', 'btn-default', 'btn-sm'], $btn_group);
+                        var $btn_user = createNewDomElement('a', ['btn', 'btn-sm'], $btn_group);
+                        $btn_user.toggleClass(user_id === user.id ? 'btn-primary' : 'btn-default', true);
                         $btn_user.text(user.nick);
                         doms.setDropDownBtn($btn_group, 'Remove', function(){alert('hi');});
 

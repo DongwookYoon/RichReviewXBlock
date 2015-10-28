@@ -92,9 +92,12 @@ passport.use(
         },
         function (accessToken, refreshToken, profile, done){
             console.log('passport.use');
-            R2D.User.prototype.findOrCreate(profile.id, function (err, user) {
-                return done(err, user);
-            });
+            var email = profile.emails.length !== 0 ? profile.emails[0].value : '';
+            R2D.User.prototype.findOrCreate(profile.id, email).then(
+                function(user){
+                    done(null, user);
+                }
+            ).catch(done);
         }
     )
 );
@@ -140,7 +143,7 @@ app.post('/resources',  resources.post);
 app.get(
     '/login',
     passport.authenticate(
-        'google', {scope:['https://www.googleapis.com/auth/plus.profile.emails.read']}
+        'google', {scope:['email']}
     )
 );
 app.get(

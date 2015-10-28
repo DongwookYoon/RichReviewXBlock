@@ -136,7 +136,7 @@ app.get('/input_test',  _pages.input_test);
 app.get('/admin',       _pages.admin);
 app.get('/downloader',  _downloader.dn);
 app.get('/support',     support.get);
-app.get('/mydocs',      mydocs.get);
+app.get('/mydocs',      doc.get);
 app.get('/mygroups',    mygroups.get);
 app.get('/upload',      upload.page);
 app.get('/viewer',      viewer.page);

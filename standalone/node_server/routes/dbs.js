@@ -118,7 +118,7 @@ var GetDocById = function(req, res){
 };
 
 
-var MyDoc_AddNewGroup = function(req, res){
+var AddNewGroup = function(req, res){
     if(js_utils.identifyUser(req, res)){
         R2D.Doc.GetDocById_Promise(req.body.docid).then(
             function(doc){
@@ -141,7 +141,7 @@ var MyDoc_AddNewGroup = function(req, res){
     }
 };
 
-var MyDoc_RenameDoc = function(req, res){
+var RenameDoc = function(req, res){
     if(typeof req.body.name == "undefined" || typeof req.body.value == "undefined"){
         js_utils.PostResp(res, req, 500);
     }
@@ -155,7 +155,7 @@ var MyDoc_RenameDoc = function(req, res){
     }
 };
 
-var MyDoc_RenameGroup = function(req, res){
+var RenameGroup = function(req, res){
     if(typeof req.body.name == "undefined" || typeof req.body.value == "undefined"){
         js_utils.PostResp(res, req, 500);
     }
@@ -291,28 +291,6 @@ var CancelInvited = function(req, res){
     }
 };
 
-var AddMyselfToGroup = function(req, res){
-    if( typeof req.user == "undefined" ||
-        typeof req.body.groupcode == "undefined"){
-        js_utils.PostResp(res, req, 500);
-    }
-    else{
-        R2D.Group.AddUserToParticipating(req.body.groupcode, req.user.id).then(
-            function(){
-                return R2D.User.prototype.AddGroupToUser(req.user.id, req.body.groupcode);
-            }
-        ).then(
-            function(){
-                js_utils.PostResp(res, req, 200);
-            }
-        ).catch(
-            function(err){
-                js_utils.PostResp(res, req, 500, err);
-            }
-        );
-    }
-};
-
 var RemoveGroupMember = function(req, res){
     if(js_utils.identifyUser(req, res)){
         var groupid_n = typeof req.body.groupid === 'string' ? req.body.groupid.substring(4) : '';
@@ -406,52 +384,6 @@ var GetDocGroups = function(req, res){
     });
 };
 
-var AddNewDoc = function(req, res){
-    if(js_utils.identifyUser(req, res)){
-        if(req.body.pdf_id){
-            var ctx = {
-                container: req.body.pdf_id,
-                blob: "doc.pdf"
-            };
-
-            azure.DoesBlobExist(ctx).then(
-                function(ctx){
-                    if(ctx.is_blob_exist){
-                        return ctx;
-                    }
-                    else{
-                        var err = new Error("Invalid Pdf Code");
-                        err.push_msg = true;
-                        throw err;
-                    }
-                }
-            ).then(
-                function(){
-                    return R2D.Doc.CreateNew(
-                        req.user.id,
-                        (new Date()).getTime(),
-                        req.body.pdf_id
-                    )
-                }
-            ).then(
-                function(){
-                    js_utils.PostResp(res, req, 200);
-                }
-            ).catch(
-                function(err){
-                    js_utils.PostResp(res, req, 500, err);
-                }
-            );
-        }
-        else{
-            var err = new Error("Invalid Pdf Code");
-            err.push_msg = true;
-            js_utils.PostResp(res, req, 500, err);
-        }
-    }
-};
-
-
 var WebAppLog = function(req, res){
     R2D.Log(req.body.group_n, req.body.log, function(err){
         if(err){
@@ -480,14 +412,14 @@ exports.post = function(req, res){
         case "GetDocsParticipated":
             GetDocsParticipated(req, res);
             break;
-        case "MyDoc_AddNewGroup":
-            MyDoc_AddNewGroup(req, res);
+        case "AddNewGroup":
+            AddNewGroup(req, res);
             break;
         case "RenameDoc":
-            MyDoc_RenameDoc(req, res);
+            RenameDoc(req, res);
             break;
         case "RenameGroup":
-            MyDoc_RenameGroup(req, res);
+            RenameGroup(req, res);
             break;
         case "DeleteGroup":
             DeleteGroup(req, res);
@@ -501,9 +433,6 @@ exports.post = function(req, res){
         case 'CancelInvited':
             CancelInvited(req, res);
             break;
-        case "AddMyselfToGroup":
-            AddMyselfToGroup(req, res);
-            break;
         case "RemoveGroupMember":
             RemoveGroupMember(req, res);
             break;
@@ -515,9 +444,6 @@ exports.post = function(req, res){
             break;
         case "GetDocGroups":
             GetDocGroups(req, res);
-            break;
-        case "AddNewDoc":
-            AddNewDoc(req, res);
             break;
         case "WebAppLog":
             WebAppLog(req, res);

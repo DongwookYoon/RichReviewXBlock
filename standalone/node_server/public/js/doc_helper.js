@@ -216,7 +216,7 @@
 
         pub.setAddGroupClick = function($btn_add_group, doc){
             $btn_add_group.click(function(){
-                postDbs('MyDoc_AddNewGroup', {docid: doc.id}).then(
+                postDbs('AddNewGroup', {docid: doc.id}).then(
                     function(resp){
                         return postDbs('GetDocById', {docid:doc.id});
                     }

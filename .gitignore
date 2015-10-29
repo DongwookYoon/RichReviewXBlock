@@ -42,3 +42,6 @@ mupla/mupla/mupla.o
 standalone/node_server/ssl/
 standalone/node_server/cache/
 standalone/node_server/_temp/
+
+#data files
+standalone/django_server/lined_notebook/data/

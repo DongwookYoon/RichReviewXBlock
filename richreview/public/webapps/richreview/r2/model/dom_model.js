@@ -415,6 +415,9 @@
             var $comment = $(document.createElement('div'));
             $comment.toggleClass('tc_piecegroup', true);
             $comment.toggleClass(cls, true);
+            $comment.mousedown(function(event){
+                event.preventDefault(); // prevent focus
+            });
             pub.focusCtrl.setFocusable($comment);
 
             $target.append($comment);

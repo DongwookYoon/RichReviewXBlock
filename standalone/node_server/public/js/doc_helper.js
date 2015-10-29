@@ -137,16 +137,29 @@
             });
         };
 
+        pub.setDocDeleteClick = function($btn_delete, doc){
+            $btn_delete.click(function(){
+                postDbs('DeleteDocument', {docid_n:doc.id.substring(4)}).then(
+                    function(){
+                        return deleteDoc(doc, $btn_delete.closest('.panel'));
+                    }
+                ).catch(
+                    function(err){
+                        Helper.Util.HandleError(err);
+                    }
+                );
+            });
+        };
+
         pub.setGroupDeleteClick = function($btn_delete, group_data, doc){
             $btn_delete.click(function(){
                 postDbs('DeleteGroup', {groupid_n: group_data.group.id.substring(4), docid_n:doc.id.substring(4)}).then(
                     function(){
-
-                        return postDbs('GetDocById', {docid:doc.id});;
+                        return postDbs('GetDocById', {docid:doc.id});
                     }
                 ).then(
                     function(doc){
-                        refreshGroupList(doc, $btn_delete.closest('.panel'));
+                        return refreshGroupList(doc, $btn_delete.closest('.panel'));
                     }
                 ).catch(
                     function(err){
@@ -286,7 +299,8 @@
                 {
                     $btn_delete_all.append(getIcon('fa-trash'));
                 }
-                doms.setDropDownBtn($btn_group, 'Delete this document', function(){alert('hi');});
+                var $btn_delete_doc_confirm = doms.setDropDownBtn($btn_group, 'Delete this document');
+                doms.setDocDeleteClick($btn_delete_doc_confirm, doc);
             }
         }
 
@@ -313,9 +327,16 @@
         );
     };
 
+    var deleteDoc = function(doc, $panel){
+        $panel.remove();
+    };
+
     var setGroupDom = function(group_data, doc, $panel_body){
         var $group_row = createNewDomElement('div', ['group_row'], $panel_body);
         {
+            var $btn_open = createNewDomElement('btn', ['btn', 'btn-default', 'btn-sm', 'btn-open'], $group_row);
+            $btn_open.text('Open');
+            doms.setGroupOpenClick($btn_open, group_data, doc);
 
             var $title = createNewDomElement('a', ['group_title'], $group_row);
             $title.text(group_data.group.name);
@@ -323,13 +344,6 @@
 
             var $group_ui = createNewDomElement('div', ['group_ui'], $group_row);
             {
-                var $btn_open = createNewDomElement('btn', ['btn', 'btn-primary', 'btn-sm'], $group_ui);
-                $btn_open.text('Open');
-                doms.setGroupOpenClick($btn_open, group_data, doc);
-
-                var $btn_share = createNewDomElement('btn', ['btn', 'btn-info', 'btn-sm'], $group_ui);
-                $btn_share.text('Share');
-
                 var $btn_group = createNewDomElement('div', ['btn-group'], $group_ui);
                 var $btn_delete = createNewDomElement('a', ['btn', 'btn-danger', 'btn-sm'], $btn_group);
                 {
@@ -347,7 +361,7 @@
                     group_data.users.forEach(function(user){
                         var $btn_group = createNewDomElement('div', ['btn-group'], $member_row);
                         var $btn_user = createNewDomElement('a', ['btn', 'btn-sm'], $btn_group);
-                        $btn_user.toggleClass(user_id === user.id ? 'btn-primary' : 'btn-default', true);
+                        $btn_user.toggleClass(user_id === user.id ? 'btn-info' : 'btn-default', true);
                         $btn_user.text(user.nick);
                         var $btn_user_remove = doms.setDropDownBtn($btn_group, 'Remove');
                         doms.setUserRemoveClick($btn_user_remove, group_data, doc, user.id);
@@ -369,9 +383,6 @@
                 {
                     var $input_group = createNewDomElement('span', ['input-group'], $form_group);
                     {
-                        //var $label = createNewDomElement('span', ['input-group-addon'], $input_group);
-                        //$label.text('invite');
-
                         var $input = createNewDomElement('input', ['form-control', 'input-sm'], $input_group);
                         $input.attr('placeholder', 'invite');
 

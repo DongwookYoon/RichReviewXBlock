@@ -193,36 +193,41 @@ var DeleteGroup = function(req, res){
 };
 
 var DeleteDocument = function(req, res){
-    if( typeof req.user == "undefined" ||
-        typeof req.body.docid_n == "undefined"){
-
-        js_utils.PostResp(res, req, 500);
-    }
-    else{
-        var job = function(group_id){
-            return R2D.Group.DeleteGroup(group_id.substring(4), req.body.docid_n);
-        };
-
-        R2D.Doc.GetDocGroups(req.body.docid_n).then(
-            function(groups){
-                return js_utils.PromiseLoop(job, groups.map(function(group){return [group];}));
-            }
-        ).then(
-            function(){
-                return R2D.Doc.DeleteDocFromRedis(req.body.docid_n);
-            }
-        ).then(
-            function(){
-                js_utils.PostResp(res, req, 200);
+    if(js_utils.identifyUser(req, res)){
+        R2D.Doc.GetDocById_Promise('doc:'+req.body.docid_n).then(
+            function(doc){
+                if(doc.userid_n === req.user.id){
+                    return R2D.Doc.GetDocGroups(req.body.docid_n).then(
+                        function(groups){
+                            return groups.map(function(group){
+                                return R2D.Group.DeleteGroup(group.substring(4), req.body.docid_n);
+                            });
+                        }
+                    ).then(
+                        function(group_delete_promises){
+                            return Promise.all(group_delete_promises);
+                        }
+                    ).then(
+                        function(){
+                            return R2D.Doc.DeleteDocFromRedis(req.body.docid_n);
+                        }
+                    ).then(
+                        function(){
+                            js_utils.PostResp(res, req, 200);
+                        }
+                    );
+                }
+                else{
+                    js_utils.PostResp(res, req, 400, 'you are not authorized to delete this document.');
+                }
             }
         ).catch(
             function(err){
-                js_utils.PostResp(res, req, 500, err);
+                js_utils.PostResp(res, req, 400, err);
             }
-        );
+        )
     }
 };
-
 
 var InviteUser = function(req, res){
     if(js_utils.identifyUser(req, res)){

@@ -4,6 +4,9 @@
 
 .panel {
     margin-bottom: 15px;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .r2Doc-loading {
@@ -46,6 +49,11 @@
 
 .btn > .fa {
     font-size: 15px;
+}
+
+.btn-open {
+    margin-left: 0;
+    margin-right: 10px;
 }
 
 .panel .editable-click {
@@ -103,6 +111,7 @@
 
 .member_row {
     margin-top: 10px;
+    margin-left: 53px;
 }
 
 .member_row > .member_text {

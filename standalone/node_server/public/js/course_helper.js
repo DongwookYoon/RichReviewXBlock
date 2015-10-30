@@ -139,32 +139,23 @@
 
                 return pub_sbs;
             }());
+
             pub_si.enrollment = (function(){
                 var pub_sie = {};
 
                 pub_sie.init = function(){
                     $('#enrollment_items').find('tr').remove();
+                    $('#enrollment_add_student_input').find('.form-group').remove();
                     return postCourse('getEnrollment', {course_id: course_id}).then(
                         function(enrollment){
                             enrollment.sort();
-                            enrollment.forEach(pub_sie.addDom);
-                            var $form_group = createNewDomElement('div', ['form-group', 'add_student_input'], $('#enrollment_add_student_input'));
-                            {
-                                var $input_group = createNewDomElement('span', ['input-group'], $form_group);
-                                {
-                                    var $input = createNewDomElement('input', ['form-control', 'input-sm'], $input_group);
-                                    $input.attr('placeholder', 'student email(s), comma-separated');
-
-                                    var $button = createNewDomElement('button', ['btn', 'btn-primary', 'btn-sm'], $input_group);
-                                    $button.append(getIcon('fa-plus'));
-                                    $button.append(getIcon('fa-user').css('padding-left', '5px'));
-                                }
-                            }
+                            enrollment.forEach(addDom);
+                            addStudentInputGroup();
                         }
                     );
                 };
 
-                pub_sie.addDom = (function(email){
+                var addDom = function(email){
                     var $tr = $(document.createElement('tr'));
                     {
                         var $email = $(document.createElement('td'));
@@ -179,27 +170,61 @@
                         {
                             var $btn_group = createNewDomElement('div', ['btn-group'], $manage);
                             var $btn_delete = createNewDomElement('a', ['btn', 'btn-danger','btn-sm'], $btn_group);
-                            $btn_delete.append(getIcon('fa-remove'));
-                            setDropDownBtn($btn_group, 'Remove this student',function(){
-                                alert(email);
+                            $btn_delete.append(getIcon('fa-user-times'));
+                            setDropDownBtn($btn_group, 'Remove '+email, function(){
+                                removeStudent(email).then(
+                                    function(){
+                                        pub_sie.init();
+                                        return null;
+                                    }
+                                ).catch(
+                                    function(err){
+                                        Helper.Util.HandleError(err);
+                                    }
+                                );
                             });
                         }
                         $tr.append($manage);
                     }
                     $('#enrollment_items').append($tr);
-                });
+                };
 
-                pub_sie.removeDom = (function(email){
+                var removeDom = function(email){
+                    $('#enrollment_items').find('enrollment_'+email).remove();
+                };
 
-                });
+                var addStudentInputGroup = function(){
+                    var $form_group = createNewDomElement('div', ['form-group', 'add_student_input'], $('#enrollment_add_student_input'));
+                    {
+                        var $input_group = createNewDomElement('span', ['input-group'], $form_group);
+                        {
+                            var $input = createNewDomElement('input', ['form-control', 'input-sm'], $input_group);
+                            $input.attr('placeholder', 'student email(s), comma-separated');
 
-                pub_sie.addStudent = (function(email){
-                    return postCourse('addEnrollment', {course_id: course_id, email: email});
-                });
+                            var $button = createNewDomElement('button', ['btn', 'btn-primary', 'btn-sm'], $input_group);
+                            $button.append(getIcon('fa-user-plus'));
+                            $button.click(function(){
+                                addStudents($input[0].value).then(
+                                    function(emails){
+                                        pub_sie.init();
+                                    }
+                                ).catch(
+                                    function(err){
+                                        Helper.Util.HandleError(err);
+                                    }
+                                );
+                            });
+                        }
+                    }
+                };
 
-                pub_sie.removeStudent = (function(email){
+                var addStudents = function(emails){
+                    return postCourse('addEnrollment', {course_id: course_id, emails: emails});
+                };
+
+                var removeStudent = function(email){
                     return postCourse('removeEnrollment', {course_id: course_id, email: email});
-                });
+                };
 
                 return pub_sie;
             }());

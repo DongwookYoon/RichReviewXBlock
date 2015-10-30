@@ -826,7 +826,7 @@ var Log = function(group_n, logStr, cb){
                 groups.forEach(function(group){
                     group.users.invited.forEach(function(email){
                         if(!inv_hash.hasOwnProperty('inv:'+email) || inv_hash['inv:'+email].indexOf(group.id) === -1){
-                            console.log('# dangled invitation: ' + email + ' in ' + group.id);
+                            console.log('# dangled invitation in group invited list: ' + email + ' in ' + group.id);
                         }
                     });
                 });
@@ -835,8 +835,8 @@ var Log = function(group_n, logStr, cb){
                     function(email){
                         var groups = inv_hash[email];
                         groups.forEach(function(group){
-                            if(!group_hash.hasOwnProperty(group) || group_hash[group].users.invited.indexOf(email.substring(4))){
-                                console.log('# dangled invitation: ' + group + ' in ' + email);
+                            if(!group_hash.hasOwnProperty(group) || group_hash[group].users.invited.indexOf(email.substring(4)) === -1){
+                                console.log('# dangled invitation in inv:<email>: ' + group + ' in ' + email);
                             }
                         });
                     }

@@ -53,7 +53,10 @@ stu:math2220_fall2015_<email> = {
 
 */
 
-var catchErr = function(foo){
+
+var cmsUtil = {};
+
+cmsUtil.catchErr = function(foo){
     foo.catch(
         function(err){
             js_utils.PostResp(res, req, 400, err);
@@ -61,9 +64,7 @@ var catchErr = function(foo){
     )
 };
 
-var cms = {};
-
-cms.isInstructor = function(course_id, email){
+cmsUtil.isInstructor = function(course_id, email){
     return RedisClient.HGET('crs:'+course_id, 'instructors').then(
         function(instructors){
             return JSON.parse(instructors).indexOf(email) !== -1;
@@ -71,7 +72,7 @@ cms.isInstructor = function(course_id, email){
     )
 };
 
-cms.isStudent = function(course_id, email){
+cmsUtil.isStudent = function(course_id, email){
     return RedisClient.HGET('crs:'+course_id, 'students').then(
         function(students){
             return JSON.parse(students).indexOf(email) !== -1;
@@ -79,23 +80,42 @@ cms.isStudent = function(course_id, email){
     )
 };
 
-cms.getSaltedSha1 = function(email){
+cmsUtil.getSaltedSha1 = function(email){
     var shasum = crypto.createHash('sha1');
     shasum.update(email+env.sha1_salt.netid);
     return shasum.digest('hex').toLowerCase();
 };
 
-cms.getCourse = function(req, res){
-    return RedisClient.HGET('crs:'+course_id, 'assignment').then(
-        function(students){
-            return JSON.parse(students).indexOf(email) !== -1;
-        }
-    )
+cmsUtil.assertInstructor = function(req, res, func){
+    if(js_utils.identifyUser(req, res)){
+        var course_id = 'math2220_fall2015';
+        R2D.User.prototype.findById(req.user.id).then(
+            function(user) {
+                return cmsUtil.isInstructor(course_id, user.email);
+            }
+        ).then(
+            function(is_instructor){
+                if(is_instructor){
+                    return func();
+                }
+                else{
+                    js_utils.PostResp(res, req, 400, 'you are not an instructor of this course.');
+                }
+            }
+        ).catch(
+            function(err){
+                js_utils.PostResp(res, req, 400, err);
+            }
+        );
+    }
 };
 
-cms.getAnnouncements = function(req, res){
+
+var postCms = {};
+
+postCms.getAnnouncements = function(req, res){
     if(js_utils.identifyUser(req, res)){
-        catchErr(
+        cmsUtil.catchErr(
             RedisClient.HGET('crs:'+req.body.course_id, 'announcements').then(
                 function(announcements){
                     js_utils.PostResp(res, req, 200, JSON.parse(announcements));
@@ -106,9 +126,9 @@ cms.getAnnouncements = function(req, res){
     }
 };
 
-cms.getSurveys = function(req, res){
+postCms.getSurveys = function(req, res){
     if(js_utils.identifyUser(req, res)){
-        catchErr(
+        cmsUtil.catchErr(
             RedisClient.HGET('crs:'+req.body.course_id, 'surveys').then(
                 function(surveys){
                     js_utils.PostResp(res, req, 200, JSON.parse(surveys));
@@ -119,34 +139,9 @@ cms.getSurveys = function(req, res){
     }
 };
 
-cms.getSubmissions = function(req, res){
+postCms.getSubmissions = function(req, res){
     if(js_utils.identifyUser(req, res)){
-        catchErr(
-            RedisClient.HGET('crs:'+req.body.course_id, 'submissions').then(
-                function(submissions){
-                    js_utils.PostResp(res, req, 200, JSON.parse(submissions));
-                    return null;
-                }
-            )
-        );
-    }
-};
-cms.getEnrollment = function(req, res){
-    if(js_utils.identifyUser(req, res)){
-        catchErr(
-            RedisClient.HGET('crs:'+req.body.course_id, 'students').then(
-                function(students){
-                    js_utils.PostResp(res, req, 200, JSON.parse(students));
-                    return null;
-                }
-            )
-        );
-    }
-};
-
-cms.getSubmissionStudent = function(req, res){
-    if(js_utils.identifyUser(req, res)){
-        catchErr(
+        cmsUtil.catchErr(
             RedisClient.HGET('crs:'+req.body.course_id, 'submissions').then(
                 function(submissions){
                     js_utils.PostResp(res, req, 200, JSON.parse(submissions));
@@ -157,35 +152,172 @@ cms.getSubmissionStudent = function(req, res){
     }
 };
 
-cms.submission = {};
+postCms.getEnrollment = function(req, res){
+    cmsUtil.assertInstructor(req, res, function(){
+        return RedisClient.HGET('crs:' + req.body.course_id, 'students').then(
+            function (students) {
+                js_utils.PostResp(res, req, 200, JSON.parse(students));
+                return null;
+            }
+        )
+    });
+};
 
-cms.submission.setStatus = function(req, res){
+postCms.removeEnrollment = function(req, res){
+    cmsUtil.assertInstructor(req, res, function(){
+        return RedisClient.HGET('crs:'+req.body.course_id, 'students').then(
+            function(students){
+                var obj = JSON.parse(students);
+                var i = obj.indexOf(req.body.email);
+                if(i === -1){throw req.body.email + ' is not in the enrollment list.'}
+                obj.splice(i, 1);
+                return obj;
+            }
+        ).then(
+            function(obj){
+                return RedisClient.HSET('crs:'+req.body.course_id, 'students', JSON.stringify(obj));
+            }
+        ).then(
+            function(){
+                js_utils.PostResp(res, req, 200);
+                return null;
+            }
+        );
+    });
+};
+
+postCms.addEnrollment = function(req, res){
+    var addIndividualStudent = function(email){
+        return RedisClient.HGET('crs:'+req.body.course_id, 'students').then(
+            function(students){
+                var obj = JSON.parse(students);
+                obj.push(email);
+                return obj;
+            }
+        ).then(
+            function(obj){
+                return RedisClient.HSET('crs:'+req.body.course_id, 'students', JSON.stringify(obj));
+            }
+        ).then(
+            function(){
+                return email;
+            }
+        )
+    };
+
+    var parseEmails = function(emails){
+        emails = emails.split(/[\s,]+/).map(function(x){return x.trim();});
+        var emails2 = [];
+        emails.forEach(function(email){
+            if(email !== ''){
+                emails2.push(email);
+            }
+        });
+        emails2.forEach(function(email){
+            if(!js_utils.validateEmail(email)){
+                throw email + ' is not a valid email address.';
+            }
+        });
+        if(emails2.length === 0){
+            throw 'please input student email(s).'
+        }
+        return emails2;
+    };
+
+    cmsUtil.assertInstructor(req, res, function(){
+        var emails = parseEmails(req.body.emails);
+
+        return RedisClient.HGET('crs:'+req.body.course_id, 'students').then(
+            function(students){
+                var existing_pupils = JSON.parse(students);
+                existing_pupils.forEach(function(existing_pupil){
+                    emails.forEach(function(email){
+                        if(existing_pupil === email){
+                            throw email + ' is already in the list.';
+                        }
+                    })
+                });
+                return js_utils.serialPromiseFuncs(
+                    emails.map(
+                        function(email){
+                            return function(){
+                                return addIndividualStudent(email);
+                            }
+                        }
+                    )
+                )
+            }
+        ).then(
+            function(email_final){
+                js_utils.PostResp(res, req, 200, email_final);
+            }
+        );
+
+        /*
+        return RedisClient.HGET('crs:'+req.body.course_id, 'students').then(
+            function(students){
+                var obj = JSON.parse(students);
+                var i = obj.indexOf(req.body.email);
+                if(i === -1){throw req.body.email + ' is not in the enrollment list.'}
+                obj.splice(i, 1);
+                return obj;
+            }
+        ).then(
+            function(obj){
+                return RedisClient.HSET('crs:'+req.body.course_id, 'students', JSON.stringify(obj));
+            }
+        ).then(
+            function(){
+                js_utils.PostResp(res, req, 200);
+                return null;
+            }
+        );
+        */
+    });
+};
+
+postCms.getSubmissionStudent = function(req, res){
+    if(js_utils.identifyUser(req, res)){
+        cmsUtil.catchErr(
+            RedisClient.HGET('crs:'+req.body.course_id, 'submissions').then(
+                function(submissions){
+                    js_utils.PostResp(res, req, 200, JSON.parse(submissions));
+                    return null;
+                }
+            )
+        );
+    }
+};
+
+postCms.submission = {};
+
+postCms.submission.setStatus = function(req, res){
 
 };
 
-cms.submission.setDue = function(req, res){
+postCms.submission.setDue = function(req, res){
 
 };
 
-cms.student = {};
+postCms.student = {};
 
-cms.student.addStudent = function(course_id, email){
-
-};
-
-cms.student.removeStudent = function(course_id, email){
+postCms.student.addStudent = function(course_id, email){
 
 };
 
-cms.student.extendDue = function(course_id, email, submission, new_due){
+postCms.student.removeStudent = function(course_id, email){
 
 };
 
-cms.student.getUploadCtx = function(course_id, netid, submission){
+postCms.student.extendDue = function(course_id, email, submission, new_due){
 
 };
 
-cms.student.doneUpload = function(course_id, netid, submission, path){
+postCms.student.getUploadCtx = function(course_id, netid, submission){
+
+};
+
+postCms.student.doneUpload = function(course_id, netid, submission, path){
 
 };
 
@@ -197,22 +329,12 @@ exports.get = function (req, res) {
             function(user){
                 return Promise.all(
                     [
-                        cms.isStudent(course_id, user.email),
-                        cms.isInstructor(course_id, user.email)
+                        cmsUtil.isInstructor(course_id, user.email),
+                        cmsUtil.isStudent(course_id, user.email)
                     ]
                 ).then(
                     function(result){
-                        if(result[0]){ // is_student
-                            res.render('cms_student',
-                                {
-                                    cur_page: 'CmsStudent',
-                                    user: req.user,
-                                    BLOB_HOST: azure.BLOB_HOST,
-                                    HOST: js_utils.getHostname() + "/"
-                                }
-                            );
-                        }
-                        else if(result[1]){ // is_instructor
+                        if(result[0]){ // is_instructor
                             res.render('cms_instructor_overview',
                                 {
                                     cur_page: 'CmsInstructor',
@@ -222,7 +344,17 @@ exports.get = function (req, res) {
                                 }
                             );
                         }
-                        else{
+                        else if(result[1]){ // is_student
+                            res.render('cms_student',
+                                {
+                                    cur_page: 'CmsStudent',
+                                    user: req.user,
+                                    BLOB_HOST: azure.BLOB_HOST,
+                                    HOST: js_utils.getHostname() + "/"
+                                }
+                            );
+                        }
+                        else {
                             res.render('cms_unidentified',
                                 {
                                     cur_page: 'CmsUnidentified',
@@ -243,23 +375,32 @@ exports.get = function (req, res) {
 
 exports.post = function(req, res){
     switch(req.query['op']){
-        case "getCourse":
-            cms.getCourse(req, res);
-            break;
+
+        /* common */
         case 'getAnnouncements':
-            cms.getAnnouncements(req, res);
+            postCms.getAnnouncements(req, res);
             break;
         case 'getSurveys':
-            cms.getSurveys(req, res);
+            postCms.getSurveys(req, res);
             break;
         case 'getSubmissions':
-            cms.getSubmissions(req, res);
+            postCms.getSubmissions(req, res);
             break;
+
+        /* instructor */
         case 'getEnrollment':
-            cms.getEnrollment(req, res);
+            postCms.getEnrollment(req, res);
             break;
+        case 'removeEnrollment':
+            postCms.removeEnrollment(req, res);
+            break;
+        case 'addEnrollment':
+            postCms.addEnrollment(req, res);
+            break;
+
+        /* student */
         case 'getSubmissionStudent':
-            cms.getSubmissionStudent(req, res);
+            postCms.getSubmissionStudent(req, res);
             break;
         default:
             js_utils.PostResp(res, req, 400, "unidentified request: "+req.query['op']);

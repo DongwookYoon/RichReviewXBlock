@@ -235,20 +235,25 @@ var InviteUser = function(req, res){
             function(doc){
                 if(doc.userid_n === req.user.id){
                     var emails = req.body.emails;
-                    emails = emails.replace(/[\,\;]/g, ' ');
-                    emails = emails.replace(/\s+/g, " ");
-                    emails = emails.split(' ');
-
+                    emails = emails.split(/[\s,]+/).map(function(x){return x.trim();});
+                    var emails2 = [];
                     emails.forEach(function(email){
-                        if(js_utils.validateEmail(email) === false){
-                            js_utils.PostResp(res, req, 400, '\'' + email + '\' is an invalid email address. please use either of @gmail.com or @cornell.edu.');
-                            return;
+                        if(email !== ''){
+                            emails2.push(email);
                         }
                     });
 
-                    return Promise.all(
-                        emails.map(function(email){
-                            return R2D.Group.InviteUser(req.body.groupid_n, email);
+                    emails2.forEach(function(email){
+                        if(!js_utils.validateEmail(email)){
+                            throw '\'' + email + '\' is an invalid email address. please use either of @gmail.com or @cornell.edu.';
+                        }
+                    });
+
+                    return js_utils.serialPromiseFuncs(
+                        emails2.map(function(email){
+                            return function() {
+                                return R2D.Group.InviteUser(req.body.groupid_n, email);
+                            };
                         })
                     ).then(
                         function(){
@@ -257,7 +262,7 @@ var InviteUser = function(req, res){
                     );
                 }
                 else{
-                    js_utils.PostResp(res, req, 400, 'you are not authorized to invite a user to this group.');
+                    throw 'you are not authorized to invite a user to this group.';
                 }
             }
         ).catch(

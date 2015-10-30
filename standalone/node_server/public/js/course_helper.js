@@ -79,23 +79,11 @@
         }());
 
         var submissions_instructor = (function(){
-            var pub_sb = {};
+            var pub_si = {};
 
-            pub_sb.init = function(){
-                postCourse('getSubmissions', {course_id: course_id}).then(
-                    function(submissions){
-                        submissions.forEach(function(submission){
-                            submission.due = new Date(submission.due);
-                        });
-                        submissions.sort(function(a, b) {
-                            if (a.due > b.due)
-                                return 1;
-                            if (a.due < b.due)
-                                return -1;
-                            return 0;
-                        });
-                        submissions.forEach(addSubmissions);
-                    }
+            pub_si.init = function(){
+                pub_si.submissions.init().then(
+                    pub_si.enrollment.init
                 ).catch(
                     function(err){
                         Helper.Util.HandleError(err);
@@ -103,30 +91,118 @@
                 );
             };
 
-            var addSubmissions = function(submission){
-                var $tr = $(document.createElement('tr'));
-                $tr.click(function(){
-                    window.open(host+course_id+'?submission='+submission.id);
+            pub_si.submissions = (function(){
+                var pub_sbs = {};
+
+                pub_sbs.init = function(){
+                    return postCourse('getSubmissions', {course_id: course_id}).then(
+                        function(submissions){
+                            submissions.forEach(function(submission){
+                                submission.due = new Date(submission.due);
+                            });
+                            submissions.sort(function(a, b) {
+                                if (a.due > b.due)
+                                    return 1;
+                                if (a.due < b.due)
+                                    return -1;
+                                return 0;
+                            });
+                            submissions.forEach(pub_sbs.add);
+                        }
+                    )
+                };
+
+                pub_sbs.add = function(submission){
+                    var $tr = $(document.createElement('tr'));
+                    $tr.click(function(){
+                        window.open(host+course_id+'?submission='+submission.id);
+                    });
+                    {
+                        var $title = $(document.createElement('td'));
+                        $title.text(submission.title);
+                        $tr.append($title);
+
+                        var $due = $(document.createElement('td'));
+                        $due.text(formatDate(submission.due));
+                        $tr.append($due);
+
+                        var $status = $(document.createElement('td'));
+                        $status.text(submission.status);
+                        $tr.append($status);
+
+                        var $status = $(document.createElement('td'));
+                        $status.text(submission.submitted);
+                        $tr.append($status);
+                    }
+                    $('#submission_items').append($tr);
+                };
+
+                return pub_sbs;
+            }());
+            pub_si.enrollment = (function(){
+                var pub_sie = {};
+
+                pub_sie.init = function(){
+                    $('#enrollment_items').find('tr').remove();
+                    return postCourse('getEnrollment', {course_id: course_id}).then(
+                        function(enrollment){
+                            enrollment.sort();
+                            enrollment.forEach(pub_sie.addDom);
+                            var $form_group = createNewDomElement('div', ['form-group', 'add_student_input'], $('#enrollment_add_student_input'));
+                            {
+                                var $input_group = createNewDomElement('span', ['input-group'], $form_group);
+                                {
+                                    var $input = createNewDomElement('input', ['form-control', 'input-sm'], $input_group);
+                                    $input.attr('placeholder', 'student email(s), comma-separated');
+
+                                    var $button = createNewDomElement('button', ['btn', 'btn-primary', 'btn-sm'], $input_group);
+                                    $button.append(getIcon('fa-plus'));
+                                    $button.append(getIcon('fa-user').css('padding-left', '5px'));
+                                }
+                            }
+                        }
+                    );
+                };
+
+                pub_sie.addDom = (function(email){
+                    var $tr = $(document.createElement('tr'));
+                    {
+                        var $email = $(document.createElement('td'));
+                        $email.text(email);
+                        $tr.append($email);
+
+                        var $status = $(document.createElement('td'));
+                        $status.text('Enrolled');
+                        $tr.append($status);
+
+                        var $manage = $(document.createElement('td'));
+                        {
+                            var $btn_group = createNewDomElement('div', ['btn-group'], $manage);
+                            var $btn_delete = createNewDomElement('a', ['btn', 'btn-danger','btn-sm'], $btn_group);
+                            $btn_delete.append(getIcon('fa-remove'));
+                            setDropDownBtn($btn_group, 'Remove this student',function(){
+                                alert(email);
+                            });
+                        }
+                        $tr.append($manage);
+                    }
+                    $('#enrollment_items').append($tr);
                 });
-                {
-                    var $title = $(document.createElement('td'));
-                    $title.text(submission.title);
-                    $tr.append($title);
 
-                    var $due = $(document.createElement('td'));
-                    $due.text(formatDate(submission.due));
-                    $tr.append($due);
+                pub_sie.removeDom = (function(email){
 
-                    var $status = $(document.createElement('td'));
-                    $status.text(submission.status);
-                    $tr.append($status);
+                });
 
-                    var $status = $(document.createElement('td'));
-                    $status.text(submission.submitted);
-                    $tr.append($status);
-                }
-                $('#submission_items').append($tr);
-            };
+                pub_sie.addStudent = (function(email){
+                    return postCourse('addEnrollment', {course_id: course_id, email: email});
+                });
+
+                pub_sie.removeStudent = (function(email){
+                    return postCourse('removeEnrollment', {course_id: course_id, email: email});
+                });
+
+                return pub_sie;
+            }());
 
             var formatDate = function(d){
                 var str = '';
@@ -141,7 +217,7 @@
                 return str;
             };
 
-            return pub_sb;
+            return pub_si;
         }());
 
         var submission_student = (function(){
@@ -182,6 +258,40 @@
                     reject(resp);
                 });
             });
+        };
+
+        var createNewDomElement = function(type, classes, parent){
+            var $dom = $(document.createElement(type));
+            classes.forEach(function(cls){
+                $dom.toggleClass(cls, true);
+            });
+            if(parent)
+                parent.append($dom);
+            return $dom;
+        };
+
+        var getIcon = function(icon){
+            var $icon = $(document.createElement('i'));
+            $icon.toggleClass('fa');
+            $icon.toggleClass(icon);
+            return $icon;
+        };
+
+        var setDropDownBtn = function($btn_group, dropdn_msg, cb){
+            $btn_group.attr('role', 'group');
+
+            var $btn = $btn_group.find('.btn');
+            $btn.attr('data-toggle', 'dropdown');
+            $btn.toggleClass('dropdown-toggle', true);
+
+            var $ul = createNewDomElement('ul', ['dropdown-menu'], $btn_group);
+            $ul.attr('role', 'menu');
+            var $li = createNewDomElement('li', [], $ul);
+
+            var $btn_confirm = createNewDomElement('a', ['btn', 'btn-default','btn-sm'], $li);
+            $btn_confirm.text(dropdn_msg);
+            $btn_confirm.click(cb);
+            return $btn_confirm;
         };
 
         return pub;

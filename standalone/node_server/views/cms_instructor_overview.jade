@@ -36,7 +36,20 @@ block content_with_cprght
                         <th>Status</th>
                         <th>Submissions</th>
                 tbody#submission_items
+    #enrollment.panel.panel-default
+        .panel-heading
+            h5
+                | Enrollment
+        .panel-body
+            table( class="table table-striped table-hover ")
+                thead
+                    tr
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Manage</th>
+                tbody#enrollment_items
 
+            div#enrollment_add_student_input
     link(rel='stylesheet', href='/stylesheets/course.css')
     link(rel="stylesheet", href="/static_viewer/lib_ext/font-awesome-animation.min.css")
     script(src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js")

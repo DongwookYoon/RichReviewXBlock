@@ -18,26 +18,34 @@ Redis database examples
 crs:math2220_fall2015 = {
     announcements: [<html>,<html>],
     surveys:  [<html>,<html>],
-    submissions: {
-        assignment1: {
-            title: <str>,
-            due: <time>,
-            status: <str>, // open or closed
-        },
-        assignment1review: ,
-        ...
-    }
     instructors: [<email>,<email>],
     students: [<email>, ...],
+    submissions: [
+        {
+            id: <str>,
+            title: <str>,
+            due: <time>,
+            status: <str>, // Open or Closed
+            submitted: <int>
+        },
+        {
+            id...
+        }
+        ...
+    ]
 }
 
-stu:math2220_fall2015_<salted_email> = {
-    sub: {
+stu:math2220_fall2015_<email> = {
+    submissions: {
         assignment1: {
-            extension: <time>,
-            review: <str>, // pending or ready
-            pdf: <SHA1>
+            extension: <time>, // or null if there's no extension
+            group: <group_id>, // or null if it's pending
+            status: <str> // Submitted or Not Submitted
+        },
+        assignment1review: {
+            extension...
         }
+    }
 }
 
 // file path on the Azure blob storage
@@ -117,6 +125,18 @@ cms.getSubmissions = function(req, res){
             RedisClient.HGET('crs:'+req.body.course_id, 'submissions').then(
                 function(submissions){
                     js_utils.PostResp(res, req, 200, JSON.parse(submissions));
+                    return null;
+                }
+            )
+        );
+    }
+};
+cms.getEnrollment = function(req, res){
+    if(js_utils.identifyUser(req, res)){
+        catchErr(
+            RedisClient.HGET('crs:'+req.body.course_id, 'students').then(
+                function(students){
+                    js_utils.PostResp(res, req, 200, JSON.parse(students));
                     return null;
                 }
             )
@@ -234,6 +254,9 @@ exports.post = function(req, res){
             break;
         case 'getSubmissions':
             cms.getSubmissions(req, res);
+            break;
+        case 'getEnrollment':
+            cms.getEnrollment(req, res);
             break;
         case 'getSubmissionStudent':
             cms.getSubmissionStudent(req, res);

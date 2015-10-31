@@ -272,9 +272,6 @@
 
                 pub_sss.add = function(submission){
                     var $tr = $(document.createElement('tr'));
-                    $tr.click(function(){
-                        window.open(host+course_id+'?submission='+submission.id);
-                    });
                     {
                         var $title = $(document.createElement('td'));
                         $title.text(submission.title);
@@ -289,7 +286,11 @@
                         $tr.append($status);
 
                         var $pdf = $(document.createElement('td'));
-                        $pdf.text('Download');
+                        {
+                            var $file_input = getFileInput();
+                            $pdf.append($file_input);
+                            $pdf.append(getUploadBtn(submission.id, $file_input));
+                        }
                         $tr.append($pdf);
 
                         var $review = $(document.createElement('td'));
@@ -298,6 +299,85 @@
 
                     }
                     $('#submission_items').append($tr);
+                };
+
+                var getFileInput = function(){
+                    var $input = createNewDomElement('input', ['file', 'pdf-file-input']);
+                    $input.attr('name', 'File');
+                    $input.attr('type', 'file');
+                    $input.bind('change', function(e){
+                        this.pdf_file = e.target.files[0];
+                    });
+                    return $input;
+                };
+
+                var getUploadBtn = function(submission_id, $file_input){
+                    var $btn = createNewDomElement('a', ['btn', 'btn-default','btn-sm']);
+                    $btn.text('Upload');
+                    $btn.click(
+                        function(){
+                            var filename = submission_id+'.pdf';
+                            postCourse(
+                                'student__getUploadSas',
+                                {
+                                    course_id: course_id,
+                                    email: user_email,
+                                    filename: filename
+                                }
+                            ).then(
+                                function(sas){
+                                    var url = blob_host+course_id.replace('_', '-')+'/'+user_key+'/'+filename;
+                                    if(typeof $file_input[0].pdf_file === 'undefined'){
+                                        alert('I think you did\'t select any file yet.');
+                                    }
+                                    else if( $file_input[0].pdf_file.type !== 'application/pdf' ){
+                                        alert('We take a PDF file only.')
+                                    }
+                                    else {
+                                        var reader = new FileReader();
+                                        reader.onloadend = function(evt){
+                                            if (evt.target.readyState === FileReader.DONE) {
+                                                var requestData = new Uint8Array(evt.target.result);
+                                                var bytes_uploaded = 0;
+
+                                                $.ajax({
+                                                    url: url+'?'+sas,
+                                                    type: 'PUT',
+                                                    data: requestData,
+                                                    processData: false,
+                                                    beforeSend: function(xhr) {
+                                                        xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
+                                                    },
+                                                    xhr: function(){
+                                                        var xhr = new window.XMLHttpRequest();
+                                                        xhr.upload.addEventListener("progress", function(evt){
+                                                            console.log('upload', evt);
+                                                            if (evt.lengthComputable) {
+                                                                var percentComplete = evt.loaded / evt.total;
+                                                                //Do something with upload progress
+                                                                console.log(percentComplete);
+                                                            }
+                                                        }, false);
+                                                        xhr.upload.addEventListener("load", function(evt){
+                                                            alert(url);
+                                                        }, false);
+                                                        return xhr;
+                                                    },
+                                                    error: function(xhr, desc, err) {
+                                                        console.log(desc);
+                                                        console.log(err);
+                                                        alert('failed');
+                                                    }
+                                                });
+                                            }
+                                        };
+                                        reader.readAsArrayBuffer($file_input[0].pdf_file);
+                                    }
+                                }
+                            );
+                        }
+                    );
+                    return $btn;
                 };
 
                 return pub_sss;
@@ -316,14 +396,12 @@
 
         var formatDate = function(d){
             var str = '';
-            str += DAYS[d.getDay()] + ', ';
-            str += d.getMonth()+1 + '/';
-            str += d.getDate() + '/';
-            str += d.getFullYear() + ', ';
+            str += MONTHS[d.getMonth()] + ' ';
+            str += d.getDate() + ' (';
+            str += DAYS[d.getDay()] + '), ';
             str += d.getHours() + ':';
             str += d.getMinutes() + ' ';
             str += d.getHours() < 12 ? 'AM' : 'PM' ;
-            str += ' (EDT)' ;
             return str;
         };
 

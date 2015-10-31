@@ -347,16 +347,12 @@ postCms.student_getSubmissions = function(req, res){
 };
 
 postCms.student__getUploadSas = function(req, res){
-    if(js_utils.identifyUser(req, res)){
-        cmsUtil.catchErr(
-            RedisClient.HGET('crs:'+req.body.course_id, 'submissions').then(
-                function(submissions){
-                    js_utils.PostResp(res, req, 200, JSON.parse(submissions));
-                    return null;
-                }
-            )
-        );
-    }
+    cmsUtil.assertStudent(req, res, function(){
+        var key = cmsUtil.getSaltedSha1(req.user.email);
+        var sas = azure.getSas(MATH_COURSE_ID.replace('_','-'), key+'/'+req.body.filename, 300);// 5 minutes
+        js_utils.PostResp(res, req, 200, sas);
+        return null;
+    });
 };
 
 postCms.submission = {};
@@ -469,7 +465,7 @@ exports.get = function (req, res) {
                     ]
                 ).then(
                     function(result){
-                        var key = 'key'+cmsUtil.getSaltedSha1(req.user.email);
+                        var key = cmsUtil.getSaltedSha1(req.user.email);
                         if(result[0]){ // is_instructor
                             res.render('cms_instructor_overview',
                                 {

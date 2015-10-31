@@ -35,8 +35,7 @@ exports.getSas = function(container, blob, expiry){ // expires in seconds
 
     var policy = {
         AccessPolicy:{
-            Permission: storage.BlobUtilities.SharedAccessPermissions.WRITE,
-            Start: t_start,
+            Permissions: storage.BlobUtilities.SharedAccessPermissions.WRITE,
             Expiry: t_expiry
         }
     };

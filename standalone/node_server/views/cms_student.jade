@@ -31,18 +31,6 @@ block content_with_cprght
                         <th>PDF</th>
                         <th>Review</th>
                 tbody
-                    tr
-                        <td>Assignment 1</td>
-                        <td>Sat, 10/17/2015, 23:55 PM (EDT)</td>
-                        <td>Submitted</td>
-                        td
-                            a.btn.btn-default.btn-sm
-                                |Download
-                            a.btn.btn-default.btn-sm
-                                |Upload
-                        td
-                            a.btn.btn-default.btn-sm
-                                |Open
 
                 tbody#submission_items
 
@@ -57,5 +45,6 @@ block content_with_cprght
         |  '#{HOST}',
         |  'math2220_fall2015',
         |  'student',
-        |  '#{user.email}'
+        |  '#{user.email}',
+        |  '${key}'
         | );;

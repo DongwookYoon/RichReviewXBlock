@@ -234,6 +234,7 @@ postCms.addEnrollment = function(req, res){
                         stu_submissions = {};
                         for(id in dict){
                             stu_submissions[id] = {
+                                title: dict[id].title,
                                 due: dict[id].due,
                                 extension:null,
                                 group:null,
@@ -309,17 +310,40 @@ postCms.addEnrollment = function(req, res){
     });
 };
 
-postCms.getSubmissionStudent = function(req, res){
-    if(js_utils.identifyUser(req, res)){
-        cmsUtil.catchErr(
-            RedisClient.HGET('crs:'+req.body.course_id, 'submissions').then(
-                function(submissions){
-                    js_utils.PostResp(res, req, 200, JSON.parse(submissions));
-                    return null;
-                }
-            )
-        );
-    }
+/*
+
+ submissions: {
+ assignment1:{
+ title: <str>,
+ due: <time>,
+ status: <str>, // Open or Closed
+ submitted: <int>
+ },
+ assignment1review:{
+ title...
+ }
+
+ stu:math2220_fall2015_<email> = {
+ submissions: {
+ assignment1: {
+ title: <str> // is always the same as crs:<>.submissions[n].title
+ due: <time> // is always the same as crs:<>.submissions[n].due
+ extension: <time>, // or null if there's no extension
+ group: <group_id>, // or null if it's pending
+ status: <str> // Submitted or Not Submitted
+ }
+
+ */
+
+postCms.student_getSubmissions = function(req, res){
+    cmsUtil.assertStudent(req, res, function(){
+        return RedisClient.HGET('stu:'+req.body.course_id + '_' + req.body.email, 'submissions').then(
+            function(submissions){
+                js_utils.PostResp(res, req, 200, JSON.parse(submissions));
+                return null;
+            }
+        )
+    });
 };
 
 postCms.student__getUploadSas = function(req, res){
@@ -367,11 +391,67 @@ postCms.student.doneUpload = function(course_id, netid, submission, path){
 
 };
 
-// Dangling student check-up
 (function danglingStudentCheckUp(){
-    RedisClient.HGET('crs:'+MATH_COURSE_ID).then(
-        function(crs){
-
+    var stus = null;
+    var existing_students = [];
+    var subs = null;
+    RedisClient.HGET('crs:'+MATH_COURSE_ID, 'students').then(
+        function(stu_str){
+            stus = JSON.parse(stu_str);
+            var promises = stus.map(
+                function(email){
+                    return RedisClient.EXISTS('stu:'+MATH_COURSE_ID+'_'+email);
+                }
+            );
+            return Promise.all(promises); // check all students existance
+        }
+    ).then(
+        function(stu_exist){
+            for(var i = 0, l = stu_exist.length; i < l; ++i){
+                if(stu_exist[i]){
+                    existing_students.push(stus[i]);
+                }
+                else{
+                    console.log('Dangling stu:'+MATH_COURSE_ID+'_'+stus[i]);
+                }
+            }
+            return null;
+        }
+    ).then(
+        function(){
+            return RedisClient.HGET('crs:'+MATH_COURSE_ID, 'submissions').then(
+                function(sub_str){
+                    subs = JSON.parse(sub_str);
+                    var promises = existing_students.map(
+                        function(email){
+                            return RedisClient.HGET(
+                                'stu:'+MATH_COURSE_ID+'_'+email,
+                                'submissions'
+                            );
+                        }
+                    );
+                    return Promise.all(promises); //get all exsiting students
+                }
+            ).then(
+                function(stu_subs){
+                    for(var i = 0, l = stu_subs.length; i < l; ++i) {
+                        var stu_sub = JSON.parse(stu_subs[i]);
+                        for(id_crs_sub in subs){
+                            var x = stu_sub[id_crs_sub];
+                            if(stu_sub[id_crs_sub].due !== subs[id_crs_sub].due ||
+                                stu_sub[id_crs_sub].title !== subs[id_crs_sub].title ){
+                                console.log('inconsistent data: '+
+                                'stu:'+MATH_COURSE_ID+'_'+existing_students[i]+
+                                ', '+id_crs_sub);
+                            }
+                        }
+                    }
+                }
+            );
+        }
+    ).catch(
+        function(err){
+            console.log(err);
         }
     );
 }());
@@ -389,13 +469,15 @@ exports.get = function (req, res) {
                     ]
                 ).then(
                     function(result){
+                        var key = 'key'+cmsUtil.getSaltedSha1(req.user.email);
                         if(result[0]){ // is_instructor
                             res.render('cms_instructor_overview',
                                 {
                                     cur_page: 'CmsInstructor',
                                     user: req.user,
                                     BLOB_HOST: azure.BLOB_HOST,
-                                    HOST: js_utils.getHostname() + "/"
+                                    HOST: js_utils.getHostname() + "/",
+                                    key: key
                                 }
                             );
                         }
@@ -405,7 +487,8 @@ exports.get = function (req, res) {
                                     cur_page: 'CmsStudent',
                                     user: req.user,
                                     BLOB_HOST: azure.BLOB_HOST,
-                                    HOST: js_utils.getHostname() + "/"
+                                    HOST: js_utils.getHostname() + "/",
+                                    key: key
                                 }
                             );
                         }
@@ -454,8 +537,8 @@ exports.post = function(req, res){
             break;
 
         /* student */
-        case 'getSubmissionStudent':
-            postCms.getSubmissionStudent(req, res);
+        case 'student_getSubmissions':
+            postCms.student_getSubmissions(req, res);
             break;
         case 'student__getUploadSas':
             postCms.student__getUploadSas(req, res);

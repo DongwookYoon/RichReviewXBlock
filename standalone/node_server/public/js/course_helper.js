@@ -9,16 +9,18 @@
     var course_id = null;
     var user_type = null;
     var user_email = null;
+    var user_key = null;
 
     r2.course = (function(){
         var pub = {};
 
-        pub.init = function(_blob_host, _host, _course_id, _user_type, _user_email){
+        pub.init = function(_blob_host, _host, _course_id, _user_type, _user_email, _user_key){
             host = _host;
             blob_host = _blob_host;
             course_id = _course_id;
             user_type = _user_type;
             user_email = _user_email;
+            user_key = _user_key;
 
             announcements.init();
             surveys.init();
@@ -108,13 +110,7 @@
                             submissions.forEach(function(submission){
                                 submission.due = new Date(submission.due);
                             });
-                            submissions.sort(function(a, b) {
-                                if (a.due > b.due)
-                                    return 1;
-                                if (a.due < b.due)
-                                    return -1;
-                                return 0;
-                            });
+                            submissions.sort(sortByDueDate);
                             submissions.forEach(pub_sbs.add);
                         }
                     )
@@ -138,9 +134,9 @@
                         $status.text(submission.status);
                         $tr.append($status);
 
-                        var $status = $(document.createElement('td'));
-                        $status.text(submission.submitted);
-                        $tr.append($status);
+                        var $submitted = $(document.createElement('td'));
+                        $submitted.text(submission.submitted);
+                        $tr.append($submitted);
                     }
                     $('#submission_items').append($tr);
                 };
@@ -237,19 +233,6 @@
                 return pub_sie;
             }());
 
-            var formatDate = function(d){
-                var str = '';
-                str += DAYS[d.getDay()] + ', ';
-                str += d.getMonth()+1 + '/';
-                str += d.getDate() + '/';
-                str += d.getFullYear() + ', ';
-                str += d.getHours() + ':';
-                str += d.getMinutes() + ' ';
-                str += d.getHours() < 12 ? 'AM' : 'PM' ;
-                str += ' (EDT)' ;
-                return str;
-            };
-
             return pub_si;
         }());
 
@@ -257,28 +240,92 @@
             var pub_ss = {};
 
             pub_ss.init = function(){
-                postCourse('getSubmissionStudent', {course_id: course_id, user_email: user_email}).then(
-                    function(submissions){
-                        submissions.forEach(function(submission){
-                            submission.due = new Date(submission.due);
-                        });
-                        submissions.sort(function(a, b) {
-                            if (a.due > b.due)
-                                return 1;
-                            if (a.due < b.due)
-                                return -1;
-                            return 0;
-                        });
-                    }
-                ).catch(
+                return pub_ss.submissions.init().catch(
                     function(err){
                         Helper.Util.HandleError(err);
                     }
                 );
             };
 
+            pub_ss.submissions = (function(){
+                var pub_sss = {};
+
+                pub_sss.init = function(){
+                    return postCourse('student_getSubmissions', {course_id: course_id, email: user_email}).then(
+                        function(submissions_dict){
+                            var submissions = [];
+                            for (var id in submissions_dict) {
+                                if (submissions_dict.hasOwnProperty(id)) {
+                                    var sub = submissions_dict[id];
+                                    sub.id = id;
+                                    submissions.push(sub);
+                                }
+                            }
+                            submissions.forEach(function(submission){
+                                submission.due = new Date(submission.due);
+                            });
+                            submissions.sort(sortByDueDate);
+                            submissions.forEach(pub_sss.add);
+                        }
+                    )
+                };
+
+                pub_sss.add = function(submission){
+                    var $tr = $(document.createElement('tr'));
+                    $tr.click(function(){
+                        window.open(host+course_id+'?submission='+submission.id);
+                    });
+                    {
+                        var $title = $(document.createElement('td'));
+                        $title.text(submission.title);
+                        $tr.append($title);
+
+                        var $due = $(document.createElement('td'));
+                        $due.text(formatDate(submission.due));
+                        $tr.append($due);
+
+                        var $status = $(document.createElement('td'));
+                        $status.text(submission.status);
+                        $tr.append($status);
+
+                        var $pdf = $(document.createElement('td'));
+                        $pdf.text('Download');
+                        $tr.append($pdf);
+
+                        var $review = $(document.createElement('td'));
+                        $review.text('Open');
+                        $tr.append($review);
+
+                    }
+                    $('#submission_items').append($tr);
+                };
+
+                return pub_sss;
+            }());
+
             return pub_ss;
         }());
+
+        var sortByDueDate = function(a, b) {
+            if (a.due > b.due)
+                return 1;
+            if (a.due < b.due)
+                return -1;
+            return 0;
+        };
+
+        var formatDate = function(d){
+            var str = '';
+            str += DAYS[d.getDay()] + ', ';
+            str += d.getMonth()+1 + '/';
+            str += d.getDate() + '/';
+            str += d.getFullYear() + ', ';
+            str += d.getHours() + ':';
+            str += d.getMinutes() + ' ';
+            str += d.getHours() < 12 ? 'AM' : 'PM' ;
+            str += ' (EDT)' ;
+            return str;
+        };
 
         var postCourse = function(op, msg){
             return new Promise(function(resolve, reject){

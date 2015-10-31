@@ -287,9 +287,12 @@
 
                         var $pdf = $(document.createElement('td'));
                         {
-                            var $file_input = getFileInput();
+                            var $file_input = uploadPdf.getFileInput();
+                            var $upload_btn = uploadPdf.getUploadBtn(submission.id);
+                            uploadPdf.link($upload_btn, $file_input);
+
                             $pdf.append($file_input);
-                            $pdf.append(getUploadBtn(submission.id, $file_input));
+                            $pdf.append($upload_btn);
                         }
                         $tr.append($pdf);
 
@@ -301,21 +304,52 @@
                     $('#submission_items').append($tr);
                 };
 
-                var getFileInput = function(){
-                    var $input = createNewDomElement('input', ['file', 'pdf-file-input']);
-                    $input.attr('name', 'File');
-                    $input.attr('type', 'file');
-                    $input.bind('change', function(e){
-                        this.pdf_file = e.target.files[0];
-                    });
-                    return $input;
-                };
+                var uploadPdf = (function(){
+                    var pub_sssu = {};
 
-                var getUploadBtn = function(submission_id, $file_input){
-                    var $btn = createNewDomElement('a', ['btn', 'btn-default','btn-sm']);
-                    $btn.text('Upload');
-                    $btn.click(
-                        function(){
+                    pub_sssu.getFileInput = function(){
+                        var $input = createNewDomElement('input', ['file', 'pdf-file-input']);
+                        $input.attr('name', 'File');
+                        $input.attr('type', 'file');
+                        return $input;
+                    };
+
+                    pub_sssu.getUploadBtn = function(submission_id){
+                        var $btn = createNewDomElement('a', ['btn', 'btn-default','btn-sm']);
+                        $btn.text('Upload');
+                        $btn.toggleClass('disabled', true);
+                        return $btn;
+                    };
+
+                    pub_sssu.link = function($btn, $file_input, submission_id){
+                        var onfilechange = function(e){
+
+                            if(e.target.files.length === 0 || e.target.files[0].type !== 'application/pdf' ){
+                                alert('We take a PDF file only.')
+                            }
+                            else{
+                                this.pdf_file = e.target.files[0];
+                                $btn.toggleClass('disabled', false);
+                            }
+                        };
+                        var onerror = function(xhr, desc, err) {
+                            console.log(desc);
+                            console.log(err);
+                            alert('File uploading failed: ', err, desc);
+                            progressModal.hide();
+                        };
+                        var onprogress = function(evt){
+                            if (evt.lengthComputable) {
+                                progressModal.updateProgress(100*evt.loaded/evt.total);
+                            }
+                        };
+                        var onload = function(evt){
+                            progressModal.hide();
+                        };
+
+                        // actual binding
+                        $file_input.bind('change', onfilechange);
+                        $btn.click(function(){
                             var filename = submission_id+'.pdf';
                             postCourse(
                                 'student__getUploadSas',
@@ -326,19 +360,16 @@
                                 }
                             ).then(
                                 function(sas){
+                                    progressModal.show('Uploading ' + filename);
                                     var url = blob_host+course_id.replace('_', '-')+'/'+user_key+'/'+filename;
                                     if(typeof $file_input[0].pdf_file === 'undefined'){
                                         alert('I think you did\'t select any file yet.');
-                                    }
-                                    else if( $file_input[0].pdf_file.type !== 'application/pdf' ){
-                                        alert('We take a PDF file only.')
                                     }
                                     else {
                                         var reader = new FileReader();
                                         reader.onloadend = function(evt){
                                             if (evt.target.readyState === FileReader.DONE) {
                                                 var requestData = new Uint8Array(evt.target.result);
-                                                var bytes_uploaded = 0;
 
                                                 $.ajax({
                                                     url: url+'?'+sas,
@@ -350,40 +381,59 @@
                                                     },
                                                     xhr: function(){
                                                         var xhr = new window.XMLHttpRequest();
-                                                        xhr.upload.addEventListener("progress", function(evt){
-                                                            console.log('upload', evt);
-                                                            if (evt.lengthComputable) {
-                                                                var percentComplete = evt.loaded / evt.total;
-                                                                //Do something with upload progress
-                                                                console.log(percentComplete);
-                                                            }
-                                                        }, false);
-                                                        xhr.upload.addEventListener("load", function(evt){
-                                                            alert(url);
-                                                        }, false);
+                                                        xhr.upload.addEventListener('progress', onprogress, false);
+                                                        xhr.upload.addEventListener('load', onload, false);
                                                         return xhr;
                                                     },
-                                                    error: function(xhr, desc, err) {
-                                                        console.log(desc);
-                                                        console.log(err);
-                                                        alert('failed');
-                                                    }
+                                                    error: onerror
                                                 });
                                             }
                                         };
                                         reader.readAsArrayBuffer($file_input[0].pdf_file);
                                     }
                                 }
+                            ).catch(
+                                function(err){
+                                    Helper.Util.HandleError(err);
+                                }
                             );
-                        }
-                    );
-                    return $btn;
-                };
+                        });
+                    };
+
+                    return pub_sssu;
+                }());
 
                 return pub_sss;
             }());
 
             return pub_ss;
+        }());
+
+        var progressModal = (function(){
+            var pub = {};
+
+            var $dom = $('#progress-modal');
+
+            pub.show = function(title){
+                $dom.attr('title', title);
+                $dom.dialog({
+                    resizable: false,
+                    width: 600,
+                    minHeight: 10,
+                    modal: true
+                });
+                pub.updateProgress(0);
+            };
+
+            pub.hide = function(){
+                $dom.dialog( "close" );
+            };
+
+            pub.updateProgress = function(percent){
+                $dom.find('#progress-bar').progressbar({value:percent});
+            };
+
+            return pub;
         }());
 
         var sortByDueDate = function(a, b) {

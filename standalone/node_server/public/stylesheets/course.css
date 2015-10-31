@@ -78,3 +78,38 @@ h5 {
 .pdf-file-input {
     width: 200px;
 }
+
+/* progress bar modal window */
+
+.ui-dialog {
+    background-color: white;
+    padding: 15px 7px;
+}
+
+.ui-dialog > .ui-dialog-titlebar {
+    background: none;
+    border: none;
+    color: #444444;
+    font-size: 20px;
+}
+
+.ui-dialog > .ui-dialog-titlebar > button {
+    display: none;
+}
+
+#progress-modal{
+    padding-bottom: 13px;
+}
+
+#progress-modal > .ui-progressbar {
+    border: none;
+    border-radius: 0;
+    height: 6px;
+}
+
+#progress-modal > .ui-progressbar > .ui-progressbar-value {
+    display: block;
+    background: rgba(33, 150, 243, 1.0);
+    border: none;
+    margin: 0;
+}

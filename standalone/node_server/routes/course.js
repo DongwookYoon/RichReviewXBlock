@@ -20,39 +20,40 @@ crs:math2220_fall2015 = {
     surveys:  [<html>,<html>],
     instructors: [<email>,<email>],
     students: [<email>, ...],
-    submissions: [
-        {
-            id: <str>,
-            title: <str>,
-            due: <time>,
-            status: <str>, // Open or Closed
-            submitted: <int>
-        },
-        {
-            id...
-        }
+    submissions: {
+        assignment1:{
+                title: <str>,
+                due: <time>,
+                status: <str>, // Open or Closed
+                submitted: <int>
+            },
+        assignment1review:{
+                title...
+            }
         ...
-    ]
+    }
 }
 
 stu:math2220_fall2015_<email> = {
     submissions: {
         assignment1: {
+            due: <time> // is always the same as crs:<>.submissions[n].due
             extension: <time>, // or null if there's no extension
             group: <group_id>, // or null if it's pending
             status: <str> // Submitted or Not Submitted
         },
         assignment1review: {
-            extension...
+            extension: ...
         }
     }
 }
 
 // file path on the Azure blob storage
-<BLOB_HOST>/math2220_fall2015/<salted_email>/<SHA1>.pdf
+<BLOB_HOST>/math2220_fall2015/<salted_email>/<assignment_id>.pdf
 
 */
 
+var MATH_COURSE_ID = 'math2220_fall2015';
 
 var cmsUtil = {};
 
@@ -88,10 +89,9 @@ cmsUtil.getSaltedSha1 = function(email){
 
 cmsUtil.assertInstructor = function(req, res, func){
     if(js_utils.identifyUser(req, res)){
-        var course_id = 'math2220_fall2015';
         R2D.User.prototype.findById(req.user.id).then(
             function(user) {
-                return cmsUtil.isInstructor(course_id, user.email);
+                return cmsUtil.isInstructor(MATH_COURSE_ID, user.email);
             }
         ).then(
             function(is_instructor){
@@ -100,6 +100,33 @@ cmsUtil.assertInstructor = function(req, res, func){
                 }
                 else{
                     js_utils.PostResp(res, req, 400, 'you are not an instructor of this course.');
+                }
+            }
+        ).catch(
+            function(err){
+                js_utils.PostResp(res, req, 400, err);
+            }
+        );
+    }
+};
+
+// asserts that the login user is the student with req.body.email
+cmsUtil.assertStudent = function(req, res, func){
+    if(js_utils.identifyUser(req, res)){
+        R2D.User.prototype.findById(req.user.id).then(
+            function(user) {
+                if(req.body.email !== user.email){
+                    throw 'you are not a valid student user of this course.';
+                }
+                return cmsUtil.isStudent(MATH_COURSE_ID, user.email);
+            }
+        ).then(
+            function(is_student){
+                if(is_student){
+                    return func();
+                }
+                else{
+                    throw 'you are not a registered student of this course.';
                 }
             }
         ).catch(
@@ -199,6 +226,33 @@ postCms.addEnrollment = function(req, res){
                 return RedisClient.HSET('crs:'+req.body.course_id, 'students', JSON.stringify(obj));
             }
         ).then(
+            // create a corresponding stu: database
+            function(){
+                return RedisClient.HGET('crs:'+MATH_COURSE_ID, 'submissions').then(
+                    function(dict){
+                        var dict = JSON.parse(dict);
+                        stu_submissions = {};
+                        for(id in dict){
+                            stu_submissions[id] = {
+                                due: dict[id].due,
+                                extension:null,
+                                group:null,
+                                status:'Not Submitted'
+                            };
+                        }
+                        return stu_submissions;
+                    }
+                ).then(
+                    function(stu_submissions){
+                        return RedisClient.HSET(
+                            'stu:'+MATH_COURSE_ID+'_'+email,
+                            'submissions',
+                            JSON.stringify(stu_submissions)
+                        );
+                    }
+                );
+            }
+        ).then(
             function(){
                 return email;
             }
@@ -252,31 +306,23 @@ postCms.addEnrollment = function(req, res){
                 js_utils.PostResp(res, req, 200, email_final);
             }
         );
-
-        /*
-        return RedisClient.HGET('crs:'+req.body.course_id, 'students').then(
-            function(students){
-                var obj = JSON.parse(students);
-                var i = obj.indexOf(req.body.email);
-                if(i === -1){throw req.body.email + ' is not in the enrollment list.'}
-                obj.splice(i, 1);
-                return obj;
-            }
-        ).then(
-            function(obj){
-                return RedisClient.HSET('crs:'+req.body.course_id, 'students', JSON.stringify(obj));
-            }
-        ).then(
-            function(){
-                js_utils.PostResp(res, req, 200);
-                return null;
-            }
-        );
-        */
     });
 };
 
 postCms.getSubmissionStudent = function(req, res){
+    if(js_utils.identifyUser(req, res)){
+        cmsUtil.catchErr(
+            RedisClient.HGET('crs:'+req.body.course_id, 'submissions').then(
+                function(submissions){
+                    js_utils.PostResp(res, req, 200, JSON.parse(submissions));
+                    return null;
+                }
+            )
+        );
+    }
+};
+
+postCms.student__getUploadSas = function(req, res){
     if(js_utils.identifyUser(req, res)){
         cmsUtil.catchErr(
             RedisClient.HGET('crs:'+req.body.course_id, 'submissions').then(
@@ -321,10 +367,19 @@ postCms.student.doneUpload = function(course_id, netid, submission, path){
 
 };
 
+// Dangling student check-up
+(function danglingStudentCheckUp(){
+    RedisClient.HGET('crs:'+MATH_COURSE_ID).then(
+        function(crs){
+
+        }
+    );
+}());
+
 exports.get = function (req, res) {
     req.session.latestUrl = req.originalUrl;
     if(js_utils.redirectUnknownUser(req, res)){
-        var course_id = 'math2220_fall2015';
+        var course_id = MATH_COURSE_ID;
         R2D.User.prototype.findById(req.user.id).then(
             function(user){
                 return Promise.all(
@@ -401,6 +456,9 @@ exports.post = function(req, res){
         /* student */
         case 'getSubmissionStudent':
             postCms.getSubmissionStudent(req, res);
+            break;
+        case 'student__getUploadSas':
+            postCms.student__getUploadSas(req, res);
             break;
         default:
             js_utils.PostResp(res, req, 400, "unidentified request: "+req.query['op']);

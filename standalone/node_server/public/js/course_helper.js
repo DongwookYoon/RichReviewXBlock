@@ -96,7 +96,15 @@
 
                 pub_sbs.init = function(){
                     return postCourse('getSubmissions', {course_id: course_id}).then(
-                        function(submissions){
+                        function(submissions_dict){
+                            var submissions = [];
+                            for (var id in submissions_dict) {
+                                if (submissions_dict.hasOwnProperty(id)) {
+                                    var sub = submissions_dict[id];
+                                    sub.id = id;
+                                    submissions.push(sub);
+                                }
+                            }
                             submissions.forEach(function(submission){
                                 submission.due = new Date(submission.due);
                             });

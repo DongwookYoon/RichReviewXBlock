@@ -1158,9 +1158,16 @@
             if(typeof cb !== 'undefined'){$btn_center.click(closeRadialMenuAndRun($menu,cb));}
             $menu.append($btn_center);
 
-            var $btn_radials = $(document.createElement('div'));
-            $btn_radials.addClass('rm_btn_raidial');
-            $menu.append($btn_radials);
+            //var $btn_gesture = $(document.createElement('a'));
+            //$btn_gesture.addClass('rm_btn_center').addClass('rm_btn');
+            //$btn_gesture.attr('href', 'javascript:void(0);');
+            //$btn_gesture.attr('aria-label', btn_alt);
+            //$btn_gesture.attr('role', 'button');
+            //r2.dom_model.focusCtrl.setFocusable($btn_gesture);
+            //$btn_gesture.append(createIcon(btn_center_fa_font));
+            //if(typeof cb !== 'undefined'){$btn_gesture.click(closeRadialMenuAndRun($menu,cb));}
+            //$menu.append($btn_gesture);
+
 
             menus.push($menu);
             return $menu;

@@ -110,6 +110,10 @@
     <div id="booklet_nav"></div>
 </div>
 <div id="r2_view" class="unselectable">
+    <div class="disablemodebox"> Switched to disble-all mode </div>
+    <div class="gesturemodebox"> Switched to gesture mode </div>
+    <div class="penmodebox" onload="r2.mouse.loadHammerJs()"> Switched to pen mode </div>
+
     <div id="r2_content">
         <canvas id="r2_page_canvas"></canvas>
         <div id="tc_doc"> </div>
@@ -117,3 +121,4 @@
         <div id="onscrbtns"></div>
     </div>
 </div>
+

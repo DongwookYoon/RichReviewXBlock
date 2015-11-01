@@ -7,7 +7,8 @@
             ["bowser/bowser.min.js", "js"],
             ["utils.js", "js"],
             ["multicolumn.js", "js"],
-            ["main.js", "js"]
+            ["main.js", "js"],
+
         ];
 
         Pla.loadJsScript = function(url, type){

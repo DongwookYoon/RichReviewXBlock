@@ -12,11 +12,19 @@ var r2Ctrl = {};
         LDN : 2
     };
 
+    r2.PenModeEnum = {
+        DESKTOP: 0,
+        DISABLED: 1,
+        GESTURE: 2,
+        PEN: 3
+    };
+
     r2.mouse = (function(){
         var pub = {};
 
         pub.mode = r2.MouseModeEnum.HOVER;
         pub.pos_dn = new Vec2(0,0);
+        pub.penMode = r2.PenModeEnum.DESKTOP;
 
         var in_menu = false;
 
@@ -24,26 +32,14 @@ var r2Ctrl = {};
         pub.outMenu = function(){in_menu = false;};
 
         pub.setDomEvents = function(){
-            /*
+
             r2.dom.setMouseEventHandlers(
                 pub.handleDn,
                 pub.handleMv,
                 pub.handleUp
             );
-            */
-            r2.tabletInteraction.penNonSupportedHandler.setDomEvents();
-            /*
-            var content = document.getElementById("r2_view");
-            content.addEventListener('touchstart', function(evt) {
-                var touchobj = evt.changedTouches[0];
-                var startx = parseint(touchobj.clientX);
-                window.alert('Touchstart on X: ' + startx + ' px');
-                // touch event detected so set new mouse event listeners
-                r2.tabletInteraction.penNonSupportedHandler.setDomEvents();
-                evt.preventDefault();
 
-            });
-            */
+            //r2.tabletInteraction.penNonSupportedHandler.setDomEvents();
         };
 
         pub.getPos = function(event){
@@ -67,7 +63,7 @@ var r2Ctrl = {};
                             if(r2.keyboard.ctrlkey_dn)
                                 r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
                         }
-                        else if(r2App.mode == r2App.AppModeEnum.RECORDING){
+                        else if(r2App.mode == r2App.AppModeEnum.RECORDING && (pub.penMode == r2.PenModeEnum.DESKTOP || pub.penMode == r2.PenModeEnum.GESTURE)){
                             r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                         }
                         break;
@@ -94,7 +90,7 @@ var r2Ctrl = {};
                         r2.onScreenButtons.drawDnMv(pub.pos_dn, new_mouse_pt);
                     }
                 }
-                else if(r2App.mode == r2App.AppModeEnum.RECORDING){
+                else if(r2App.mode == r2App.AppModeEnum.RECORDING && (pub.penMode == r2.PenModeEnum.DESKTOP || pub.penMode == r2.PenModeEnum.GESTURE)){
                     r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                 }
             }
@@ -118,7 +114,7 @@ var r2Ctrl = {};
                         r2App.annot_private_spotlight.changed = true;
                     }
                 }
-                else if(r2App.mode == r2App.AppModeEnum.RECORDING){
+                else if(r2App.mode == r2App.AppModeEnum.RECORDING && (pub.penMode == r2.PenModeEnum.DESKTOP || pub.penMode == r2.PenModeEnum.GESTURE)){
                     r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                 }
                 pub.mode = r2.MouseModeEnum.HOVER;
@@ -156,6 +152,74 @@ var r2Ctrl = {};
                 }
             }
         };
+
+        pub.loadHammerJs = function() {
+
+
+            $(".disablemodebox").hide();
+            $(".gesturemodebox").hide();
+            $(".penmodebox").hide();
+
+
+            var r2view = document.getElementById("r2_view");
+
+            // We create a manager object, which is the same as Hammer(), but without the presetted recognizers.
+            var mc = new Hammer.Manager(r2view);
+
+
+            // Tap recognizer with minimal 2 taps
+            mc.add( new Hammer.Tap({ event: 'doubletap', taps: 2}) );
+            // Single tap recognizer
+            mc.add( new Hammer.Tap({ event: 'singletap' }) );
+
+
+            // we want to recognize this simulatenous, so a quadrupletap will be detected even while a tap has been recognized.
+            mc.get('doubletap').recognizeWith('singletap');
+            // we only want to trigger a tap, when we don't have detected a doubletap
+            mc.get('singletap').requireFailure('doubletap');
+
+
+            mc.on("doubletap", function(ev) {
+                console.log(ev.type);
+
+                if (r2.mouse.penMode == r2.mouse.penMode == r2.PenModeEnum.r2.PenModeEnum.DISABLED) {
+                    r2.mouse.penMode == r2.PenModeEnum.GESTURE;
+                    $(".gesturemodebox").fadeIn(2000, function() {$(".gesturemodebox").fadeOut();});
+                    //setTimeout(function() {$(".gestiremodebox").hide();}, 1000);
+                    //$(".gestiremodebox").fadeout();
+                }
+                else if (r2.mouse.penMode == r2.PenModeEnum.GESTURE) {
+                    r2.mouse.penMode == r2.PenModeEnum.PEN;
+                    $(".penmodebox").fadeIn(2000, function() {$(".penmodebox").fadeOut();});
+                    //$('.penmodebox').fadeOut();
+                    //setTimeout(function() {$(".penmodebox").hide();}, 1000);
+                }
+                else if (r2.mouse.penMode == r2.PenModeEnum.PEN) {
+                    r2.mouse.penMode == r2.PenModeEnum.DISABLED;
+                    $(".disablemodebox").fadeIn(function() {$(".disablemodebox").fadeOut();});
+                    //setTimeout(function() {$(".disablemodebox").hide();}, 1000);
+                    //$('.disablemodebox').fadeOut();
+                }
+            });
+
+            //load jquery and hammer.js
+            var elem = null;
+            elem = document.createElement('script');
+            elem.type = 'text/javascript';
+            elem.src = 'https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js';
+            document.getElementsByTagName('head')[0].appendChild(elem);
+
+            var hammerScript = document.createElement('script');
+            hammerScript.type = 'text/javascript';
+            hammerScript.src = 'https://hammerjs.github.io/dist/hammer.js';
+            hammerScript.onreadystatechange = hammerSetUp;
+            hammerScript.onload = hammerSetUp;
+            document.getElementsByTagName('head')[0].appendChild(hammerScript);
+        };
+
+
+
+
 
         return pub;
     }());
@@ -670,235 +734,3 @@ var r2Ctrl = {};
 
 }(window.r2 = window.r2 || {}));
 
-
-
-//tabletInteraction
-
-(function(r2){
-
-
-    r2.tabletInteraction = (function(){
-        var pub = {};
-        var isTabletDisplay = false;
-        var isPenSupported =false;
-		//pub.curPenHandler = r2.tabletInteraction.generalTablets;
-        pub.detectTabletDisplay = function(e){
-            if(isTabletDisplay==true) return;
-            isTabletDisplay = true;
-            if(e.pointerType!==undefined){
-                isPenSupported = true;
-                pub.curPenHandler = r2.tabletInteraction.penSupportedHandler;
-            }
-            else {
-                pub.curPenHandler = r2.tabletInteraction.penNonSupportedHandler;
-            }
-			//r2.attach(pub.curPenhandler);
-        };
-
-
-
-        pub.penSupportedHandler = (function(){
-            var pub_ht = {};
-
-
-
-            return pub_ht;
-        }());
-
-        pub.penNonSupportedHandler = (function(){
-            r2.penMouseModeEnum = {
-                IDLE : 0,
-                HOVERIN : 1,
-                HOVEROUT : 2,
-                LDN : 3,
-                UP : 4
-            };
-
-            var pub = {};
-            pub.mode = r2.penMouseModeEnum.IDLE;
-
-            /* not sure if useful */
-            pub.pos_dn = new Vec2(0,0);
-            var in_menu = false;
-            pub.inMenu = function() {in_menu = true;};
-            pub.outMenu = function() {in_menu = false;};
-            /**/
-
-            pub.setDomEvents = function() {
-                r2.dom.setMouseEventHandlers(
-                    pub.mouseDn,
-                    pub.mouseMv,
-                    pub.mouseUp
-                );
-            };
-
-            pub.getPos = function(evt) {
-                return r2.viewCtrl.mapBrowserToScr(new Vec2(evt.clientX, evt.clientY))
-            }
-
-            pub.isTap = function(pt) {
-                var d = pub.pos_dn.subtract(pt, true);
-                d = Math.sqrt(d.x * d.x + d.y * d.y) * r2.viewCtrl .page_width_noscale;
-                return d < r2Const.MOUSE_CLICK_DIST_CRITERIA;
-            };
-
-            pub.hoverTimer = null;
-
-            pub.stopTimer = function() {
-                if (pub.hoverTimer != null) {
-                    clearTimeout(pub.hoverTimer);
-                    pub.hoverTimer = null;
-                }
-            };
-
-            pub.mouseDn = function(evt){
-               var new_mouse_pt = pub.getPos(evt);
-               console.log("mouse down at (" + new_mouse_pt.x + " , " + new_mouse_pt.y + " )");
-               if (pub.mode === r2.penMouseModeEnum.IDLE) {
-                    switch (event.which) {
-                        case 1: // left click
-                            //pub.mode = r2.penMouseModeEnum.LDN;
-                            pub.pos_dn = new_mouse_pt;
-                            if (r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING) {
-                                pub.mode = r2.penMouseModeEnum.LDN;
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-               }
-               // TODO inking
-                r2App.cur_mouse_pt = new_mouse_pt;
-            };
-
-
-            pub.mouseUp = function(evt) {
-                var new_mouse_pt = pub.getPos(event);
-                console.log("mouse up at (" + new_mouse_pt.x + " , " + new_mouse_pt.y + " )");
-                if (pub.mode == r2.penMouseModeEnum.LDN) {
-                    if (!in_menu && pub.isTap(new_mouse_pt)) {
-                        pub.handleTimeIndexingUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt));
-                    }
-                }
-                pub.mode = r2.penMouseModeEnum.IDLE;
-                r2App.cur_mouse_pt = new_mouse_pt;
-                // TODO inking
-            };
-
-
-
-            pub.mouseMv = function(evt){
-                //pub.hoverIn(evt);
-                var new_mouse_pt = pub.getPos(evt);
-                if (pub.mode === r2.penMouseModeEnum.IDLE) { // first hover in
-                    //pub.mode = r2.penMouseModeEnum.HOVERIN;
-                    //pub.pos_dn = new_mouse_pt;
-                    //if (/*r2App.mode == r2App.AppModeEnum.IDLE ||*/ r2App.mode == r2App.AppModeEnum.REPLAYING) {
-                        //window.alert('current app mode idle');
-                    //    if (r2.keyboard.ctrlkey_dn) {
-                    //        console.log("CTRL key dn");
-                    //        r2.spotlightctrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
-                    //        pub.mode = r2.penMouseModeEnum.HOVERIN;
-                    //    }
-                    //}
-                    if (r2App.mode == r2App.AppModeEnum.RECORDING) {
-                        pub.hoverIn(evt);
-                        r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
-                        pub.mode = r2.penMouseModeEnum.HOVERIN;
-                        console.log("IDLE/REPLAYING: mouse move at (" + new_mouse_pt.x + " , " + new_mouse_pt.y + " )");
-                    }
-                }
-                else if (pub.mode === r2.penMouseModeEnum.HOVERIN) { // not first hover in, in this case we need to update the selection area (similar to old mouseMv)
-                    //if(/*r2App.mode == r2App.AppModeEnum.IDLE ||*/ r2App.mode == r2App.AppModeEnum.REPLAYING){
-                    //    if(r2.spotlightCtrl.nowRecording()){
-                    //        r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
-                    //    }
-                    //    else{
-                    //        r2.onScreenButtons.drawDnMv(pub.pos_dn, new_mouse_pt);
-                    //    }
-                    //}
-                    /*else*/ if(r2App.mode == r2App.AppModeEnum.RECORDING){
-                        pub.hoverIn(evt);
-                        r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
-                        console.log("RECORDING: mouse move at (" + new_mouse_pt.x + " , " + new_mouse_pt.y + " )");
-                    }
-                }
-
-                r2App.cur_mouse_pt = new_mouse_pt;
-            };
-
-            pub.hoverIn = function(evt){
-                //clear old timer and set new timer
-                console.log("hover in");
-                pub.stopTimer();
-                pub.hoverTimer = setTimeout(function() {pub.hoverOut(evt);}, 1000);
-            };
-
-            pub.hoverOut = function(evt){
-                //hover out should serve as the signal of the end of a stroke (similar to old handle up)
-                console.log('Hover out!');
-                var new_mouse_pt = pub.getPos(evt);
-                if (r2App.mode == r2App.AppModeEnum.RECORDING) {
-                    r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
-                }
-                pub.mode = r2.penMouseModeEnum.IDLE;
-            };
-
-            pub.touchStart = function(evt){
-
-            };
-
-            pub.touchEnd = function(evt) {
-
-            };
-
-            pub.touchMove = function(evt) {
-
-            };
-
-
-
-            // used to transfer play location/time
-            pub.handleTimeIndexingUp = function(pt){
-                        var l = r2App.cur_page.HitTest(pt);
-                        if(l.length == 0){return;}
-
-                        var playback;
-                        var obj_front = l[0];
-                        if(obj_front instanceof r2.PieceAudio){
-                            playback = obj_front.GetPlayback(pt);
-                            if(playback){
-                                r2.rich_audio.play(playback.annot, playback.t);
-                                r2.log.Log_AudioPlay('indexing_wf', playback.annot, playback.t);
-                            }
-                        }
-                        else if(obj_front instanceof r2.PieceKeyboard){
-                            obj_front.Focus();
-                        }
-                        else{
-                            var spotlights = [];
-                            l.forEach(function(item){if(item instanceof r2.Spotlight.Cache){spotlights.push(item);}});
-                            for(var i = 0; spotlight = spotlights[i]; ++i){
-                                playback = spotlight.GetPlayback(pt);
-                                if(playback){
-                                    r2.rich_audio.play(playback.annot, playback.t);
-                                    r2.log.Log_AudioPlay('indexing_sp', playback.annot, playback.t);
-                                    break;
-                                }
-                            }
-                        }
-                    };
-
-
-            return pub;
-
-        }());
-
-
-        return pub;
-
-    }());
-
-
-
-}(window.r2 = window.r2 || {}));

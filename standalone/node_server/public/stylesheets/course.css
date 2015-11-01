@@ -26,6 +26,14 @@ h5 {
     cursor: pointer;
 }
 
+#submission_items > tr > td > p {
+    margin-bottom: 0;
+}
+
+#submission_items > tr > td > a {
+    margin-left: 0;
+}
+
 .btn {
     text-transform: none;
     margin-left: 5px;
@@ -75,12 +83,18 @@ h5 {
     width: 400px;
 }
 
-.pdf-file-input {
+/*student's file input for pdf upload*/
+input.pdf-file-input {
     width: 200px;
+    display: flex;
+    margin: 3.5px 0;
+}
+
+.download_btn > i{
+    color: #e51c23;
 }
 
 /* progress bar modal window */
-
 .ui-dialog {
     background-color: white;
     padding: 15px 7px;

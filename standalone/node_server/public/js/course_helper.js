@@ -251,6 +251,7 @@
                 var pub_sss = {};
 
                 pub_sss.init = function(){
+                    $('#submission_items').find('tr').remove();
                     return postCourse('student_getSubmissions', {course_id: course_id, email: user_email}).then(
                         function(submissions_dict){
                             var submissions = [];
@@ -282,24 +283,44 @@
                         $tr.append($due);
 
                         var $status = $(document.createElement('td'));
-                        $status.text(submission.status);
+                        {
+                            if(submission.status === 'Submitted'){
+                                var $btn = createNewDomElement('a', ['btn', 'btn-default','btn-sm']);
+
+                                $btn.text('Download ');
+                                $btn.toggleClass('download_btn');
+                                $btn.attr('download');
+                                $btn.attr(
+                                    'href',
+                                    blob_host+course_id.replace('_', '-')+'/'+user_key+'/'+submission.id+'.pdf'
+                                );
+
+                                var $icon = getIcon('fa-file-pdf-o');
+                                $btn.append($icon);
+                                $status.append($btn);
+
+                                var $p = $(document.createElement('p'));
+                                console.log(JSON.stringify(submission));
+                                $p.text(formatDate(new Date(submission.submission_time)));
+                                $status.append($p);
+                            }
+                        }
                         $tr.append($status);
 
-                        var $pdf = $(document.createElement('td'));
+                        var $submissions = $(document.createElement('td'));
                         {
                             var $file_input = uploadPdf.getFileInput();
                             var $upload_btn = uploadPdf.getUploadBtn(submission.id);
-                            uploadPdf.link($upload_btn, $file_input);
+                            uploadPdf.link($upload_btn, $file_input, submission.id);
 
-                            $pdf.append($file_input);
-                            $pdf.append($upload_btn);
+                            $submissions.append($file_input);
+                            $submissions.append($upload_btn);
                         }
-                        $tr.append($pdf);
+                        $tr.append($submissions);
 
                         var $review = $(document.createElement('td'));
-                        $review.text('Open');
+                        $review.text('Pending');
                         $tr.append($review);
-
                     }
                     $('#submission_items').append($tr);
                 };
@@ -344,7 +365,23 @@
                             }
                         };
                         var onload = function(evt){
-                            progressModal.hide();
+                            postCourse(
+                                'student__doneUploadPdf',
+                                {
+                                    course_id: course_id,
+                                    email: user_email,
+                                    submission_id: submission_id
+                                }
+                            ).then(
+                                function(){
+                                    pub_sss.init();
+                                    progressModal.hide();
+                                }
+                            ).catch(
+                                function(err){
+                                    Helper.Util.HandleError(err);
+                                }
+                            );
                         };
 
                         // actual binding

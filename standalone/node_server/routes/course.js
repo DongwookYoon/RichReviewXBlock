@@ -238,6 +238,7 @@ postCms.addEnrollment = function(req, res){
                                 due: dict[id].due,
                                 extension:null,
                                 group:null,
+                                submission_time:null,
                                 status:'Not Submitted'
                             };
                         }
@@ -352,6 +353,29 @@ postCms.student__getUploadSas = function(req, res){
         var sas = azure.getSas(MATH_COURSE_ID.replace('_','-'), key+'/'+req.body.filename, 300);// 5 minutes
         js_utils.PostResp(res, req, 200, sas);
         return null;
+    });
+};
+
+postCms.student__doneUploadPdf = function(req, res){
+    cmsUtil.assertStudent(req, res, function(){
+        var stu_key = 'stu:'+req.body.course_id+'_'+req.body.email;
+        return RedisClient.HGET(stu_key, 'submissions').then(
+            function(submissions){
+                submissions = JSON.parse(submissions);
+                submissions[req.body.submission_id].status = 'Submitted';
+                submissions[req.body.submission_id].submission_time = (new Date()).toISOString();
+                return submissions;
+            }
+        ).then(
+            function(submissions){
+                return RedisClient.HSET(stu_key, 'submissions', JSON.stringify(submissions));
+            }
+        ).then(
+            function(){
+                js_utils.PostResp(res, req, 200);
+                return null;
+            }
+        );
     });
 };
 
@@ -538,6 +562,9 @@ exports.post = function(req, res){
             break;
         case 'student__getUploadSas':
             postCms.student__getUploadSas(req, res);
+            break;
+        case 'student__doneUploadPdf':
+            postCms.student__doneUploadPdf(req, res);
             break;
         default:
             js_utils.PostResp(res, req, 400, "unidentified request: "+req.query['op']);

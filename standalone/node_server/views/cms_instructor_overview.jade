@@ -31,10 +31,11 @@ block content_with_cprght
             table( class="table table-striped table-hover ")
                 thead
                     tr
-                        <th></th>
+                        <th> </th>
                         <th>Due</th>
                         <th>Status</th>
                         <th>Submissions</th>
+                        <th>Review</th>
                 tbody#submission_items
     #enrollment.panel.panel-default
         .panel-heading
@@ -63,4 +64,4 @@ block content_with_cprght
         |  'instructor',
         |  '#{user.email}',
         |  '#{key}'
-        | );;
+        | );

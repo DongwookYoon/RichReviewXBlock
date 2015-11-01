@@ -186,7 +186,7 @@ postCms.getEnrollment = function(req, res){
                 js_utils.PostResp(res, req, 200, JSON.parse(students));
                 return null;
             }
-        )
+        );
     });
 };
 
@@ -310,6 +310,40 @@ postCms.addEnrollment = function(req, res){
         );
     });
 };
+
+postCms.getReviewItems = function(req, res){
+    cmsUtil.assertInstructor(req, res, function(){
+        var emails = [];
+        return RedisClient.HGET('crs:' + req.body.course_id, 'students').then(
+            function (_emails) {
+                emails = JSON.parse(_emails);
+                var promises = emails.map(function(email){
+                    return RedisClient.HGET(
+                        'stu:'+req.body.course_id + '_' + email,
+                        'submissions'
+                    ).then(
+                        function(item){
+                            return JSON.parse(item);
+                        }
+                    );
+                });
+                return Promise.all(promises);
+            }
+        ).then(
+            function(stu_data){
+                var rtn = [];
+                for(var i = 0, l = stu_data.length; i < l; ++i){
+                    var item = stu_data[i][req.body.review];
+                    item.email = emails[i];
+                    rtn.push(item);
+                }
+                js_utils.PostResp(res, req, 200, rtn);
+                return null;
+            }
+        );
+    });
+};
+
 
 /*
 
@@ -478,50 +512,75 @@ postCms.student.doneUpload = function(course_id, netid, submission, path){
 
 exports.get = function (req, res) {
     req.session.latestUrl = req.originalUrl;
+    var course_id = MATH_COURSE_ID;
     if(js_utils.redirectUnknownUser(req, res)){
-        var course_id = MATH_COURSE_ID;
         R2D.User.prototype.findById(req.user.id).then(
             function(user){
-                return Promise.all(
-                    [
-                        cmsUtil.isInstructor(course_id, user.email),
-                        cmsUtil.isStudent(course_id, user.email)
-                    ]
-                ).then(
-                    function(result){
-                        var key = cmsUtil.getSaltedSha1(req.user.email);
-                        if(result[0]){ // is_instructor
-                            res.render('cms_instructor_overview',
+                var key = cmsUtil.getSaltedSha1(req.user.email);
+                if(req.query['review']){
+                    return cmsUtil.isInstructor(course_id, user.email).then(
+                        function(is_instructor){
+                            if(!is_instructor){
+                                throw 'only instructors can access this page.';
+                            }
+                            return null;
+                        }
+                    ).then(
+                        function(){
+                            res.render('cms_instructor_review',
                                 {
                                     cur_page: 'CmsInstructor',
                                     user: req.user,
                                     BLOB_HOST: azure.BLOB_HOST,
                                     HOST: js_utils.getHostname() + "/",
-                                    key: key
+                                    key: key,
+                                    review: req.query['review']
                                 }
                             );
                         }
-                        else if(result[1]){ // is_student
-                            res.render('cms_student',
-                                {
-                                    cur_page: 'CmsStudent',
-                                    user: req.user,
-                                    BLOB_HOST: azure.BLOB_HOST,
-                                    HOST: js_utils.getHostname() + "/",
-                                    key: key
-                                }
-                            );
+                    );
+                }
+                else{
+                    return Promise.all(
+                        [
+                            cmsUtil.isInstructor(course_id, user.email),
+                            cmsUtil.isStudent(course_id, user.email)
+                        ]
+                    ).then(
+                        function(result){
+                            if(result[0]){ // is_instructor
+                                res.render('cms_instructor_overview',
+                                    {
+                                        cur_page: 'CmsInstructor',
+                                        user: req.user,
+                                        BLOB_HOST: azure.BLOB_HOST,
+                                        HOST: js_utils.getHostname() + "/",
+                                        key: key
+                                    }
+                                );
+                            }
+                            else if(result[1]){ // is_student
+                                res.render('cms_student',
+                                    {
+                                        cur_page: 'CmsStudent',
+                                        user: req.user,
+                                        BLOB_HOST: azure.BLOB_HOST,
+                                        HOST: js_utils.getHostname() + "/",
+                                        key: key
+                                    }
+                                );
+                            }
+                            else {
+                                res.render('cms_unidentified',
+                                    {
+                                        cur_page: 'CmsUnidentified',
+                                        user: req.user
+                                    }
+                                );
+                            }
                         }
-                        else {
-                            res.render('cms_unidentified',
-                                {
-                                    cur_page: 'CmsUnidentified',
-                                    user: req.user
-                                }
-                            );
-                        }
-                    }
-                );
+                    );
+                }
             }
         ).catch(
             function(err){
@@ -554,6 +613,9 @@ exports.post = function(req, res){
             break;
         case 'addEnrollment':
             postCms.addEnrollment(req, res);
+            break;
+        case 'getReviewItems':
+            postCms.getReviewItems(req, res);
             break;
 
         /* student */

@@ -140,7 +140,7 @@
                 }
             }
             r2.spotlightCtrl.drawDynamicSceneTraces(r2.annot_canv_ctx);
-
+            r2.inkCtrl.drawDynamicSceneTraces();
             r2App.pieceSelector.draw(r2.annot_canv_ctx);
         }
 

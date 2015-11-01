@@ -8,7 +8,8 @@
             ["utils.js", "js"],
             ["multicolumn.js", "js"],
             ["main.js", "js"],
-
+			["jquery_1.11.1.min.js", "js"],
+			["hammer.js", "js"]
         ];
 
         Pla.loadJsScript = function(url, type){

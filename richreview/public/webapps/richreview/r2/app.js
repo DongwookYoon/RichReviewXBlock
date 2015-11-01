@@ -174,6 +174,7 @@
 
                     r2.onScreenButtons.Init();
                     r2.mouse.setDomEvents();
+					r2.mouse.loadHammerJs();
                 }
             ).then(
                 initUserSet

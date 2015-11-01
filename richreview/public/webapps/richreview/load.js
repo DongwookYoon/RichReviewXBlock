@@ -50,7 +50,9 @@
             ['r2/controller/controller_dbs.js', 'js'],
             ['r2/controller/controller_event.js', 'js'],
             ['r2/controller/controller_ctrl.js', 'js'],
-            ['r2/app.js', 'js']
+            ['r2/app.js', 'js'],
+			//['lib_ext/jquery_1.11.1.min.js', 'js'],
+			['lib_ext/hammer.js', 'js']
         ];
 
         var job = function(i){

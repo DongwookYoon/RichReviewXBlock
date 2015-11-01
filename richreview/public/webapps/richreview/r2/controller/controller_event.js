@@ -24,7 +24,7 @@ var r2Ctrl = {};
 
         pub.mode = r2.MouseModeEnum.HOVER;
         pub.pos_dn = new Vec2(0,0);
-        pub.penMode = r2.PenModeEnum.DESKTOP;
+        pub.penMode = r2.PenModeEnum.DISABLED;
 
         var in_menu = false;
 
@@ -155,55 +155,62 @@ var r2Ctrl = {};
 
         pub.loadHammerJs = function() {
 
-
-            $(".disablemodebox").hide();
-            $(".gesturemodebox").hide();
-            $(".penmodebox").hide();
-
-
-            var r2view = document.getElementById("r2_view");
-
-            // We create a manager object, which is the same as Hammer(), but without the presetted recognizers.
-            var mc = new Hammer.Manager(r2view);
+			console.log("start load hammerjs");
+		
+			//var hammerSetUp = function() {
+				$(".disablemodebox").hide();
+				$(".gesturemodebox").hide();
+				$(".penmodebox").hide();
 
 
-            // Tap recognizer with minimal 2 taps
-            mc.add( new Hammer.Tap({ event: 'doubletap', taps: 2}) );
-            // Single tap recognizer
-            mc.add( new Hammer.Tap({ event: 'singletap' }) );
+				var r2view = document.getElementById("r2_view");
+
+				// We create a manager object, which is the same as Hammer(), but without the presetted recognizers.
+				var mc = new Hammer.Manager(r2view);
 
 
-            // we want to recognize this simulatenous, so a quadrupletap will be detected even while a tap has been recognized.
-            mc.get('doubletap').recognizeWith('singletap');
-            // we only want to trigger a tap, when we don't have detected a doubletap
-            mc.get('singletap').requireFailure('doubletap');
+				// Tap recognizer with minimal 2 taps
+				mc.add( new Hammer.Tap({ event: 'doubletap', taps: 2}) );
+				// Single tap recognizer
+				mc.add( new Hammer.Tap({ event: 'singletap' }) );
+
+			console.log("1");
+			
+				// we want to recognize this simulatenous, so a quadrupletap will be detected even while a tap has been recognized.
+				mc.get('doubletap').recognizeWith('singletap');
+				// we only want to trigger a tap, when we don't have detected a doubletap
+				mc.get('singletap').requireFailure('doubletap');
 
 
-            mc.on("doubletap", function(ev) {
-                console.log(ev.type);
+				mc.on("doubletap", function(ev) {
+					console.log(ev.type);
 
-                if (r2.mouse.penMode == r2.mouse.penMode == r2.PenModeEnum.r2.PenModeEnum.DISABLED) {
-                    r2.mouse.penMode == r2.PenModeEnum.GESTURE;
-                    $(".gesturemodebox").fadeIn(2000, function() {$(".gesturemodebox").fadeOut();});
-                    //setTimeout(function() {$(".gestiremodebox").hide();}, 1000);
-                    //$(".gestiremodebox").fadeout();
-                }
-                else if (r2.mouse.penMode == r2.PenModeEnum.GESTURE) {
-                    r2.mouse.penMode == r2.PenModeEnum.PEN;
-                    $(".penmodebox").fadeIn(2000, function() {$(".penmodebox").fadeOut();});
-                    //$('.penmodebox').fadeOut();
-                    //setTimeout(function() {$(".penmodebox").hide();}, 1000);
-                }
-                else if (r2.mouse.penMode == r2.PenModeEnum.PEN) {
-                    r2.mouse.penMode == r2.PenModeEnum.DISABLED;
-                    $(".disablemodebox").fadeIn(function() {$(".disablemodebox").fadeOut();});
-                    //setTimeout(function() {$(".disablemodebox").hide();}, 1000);
-                    //$('.disablemodebox').fadeOut();
-                }
-            });
-
+					if (r2.mouse.penMode == r2.PenModeEnum.DISABLED) {
+						r2.mouse.penMode = r2.PenModeEnum.GESTURE;
+						$(".gesturemodebox").fadeIn(2000, function() {$(".gesturemodebox").fadeOut();});
+						//setTimeout(function() {$(".gestiremodebox").hide();}, 1000);
+						//$(".gestiremodebox").fadeout();
+					}
+					else if (r2.mouse.penMode == r2.PenModeEnum.GESTURE) {
+						r2.mouse.penMode = r2.PenModeEnum.PEN;
+						$(".penmodebox").fadeIn(2000, function() {$(".penmodebox").fadeOut();});
+						//$('.penmodebox').fadeOut();
+						//setTimeout(function() {$(".penmodebox").hide();}, 1000);
+					}
+					else if (r2.mouse.penMode == r2.PenModeEnum.PEN) {
+						r2.mouse.penMode = r2.PenModeEnum.DISABLED;
+						$(".disablemodebox").fadeIn(function() {$(".disablemodebox").fadeOut();});
+						//setTimeout(function() {$(".disablemodebox").hide();}, 1000);
+						//$('.disablemodebox').fadeOut();
+					}
+				});
+				
+			console.log("1");
+			//};
+			
             //load jquery and hammer.js
-            var elem = null;
+            /*
+			var elem = null;
             elem = document.createElement('script');
             elem.type = 'text/javascript';
             elem.src = 'https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js';
@@ -215,7 +222,8 @@ var r2Ctrl = {};
             hammerScript.onreadystatechange = hammerSetUp;
             hammerScript.onload = hammerSetUp;
             document.getElementsByTagName('head')[0].appendChild(hammerScript);
-        };
+			*/
+		};
 
 
 
@@ -734,3 +742,60 @@ var r2Ctrl = {};
 
 }(window.r2 = window.r2 || {}));
 
+/*
+(function(r2){
+	console.log("start load hammerjs");
+		
+	//var hammerSetUp = function() {
+	$(".disablemodebox").hide();
+	$(".gesturemodebox").hide();
+	$(".penmodebox").hide();
+
+
+	var r2view = document.getElementById("r2_view");
+
+	// We create a manager object, which is the same as Hammer(), but without the presetted recognizers.
+	var mc = new Hammer.Manager(r2view);
+
+
+	// Tap recognizer with minimal 2 taps
+	mc.add( new Hammer.Tap({ event: 'doubletap', taps: 2}) );
+	// Single tap recognizer
+	mc.add( new Hammer.Tap({ event: 'singletap' }) );
+
+	console.log("1");
+
+	// we want to recognize this simulatenous, so a quadrupletap will be detected even while a tap has been recognized.
+	mc.get('doubletap').recognizeWith('singletap');
+	// we only want to trigger a tap, when we don't have detected a doubletap
+	mc.get('singletap').requireFailure('doubletap');
+
+
+	mc.on("doubletap", function(ev) {
+		console.log(ev.type);
+
+		if (r2.mouse.penMode == r2.mouse.penMode == r2.PenModeEnum.r2.PenModeEnum.DISABLED) {
+			r2.mouse.penMode = r2.PenModeEnum.GESTURE;
+			$(".gesturemodebox").fadeIn(2000, function() {$(".gesturemodebox").fadeOut();});
+			//setTimeout(function() {$(".gestiremodebox").hide();}, 1000);
+			//$(".gestiremodebox").fadeout();
+		}
+		else if (r2.mouse.penMode == r2.PenModeEnum.GESTURE) {
+			r2.mouse.penMode = r2.PenModeEnum.PEN;
+			$(".penmodebox").fadeIn(2000, function() {$(".penmodebox").fadeOut();});
+			//$('.penmodebox').fadeOut();
+			//setTimeout(function() {$(".penmodebox").hide();}, 1000);
+		}
+		else if (r2.mouse.penMode == r2.PenModeEnum.PEN) {
+			r2.mouse.penMode = r2.PenModeEnum.DISABLED;
+			$(".disablemodebox").fadeIn(function() {$(".disablemodebox").fadeOut();});
+			//setTimeout(function() {$(".disablemodebox").hide();}, 1000);
+			//$('.disablemodebox').fadeOut();
+		}
+	});
+	
+	console.log("1");
+
+
+}(window.r2 = window.r2 || {}));
+*/

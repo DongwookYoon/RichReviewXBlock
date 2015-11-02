@@ -499,6 +499,9 @@
                 };
 
                 var add = function(item){
+                    var submitted = item.submission_time !== null &&
+                        (item.status === 'Submitted' || item.status === 'ReadyForReview');
+                    var ready = submitted && item.status === 'ReadyForReview';
                     var $tr = $(document.createElement('tr'));
                     {
                         var $title = $(document.createElement('td'));
@@ -510,7 +513,7 @@
                         $tr.append($due);
 
                         var $status = $(document.createElement('td'));
-                        if(item.submission_time){
+                        if(submitted){
                             $status.text(formatDate(new Date(item.submission_time)));
                         }
                         else{
@@ -520,11 +523,31 @@
 
                         var $review = $(document.createElement('td'));
                         {
-                            var $btn = createNewDomElement('a', ['btn', 'btn-default','btn-sm'], $review);
-                            $btn.text('Open');
-                            $btn.click(function(){
-                                window.open(host+course_id+'?review='+submission.id);
-                            });
+                            if (ready){
+                                var $btn = createNewDomElement('a', ['btn', 'btn-default','btn-sm'], $review);
+                                $btn.text('Open');
+                                $btn.click(function(){
+                                    alert(host+course_id+'?review='+submission.id);
+                                });
+                            }
+                            else if(submitted)
+                            {
+                                var $p = $(document.createElement('p'));
+                                $p.text('Pending');
+                                $review.append($p);
+
+                                var $btn = createNewDomElement('a', ['btn', 'btn-default','btn-sm'], $review);
+                                $btn.text('?');
+                                $btn.click(function(){
+                                    alert('The student ' + item.email + ' has made the submission successfully in time. ' +
+                                    'Researchers are processing the submission file into the format ' +
+                                    'to which the instructors can give a feedback.' );
+                                });
+                                $p.append($btn);
+                            }
+                            else{
+                                $review.text('-');
+                            }
                         }
                         $tr.append($review);
                     }

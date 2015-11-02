@@ -401,3 +401,7 @@ function UploadBlockBlobFromLocalFileList(container, blob_path, file_path, file_
         }
     }
 }
+
+process.argv.forEach(function (val, index, array) {
+    console.log(index + ': ' + val);
+});

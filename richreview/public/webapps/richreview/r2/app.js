@@ -175,9 +175,15 @@
                     r2.resizeWindow({});
 
                     r2.onScreenButtons.Init();
+<<<<<<< HEAD
                     r2.input.setModeDesktop();
                     r2.tabletInput.setEventHandlers();
                     return null;
+=======
+                    r2.mouse.setDomEvents();
+                    r2.mouse.loadHammerJs();
+                    r2.tabletInteraction.tabletInit();
+>>>>>>> inking success
                 }
             ).then(
                 initUserSet

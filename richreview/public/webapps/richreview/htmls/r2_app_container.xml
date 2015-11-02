@@ -105,6 +105,9 @@
 </div>
 
 <div id="overlay_container">
+    <div class="disablemodebox" style="display: none;"> Switched to disble-all mode </div>
+    <div class="gesturemodebox" style="display: none;"> Switched to gesture mode </div>
+    <div class="penmodebox" style="display: none;"> Switched to pen mode </div>
     <div id="rendering_spinner">
         <i class="fa fa-spinner faa-spin animated"></i>
     </div>

@@ -69,4 +69,3 @@ for n in range(1, 100):
     if(os.path.isfile(path)):
         run(path)
 cv2.destroyAllWindows()
-

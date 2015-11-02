@@ -10,12 +10,33 @@ var azure = require('./lib/azure');
 var Promise = require("promise");
 var RedisClient = require('./lib/redis_client').RedisClient;
 var crypto = require('crypto');
+var spawn = require("child_process").spawn;
 
 var getSaltedSha1 = function(email){
     var shasum = crypto.createHash('sha1');
     shasum.update(email+env.sha1_salt.netid);
     return shasum.digest('hex').toLowerCase();
 };
+
+var runPythonProcess = function(path){
+    var python_process = spawn('python',["../../django_server/lined_notebook/from_pdf.py", path]);
+
+    var output = '';
+    python_process.stdout.on('data', function(){
+        output += data;
+        console.log(output);
+    });
+    python_process.stderr.on('data', function (data) {
+        console.log('ps stderr: ' + data);
+    });
+    python_process.on('close', function(code){
+        console.log('python_process closed');
+    });
+    python_process.on('error', function (err) {
+        console.log('error:'+err);
+    });
+};
+
 
 var process_course_submission = function(course_id, submission_id, data){
 
@@ -50,6 +71,8 @@ var process_course_submission = function(course_id, submission_id, data){
 };
 
 exports.run = function(course_id, submission_id){
+    runPythonProcess('hi');
+    /*
     RedisClient.HGET('crs:'+course_id, 'students').then(
         function(stus){
             var promises = JSON.parse(stus).map(function(stu){
@@ -76,5 +99,5 @@ exports.run = function(course_id, submission_id){
         function(err){
             console.log(err);
         }
-    );
+    );*/
 };

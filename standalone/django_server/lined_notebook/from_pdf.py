@@ -1,3 +1,4 @@
+import sys
 import cv2
 import numpy as np
 import PyPDF2
@@ -10,10 +11,9 @@ from sklearn import linear_model, datasets
 from scipy.spatial import distance
 import subprocess
 
+
 IMAGE_WIDTH = 768
 DPI_TO_PX_RATIO = 72
-#FOLDER_NAME = './lined_notebook/lined_notebook.pdf'
-FOLDER_NAME = './scanned_notebook/scanned_notebook.pdf'
 HOUGH_THRESHOLD = 175
 HOUGH_THRESHOLD_AFTER_UNDISTORTION = 250
 HOUGH_THETA_THRESHOLD = 30
@@ -210,15 +210,15 @@ def run(pdf, n):
     split_pts = split(cv_img, verbose = False)
     split_pts.sort()
 
-    return cv_img, split_pts
-
-    key = cv2.waitKey(0)
+    key = cv2.waitKey(1)
     if(key == 113):
          quit()
 
-def run2():
+    return cv_img, split_pts
 
-    pdf = PyPDF2.PdfFileReader(file(FOLDER_NAME, "rb"))
+def run2(path, filename):
+    pdf = PyPDF2.PdfFileReader(file(path+'/'+filename, "rb"))
+    '''
 
     cv2.namedWindow('img')
     cv2.moveWindow('img', 0, 0)
@@ -229,18 +229,21 @@ def run2():
     for n in xrange(0, pdf.getNumPages()):
         print 'PDF page:', n
         img, pts = run(pdf, n)
-        cv2.imwrite('./scanned_notebook/'+str(n)+'.jpg', img)
+        cv2.imwrite(path+'/'+str(n)+'.jpg', img)
     cv2.destroyAllWindows()
+    '''
+    param = ['convert', path+'\\*.jpg']
+    #for n in xrange(0, pdf.getNumPages()):
+    #    param.append(str(n)+'.jpg')
+    print param
+    ret = subprocess.call(param,stdout=subprocess.PIPE, cwd=path)
 
-def save():
-    param = ['convert']
-    for n in xrange(0, 3):
-        param.append('./scanned_notebook/'+str(n)+'.jpg')
-    param.append('./scanned_notebook/merged.pdf')
-    ret = subprocess.call(param,stdout=subprocess.PIPE)
+path = sys.argv[1]
+filename = sys.argv[2]
 
-run2()
-save()
+print path, filename
+run2(path, filename)
+
 
 #cv2.findHomography
 #dst = cv2.warpPerspective(img,M,(300,300))

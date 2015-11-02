@@ -10,22 +10,27 @@
     var user_type = null;
     var user_email = null;
     var user_key = null;
+    var review = null;
 
     r2.course = (function(){
         var pub = {};
 
-        pub.init = function(_blob_host, _host, _course_id, _user_type, _user_email, _user_key){
+        pub.init = function(_blob_host, _host, _course_id, _user_type, _user_email, _user_key, _review){
             host = _host;
             blob_host = _blob_host;
             course_id = _course_id;
             user_type = _user_type;
             user_email = _user_email;
             user_key = _user_key;
+            review = _review;
 
             announcements.init();
             surveys.init();
             if(_user_type === 'instructor'){
                 submissions_instructor.init();
+            }
+            else if(_user_type === 'instructor_review'){
+                reviews.init();
             }
             else if(_user_type === 'student'){
                 submission_student.init();
@@ -118,9 +123,6 @@
 
                 pub_sbs.add = function(submission){
                     var $tr = $(document.createElement('tr'));
-                    $tr.click(function(){
-                        window.open(host+course_id+'?submission='+submission.id);
-                    });
                     {
                         var $title = $(document.createElement('td'));
                         $title.text(submission.title);
@@ -137,6 +139,17 @@
                         var $submitted = $(document.createElement('td'));
                         $submitted.text(submission.submitted);
                         $tr.append($submitted);
+
+
+                        var $review = $(document.createElement('td'));
+                        {
+                            var $btn = createNewDomElement('a', ['btn', 'btn-default','btn-sm'], $review);
+                            $btn.text('Open');
+                            $btn.click(function(){
+                                window.open(host+course_id+'?review='+submission.id);
+                            });
+                        }
+                        $tr.append($review);
                     }
                     $('#submission_items').append($tr);
                 };
@@ -444,6 +457,107 @@
             }());
 
             return pub_ss;
+        }());
+
+        var reviews = (function(){
+            var pub_rv = {};
+
+            pub_rv.init = function(){
+                postCourse('getSubmissions', {course_id: course_id}).then(
+                    function(submissions_dict){
+                        $('#reviews').find('.panel-heading').find('.title').text(
+                            submissions_dict[review].title
+                        );
+                        return null;
+                    }
+                ).then(
+                    review_items.init
+                ).catch(
+                    function(err){
+                        Helper.Util.HandleError(err);
+                    }
+                );
+            };
+
+            var review_items = (function(){
+                var pub_rvr = {};
+
+                pub_rvr.init = function(){
+                    return postCourse(
+                        'getReviewItems',
+                        {
+                            course_id: course_id,
+                            review: review
+                        }
+                    ).then(
+                        function(review_items){
+                            review_items.forEach(function(item){
+                                add(item);
+                            });
+                        }
+                    );
+                };
+
+                var add = function(item){
+                    var submitted = item.submission_time !== null &&
+                        (item.status === 'Submitted' || item.status === 'ReadyForReview');
+                    var ready = submitted && item.status === 'ReadyForReview';
+                    var $tr = $(document.createElement('tr'));
+                    {
+                        var $title = $(document.createElement('td'));
+                        $title.text(item.email);
+                        $tr.append($title);
+
+                        var $due = $(document.createElement('td'));
+                        $due.text(formatDate(new Date(item.due)));
+                        $tr.append($due);
+
+                        var $status = $(document.createElement('td'));
+                        if(submitted){
+                            $status.text(formatDate(new Date(item.submission_time)));
+                        }
+                        else{
+                            $status.text('Not Submitted');
+                        }
+                        $tr.append($status);
+
+                        var $review = $(document.createElement('td'));
+                        {
+                            if (ready){
+                                var $btn = createNewDomElement('a', ['btn', 'btn-default','btn-sm'], $review);
+                                $btn.text('Open');
+                                $btn.click(function(){
+                                    alert(host+course_id+'?review='+submission.id);
+                                });
+                            }
+                            else if(submitted)
+                            {
+                                var $p = $(document.createElement('p'));
+                                $p.text('Pending');
+                                $review.append($p);
+
+                                var $btn = createNewDomElement('a', ['btn', 'btn-default','btn-sm'], $review);
+                                $btn.text('?');
+                                $btn.click(function(){
+                                    alert('The student ' + item.email + ' has made the submission successfully in time. ' +
+                                    'Researchers are processing the submission file into the format ' +
+                                    'to which the instructors can give a feedback.' );
+                                });
+                                $p.append($btn);
+                            }
+                            else{
+                                $review.text('-');
+                            }
+                        }
+                        $tr.append($review);
+                    }
+                    $('#review_items').append($tr);
+                };
+
+                return pub_rvr;
+            }());
+
+            return pub_rv;
         }());
 
         var progressModal = (function(){

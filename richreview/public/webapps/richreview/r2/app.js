@@ -174,7 +174,8 @@
 
                     r2.onScreenButtons.Init();
                     r2.mouse.setDomEvents();
-					r2.tabletInteraction.tabletInit();
+                    r2.mouse.loadHammerJs();
+                    r2.tabletInteraction.tabletInit();
                 }
             ).then(
                 initUserSet

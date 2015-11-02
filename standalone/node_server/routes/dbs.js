@@ -70,8 +70,7 @@ var GetDocsOwned = function(req, res){
     }
 };
 
-<<<<<<< HEAD
-=======
+
 var GetDocsParticipated = function(req, res){
     if(req.user){
         R2D.User.prototype.GetGroupNs(req.user.id).then(
@@ -140,7 +139,6 @@ var GetDocById = function(req, res){
     }
 };
 
->>>>>>> refs/remotes/DongwookYoon/master
 
 var MyDoc_AddNewGroup = function(req, res){
     if(req.user){
@@ -436,15 +434,12 @@ exports.post = function(req, res){
         case "GetDocsOwned":
             GetDocsOwned(req, res);
             break;
-<<<<<<< HEAD
-=======
         case "GetDocById":
             GetDocById(req, res);
             break;
         case "GetDocsParticipated":
             GetDocsParticipated(req, res);
             break;
->>>>>>> refs/remotes/DongwookYoon/master
         case "MyDoc_AddNewGroup":
             MyDoc_AddNewGroup(req, res);
             break;

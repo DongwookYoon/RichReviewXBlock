@@ -4,6 +4,7 @@
 
 
 var env = require('./lib/env.js');
+var mkdirp = require('mkdirp');
 var js_utils = require("./lib/js_utils.js");
 var azure = require('./lib/azure');
 var Promise = require("promise");
@@ -17,25 +18,35 @@ var getSaltedSha1 = function(email){
 };
 
 var process_course_submission = function(course_id, submission_id, data){
-    var c= course_id.replace('_', '-');
-    var b = getSaltedSha1(data.email)+'/'+submission_id+'.pdf';
-    console.log(course_id, data, c, b, './cache/' + c + '/' + b);
-    console.log(data.email, 'https://richreview.blob.core.windows.net/math2220-fall2015/bacca6e303c2fd44eaa75e86195a6f400c4d04a1/assignment1.pdf');
-    return new Promise(function(resolve, reject) {
+
+    return new Promise(function(resolve, reject) { // donwload
         if(data.status === 'Submitted'){
-            azure.BlobFileDownload(c, b, './cache/' + c + '/' + b, function (err) {
+
+            var c= course_id.replace('_', '-');
+            var b = getSaltedSha1()+'/'+submission_id+'.pdf';
+            var path = './cache/' + c + '/' + b;
+            console.log('+', data.email, c, b);
+
+            var dir = path.substring(0, path.lastIndexOf('/'));
+            mkdirp(dir);
+            azure.BlobFileDownload(c, b, path, function (err) {
                 if (err) {
                     reject(err)
                 }
                 else {
-                    resolve();
+                    resolve(true);
                 }
             });
         }
         else{
-            resolve();
+            console.log('-', data.email);
+            resolve(false);
         }
-    });
+    }).then(
+        function(){
+            return null;
+        }
+    );
 };
 
 exports.run = function(course_id, submission_id){

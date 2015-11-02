@@ -24,7 +24,7 @@ var process_course_submission = function(course_id, submission_id, data){
 
             var c= course_id.replace('_', '-');
             var b = getSaltedSha1()+'/'+submission_id+'.pdf';
-            var path = './cache/' + c + '/' + b;
+            var path = '../cache/' + c + '/' + b;
             console.log('+', data.email, c, b);
 
             var dir = path.substring(0, path.lastIndexOf('/'));

@@ -48,9 +48,6 @@ exports.post = function(req, res){
         }
 
         switch(req.body.op){
-            case 'get_azure_sas':
-                getAzureSas(req, res);
-                break;
             default:
                 throw '\'' + req.body.op + '\''+ ' is an undefined operation';
                 break;
@@ -67,17 +64,4 @@ exports.post = function(req, res){
             res.status(400).send({'error': 'unidentified internal server error'});
         }
     }
-};
-
-var getAzureSas = function(req, res){
-    if( typeof req.user === 'undefined' || typeof req.user.id !== 'undefined') { // allows authorized users only
-        //throw 'you are not an authorized user. please sign in.'
-    }
-    if( typeof req.body.container === 'undefined' ||
-        typeof req.body.blob === 'undefined' ){
-        throw 'please specify target container and blob.'
-    }
-
-    var sas = azure.getSas(req.body.container, req.body.blob, 120); // 2 minutes of expiry
-    res.send({'sas':sas});
 };

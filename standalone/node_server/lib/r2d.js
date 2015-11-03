@@ -6,18 +6,13 @@
 * R2D
 */
 
-var redis = require('redis');
-var redisClient = redis.createClient(6379, "richreview.net");
-var js_utils = require('../lib/js_utils.js');
 var Promise = require("promise");
-redisClient.auth('rich.reviewer@cornell');
-redisClient.on('error', function(err) {
-    // "Redis connection to <hostname>:6379 failed - read ETIMEDOUT";
-    console.log('Redis error: ' + err);
-});
-
+var js_utils = require('../lib/js_utils.js');
+var redisClient = require('../lib/redis_client').redisClient;
+var RedisClient = require('../lib/redis_client').RedisClient;
 
 /*
+<<<<<<< HEAD
 <<<<<<< HEAD
  * Ping regularly in order to maintain the connection
  */
@@ -200,255 +195,214 @@ User.prototype.GetGroupNs = function(userid_n, cb){
 =======
 >>>>>>> refs/remotes/DongwookYoon/master
  *  RedisWrapper for Promise
- */
-
-var RedisClient = {
-    HGET: function(key, field){
-        return new Promise(function(resolve, reject){
-            redisClient.HGET(key, field, function(err, rtn){
-                if(err){
-                    reject(err);
-                }
-                else{
-                    resolve(rtn);
-                }
-            });
-        });
-    },
-
-    HGETALL: function(key) {
-        return new Promise(function (resolve, reject) {
-            redisClient.HGETALL(key, function (err, rtn) {
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(rtn);
-                }
-            });
-        })
-    },
-
-    KEYS: function(exp) {
-        return new Promise(function (resolve, reject) {
-            redisClient.KEYS(exp, function (err, rtn) {
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(rtn);
-                }
-            });
-        })
-    },
-
-    EXISTS: function(key){
-        return new Promise(function (resolve, reject) {
-            redisClient.EXISTS(key, function(err, rtn){
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(rtn);
-                }
-            });
-        })
-    },
-
-    HMSET: function(){
-        var a = [];
-        for(var i = 0; i < arguments.length; ++i){
-            a.push(arguments[i]);
-        }
-        return new Promise(function (resolve, reject) {
-            var f = function(err, rtn){
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(rtn);
-                }
-            };
-            a.push(f);
-            redisClient.HMSET.apply(redisClient, a);
-
-        });
-    },
-
-    HSET: function(key, field, value) {
-        return new Promise(function (resolve, reject) {
-            redisClient.HSET(key, field, value, function(err, rtn){
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(rtn);
-                }
-            });
-        });
-    },
-
-    DEL: function(key) {
-        return new Promise(function (resolve, reject) {
-            redisClient.DEL(key, function(err, rtn){
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(rtn);
-                }
-            });
-        });
-    },
-
-    LRANGE: function(key, start, stop){
-        return new Promise(function (resolve, reject) {
-            redisClient.LRANGE(key, start, stop, function(err, rtn){
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(rtn);
-                }
-            });
-        });
-    }
-};
-
-/*
- * Ping regularly in order to maintain the connection
- */
-function PingRedisServer()
-{
-    redisClient.ping(redis.print);
-    setTimeout(PingRedisServer, 3*60*1000);
-}
-PingRedisServer();
-
-
-/*
+=======
  * User
+>>>>>>> refs/remotes/DongwookYoon/master
  */
-var user_cache = {};
 var User = function(id, nickname, email){
     this.id = id;
     this.nick = nickname;
     this.email = email;
 };
-(function populateUserCache(){
-    RedisClient.KEYS("usr:*").then(
-        function(userids){
-            Promise.all(
-                userids.map(function(userid){
-                    return User.prototype.findOrCreate(userid.substring(4))
+
+User.prototype.getSignedUp = function(){
+    return RedisClient.KEYS('usr:*').then(
+        function(keys){
+            return Promise.all(
+                keys.map(function(key){
+                    return RedisClient.HGETALL(key)
                 })
             ).then(
-                function(users){
-                    users.forEach(function(user){user_cache[user.id] = user;})
-                }
-            ).catch(
-                function(err){
-                    console.log(err);
+                function(usrs){
+                    for(var i = 0, l = usrs.length; i < l; ++i){
+                        usrs[i].id = keys[i];
+                    }
+                    return usrs;
                 }
             );
         }
-    );
-})();
-User.prototype.updateNick = function(id, newnick){
-    if(user_cache.hasOwnProperty(id)){
-        return RedisClient.HMSET(
-            'usr:' + id,
-            'nick', newnick
-        ).then(
-            function(){
-                user_cache[id].nick = newnick;
-                return user_cache[id];
+    )
+};
+
+User.prototype.cache = (function(){
+    var pub = {};
+
+    var cache = {};
+
+    pub.populate = function(){
+        return RedisClient.KEYS("usr:*").then(
+            function(userids){
+                return Promise.all(
+                    userids.map(function(userid){return pub.loadFromDb(userid.substring(4));})
+                );
             }
-        );
-    }
-    else{
-        throw 'internal server error: user not cached';
-    }
-};
-User.prototype.updateEmail = function(id, newemail){
-    if(user_cache.hasOwnProperty(id)){
-        return RedisClient.HMSET(
-            'usr:' + id,
-            'email', newemail
         ).then(
-            function(){
-                user_cache[id].email = newemail;
-                return user_cache[id];
+            function(users){
+                return users;
             }
-        );
-    }
-    else{
-        throw 'internal server error: user not cached';
-    }
-};
-User.prototype.findById = function(id){
-    return new Promise(function(resolve, reject){
-        if(user_cache.hasOwnProperty(id)) {
-            resolve(user_cache[id]);
-        }
-        else{
-            reject('cannot find the user with the given id: '+id);
-        }
-    });
-};
-User.prototype.findOrCreate = function(id, email){
-    return new Promise(function(resolve, reject){
-        var done = function(user){
-            if(typeof email !== 'undefined' && user.email !== email){
-                return User.prototype.updateEmail(id, email).then(
-                    function(){
-                        resolve(user);
-                    }
-                )
+        ).catch(
+            function(err){
+                console.log(err);
+            }
+        )
+    };
+
+    pub.loadFromDb = function(id){
+        return RedisClient.HGETALL("usr:"+id).then(
+            function(result){
+                 var new_user = new User(
+                    id,
+                    result.nick,
+                    result.email
+                );
+                cache[id] = new_user;
+                return new_user;
+            }
+        )
+    };
+
+    pub.get = function(id){
+        return new Promise(function(resolve, reject) {
+            if(cache.hasOwnProperty(id)){
+                resolve(cache[id]);
             }
             else{
-                resolve(user);
+                reject('the user with id:' + id + ' does not exist.');
             }
-        };
+        });
+    };
 
-        if(user_cache.hasOwnProperty(id)){ // cached
-            done(user_cache[id]);
+    pub.populate();
+
+    return pub;
+}());
+
+User.prototype.isExist = function(id){
+    return RedisClient.EXISTS('usr:'+id);
+};
+
+User.prototype.findById = function(id){
+    return User.prototype.cache.get(id);
+};
+
+User.prototype.findByEmail = function(email){
+    return RedisClient.HGET('email_user_lookup', email).then(
+        function(id){
+            return User.prototype.cache.get(id.substring(4));
+        }
+    );
+};
+
+User.prototype.create = function(id, email){
+
+    var groupids = [];
+
+    return RedisClient.HMSET(
+        'usr:'+id,
+        'nick', 'user'+id.substr(3, 1)+id.substr(6, 2),
+        'email', email,
+        'groupNs', '[]'
+    ).then(
+        function(){
+            return RedisClient.HMSET(
+                'email_user_lookup',
+                email,
+                'usr:'+id
+            )
+        }
+    ).then(
+        function(){
+            return RedisClient.LRANGE('inv:'+email, 0, -1).then(
+                function(_groupids){
+                    groupids = _groupids;
+                    return null;
+                }
+            );
+        }
+    ).then(
+        function(){
+            var argl = groupids.map(
+                function(groupid){
+                    return [groupid.substring(4), id];
+                }
+            );
+            return js_utils.PromiseLoop(Group.connectUserAndGroup, argl);
+        }
+    ).then(
+        function(){
+            var argl = groupids.map(
+                function(groupid){
+                    return [groupid.substring(4), email];
+                }
+            );
+            return js_utils.PromiseLoop(Group.CancelInvited, argl);
+        }
+    ).then(
+        function(){
+            return User.prototype.cache.loadFromDb(id);
+        }
+    );
+};
+
+User.prototype.deleteByEmail = function(email){
+    return RedisClient.HGET('email_user_lookup', email).then(
+        RedisClient.DEL
+    ).then(
+        function(){
+            return RedisClient.HDEL('email_user_lookup', email);
+        }
+    );
+};
+
+User.prototype.updateNick = function(id, newnick){
+    return RedisClient.HMSET(
+        'usr:' + id,
+        'nick', newnick
+    ).then(
+        function(){
+            return User.prototype.cache.loadFromDb(id);
+        }
+    );
+};
+
+User.prototype.syncEmail = function(user, newemail){
+    return new Promise(function(resolve, reject){
+        if(user.email === newemail){
+            return resolve(user);
         }
         else{
-            var nick = '';
-            var mail = '';
-            RedisClient.HGETALL("usr:"+id).then(
-                function(result){
-                    if(result === null){
-                        nick = 'user'+id.substr(3, 1)+id.substr(6, 2); // default nick
-                        mail = 'default@email.com'; // default mail
-                        return RedisClient.HMSET(
-                            "usr:"+id,
-                            'nick', nick,
-                            'email', mail,
-                            'groupNs', '[]'
-                        );
-                    }
-                    else{
-                        nick = result.nick;
-                        mail = result.email;
-                        return null;
-                    }
+            return RedisClient.HMSET(
+                'usr:' + user.id,
+                'email',
+                newemail
+            ).then(
+                function(){
+                    return RedisClient.HMSET(
+                        'email_user_lookup',
+                        newemail,
+                        'usr:'+user.id
+                    )
                 }
             ).then(
                 function(){
-                    var newuser = new User(
-                        id,
-                        nick,
-                        mail
-                    );
-                    user_cache[id] = (newuser);
-                    done(newuser);
+                    return RedisClient.HDEL(
+                        'email_user_lookup',
+                        user.email
+                    )
+                }
+            ).then(
+                function(){
+                    return User.prototype.cache.loadFromDb(user.id)
+                }
+            ).then(
+                function(user){
+                    resolve(user);
                 }
             ).catch(reject);
         }
     });
 };
+
 User.prototype.AddGroupToUser = function(userid_n, groupid_n){
     return RedisClient.HGET("usr:"+userid_n, "groupNs").then( // get group of the user
         function(groupNsStr){
@@ -459,28 +413,26 @@ User.prototype.AddGroupToUser = function(userid_n, groupid_n){
                 return RedisClient.HSET("usr:"+userid_n, "groupNs", JSON.stringify(groupNsObj));
             }
             else{
-                var err = new Error("You are already a member of the group");
-                err.push_msg = true;
-                throw err;
+                throw 'this user is already a member of the group';
             }
         }
     );
 };
+
 User.prototype.RemoveGroupFromUser = function(userid_n, groupid_n){
-    return RedisClient.HGET("usr:"+userid_n, "groupNs").then( // get user's group list
+    return RedisClient.HGET("usr:"+userid_n, "groupNs").then(
         function(groupNsStr){
             var groupNsObj = JSON.parse(groupNsStr);
             var i = groupNsObj.indexOf(groupid_n);
             if(i < 0){
-                var err = new Error("RemoveGroupMemeber failed: No such user found in the group");
-                err.push_msg = true;
-                throw err;
+                throw 'the user is not a member of the group. please refresh the page.';
             }
             groupNsObj.splice(i, 1);
-            return RedisClient.HSET("usr:"+userid_n, "groupNs", JSON.stringify(groupNsObj)); // save to user's group list
+            return RedisClient.HSET("usr:"+userid_n, "groupNs", JSON.stringify(groupNsObj));
         }
     );
 };
+
 User.prototype.GetGroupNs = function(userid_n, cb){
     return RedisClient.HGET("usr:"+userid_n, "groupNs").then(
         function(groupNsStr){
@@ -501,8 +453,9 @@ var Group = (function(manager, name, creationDate){
      name
      users {"invited":[noname@gmail.com], "participating":[user:1902839014]}
      */
-    var public = {};
-    public.CreateNewGroup = function(userid_n, docid, creationTime){
+    var pub_grp = {};
+
+    pub_grp.CreateNewGroup = function(userid_n, docid, creationTime){
         return new Promise(function(resolve, reject){
             var groupid = "grp:"+userid_n+"_"+creationTime;
             redisClient.EXISTS(groupid, function(err, resp){
@@ -526,44 +479,96 @@ var Group = (function(manager, name, creationDate){
                 }
             });
         });
-
     };
 
-    public.GetById = function(groupid, cb){
+    pub_grp.GetById = function(groupid, cb){
         redisClient.HGETALL(groupid, function(err, groupObj){
             if(err != null || groupObj == null){cb(err);}
             else{
                 groupObj.id = groupid;
                 groupObj.users = JSON.parse(groupObj.users);
-                for(var i = 0; i < groupObj.users.invited.length; ++i) {
-                    groupObj.users.invited[i] = JSON.parse(groupObj.users.invited[i]);
-                }
                 cb(err, groupObj);
             }
         });
     };
 
-
-    public.GetGroupObj_Promise = function(groupid){
+    pub_grp.GetGroupObj_Promise = function(groupid){
         return RedisClient.HGETALL(groupid).then(
             function(groupObj){
                 groupObj.id = groupid;
                 groupObj.users = JSON.parse(groupObj.users);
-                for(var i = 0; i < groupObj.users.invited.length; ++i) {
-                    groupObj.users.invited[i] = JSON.parse(groupObj.users.invited[i]);
-                }
                 return groupObj;
             }
         );
     };
 
+<<<<<<< HEAD
     public.GetDocIdByGroupId = function(groupid_n, cb){
         redisClient.HGET("grp:"+groupid_n, "docid", function(err, docid){
             cb(err, docid);
         });
+=======
+    pub_grp.getAll = function(){
+        return RedisClient.KEYS('grp:*').then(
+            function(keys){
+                return Promise.all(
+                    keys.map(function(key){
+                        return RedisClient.HGETALL(key)
+                    })
+                ).then(
+                    function(grps){
+                        for(var i = 0, l = grps.length; i < l; ++i){
+                            grps[i].id = keys[i];
+                        }
+                        return grps;
+                    }
+                );
+            }
+        );
     };
 
-    public.PopulateParticipantObjs = function(groupObj){
+    pub_grp.InviteUser = function(groupid_n, email){
+        return RedisClient.HEXISTS('email_user_lookup', email).then(
+            function(is_exist){
+                if(is_exist){ // when the user already signed up and can be found on the system
+                    var userid_n = '';
+                    return RedisClient.HGET('email_user_lookup', email).then(
+                        function(userid){
+                            return pub_grp.connectUserAndGroup(groupid_n, userid.substring(4));
+                        }
+                    );
+                }
+                else{ // when the user is not on the system yet
+                    return pub_grp.AddEmailToInvited(groupid_n, email).then(
+                        function(){
+                            return RedisClient.RPUSH('inv:'+email, 'grp:'+groupid_n);
+                        }
+                    );
+                }
+            }
+        )
+    };
+
+    pub_grp.connectUserAndGroup = function(groupid_n, userid_n){
+        return pub_grp.AddUserToParticipating(groupid_n, userid_n).then(
+            function(){
+                return User.prototype.AddGroupToUser(userid_n, groupid_n);
+            }
+        );
+    };
+
+    pub_grp.GetDocIdByGroupId = function(groupid_n){
+        return RedisClient.HGET("grp:"+groupid_n, "docid");
+>>>>>>> refs/remotes/DongwookYoon/master
+    };
+
+    pub_grp.GetDocObjByGroupId = function(groupid_n){
+        return RedisClient.HGET("grp:"+groupid_n, "docid").then(
+            RedisClient.HGETALL
+        );
+    };
+
+    pub_grp.PopulateParticipantObjs = function(groupObj){
         return new Promise(function (resolve, reject) {
             var argl = [];
             for(var i = 0; i < groupObj.users.participating.length; ++i){
@@ -580,7 +585,7 @@ var Group = (function(manager, name, creationDate){
         );
     };
 
-    public.DeleteGroup = function(groupid_n, docid_n){
+    pub_grp.DeleteGroup = function(groupid_n, docid_n){
         function job(userid_n){
             return User.prototype.RemoveGroupFromUser(userid_n, groupid_n).then(
                 function(){
@@ -600,7 +605,7 @@ var Group = (function(manager, name, creationDate){
         )
     };
 
-    public.DeleteGroupFromDoc = function(groupid_n, docid_n){
+    pub_grp.DeleteGroupFromDoc = function(groupid_n, docid_n){
         return RedisClient.HGET("doc:"+docid_n, 'groups').then( // get group list of doc
             function(groupsStr){
                 var groupsObj = JSON.parse(groupsStr);
@@ -622,7 +627,7 @@ var Group = (function(manager, name, creationDate){
         )
     };
 
-    public.Delete = function(userid_n, docid, groupid, cb){
+    pub_grp.Delete = function(userid_n, docid, groupid, cb){
         redisClient.HGET(docid, 'groups', function(err, groupsStr){
             var groupsObj = JSON.parse(groupsStr);
             var index = groupsObj.indexOf(groupid);
@@ -643,19 +648,19 @@ var Group = (function(manager, name, creationDate){
         });
     };
 
-    public.Rename = function(groupid, newname, cb){
+    pub_grp.Rename = function(groupid, newname, cb){
         redisClient.HSET(groupid, 'name', newname, function(err){
             cb(err);
         });
     };
 
-    public.SetUsersByObj = function(groupid, usersobj, cb){
+    pub_grp.SetUsersByObj = function(groupid, usersobj, cb){
         redisClient.HSET(groupid, "users", JSON.stringify(usersobj), function(err, resp){
             cb(err, resp);
         });
     };
 
-    public.GetNumUsers = function(groupid, cb){
+    pub_grp.GetNumUsers = function(groupid, cb){
         redisClient.HGET(groupid, "users", function(err, usersStr){
             if(err){
                 cb(err, null);
@@ -669,7 +674,7 @@ var Group = (function(manager, name, creationDate){
         });
     };
 
-    public.GetUsersFromGroup = function(groupid_n){
+    pub_grp.GetUsersFromGroup = function(groupid_n){
         return RedisClient.HGET("grp:"+groupid_n, "users").then(
             function(usersStr){
                 return JSON.parse(usersStr);
@@ -677,43 +682,68 @@ var Group = (function(manager, name, creationDate){
         );
     };
 
-    public.AddUserToGroup = function(groupid_n, userid_n){
-        return RedisClient.HGET("grp:"+groupid_n, "users").then(
-            function(usersStr) {
-                var usersObj = JSON.parse(usersStr);
-                if(usersObj == null){
-                    var err = new Error("That's and invalid GroupCode.");
-                    err.push_msg = true;
-                    throw err;
-                }
-                var i = usersObj.participating.indexOf(userid_n);
-                if(usersObj.participating.length == 5){
-                    var err = new Error("There are already maximum number (5) of users in this group.");
-                    err.push_msg = true;
-                    throw err;
-                }
-                else if (i >= 0) {
-                    var err = new Error("You are already a member of the group");
-                    err.push_msg = true;
-                    throw err;
+    pub_grp.AddEmailToInvited = function(groupid_n, email){
+        return RedisClient.HGET('grp:' + groupid_n, 'users').then(
+            function(usersStr){
+                var users = JSON.parse(usersStr);
+                if( users.invited.indexOf(email) === -1 ){
+                    users.invited.push(email);
+                    return RedisClient.HSET('grp:' + groupid_n, 'users', JSON.stringify(users));
                 }
                 else{
-                    usersObj.participating.push(userid_n);
-                    return RedisClient.HSET("grp:"+groupid_n, 'users', JSON.stringify(usersObj));
+                    throw 'that user is already in the invitation list.';
+                    return; // do nothing when the email is already there
                 }
+            }
+        )
+    };
+
+    pub_grp.CancelInvited = function(groupid_n, email){
+        return RedisClient.HGET('grp:' + groupid_n, 'users').then(
+            function(usersStr){
+                var users = JSON.parse(usersStr);
+                var i = users.invited.indexOf(email);
+                if( i !== -1 ){
+                    users.invited.splice(i, 1);
+                    return RedisClient.HSET('grp:' + groupid_n, 'users', JSON.stringify(users));
+                }
+                else{
+                    return null;
+                }
+            }
+        ).then(
+            function(){
+                return RedisClient.LREM('inv:'+email, 1,'grp:' + groupid_n);
             }
         );
     };
 
-    public.RemoveUserFromGroup = function(groupid_n, userid_n){
+    pub_grp.AddUserToParticipating = function(groupid_n, userid_n){
+        return RedisClient.HGET("grp:"+groupid_n, "users").then(
+            function(usersStr) {
+                var users = JSON.parse(usersStr);
+                if(users == null){throw 'invalid group id';}
+
+                var i = users.participating.indexOf(userid_n);
+                if(users.participating.length == 5){
+                    throw 'there are already maximum number (5) of users in this group.';
+                }
+                else if(i === -1){
+                    users.participating.push(userid_n);
+                    return RedisClient.HSET("grp:"+groupid_n, 'users', JSON.stringify(users));
+                }
+                return null;
+            }
+        );
+    };
+
+    pub_grp.RemoveUserFromGroup = function(groupid_n, userid_n){
         return RedisClient.HGET("grp:"+groupid_n, "users").then( // get group's user list
             function(usersStr){
                 var usersObj = JSON.parse(usersStr);
                 var i = usersObj.participating.indexOf(userid_n);
                 if(i < 0){
-                    var err = new Error("RemoveGroupMemeber failed: No such group found in the group");
-                    err.push_msg = true;
-                    throw err;
+                    throw 'no such group found in the group';
                 }
                 usersObj.participating.splice(i, 1);
                 return RedisClient.HSET("grp:"+groupid_n, 'users', JSON.stringify(usersObj)); // save to group's user list
@@ -721,7 +751,7 @@ var Group = (function(manager, name, creationDate){
         );
     };
 
-    public.GetViewerUrl = function(groupid_n, cb){
+    pub_grp.GetViewerUrl = function(groupid_n, cb){
         redisClient.HGET("grp:"+groupid_n, 'docid', function(err, docid){
             if(err){cb(err);}
             else{
@@ -736,7 +766,7 @@ var Group = (function(manager, name, creationDate){
         });
     };
 
-    return public;
+    return pub_grp;
 })();
 
 
@@ -745,12 +775,12 @@ var Group = (function(manager, name, creationDate){
  * Doc
  */
 var Doc = (function(){
-    var public = {};
+    var pub_doc = {};
 
     //redis doc hash structure
     // userid, creationDate, pdfid, name, groups(list)
 
-    public.CreateNew = function(userid_n, creationTime, pdfid){
+    pub_doc.CreateNew = function(userid_n, creationTime, pdfid){
         var docid = "doc:"+userid_n+"_"+creationTime;
         return RedisClient.EXISTS(docid).then(
             function(isexist){
@@ -781,7 +811,7 @@ var Doc = (function(){
         );
     };
 
-    public.GetDocById_Promise = function(docid){
+    pub_doc.GetDocById_Promise = function(docid){
         return RedisClient.HGETALL(docid).then(
             function(doc_obj){
                 doc_obj.id = docid;
@@ -792,14 +822,14 @@ var Doc = (function(){
         );
     };
 
-    public.GetDocIdsByUser = function(userid_n){
+    pub_doc.GetDocIdsByUser = function(userid_n){
         return RedisClient.KEYS('doc:'+userid_n+'_*');
     };
 
-    public.GetDocByUser_Promise = function(userid_n){
+    pub_doc.GetDocByUser_Promise = function(userid_n){
         return RedisClient.KEYS('doc:'+userid_n+'_*').then(
             function(docids){
-                return js_utils.PromiseLoop(public.GetDocById_Promise, docids.map(function(docid){return [docid];})).then(
+                return js_utils.PromiseLoop(pub_doc.GetDocById_Promise, docids.map(function(docid){return [docid];})).then(
                     function(doc_objs){
                         return doc_objs;
                     }
@@ -808,7 +838,7 @@ var Doc = (function(){
         );
     };
 
-    public.AddNewGroup = function(userid_n, docid){
+    pub_doc.AddNewGroup = function(userid_n, docid){
         var groupsObj;
         var groupid;
 
@@ -834,7 +864,7 @@ var Doc = (function(){
         );
     };
 
-    public.GetDocGroups = function(docid_n){
+    pub_doc.GetDocGroups = function(docid_n){
         return RedisClient.HGET("doc:"+docid_n, "groups").then(
             function(groupsStr){
                 return groupsObj = JSON.parse(groupsStr);
@@ -842,32 +872,32 @@ var Doc = (function(){
         );
     };
 
-    public.Rename = function(docid, newname, cb){
+    pub_doc.Rename = function(docid, newname, cb){
         redisClient.HSET(docid, "name", newname, function(err, resp){
             cb(err, resp);
         });
     };
 
-    public.DeleteDocFromRedis = function(docid_n){
+    pub_doc.DeleteDocFromRedis = function(docid_n){
         return RedisClient.DEL("doc:"+docid_n);
     };
 
-    return public;
+    return pub_doc;
 }());
 
 var Cmd = (function(){
-    var public = {};
+    var pub_cmd = {};
 
-    public.AppendCmd = function(group_id_n, cmdStr, cb){
+    pub_cmd.AppendCmd = function(group_id_n, cmdStr, cb){
         redisClient.RPUSH("cmd:"+group_id_n, cmdStr, function(err){
             cb(err);
         });
     };
-    public.GetCmds = function(groupid_n, cmds_downloaded_n){
+    pub_cmd.GetCmds = function(groupid_n, cmds_downloaded_n){
         return RedisClient.LRANGE("cmd:"+groupid_n, cmds_downloaded_n, -1);
     };
 
-    return public;
+    return pub_cmd;
 })();
 
 var Log = function(group_n, logStr, cb){
@@ -875,6 +905,153 @@ var Log = function(group_n, logStr, cb){
         cb(err);
     });
 };
+
+/* data sanity check-up*/
+
+(function dataSanityCheckup(){
+
+    (function checkInvited(){
+        var user_hash = {};
+        var users = null;
+        var group_hash = {};
+        var groups = null;
+        var inv_hash = {};
+        var email_user_lookup = null;
+        Promise.resolve().then(
+            function(){
+                return User.prototype.getSignedUp().then(
+                    function(_users) {
+                        users = _users;
+                        users.forEach(function(user){
+                            user.groupNs = JSON.parse(user.groupNs);
+                            user_hash[user.id] = user;
+                        });
+                        return null;
+                    }
+                );
+            }
+        ).then(
+            function(){
+                return Group.getAll().then(
+                    function(_groups){
+                        groups = _groups;
+                        groups.forEach(function(group){
+                            group.users = JSON.parse(group.users);
+                            group_hash[group.id] = group;
+                        });
+                        return null;
+                    }
+                );
+            }
+        ).then(
+            function(){
+                return RedisClient.KEYS('inv:*').then(
+                    function(_invs){
+                        var promises =_invs.map(function(inv){
+                            return RedisClient.LRANGE(inv, 0, -1);
+                        });
+
+                        return Promise.all(promises).then(
+                            function(_inv_groups){
+                                for(var i = 0, l = _invs.length; i < l; ++i){
+                                    inv_hash[_invs[i]] = _inv_groups[i];
+                                }
+                            }
+                        )
+                    }
+                );
+            }
+        ).then(
+            function(){
+                return RedisClient.HGETALL('email_user_lookup').then(
+                    function(_email_user_lookup){
+                        email_user_lookup = _email_user_lookup;
+                    }
+                );
+            }
+        ).then(
+            function(){
+                console.log('# usr:', users.length);
+                console.log('# email lookups:', Object.keys(email_user_lookup).length);
+
+                users.forEach(
+                    function(usr){
+                        if(!email_user_lookup.hasOwnProperty(usr.email)){
+                            console.log('# dangled user: ' + usr.id, usr.email);
+                        }
+                        else if( email_user_lookup[usr.email] !== usr.id){
+                            console.log('# incongruent user: ' + usr.id, usr.email);
+                        }
+                    }
+                );
+
+                groups.forEach(function(group){
+                    group.users.participating.forEach(
+                        function(userid_n){
+                            if(user_hash.hasOwnProperty('usr:' + userid_n)) {
+                                var i = user_hash['usr:' + userid_n].groupNs.indexOf(group.id.substring(4));
+                                if (i === -1)
+                                    console.log('# incongruent group-user assignment: ' + group.id, userid_n);
+                            }
+                            else{
+                                console.log('# incongruent group-user assignment: ' + group.id, userid_n);
+                            }
+                        }
+                    );
+                });
+
+                users.forEach(function(user){
+                    user.groupNs.forEach(
+                        function(group){
+                            if(group_hash.hasOwnProperty('grp:'+group)){
+                                var i = group_hash['grp:'+group].users.participating.indexOf(user.id.substring(4));
+                                if(i === -1)
+                                    console.log('# incongruent user-group assignment: ' + group.id, userid_n);
+                            }
+                            else{
+                                console.log('# incongruent user-group assignment: ' + group.id, userid_n);
+                            }
+                        }
+                    );
+                });
+
+                groups.forEach(function(group){
+                    group.users.invited.forEach(function(email){
+                        if(!inv_hash.hasOwnProperty('inv:'+email) || inv_hash['inv:'+email].indexOf(group.id) === -1){
+                            console.log('# dangled invitation in group invited list: ' + email + ' in ' + group.id);
+                        }
+                    });
+                });
+
+                Object.keys(inv_hash).forEach(
+                    function(email){
+                        var groups = inv_hash[email];
+                        groups.forEach(function(group){
+                            if(!group_hash.hasOwnProperty(group) || group_hash[group].users.invited.indexOf(email.substring(4)) === -1){
+                                console.log('# dangled invitation in inv:<email>: ' + group + ' in ' + email);
+                            }
+                        });
+                    }
+                );
+            }
+        ).catch(
+            function(err){
+                console.log(err.stack);
+            }
+        )
+    }());
+
+    /*
+    User.prototype.deleteByEmail('richreviewer0@gmail.com').catch(
+        function(err){
+            console.log(err);
+        }
+    );
+    */
+
+}());
+
+
 
 exports.User = User;
 exports.Doc = Doc;

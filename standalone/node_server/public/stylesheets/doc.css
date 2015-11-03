@@ -4,6 +4,9 @@
 
 .panel {
     margin-bottom: 15px;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .r2Doc-loading {
@@ -48,6 +51,21 @@
     font-size: 15px;
 }
 
+<<<<<<< HEAD
+=======
+.btn-open {
+    margin-left: 0;
+    margin-right: 10px;
+}
+
+.panel .editable-click {
+    border-bottom: dashed 1px gray;
+}
+.panel .editable-click:hover {
+    border-bottom: solid 2px dodgerblue;
+}
+
+>>>>>>> refs/remotes/DongwookYoon/master
 /* dropdown menu */
 .btn-group {
     margin-left: 5px;
@@ -96,6 +114,7 @@
 
 .member_row {
     margin-top: 10px;
+    margin-left: 53px;
 }
 
 .member_row > .member_text {
@@ -104,3 +123,22 @@
 .member_row > .member_empty_text{
     margin-left: 5px;
 }
+.member_row .btn-invited {
+    font-size: 10px;
+}
+
+.member_row > .invite_input {
+    display: inline-flex;
+    margin: 0;
+    padding-left: 10px;
+}
+.member_row > .invite_input .input-group {
+    display: inline-flex;
+}
+.member_row > .invite_input input {
+    font-size: 13px;
+    border: solid 1px lightcyan;
+    width: 100px;
+    height: 22px;
+}
+

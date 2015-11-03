@@ -3,6 +3,7 @@
  */
 
 var js_utils = require('../lib/js_utils.js');
+var fs = require('fs');
 
 exports.admin_list = [
     '116730002901619859123'
@@ -34,3 +35,5 @@ exports.config_files = {
     ssl_cert:       '../ssl/richreview_net.crt',
     ssl_ca:         '../ssl/root.crt'
 };
+
+exports.sha1_salt = JSON.parse(fs.readFileSync('../ssl/sha1_salt.json', 'utf-8'));

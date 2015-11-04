@@ -137,7 +137,6 @@
 
         pub.createBodyText = function($tight_col, piece_text){
             var $comment = appendPieceGroup($tight_col, 'tc_comment_text');
-            console.log(piece_text);
             $comment.attr('aria-label', typeof piece_text.GetPieceText() === 'string' ? piece_text.GetPieceText() : 'empty texts');
             $comment.attr('role', 'document');
             var $piece = $(document.createElement('div'));
@@ -270,7 +269,7 @@
                         ;
                     });
                     r2.radialMenu.addBtnCircular($rm, 'fa-trash', 'erase', function(){
-                        if(r2.userGroup.cur_user === user.name){
+                        if(r2.userGroup.cur_user.name === user.name){
                             var annottodelete = r2App.annots[annot_id];
                             if(r2.removeAnnot(annot_id, true, false)){ // askuser, mute
                                 r2Sync.PushToUploadCmd(annottodelete.ExportToCmdDeleteComment());
@@ -284,7 +283,7 @@
                     r2.radialMenu.finishInit($rm, user.color_radial_menu_unselected, user.color_radial_menu_selected);
 
                     var rm_x = getCommentTtIndentX($comment)-r2Const.RADIALMENU_OFFSET_X*rm_ratio;
-                    $rm.css('left', (rm_x)/rm_size+'em');
+                    $rm.css('left', (rm_x)/rm_size/r2Const.RAIDALMENU_FONTSIZE_SCALE+'em');
                     $comment.prepend($rm);
                 }
 
@@ -399,7 +398,7 @@
 
                     var rm_x = getPieceTtIndentX($piece)-r2Const.RADIALMENU_OFFSET_X*rm_ratio;
 
-                    $rm.css('left', (rm_x)/rm_size+'em');
+                    $rm.css('left', (rm_x)/rm_size/r2Const.RAIDALMENU_FONTSIZE_SCALE+'em');
                     //$rm.css('top', (rm_size*0.4*rm_btn_size)/rm_size+'em');
 
                     $comment.prepend($rm);
@@ -416,6 +415,9 @@
             var $comment = $(document.createElement('div'));
             $comment.toggleClass('tc_piecegroup', true);
             $comment.toggleClass(cls, true);
+            $comment.mousedown(function(event){
+                event.preventDefault(); // prevent focus
+            });
             pub.focusCtrl.setFocusable($comment);
 
             $target.append($comment);

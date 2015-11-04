@@ -12,22 +12,23 @@ var fs = require('fs');
 var passport = require('passport');
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 var R2D = require('./lib/r2d.js');
+var redis_client = require('./lib/redis_client.js');
 var env = require('./lib/env.js');
 var RedisStore = require('connect-redis')(expressSession);
-
 
 var _downloader = require('./routes/_downloader');
 var _pages = require('./routes/_pages');
 var support = require('./routes/support');
-var mydocs = require('./routes/mydocs');
 var mygroups = require('./routes/mygroups');
 var account = require('./routes/account');
 var docs = require('./routes/docs');
+var doc = require('./routes/doc');
 var upload = require('./routes/upload');
 var viewer = require('./routes/viewer');
 var dataviewer = require('./routes/dataviewer');
 var dbs = require('./routes/dbs');
 var resources = require('./routes/resources');
+var course = require('./routes/course');
 
 mkdirp('../_temp');
 mkdirp('../cache');
@@ -68,7 +69,7 @@ app.use(
         {
             store: new RedisStore(
                 {
-                    client: R2D.redisClient
+                    client: redis_client.redisClient
                 }),
             secret: 'rich.reviewer@cornell',
             saveUninitialized: true,
@@ -90,10 +91,25 @@ passport.use(
             callbackURL: google_oauth.web.redirect_uris[0]
         },
         function (accessToken, refreshToken, profile, done){
-            console.log('passport.use');
-            R2D.User.prototype.findOrCreate(profile.id, function (err, user) {
-                return done(err, user);
-            });
+            var email = profile.emails.length !== 0 ? profile.emails[0].value : '';
+            R2D.User.prototype.isExist(profile.id).then(
+                function(is_exist){
+                    if(is_exist){
+                        return R2D.User.prototype.findById(profile.id).then(
+                            function(user){
+                                return R2D.User.prototype.syncEmail(user, email);
+                            }
+                        );
+                    }
+                    else{
+                        return R2D.User.prototype.create(profile.id, email);
+                    }
+                }
+            ).then(
+                function(user){
+                    done(null, user);
+                }
+            ).catch(done);
         }
     )
 );
@@ -101,9 +117,15 @@ passport.serializeUser(function(user, done){
     done(null, user.id);
 });
 passport.deserializeUser(function(id, done){
-    R2D.User.prototype.findById(id, function(error, user){
-        done(null, user);
-    });
+    R2D.User.prototype.findById(id).then(
+        function(user){
+            done(null, user);
+        }
+    ).catch(
+        function(err){
+            done(null, null);
+        }
+    );
 });
 
 app.get('/',            _pages.about);
@@ -113,14 +135,15 @@ app.get('/input_test',  _pages.input_test);
 app.get('/admin',       _pages.admin);
 app.get('/downloader',  _downloader.dn);
 app.get('/support',     support.get);
-app.get('/mydocs',      mydocs.get);
+app.get('/mydocs',      doc.get);
 app.get('/mygroups',    mygroups.get);
 app.get('/upload',      upload.page);
 app.get('/viewer',      viewer.page);
 app.get('/dataviewer',  dataviewer.get);
-app.get('/docs',        docs.page);
 app.get('/account',     account.get);
 app.get('/resources',   resources.get);
+app.get('/math2220_fall2015',    course.get);
+//app.get('/docs',        docs.page);
 
 app.post('/dbs',        dbs.post);
 app.post('/account',    account.post);
@@ -130,11 +153,12 @@ app.post('/upload',     upload.post);
 app.post('/support',    support.post);
 app.post('/uploadaudioblob', upload.post_audioblob);
 app.post('/resources',  resources.post);
+app.post('/course',     course.post);
 
 app.get(
     '/login',
     passport.authenticate(
-        'google', {scope:['https://www.googleapis.com/auth/plus.profile.emails.read']}
+        'google', {scope:['email']}
     )
 );
 app.get(
@@ -145,6 +169,13 @@ app.get(
     }
 );
 
+
+app.get(
+    '/math2220',
+    function(req, res) {
+        res.redirect("/math2220_fall2015");
+    }
+);
 
 app.get(
     '/demo',

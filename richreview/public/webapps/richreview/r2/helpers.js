@@ -574,12 +574,14 @@
                 });
             }
 
-            if(groupdata.self){
-                pub.AddUser(groupdata.self.id, groupdata.self.nick, groupdata.self.email, type = "guest");
-                pub.SetCurUser(groupdata.self.id);
+            if(pub.cur_user === null && groupdata.self === ''){
+                pub.SetCurUser('anonymous');
             }
             else{
-                pub.SetCurUser('anonymous');
+                if(groupdata.self){
+                    pub.AddUser(groupdata.self.id, groupdata.self.nick, groupdata.self.email, type = "guest");
+                    pub.SetCurUser(groupdata.self.id);
+                }
             }
 
             $("#observer_indicator").css("display", pub.cur_user.isguest ? "block" : "none");
@@ -1144,7 +1146,7 @@
             $menu.addClass('rm_menu');
             $menu.attr('id', rm_id);
             $menu.attr('aria-label', 'menu');
-            $menu.css('font-size', rm_size+'em');
+            $menu.css('font-size', r2Const.RAIDALMENU_FONTSIZE_SCALE*rm_size+'em');
 
             var $btn_center = $(document.createElement('a'));
             $btn_center.addClass('rm_btn_center').addClass('rm_btn');
@@ -1300,10 +1302,10 @@
             pub.canv_px_size.x = Math.round(pub.page_size_scaled.x*pub.hdpi_ratio.sx); // canvas pixel size (maybe different from the DOM size)
             pub.canv_px_size.y = Math.round(pub.page_size_scaled.y*pub.hdpi_ratio.sy);
 
-            console.log("== ViewCtrl resized");
+            /*console.log("== ViewCtrl resized");
             console.log("canv_px_size", pub.canv_px_size.x, pub.canv_px_size.y);
             console.log("app_container_size", app_container_size.x, app_container_size.y);
-            console.log("page_size", pub.page_size_scaled.x, pub.page_size_scaled.y);
+            console.log("page_size", pub.page_size_scaled.x, pub.page_size_scaled.y);*/
         };
 
         pub.getAppContainerSize = function(){

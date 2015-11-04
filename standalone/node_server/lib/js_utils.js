@@ -248,6 +248,27 @@ require('util').inherits(ReadableStreamBuffer, stream.Stream);
 
 exports.ReadableStreamBuffer = ReadableStreamBuffer;
 
+exports.serialPromiseFuncs = function(promiseFuncs, rtns){
+    if(typeof rtns === 'undefined'){
+        rtns = [];
+    }
+    var run = promiseFuncs.shift();
+    if(run){
+        return run().then(
+            function(rtn){
+                rtns.push(rtn);
+                return exports.serialPromiseFuncs(promiseFuncs, rtns)
+            }
+        );
+    }
+    else{
+        return new Promise(function(resolve){
+            resolve(rtns);
+        });
+    }
+};
+
+
 exports.PromiseLoop = function(func, argl){
     var rtnl = new Array(argl.length);
     return new Promise(function(resolve, reject){
@@ -347,4 +368,41 @@ exports.getWebAppUrls = function(path, prefix, exclude){
         }
     });
     return urls;
+};
+
+exports.identifyUser = function(req, res){
+    if(req.user){
+        return true;
+    }
+    else{
+        exports.PostResp(res, req, 400, 'you are an unidentified user. please sign in and try again.');
+        return false;
+    }
+};
+
+exports.redirectUnknownUser = function(req, res){
+    if(req.user){
+        return true;
+    }
+    else{
+        res.redirect('/login');
+        return false;
+    }
+};
+
+exports.validateEmail = function(email){
+    var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if(re.test(email)){
+        if(email.substring(email.length-12).toLowerCase() == "@cornell.edu" ||
+            email.substring(email.length-10).toLowerCase() == "@gmail.com" ||
+            email.substring(email.length-8).toLowerCase() == "@edx.org"){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+    else{
+        return false;
+    }
 };

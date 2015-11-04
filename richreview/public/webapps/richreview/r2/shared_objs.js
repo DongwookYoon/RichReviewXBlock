@@ -39,6 +39,7 @@ var r2Const = (function () {
     pub.RADIALMENU_OFFSET_X = 0.021;
     pub.RADIALMENU_SIZE = 19/920; // 23 pixel on the 920 px width screen
     pub.RADIALMENU_RADIUS = pub.RADIALMENU_SIZE*1.6*0.5; // 23px*1.6em/2
+    pub.RAIDALMENU_FONTSIZE_SCALE = 100; // this is required to circumvent minimum font size setting
 
     // on screen btn
     pub.ONSCRBTN_SIZE = 13/920;

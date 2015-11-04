@@ -7,13 +7,10 @@ redisClient.on('error', function(err) {
     console.log('Redis error: ' + err);
 });
 
-
-/*
- * Ping timer maintains the connection
- */
+var ping_timeout = null;
 (function PingRedisServer(){
     redisClient.ping(redis.print);
-    setTimeout(PingRedisServer, 3*60*1000);
+    ping_timeout = setTimeout(PingRedisServer, 3*60*1000);
 }());
 
 /*
@@ -54,6 +51,12 @@ var RedisClient = (function(){
             });
         };
     });
+
+
+    pub.end = function(){
+        clearTimeout(ping_timeout);
+        redisClient.end();
+    };
 
     return pub;
 }());

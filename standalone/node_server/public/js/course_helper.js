@@ -297,7 +297,7 @@
 
                         var $status = $(document.createElement('td'));
                         {
-                            if(submission.status === 'Submitted'){
+                            if(submission.status === 'Submitted' || submission.status === 'ReadyForReview'){
                                 var $btn = createNewDomElement('a', ['btn', 'btn-default','btn-sm']);
 
                                 $btn.text('Download ');
@@ -332,7 +332,20 @@
                         $tr.append($submissions);
 
                         var $review = $(document.createElement('td'));
-                        $review.text('Pending');
+                        if(submission.status === 'ReadyForReview'){
+                            var $btn = createNewDomElement('a', ['btn', 'btn-default','btn-sm'], $review);
+                            $btn.text('Open');
+                            $btn.click(function(){
+                                window.open(host+'viewer?'+
+                                    'access_code='+submission.group.pdf_hash +
+                                    '&docid=' + submission.group.doc_id.substring(4) +
+                                    '&groupid=' + submission.group.group_id.substring(4)
+                                );
+                            });
+                        }
+                        else{
+                            $review.text('Pending');
+                        }
                         $tr.append($review);
                     }
                     $('#submission_items').append($tr);

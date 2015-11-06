@@ -257,7 +257,13 @@ exports.serialPromiseFuncs = function(promiseFuncs, rtns){
         return run().then(
             function(rtn){
                 rtns.push(rtn);
-                return exports.serialPromiseFuncs(promiseFuncs, rtns)
+                return exports.serialPromiseFuncs(promiseFuncs, rtns);
+            }
+        ).catch(
+            function(err){
+                console.error(err);
+                rtns.push(err);
+                return exports.serialPromiseFuncs(promiseFuncs, rtns);
             }
         );
     }

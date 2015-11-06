@@ -240,7 +240,7 @@ def runPdf(path, filename):
     convert = 'convert'
     if os.name == 'nt':
         convert = 'convert2' # avoid collision with windows' convert.exe
-    param = [convert, path+'\\*.jpg', path+'\\merged.pdf']
+    param = [convert, path+'/*.jpg', path+'/merged.pdf']
 
     ret = subprocess.call(param,stdout=subprocess.PIPE)
 

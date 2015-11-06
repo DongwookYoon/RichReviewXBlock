@@ -14,7 +14,7 @@ var azure = require('./lib/azure');
 var RedisClient = require('./lib/redis_client').RedisClient;
 var R2D = require("./lib/r2d.js");
 
-var INSTRUCTOR_EMAIL = 'dy252@cornell.edu';
+var INSTRUCTOR_EMAIL = 'francois.guimbretiere@gmail.com';
 
 var getSaltedSha1 = function(email){
     var shasum = crypto.createHash('sha1');
@@ -64,23 +64,23 @@ var downloader = (function(){
         }).then(
             function(to_run){
                 if(to_run){
-                    return runPythonProcess('../../node_server/' + dir_path, pdf_filename);
+                    return runPythonProcess('../../node_server/' + dir_path, pdf_filename).then(
+                        function(python_output){
+                            return new Promise(function(resolve, reject){
+                                if(python_output === null){return;}
+                                var output = constructVsDoc(parsePcsData(python_output));
+                                var fs = require('fs');
+                                fs.writeFile('../' + dir_path + '/doc.vs_doc', JSON.stringify(output), function(err) {
+                                    if(err) {
+                                        return console.log(err);
+                                    }
+                                });
+                                resolve(null);
+                            });
+                        }
+                    );
                 }
                 return null;
-            }
-        ).then(
-            function(python_output){
-                return new Promise(function(resolve, reject){
-                    if(python_output === null){return;}
-                    var output = constructVsDoc(parsePcsData(python_output));
-                    var fs = require('fs');
-                    fs.writeFile('../' + dir_path + '/doc.vs_doc', JSON.stringify(output), function(err) {
-                        if(err) {
-                            return console.log(err);
-                        }
-                    });
-                    resolve(null);
-                });
             }
         );
     };

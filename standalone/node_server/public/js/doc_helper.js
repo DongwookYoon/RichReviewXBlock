@@ -382,7 +382,7 @@
                     var $input_group = createNewDomElement('span', ['input-group'], $form_group);
                     {
                         var $input = createNewDomElement('input', ['form-control', 'input-sm'], $input_group);
-                        $input.attr('placeholder', 'invite');
+                        $input.attr('placeholder', 'invite by email');
 
                         var $button = createNewDomElement('button', ['btn', 'btn-default', 'btn-sm'], $input_group);
                         $button.append(getIcon('fa-plus'));

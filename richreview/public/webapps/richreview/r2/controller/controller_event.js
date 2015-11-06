@@ -188,6 +188,10 @@ var r2Ctrl = {};
         var mode = r2.KeyboardModeEnum.NORMAL;
         pub.ctrlkey_dn = false;
 
+        pub.getMode = function(){
+            return mode;
+        };
+
         var updateMode = function(){
             $focus = $(':focus');
             if($focus.length !== 0){

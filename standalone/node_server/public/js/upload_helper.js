@@ -72,6 +72,7 @@ var FileList = (function(){
             );
         }
         catch(err){
+            alert('Sorry, we failed to analyze that PDF file. Please try again, and if the error recurs, please contact the system manager dy252@cornell.edu. Thank you.');
             Helper.Util.HandleError(err);
         }
     });

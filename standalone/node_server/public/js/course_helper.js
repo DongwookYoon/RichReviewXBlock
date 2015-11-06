@@ -527,7 +527,11 @@
                                 var $btn = createNewDomElement('a', ['btn', 'btn-default','btn-sm'], $review);
                                 $btn.text('Open');
                                 $btn.click(function(){
-                                    alert(host+course_id+'?review='+submission.id);
+                                    window.open(host+'viewer?'+
+                                        'access_code='+item.group.pdf_hash +
+                                        '&docid=' + item.group.doc_id.substring(4) +
+                                        '&groupid=' + item.group.group_id.substring(4)
+                                    );
                                 });
                             }
                             else if(submitted)

@@ -42,7 +42,7 @@ var downloader = (function(){
         return new Promise(function(resolve, reject) { // donwload
             if(data.status === 'Submitted'){
                 console.log('+', data.email, azure_course_id, key+'/'+pdf_filename);
-                var skip_pdf_download = true;
+                var skip_pdf_download = false;
                 if(skip_pdf_download){
                     resolve(true);
                     return;
@@ -70,13 +70,16 @@ var downloader = (function(){
             }
         ).then(
             function(python_output){
-                if(python_output === null){return;}
-                var output = constructVsDoc(parsePcsData(python_output));
-                var fs = require('fs');
-                fs.writeFile('../' + dir_path + '/doc.vs_doc', JSON.stringify(output), function(err) {
-                    if(err) {
-                        return console.log(err);
-                    }
+                return new Promise(function(resolve, reject){
+                    if(python_output === null){return;}
+                    var output = constructVsDoc(parsePcsData(python_output));
+                    var fs = require('fs');
+                    fs.writeFile('../' + dir_path + '/doc.vs_doc', JSON.stringify(output), function(err) {
+                        if(err) {
+                            return console.log(err);
+                        }
+                    });
+                    resolve(null);
                 });
             }
         );
@@ -265,8 +268,18 @@ var uploader = (function(){
                             pdf_hash
                         );
                     }
+                ).then(
+                    function(group_data){ // update student submission data
+                        return RedisClient.HGET('stu:'+course_id+'_'+data.email, 'submissions').then(
+                            function(submissions){
+                                submissions = JSON.parse(submissions);
+                                submissions[submission_id].status = 'ReadyForReview';
+                                submissions[submission_id].group = group_data;
+                                return RedisClient.HSET('stu:'+course_id+'_'+data.email, 'submissions', JSON.stringify(submissions));
+                            }
+                        );
+                    }
                 );
-
             }
         ).catch(
             function(err){
@@ -343,6 +356,14 @@ var uploader = (function(){
         ).then( // set group name
             function(){
                 return R2D.Group.Rename(group_id, 'Instructor\'s Feedback');
+            }
+        ).then(
+            function(){
+                return {
+                    doc_id: doc_id,
+                    group_id: group_id,
+                    pdf_hash: pdf_hash
+                };
             }
         );
     };

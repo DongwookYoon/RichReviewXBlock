@@ -67,12 +67,12 @@ var FileList = (function(){
                     $btn_submit.toggleClass("btn-primary", false);
                     $btn_submit.toggleClass("btn-danger", true);
                     $btn_submit.text("FAILED");
+                    alert('Sorry, we failed to receive/analyze that PDF file. Please try again, and if the error recurs, please contact the system manager dy252@cornell.edu. Thank you.');
                     Helper.Util.HandleError(err);
                 }
             );
         }
         catch(err){
-            alert('Sorry, we failed to analyze that PDF file. Please try again, and if the error recurs, please contact the system manager dy252@cornell.edu. Thank you.');
             Helper.Util.HandleError(err);
         }
     });

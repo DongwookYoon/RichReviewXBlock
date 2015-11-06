@@ -128,3 +128,10 @@ input.pdf-file-input {
     border: none;
     margin: 0;
 }
+
+
+/* announcements */
+#announcement_items > p > a{
+    color: rgba(33, 150, 243, 1.0);
+    font-weight: bold;
+}

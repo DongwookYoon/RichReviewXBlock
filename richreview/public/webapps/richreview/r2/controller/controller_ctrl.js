@@ -52,11 +52,9 @@
         $('#recording_indicator').css("display","block");
         r2.dom.recordingBgn();
 
-
         /* dom */
         r2.dom_model.createCommentVoice(r2App.cur_recording_annot, r2App.cur_pdf_pagen, true); /* live_recording = true */
         r2.dom_model.appendPieceVoice(annotid, 0, r2App.cur_recording_annot.GetBgnTime());
-
 
         r2App.invalidate_page_layout = true;
     };

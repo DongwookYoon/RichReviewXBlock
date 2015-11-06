@@ -477,7 +477,13 @@
             var last_focused_comment = null;
 
             pub_fc.focusPiece = function(annot_id){
-                $tc_cur_page.find('#'+r2.util.escapeDomId(annot_id)).focus();
+                var $p = $tc_cur_page.find('#'+r2.util.escapeDomId(annot_id));
+                if($p.hasClass('tc_piece')){
+                    $p.parent().focus();
+                }
+                else{
+                    $p.focus();
+                }
             };
 
             pub_fc.next = function(){

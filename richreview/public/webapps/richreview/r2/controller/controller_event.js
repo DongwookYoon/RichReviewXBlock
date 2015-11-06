@@ -124,11 +124,15 @@ var r2Ctrl = {};
                     r2.rich_audio.play(playback.annot, playback.t);
                     r2.log.Log_AudioPlay('indexing_wf', playback.annot, playback.t);
                 }
+                r2.dom_model.focusCtrl.focusPiece(playback.annot);
             }
             else if(obj_front instanceof r2.PieceKeyboard){
                 obj_front.Focus();
             }
             else{
+                if(obj_front instanceof r2.PieceText){
+                    r2.dom_model.focusCtrl.focusPiece(obj_front.GetId());
+                }
                 var spotlights = [];
                 l.forEach(function(item){if(item instanceof r2.Spotlight.Cache){spotlights.push(item);}});
                 for(var i = 0; spotlight = spotlights[i]; ++i){
@@ -373,7 +377,7 @@ var r2Ctrl = {};
             HIDDEN : 0,
             VISIBLE : 1
         };
-        var VERTICAL_DRAG_CRITERIA = 0.03;
+        var VERTICAL_DRAG_CRITERIA = 0.015;
 
         r2.HtmlTemplate.add('onscrbtns');
 

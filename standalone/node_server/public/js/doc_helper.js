@@ -127,8 +127,6 @@
                 tpl: "<input type='text' style='font-family: inherit;font-weight: 400;line-height: 1.1;font-size:16px;width:400px;'>",
                 placement: 'bottom'
             });
-
-            $group_title.attr('title', group_id + '\n' + doc.id + '\npdf:' + doc.pdfid);
         };
 
         pub.setGroupOpenClick = function($btn_open, group_data, doc){
@@ -384,7 +382,7 @@
                     var $input_group = createNewDomElement('span', ['input-group'], $form_group);
                     {
                         var $input = createNewDomElement('input', ['form-control', 'input-sm'], $input_group);
-                        $input.attr('placeholder', 'invite');
+                        $input.attr('placeholder', 'invite by email');
 
                         var $button = createNewDomElement('button', ['btn', 'btn-default', 'btn-sm'], $input_group);
                         $button.append(getIcon('fa-plus'));

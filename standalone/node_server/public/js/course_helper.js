@@ -55,7 +55,7 @@
             var addAnnouncements = function(str){
                 var $p = $(document.createElement('p'));
                 $p.text(str);
-                $('#announcement_items').append($p);
+                //$('#announcement_items').append($p);
             };
 
             return pub_an;
@@ -316,6 +316,9 @@
                                 console.log(JSON.stringify(submission));
                                 $p.text(formatDate(new Date(submission.submission_time)));
                                 $status.append($p);
+                            }
+                            else{
+                                $status.text('Not Submitted');
                             }
                         }
                         $tr.append($status);

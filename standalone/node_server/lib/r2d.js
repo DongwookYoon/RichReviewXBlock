@@ -648,10 +648,8 @@ var Group = (function(manager, name, creationDate){
         });
     };
 
-    pub_grp.Rename = function(groupid, newname, cb){
-        redisClient.HSET(groupid, 'name', newname, function(err){
-            cb(err);
-        });
+    pub_grp.Rename = function(group_id, new_name){
+        return RedisClient.HSET(group_id, 'name', new_name);
     };
 
     pub_grp.SetUsersByObj = function(groupid, usersobj, cb){
@@ -780,7 +778,7 @@ var Doc = (function(){
     //redis doc hash structure
     // userid, creationDate, pdfid, name, groups(list)
 
-    pub_doc.CreateNew = function(userid_n, creationTime, pdfid){
+    pub_doc.CreateNew = function(userid_n, creationTime, pdfid, crs_submission){
         var docid = "doc:"+userid_n+"_"+creationTime;
         return RedisClient.EXISTS(docid).then(
             function(isexist){
@@ -795,13 +793,15 @@ var Doc = (function(){
             }
         ).then(
             function(){
+                crs_submission = crs_submission === 'undefined' ? null : crs_submission;
                 return RedisClient.HMSET(
                     docid,
                     'userid_n', userid_n,
                     'creationTime', creationTime,
                     'pdfid', pdfid,
                     'name', 'Document uploaded at ' + js_utils.FormatDateTimeMilisec(creationTime),
-                    'groups', '[]'
+                    'groups', '[]',
+                    'crs_submission', JSON.stringify(crs_submission)
                 )
             }
         ).then(
@@ -872,10 +872,8 @@ var Doc = (function(){
         );
     };
 
-    pub_doc.Rename = function(docid, newname, cb){
-        redisClient.HSET(docid, "name", newname, function(err, resp){
-            cb(err, resp);
-        });
+    pub_doc.Rename = function(doc_id, new_name){
+        return RedisClient.HSET(doc_id, 'name', new_name);
     };
 
     pub_doc.DeleteDocFromRedis = function(docid_n){

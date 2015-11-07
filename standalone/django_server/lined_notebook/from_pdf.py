@@ -5,6 +5,7 @@ import PyPDF2
 from wand.image import Image
 import wand
 import io
+import os
 import struct
 from matplotlib import pyplot as plt
 from sklearn import linear_model, datasets
@@ -175,9 +176,9 @@ def split(img, verbose):
                 cv2.line(img,(x1,y1),(x2,y2),(0,255,0),1)
 
         cv2.imshow('undistorted_line', img)
-    return [-w*0.5/np.tan(theta)+rho/np.sin(theta) for (rho,theta) in lines]
+    return w, h, [-w*0.5/np.tan(theta)+rho/np.sin(theta) for (rho,theta) in lines]
 
-def run(pdf, n):
+def runPage(pdf, n):
     # read the pdf page into bytes array
     pdf_writer = PyPDF2.PdfFileWriter()
     pdf_page = pdf.getPage(n)
@@ -207,18 +208,15 @@ def run(pdf, n):
 
     cv2.imshow('undistorted', cv_img)
 
-    split_pts = split(cv_img, verbose = False)
-    split_pts.sort()
 
-    key = cv2.waitKey(1)
-    if(key == 113):
-         quit()
+    structure_data = {}
+    structure_data['w'], structure_data['h'], structure_data['split_pts'] = split(cv_img, verbose = False)
+    structure_data['split_pts'].sort()
 
-    return cv_img, split_pts
+    return cv_img, structure_data
 
-def run2(path, filename):
+def runPdf(path, filename):
     pdf = PyPDF2.PdfFileReader(file(path+'/'+filename, "rb"))
-    '''
 
     cv2.namedWindow('img')
     cv2.moveWindow('img', 0, 0)
@@ -227,24 +225,28 @@ def run2(path, filename):
     cv2.moveWindow('undistorted', IMAGE_WIDTH, 0)
 
     for n in xrange(0, pdf.getNumPages()):
-        print 'PDF page:', n
-        img, pts = run(pdf, n)
+        img, structure_data = runPage(pdf, n)
+        print '<page>'
+        print structure_data
+        print '</page>'
         cv2.imwrite(path+'/'+str(n)+'.jpg', img)
+
+        key = cv2.waitKey(1)
+        if(key == 113):
+             quit()
+
     cv2.destroyAllWindows()
-    '''
-    param = ['convert', path+'\\*.jpg']
-    #for n in xrange(0, pdf.getNumPages()):
-    #    param.append(str(n)+'.jpg')
-    print param
-    ret = subprocess.call(param,stdout=subprocess.PIPE, cwd=path)
+
+    convert = 'convert'
+    if os.name == 'nt':
+        convert = 'convert2' # avoid collision with windows' convert.exe
+    param = [convert, path+'/*.jpg', path+'/merged.pdf']
+
+    ret = subprocess.call(param,stdout=subprocess.PIPE)
 
 path = sys.argv[1]
 filename = sys.argv[2]
 
-print path, filename
-run2(path, filename)
-
-
-#cv2.findHomography
-#dst = cv2.warpPerspective(img,M,(300,300))
-#http://opencv-python-tutroals.readthedocs.org/en/latest/py_tutorials/py_imgproc/py_geometric_transformations/py_geometric_transformations.html
+if __name__ == '__main__':
+    print path, filename
+    runPdf(path, filename)

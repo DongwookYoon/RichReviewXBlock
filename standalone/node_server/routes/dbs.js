@@ -147,12 +147,15 @@ var RenameDoc = function(req, res){
         js_utils.PostResp(res, req, 500);
     }
     else{
-        R2D.Doc.Rename("doc:"+req.body.name.substring(9), req.body.value, function(err){
-            if(err){js_utils.PostResp(res, req, 500);}
-            else {
-                js_utils.PostResp(res, req, 200);
+        R2D.Doc.Rename('doc:'+req.body.name.substring(9), req.body.value).then(
+            function(){
+                return js_utils.PostResp(res, req, 200);
             }
-        });
+        ).catch(
+            function(){
+                js_utils.PostResp(res, req, 500);
+            }
+        );
     }
 };
 
@@ -161,12 +164,15 @@ var RenameGroup = function(req, res){
         js_utils.PostResp(res, req, 500);
     }
     else{
-        R2D.Group.Rename("grp:"+req.body.name.substring(11), req.body.value, function(err){
-            if(err){js_utils.PostResp(res, req, 500);}
-            else {
-                js_utils.PostResp(res, req, 200);
+        R2D.Group.Rename('grp:'+req.body.name.substring(11), req.body.value).then(
+            function(){
+                return js_utils.PostResp(res, req, 200);
             }
-        });
+        ).catch(
+            function(){
+                js_utils.PostResp(res, req, 500);
+            }
+        );
     }
 };
 

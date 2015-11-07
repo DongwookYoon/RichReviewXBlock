@@ -1210,16 +1210,19 @@
                         r2App.invalidate_page_layout = true
                     }
                 }.bind(this), false);
-                this.dom_textarea.addEventListener('focusout', function() {
+                $(this.dom_textarea).focusout(function() {
+                    console.log('>>>>focusout');
                     r2App.cur_focused_piece_keyboard = null;
                     this.dom_textarea.style.boxShadow = "none";
                     $(this.dom).css("pointer-events", 'none');
                     if(this.__contentschanged){
+                        console.log('>>>>__contentschanged:', this.ExportToTextChange());
                         r2Sync.PushToUploadCmd(this.ExportToTextChange());
                         this.__contentschanged = false;
                     }
-                }.bind(this), false);
-                this.dom_textarea.addEventListener('focus', function() {
+                }.bind(this));
+                $(this.dom_textarea).focus(function() {
+                    console.log('>>>>focusin');
                     r2App.cur_focused_piece_keyboard = this;
                     var color = this._isprivate ?
                             r2.userGroup.GetUser(this._username).color_piecekeyboard_private_box_shadow :
@@ -1230,7 +1233,7 @@
                         //this.dom_btn_pub.style.display = "block";
                     }
                     $(this.dom).css("pointer-events", 'auto');
-                }.bind(this), false);
+                }.bind(this));
             }
         }.bind(this);
 

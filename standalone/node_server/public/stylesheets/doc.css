@@ -138,7 +138,6 @@
 .member_row > .invite_input input {
     font-size: 13px;
     border: solid 1px lightcyan;
-    width: 100px;
+    width: 120px;
     height: 22px;
 }
-

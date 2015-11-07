@@ -12,19 +12,21 @@ var r2Ctrl = {};
         LDN : 2
     };
 
+    /*
     r2.PenModeEnum = {
         DESKTOP: 0,
         DISABLED: 1,
         GESTURE: 2,
         PEN: 3
     };
+    */
 
     r2.mouse = (function(){
         var pub = {};
 
         pub.mode = r2.MouseModeEnum.HOVER;
         pub.pos_dn = new Vec2(0,0);
-        pub.penMode = r2.PenModeEnum.DISABLED;
+        //pub.penMode = r2.PenModeEnum.DISABLED;
 
         var in_menu = false;
 
@@ -63,7 +65,7 @@ var r2Ctrl = {};
                             if(r2.keyboard.ctrlkey_dn)
                                 r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
                         }
-                        else if(r2App.mode == r2App.AppModeEnum.RECORDING && (pub.penMode == r2.PenModeEnum.DESKTOP || pub.penMode == r2.PenModeEnum.GESTURE)){
+                        else if(r2App.mode == r2App.AppModeEnum.RECORDING){
                             r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                         }
                         break;
@@ -90,7 +92,7 @@ var r2Ctrl = {};
                         r2.onScreenButtons.drawDnMv(pub.pos_dn, new_mouse_pt);
                     }
                 }
-                else if(r2App.mode == r2App.AppModeEnum.RECORDING && (pub.penMode == r2.PenModeEnum.DESKTOP || pub.penMode == r2.PenModeEnum.GESTURE)){
+                else if(r2App.mode == r2App.AppModeEnum.RECORDING){
                     r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                 }
             }
@@ -114,7 +116,7 @@ var r2Ctrl = {};
                         r2App.annot_private_spotlight.changed = true;
                     }
                 }
-                else if(r2App.mode == r2App.AppModeEnum.RECORDING && (pub.penMode == r2.PenModeEnum.DESKTOP || pub.penMode == r2.PenModeEnum.GESTURE)){
+                else if(r2App.mode == r2App.AppModeEnum.RECORDING){
                     r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                 }
                 pub.mode = r2.MouseModeEnum.HOVER;

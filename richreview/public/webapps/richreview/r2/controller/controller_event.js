@@ -173,7 +173,7 @@ var r2Ctrl = {};
         pub.loadHammerJs = function() {
 
 			console.log("start load hammerjs");
-		
+
 			//var hammerSetUp = function() {
 				$(".disablemodebox").hide();
 				$(".gesturemodebox").hide();
@@ -192,7 +192,7 @@ var r2Ctrl = {};
 				mc.add( new Hammer.Tap({ event: 'singletap' }) );
 
 			console.log("1");
-			
+
 				// we want to recognize this simulatenous, so a quadrupletap will be detected even while a tap has been recognized.
 				mc.get('doubletap').recognizeWith('singletap');
 				// we only want to trigger a tap, when we don't have detected a doubletap
@@ -221,10 +221,10 @@ var r2Ctrl = {};
 						//$('.disablemodebox').fadeOut();
 					}
 				});
-				
+
 			console.log("1");
 			//};
-			
+
             //load jquery and hammer.js
             /*
 			var elem = null;
@@ -766,7 +766,7 @@ var r2Ctrl = {};
 /*
 (function(r2){
 	console.log("start load hammerjs");
-		
+
 	//var hammerSetUp = function() {
 	$(".disablemodebox").hide();
 	$(".gesturemodebox").hide();
@@ -814,7 +814,7 @@ var r2Ctrl = {};
 			//$('.disablemodebox').fadeOut();
 		}
 	});
-	
+
 	console.log("1");
 
 

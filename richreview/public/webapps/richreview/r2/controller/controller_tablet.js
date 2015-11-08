@@ -121,8 +121,8 @@
 			return pub_ps;
 		}());
 
-        pub.penNonSupportedHandler = (function(){
-            var pub = {};
+		pub.penNonSupportedHandler = (function(){
+			var pub = {};
 			pub.setDomEvents = function(){
 				r2.dom.setTouchEventHandlers(
 					r2.tabletInteraction.touchStart,
@@ -133,56 +133,56 @@
 
 				//r2.dom.setPenEventHandlers
 			};
-            pub.hoverTimer = null;
+			pub.hoverTimer = null;
 
-            pub.stopTimer = function() {
-                if (pub.hoverTimer != null) {
-                    clearTimeOut(pub.hoverTimer);
-                    pub.hoverTimer = null;
-                }
-            };
+			pub.stopTimer = function() {
+				if (pub.hoverTimer != null) {
+					clearTimeOut(pub.hoverTimer);
+					pub.hoverTimer = null;
+				}
+			};
 
-            pub.mouseDn = function(evt){
-                r2.mouse.handleDn(evt);
-            };
+			pub.mouseDn = function(evt){
+				r2.mouse.handleDn(evt);
+			};
 
-            pub.mouseMv = function(evt){
-                if (r2.mouse.mode === r2.MouseModeEnum.HOVER) { // it is a pen hover move
-                    r2.hoverIn(evt);
-                }
+			pub.mouseMv = function(evt){
+				if (r2.mouse.mode === r2.MouseModeEnum.HOVER) { // it is a pen hover move
+					r2.hoverIn(evt);
+				}
 
-                r2.mouse.handleMv(evt);
-            };
+				r2.mouse.handleMv(evt);
+			};
 
-            pub.mouseUp = function(evt){
-                r2.mouse.handleUp(evt);
-            };
+			pub.mouseUp = function(evt){
+				r2.mouse.handleUp(evt);
+			};
 
-            /*
-            pub.hoverIn = function(evt){
+			/*
+			 pub.hoverIn = function(evt){
 
-            };
-            */
+			 };
+			 */
 
-            pub.hoverIn = function(evt){
-                //clear old timer and set new timer
-                pub.stopTimer();
-                pub.hoverTimer = setTimeout(function() {pub.hoverOut(evt);}, 50);
-            };
+			pub.hoverIn = function(evt){
+				//clear old timer and set new timer
+				pub.stopTimer();
+				pub.hoverTimer = setTimeout(function() {pub.hoverOut(evt);}, 50);
+			};
 
-            pub.hoverOut = function(evt){
-                //TODO
-            };
+			pub.hoverOut = function(evt){
+				//TODO
+			};
 
 
-            return pub;
+			return pub;
 
-        }());
+		}());
 
 		pub.touchStart = function(evt){
 			//alert("touchStart");
 			//evt.preventDefault();
-			//pub.penDown(evt.changedTouches[0]);
+			pub.penDown(evt.changedTouches[0]);
 			if(in_menu){
 				//evt.preventDefault()
 			}
@@ -192,7 +192,7 @@
 				//evt.preventDefault()
 			}
 			//evt.preventDefault();
-			//pub.penUp(evt.changedTouches[0]);
+			pub.penUp(evt.changedTouches[0]);
         };
 		pub.touchCancel = function(evt) {
 			if(in_menu){
@@ -201,7 +201,7 @@
         };
         pub.touchMove = function(evt) {
 			//evt.preventDefault();
-			//pub.penMv(evt.changedTouches[0]);
+			pub.penMv(evt.changedTouches[0]);
         };
 		pub.penIn = function(evt){
 
@@ -255,123 +255,108 @@
         return pub;
 
     }());
-
 	r2.inkCtrl = (function(){
 		var pub = {};
-		var cur_recording_ink = null;
-		var cur_recording_ink_piece = null;
-		//var cur_recording_ink_pts = [];
+
+		var cur_recording_Ink = null;
+		var cur_recording_Ink_segment = null;
+		var cur_recording_Ink_segment_piece = null;
+		var cur_recording_Ink_pt = null;
+		var cur_recording_Ink_piece=null;
 
 		pub.nowRecording = function(){
-			return cur_recording_ink !== null;
+			return cur_recording_Ink !== null;
 		};
 
-		/*pub.drawDynamicSceneBlob = function(canv_ctx, isprivate, color){
-			if(cur_recording_ink._pt){
-				r2.Ink.Cache.prototype.Relayout(cur_recording_ink._pt);
-			}
-		};*/
 
-		pub.drawDynamicSceneTraces = function() {
-
-			if (cur_recording_ink !== null) {
-
-				//alert("called");
-				cur_recording_ink.Draw();
-			}
+		pub.drawDynamicSceneTraces = function(canv_ctx){
+			if(cur_recording_Ink !== null)
+				cur_recording_Ink.DrawSegments(canv_ctx);
 		};
 
 		pub.recordingInkDn = function(pt, target_annot){
 			var piece = r2App.cur_page.GetPieceByHitTest(pt);
-			//alert(piece==null);
+			cur_recording_Ink_piece = piece;
 			if(piece){
-
-				var curInk = new r2.Ink();
-				curInk.SetInk(
+				var Ink = new r2.Ink();
+				Ink.SetInk(
 					target_annot.GetAnchorPid(),
 					target_annot.GetUsername(),
 					[pt.subtract(piece.pos, true)],
 					target_annot.GetId(),
 					[r2App.cur_time-target_annot.GetBgnTime(),r2App.cur_time-target_annot.GetBgnTime()]);
-				cur_recording_ink = curInk;
-				cur_recording_ink_piece = piece;
-				//alert(cur_recording_ink._pts.length);
+
+				Ink.SetPage(r2App.cur_pdf_pagen);
+				var segment  = new r2.Ink.Segment();
+				segment.SetSegment(piece.GetId(), [pt.subtract(piece.pos, true)]);
+
+				Ink.AddSegment(segment);
+
+				cur_recording_Ink = Ink;
+				cur_recording_Ink_segment = segment;
+				cur_recording_Ink_segment_piece = piece;
+				cur_recording_Ink_pt = pt;
 			}
 		};
 		pub.recordingInkMv = function(pt, target_annot){
-			if(cur_recording_ink){
+			if(cur_recording_Ink && cur_recording_Ink_segment){
 				var piece = r2App.cur_page.GetPieceByHitTest(pt);
-				if(piece === cur_recording_ink_piece){
-
+				if(piece === cur_recording_Ink_segment_piece){
 					if(piece){
 						// add point
-						cur_recording_ink._pts.push(pt.subtract(piece.pos, true));
-						cur_recording_ink._t_end = r2App.cur_time-target_annot.GetBgnTime();
+						cur_recording_Ink_segment.AddPt(pt.subtract(piece.pos, true));
+						cur_recording_Ink.t_end = r2App.cur_time-target_annot.GetBgnTime();
 					}
 					else{
 						// cut segment
-						//cur_recording_ink_segment = null;
+						cur_recording_Ink_segment = null;
 					}
 				}
 				else{
 					// cut segment
-					//cur_recording_ink_segment = null;
+					cur_recording_Ink_segment = null;
 					if(piece){
 						// add new segment and add point
-						/*var segment  = new r2.Ink.Segment();
+						var segment  = new r2.Ink.Segment();
 						segment.SetSegment(piece.GetId(), [pt.subtract(piece.pos, true)]);
 						if(segment.GetNumPts()>0){
-							cur_recording_ink.AddSegment(segment);
+							cur_recording_Ink.AddSegment(segment);
 						}
-						cur_recording_ink_segment = segment;*/
-						cur_recording_ink.t_end = r2App.cur_time-target_annot.GetBgnTime();
-						cur_recording_ink_piece.AddInk(target_annot.GetId(),cur_recording_ink);
-						var curInk = new r2.Ink();
-						curInk.SetInk(
-							target_annot.GetAnchorPid(),
-							target_annot.GetUsername(),
-							[pt.subtract(piece.pos, true)],
-							target_annot.GetId(),
-							[r2App.cur_time-target_annot.GetBgnTime(),r2App.cur_time-target_annot.GetBgnTime()]);
-						cur_recording_ink = curInk;
-						cur_recording_ink._pts.push(pt.subtract(piece.pos, true));
+						cur_recording_Ink_segment = segment;
+						cur_recording_Ink._t_end = r2App.cur_time-target_annot.GetBgnTime();
 					}
 				}
-				cur_recording_ink_piece = piece;
-				//cur_recording_ink_pt = pt;
-
+				cur_recording_Ink_segment_piece=piece;
+				cur_recording_Ink_pt = pt;
 			}
 		};
 
 		pub.recordingInkUp = function(pt, target_annot){
-			if(cur_recording_ink){
-				/*if(cur_recording_ink_segment){
-					cur_recording_ink_segment = null;
+			if(cur_recording_Ink){
+				//console.log(cur_recording_Ink.segments.length);
+				cur_recording_Ink_piece.AddInk(target_annot.GetId(),cur_recording_Ink);
+				if(cur_recording_Ink_segment){
+					cur_recording_Ink_segment = null;
 				}
-				if(cur_recording_ink.segments.length>0){
-					target_annot.Addink(cur_recording_ink, toupload = true);
+				if(cur_recording_Ink.segments.length>0){
+					target_annot.AddInk(cur_recording_Ink, toupload = true);
 				}
-				cur_recording_ink_pt = null;
-				//Relayout
-			*/
-				//cur_recording_ink.Relayout(cur_recording_ink_piece.pos);
-				if(cur_recording_ink_piece){
-					cur_recording_ink_piece.AddInk(target_annot.GetId(),cur_recording_ink);
-				}
-				//alert(cur_recording_ink._pts.length);
-				cur_recording_ink_piece=null;
-				cur_recording_ink = null;
+				cur_recording_Ink_pt = null;
+				r2App.cur_page.refreshInkPrerender();
+
+				cur_recording_Ink = null;
 				r2App.invalidate_static_scene = true;
 				r2App.invalidate_dynamic_scene = true;
 				return true;
 			}
 			else{
-				cur_recording_ink = null;
+				cur_recording_Ink = null;
 				return false;
 			}
 		};
 
 		return pub;
 	}());
+
 
 }(window.r2 = window.r2 || {}));

@@ -1135,7 +1135,52 @@
         return pub;
 
     }());
+    r2.InkRenderer = (function(){
+        var pub = {};
 
+        var canv;
+        var canv_ctx;
+        var _original_canv_width_stored = 0;
+        var _ratio_stored = 0;
+
+        pub.setCanvCtx = function(original_canv_width, ratio){
+            if(_original_canv_width_stored != original_canv_width || _ratio_stored != ratio){
+                _original_canv_width_stored = original_canv_width;
+                _ratio_stored = ratio;
+
+                canv = document.createElement('canvas');
+                canv.width = original_canv_width/4;
+                canv.height = canv.width*ratio;
+                canv_ctx = canv.getContext('2d');
+            }
+            else{
+                canv_ctx.clearRect(0, 0, canv.width, canv.height);
+            }
+        };
+
+        pub.getCanvCtx = function(){
+            return canv_ctx;
+        };
+
+        pub.getCanv = function(){
+            return canv;
+        };
+
+        pub.getCanvWidth = function(){
+            return canv.width;
+        };
+
+        pub.getCanvRatio = function(){
+            return canv.height/canv.width;
+        };
+
+        pub.getRenderHeight = function(original_size_y, page_width){
+            return Math.floor(original_size_y*page_width/4)*4/page_width;
+        };
+
+        return pub;
+
+    }());
     r2.radialMenu = (function(){
         var pub = {};
 

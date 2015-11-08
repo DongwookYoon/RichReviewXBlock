@@ -256,6 +256,7 @@
                             pub.penMode = r2.PenModeEnum.IDLE;
                         }
                     }
+                    pub.mode = r2.MouseModeEnum.HOVER;
                 }
             };
 
@@ -297,9 +298,11 @@
             };
 
             pub.hoverOut = function(event){
-                var new_mouse_pt = pub.getPos(event);
-                r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
-                pub.penMode = r2.PenModeEnum.IDLE;
+                if (pub.penMode == r2.PenModeEnum.gesture) {
+                    var new_mouse_pt = pub.getPos(event);
+                    r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
+                    pub.penMode = r2.PenModeEnum.IDLE;
+                }
             };
 
 

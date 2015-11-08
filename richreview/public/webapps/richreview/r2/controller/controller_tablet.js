@@ -172,10 +172,10 @@
 
             pub.mouseDn = function(event){
                 var new_mouse_pt = pub.getPos(event);
-                //if (pub.mode === r2.MouseModeEnum.HOVER) {
+                if (pub.mode === r2.MouseModeEnum.HOVER) {
                     switch (event.which) {
                         case 1: // left click
-                            //pub.mode = r2.MouseModeEnum.LDN;
+                            pub.mode = r2.MouseModeEnum.LDN;
                             pub.pos_dn = new_mouse_pt;
                             if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
                                 if(r2.keyboard.ctrlkey_dn)
@@ -193,20 +193,19 @@
                         default:
                             break;
                     }
-                //}
+                }
                 r2App.cur_mouse_pt = new_mouse_pt;
             };
 
             pub.mouseMv = function(event){
                 var new_mouse_pt = pub.getPos(event);
 
-                /*
+
                 if(pub.mode == r2.MouseModeEnum.HOVER){
                     // select piece
                     r2App.pieceSelector.update(r2App.cur_mouse_pt);
                 }
-                */
-                //else if(pub.mode == r2.MouseModeEnum.LDN){
+                else if(pub.mode == r2.MouseModeEnum.LDN){
                     if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
                         if(r2.spotlightCtrl.nowRecording()){
                             r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
@@ -223,38 +222,73 @@
                         }
                         else if (pub.penMode == r2.PenModeEnum.GESTURE) {
                             r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
+                            pub.hoverIn(event);
                         }
                         else if (pub.penMode == r2.PenModeEnum.INKING) {
-                            //TODO FINISH PREVIOUS INKING
-
-                            pub.penMode = r2.PenModeEnum.GESTURE;
-                            r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
-                            pub.hoverIn(event);
+                            //TODO inking move
 
                         }
                     }
-                //}
+                }
 
                 r2App.cur_mouse_pt = new_mouse_pt;
             };
 
             pub.mouseUp = function(event){
                 var new_mouse_pt = pub.getPos(event);
-                if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
-                    if (!in_menu && pub.isTap(new_mouse_pt)) {
-                        pub.handleTimeIndexingUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt));
-                    }
-                    if(r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight)){
-                        r2App.annot_private_spotlight.timeLastChanged = (new Date()).getTime();
-                        r2App.annot_private_spotlight.changed = true;
-                    }
+                if (pub.mode == r2.MouseModeEnum.HOVER) {
+                    // nothing
                 }
-                else if(r2App.mode == r2App.AppModeEnum.RECORDING){
-                    if (pub.penMode == r2.PenModeEnum) {
-                        //TODO INKING UP
+                else if (pub.mode == r2.MouseModeEnum.LDN) {
+                    if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
+                        if (!r2.mouse.in_menu && pub.isTap(new_mouse_pt)) {
+                            pub.handleTimeIndexingUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt));
+                        }
+                        if(r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight)){
+                            r2App.annot_private_spotlight.timeLastChanged = (new Date()).getTime();
+                            r2App.annot_private_spotlight.changed = true;
+                        }
+                    }
+                    else if(r2App.mode == r2App.AppModeEnum.RECORDING){
+                        if (pub.penMode == r2.PenModeEnum.INKING) {
+                            //TODO INKING UP
+
+                            pub.penMode = r2.PenModeEnum.IDLE;
+                        }
                     }
                 }
             };
+
+            pub.handleTimeIndexingUp = function(pt){
+                var l = r2App.cur_page.HitTest(pt);
+                if(l.length == 0){return;}
+
+                var playback;
+                var obj_front = l[0];
+                if(obj_front instanceof r2.PieceAudio){
+                    playback = obj_front.GetPlayback(pt);
+                    if(playback){
+                        r2.rich_audio.play(playback.annot, playback.t);
+                        r2.log.Log_AudioPlay('indexing_wf', playback.annot, playback.t);
+                    }
+                }
+                else if(obj_front instanceof r2.PieceKeyboard){
+                    obj_front.Focus();
+                }
+                else{
+                    var spotlights = [];
+                    l.forEach(function(item){if(item instanceof r2.Spotlight.Cache){spotlights.push(item);}});
+                    for(var i = 0; spotlight = spotlights[i]; ++i){
+                        playback = spotlight.GetPlayback(pt);
+                        if(playback){
+                            r2.rich_audio.play(playback.annot, playback.t);
+                            r2.log.Log_AudioPlay('indexing_sp', playback.annot, playback.t);
+                            break;
+                        }
+                    }
+                }
+            };
+
 
             pub.hoverIn = function(event){
                 //clear old timer and set new timer
@@ -264,7 +298,8 @@
 
             pub.hoverOut = function(event){
                 var new_mouse_pt = pub.getPos(event);
-               r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
+                r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
+                pub.penMode = r2.PenModeEnum.IDLE;
             };
 
 

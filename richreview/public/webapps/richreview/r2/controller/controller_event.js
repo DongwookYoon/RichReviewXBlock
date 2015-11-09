@@ -289,42 +289,19 @@ var r2Ctrl = {};
         LDN : 2
     };
 
-    r2.PenModeEnum = {
-        DESKTOP: 0,
-        DISABLED: 1,
-        GESTURE: 2,
-        PEN: 3
-    };
-
     r2.mouse = (function(){
         var pub = {};
 
         pub.mode = r2.MouseModeEnum.HOVER;
-<<<<<<< HEAD
-=======
-        pub.pos_dn = new Vec2(0,0);
-        pub.penMode = r2.PenModeEnum.DISABLED;
->>>>>>> inking success
 
         var pos_dn = new Vec2(0,0);
 
-<<<<<<< HEAD
         pub.setEventHandlers = function(){
             r2.dom.onMouseEventHandlers(
-=======
-        pub.inMenu = function(){in_menu = true;};
-        pub.outMenu = function(){in_menu = false;};
-
-        pub.setDomEvents = function(){
-
-            r2.dom.setMouseEventHandlers(
->>>>>>> inking success
                 pub.handleDn,
                 pub.handleMv,
                 pub.handleUp
             );
-
-            //r2.tabletInteraction.penNonSupportedHandler.setDomEvents();
         };
 
         pub.removeEventHandlers = function(){
@@ -336,15 +313,7 @@ var r2Ctrl = {};
         };
 
         pub.handleDn = function(event){
-<<<<<<< HEAD
             var new_mouse_pt = r2.input.getPos(event);
-=======
-            if(pub.penMode == r2.PenModeEnum.PEN) {
-                r2.tabletInteraction.penDown(event);
-            }
-
-            var new_mouse_pt = pub.getPos(event);
->>>>>>> inking success
             if(pub.mode === r2.MouseModeEnum.HOVER){
                 switch (event.which) {
                     case 1: // left click
@@ -354,7 +323,7 @@ var r2Ctrl = {};
                             if(r2.keyboard.ctrlkey_dn)
                                 r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
                         }
-                        else if(r2App.mode == r2App.AppModeEnum.RECORDING && (pub.penMode == r2.PenModeEnum.DESKTOP || pub.penMode == r2.PenModeEnum.GESTURE)){
+                        else if(r2App.mode == r2App.AppModeEnum.RECORDING){
                             r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                         }
                         break;
@@ -366,16 +335,7 @@ var r2Ctrl = {};
         };
 
         pub.handleMv = function(event){
-<<<<<<< HEAD
             var new_mouse_pt = r2.input.getPos(event);
-=======
-            if(pub.penMode == r2.PenModeEnum.PEN) {
-                r2.tabletInteraction.penMv(event);
-            }
-
-
-            var new_mouse_pt = pub.getPos(event);
->>>>>>> inking success
 
             if(pub.mode == r2.MouseModeEnum.HOVER){
                 // select piece
@@ -390,7 +350,7 @@ var r2Ctrl = {};
                         r2.onScreenButtons.mouseMv(pos_dn, new_mouse_pt);
                     }
                 }
-                else if(r2App.mode == r2App.AppModeEnum.RECORDING && (pub.penMode == r2.PenModeEnum.DESKTOP || pub.penMode == r2.PenModeEnum.GESTURE)){
+                else if(r2App.mode == r2App.AppModeEnum.RECORDING){
                     r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                 }
             }
@@ -399,15 +359,7 @@ var r2Ctrl = {};
         };
 
         pub.handleUp = function(event){
-<<<<<<< HEAD
             var new_mouse_pt = r2.input.getPos(event);
-=======
-            if(pub.penMode == r2.PenModeEnum.PEN) {
-                r2.tabletInteraction.penUp(event);
-            }
-
-            var new_mouse_pt = pub.getPos(event);
->>>>>>> inking success
 
             if(pub.mode == r2.MouseModeEnum.HOVER){
                 // do nothing, there's something weird.
@@ -422,7 +374,7 @@ var r2Ctrl = {};
                         r2App.annot_private_spotlight.changed = true;
                     }
                 }
-                else if(r2App.mode == r2App.AppModeEnum.RECORDING && (pub.penMode == r2.PenModeEnum.DESKTOP || pub.penMode == r2.PenModeEnum.GESTURE)){
+                else if(r2App.mode == r2App.AppModeEnum.RECORDING){
                     r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                 }
 
@@ -468,92 +420,8 @@ var r2Ctrl = {};
                     break;
                 }
             }
-<<<<<<< HEAD
         }
     };
-=======
-        };
-
-        pub.loadHammerJs = function() {
-
-			console.log("start load hammerjs");
-		
-			//var hammerSetUp = function() {
-				$(".disablemodebox").hide();
-				$(".gesturemodebox").hide();
-				$(".penmodebox").hide();
-
-
-				var r2view = document.getElementById("r2_view");
-
-				// We create a manager object, which is the same as Hammer(), but without the presetted recognizers.
-				var mc = new Hammer.Manager(r2view);
-
-
-				// Tap recognizer with minimal 2 taps
-				mc.add( new Hammer.Tap({ event: 'doubletap', taps: 2}) );
-				// Single tap recognizer
-				mc.add( new Hammer.Tap({ event: 'singletap' }) );
-
-			console.log("1");
-			
-				// we want to recognize this simulatenous, so a quadrupletap will be detected even while a tap has been recognized.
-				mc.get('doubletap').recognizeWith('singletap');
-				// we only want to trigger a tap, when we don't have detected a doubletap
-				mc.get('singletap').requireFailure('doubletap');
-
-
-				mc.on("doubletap", function(ev) {
-					console.log(ev.type);
-
-					if (r2.mouse.penMode == r2.PenModeEnum.DISABLED) {
-						r2.mouse.penMode = r2.PenModeEnum.GESTURE;
-						$(".gesturemodebox").fadeIn(1000, function() {$(".gesturemodebox").fadeOut();});
-						//setTimeout(function() {$(".gestiremodebox").hide();}, 1000);
-						//$(".gestiremodebox").fadeout();
-					}
-					else if (r2.mouse.penMode == r2.PenModeEnum.GESTURE) {
-						r2.mouse.penMode = r2.PenModeEnum.PEN;
-						$(".penmodebox").fadeIn(1000, function() {$(".penmodebox").fadeOut();});
-						//$('.penmodebox').fadeOut();
-						//setTimeout(function() {$(".penmodebox").hide();}, 1000);
-					}
-					else if (r2.mouse.penMode == r2.PenModeEnum.PEN) {
-						r2.mouse.penMode = r2.PenModeEnum.DISABLED;
-						$(".disablemodebox").fadeIn(1000,function() {$(".disablemodebox").fadeOut();});
-						//setTimeout(function() {$(".disablemodebox").hide();}, 1000);
-						//$('.disablemodebox').fadeOut();
-					}
-				});
-				
-			console.log("1");
-			//};
-			
-            //load jquery and hammer.js
-            /*
-			var elem = null;
-            elem = document.createElement('script');
-            elem.type = 'text/javascript';
-            elem.src = 'https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js';
-            document.getElementsByTagName('head')[0].appendChild(elem);
-
-            var hammerScript = document.createElement('script');
-            hammerScript.type = 'text/javascript';
-            hammerScript.src = 'https://hammerjs.github.io/dist/hammer.js';
-            hammerScript.onreadystatechange = hammerSetUp;
-            hammerScript.onload = hammerSetUp;
-            document.getElementsByTagName('head')[0].appendChild(hammerScript);
-			*/
-		};
-
-
-
-
-
-        return pub;
-    }());
-
->>>>>>> inking success
 
     /* keyboard */
     r2.KeyboardModeEnum = {
@@ -683,7 +551,6 @@ var r2Ctrl = {};
                         event.preventDefault();
                         break;
                     default:
-                        pub.ctrlkey_dn = true;
                         break;
                 }
             }
@@ -775,10 +642,9 @@ var r2Ctrl = {};
             }
         };
 
-
         document.onkeyup = pub.handleUp;
         document.onkeydown = pub.handleDn;
-        console.log("key events set");
+
         return pub;
     }());
     /* end of keyboard */
@@ -1182,61 +1048,3 @@ var r2Ctrl = {};
     };
 
 }(window.r2 = window.r2 || {}));
-
-/*
-(function(r2){
-	console.log("start load hammerjs");
-		
-	//var hammerSetUp = function() {
-	$(".disablemodebox").hide();
-	$(".gesturemodebox").hide();
-	$(".penmodebox").hide();
-
-
-	var r2view = document.getElementById("r2_view");
-
-	// We create a manager object, which is the same as Hammer(), but without the presetted recognizers.
-	var mc = new Hammer.Manager(r2view);
-
-
-	// Tap recognizer with minimal 2 taps
-	mc.add( new Hammer.Tap({ event: 'doubletap', taps: 2}) );
-	// Single tap recognizer
-	mc.add( new Hammer.Tap({ event: 'singletap' }) );
-
-	console.log("1");
-
-	// we want to recognize this simulatenous, so a quadrupletap will be detected even while a tap has been recognized.
-	mc.get('doubletap').recognizeWith('singletap');
-	// we only want to trigger a tap, when we don't have detected a doubletap
-	mc.get('singletap').requireFailure('doubletap');
-
-
-	mc.on("doubletap", function(ev) {
-		console.log(ev.type);
-
-		if (r2.mouse.penMode == r2.mouse.penMode == r2.PenModeEnum.r2.PenModeEnum.DISABLED) {
-			r2.mouse.penMode = r2.PenModeEnum.GESTURE;
-			$(".gesturemodebox").fadeIn(2000, function() {$(".gesturemodebox").fadeOut();});
-			//setTimeout(function() {$(".gestiremodebox").hide();}, 1000);
-			//$(".gestiremodebox").fadeout();
-		}
-		else if (r2.mouse.penMode == r2.PenModeEnum.GESTURE) {
-			r2.mouse.penMode = r2.PenModeEnum.PEN;
-			$(".penmodebox").fadeIn(2000, function() {$(".penmodebox").fadeOut();});
-			//$('.penmodebox').fadeOut();
-			//setTimeout(function() {$(".penmodebox").hide();}, 1000);
-		}
-		else if (r2.mouse.penMode == r2.PenModeEnum.PEN) {
-			r2.mouse.penMode = r2.PenModeEnum.DISABLED;
-			$(".disablemodebox").fadeIn(function() {$(".disablemodebox").fadeOut();});
-			//setTimeout(function() {$(".disablemodebox").hide();}, 1000);
-			//$('.disablemodebox').fadeOut();
-		}
-	});
-	
-	console.log("1");
-
-
-}(window.r2 = window.r2 || {}));
-*/

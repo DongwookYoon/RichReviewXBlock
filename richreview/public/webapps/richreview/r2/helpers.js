@@ -1278,14 +1278,7 @@
                 $menu.toggleClass('open', false);
                 $menu.find('.rm_btn').blur();
             });
-			$menu.on('touchstart',function(e) {
-                r2.tabletInteraction.inMenu();
-                $menu.toggleClass('open', true);
-            }).on('touchend',function(e) {
-                r2.tabletInteraction.outMenu();
-                $menu.toggleClass('open', false);
-                $menu.find('.rm_btn').blur();
-            });
+
             $menu.find('.rm_btn').on('focus', function(e){
                 updateMenuOpenStatus($menu);
             }).on('blur', function(e){
@@ -1496,20 +1489,7 @@
             $(content).off('mousemove', mv);
             $(content).off('mouseup', up);
         };
-        pub.setPointerEventHandlers = function(dn,mv,up,en,lv){
-            content.onpointerdown = dn;
-            content.onpointermove = mv;
-            content.onpointerup = up;
-			content.onpointerenter = en;
-			content.onpointerleave = lv;
-        };
-		pub.setTouchEventHandlers = function(st,mv,ed,cancel){
-            content.ontouchstart = st;
-            content.ontouchmove = mv;
-            content.ontouchend = ed
-			content.ontouchcancel = cancel;
-        };
-		
+
         pub.setContextMenuEvent = function(func){
             $(content).on('contextmenu', func);
         };

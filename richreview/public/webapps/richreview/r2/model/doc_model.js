@@ -1864,7 +1864,6 @@
             ctx.lineTo(this._pts[i].x, this._pts[i].y);
         }
         ctx.strokeStyle = this._user.color_stroke_dynamic_past;
-        console.log(this._pts.length);
         ctx.lineWidth = r2Const.INK_WIDTH;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';

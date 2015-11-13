@@ -85,7 +85,7 @@
 						break;
 					case "pen":
 						event.preventDefault();
-						r2.tabletInteraction.penMv(event);
+						r2.tabletInteraction.penMove(event);
 						break;
 					case "touch":
 						r2.tabletInteraction.touchMove(event);
@@ -123,55 +123,254 @@
 
 		pub.penNonSupportedHandler = (function(){
 			var pub = {};
+			r2.PenModeEnum = {
+				IDLE: 0,
+				GESTURE: 1,
+				INKING: 2
+			};
+			pub.penMode = r2.PenModeEnum.IDLE;
+			pub.mode = r2.MouseModeEnum.HOVER;
+
 			pub.setDomEvents = function(){
-				r2.dom.setTouchEventHandlers(
-					r2.tabletInteraction.touchStart,
-					r2.tabletInteraction.touchMove,
-					r2.tabletInteraction.touchEnd,
-					r2.tabletInteraction.touchCancel
+
+				 r2.dom.setTouchEventHandlers(
+				 r2.tabletInteraction.touchStart,
+				 r2.tabletInteraction.touchMove,
+				 r2.tabletInteraction.touchEnd,
+				 r2.tabletInteraction.touchCancel
+				 );
+
+
+				//set mouse events
+				r2.dom.setMouseEventHandlers(
+					pub.mouseDn,
+					pub.mouseMv,
+					pub.mouseUp
 				);
 
-				//r2.dom.setPenEventHandlers
 			};
+
 			pub.hoverTimer = null;
+
+			pub.pos_dn = new Vec2(0, 0);
+
+			pub.getPos = function(event){
+				return r2.viewCtrl.mapBrowserToScr(new Vec2(event.clientX, event.clientY))
+			};
+
+			pub.isTap = function(pt){
+				var d = pub.pos_dn.subtract(pt, true);
+				d = Math.sqrt(d.x * d.x + d.y * d.y) * r2.viewCtrl.page_width_noscale;
+				return d < r2Const.MOUSE_CLICK_DIST_CRITERIA;
+			};
+
 
 			pub.stopTimer = function() {
 				if (pub.hoverTimer != null) {
-					clearTimeOut(pub.hoverTimer);
+					clearTimeout(pub.hoverTimer);
 					pub.hoverTimer = null;
+					return true;
+				}
+				return false;
+			};
+
+			pub.mouseDn = function(event){
+				var new_mouse_pt = pub.getPos(event);
+
+				if(r2App.mode == r2App.AppModeEnum.RECORDING){
+					//console.log("recording mouse down");
+					if (pub.penMode == r2.PenModeEnum.IDLE) {
+						console.log("ink down");
+						pub.penMode = r2.PenModeEnum.INKING;
+						r2.tabletInteraction.penDown(event);
+					}
+					else if (pub.penMode == r2.PenModeEnum.GESTURE) {
+						pub.penMode = r2.PenModeEnum.INKING;
+						pub.hoverOut(event);
+						r2.tabletInteraction.penDown(event);
+					}
+					//r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
+				}
+
+				if(pub.mode === r2.MouseModeEnum.HOVER){
+					switch (event.which) {
+						case 1: // left click
+							pub.mode = r2.MouseModeEnum.LDN;
+							pub.pos_dn = new_mouse_pt;
+							if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
+								if(r2.keyboard.ctrlkey_dn)
+									r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
+							}
+							else if(r2App.mode == r2App.AppModeEnum.RECORDING){
+								//console.log("recording mouse down");
+								if (pub.penMode == r2.PenModeEnum.IDLE) {
+									console.log("ink down");
+									pub.penMode = r2.PenModeEnum.INKING;
+									r2.tabletInteraction.penDown(event);
+								}
+								else if (pub.penMode == r2.PenModeEnum.GESTURE) {
+									pub.penMode = r2.PenModeEnum.INKING;
+									pub.hoverOut(event);
+									r2.tabletInteraction.penDown(event);
+								}
+								//r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
+							};
+						default:
+							break;
+					}
+				}
+				r2App.cur_mouse_pt = new_mouse_pt;
+			};
+
+			pub.mouseMv = function(event){
+				var new_mouse_pt = pub.getPos(event);
+
+				if (r2App.mode == r2App.AppModeEnum.RECORDING){
+					//console.log("recording mouse mv");
+					if (pub.penMode == r2.PenModeEnum.INKING) {
+						console.log("ink move");
+						r2.tabletInteraction.penMove(event);
+					}
+					else if (pub.penMode == r2.PenModeEnum.IDLE) {
+						//console.log("gesture first time in");
+						pub.penMode = r2.PenModeEnum.GESTURE;
+						// wait 50 ms
+						r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
+						pub.hoverIn(event);
+					}
+					else if (pub.penMode == r2.PenModeEnum.GESTURE) {
+						//console.log("gesture non first time in");
+						r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
+						pub.hoverIn(event);
+					}
+				}
+
+				if(pub.mode == r2.MouseModeEnum.HOVER){
+					// select piece
+					r2App.pieceSelector.update(r2App.cur_mouse_pt);
+				}
+				else if(pub.mode == r2.MouseModeEnum.LDN){
+					if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
+						if(r2.spotlightCtrl.nowRecording()){
+							r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
+						}
+						else{
+							r2.onScreenButtons.drawDnMv(pub.pos_dn, new_mouse_pt);
+						}
+					}
+					/*
+					 else if(r2App.mode == r2App.AppModeEnum.RECORDING){
+					 if (pub.penMode == r2.PenModeEnum.INKING) {
+					 console.log("ink move");
+
+					 }
+					 else if (pub.penMode == r2.PenModeEnum.IDLE) {
+					 console.log("gesture first time in");
+					 pub.penMode = r2.PenModeEnum.GESTURE;
+					 r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
+					 pub.hoverIn(event);
+					 }
+					 else if (pub.penMode == r2.PenModeEnum.GESTURE) {
+					 console.log("gesture non first time in");
+					 r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
+					 pub.hoverIn(event);
+					 }
+					 }
+					 */
+				}
+
+				r2App.cur_mouse_pt = new_mouse_pt;
+
+			};
+
+			pub.mouseUp = function(event){
+				var new_mouse_pt = pub.getPos(event);
+
+				if (r2App.mode == r2App.AppModeEnum.RECORDING){
+					//console.log("recording mouse up");
+					if (pub.penMode == r2.PenModeEnum.INKING) {
+						console.log("ink up");
+						r2.tabletInteraction.penUp(event);
+						pub.penMode = r2.PenModeEnum.IDLE;
+					}
+					//r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
+				}
+				if(pub.mode == r2.MouseModeEnum.HOVER){
+					// do nothing, there's something weird.
+				}
+				else if(pub.mode == r2.MouseModeEnum.LDN){
+					if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
+						if (!r2.mouse.in_menu && pub.isTap(new_mouse_pt)) {
+							pub.handleTimeIndexingUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt));
+						}
+						if(r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight)){
+							r2App.annot_private_spotlight.timeLastChanged = (new Date()).getTime();
+							r2App.annot_private_spotlight.changed = true;
+						}
+					}
+					/*
+					 else if(r2App.mode == r2App.AppModeEnum.RECORDING){
+					 if (pub.penMode == r2.PenModeEnum.INKING) {
+					 console.log("ink up");
+
+					 pub.penMode = r2.PenModeEnum.IDLE;
+					 }
+					 //r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
+					 }
+					 */
+					pub.mode = r2.MouseModeEnum.HOVER;
+				}
+
+				r2App.cur_mouse_pt = new_mouse_pt;
+			};
+
+			pub.handleTimeIndexingUp = function(pt){
+				var l = r2App.cur_page.HitTest(pt);
+				if(l.length == 0){return;}
+
+				var playback;
+				var obj_front = l[0];
+				if(obj_front instanceof r2.PieceAudio){
+					playback = obj_front.GetPlayback(pt);
+					if(playback){
+						r2.rich_audio.play(playback.annot, playback.t);
+						r2.log.Log_AudioPlay('indexing_wf', playback.annot, playback.t);
+					}
+				}
+				else if(obj_front instanceof r2.PieceKeyboard){
+					obj_front.Focus();
+				}
+				else{
+					var spotlights = [];
+					l.forEach(function(item){if(item instanceof r2.Spotlight.Cache){spotlights.push(item);}});
+					for(var i = 0; spotlight = spotlights[i]; ++i){
+						playback = spotlight.GetPlayback(pt);
+						if(playback){
+							r2.rich_audio.play(playback.annot, playback.t);
+							r2.log.Log_AudioPlay('indexing_sp', playback.annot, playback.t);
+							break;
+						}
+					}
 				}
 			};
 
-			pub.mouseDn = function(evt){
-				r2.mouse.handleDn(evt);
-			};
 
-			pub.mouseMv = function(evt){
-				if (r2.mouse.mode === r2.MouseModeEnum.HOVER) { // it is a pen hover move
-					r2.hoverIn(evt);
-				}
-
-				r2.mouse.handleMv(evt);
-			};
-
-			pub.mouseUp = function(evt){
-				r2.mouse.handleUp(evt);
-			};
-
-			/*
-			 pub.hoverIn = function(evt){
-
-			 };
-			 */
-
-			pub.hoverIn = function(evt){
+			pub.hoverIn = function(event){
 				//clear old timer and set new timer
+				//console.log("hover in");
 				pub.stopTimer();
-				pub.hoverTimer = setTimeout(function() {pub.hoverOut(evt);}, 50);
+				pub.hoverTimer = setTimeout(function() {pub.hoverOut(event);}, 50);
 			};
 
-			pub.hoverOut = function(evt){
-				//TODO
+			pub.hoverOut = function(event){
+				console.log("hover out");
+				if (pub.penMode != r2.PenModeEnum.IDLE ) {
+					var new_mouse_pt = pub.getPos(event);
+					r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
+					if( pub.mode != r2.MouseModeEnum.LDN) {
+						pub.penMode = r2.PenModeEnum.IDLE;
+					}
+				}
 			};
 
 
@@ -217,7 +416,7 @@
 				r2.inkCtrl.recordingInkDn(r2.viewCtrl.mapScrToDoc(new_pen_pt), r2App.cur_recording_annot);
 			}
         };
-		pub.penMv = function(evt) {
+		pub.penMove = function(evt) {
 
             var new_pen_pt = pub.getPos(evt);
             if(pub.pendown){

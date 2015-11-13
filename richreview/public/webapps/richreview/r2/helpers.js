@@ -1135,7 +1135,52 @@
         return pub;
 
     }());
+    r2.InkRenderer = (function(){
+        var pub = {};
 
+        var canv;
+        var canv_ctx;
+        var _original_canv_width_stored = 0;
+        var _ratio_stored = 0;
+
+        pub.setCanvCtx = function(original_canv_width, ratio){
+            if(_original_canv_width_stored != original_canv_width || _ratio_stored != ratio){
+                _original_canv_width_stored = original_canv_width;
+                _ratio_stored = ratio;
+
+                canv = document.createElement('canvas');
+                canv.width = original_canv_width/4;
+                canv.height = canv.width*ratio;
+                canv_ctx = canv.getContext('2d');
+            }
+            else{
+                canv_ctx.clearRect(0, 0, canv.width, canv.height);
+            }
+        };
+
+        pub.getCanvCtx = function(){
+            return canv_ctx;
+        };
+
+        pub.getCanv = function(){
+            return canv;
+        };
+
+        pub.getCanvWidth = function(){
+            return canv.width;
+        };
+
+        pub.getCanvRatio = function(){
+            return canv.height/canv.width;
+        };
+
+        pub.getRenderHeight = function(original_size_y, page_width){
+            return Math.floor(original_size_y*page_width/4)*4/page_width;
+        };
+
+        return pub;
+
+    }());
     r2.radialMenu = (function(){
         var pub = {};
 
@@ -1244,7 +1289,14 @@
                 $menu.toggleClass('open', false);
                 $menu.find('.rm_btn').blur();
             });
-
+			$menu.on('touchstart',function(e) {
+                r2.tabletInteraction.inMenu();
+                $menu.toggleClass('open', true);
+            }).on('touchend',function(e) {
+                r2.tabletInteraction.outMenu();
+                $menu.toggleClass('open', false);
+                $menu.find('.rm_btn').blur();
+            });
             $menu.find('.rm_btn').on('focus', function(e){
                 updateMenuOpenStatus($menu);
             }).on('blur', function(e){
@@ -1449,7 +1501,20 @@
             content.onmousemove = mv;
             content.onmouseup = up;
         };
-
+        pub.setPointerEventHandlers = function(dn,mv,up,en,lv){
+            content.onpointerdown = dn;
+            content.onpointermove = mv;
+            content.onpointerup = up;
+			content.onpointerenter = en;
+			content.onpointerleave = lv;
+        };
+		pub.setTouchEventHandlers = function(st,mv,ed,cancel){
+            content.ontouchstart = st;
+            content.ontouchmove = mv;
+            content.ontouchend = ed
+			content.ontouchcancel = cancel;
+        };
+		
         pub.setContextMenuEvent = function(func){
             $(content).on('contextmenu', func);
         };

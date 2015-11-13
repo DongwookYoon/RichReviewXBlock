@@ -1,50 +1,80 @@
 /**
- * Created by dongwook on 4/6/15.
+ * Created by Yuan on Sep/2015.
  */
 
 var InputTestWebApp = (function(){
-    $ul = $("#input_test_ul");
+    document.write(window.PointerEvent);
+	$ul = $("#input_test_ul");
     $canv = $("#input_test_canvas");
-    $canv.mousedown(
+    /*$canv.mousedown(
         function(event){
             AddLi("mouse", "Dn", StringifyMouseType(event.which), event.clientX, event.clientY);
         }
-    );
-    $canv.mouseup(
-        function(event){
-            AddLi("mouse", "Up", StringifyMouseType(event.which), event.clientX, event.clientY);
-        }
-    );
-    $canv.mousemove(
-        function(event){
-            ReplaceLi("mouse", "Mv", StringifyMouseType(event.which), event.clientX, event.clientY);
-        }
-    );
-	var touchnowX = 0;
-	var touchnowY = 0;
-    $canv.get(0).addEventListener('touchstart', function(event) {
+    );*/
+	$canv.get(0).addEventListener('pointerdown', function(event) {
         event.preventDefault();
-		touchnowX = event.changedTouches[0].clientX;
-		touchnowY = event.changedTouches[0].clientY;
-        for(var i = 0; i < event.changedTouches.length; ++i){
-            var touch = event.changedTouches[i];
-			
-            AddLi("touch", "Dn", touch.identifier, touch.clientX, touch.clientY);
-        }
+        addListPointer(event,"Dn");     
     }, false);
-
-    $canv.get(0).addEventListener('touchmove', function(event) {
+	$canv.get(0).addEventListener('pointerup', function(event) {
         event.preventDefault();
-		var touch1 = event.changedTouches[0];
-		$(window).moveBy(touch1.clientX-touchnowX,touch1.clientY-touch0.touchnowY);
-		touchnowX = touch1.clientX;
-		touchnowY = touch1.clientY;
-        for(var i = 0; i < Math.min(1, event.changedTouches.length); ++i){
-            var touch = event.changedTouches[i];
-            ReplaceLi("touch", "Mv", event.pressure, touch.clientX, touch.clientY);
-        }
+        addListPointer(event,"Up");     
     }, false);
-
+	$canv.get(0).addEventListener('pointerenter', function(event) {
+        event.preventDefault();
+        addListPointer(event,"En");     
+    }, false);
+	$canv.get(0).addEventListener('pointerout', function(event) {
+        event.preventDefault();
+        addListPointer(event,"Out");     
+    }, false);
+	$canv.get(0).addEventListener('pointermove', function(event) {
+        event.preventDefault();
+		ReplaceListPointer(event,"Mv");
+        //addListPointer(event,"Mv");     
+    }, false);
+	$canv.get(0).addEventListener('pointerover', function(event) {
+        event.preventDefault();
+        addListPointer(event,"Over");     
+    }, false);
+    function addListPointer(e,curCmd) {
+		var endev ="";
+		var entyp ="";
+		switch (e.pointerType) {
+			case "mouse":
+				entyp += StringifyMouseType(e.buttons);
+				break;
+			case "pen":
+				break;
+			case "touch":
+				break;
+			default:
+				break;
+		}
+		AddLi(e.pointerType, curCmd , entyp, e.offsetX, e.offsetY);
+	}
+	function ReplaceListPointer(e,curCmd) {
+		var endev ="";
+		var entyp ="";
+		switch (e.pointerType) {
+			case "mouse":
+				entyp = StringifyMouseType(e.buttons);
+				break;
+			case "pen":
+				if(e.pressure>0.1){
+					entyp="press";
+				}
+				else{
+					entyp="hover";
+				}
+				break;
+			case "touch":
+				break;
+			default:
+				break;
+		}
+		ReplaceLi(e.pointerType, curCmd , entyp, e.offsetX, e.offsetY);
+	}
+/*
     $canv.get(0).addEventListener('touchend', function(event) {
         event.preventDefault();
         for(var i = 0; i < event.changedTouches.length; ++i){
@@ -52,7 +82,7 @@ var InputTestWebApp = (function(){
             AddLi("touch", "Up", touch.identifier, touch.clientX, touch.clientY);
         }
     }, false);
-
+*/
     function StringifyMouseType(n){
         var rtn;
         switch(n){

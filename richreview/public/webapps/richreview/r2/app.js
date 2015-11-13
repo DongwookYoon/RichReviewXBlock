@@ -115,8 +115,8 @@
             r2App.cur_page.drawBackgroundWhite();
             r2App.cur_page.RunRecursive('DrawPiece');
             r2App.cur_page.RunRecursive('DrawInk');
-
             r2App.cur_page.drawSpotlightPrerendered();
+            r2App.cur_page.drawInkPrerendered();
         }
 
         function drawDynamicScene(){
@@ -140,7 +140,7 @@
                 }
             }
             r2.spotlightCtrl.drawDynamicSceneTraces(r2.annot_canv_ctx);
-
+            r2.inkCtrl.drawDynamicSceneTraces(r2.annot_canv_ctx);
             r2App.pieceSelector.draw(r2.annot_canv_ctx);
         }
 
@@ -174,6 +174,8 @@
 
                     r2.onScreenButtons.Init();
                     r2.mouse.setDomEvents();
+                    //r2.mouse.loadHammerJs();
+                    r2.tabletInteraction.tabletInit();
                 }
             ).then(
                 initUserSet
@@ -394,9 +396,10 @@
             });
 
             // disable tablet bumping
-            document.addEventListener("touchmove", function (event) {
+            /*
+			document.addEventListener("touchmove", function (event) {
                 event.preventDefault();
-            });
+            });*/
             var scrollingDiv = document.getElementById('scrollDiv');
             if (scrollingDiv) {
                 scrollingDiv.addEventListener('touchmove', function (event) {

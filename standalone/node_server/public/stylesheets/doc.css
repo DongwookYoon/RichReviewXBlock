@@ -51,6 +51,8 @@
     font-size: 15px;
 }
 
+<<<<<<< HEAD
+=======
 .btn-open {
     margin-left: 0;
     margin-right: 10px;
@@ -63,6 +65,7 @@
     border-bottom: solid 2px dodgerblue;
 }
 
+>>>>>>> refs/remotes/DongwookYoon/master
 /* dropdown menu */
 .btn-group {
     margin-left: 5px;

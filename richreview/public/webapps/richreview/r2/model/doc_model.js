@@ -1474,14 +1474,14 @@
         var v1 = p*this._audio_dbs[Math.max(0, Math.min(this._audio_dbs.length-1, Math.floor(x)+1))];
         return v0+v1;
     };
-    r2.Annot.prototype.UpdateDbs = function(buf){
+    r2.Annot.prototype.UpdateDbs = function(dbs){
         var dbsPerSec = r2.audioRecorder.RECORDER_SOURCE_SAMPLE_RATE/r2.audioRecorder.RECORDER_BUFFER_LEN/1000;
         var nDbs = Math.floor((r2App.cur_time-this._bgn_time) * dbsPerSec);
 
         this._duration = nDbs/dbsPerSec;
 
         for(var i = this._audio_dbs.length; i < nDbs; ++i) {
-            this._audio_dbs.push(0);
+            this._audio_dbs.push((r2.audioRecorder.RECORDER_SAMPLE_SCALE*dbs).toFixed(3));
         }
     };
 

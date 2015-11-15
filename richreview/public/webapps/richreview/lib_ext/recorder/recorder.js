@@ -67,6 +67,11 @@
       //worker.postMessage({ command: 'getBuffer' })
     }
 
+    this.getDbs = function(cb) {
+      currCallback = cb || config.callback;
+      worker.postMessage({ command: 'getDbs' })
+    }
+
     this.exportWAV = function(cb, type){
       currCallback = cb || config.callback;
       type = type || config.type || 'audio/wav';

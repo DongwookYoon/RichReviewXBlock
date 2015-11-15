@@ -273,6 +273,9 @@
         pub.GetBuffer = function(cb){
             recorder.getBuffer(cb)
         };
+        pub.getDbs = function(cb){
+            recorder.getDbs(cb)
+        };
 
         /**
          * Convenience method to read out the local file to a dictionary containing sampleRate, bitsPerSample, and samples.

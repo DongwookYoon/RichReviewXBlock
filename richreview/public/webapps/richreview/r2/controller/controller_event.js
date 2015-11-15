@@ -76,7 +76,7 @@ var r2Ctrl = {};
                         r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
                     }
                     else{
-                        r2.onScreenButtons.drawDnMv(pub.pos_dn, new_mouse_pt);
+                        r2.onScreenButtons.mouseMv(pub.pos_dn, new_mouse_pt);
                     }
                 }
                 else if(r2App.mode == r2App.AppModeEnum.RECORDING){
@@ -106,6 +106,8 @@ var r2Ctrl = {};
                 else if(r2App.mode == r2App.AppModeEnum.RECORDING){
                     r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                 }
+
+                r2.onScreenButtons.mouseUp();
                 pub.mode = r2.MouseModeEnum.HOVER;
             }
 
@@ -421,7 +423,7 @@ var r2Ctrl = {};
                         r2.log.Log_Simple("Recording_Bgn_OnScrBtn");
                     }
                 }
-                pub.mode = r2.MouseModeEnum.HOVER; // should set mouse mode here, since we are calling stopPropagation().
+                r2.mouse.mode = r2.MouseModeEnum.HOVER; // should set mouse mode here, since we are calling stopPropagation().
                 hideDom();
             });
 
@@ -453,7 +455,7 @@ var r2Ctrl = {};
 
         };
 
-        pub.drawDnMv = function(mouse_dn, mouse_mv){
+        pub.mouseMv = function(mouse_dn, mouse_mv){
             if(mode === modeEnum.VISIBLE){
                 if(mouse_mv.y < mouse_dn.y + VERTICAL_DRAG_CRITERIA){
                     mode = modeEnum.HIDDEN;
@@ -471,6 +473,11 @@ var r2Ctrl = {};
                     moveDom(mouse_mv);
                 }
             }
+        };
+
+        pub.mouseUp = function(){
+            mode = modeEnum.HIDDEN;
+            hideDom();
         };
 
         var hideDom = function(){

@@ -36,4 +36,4 @@ exports.config_files = {
     ssl_ca:         '../ssl/root.crt'
 };
 
-exports.sha1_salt = JSON.parse(fs.readFileSync('../ssl/sha1_salt.json', 'utf-8'));
+//exports.sha1_salt = JSON.parse(fs.readFileSync('../ssl/sha1_salt.json', 'utf-8'));

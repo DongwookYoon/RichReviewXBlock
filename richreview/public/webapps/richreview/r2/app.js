@@ -136,8 +136,8 @@
             );
 
             if(r2App.cur_recording_pieceaudios){
-                for(var i = 0; i < r2App.cur_recording_pieceaudios.length; ++i){
-                    r2App.cur_recording_pieceaudios[i].DrawPieceDynamic(null, r2.annot_canv_ctx, true); // force
+                if(r2App.cur_recording_pieceaudios.length !== 0){
+                    r2App.cur_recording_pieceaudios[r2App.cur_recording_pieceaudios.length-1].DrawPieceDynamic(null, r2.annot_canv_ctx, true); // force
                 }
             }
             r2.spotlightCtrl.drawDynamicSceneTraces(r2.annot_canv_ctx);

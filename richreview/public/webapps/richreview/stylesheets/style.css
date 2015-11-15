@@ -842,7 +842,7 @@ body::-webkit-scrollbar-corner {
 }
 
 .tc_rows {
-  width: 101em;
+  width: 50.5em;
   clear: both;
   float:left;
 }

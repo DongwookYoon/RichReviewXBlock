@@ -82,7 +82,7 @@
 
     r2.recordingUpdate = function(){
         r2.audioRecorder.GetBuffer(function(buffer){
-            r2App.cur_recording_annot.UpdateDbs(buffer[0]);
+            r2App.cur_recording_annot.UpdateDbs(buffer);
             r2.util.lastOf(r2App.cur_recording_pieceaudios).UpdateAudioDbsRecording(r2App.cur_time-r2App.cur_recording_annot.GetBgnTime());
 
             var timePerPiece = r2Const.PIECEAUDIO_TIME_PER_WIDTH*r2.util.lastOf(r2App.cur_recording_pieceaudios).GetTtIndentedWidth();

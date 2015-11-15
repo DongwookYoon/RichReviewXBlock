@@ -1443,10 +1443,16 @@
             content.removeChild(dom_obj);
         };
 
-        pub.setMouseEventHandlers = function(dn, mv, up){
-            content.onmousedown = dn;
-            content.onmousemove = mv;
-            content.onmouseup = up;
+        pub.onMouseEventHandlers = function(dn, mv, up){
+            $(content).on('mousedown', dn);
+            $(content).on('mousemove', mv);
+            $(content).on('mouseup', up);
+        };
+
+        pub.offMouseEventHandlers = function(dn, mv, up){
+            $(content).off('mousedown', dn);
+            $(content).off('mousemove', mv);
+            $(content).off('mouseup', up);
         };
 
         pub.setContextMenuEvent = function(func){

@@ -137,7 +137,7 @@
 
             if(r2App.cur_recording_pieceaudios){
                 for(var i = 0; i < r2App.cur_recording_pieceaudios.length; ++i){
-                    r2App.cur_recording_pieceaudios[i].DrawPieceDynamic(null, r2.annot_canv_ctx, true); // force
+                    //r2App.cur_recording_pieceaudios[i].DrawPieceDynamic(null, r2.annot_canv_ctx, true); // force
                 }
             }
             r2.spotlightCtrl.drawDynamicSceneTraces(r2.annot_canv_ctx);
@@ -174,7 +174,7 @@
                     r2.resizeWindow({});
 
                     r2.onScreenButtons.Init();
-                    r2.mouse.setDomEvents();
+                    r2.input.setModeDesktop();
                 }
             ).then(
                 initUserSet
@@ -393,17 +393,6 @@
             $(window).bind('resizeEvent', function () {
                 r2App.invalidate_size = true;
             });
-
-            // disable tablet bumping
-            document.addEventListener("touchmove", function (event) {
-                event.preventDefault();
-            });
-            var scrollingDiv = document.getElementById('scrollDiv');
-            if (scrollingDiv) {
-                scrollingDiv.addEventListener('touchmove', function (event) {
-                    event.stopPropagation();
-                });
-            }
 
             // prevent data loss
             window.onbeforeunload = function () {

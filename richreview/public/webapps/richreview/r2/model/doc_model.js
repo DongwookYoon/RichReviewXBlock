@@ -1480,11 +1480,8 @@
 
         this._duration = nDbs/dbsPerSec;
 
-        if(buf.length != 0){
-            var dbs = r2.util.rootMeanSquare(buf, buf.length-r2.audioRecorder.RECORDER_BUFFER_LEN, buf.length);
-            for(var i = this._audio_dbs.length; i < nDbs; ++i) {
-                this._audio_dbs.push((r2.audioRecorder.RECORDER_SAMPLE_SCALE*dbs).toFixed(3));
-            }
+        for(var i = this._audio_dbs.length; i < nDbs; ++i) {
+            this._audio_dbs.push(0);
         }
     };
 

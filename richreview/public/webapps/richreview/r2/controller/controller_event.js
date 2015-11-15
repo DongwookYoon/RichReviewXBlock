@@ -7,6 +7,138 @@ var r2Ctrl = {};
 /** @namespace r2 */
 (function(r2){
 
+    /* input mode */
+    r2.input = (function(){
+        var pub = {};
+
+        pub.setModeDesktop = function(){
+            $('#btn-input-set-mode-desktop').toggleClass('btn-primary', true);
+            $('#btn-input-set-mode-desktop').toggleClass('btn-default', false);
+            $('#btn-input-set-mode-tablet').toggleClass('btn-primary', false);
+            $('#btn-input-set-mode-tablet').toggleClass('btn-default', true);
+
+            r2.mouse.on();
+            r2.touch.off();
+            r2.pen.off();
+        };
+        pub.setModeTablet = function(){
+            $('#btn-input-set-mode-desktop').toggleClass('btn-primary', false);
+            $('#btn-input-set-mode-desktop').toggleClass('btn-default', true);
+            $('#btn-input-set-mode-tablet').toggleClass('btn-primary', true);
+            $('#btn-input-set-mode-tablet').toggleClass('btn-default', false);
+
+            r2.mouse.off();
+            r2.touch.on();
+            r2.pen.on();
+        };
+
+        return pub;
+    }());
+    /* end of input mode*/
+
+    /* touch */
+    r2.touch = (function(){
+        var pub_tc = {};
+
+        pub_tc.on = function(){
+            $('#r2_content').off('touchstart', preventDefault);
+            $('#r2_content').off('touchmove', preventDefault);
+            $('#r2_content').off('touchend', preventDefault);
+        };
+
+        pub_tc.off = function(){
+            // disable tablet bumping
+            $('#r2_content').on('touchstart', preventDefault);
+            $('#r2_content').on('touchmove', preventDefault);
+            $('#r2_content').on('touchend', preventDefault);
+        };
+
+        var preventDefault = function(event){
+            event.preventDefault ? event.preventDefault() : event.returnValue = false;
+            event.cancelBubble = true;
+            event.stopPropagation();
+        };
+
+        return pub_tc;
+    }());
+    /* end of touch*/
+
+    /* pen */
+    r2.pen = (function(){
+        var pub_pn = {};
+
+        var cur_dn = false;
+        var $content = $('#r2_content');
+
+        pub_pn.on = function(){
+            $content.off('pointerdown', preventDefault);
+            $content.off('pointermove', preventDefault);
+            $content.off('pointerup', preventDefault);
+            $content.on('pointerdown', dn);
+            $content.on('pointermove', mv_raw);
+            $content.on('pointerup', up);
+            $content.on('pointerenter', en);
+            $content.on('pointerleave', lv);
+        };
+
+        pub_pn.off = function(){
+            $content.on('pointerdown', preventDefault);
+            $content.on('pointermove', preventDefault);
+            $content.on('pointerup', preventDefault);
+            $content.off('pointerdown', dn);
+            $content.off('pointermove', mv_raw);
+            $content.off('pointerup', up);
+            $content.off('pointerenter', en);
+            $content.off('pointerleave', lv);
+        };
+
+        var dn = function(event){
+            if(event.originalEvent.pointerType !== 'pen'){ return; }
+            cur_dn = true;
+        };
+        var up = function(event){
+            if(event.originalEvent.pointerType !== 'pen'){ return; }
+            cur_dn = false;
+        };
+        var mv = function(event){
+        };
+        var hv = function(event){
+        };
+        var en = function(event){
+            if(event.originalEvent.pointerType !== 'pen'){ return; }
+        };
+        var lv = function(event){
+            if(event.originalEvent.pointerType !== 'pen'){ return; }
+        };
+
+        var mv_raw = function(event){
+            if(event.originalEvent.pointerType !== 'pen'){ return; }
+            if(cur_dn){
+                mv(event);
+            }
+            else{
+                hv(event);
+            }
+        };
+
+        var preventDefault = function(event){
+            if(event.preventDefault){
+                event.preventDefault()
+            }
+            if(event.stopPropagation){
+                event.stopPropagation();
+            }
+            if(event.originalEvent){
+                event.originalEvent.returnValue = false;
+                event.originalEvent.cancelBubble = true;
+            }
+        };
+
+        return pub_pn;
+    }());
+    /* end of pen */
+
+    /* mouse */
     r2.MouseModeEnum = {
         HOVER : 0,
         LDN : 2
@@ -23,8 +155,16 @@ var r2Ctrl = {};
         pub.inMenu = function(){in_menu = true;};
         pub.outMenu = function(){in_menu = false;};
 
-        pub.setDomEvents = function(){
-            r2.dom.setMouseEventHandlers(
+        pub.on = function(){
+            r2.dom.onMouseEventHandlers(
+                pub.handleDn,
+                pub.handleMv,
+                pub.handleUp
+            );
+        };
+
+        pub.off = function(){
+            r2.dom.offMouseEventHandlers(
                 pub.handleDn,
                 pub.handleMv,
                 pub.handleUp
@@ -150,8 +290,9 @@ var r2Ctrl = {};
 
         return pub;
     }());
+    /* end of mouse */
 
-
+    /* keyboard */
     r2.KeyboardModeEnum = {
         FOCUSED : 0,
         NORMAL : 1,
@@ -375,6 +516,7 @@ var r2Ctrl = {};
 
         return pub;
     }());
+    /* end of keyboard */
 
     r2.onScreenButtons = (function(){
         var pub = {};

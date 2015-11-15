@@ -40,12 +40,28 @@
     </div>
     <div class="horizontal_line"></div>
     <div id="main_row" class="row">
-        <div style="float:left;margin: 0 12px;" >
+        <div style="float:left; margin:0 12px;" >
             <div>
                 <button id="btn-cheatsheet" onclick="r2.clickHowTo()" class="btn btn-sm btn-primary btn-dashboard"
-                   data-toggle="tooltip" data-html="true" data-container="body" data-placement="bottom"
+                        data-toggle="tooltip" data-html="true" data-container="body" data-placement="bottom"
                         aria-label="UI cheat sheat">
                     Cheatsheet
+                </button>
+            </div>
+        </div>
+        <div style="float:left;margin:0 6px;" >
+            <div style="float:left;margin: 0" >
+                <button id="btn-input-set-mode-desktop" onclick="r2.input.setModeDesktop()" class="btn btn-sm btn-primary btn-dashboard"
+                        aria-label="Desktop Mode" style="padding: 5px 6px" >
+                    <i class="fa fa-desktop"></i>
+                    <i class="fa fa-keyboard-o"></i>
+                </button>
+            </div>
+            <div style="float:left;margin: 0" >
+                <button id="btn-input-set-mode-tablet" onclick="r2.input.setModeTablet()" class="btn btn-sm btn-default btn-dashboard"
+                        aria-label="Tablet Mode">
+                    <i class="fa fa-tablet"></i>
+                    <i class="fa fa-pencil"></i>
                 </button>
             </div>
         </div>

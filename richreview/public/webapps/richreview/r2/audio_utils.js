@@ -203,7 +203,7 @@
 
         // audio recording initial settings
         pub.RECORDER_SAMPLE_SCALE = 2.5;
-        pub.RECORDER_BUFFER_LEN = 2048;
+        pub.RECORDER_BUFFER_LEN = 1024*2;
         pub.RECORDER_SAMPLE_RATE = 22050;
         pub.RECORDER_SOURCE_SAMPLE_RATE = 44100;
         // If liveRecording is set to true, the microphone will send packets of audio continuously throughout recording.

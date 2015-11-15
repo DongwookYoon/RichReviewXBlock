@@ -123,8 +123,8 @@ var r2Ctrl = {};
                 if(playback){
                     r2.rich_audio.play(playback.annot, playback.t);
                     r2.log.Log_AudioPlay('indexing_wf', playback.annot, playback.t);
+                    r2.dom_model.focusCtrl.focusPiece(playback.annot);
                 }
-                r2.dom_model.focusCtrl.focusPiece(playback.annot);
             }
             else if(obj_front instanceof r2.PieceKeyboard){
                 obj_front.Focus();

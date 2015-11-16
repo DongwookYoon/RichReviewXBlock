@@ -2,6 +2,7 @@
  * Created by yoon on 12/21/14.
  */
 
+//written by Yuan Huang
 var r2Ctrl = {};
 
 /** @namespace r2 */

@@ -268,9 +268,9 @@ a:active {
 .r2_piecekeyboard_textarea
 {
   font-family: wf_SegoeUI,"Segoe UI","Segoe","Tahoma","Helvetica","sans-serif";
-  font-size: 0.016em;
+  font-size: 0.8em; /* variant to FONT_SIZE_SCALE  */
   margin: 0;
-  padding: 0.2em;
+  padding: 0.2em; /* variant to FONT_SIZE_SCALE  */
   outline: 0 none;
   border: 0;
   line-height: 1.2em;
@@ -842,7 +842,7 @@ body::-webkit-scrollbar-corner {
 }
 
 .tc_rows {
-  width: 1.01em;
+  width: 50.5em;
   clear: both;
   float:left;
 }
@@ -949,6 +949,7 @@ body::-webkit-scrollbar-corner {
   pointer-events: none;
   overflow: visible;
   z-index: 8;
+
 }
 
 .rm_menu.open {
@@ -958,6 +959,10 @@ body::-webkit-scrollbar-corner {
 .rm_btn {
   box-sizing: initial;
   z-index: 9;
+
+  -webkit-transition: none;
+  -moz-transition: none;
+  transition: none;
 }
 
 .rm_btn > i.fa {
@@ -1053,19 +1058,4 @@ body::-webkit-scrollbar-corner {
 
 .rm_btn_center > i {
   font-size: 0.30em;
-}
-
-.disablemodebox, .gesturemodebox, .penmodebox {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  font-weight:bold;
-  border: 2px solid;
-  margin: -8px -5px -8px -350px;
-  padding:15px 10px 15px 70px;
-  background-repeat: no-repeat;
-  background-position: 10px center;
-  width:600px;
-  color: #4F8A10;
-  background-color: #EDFCED;
 }

@@ -72,7 +72,6 @@ var GetDocsOwned = function(req, res){
     }
 };
 
-
 var GetDocsParticipated = function(req, res){
     if(js_utils.identifyUser(req, res)){
         R2D.User.prototype.GetGroupNs(req.user.id).then(

@@ -15,10 +15,13 @@ this.onmessage = function(e){
       exportWAV(e.data.type);
       break;
     case 'exportChunk':
-          exportChunk(e.data.buffer);
-          break;
+        exportChunk(e.data.buffer);
+        break;
     case 'getBuffer':
       getBuffer();
+      break;
+    case 'getDbs':
+      getDbs();
       break;
     case 'clear':
       clear();
@@ -69,6 +72,30 @@ function getBuffer() {
   buffers.push( mergeBuffers(recBuffersL, recLength) );
   //buffers.push( mergeBuffers(recBuffersR, recLength) );
   this.postMessage(buffers);
+}
+
+
+var rootMeanSquare = function (l, bgn, end){
+  var i = bgn;
+  var accum = 0;
+  while(i < end){
+    accum += l[i]*l[i];
+    i+=32;
+  }
+  return Math.sqrt(accum/ ((end-bgn)/32));
+};
+
+function getDbs() {
+   var buffers = [];
+   if(recBuffersL.length){
+     var arr = new Float32Array(recBuffersL[recBuffersL.length-1].length);
+     arr.set(recBuffersL[recBuffersL.length-1], 0);
+     buffers.push(rootMeanSquare(arr, arr.length-1024, arr.length));
+   }
+  else{
+     buffers.push(0);
+   }
+   this.postMessage(buffers);
 }
 
 function clear(){

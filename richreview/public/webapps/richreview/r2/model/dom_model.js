@@ -22,7 +22,7 @@
 
         pub.resize = function(width){
             if($tc_cur_page)
-                $tc_cur_page.css('font-size', width+'px');
+                $tc_cur_page.css('font-size', width/r2Const.FONT_SIZE_SCALE+'px');
         };
 
         pub.setCurPage = function(n){
@@ -53,12 +53,6 @@
         };
 
         pub.relayoutPage = function(){
-            var contents = $tc_cur_page.find('.tc_content');
-            for(var i = 0, l = contents.length; i < l; ++i){
-                if(contents[i].dom_model){
-                    var x = 0;
-                }
-            }
         };
 
         /* submodule for data loading bgn */
@@ -153,11 +147,10 @@
 
             var $content = $(document.createElement('div'));
             $content.toggleClass('tc_content', true);
-            $content.width(content_size.x+'em');
-            $content.height(content_size.y+'em');
+            $content.width(content_size.x*r2Const.FONT_SIZE_SCALE+'em');
+            $content.height(content_size.y*r2Const.FONT_SIZE_SCALE+'em');
 
             $piece.append($content);
-            setFocusSelection($comment, id);
             $comment.append($piece);
         };
 
@@ -195,12 +188,11 @@
                 var $content = $(document.createElement('div'));
                 $content.toggleClass('tc_content', true);
                 $content.toggleClass('tc_piece_text', true);
-                $content.height(piece_teared.GetContentSize().y+'em');
-                $content.width(dom_anchor.pp.w+'em');
+                $content.height(piece_teared.GetContentSize().y*r2Const.FONT_SIZE_SCALE+'em');
+                $content.width(dom_anchor.pp.w*r2Const.FONT_SIZE_SCALE+'em');
                 $content[0].dom_model = piece_teared;
                 $piece.append($content);
 
-                setFocusSelection($comment, id);
                 $comment.append($piece);
                 $anchor.children().first().after($comment);
                 return true;
@@ -321,11 +313,10 @@
 
                 var $content = $(document.createElement('div'));
                 $content.toggleClass('tc_content', true);
-                $content.height(r2Const.PIECEAUDIO_HEIGHT+'em');
-                $content.width($anchor.get(0).pp.w+'em');
+                $content.height(r2Const.PIECEAUDIO_HEIGHT*r2Const.FONT_SIZE_SCALE+'em');
+                $content.width($anchor.get(0).pp.w*r2Const.FONT_SIZE_SCALE+'em');
 
                 $piece.append($content);
-                setFocusSelection($comment, id);
                 $comment.append($piece);
             }
         };
@@ -358,8 +349,7 @@
                 $piece.append($dom_piecekeyboard);
                 $dom_piecekeyboard.toggleClass('tc_content', true);
                 $dom_piecekeyboard.toggleClass('tc_piece_keyboard', true);
-                $dom_piecekeyboard.css('width', dom_anchor.pp.w+'em');
-                setFocusSelection($comment, pid);
+                $dom_piecekeyboard.css('width', dom_anchor.pp.w*r2Const.FONT_SIZE_SCALE+'em');
                 $comment.append($piece);
 
                 {/* add menu */
@@ -416,18 +406,12 @@
             $comment.toggleClass('tc_piecegroup', true);
             $comment.toggleClass(cls, true);
             $comment.mousedown(function(event){
-                event.preventDefault(); // prevent focus
+                //event.preventDefault(); // prevent focus
             });
             pub.focusCtrl.setFocusable($comment);
 
             $target.append($comment);
             return $comment;
-        };
-
-        var setFocusSelection = function($comment, pid){
-            $comment.off('focusin').on('focusin', function(){
-                r2App.pieceSelector.set(pid);
-            });
         };
 
         var setPieceProperties = function($target, id, time, w, tt_depth, tt_x, tt_w){

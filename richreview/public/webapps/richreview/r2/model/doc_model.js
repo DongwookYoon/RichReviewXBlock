@@ -247,6 +247,7 @@
         this.size = new Vec2(mx, my);
 
         this.refreshSpotlightPrerender();
+        this.refreshInkPrerender();
 
         r2App.invalidate_static_scene = true;
         r2App.invalidate_dynamic_scene = true;
@@ -307,6 +308,64 @@
             spotlight.preRender(r2.spotlightRenderer.getCanvCtx(), r2.spotlightRenderer.getCanvWidth()); // ctx, ratio
         }
     };
+
+
+    r2.Page.prototype.refreshInkPrerender = function(){
+        this._Ink_cache = [];
+        var i, Ink, cache;
+        for (var annotid in r2App.annots) {
+            if (r2App.annots.hasOwnProperty(annotid)){
+                var annot = r2App.annots[annotid];
+                var Inks_of_page = annot.GetInksByNumPage(this._num);
+
+                for(i = 0; Ink = Inks_of_page[i]; ++i){
+                    var segments = Ink.getValidSegments();
+                    if(segments.length > 0){
+                        var n_total_pts = segments.reduce(function(sum, item){return sum+item.GetNumPts();}, 0);
+
+                        var t_step = (Ink.t_end-Ink.t_bgn)/n_total_pts;
+
+                        var segment = segments[0];
+                        var cache_tbgn = Ink._t_bgn;
+                        var cache_pid = segment.GetPieceId();
+                        var cache_pts = segment.CopyPtsWithOffset(r2App.pieces_cache[segment.GetPieceId()].pos);
+
+                        for(var j = 1; j < segments.length; ++j){
+                            segment = segments[j];
+                            if(!r2.Piece.prototype.isTheSameOrAdjecent(segment.GetPieceId(),cache_pid)){
+                                cache = new r2.Ink.Cache();
+                                var t_end_segment = cache_tbgn + cache_pts.length*t_step;
+                                cache.setCache(
+                                    annot,
+                                    cache_tbgn,
+                                    t_end_segment,
+                                    cache_pts);
+                                this._Ink_cache.push(cache);
+                                cache_pts = [];
+                                cache_tbgn = t_end_segment;
+                            }
+                            cache_pid = segment.GetPieceId();
+                            cache_pts = cache_pts.concat(segment.CopyPtsWithOffset(r2App.pieces_cache[segment.GetPieceId()].pos));
+                        }
+                        cache = new r2.Ink.Cache();
+                        cache.setCache(
+                            annot,
+                            cache_tbgn,
+                            Ink._t_end,
+                            cache_pts);
+                        this._Ink_cache.push(cache);
+                    }
+                }
+            }
+        }
+        //console.log(this._Ink_cache.length);
+        r2.InkRenderer.setCanvCtx(r2.viewCtrl.page_width_noscale, this.size.y/this.size.x);
+        for(i = 0; Ink = this._Ink_cache[i]; ++i){
+            Ink.preRender(r2.InkRenderer.getCanvCtx()); // ctx, ratio
+        }
+    };
+
+
     r2.Page.prototype.drawBackgroundWhite = function(){
         r2.canv_ctx.fillStyle = 'white';
         r2.canv_ctx.fillRect(0, 0, this.size.x, this.size.y);
@@ -316,6 +375,14 @@
             r2.spotlightRenderer.getCanv(),
             0, 0, 1.0, r2.spotlightRenderer.getRenderHeight(this.size.y, r2.viewCtrl.page_width_noscale)
         );
+    };
+    r2.Page.prototype.drawInkPrerendered = function(){
+        var i, inks;
+
+        for(i = 0; inks = this._Ink_cache[i]; ++i){
+
+            inks.preRender(r2.canv_ctx);
+        }
     };
     r2.Page.prototype.drawReplayBlob = function(canvas_ctx){
         var i, spotlight;
@@ -519,6 +586,8 @@
             if (this._inks.hasOwnProperty(key)) {
                 for (var i = 0; ink = this._inks[key][i]; ++i) {
                     ink.Draw();
+                    ink.DrawSegments(r2.annot_canv_ctx);
+
                 }
             }
         }
@@ -1326,7 +1395,6 @@
         };
 
         var new_height = r2.viewCtrl.mapDomToDocScale(realHeight($(this.dom)));
-        console.log('xxxx', new_height);
         if(this._cnt_size.y != new_height){
             this._cnt_size.y = new_height;
             return true;
@@ -1372,6 +1440,7 @@
         this._audio_dbs = [];
         this._username = null;
         this._spotlights = [];
+        this._inks = [];
         this._audiofileurl = "";
     };
 
@@ -1439,6 +1508,9 @@
     r2.Annot.prototype.GetSpotlightsByNumPage = function(n){
         return this._spotlights.filter(function(spotlight){return spotlight.GetPage() == n;})
     };
+    r2.Annot.prototype.GetInksByNumPage = function(n){
+        return this._inks.filter(function(Ink){return Ink.GetPage() == n;})
+    };
     r2.Annot.prototype.GetUser = function(){
         return r2.userGroup.GetUser(this._username);
     };
@@ -1458,6 +1530,9 @@
     };
     r2.Annot.prototype.AddSpotlight = function(spotlight, toupload){
         this._spotlights.push(spotlight);
+    };
+    r2.Annot.prototype.AddInk = function(ink, toupload){
+        this._inks.push(ink);
     };
     r2.Annot.prototype.GetAudioFileUrl = function(){
         return r2.util.normalizeUrl(this._audiofileurl);
@@ -1549,6 +1624,9 @@
 
         this._pts_abs = [];
         this._bb = new Vec2(0,0);
+
+        this.npage = 0;
+        this.segments = [];
     };
     r2.Ink.prototype.SetInk = function(anchorpid, username, _pts, annotid, t_bgn_and_end){
         this._anchorpid = anchorpid;
@@ -1558,6 +1636,12 @@
         this._annotid = annotid;
         this._t_bgn = t_bgn_and_end[0];
         this._t_end = t_bgn_and_end[1];
+    };
+    r2.Ink.prototype.SetPage = function(pagen){
+        this.npage=pagen;
+    };
+    r2.Ink.prototype.GetPage = function(){
+        return this.npage;
     };
     r2.Ink.prototype.Relayout = function(piece_pos){
         if(this._pts.length != this._pts_abs.length){
@@ -1595,6 +1679,32 @@
     };
 
     r2.Ink.prototype.drawReplaying = function(canvas_ctx){
+        var numall=0;
+        for (i = 0; segment = this.segments[i]; ++i) {
+            numall = numall+segment._pts.length;
+        }
+        if(r2App.cur_annot_id != null && r2App.cur_annot_id === this._annotid) {
+            var n = Math.floor(numall * (r2App.cur_audio_time - this._t_bgn) / (this._t_end - this._t_bgn));
+            n = Math.min(numall, n);
+            var curn=0;
+            if (n >= 2) {
+                canvas_ctx.beginPath();
+                var i, segment;
+                var wasbgn = false;
+                for (i = 0; segment = this.segments[i]; ++i) {
+                    if(n<curn){
+                        break;
+                    }
+                    wasbgn = segment.drawReplaying(canvas_ctx, wasbgn, n-curn);
+                    curn=curn+segment._pts.length;
+                }
+                canvas_ctx.strokeStyle = r2.userGroup.GetUser(this._username).color_stroke_dynamic_past;
+                canvas_ctx.lineWidth = r2Const.INK_WIDTH * 3;
+                canvas_ctx.lineCap = 'round';
+                canvas_ctx.lineJoin = 'round';
+                canvas_ctx.stroke();
+            }
+        }
         if(this._pts_abs.length < 2){return;}
         if(r2App.cur_annot_id != null && r2App.cur_annot_id === this._annotid) {
             var n = Math.floor(this._pts_abs.length*(r2App.cur_audio_time-this._t_bgn)/(this._t_end-this._t_bgn));
@@ -1613,6 +1723,167 @@
                 canvas_ctx.stroke();
             }
         }
+    };
+    r2.Ink.prototype.AddSegment = function(segment){
+        this.segments.push(segment);
+    };
+    r2.Ink.prototype.getValidSegments = function(){
+        var rtn = [];
+        var i, segment;
+        for(i = 0; segment = this.segments[i]; ++i){
+            if(r2App.pieces_cache.hasOwnProperty(segment.GetPieceId())){
+                rtn.push(segment);
+            }
+        }
+        return rtn;
+    };
+    r2.Ink.prototype.DrawSegments = function(canvas_ctx){
+        canvas_ctx.beginPath();
+        var i, segment;
+        var wasbgn = false;
+        for(i = 0; segment = this.segments[i]; ++i){
+            wasbgn = segment.Draw(canvas_ctx, wasbgn);
+        }
+        if(r2App.cur_annot_id != null && r2App.cur_annot_id == this._annotid) {
+            canvas_ctx.strokeStyle = r2.userGroup.GetUser(this._username).color_stroke_dynamic_future;
+        }
+        else{
+            canvas_ctx.strokeStyle = r2.userGroup.GetUser(this._username).color_dark_html;
+        }
+        canvas_ctx.lineWidth = r2Const.INK_WIDTH;
+        canvas_ctx.lineCap = 'round';
+        canvas_ctx.lineJoin = 'round';
+        canvas_ctx.stroke();
+    };
+
+    /*
+    ink segment
+     */
+    r2.Ink.Segment = function(){
+        this._pid = null;
+        this._pts = [];
+    };
+    r2.Ink.Segment.prototype.ExportToCmd = function(){
+        //Ink.Segment: {pid: ..., pts: [Vec2, Vec2, ...]}
+        var cmd = {};
+        cmd.pid = this._pid;
+        cmd.pts = r2.util.vec2ListToNumList(this._pts);
+        return cmd;
+    };
+    r2.Ink.Segment.prototype.GetPieceId = function(){
+        return this._pid;
+    };
+    r2.Ink.Segment.prototype.GetNumPts = function(){
+        return this._pts.length;
+    };
+    r2.Ink.Segment.prototype.SetSegment = function(pid, pts){
+        this._pid = pid;
+        this._pts = pts;
+    };
+    r2.Ink.Segment.prototype.CopyPtsWithOffset = function(offset){
+        var rtn = new Array(this._pts.length);
+        for(var i = 0; i < this._pts.length; ++i){
+            rtn[i] = new Vec2(this._pts[i].x+offset.x, this._pts[i].y + offset.y);
+        }
+        return rtn;
+    };
+    r2.Ink.Segment.prototype.AddPt = function(pt){
+        this._pts.push(pt);
+    };
+    r2.Ink.Segment.prototype.Draw = function(canvas_ctx, wasbgn){
+        //
+        var piece = r2App.pieces_cache[this._pid];
+        if(piece){
+            var offset = piece.pos;
+            for(var i = 0; i < this._pts.length; ++i) {
+                if(wasbgn){
+                    canvas_ctx.lineTo(offset.x+this._pts[i].x, offset.y+this._pts[i].y);
+                }
+                else{
+                    canvas_ctx.moveTo(offset.x+this._pts[i].x, offset.y+this._pts[i].y);
+                    wasbgn = true;
+                }
+            }
+        }
+        return wasbgn;
+    };
+    r2.Ink.Segment.prototype.drawReplaying = function(canvas_ctx,wasbgn,cnt){
+
+        var piece = r2App.pieces_cache[this._pid];
+        cnt=Math.min(cnt,this._pts.length);
+        if(piece){
+            var offset = piece.pos;
+            for(var i = 0; i < cnt; ++i) {
+                if(wasbgn){
+                    canvas_ctx.lineTo(offset.x+this._pts[i].x, offset.y+this._pts[i].y);
+                }
+                else{
+                    canvas_ctx.moveTo(offset.x+this._pts[i].x, offset.y+this._pts[i].y);
+                    wasbgn = true;
+                }
+            }
+        }
+        return wasbgn;
+    };
+    /*
+      ink cache
+     */
+    r2.Ink.Cache = function(){
+        this._annot = null;
+        this._t_bgn = 0;
+        this._t_end = 0;
+        this._pts = [];
+        this._bb = [];
+    };
+    r2.Ink.Cache.prototype.setCache = function(annot, t_bgn, t_end, pts){
+        this._annot = annot;
+        this._t_bgn = t_bgn;
+        this._t_end = t_end;
+        this._pts = pts;
+
+        this._user = this._annot.GetUser();
+        var max = new Vec2(Number.MIN_VALUE, Number.MIN_VALUE);
+        var min = new Vec2(Number.MAX_VALUE, Number.MAX_VALUE);
+        for(var i = 0; i < this._pts.length; ++i){
+            var v = this._pts[i];
+            max.x = Math.max(max.x, v.x);
+            max.y = Math.max(max.y, v.y);
+            min.x = Math.min(min.x, v.x);
+            min.y = Math.min(min.y, v.y);
+        }
+        max.x+=r2Const.SPLGHT_WIDTH/2;max.y+=r2Const.SPLGHT_WIDTH/2;
+        min.x-=r2Const.SPLGHT_WIDTH/2;min.y-=r2Const.SPLGHT_WIDTH/2;
+        this._bb = [min, max];
+    };
+    r2.Ink.Cache.prototype.preRender = function(ctx){
+
+        if(this._pts.length == 0){return;}
+
+        ctx.beginPath();
+        ctx.moveTo(this._pts[0].x, this._pts[0].y);
+        for(var i = 0; i < this._pts.length; ++i) {
+            ctx.lineTo(this._pts[i].x, this._pts[i].y);
+        }
+        ctx.strokeStyle = this._user.color_stroke_dynamic_past;
+        ctx.lineWidth = r2Const.INK_WIDTH;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+    };
+
+
+    r2.Ink.Cache.prototype.GetPlayback = function(pt) {
+        if(this._pts.length>1 && this._annot != null && this._t_end > this._t_bgn){
+            for(var i = 0; i < this._pts.length-1; ++i){
+                if(r2.util.linePointDistance(this._pts[i], this._pts[i+1], pt) < r2Const.SPLGHT_WIDTH/2){
+                    var rtn = {};
+                    rtn.annot = this._annot.GetId();
+                    rtn.t = this._t_bgn + (i/this._pts.length)*(this._t_end-this._t_bgn);
+                    return rtn;
+                }
+            }
+        }
+        return null;
     };
 
     /*

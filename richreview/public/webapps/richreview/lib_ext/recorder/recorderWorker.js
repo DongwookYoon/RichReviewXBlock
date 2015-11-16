@@ -80,9 +80,9 @@ var rootMeanSquare = function (l, bgn, end){
   var accum = 0;
   while(i < end){
     accum += l[i]*l[i];
-    i++
+    i+=32;
   }
-  return Math.sqrt(accum/ (end-bgn));
+  return Math.sqrt(accum/ ((end-bgn)/32));
 };
 
 function getDbs() {
@@ -90,7 +90,7 @@ function getDbs() {
    if(recBuffersL.length){
      var arr = new Float32Array(recBuffersL[recBuffersL.length-1].length);
      arr.set(recBuffersL[recBuffersL.length-1], 0);
-     buffers.push(rootMeanSquare(arr, arr.length-512, arr.length));
+     buffers.push(rootMeanSquare(arr, arr.length-1024, arr.length));
    }
   else{
      buffers.push(0);

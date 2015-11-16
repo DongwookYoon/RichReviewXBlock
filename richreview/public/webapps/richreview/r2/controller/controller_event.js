@@ -10,109 +10,183 @@ var r2Ctrl = {};
     /* input mode */
     r2.input = (function(){
         var pub = {};
+        var InpuMode = {
+            DESKTOP : 0,
+            TABLET : 1
+        };
+        var mode = InpuMode.DESKTOP;
+        var cursor_in_menu = false;
 
         pub.setModeDesktop = function(){
+            mode = InpuMode.DESKTOP;
+
             $('#btn-input-set-mode-desktop').toggleClass('btn-primary', true);
             $('#btn-input-set-mode-desktop').toggleClass('btn-default', false);
             $('#btn-input-set-mode-tablet').toggleClass('btn-primary', false);
             $('#btn-input-set-mode-tablet').toggleClass('btn-default', true);
 
-            r2.mouse.on();
-            r2.touch.off();
-            r2.pen.off();
+            r2.mouse.setEventHandlers();
+            r2.tabletInput.off();
         };
         pub.setModeTablet = function(){
+            mode = InpuMode.TABLET;
             $('#btn-input-set-mode-desktop').toggleClass('btn-primary', false);
             $('#btn-input-set-mode-desktop').toggleClass('btn-default', true);
             $('#btn-input-set-mode-tablet').toggleClass('btn-primary', true);
             $('#btn-input-set-mode-tablet').toggleClass('btn-default', false);
 
-            r2.mouse.off();
-            r2.touch.on();
-            r2.pen.on();
+            r2.mouse.removeEventHandlers();
+            r2.tabletInput.on();
         };
+
+        pub.getPos = function(event){
+            return r2.viewCtrl.mapBrowserToScr(new Vec2(event.clientX, event.clientY))
+        };
+
+        pub.isTap = function(pt_dn, pt){
+            var d = pt_dn.subtract(pt, true);
+            d = Math.sqrt(d.x * d.x + d.y * d.y) * r2.viewCtrl.page_width_noscale;
+            return d < r2Const.MOUSE_CLICK_DIST_CRITERIA;
+        };
+
+        pub.inMenu = function(){cursor_in_menu = true;};
+        pub.outMenu = function(){cursor_in_menu = false;};
+        pub.isInMenu = function(){return cursor_in_menu;};
 
         return pub;
     }());
     /* end of input mode*/
 
+    r2.tabletInput = (function(){
+        var pub_ti = {};
+
+        var enabled = false;
+        var $content = null;
+
+        pub_ti.setEventHandlers = function(){
+            if($content === null){
+                $content = $('#r2_content');
+            }
+            $content.on('pointerdown', dn);
+            $content.on('pointerup', up);
+            $content.on('pointermove', mv);
+            $content.on('pointerenter', en);
+            $content.on('pointerleave', lv);
+        };
+
+        pub_ti.on = function(){
+            enabled = true;
+        };
+
+        pub_ti.off = function(){
+            enabled = false;
+        };
+
+        var dn = function(event){
+            if(!enabled){return;}
+
+            if(event.originalEvent.pointerType === 'pen'){
+                r2.pen.dn(event);
+            }
+            else if(event.originalEvent.pointerType === 'touch'){
+                r2.touch.dn(event);
+            }
+        };
+
+        var up = function(event){
+            if(!enabled){return;}
+
+            if(event.originalEvent.pointerType === 'pen'){
+                r2.pen.up(event);
+            }
+            else if(event.originalEvent.pointerType === 'touch'){
+                r2.touch.up(event);
+            }
+        };
+
+        var mv = function(event){
+            if(!enabled){return;}
+
+            if(event.originalEvent.pointerType === 'pen'){
+                r2.pen.mv(event);
+            }
+            else if(event.originalEvent.pointerType === 'touch'){
+                r2.touch.mv(event);
+            }
+        };
+
+        var en = function(event){
+            if(!enabled){return;}
+
+            if(event.originalEvent.pointerType === 'pen'){
+                r2.pen.en(event);
+            }
+        };
+
+        var lv = function(event){
+            if(!enabled){return;}
+
+            if(event.originalEvent.pointerType === 'pen'){
+                r2.pen.lv(event);
+            }
+        };
+
+        return pub_ti;
+    }());
+
     /* touch */
     r2.touch = (function(){
         var pub_tc = {};
 
-        pub_tc.on = function(){
-            $('#r2_content').off('touchstart', preventDefault);
-            $('#r2_content').off('touchmove', preventDefault);
-            $('#r2_content').off('touchend', preventDefault);
+        pub_tc.dn = function(event){
         };
 
-        pub_tc.off = function(){
-            // disable tablet bumping
-            $('#r2_content').on('touchstart', preventDefault);
-            $('#r2_content').on('touchmove', preventDefault);
-            $('#r2_content').on('touchend', preventDefault);
+        pub_tc.up = function(event){
         };
 
-        var preventDefault = function(event){
-            event.preventDefault ? event.preventDefault() : event.returnValue = false;
-            event.cancelBubble = true;
-            event.stopPropagation();
+        pub_tc.mv = function(event){
         };
 
         return pub_tc;
     }());
     /* end of touch*/
 
+    var preventDefault = function(event){
+        if(event.preventDefault){
+            event.preventDefault()
+        }
+        if(event.stopPropagation){
+            event.stopPropagation();
+        }
+        if(event.originalEvent){
+            event.originalEvent.returnValue = false;
+            event.originalEvent.cancelBubble = true;
+        }
+    };
+
     /* pen */
     r2.pen = (function(){
         var pub_pn = {};
 
+        var PenEventType = {
+            NORMAL: 1,
+            FIRST_BTN:6,
+            SECOND_BTN:3
+        };
         var cur_dn = false;
-        var $content = $('#r2_content');
+        var pos_dn = new Vec2(0, 0);
+        var pos_writing = new Vec2(0, 0);
+        var pos_splight = new Vec2(0, 0);
 
-        pub_pn.on = function(){
-            $content.off('pointerdown', preventDefault);
-            $content.off('pointermove', preventDefault);
-            $content.off('pointerup', preventDefault);
-            $content.on('pointerdown', dn);
-            $content.on('pointermove', mv_raw);
-            $content.on('pointerup', up);
-            $content.on('pointerenter', en);
-            $content.on('pointerleave', lv);
+        pub_pn.dn = function(event){
+            dn(event);
         };
 
-        pub_pn.off = function(){
-            $content.on('pointerdown', preventDefault);
-            $content.on('pointermove', preventDefault);
-            $content.on('pointerup', preventDefault);
-            $content.off('pointerdown', dn);
-            $content.off('pointermove', mv_raw);
-            $content.off('pointerup', up);
-            $content.off('pointerenter', en);
-            $content.off('pointerleave', lv);
+        pub_pn.up = function(event){
+            up(event);
         };
 
-        var dn = function(event){
-            if(event.originalEvent.pointerType !== 'pen'){ return; }
-            cur_dn = true;
-        };
-        var up = function(event){
-            if(event.originalEvent.pointerType !== 'pen'){ return; }
-            cur_dn = false;
-        };
-        var mv = function(event){
-        };
-        var hv = function(event){
-        };
-        var en = function(event){
-            if(event.originalEvent.pointerType !== 'pen'){ return; }
-        };
-        var lv = function(event){
-            if(event.originalEvent.pointerType !== 'pen'){ return; }
-        };
-
-        var mv_raw = function(event){
-            if(event.originalEvent.pointerType !== 'pen'){ return; }
+        pub_pn.mv = function(event){
             if(cur_dn){
                 mv(event);
             }
@@ -120,17 +194,88 @@ var r2Ctrl = {};
                 hv(event);
             }
         };
+        pub_pn.en = function(event){
+            en(event);
+        };
 
-        var preventDefault = function(event){
-            if(event.preventDefault){
-                event.preventDefault()
+        pub_pn.lv = function(event){
+            lv(event);
+        };
+
+        var dn = function(event){
+            cur_dn = true;
+
+            var new_pen_pt = r2.input.getPos(event);
+            var pos_px = new Vec2(event.clientX, event.clientY);
+            if(r2App.mode === r2App.AppModeEnum.RECORDING){
+                r2.inkCtrl.recordingInkDn(r2.viewCtrl.mapScrToDoc(new_pen_pt), r2App.cur_recording_annot);
+                pos_writing = pos_px;
+                r2.spotlightCtrl.recordingSpotlightCancel(); // just in case
             }
-            if(event.stopPropagation){
-                event.stopPropagation();
+            pos_dn = new_pen_pt;
+        };
+        var up = function(event){
+            var new_pen_pt = r2.input.getPos(event);
+            var pos_px = new Vec2(event.clientX, event.clientY);
+            if(r2App.mode === r2App.AppModeEnum.RECORDING){
+                r2.inkCtrl.recordingInkUp(r2.viewCtrl.mapScrToDoc(new_pen_pt), r2App.cur_recording_annot);
             }
-            if(event.originalEvent){
-                event.originalEvent.returnValue = false;
-                event.originalEvent.cancelBubble = true;
+            else if(r2App.mode === r2App.AppModeEnum.IDLE || r2App.mode === r2App.AppModeEnum.REPLAYING){
+                if(r2.input.isTap(pos_dn, new_pen_pt)){
+                    if(event.which === PenEventType.FIRST_BTN){
+                        if(!r2App.pieceSelector.isNull()){
+                            r2App.recordingTrigger.set(r2App.pieceSelector.get());
+                            r2.log.Log_Simple("Recording_Bgn_PenTap");
+                        }
+                    }
+                    else if(event.which === PenEventType.NORMAL ){
+                        if (!r2.input.isInMenu()) {
+                            handleTimeIndexingUp(r2.viewCtrl.mapScrToDoc(new_pen_pt));
+                        }
+                    }
+                }
+            }
+            cur_dn = false;
+        };
+        var mv = function(event){
+            var new_pen_pt = r2.input.getPos(event);
+            var pos_px = new Vec2(event.clientX, event.clientY);
+            if(r2App.mode === r2App.AppModeEnum.RECORDING){
+                if(pos_writing.distance(pos_px) > 1){
+                    r2.inkCtrl.recordingInkMv(r2.viewCtrl.mapScrToDoc(new_pen_pt), r2App.cur_recording_annot);
+                    pos_writing = pos_px;
+                }
+            }
+        };
+        var hv = function(event){
+            var new_pen_pt = r2.input.getPos(event);
+            var pos_px = new Vec2(event.clientX, event.clientY);
+
+            // select piece
+            r2App.pieceSelector.update(new_pen_pt);
+
+            if(r2App.mode == r2App.AppModeEnum.RECORDING){
+                if(pos_splight.distance(pos_px) > 1) {
+                    r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_pen_pt), r2App.cur_recording_annot);
+                }
+            }
+
+        };
+        var en = function(event){
+            var new_pen_pt = r2.input.getPos(event);
+            var pos_px = new Vec2(event.clientX, event.clientY);
+            console.log('en');
+            if(r2App.mode == r2App.AppModeEnum.RECORDING){
+                r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_pen_pt), r2App.cur_recording_annot);
+                pos_splight = pos_px;
+            }
+        };
+        var lv = function(event){
+            var new_pen_pt = r2.input.getPos(event);
+            var pos_px = new Vec2(event.clientX, event.clientY);
+            console.log('lv');
+            if(r2App.mode == r2App.AppModeEnum.RECORDING){
+                r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_pen_pt), r2App.cur_recording_annot);
             }
         };
 
@@ -148,14 +293,10 @@ var r2Ctrl = {};
         var pub = {};
 
         pub.mode = r2.MouseModeEnum.HOVER;
-        pub.pos_dn = new Vec2(0,0);
 
-        var in_menu = false;
+        var pos_dn = new Vec2(0,0);
 
-        pub.inMenu = function(){in_menu = true;};
-        pub.outMenu = function(){in_menu = false;};
-
-        pub.on = function(){
+        pub.setEventHandlers = function(){
             r2.dom.onMouseEventHandlers(
                 pub.handleDn,
                 pub.handleMv,
@@ -163,7 +304,7 @@ var r2Ctrl = {};
             );
         };
 
-        pub.off = function(){
+        pub.removeEventHandlers = function(){
             r2.dom.offMouseEventHandlers(
                 pub.handleDn,
                 pub.handleMv,
@@ -171,23 +312,13 @@ var r2Ctrl = {};
             );
         };
 
-        pub.getPos = function(event){
-            return r2.viewCtrl.mapBrowserToScr(new Vec2(event.clientX, event.clientY))
-        };
-
-        pub.isTap = function(pt){
-            var d = pub.pos_dn.subtract(pt, true);
-            d = Math.sqrt(d.x * d.x + d.y * d.y) * r2.viewCtrl.page_width_noscale;
-            return d < r2Const.MOUSE_CLICK_DIST_CRITERIA;
-        };
-
         pub.handleDn = function(event){
-            var new_mouse_pt = pub.getPos(event);
+            var new_mouse_pt = r2.input.getPos(event);
             if(pub.mode === r2.MouseModeEnum.HOVER){
                 switch (event.which) {
                     case 1: // left click
                         pub.mode = r2.MouseModeEnum.LDN;
-                        pub.pos_dn = new_mouse_pt;
+                        pos_dn = new_mouse_pt;
                         if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
                             if(r2.keyboard.ctrlkey_dn)
                                 r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
@@ -204,7 +335,7 @@ var r2Ctrl = {};
         };
 
         pub.handleMv = function(event){
-            var new_mouse_pt = pub.getPos(event);
+            var new_mouse_pt = r2.input.getPos(event);
 
             if(pub.mode == r2.MouseModeEnum.HOVER){
                 // select piece
@@ -216,7 +347,7 @@ var r2Ctrl = {};
                         r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
                     }
                     else{
-                        r2.onScreenButtons.mouseMv(pub.pos_dn, new_mouse_pt);
+                        r2.onScreenButtons.mouseMv(pos_dn, new_mouse_pt);
                     }
                 }
                 else if(r2App.mode == r2App.AppModeEnum.RECORDING){
@@ -228,15 +359,15 @@ var r2Ctrl = {};
         };
 
         pub.handleUp = function(event){
-            var new_mouse_pt = pub.getPos(event);
+            var new_mouse_pt = r2.input.getPos(event);
 
             if(pub.mode == r2.MouseModeEnum.HOVER){
                 // do nothing, there's something weird.
             }
             else if(pub.mode == r2.MouseModeEnum.LDN){
                 if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
-                    if (!in_menu && pub.isTap(new_mouse_pt)) {
-                        pub.handleTimeIndexingUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt));
+                    if (!r2.input.isInMenu() && r2.input.isTap(pos_dn, new_mouse_pt)) {
+                        handleTimeIndexingUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt));
                     }
                     if(r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight)){
                         r2App.annot_private_spotlight.timeLastChanged = (new Date()).getTime();
@@ -254,43 +385,43 @@ var r2Ctrl = {};
             r2App.cur_mouse_pt = new_mouse_pt;
         };
 
-        pub.handleTimeIndexingUp = function(pt){
-            var l = r2App.cur_page.HitTest(pt);
-            if(l.length == 0){return;}
-
-            var playback;
-            var obj_front = l[0];
-            if(obj_front instanceof r2.PieceAudio){
-                playback = obj_front.GetPlayback(pt);
-                if(playback){
-                    r2.rich_audio.play(playback.annot, playback.t);
-                    r2.log.Log_AudioPlay('indexing_wf', playback.annot, playback.t);
-                    r2.dom_model.focusCtrl.focusPiece(playback.annot);
-                }
-            }
-            else if(obj_front instanceof r2.PieceKeyboard){
-                obj_front.Focus();
-            }
-            else{
-                if(obj_front instanceof r2.PieceText){
-                    r2.dom_model.focusCtrl.focusPiece(obj_front.GetId());
-                }
-                var spotlights = [];
-                l.forEach(function(item){if(item instanceof r2.Spotlight.Cache){spotlights.push(item);}});
-                for(var i = 0; spotlight = spotlights[i]; ++i){
-                    playback = spotlight.GetPlayback(pt);
-                    if(playback){
-                        r2.rich_audio.play(playback.annot, playback.t);
-                        r2.log.Log_AudioPlay('indexing_sp', playback.annot, playback.t);
-                        break;
-                    }
-                }
-            }
-        };
-
         return pub;
     }());
     /* end of mouse */
+
+    var handleTimeIndexingUp = function(pt){
+        var l = r2App.cur_page.HitTest(pt);
+        if(l.length == 0){return;}
+
+        var playback;
+        var obj_front = l[0];
+        if(obj_front instanceof r2.PieceAudio){
+            playback = obj_front.GetPlayback(pt);
+            if(playback){
+                r2.rich_audio.play(playback.annot, playback.t);
+                r2.log.Log_AudioPlay('indexing_wf', playback.annot, playback.t);
+                r2.dom_model.focusCtrl.focusPiece(playback.annot);
+            }
+        }
+        else if(obj_front instanceof r2.PieceKeyboard){
+            obj_front.Focus();
+        }
+        else{
+            if(obj_front instanceof r2.PieceText){
+                r2.dom_model.focusCtrl.focusPiece(obj_front.GetId());
+            }
+            var spotlights = [];
+            l.forEach(function(item){if(item instanceof r2.Spotlight.Cache){spotlights.push(item);}});
+            for(var i = 0; spotlight = spotlights[i]; ++i){
+                playback = spotlight.GetPlayback(pt);
+                if(playback){
+                    r2.rich_audio.play(playback.annot, playback.t);
+                    r2.log.Log_AudioPlay('indexing_sp', playback.annot, playback.t);
+                    break;
+                }
+            }
+        }
+    };
 
     /* keyboard */
     r2.KeyboardModeEnum = {
@@ -641,6 +772,108 @@ var r2Ctrl = {};
         return pub;
     })();
 
+
+    r2.inkCtrl = (function(){
+        var pub = {};
+
+        var cur_recording_Ink = null;
+        var cur_recording_Ink_segment = null;
+        var cur_recording_Ink_segment_piece = null;
+        var cur_recording_Ink_pt = null;
+        var cur_recording_Ink_piece=null;
+
+        pub.nowRecording = function(){
+            return cur_recording_Ink !== null;
+        };
+
+        pub.drawDynamicSceneTraces = function(canv_ctx){
+            if(cur_recording_Ink !== null)
+                cur_recording_Ink.DrawSegments(canv_ctx);
+        };
+
+        pub.recordingInkDn = function(pt, target_annot){
+            var piece = r2App.cur_page.GetPieceByHitTest(pt);
+            cur_recording_Ink_piece = piece;
+            if(piece){
+                var Ink = new r2.Ink();
+                Ink.SetInk(
+                    target_annot.GetAnchorPid(),
+                    target_annot.GetUsername(),
+                    [pt.subtract(piece.pos, true)],
+                    target_annot.GetId(),
+                    [r2App.cur_time-target_annot.GetBgnTime(),r2App.cur_time-target_annot.GetBgnTime()]);
+
+                Ink.SetPage(r2App.cur_pdf_pagen);
+                var segment  = new r2.Ink.Segment();
+                segment.SetSegment(piece.GetId(), [pt.subtract(piece.pos, true)]);
+
+                Ink.AddSegment(segment);
+
+                cur_recording_Ink = Ink;
+                cur_recording_Ink_segment = segment;
+                cur_recording_Ink_segment_piece = piece;
+                cur_recording_Ink_pt = pt;
+            }
+        };
+        pub.recordingInkMv = function(pt, target_annot){
+            if(cur_recording_Ink && cur_recording_Ink_segment){
+                var piece = r2App.cur_page.GetPieceByHitTest(pt);
+                if(piece === cur_recording_Ink_segment_piece){
+                    if(piece){
+                        // add point
+                        cur_recording_Ink_segment.AddPt(pt.subtract(piece.pos, true));
+                        cur_recording_Ink.t_end = r2App.cur_time-target_annot.GetBgnTime();
+                    }
+                    else{
+                        // cut segment
+                        cur_recording_Ink_segment = null;
+                    }
+                }
+                else{
+                    // cut segment
+                    cur_recording_Ink_segment = null;
+                    if(piece){
+                        // add new segment and add point
+                        var segment  = new r2.Ink.Segment();
+                        segment.SetSegment(piece.GetId(), [pt.subtract(piece.pos, true)]);
+                        if(segment.GetNumPts()>0){
+                            cur_recording_Ink.AddSegment(segment);
+                        }
+                        cur_recording_Ink_segment = segment;
+                        cur_recording_Ink._t_end = r2App.cur_time-target_annot.GetBgnTime();
+                    }
+                }
+                cur_recording_Ink_segment_piece=piece;
+                cur_recording_Ink_pt = pt;
+            }
+        };
+
+        pub.recordingInkUp = function(pt, target_annot){
+            if(cur_recording_Ink){
+                cur_recording_Ink_piece.AddInk(target_annot.GetId(),cur_recording_Ink);
+                if(cur_recording_Ink_segment){
+                    cur_recording_Ink_segment = null;
+                }
+                if(cur_recording_Ink.segments.length>0){
+                    target_annot.AddInk(cur_recording_Ink, toupload = true);
+                }
+                cur_recording_Ink_pt = null;
+                r2App.cur_page.refreshInkPrerender();
+
+                cur_recording_Ink = null;
+                r2App.invalidate_static_scene = true;
+                r2App.invalidate_dynamic_scene = true;
+                return true;
+            }
+            else{
+                cur_recording_Ink = null;
+                return false;
+            }
+        };
+
+        return pub;
+    }());
+
     r2.spotlightCtrl = (function(){
         var pub = {};
 
@@ -746,6 +979,12 @@ var r2Ctrl = {};
                 cur_recording_spotlight = null;
                 return false;
             }
+        };
+
+        pub.recordingSpotlightCancel = function(){
+            cur_recording_spotlight_segment = null;
+            cur_recording_spotlight_pt = null;
+            cur_recording_spotlight = null;
         };
 
         return pub;

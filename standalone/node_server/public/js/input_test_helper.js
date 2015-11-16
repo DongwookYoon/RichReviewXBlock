@@ -7,19 +7,35 @@ var InputTestWebApp = (function(){
     $canv = $("#input_test_canvas");
     $canv.mousedown(
         function(event){
-            AddLi("mouse", "Dn", StringifyMouseType(event.which), event.clientX, event.clientY);
+            //AddLi("mouse", "Dn", StringifyMouseType(event.which), event.clientX, event.clientY);
         }
     );
     $canv.mouseup(
         function(event){
-            AddLi("mouse", "Up", StringifyMouseType(event.which), event.clientX, event.clientY);
+            //AddLi("mouse", "Up", StringifyMouseType(event.which), event.clientX, event.clientY);
         }
     );
     $canv.mousemove(
         function(event){
-            ReplaceLi("mouse", "Mv", StringifyMouseType(event.which), event.clientX, event.clientY);
+            //ReplaceLi("mouse", "Mv", StringifyMouseType(event.which), event.clientX, event.clientY);
         }
     );
+
+    $canv.get(0).addEventListener('pointerdown', function(event) {
+        event.preventDefault();
+        console.log(event);
+        AddLi("pointer", "Dn", StringifyMouseType(event.which), event.clientX, event.clientY);
+    }, false);
+
+    $canv.get(0).addEventListener('pointermove', function(event) {
+        event.preventDefault();
+        ReplaceLi("pointer", "Mv", StringifyMouseType(event.which), event.clientX, event.clientY);
+    }, false);
+
+    $canv.get(0).addEventListener('pointerup', function(event) {
+        event.preventDefault();
+        AddLi("pointer", "Up", StringifyMouseType(event.which), event.clientX, event.clientY);
+    }, false);
 
     $canv.get(0).addEventListener('touchstart', function(event) {
         event.preventDefault();

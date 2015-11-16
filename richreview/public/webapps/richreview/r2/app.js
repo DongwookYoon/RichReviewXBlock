@@ -118,6 +118,7 @@
             r2App.cur_page.RunRecursive('DrawInk');
 
             r2App.cur_page.drawSpotlightPrerendered();
+            r2App.cur_page.drawInkPrerendered();
         }
 
         function drawDynamicScene(){
@@ -141,7 +142,7 @@
                 }
             }
             r2.spotlightCtrl.drawDynamicSceneTraces(r2.annot_canv_ctx);
-
+            r2.inkCtrl.drawDynamicSceneTraces(r2.annot_canv_ctx);
             r2App.pieceSelector.draw(r2.annot_canv_ctx);
         }
 
@@ -175,6 +176,8 @@
 
                     r2.onScreenButtons.Init();
                     r2.input.setModeDesktop();
+                    r2.tabletInput.setEventHandlers();
+                    return null;
                 }
             ).then(
                 initUserSet

@@ -13,23 +13,10 @@
         var l = [];
 
         pub.initHT = function(resource_urls){
-            return new Promise(function(resolve, reject){
-                var job = function(i){
-                    if(i < l.length){
-                        pub.loadOnce(resource_urls, l[i]).then(
-                            function(){
-                                job(i+1);
-                            }
-                        ).catch(
-                            reject
-                        );
-                    }
-                    else{ // i == l.length
-                        resolve();
-                    }
-                };
-                job(0);
+            var promises = l.map(function(template){
+                return pub.loadOnce(resource_urls, template);
             });
+            return Promise.all(promises);
         };
 
         pub.add = function(name){
@@ -78,7 +65,6 @@
 
         pub.setPdfProgress = function(progress){
             $('#progress-bar-loading-pdf').progressbar({value:progress});
-            console.log(progress);
         };
 
         pub.bgnDownloadingMetafile = function(){
@@ -1135,6 +1121,8 @@
         return pub;
 
     }());
+
+    /** Prerenders Inks  */
     r2.InkRenderer = (function(){
         var pub = {};
 
@@ -1181,6 +1169,7 @@
         return pub;
 
     }());
+
     r2.radialMenu = (function(){
         var pub = {};
 
@@ -1191,7 +1180,7 @@
             $menu.addClass('rm_menu');
             $menu.attr('id', rm_id);
             $menu.attr('aria-label', 'menu');
-            $menu.css('font-size', r2Const.RAIDALMENU_FONTSIZE_SCALE*rm_size+'em');
+            $menu.css('font-size', r2Const.FONT_SIZE_SCALE*r2Const.RAIDALMENU_FONTSIZE_SCALE*rm_size+'em');
 
             var $btn_center = $(document.createElement('a'));
             $btn_center.addClass('rm_btn_center').addClass('rm_btn');
@@ -1282,21 +1271,14 @@
             });
 
             $menu.on('mouseenter',function(e) {
-                r2.mouse.inMenu();
+                r2.input.inMenu();
                 $menu.toggleClass('open', true);
             }).on('mouseleave',function(e) {
-                r2.mouse.outMenu();
+                r2.input.outMenu();
                 $menu.toggleClass('open', false);
                 $menu.find('.rm_btn').blur();
             });
-			$menu.on('touchstart',function(e) {
-                r2.tabletInteraction.inMenu();
-                $menu.toggleClass('open', true);
-            }).on('touchend',function(e) {
-                r2.tabletInteraction.outMenu();
-                $menu.toggleClass('open', false);
-                $menu.find('.rm_btn').blur();
-            });
+
             $menu.find('.rm_btn').on('focus', function(e){
                 updateMenuOpenStatus($menu);
             }).on('blur', function(e){
@@ -1312,7 +1294,7 @@
 
         var closeRadialMenuAndRun = function($menu, cb){
             return function(){
-                r2.mouse.outMenu();
+                r2.input.outMenu();
                 $menu.toggleClass('open', false);
                 cb();
             };
@@ -1496,25 +1478,18 @@
             content.removeChild(dom_obj);
         };
 
-        pub.setMouseEventHandlers = function(dn, mv, up){
-            content.onmousedown = dn;
-            content.onmousemove = mv;
-            content.onmouseup = up;
+        pub.onMouseEventHandlers = function(dn, mv, up){
+            $(content).on('mousedown', dn);
+            $(content).on('mousemove', mv);
+            $(content).on('mouseup', up);
         };
-        pub.setPointerEventHandlers = function(dn,mv,up,en,lv){
-            content.onpointerdown = dn;
-            content.onpointermove = mv;
-            content.onpointerup = up;
-			content.onpointerenter = en;
-			content.onpointerleave = lv;
+
+        pub.offMouseEventHandlers = function(dn, mv, up){
+            $(content).off('mousedown', dn);
+            $(content).off('mousemove', mv);
+            $(content).off('mouseup', up);
         };
-		pub.setTouchEventHandlers = function(st,mv,ed,cancel){
-            content.ontouchstart = st;
-            content.ontouchmove = mv;
-            content.ontouchend = ed
-			content.ontouchcancel = cancel;
-        };
-		
+
         pub.setContextMenuEvent = function(func){
             $(content).on('contextmenu', func);
         };

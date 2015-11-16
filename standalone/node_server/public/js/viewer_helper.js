@@ -72,7 +72,6 @@ var resizePageBody = function(){
     $app_page.width(w);
     $app_page.height(h);
     $app_container.height(h);
-    console.log(h);
 };
 
 

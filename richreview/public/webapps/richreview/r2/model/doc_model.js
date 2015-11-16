@@ -248,6 +248,7 @@
 
         this.refreshSpotlightPrerender();
         this.refreshInkPrerender();
+
         r2App.invalidate_static_scene = true;
         r2App.invalidate_dynamic_scene = true;
         r2App.invalidate_size = true;
@@ -586,6 +587,7 @@
                 for (var i = 0; ink = this._inks[key][i]; ++i) {
                     ink.Draw();
                     ink.DrawSegments(r2.annot_canv_ctx);
+
                 }
             }
         }
@@ -639,20 +641,21 @@
             canvas_ctx.stroke();
             canvas_ctx.shadowBlur = 0;
 
+            // triangles
             var tri_w = 0.01;
             var tri_h_half = 0.005;
 
-            /*var path=new Path2D();
-            path.moveTo(x0, y);
-            path.lineTo(x0-tri_w, y-tri_h_half);
-            path.lineTo(x0-tri_w, y+tri_h_half);
-
-            path.moveTo(x1, y);
-            path.lineTo(x1+tri_w, y+tri_h_half);
-            path.lineTo(x1+tri_w, y-tri_h_half);
-
+            canvas_ctx.beginPath();
             canvas_ctx.fillStyle = colors[1];
-            canvas_ctx.fill(path);*/
+
+            canvas_ctx.moveTo(x0, y);
+            canvas_ctx.lineTo(x0-tri_w, y-tri_h_half);
+            canvas_ctx.lineTo(x0-tri_w, y+tri_h_half);
+            canvas_ctx.moveTo(x1, y);
+            canvas_ctx.lineTo(x1+tri_w, y+tri_h_half);
+            canvas_ctx.lineTo(x1+tri_w, y-tri_h_half);
+
+            canvas_ctx.fill();
         }
     };
     /**
@@ -1259,8 +1262,8 @@
         }
         this.dom_tr.appendChild(this.dom_textarea);
 
-        $(this.dom_tr).css('left', this.GetTtIndent()+'em');
-        $(this.dom_tr).css('width', this.GetTtIndentedWidth()+'em');
+        $(this.dom_tr).css('left', this.GetTtIndent()*r2Const.FONT_SIZE_SCALE+'em');
+        $(this.dom_tr).css('width', this.GetTtIndentedWidth()*r2Const.FONT_SIZE_SCALE+'em');
 
         //fa-times-circle
         //fa-share-square
@@ -1546,17 +1549,14 @@
         var v1 = p*this._audio_dbs[Math.max(0, Math.min(this._audio_dbs.length-1, Math.floor(x)+1))];
         return v0+v1;
     };
-    r2.Annot.prototype.UpdateDbs = function(buf){
+    r2.Annot.prototype.UpdateDbs = function(dbs){
         var dbsPerSec = r2.audioRecorder.RECORDER_SOURCE_SAMPLE_RATE/r2.audioRecorder.RECORDER_BUFFER_LEN/1000;
         var nDbs = Math.floor((r2App.cur_time-this._bgn_time) * dbsPerSec);
 
         this._duration = nDbs/dbsPerSec;
 
-        if(buf.length != 0){
-            var dbs = r2.util.rootMeanSquare(buf, buf.length-r2.audioRecorder.RECORDER_BUFFER_LEN, buf.length);
-            for(var i = this._audio_dbs.length; i < nDbs; ++i) {
-                this._audio_dbs.push((r2.audioRecorder.RECORDER_SAMPLE_SCALE*dbs).toFixed(3));
-            }
+        for(var i = this._audio_dbs.length; i < nDbs; ++i) {
+            this._audio_dbs.push((r2.audioRecorder.RECORDER_SAMPLE_SCALE*dbs).toFixed(3));
         }
     };
 
@@ -1632,6 +1632,7 @@
         this._anchorpid = anchorpid;
         this._username = username;
         this._pts = _pts;
+
         this._annotid = annotid;
         this._t_bgn = t_bgn_and_end[0];
         this._t_end = t_bgn_and_end[1];
@@ -1824,9 +1825,9 @@
         }
         return wasbgn;
     };
-/*
-    ink cache
- */
+    /*
+      ink cache
+     */
     r2.Ink.Cache = function(){
         this._annot = null;
         this._t_bgn = 0;
@@ -2099,23 +2100,30 @@
         }
     };
     r2.Spotlight.Cache.prototype.drawMovingBlob = function(p0, p1, forprivate, color, canvas_ctx){
-        if(p0.equal(p1)){
-            p1 = p0.add(new Vec2(0.001, 0.001), true);
-        }
-        canvas_ctx.beginPath();
-        canvas_ctx.moveTo(p0.x, p0.y);
-        canvas_ctx.lineTo(p1.x, p1.y);
-
+        var line_width = 0;
         if(forprivate){
-            canvas_ctx.lineWidth = r2Const.SPLGHT_PRIVATE_WIDTH;
+            line_width = r2Const.SPLGHT_PRIVATE_WIDTH;
         }
         else{
-            canvas_ctx.lineWidth = r2Const.SPLGHT_WIDTH;
+            line_width = r2Const.SPLGHT_WIDTH;
         }
-        canvas_ctx.strokeStyle = color;
-        canvas_ctx.lineCap = 'round';
-        canvas_ctx.lineJoin = 'round';
-        canvas_ctx.stroke();
+        if(p0.distance(p1) < 0.02){
+            canvas_ctx.beginPath();
+            canvas_ctx.arc(p0.x, p0.y, line_width*0.5, 0, 2 * Math.PI, false);
+            canvas_ctx.fillStyle = color;
+            canvas_ctx.fill();
+        }
+        else{
+            canvas_ctx.beginPath();
+            canvas_ctx.moveTo(p0.x, p0.y);
+            canvas_ctx.lineTo(p1.x, p1.y);
+
+            canvas_ctx.lineWidth = line_width;
+            canvas_ctx.strokeStyle = color;
+            canvas_ctx.lineCap = 'round';
+            canvas_ctx.lineJoin = 'round';
+            canvas_ctx.stroke();
+        }
     };
     r2.Spotlight.Cache.prototype.HitTest = function(pt){
         if( pt.x > this._bb[0].x && pt.y > this._bb[0].y &&

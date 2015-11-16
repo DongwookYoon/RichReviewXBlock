@@ -12,192 +12,7 @@ var redisClient = require('../lib/redis_client').redisClient;
 var RedisClient = require('../lib/redis_client').RedisClient;
 
 /*
-<<<<<<< HEAD
-<<<<<<< HEAD
- * Ping regularly in order to maintain the connection
- */
-function PingRedisServer()
-{
-    redisClient.ping(redis.print);
-    setTimeout(PingRedisServer, 3*60*1000);
-}
-PingRedisServer();
-
-
-/*
  * User
- */
-var user_cache = {};
-var User = function(id, nickname, email){
-    this.id = id;
-    this.nick = nickname;
-    this.email = email;
-};
-(function PopulateUserCache(){
-    redisClient.KEYS("usr:*", function(err, userids){
-        userids.forEach(function(userid){
-            User.prototype.findOrCreate(userid.substring(4), function(err){
-                if(err){
-                    console.log("Error Loading User Id");
-                }
-            })
-        });
-    })
-})();
-User.prototype.Update = function(id, newnick, newemail, cb){
-    this.findById(id).then(
-        function(user){
-            if(newnick == ''){newnick = user.nick;}
-            if(newemail == ''){newemail = user.email;}
-            return RedisClient.HMSET(
-                'usr:' + id,
-                'nick', newnick,
-                'email', newemail
-            );
-        }
-    ).then(
-        function(){
-            user_cache[id].nick = newnick;
-            user_cache[id].email = newemail;
-            cb(null, null);
-            return null;
-        }
-    ).catch(
-        function(err){
-            cb(err, null);
-        }
-    );
-
-    /*
-    this.findById(id, function(err, result){
-        if(err){cb(err, null);}
-        else{
-            if(newnick == ""){newnick = user_cache[id].nick;}
-            if(newemail == ""){newemail = user_cache[id].email;}
-            redisClient.HMSET(
-                "usr:"+id,
-                'nick', newnick,
-                'email', newemail,
-                function(err, result){
-                    if(err){cb(err, null);}
-                    else {
-                        user_cache[id].nick = newnick;
-                        user_cache[id].email = newemail;
-                        cb(null, null);
-                    }
-                }
-            );
-
-        }
-    });*/
-};
-User.prototype.findById = function(id, cb){
-    return new Promise(function(resolve, reject){
-        if(user_cache.hasOwnProperty(id)) {
-            resolve(user_cache[id]);
-        }
-        else{
-            reject('cannot find the user with the given id'+id);
-        }
-    });
-};
-User.prototype.findOrCreate = function(id, cb){
-    if(user_cache.hasOwnProperty(id)){
-        cb(null, user_cache[id]);
-    }
-    else{
-        redisClient.HGETALL("usr:"+id,
-            function(err, result)
-            {
-                if(err){cb(err, null);}
-                else if(err == null && result == null){// no entry
-                    var default_nick = 'user'+id.substr(3, 1)+id.substr(6, 2);
-                    var defailt_mail = 'default@email.com';
-                    redisClient.HMSET(
-                        "usr:"+id,
-                        'nick', default_nick,
-                        'email', defailt_mail,
-                        'groupNs', '[]',
-                        function(err, result){
-                            if(err != null){cb(err, null);}
-                            else{
-                                var newuser = new User(id, default_nick, defailt_mail);
-                                user_cache[id] = (newuser);
-                                cb(null, newuser);
-                            }
-                        }
-                    );
-                }
-                else{
-                    var newuser = new User(
-                        id,
-                        result.nick,
-                        result.email
-                    );
-                    user_cache[id] = (newuser);
-                    cb(null, newuser);
-                }
-
-            }
-        );
-    }
-};
-
-User.prototype.AddGroupToUser = function(userid_n, groupid_n){
-    return RedisClient.HGET("usr:"+userid_n, "groupNs").then( // get group of the user
-        function(groupNsStr){
-            var groupNsObj = JSON.parse(groupNsStr);
-            var idx = groupNsObj.indexOf(groupid_n);
-            if(idx < 0){
-                groupNsObj.push(groupid_n);
-                return RedisClient.HSET("usr:"+userid_n, "groupNs", JSON.stringify(groupNsObj));
-            }
-            else{
-                var err = new Error("You are already a member of the group");
-                err.push_msg = true;
-                throw err;
-            }
-        }
-    );
-};
-
-
-User.prototype.RemoveGroupFromUser = function(userid_n, groupid_n){
-    return RedisClient.HGET("usr:"+userid_n, "groupNs").then( // get user's group list
-        function(groupNsStr){
-            var groupNsObj = JSON.parse(groupNsStr);
-            var i = groupNsObj.indexOf(groupid_n);
-            if(i < 0){
-                var err = new Error("RemoveGroupMemeber failed: No such user found in the group");
-                err.push_msg = true;
-                throw err;
-            }
-            groupNsObj.splice(i, 1);
-            return RedisClient.HSET("usr:"+userid_n, "groupNs", JSON.stringify(groupNsObj)); // save to user's group list
-        }
-    );
-};
-
-User.prototype.GetGroupNs = function(userid_n, cb){
-    redisClient.HGET("usr:"+userid_n, "groupNs", function(err, groupNsStr){
-        if(err){cb(err, null);}
-        else {
-            var groupNsObj = JSON.parse(groupNsStr);
-            cb(null, groupNsObj);
-        }
-    });
-};
-
-
-
-
-/*
-=======
->>>>>>> refs/remotes/DongwookYoon/master
- *  RedisWrapper for Promise
-=======
- * User
->>>>>>> refs/remotes/DongwookYoon/master
  */
 var User = function(id, nickname, email){
     this.id = id;
@@ -502,12 +317,6 @@ var Group = (function(manager, name, creationDate){
         );
     };
 
-<<<<<<< HEAD
-    public.GetDocIdByGroupId = function(groupid_n, cb){
-        redisClient.HGET("grp:"+groupid_n, "docid", function(err, docid){
-            cb(err, docid);
-        });
-=======
     pub_grp.getAll = function(){
         return RedisClient.KEYS('grp:*').then(
             function(keys){
@@ -559,7 +368,6 @@ var Group = (function(manager, name, creationDate){
 
     pub_grp.GetDocIdByGroupId = function(groupid_n){
         return RedisClient.HGET("grp:"+groupid_n, "docid");
->>>>>>> refs/remotes/DongwookYoon/master
     };
 
     pub_grp.GetDocObjByGroupId = function(groupid_n){

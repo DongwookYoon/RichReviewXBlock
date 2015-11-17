@@ -772,7 +772,9 @@
         anchorCmd.page = this.GetNumPage();
         return anchorCmd;
     };
-
+    r2.PieceTeared.prototype.resize = function(new_height){
+        this._cnt_size.y = new_height;
+    };
     r2.PieceTeared.prototype.SetPieceTeared = function(username){
         this._username = username;
     };

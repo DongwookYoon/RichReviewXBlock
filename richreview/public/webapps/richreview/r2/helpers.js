@@ -1539,6 +1539,10 @@
             return Sha1.hash("P"+npage+"_R"+nrgn+"_L"+npt);
         };
 
+        pub.teared = function(annotid){
+            return Sha1.hash(annotid+" PieceTeared 0")
+        };
+
         pub.keyboard = function(annotid){
             return Sha1.hash(annotid+" PieceKeyboard 0")
         };

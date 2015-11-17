@@ -200,6 +200,11 @@
             return false;
         };
 
+        pub.updateSizeTextTearing = function(piece_teared){
+            var $piece = $('#'+piece_teared.GetId());
+            $piece.find('.tc_content').height(piece_teared.GetContentSize().y*r2Const.FONT_SIZE_SCALE+'em');
+        };
+
         pub.createCommentVoice = function(annot, pagen, live_recording){
             var user = r2.userGroup.GetUser(annot.GetUsername());
             var annot_id = annot.GetId();

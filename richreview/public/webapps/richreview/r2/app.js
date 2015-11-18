@@ -25,6 +25,7 @@
 
                 if(r2App.invalidate_size){
                     r2.resizeWindow();
+                    r2App.cur_page.Relayout();
                     r2App.invalidate_size = false;
                 }
 
@@ -117,6 +118,7 @@
             r2App.cur_page.RunRecursive('DrawInk');
 
             r2App.cur_page.drawSpotlightPrerendered();
+            r2App.cur_page.drawInkPrerendered();
         }
 
         function drawDynamicScene(){
@@ -135,12 +137,12 @@
             );
 
             if(r2App.cur_recording_pieceaudios){
-                for(var i = 0; i < r2App.cur_recording_pieceaudios.length; ++i){
-                    r2App.cur_recording_pieceaudios[i].DrawPieceDynamic(null, r2.annot_canv_ctx, true); // force
+                if(r2App.cur_recording_pieceaudios.length !== 0){
+                    r2App.cur_recording_pieceaudios[r2App.cur_recording_pieceaudios.length-1].DrawPieceDynamic(null, r2.annot_canv_ctx, true); // force
                 }
             }
             r2.spotlightCtrl.drawDynamicSceneTraces(r2.annot_canv_ctx);
-
+            r2.inkCtrl.drawDynamicSceneTraces(r2.annot_canv_ctx);
             r2App.pieceSelector.draw(r2.annot_canv_ctx);
         }
 
@@ -173,7 +175,9 @@
                     r2.resizeWindow({});
 
                     r2.onScreenButtons.Init();
-                    r2.mouse.setDomEvents();
+                    r2.input.setModeDesktop();
+                    r2.tabletInput.setEventHandlers();
+                    return null;
                 }
             ).then(
                 initUserSet
@@ -392,17 +396,6 @@
             $(window).bind('resizeEvent', function () {
                 r2App.invalidate_size = true;
             });
-
-            // disable tablet bumping
-            document.addEventListener("touchmove", function (event) {
-                event.preventDefault();
-            });
-            var scrollingDiv = document.getElementById('scrollDiv');
-            if (scrollingDiv) {
-                scrollingDiv.addEventListener('touchmove', function (event) {
-                    event.stopPropagation();
-                });
-            }
 
             // prevent data loss
             window.onbeforeunload = function () {

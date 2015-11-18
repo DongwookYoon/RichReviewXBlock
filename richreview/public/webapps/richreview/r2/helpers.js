@@ -13,23 +13,10 @@
         var l = [];
 
         pub.initHT = function(resource_urls){
-            return new Promise(function(resolve, reject){
-                var job = function(i){
-                    if(i < l.length){
-                        pub.loadOnce(resource_urls, l[i]).then(
-                            function(){
-                                job(i+1);
-                            }
-                        ).catch(
-                            reject
-                        );
-                    }
-                    else{ // i == l.length
-                        resolve();
-                    }
-                };
-                job(0);
+            var promises = l.map(function(template){
+                return pub.loadOnce(resource_urls, template);
             });
+            return Promise.all(promises);
         };
 
         pub.add = function(name){
@@ -78,7 +65,6 @@
 
         pub.setPdfProgress = function(progress){
             $('#progress-bar-loading-pdf').progressbar({value:progress});
-            console.log(progress);
         };
 
         pub.bgnDownloadingMetafile = function(){
@@ -1136,6 +1122,54 @@
 
     }());
 
+    /** Prerenders Inks  */
+    r2.InkRenderer = (function(){
+        var pub = {};
+
+        var canv;
+        var canv_ctx;
+        var _original_canv_width_stored = 0;
+        var _ratio_stored = 0;
+
+        pub.setCanvCtx = function(original_canv_width, ratio){
+            if(_original_canv_width_stored != original_canv_width || _ratio_stored != ratio){
+                _original_canv_width_stored = original_canv_width;
+                _ratio_stored = ratio;
+
+                canv = document.createElement('canvas');
+                canv.width = original_canv_width/4;
+                canv.height = canv.width*ratio;
+                canv_ctx = canv.getContext('2d');
+            }
+            else{
+                canv_ctx.clearRect(0, 0, canv.width, canv.height);
+            }
+        };
+
+        pub.getCanvCtx = function(){
+            return canv_ctx;
+        };
+
+        pub.getCanv = function(){
+            return canv;
+        };
+
+        pub.getCanvWidth = function(){
+            return canv.width;
+        };
+
+        pub.getCanvRatio = function(){
+            return canv.height/canv.width;
+        };
+
+        pub.getRenderHeight = function(original_size_y, page_width){
+            return Math.floor(original_size_y*page_width/4)*4/page_width;
+        };
+
+        return pub;
+
+    }());
+
     r2.radialMenu = (function(){
         var pub = {};
 
@@ -1146,7 +1180,7 @@
             $menu.addClass('rm_menu');
             $menu.attr('id', rm_id);
             $menu.attr('aria-label', 'menu');
-            $menu.css('font-size', r2Const.RAIDALMENU_FONTSIZE_SCALE*rm_size+'em');
+            $menu.css('font-size', r2Const.FONT_SIZE_SCALE*r2Const.RAIDALMENU_FONTSIZE_SCALE*rm_size+'em');
 
             var $btn_center = $(document.createElement('a'));
             $btn_center.addClass('rm_btn_center').addClass('rm_btn');
@@ -1237,10 +1271,10 @@
             });
 
             $menu.on('mouseenter',function(e) {
-                r2.mouse.inMenu();
+                r2.input.inMenu();
                 $menu.toggleClass('open', true);
             }).on('mouseleave',function(e) {
-                r2.mouse.outMenu();
+                r2.input.outMenu();
                 $menu.toggleClass('open', false);
                 $menu.find('.rm_btn').blur();
             });
@@ -1260,7 +1294,7 @@
 
         var closeRadialMenuAndRun = function($menu, cb){
             return function(){
-                r2.mouse.outMenu();
+                r2.input.outMenu();
                 $menu.toggleClass('open', false);
                 cb();
             };
@@ -1444,10 +1478,16 @@
             content.removeChild(dom_obj);
         };
 
-        pub.setMouseEventHandlers = function(dn, mv, up){
-            content.onmousedown = dn;
-            content.onmousemove = mv;
-            content.onmouseup = up;
+        pub.onMouseEventHandlers = function(dn, mv, up){
+            $(content).on('mousedown', dn);
+            $(content).on('mousemove', mv);
+            $(content).on('mouseup', up);
+        };
+
+        pub.offMouseEventHandlers = function(dn, mv, up){
+            $(content).off('mousedown', dn);
+            $(content).off('mousemove', mv);
+            $(content).off('mouseup', up);
         };
 
         pub.setContextMenuEvent = function(func){
@@ -1497,6 +1537,10 @@
 
         pub.text = function(npage, nrgn, npt){
             return Sha1.hash("P"+npage+"_R"+nrgn+"_L"+npt);
+        };
+
+        pub.teared = function(annotid){
+            return Sha1.hash(annotid+" PieceTeared 0")
         };
 
         pub.keyboard = function(annotid){

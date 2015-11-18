@@ -8,7 +8,7 @@
     this.context = source.context;
     this.node = (this.context.createScriptProcessor ||
                  this.context.createJavaScriptNode).call(this.context,
-                                                         bufferLen, 2, 2);
+                                                         bufferLen, 1, 1);
     var worker = new Worker(config.workerPath || WORKER_PATH);
     r2.audioRecorder.RECORDER_SOURCE_SAMPLE_RATE = this.context.sampleRate;
     r2.audioRecorder.RECORDER_SAMPLE_RATE = r2.audioRecorder.RECORDER_SOURCE_SAMPLE_RATE > 22050? r2.audioRecorder.RECORDER_SOURCE_SAMPLE_RATE/2 : r2.audioRecorder.RECORDER_SOURCE_SAMPLE_RATE;
@@ -63,7 +63,13 @@
 
     this.getBuffer = function(cb) {
       currCallback = cb || config.callback;
-      worker.postMessage({ command: 'getBuffer' })
+      cb(null);
+      //worker.postMessage({ command: 'getBuffer' })
+    }
+
+    this.getDbs = function(cb) {
+      currCallback = cb || config.callback;
+      worker.postMessage({ command: 'getDbs' })
     }
 
     this.exportWAV = function(cb, type){

@@ -116,8 +116,9 @@
             r2App.cur_page.drawBackgroundWhite();
             r2App.cur_page.RunRecursive('DrawPiece');
             r2App.cur_page.RunRecursive('DrawInk');
-
-            r2App.cur_page.drawSpotlightPrerendered();
+            if(r2App.mode !== r2App.AppModeEnum.RECORDING){
+                r2App.cur_page.drawSpotlightPrerendered();
+            }
             r2App.cur_page.drawInkPrerendered();
         }
 

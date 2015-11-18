@@ -1665,7 +1665,7 @@
 
         r2.canv_ctx.beginPath();
         r2.canv_ctx.moveTo(this._pts_abs[0].x, this._pts_abs[0].y);
-        for(var i = 1; i < this._pts_abs.length; ++i){
+        for(var i = 1, l = this._pts_abs.length; i < l; ++i){
             r2.canv_ctx.lineTo(this._pts_abs[i].x, this._pts_abs[i].y);
         }
 

@@ -19,14 +19,14 @@
 
                 if(r2App.invalidate_page_layout){
                     r2App.cur_page.Relayout();
-                    r2.dom_model.relayoutPage();
                     r2App.invalidate_page_layout = false;
+                    console.log('invalidate_page_layout');
                 }
 
                 if(r2App.invalidate_size){
                     r2.resizeWindow();
-                    r2App.cur_page.Relayout();
                     r2App.invalidate_size = false;
+                    console.log('invalidate_size');
                 }
 
                 if(r2App.invalidate_static_scene){
@@ -242,7 +242,10 @@
                         "And, in the Media -> Manage exceptions..., remove blocks of microphone resources to our website.",
                         "If nothing helps, please report this to the manager (dy252@cornell.edu). Thank you."
                     ]);
-                    throw new Error("Failed to set up your mic.");
+                    alert('Failed to set up your mic, and your recordings will be speechless. ' +
+                        'But you can still enjoy replaying existing voice comments. ' +
+                        'We recommend using the Chrome browser.'
+                    );
                 }
             );
         }

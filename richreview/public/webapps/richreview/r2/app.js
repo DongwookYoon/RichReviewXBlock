@@ -205,7 +205,7 @@
                 var is_supported_browser = bowser.chrome || bowser.firefox || bowser.safari || bowser.msedge;
                 if(is_mobile) {
                     r2.coverMsg.Show([
-                        'Sorry! RichReviewWebApp WebApp does not support mobile platform yet.',
+                        'Sorry! RichReview does not support mobile platform yet.',
                         'Please try again on your laptop or desktop.'
                     ]);
                     var err = new Error('unsupported mobile access');

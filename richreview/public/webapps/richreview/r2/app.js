@@ -200,15 +200,27 @@
         };
 
         function checkPlatform(){
-            if(r2.ctx["pmo"] == ""){ // pass mobile is not set
-                if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                    r2.coverMsg.Show([
-                        "RichReviewWebApp does not support mobile platform yet.",
-                        "Please try again in a desktop or laptop browser."
-                    ]);
-                    throw new Error("RichReviewWebApp does not support mobile platform yet.");
+            return new Promise(function(resolve, reject){
+                var is_mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                var is_supported_browser = bowser.chrome || bowser.firefox || bowser.safari || bowser.msedge;
+                if(is_mobile) {
+                    reject(new Error(
+                        "RichReviewWebApp WebApp does not support mobile platform yet.\n"+
+                        "Please try again in a desktop or laptop browser."));
                 }
-            }
+                else if(!is_supported_browser){
+                    r2.coverMsg.Show([
+                        'Sorry! RichReview only supports Chrome, Firefox, Safari, or MS Edge browsers.',
+                        "But you are using something else..."
+                    ]);
+                    var err = new Error('unsupported browser');
+                    err.silent = true;
+                    reject(err);
+                }
+                else{
+                    resolve();
+                }
+            });
         }
 
         function initAudioPlayer(){
@@ -234,7 +246,7 @@
                     r2.coverMsg.Show([""]);
                 }
             ).catch(
-                function (){
+                function (err){
                     r2.coverMsg.Show([
                         "Failed to set up your mic. Please check the following:",
                         "1. Your machine's mic is working.",
@@ -243,10 +255,6 @@
                         "And, in the Media -> Manage exceptions..., remove blocks of microphone resources to our website.",
                         "If nothing helps, please report this to the manager (dy252@cornell.edu). Thank you."
                     ]);
-                    alert('Failed to set up your mic, and your recordings will be speechless. ' +
-                        'But you can still enjoy replaying existing voice comments. ' +
-                        'We recommend using the Chrome browser.'
-                    );
                 }
             );
         }

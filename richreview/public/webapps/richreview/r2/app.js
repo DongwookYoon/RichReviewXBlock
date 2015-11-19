@@ -204,9 +204,13 @@
                 var is_mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
                 var is_supported_browser = bowser.chrome || bowser.firefox || bowser.safari || bowser.msedge;
                 if(is_mobile) {
-                    reject(new Error(
-                        "RichReviewWebApp WebApp does not support mobile platform yet.\n"+
-                        "Please try again in a desktop or laptop browser."));
+                    r2.coverMsg.Show([
+                        'Sorry! RichReviewWebApp WebApp does not support mobile platform yet.',
+                        'Please try again on your laptop or desktop.'
+                    ]);
+                    var err = new Error('unsupported mobile access');
+                    err.silent = true;
+                    reject(err);
                 }
                 else if(!is_supported_browser){
                     r2.coverMsg.Show([

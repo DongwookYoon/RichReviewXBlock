@@ -198,7 +198,7 @@ var r2Ctrl = {};
         };
 
         pub_pn.mv = function(event){
-            if(cur_dn && event.originalEvent.pressure>0){
+            if(cur_dn){
                 mv(event);
             }
             else{

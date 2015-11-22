@@ -287,6 +287,49 @@
             return s.replace(/\.|\-|T|\:/g, '_');
         };
 
+        pub.SimplifyStrokeDouglasPuecker = function(pts, begin, end, _eps){
+            if(pts==null){
+                return [];
+            }
+            var maxDist = 0;
+            var farthestPtIndex = 0;
+
+            var startPt = [pts[begin].x, pts[begin].y];
+            var endPt = [pts[end-1].x, pts[end-1].y];
+            for(var i = begin; i<end ; ++i){
+                var pt = pts[i];
+                var curDist = pub.GetDistBetweenLineAndPoint(startPt,endPt,[pt.x,pt.y]);
+                if (curDist > maxDist){
+                    farthestPtIndex = i;
+                    maxDist = curDist;
+                }
+            }
+            if (maxDist > _eps && end-begin>2){
+                var rlist = pub.SimplifyStrokeDouglasPuecker(pts,farthestPtIndex, end, _eps);
+                var llist = pub.SimplifyStrokeDouglasPuecker(pts,begin, farthestPtIndex+1, _eps);
+                llist = llist.concat(rlist);
+                return llist;
+            }
+            else{
+                var rtn_list=[];
+                if(begin==0){
+                    rtn_list.push(pts[begin]);
+                }
+
+                //rtn_list.push(pts[begin]);
+                rtn_list.push(pts[end-1]);
+                return rtn_list;
+            }
+        };
+        pub.GetDistBetweenLineAndPoint = function(startPoint, endPoint, extraPoint ){
+            var lineVec = [endPoint[0]-startPoint[0],endPoint[1]-startPoint[1]];
+            var vecLenSq = lineVec[0]*lineVec[0]+lineVec[1]*lineVec[1];
+            var toExtra =  [extraPoint[0]-startPoint[0],extraPoint[1]-startPoint[1]];
+            var lenExtraSq = toExtra[0]*toExtra[0]+toExtra[1]*toExtra[1];
+            var DotExtra = (lineVec[0]*toExtra[0]+lineVec[1]*toExtra[1])/Math.sqrt(vecLenSq);
+            var dist = Math.sqrt(lenExtraSq -DotExtra*DotExtra);
+            return dist;
+        };
         return pub;
     }());
 

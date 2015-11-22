@@ -1700,6 +1700,7 @@
                     }
                     wasbgn = segment.drawReplaying(canvas_ctx, wasbgn, n-curn);
                     curn=curn+segment._pts.length;
+
                 }
                 canvas_ctx.strokeStyle = r2.userGroup.GetUser(this._username).color_stroke_dynamic_past;
                 canvas_ctx.lineWidth = r2Const.INK_WIDTH * 3;
@@ -1758,7 +1759,12 @@
         canvas_ctx.lineJoin = 'round';
         canvas_ctx.stroke();
     };
-
+    r2.Ink.prototype.smoothing = function(canvas_ctx){
+        var i, segment;
+        for(i = 0; segment = this.segments[i]; ++i) {
+            segment.smoothing();
+        }
+    };
     /*
     ink segment
      */
@@ -1809,6 +1815,9 @@
             }
         }
         return wasbgn;
+    };
+    r2.Ink.Segment.prototype.smoothing = function(){
+        this._pts = r2.util.SimplifyStrokeDouglasPuecker(this._pts,0,this._pts.length, 0.00025);
     };
     r2.Ink.Segment.prototype.drawReplaying = function(canvas_ctx,wasbgn,cnt){
 

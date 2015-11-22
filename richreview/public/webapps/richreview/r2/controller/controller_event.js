@@ -1,6 +1,7 @@
 /**
  * Created by yoon on 12/21/14.
  */
+//written by Tianwei Huang
 //written by Yuan Huang
  
 var r2Ctrl = {};
@@ -174,10 +175,19 @@ var r2Ctrl = {};
             FIRST_BTN:6,
             SECOND_BTN:3
         };
+
+        var PenMode = {
+            NORMAL: 0,
+            MANIPULATION: 1,
+            TEARING: 2
+        };
+        var mode = PenMode.NORMAL;
         var cur_dn = false;
         var pos_dn = new Vec2(0, 0);
         var pos_writing = new Vec2(0, 0);
         var pos_splight = new Vec2(0, 0);
+        var cur_piece_tearing = null;
+
 
         pub_pn.dn = function(event){
             dn(event);
@@ -213,6 +223,11 @@ var r2Ctrl = {};
                 pos_writing = pos_px;
                 r2.spotlightCtrl.recordingSpotlightCancel(); // just in case
             }
+            else if(r2App.mode === r2App.AppModeEnum.IDLE || r2App.mode === r2App.AppModeEnum.REPLAYING) {
+                if(event.which === PenEventType.FIRST_BTN){
+                    mode = PenMode.MANIPULATION;
+                }
+            }
             pos_dn = new_pen_pt;
         };
         var up = function(event){
@@ -223,17 +238,24 @@ var r2Ctrl = {};
             }
             else if(r2App.mode === r2App.AppModeEnum.IDLE || r2App.mode === r2App.AppModeEnum.REPLAYING){
                 if(r2.input.isTap(pos_dn, new_pen_pt)){
-                    if(event.which === PenEventType.FIRST_BTN){
+                    if(mode === PenMode.MANIPULATION){
                         if(!r2App.pieceSelector.isNull()){
                             r2App.recordingTrigger.set(r2App.pieceSelector.get());
                             r2.log.Log_Simple("Recording_Bgn_PenTap");
                         }
                     }
-                    else if(event.which === PenEventType.NORMAL ){
+                    else if(mode === PenMode.NORMAL){
                         if (!r2.input.isInMenu()) {
                             handleTimeIndexingUp(r2.viewCtrl.mapScrToDoc(new_pen_pt));
                         }
                     }
+                }
+                if(mode === PenMode.MANIPULATION){
+                    mode = PenMode.NORMAL;
+                }
+                if(mode === PenMode.TEARING){
+                    mode = PenMode.NORMAL;
+                    cur_piece_tearing = null;
                 }
             }
             cur_dn = false;
@@ -245,6 +267,24 @@ var r2Ctrl = {};
                 if(pos_writing.distance(pos_px) > 1){
                     r2.inkCtrl.recordingInkMv(r2.viewCtrl.mapScrToDoc(new_pen_pt), r2App.cur_recording_annot);
                     pos_writing = pos_px;
+                }
+            }
+            else if(r2App.mode === r2App.AppModeEnum.IDLE || r2App.mode === r2App.AppModeEnum.REPLAYING) {
+                if(mode === PenMode.MANIPULATION){
+                    if(new_pen_pt.y > pos_dn.y + 0.05){
+                        mode = PenMode.TEARING;
+                        cur_piece_tearing = createPieceTeared();
+                    }
+                }
+                if(mode === PenMode.TEARING){
+                    if(cur_piece_tearing){
+                        var new_height = new_pen_pt.y-cur_piece_tearing.pos.y;
+                        if(new_height > 0.05){
+                            cur_piece_tearing.resize(new_height);
+                            r2.dom_model.updateSizeTextTearing(cur_piece_tearing);
+                            r2App.invalidate_page_layout = true;
+                        }
+                    }
                 }
             }
         };
@@ -260,12 +300,10 @@ var r2Ctrl = {};
                     r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_pen_pt), r2App.cur_recording_annot);
                 }
             }
-
         };
         var en = function(event){
             var new_pen_pt = r2.input.getPos(event);
             var pos_px = new Vec2(event.clientX, event.clientY);
-            console.log('en');
             if(r2App.mode == r2App.AppModeEnum.RECORDING){
                 r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_pen_pt), r2App.cur_recording_annot);
                 pos_splight = pos_px;
@@ -274,7 +312,6 @@ var r2Ctrl = {};
         var lv = function(event){
             var new_pen_pt = r2.input.getPos(event);
             var pos_px = new Vec2(event.clientX, event.clientY);
-            console.log('lv');
             if(r2App.mode == r2App.AppModeEnum.RECORDING){
                 r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_pen_pt), r2App.cur_recording_annot);
             }
@@ -998,6 +1035,34 @@ var r2Ctrl = {};
         r2.log.Log_Simple("CreatePieceKeyboard_Public_Enter");
         r2.removeAnnot(annotid, askuser = false, mute = true);
         createPieceKeyboard(isprivate = false);
+    };
+
+    var createPieceTeared = function(creation_time){
+        if(typeof creation_time === 'undefined'){
+            creation_time = new Date(r2App.cur_time);
+        }
+        var anchorpiece = r2App.pieceSelector.get();
+        if(anchorpiece){
+            if(anchorpiece instanceof r2.PieceTeared){
+                return anchorpiece;
+            }
+            else{
+                var pieceteared = new r2.PieceTeared();
+                pieceteared.SetPiece(
+                    r2.pieceHashId.teared(creation_time.toISOString()),
+                    creation_time,
+                    new Vec2(anchorpiece._cnt_size.x, 0.05),
+                    anchorpiece.GetTTData()
+                );
+                pieceteared.SetPieceTeared(r2.userGroup.cur_user.name);
+                anchorpiece.AddChildAtFront(pieceteared);
+                r2App.cur_page.Relayout();
+
+                r2.dom_model.createTextTearing(pieceteared);
+                return pieceteared;
+            }
+        }
+        return null;
     };
 
     var createPieceKeyboard = function(isprivate){

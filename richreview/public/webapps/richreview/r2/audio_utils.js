@@ -250,6 +250,7 @@
                         get_worker_script.send();
                     },
                     function(err){
+                        console.log(err);
                         reject(new Error("Failed to initialize the microphone"));
                     }
                 );

@@ -61,7 +61,10 @@ var r2Const = (function () {
     pub.DB_SYNC_POLLING_INTERVAL = 5*1000; // 5 secs
 
     // error message
-    pub.ERROR_MSG = "We caught an invalid operation of the system. Please refresh the webpage, and report this error to the system manager (dy252@cornell.edu). The report is the most helpful when you Copy and Paste the following error message. Thank you!";
+    pub.ERROR_MSG =
+        'We caught an invalid operation of the system. ' +
+        'Refresh the webpage, and if the error Recurs, please report this message to the system manager (dy252@cornell.edu). ' +
+        'The report is the most helpful when you Copy and Paste the following error message. Thank you!';
 
     return pub;
 })();

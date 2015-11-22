@@ -52,9 +52,6 @@
             $('#'+annot_id_esc).remove();
         };
 
-        pub.relayoutPage = function(){
-        };
-
         /* submodule for data loading bgn */
         var loader = (function(){
             var pub_loader = {};
@@ -198,6 +195,11 @@
                 return true;
             }
             return false;
+        };
+
+        pub.updateSizeTextTearing = function(piece_teared){
+            var $piece = $('#'+piece_teared.GetId());
+            $piece.find('.tc_content').height(piece_teared.GetContentSize().y*r2Const.FONT_SIZE_SCALE+'em');
         };
 
         pub.createCommentVoice = function(annot, pagen, live_recording){

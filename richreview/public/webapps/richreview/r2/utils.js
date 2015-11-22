@@ -9,15 +9,15 @@
     r2.util = (function(){
         var pub = {};
         pub.handleError = function(err, msg){
-            if(r2App.is_first_error){
+            if(r2App.is_first_error && !err.silent){
                 r2App.is_first_error = false; // do not prompt error msgs for the subsequent errors
 
                 var s = "Error Message: " + err.message + "\n\nDetails: " + err.stack;
 
-                if(typeof msg !== "undefined") {
-                    s = msg + "\n\n" + s;
+                if(typeof msg === 'undefined') {
+                    msg = 'We caught an invalid operation of the system.';
                 }
-                alert(s);
+                prompt(msg, s + '\n' + window.location.href);
             }
         };
 

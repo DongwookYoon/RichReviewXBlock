@@ -78,7 +78,7 @@
   height: 100%;
   background: white;
   text-align: center;
-  z-index: 8;
+  z-index: 10;
 }
 #cover_msg_text{
   display: table-cell;
@@ -613,7 +613,7 @@ a:active {
 #r2_app_container > #overlay_container {
   position: relative;
   width: 100%;
-  z-index: 7;
+  z-index: 9;
 }
 
 #r2_app_container > #overlay_container.recording {

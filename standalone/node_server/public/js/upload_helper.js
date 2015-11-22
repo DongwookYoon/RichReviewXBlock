@@ -373,3 +373,24 @@ var getWebAppUrls = function(){
             });
     });
 };
+
+var checkPlatform = function(){
+    var is_mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    var is_supported_browser = bowser.chrome || bowser.firefox || bowser.safari || bowser.msedge;
+    if(is_mobile) {
+        $('.container').find('#multicolumn').remove();
+        var $well = $('.well');
+        $well.empty();
+        var $p = $(document.createElement('h5'));
+        $p.text('Sorry! The upload feature is not supported on mobile platform yet. Please try again on your laptop or desktop.');
+        $well.append($p);
+    }
+    else if(!is_supported_browser){
+        $('.container').find('#multicolumn').remove();
+        var $well = $('.well');
+        $well.empty();
+        var $p = $(document.createElement('h5'));
+        $p.text('Sorry! RichReview only supports Chrome, Firefox, Safari, or MS Edge browsers. But you are using something else...');
+        $well.append($p);
+    }
+};

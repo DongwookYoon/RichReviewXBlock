@@ -15,6 +15,7 @@ var r2Ctrl = {};
         var InpuMode = {
             DESKTOP : 0,
             TABLET : 1
+            //CHROMETABLET : 2
         };
         var mode = InpuMode.DESKTOP;
         var cursor_in_menu = false;
@@ -69,11 +70,23 @@ var r2Ctrl = {};
             if($content === null){
                 $content = $('#r2_content');
             }
-            $content.on('pointerdown', dn);
-            $content.on('pointerup', up);
-            $content.on('pointermove', mv);
-            $content.on('pointerenter', en);
-            $content.on('pointerleave', lv);
+            if (navigator.userAgent.indexOf("Edge") != -1) {
+                console.log("The current browser is MS Edge");
+                $content.on('pointerdown', dn);
+                $content.on('pointerup', up);
+                $content.on('pointermove', mv);
+                $content.on('pointerenter', en);
+                $content.on('pointerleave', lv);
+            }
+            else {
+                console.log("The current browser is not MS Edge");
+                $content.on('mousedown', mouseDn);
+                $content.on('mousemove', mouseMv);
+                $content.on('mouseup', mouseUp);
+                $content.on('touchdown', touchDn);
+                $content.on('touchmove', touchMv);
+                $content.on('touchup', touchUp);
+            }
         };
 
         pub_ti.on = function(){
@@ -82,6 +95,78 @@ var r2Ctrl = {};
 
         pub_ti.off = function(){
             enabled = false;
+        };
+
+        var penStateEnum = {
+            IDLE: 0,
+            GESTURE: 1,
+            INKING: 2
+        };
+
+        var penState = penStateEnum.IDLE;
+
+        var hoverTimer = null;
+
+        var stopTimer = function() {
+            if (hoverTimer != null) {
+                clearTimeout(hoverTimer);
+                hoverTimer = null;
+            }
+        };
+
+        var hoverIn = function(event) {
+            if (penState != penStateEnum.INKING) {
+                penState = penStateEnum.GESTURE;
+                stopTimer();
+                hoverTimer = setTimeout(function() {hoverOut(event);}, 50);
+                r2.pen.en(event);
+            }
+        };
+
+        var hoverOut = function(event) {
+            if (penState != penStateEnum.INKING) {
+                penState = penStateEnum.IDLE;
+                r2.pen.lv(event);
+            }
+        };
+
+        var mouseDn = function(event) {
+            if(!enabled) {return;}
+            penState = penStateEnum.INKING;
+            r2.pen.dn(event);
+        };
+
+        var mouseMv = function(event) {
+            if(!enabled) {return;}
+            if (penState == penStateEnum.IDLE) {
+                penState = penStateEnum.GESTURE;
+                setTimeout(function() {hoverIn(event);}, 100);
+            }
+            else {
+                r2.pen.mv(event);
+            }
+
+        };
+
+        var mouseUp = function(event) {
+            if(!enabled) {return;}
+            penState = penStateEnum.IDLE;
+            r2.pen.up(event);
+        };
+
+        var touchDn = function(event) {
+            if(!enabled) {return;}
+            r2.touch.dn(event);
+        };
+
+        var touchMv = function(event) {
+            if(!enabled) {return;}
+            r2.touch.mv(event);
+        };
+
+        var touchUp = function(event) {
+            if(!enabled) {return;}
+            r2.touch.up(event);
         };
 
         var dn = function(event){

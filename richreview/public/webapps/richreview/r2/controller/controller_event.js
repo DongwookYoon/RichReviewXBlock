@@ -264,7 +264,7 @@ var r2Ctrl = {};
             var new_pen_pt = r2.input.getPos(event);
             var pos_px = new Vec2(event.clientX, event.clientY);
             if(r2App.mode === r2App.AppModeEnum.RECORDING){
-                if(pos_writing.distance(pos_px) > 1){
+                if(pos_writing.distance(pos_px) > 1 ){
                     r2.inkCtrl.recordingInkMv(r2.viewCtrl.mapScrToDoc(new_pen_pt), r2App.cur_recording_annot);
                     pos_writing = pos_px;
                 }
@@ -860,7 +860,7 @@ var r2Ctrl = {};
                     if(piece){
                         // add point
                         cur_recording_Ink_segment.AddPt(pt.subtract(piece.pos, true));
-                        cur_recording_Ink.t_end = r2App.cur_time-target_annot.GetBgnTime();
+                        cur_recording_Ink._t_end = r2App.cur_time-target_annot.GetBgnTime();
                     }
                     else{
                         // cut segment
@@ -888,6 +888,7 @@ var r2Ctrl = {};
 
         pub.recordingInkUp = function(pt, target_annot){
             if(cur_recording_Ink){
+                cur_recording_Ink.smoothing();
                 cur_recording_Ink_piece.AddInk(target_annot.GetId(),cur_recording_Ink);
                 if(cur_recording_Ink_segment){
                     cur_recording_Ink_segment = null;

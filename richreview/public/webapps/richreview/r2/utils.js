@@ -90,10 +90,11 @@
         pub.linePointDistance = function (v, w, pt) {
             var l2 = v.distance(w);
             if (l2 < 0.00001){return pt.distance(v);}   // v == w
-            var t = pt.subtract(v, true).dot(w.subtract(v, true)) / l2;
+            var t = pt.subtract(v, true).dot(w.subtract(v, true)) /(pt.distance(v) *l2);
             if (t < 0.0){return pt.distance(v);}
             else if (t > 1.0){return pt.distance(w);}
-            var prj = v.add(t * (w.subtract(v, true)), true);  // Projection falls on the segment
+
+            var prj = v.add((w.subtract(v, true)).multiply(t,true), true);  // Projection falls on the segment
             return pt.distance(prj);
         };
 
@@ -285,6 +286,39 @@
 
         pub.escapeDomId = function(s){
             return s.replace(/\.|\-|T|\:/g, '_');
+        };
+
+        pub.SimplifyStrokeDouglasPuecker = function(pts, begin, end, _eps){
+            if(pts==null){
+                return [];
+            }
+            var maxDist = 0;
+            var farthestPtIndex = 0;
+
+            var startPt = pts[begin];
+            var endPt = pts[end-1];
+            for(var i = begin; i<end ; ++i){
+                var pt = pts[i];
+                var curDist = pub.linePointDistance(startPt,endPt,pt);
+                if (curDist > maxDist){
+                    farthestPtIndex = i;
+                    maxDist = curDist;
+                }
+            }
+            if (maxDist > _eps && end-begin>2 && farthestPtIndex!=begin &&farthestPtIndex!=end-1){
+                var rlist = pub.SimplifyStrokeDouglasPuecker(pts,farthestPtIndex, end, _eps);
+                var llist = pub.SimplifyStrokeDouglasPuecker(pts,begin, farthestPtIndex+1, _eps);
+                llist = llist.concat(rlist);
+                return llist;
+            }
+            else{
+                var rtn_list=[];
+                if(begin==0){
+                    rtn_list.push(pts[begin]);
+                }
+                rtn_list.push(pts[end-1]);
+                return rtn_list;
+            }
         };
 
         return pub;

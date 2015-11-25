@@ -108,6 +108,7 @@ var r2App = (function() {
 
     pub.annots = {};
     pub.annot_private_spotlight = null;
+    pub.annot_static_ink = null;
     pub.pieces_cache = {};
 
     pub.cur_recording_anchor_piece = null;
@@ -219,6 +220,28 @@ var r2App = (function() {
         pub.cur_pdf_pagen = i;
         pub.cur_page = pub.doc.GetPage(pub.cur_pdf_pagen);
     };
+
+    pub.annotStaticInkMgr = (function(){
+        var pub = {};
+
+        pub.addNewUser = function(user){
+            var annot_static_ink_id = user.GetAnnotStaticInkId();
+            if(r2App.annots[annot_static_ink_id]){ // do nothing if the annot exists already
+                return;
+            }
+            else{
+                var annot = new r2.AnnotStaticInk();
+                annot.SetAnnot(annot_static_ink_id, null, 0, 0, [], user.name, '');
+                r2App.annots[annot_static_ink_id] = annot;
+            }
+        };
+
+        pub.setCurUser = function(user){
+            r2App.annot_static_ink = r2App.annots[user.GetAnnotStaticInkId()];
+        };
+
+        return pub;
+    }());
 
     return pub;
 })();

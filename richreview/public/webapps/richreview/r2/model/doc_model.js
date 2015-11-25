@@ -359,7 +359,6 @@
                 }
             }
         }
-        //console.log(this._Ink_cache.length);
         r2.InkRenderer.setCanvCtx(r2.viewCtrl.page_width_noscale, this.size.y/this.size.x);
         for(i = 0; Ink = this._Ink_cache[i]; ++i){
             Ink.preRender(r2.InkRenderer.getCanvCtx()); // ctx, ratio
@@ -1564,6 +1563,7 @@
     };
 
 
+    /* abstract annot that contains private spotlights */
     r2.AnnotPrivateSpotlight = function() {
         r2.Annot.call(this);
         this.isPrivateSpotlight = true;
@@ -1613,6 +1613,25 @@
         }
     };
 
+    /* abstract annot that contains static inks */
+    r2.AnnotStaticInk = function(){
+        r2.Annot.call(this);
+        this.is_static_ink = true;
+        this.time_last_modified = 0;
+        this.modified = false;
+        this.inks_dict = {};
+        this.inks_to_upload = [];
+    };
+    r2.AnnotStaticInk.prototype = Object.create(r2.Annot.prototype);
+
+    r2.AnnotStaticInk.prototype.AddInk = function(ink, to_upload){
+        if(ink._t_bgn in this.inks_dict){return;}
+        this._inks.push(ink);
+        this.inks_dict[ink.time] = true;
+        if(to_upload){
+            this.inks_to_upload.push(ink);
+        }
+    };
 
     /*
      * Ink

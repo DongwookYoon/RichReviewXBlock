@@ -369,7 +369,7 @@
 
             var annot_private_spotlight_id = r2.userGroup.cur_user.GetAnnotPrivateSpotlightId();
             r2App.annot_private_spotlight = new r2.AnnotPrivateSpotlight();
-            r2App.annot_private_spotlight.SetAnnot(annot_private_spotlight_id, null, 0, 0, [], r2.userGroup.cur_user.name, "");
+            r2App.annot_private_spotlight.SetAnnot(annot_private_spotlight_id, null, 0, 0, [], r2.userGroup.cur_user.name, '');
             r2App.annots[annot_private_spotlight_id] = r2App.annot_private_spotlight;
 
             r2.booklet.initBooklet();

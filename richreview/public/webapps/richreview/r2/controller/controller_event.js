@@ -224,7 +224,10 @@ var r2Ctrl = {};
                 r2.spotlightCtrl.recordingSpotlightCancel(); // just in case
             }
             else if(r2App.mode === r2App.AppModeEnum.IDLE || r2App.mode === r2App.AppModeEnum.REPLAYING) {
-                if(event.which === PenEventType.FIRST_BTN){
+                if(event.which === PenEventType.NORMAL){
+                    r2.inkCtrl.recordingInkDn(r2.viewCtrl.mapScrToDoc(new_pen_pt), r2App.annot_static_ink);
+                }
+                else if(event.which === PenEventType.FIRST_BTN){
                     mode = PenMode.MANIPULATION;
                 }
             }
@@ -250,6 +253,9 @@ var r2Ctrl = {};
                         }
                     }
                 }
+                if(event.which === PenEventType.NORMAL){
+                    r2.inkCtrl.recordingInkUp(r2.viewCtrl.mapScrToDoc(new_pen_pt), r2App.annot_static_ink);
+                }
                 if(mode === PenMode.MANIPULATION){
                     mode = PenMode.NORMAL;
                 }
@@ -270,6 +276,10 @@ var r2Ctrl = {};
                 }
             }
             else if(r2App.mode === r2App.AppModeEnum.IDLE || r2App.mode === r2App.AppModeEnum.REPLAYING) {
+                if(event.which === PenEventType.NORMAL){
+                    r2.inkCtrl.recordingInkMv(r2.viewCtrl.mapScrToDoc(new_pen_pt), r2App.annot_static_ink);
+                    r2App.invalidate_dynamic_scene = true;
+                }
                 if(mode === PenMode.MANIPULATION){
                     if(new_pen_pt.y > pos_dn.y + 0.05){
                         mode = PenMode.TEARING;

@@ -261,6 +261,7 @@ var r2Ctrl = {};
                 }
                 if(mode === PenMode.TEARING){
                     mode = PenMode.NORMAL;
+                    r2Sync.PushToUploadCmd(cur_piece_tearing.ExportToCmd());
                     cur_piece_tearing = null;
                 }
             }
@@ -1060,16 +1061,14 @@ var r2Ctrl = {};
         createPieceKeyboard(isprivate = false);
     };
 
-    var createPieceTeared = function(creation_time){
-        if(typeof creation_time === 'undefined'){
-            creation_time = new Date(r2App.cur_time);
-        }
+    var createPieceTeared = function(){
         var anchorpiece = r2App.pieceSelector.get();
         if(anchorpiece){
-            if(anchorpiece instanceof r2.PieceTeared){
+            if(anchorpiece instanceof r2.PieceTeared && anchorpiece.getUsername() === r2.userGroup.cur_user.name){
                 return anchorpiece;
             }
             else{
+                var creation_time = new Date(r2App.cur_time);
                 var pieceteared = new r2.PieceTeared();
                 pieceteared.SetPiece(
                     r2.pieceHashId.teared(creation_time.toISOString()),

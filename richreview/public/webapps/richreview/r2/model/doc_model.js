@@ -751,6 +751,27 @@
     };
     r2.PieceTeared.prototype = Object.create(r2.Piece.prototype);
 
+    r2.PieceTeared.prototype.ExportToCmd = function(){
+        // time: 2014-12-21T13...
+        // user: 'red user'
+        // op: 'CreateComment'
+        // type: 'TextTearing'
+        // anchorTo: ...
+        // data: {pid: id, height: 0.1}
+        var cmd = {};
+        cmd.time = (new Date(this._creationTime)).toISOString();
+        cmd.user = this._username;
+        cmd.op = "CreateComment";
+        cmd.type = "TextTearing";
+        cmd.anchorTo = this._parent.GetAnchorTo();
+        cmd.data = {};
+        cmd.data.pid = this._id;
+        cmd.data.height = this._cnt_size.y;
+        return cmd;
+    };
+    r2.PieceTeared.prototype.getUsername = function(){
+        return this._username;
+    };
     r2.PieceTeared.prototype.GetAnchorTo = function(){
         //           {type: 'PieceTeared', id: pid, page: 2}
         var anchorCmd = {};

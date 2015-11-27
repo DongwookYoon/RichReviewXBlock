@@ -273,23 +273,30 @@
             //           {type: 'CommentAudio', id: annotId, page: 2, time: [t0, t1]}
             // data: {pid: id, height: 0.1}
 
-            if(r2App.pieces_cache.hasOwnProperty(cmd.data.pid)){return;}
-            var anchorpage = doc.GetPage(cmd.anchorTo.page);
-            var anchorpiece = getAnchorPiece(anchorpage, cmd);
-            if(anchorpiece){
-                var pieceteared = new r2.PieceTeared();
-                pieceteared.SetPiece(
-                    cmd.data.pid,
-                    (new Date(cmd.time)).getTime(),
-                    new Vec2(anchorpiece._cnt_size.x, cmd.data.height),
-                    anchorpiece.GetTTData()
-                );
-                pieceteared.SetPieceTeared(cmd.user);
-                anchorpiece.AddChildrenChronologically([pieceteared]);
+            if(!r2App.pieces_cache.hasOwnProperty(cmd.data.pid)){ // create if not exist
+                var anchorpage = doc.GetPage(cmd.anchorTo.page);
+                var anchorpiece = getAnchorPiece(anchorpage, cmd);
+                if(anchorpiece){
+                    var pieceteared = new r2.PieceTeared();
+                    pieceteared.SetPiece(
+                        cmd.data.pid,
+                        (new Date(cmd.time)).getTime(),
+                        new Vec2(anchorpiece._cnt_size.x, cmd.data.height),
+                        anchorpiece.GetTTData()
+                    );
+                    pieceteared.SetPieceTeared(cmd.user);
+                    anchorpiece.AddChildrenChronologically([pieceteared]);
 
-                r2.dom_model.createTextTearing(pieceteared);
+                    r2.dom_model.createTextTearing(pieceteared);
+                    return true;
+                }
+            }
+            else{ // change height it exist
+                r2App.pieces_cache[cmd.data.pid].resize(cmd.data.height);
                 return true;
             }
+
+
             return false;
         };
 

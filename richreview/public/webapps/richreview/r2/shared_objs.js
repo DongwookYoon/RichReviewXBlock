@@ -55,7 +55,7 @@ var r2Const = (function () {
     pub.TIMEOUT_MINIMAL = 10;
     pub.TIMEOUT_FRAMERATE = 1000/30;
     pub.TIMEOUT_RESIZE_DELAY = 100;
-    pub.TIMEOUT_PRIVATE_HIGHLIGHT_UPDATE = 5*1000;
+    pub.TIMEOUT_PRIVATE_HIGHLIGHT_UPDATE = 3*1000;
 
     // db sync polling interval
     pub.DB_SYNC_POLLING_INTERVAL = 5*1000; // 5 secs
@@ -224,6 +224,8 @@ var r2App = (function() {
     pub.annotStaticInkMgr = (function(){
         var pub = {};
 
+        var annots = [];
+
         pub.addNewUser = function(user){
             var annot_static_ink_id = user.GetAnnotStaticInkId();
             if(r2App.annots[annot_static_ink_id]){ // do nothing if the annot exists already
@@ -231,6 +233,7 @@ var r2App = (function() {
             }
             else{
                 var annot = new r2.AnnotStaticInk();
+                annots.push(annot);
                 annot.SetAnnot(annot_static_ink_id, null, 0, 0, [], user.name, '');
                 r2App.annots[annot_static_ink_id] = annot;
             }
@@ -238,6 +241,10 @@ var r2App = (function() {
 
         pub.setCurUser = function(user){
             r2App.annot_static_ink = r2App.annots[user.GetAnnotStaticInkId()];
+        };
+
+        pub.getAnnots = function(){
+            return annots;
         };
 
         return pub;

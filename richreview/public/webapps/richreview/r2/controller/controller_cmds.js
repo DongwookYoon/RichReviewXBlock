@@ -246,7 +246,7 @@
                 case 'CommentAudio':
                     success = createCommentAudio(doc, cmd);
                     break;
-                case 'CommentInk':
+                case 'CommentInk': // inks from the legacy Tablet app
                     success = createCommentInk(doc, cmd);
                     break;
                 case 'CommentText':
@@ -254,6 +254,9 @@
                     break;
                 case 'PrivateHighlight':
                     success = createPrivateHighlight(doc, cmd);
+                    break;
+                case 'StaticInk':
+                    success = createStaticInk(doc, cmd);
                     break;
                 default:
                     console.log('Unknown Cmd Error:', JSON.stringify(cmd));
@@ -308,8 +311,6 @@
 
 
             if(anchorpiece){
-
-
                 var annot = new r2.Annot();
                 annot.SetAnnot(cmd.data.aid, anchorpiece.GetId(), cmd.time, cmd.data.duration, cmd.data.waveform_sample, cmd.user, cmd.data.audiofileurl);
                 r2App.annots[cmd.data.aid] = annot;
@@ -356,6 +357,29 @@
                     var toupload;
                     annot.AddSpotlight(spotlight, toupload = false);
                 }
+
+                if(cmd.data.Inks){
+                    var cmd_ink;
+                    for(i = 0; cmd_ink = cmd.data.Inks[i]; ++i) {
+                        var ink = new r2.Ink();
+                        ink.SetInk(
+                            cmd_ink.anchorpid,
+                            cmd_ink.username,
+                            cmd_ink.annotid,
+                            [cmd_ink.t_bgn, cmd_ink.t_end]
+                        );
+                        ink.SetPage(cmd_ink.npage);
+                        for(var j = 0; j < cmd_ink.segments.length; ++j){
+                            if(r2App.pieces_cache.hasOwnProperty(cmd_ink.segments[j].pid)){
+                                var segment = new r2.Ink.Segment();
+                                segment.SetSegment(cmd_ink.segments[j].pid, r2.util.numListToVec2List(cmd_ink.segments[j].pts));
+                                ink.AddSegment(segment);
+                            }
+                        }
+                        anchorpiece.AddInk(cmd.data.aid, ink);
+                        annot.AddInk(ink);
+                    }
+                }
                 return true;
             }
             return false;
@@ -375,8 +399,17 @@
                 var stroke;
                 for(var i = 0; stroke = cmd.data.strokes[i]; ++i){
                     var ink = new r2.Ink();
-                    ink.SetInk(anchorpiece.GetId(), cmd.user, r2.util.numListToVec2List(stroke.pts), cmd.data.aid, stroke.time);
+                    ink.SetInk(anchorpiece.GetId(), cmd.user, cmd.data.aid, stroke.time);
+                    var segment = new r2.Ink.Segment();
+                    segment.SetSegment(anchorpiece.GetId(), r2.util.numListToVec2List(stroke.pts));
+                    ink.AddSegment(segment);
                     anchorpiece.AddInk(cmd.data.aid, ink);
+                    if(r2App.annots[cmd.data.aid]){
+                        r2App.annots[cmd.data.aid].AddInk(ink);
+                    }
+                    else{
+                        r2App.annots[r2.userGroup.GetUser(r2Const.LEGACY_USERNAME).GetAnnotStaticInkId()].AddInk(ink);
+                    }
                 }
                 return true;
             }
@@ -446,6 +479,31 @@
                 return true;
             }
             return false;
+        };
+
+        var createStaticInk = function(doc, cmd){
+            cmd.data.inks.forEach(function(cmd_ink){
+                var ink = new r2.Ink();
+                ink.SetInk(
+                    cmd_ink.anchorpid,
+                    cmd_ink.username,
+                    cmd_ink.annotid,
+                    [cmd_ink.t_bgn, cmd_ink.t_end]
+                );
+                ink.SetPage(cmd_ink.npage);
+                for(var j = 0; j < cmd_ink.segments.length; ++j){
+                    if(r2App.pieces_cache.hasOwnProperty(cmd_ink.segments[j].pid)){
+                        var segment = new r2.Ink.Segment();
+                        segment.SetSegment(cmd_ink.segments[j].pid, r2.util.numListToVec2List(cmd_ink.segments[j].pts));
+                        ink.AddSegment(segment);
+                    }
+                }
+
+                var annot = r2App.annots[r2.userGroup.GetUser(cmd_ink.username).GetAnnotStaticInkId()];
+                //.AddInk(cmd.data.aid, ink);
+                annot.AddInk(ink);
+            });
+            return true;
         };
 
         var changeProperty_PieceKeyboardTextChange = function(doc, cmd){

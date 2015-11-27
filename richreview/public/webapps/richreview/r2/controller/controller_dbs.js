@@ -173,6 +173,9 @@ var r2Sync = (function(){
                             r2.commentHistory.consumeCmd(cmdObjs[i]);
                             r2App.invalidate_page_layout = true;
                         }
+                        else{
+                            console.error('error from cmd: ', cmdObjs[i]);
+                        }
                         $( "#main_progress_bar" ).progressbar({
                             value: parseInt(100*(i)/(cmdObjs.length-1))
                         });

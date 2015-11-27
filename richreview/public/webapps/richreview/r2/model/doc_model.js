@@ -312,6 +312,8 @@
 
 
     r2.Page.prototype.refreshInkPrerender = function(){
+        r2.inkCtrl.dynamicScene.clear();
+
         this._Ink_cache = [];
         var i, Ink, cache;
         for (var annotid in r2App.annots) {
@@ -365,7 +367,6 @@
         }
     };
 
-
     r2.Page.prototype.drawBackgroundWhite = function(){
         r2.canv_ctx.fillStyle = 'white';
         r2.canv_ctx.fillRect(0, 0, this.size.x, this.size.y);
@@ -378,9 +379,7 @@
     };
     r2.Page.prototype.drawInkPrerendered = function(){
         var i, inks;
-
         for(i = 0; inks = this._Ink_cache[i]; ++i){
-
             inks.preRender(r2.canv_ctx);
         }
     };
@@ -579,18 +578,6 @@
             this._inks[annotid] = [];
         }
         this._inks[annotid].push(stroke);
-    };
-    r2.Piece.prototype.DrawInk = function(){
-        var ink;
-        for (var key in this._inks) {
-            if (this._inks.hasOwnProperty(key)) {
-                for (var i = 0; ink = this._inks[key][i]; ++i) {
-                    ink.Draw();
-                    ink.DrawSegments(r2.annot_canv_ctx);
-
-                }
-            }
-        }
     };
     r2.Piece.prototype.drawInkReplaying = function(canvas_ctx){
         var ink;
@@ -1469,6 +1456,10 @@
         this._spotlights.forEach(function(splght){
             cmd.data.Spotlights.push(splght.ExportToCmd());
         });
+        cmd.data.Inks = [];
+        this._inks.forEach(function(ink){
+            cmd.data.Inks.push(ink.ExportToCmd());
+        });
         cmd.data.audiofileurl = this._audiofileurl;
         return cmd;
     };
@@ -1534,7 +1525,9 @@
         this._spotlights.push(spotlight);
     };
     r2.Annot.prototype.AddInk = function(ink, toupload){
-        this._inks.push(ink);
+        if(ink.segments.length>0){
+            this._inks.push(ink);
+        }
     };
     r2.Annot.prototype.GetAudioFileUrl = function(){
         return r2.util.normalizeUrl(this._audiofileurl);
@@ -1601,7 +1594,7 @@
             this._spotlightsToUpload.push(spotlight);
         }
     };
-    r2.AnnotPrivateSpotlight.prototype.GetCmdsToUpload = function(){
+    r2.AnnotPrivateSpotlight.prototype.getCmdsToUpload = function(){
         if( this.changed &&
             r2App.cur_time-this.timeLastChanged > r2Const.TIMEOUT_PRIVATE_HIGHLIGHT_UPDATE){
 
@@ -1623,13 +1616,46 @@
         this.inks_to_upload = [];
     };
     r2.AnnotStaticInk.prototype = Object.create(r2.Annot.prototype);
-
+    r2.AnnotStaticInk.prototype.ExportToCmd = function(){
+        // time: 2014-12-21T13...
+        // user: 'red user'
+        // op: 'CreateComment'
+        // type: PrivateHighlight
+        // data: {Spotlights: [Spotlight, Spotlight, ...] };
+        var cmd ={};
+        cmd.time = new Date(this.time_last_modified).toISOString();
+        cmd.user = r2.userGroup.cur_user.name;
+        cmd.op = "CreateComment";
+        cmd.type = "StaticInk";
+        cmd.data = {};
+        cmd.data.inks = [];
+        this.inks_to_upload.forEach(function(ink){
+            cmd.data.inks.push(ink.ExportToCmd());
+        });
+        this.inks_to_upload = [];
+        return cmd;
+    };
     r2.AnnotStaticInk.prototype.AddInk = function(ink, to_upload){
         if(ink._t_bgn in this.inks_dict){return;}
+
         this._inks.push(ink);
         this.inks_dict[ink.time] = true;
+
         if(to_upload){
             this.inks_to_upload.push(ink);
+            this.modified = true;
+            this.time_last_modified = r2App.cur_time;
+        }
+    };
+    r2.AnnotStaticInk.prototype.getCmdsToUpload = function(){
+        if( this.modified &&
+            r2App.cur_time-this.time_last_modified > r2Const.TIMEOUT_PRIVATE_HIGHLIGHT_UPDATE){
+
+            this.modified = false;
+            return this.ExportToCmd();
+        }
+        else{
+            return null;
         }
     };
 
@@ -1637,23 +1663,16 @@
      * Ink
      */
     r2.Ink = function(){
-        this._anchorpid = null;
         this._username = '';
-        this._pts = [];
         this._annotid = null;
         this._t_bgn = 0;
         this._t_end = 0;
-
-        this._pts_abs = [];
-        this._bb = new Vec2(0,0);
-
         this.npage = 0;
         this.segments = [];
     };
-    r2.Ink.prototype.SetInk = function(anchorpid, username, _pts, annotid, t_bgn_and_end){
+    r2.Ink.prototype.SetInk = function(anchorpid, username, annotid, t_bgn_and_end){
         this._anchorpid = anchorpid;
         this._username = username;
-        this._pts = _pts;
 
         this._annotid = annotid;
         this._t_bgn = t_bgn_and_end[0];
@@ -1665,39 +1684,26 @@
     r2.Ink.prototype.GetPage = function(){
         return this.npage;
     };
-    r2.Ink.prototype.Relayout = function(piece_pos){
-        if(this._pts.length != this._pts_abs.length){
-            this._pts_abs = [];
-            for(var i = 0; i < this._pts.length; ++i){
-                this._pts_abs.push(this._pts[i].add(piece_pos, true));
-            }
-        }
-        else{
-            for(var i = 0; i < this._pts.length; ++i){
-                this._pts_abs[i] = this._pts[i].add(piece_pos, true);
-            }
-        }
+    r2.Ink.prototype.ExportToCmd = function(){
+        //Ink: {_username: ..., _annotid:..., t_bgn:..., t_end:..., npage: 0, segments: [Segment, Segment, ...]}
+        var cmd = {};
+        cmd.username = this._username;
+        cmd.annotid = this._annotid;
+        cmd.t_bgn = this._t_bgn;
+        cmd.t_end = this._t_end;
+        cmd.npage = this.npage;
+        cmd.segments = [];
+        this.segments.forEach(function(sgmnt){
+            cmd.segments.push(sgmnt.ExportToCmd());
+        });
 
+        cmd.anchorpid = this._anchorpid;
+        return cmd;
+    };
+    r2.Ink.prototype.Relayout = function(piece_pos){
     };
     r2.Ink.prototype.Draw = function(){
-        if(this._pts_abs.length < 2){return;}
-
-        r2.canv_ctx.beginPath();
-        r2.canv_ctx.moveTo(this._pts_abs[0].x, this._pts_abs[0].y);
-        for(var i = 1, l = this._pts_abs.length; i < l; ++i){
-            r2.canv_ctx.lineTo(this._pts_abs[i].x, this._pts_abs[i].y);
-        }
-
-        if(r2App.cur_annot_id != null && r2App.cur_annot_id == this._annotid) {
-            r2.canv_ctx.strokeStyle = r2.userGroup.GetUser(this._username).color_stroke_dynamic_future;
-        }
-        else{
-            r2.canv_ctx.strokeStyle = r2.userGroup.GetUser(this._username).color_dark_html;
-        }
-        r2.canv_ctx.lineWidth = r2Const.INK_WIDTH;
-        r2.canv_ctx.lineCap = 'round';
-        r2.canv_ctx.lineJoin = 'round';
-        r2.canv_ctx.stroke();
+        this.DrawSegments(r2.canv_ctx);
     };
 
     r2.Ink.prototype.drawReplaying = function(canvas_ctx){
@@ -1723,24 +1729,6 @@
                 }
                 canvas_ctx.strokeStyle = r2.userGroup.GetUser(this._username).color_stroke_dynamic_past;
                 canvas_ctx.lineWidth = r2Const.INK_WIDTH * 3;
-                canvas_ctx.lineCap = 'round';
-                canvas_ctx.lineJoin = 'round';
-                canvas_ctx.stroke();
-            }
-        }
-        if(this._pts_abs.length < 2){return;}
-        if(r2App.cur_annot_id != null && r2App.cur_annot_id === this._annotid) {
-            var n = Math.floor(this._pts_abs.length*(r2App.cur_audio_time-this._t_bgn)/(this._t_end-this._t_bgn));
-            n = Math.min(this._pts_abs.length, n);
-            if(n >= 2){
-                canvas_ctx.beginPath();
-                canvas_ctx.moveTo(this._pts_abs[0].x, this._pts_abs[0].y);
-                for(var j = 1; j < n; ++j){
-                    canvas_ctx.lineTo(this._pts_abs[j].x, this._pts_abs[j].y);
-                }
-                canvas_ctx.strokeStyle = r2.userGroup.GetUser(this._username).color_stroke_dynamic_past;
-
-                canvas_ctx.lineWidth = r2Const.INK_WIDTH*3;
                 canvas_ctx.lineCap = 'round';
                 canvas_ctx.lineJoin = 'round';
                 canvas_ctx.stroke();
@@ -1784,6 +1772,7 @@
             segment.smoothing();
         }
     };
+
     /*
     ink segment
      */
@@ -1836,7 +1825,7 @@
         return wasbgn;
     };
     r2.Ink.Segment.prototype.smoothing = function(){
-        this._pts = r2.util.SimplifyStrokeDouglasPuecker(this._pts,0,this._pts.length, 0.00025);
+        this._pts = r2.util.SimplifyStrokeDouglasPuecker(this._pts,0,this._pts.length, 0.001);
     };
     r2.Ink.Segment.prototype.drawReplaying = function(canvas_ctx,wasbgn,cnt){
 
@@ -1864,7 +1853,6 @@
         this._t_bgn = 0;
         this._t_end = 0;
         this._pts = [];
-        this._bb = [];
     };
     r2.Ink.Cache.prototype.setCache = function(annot, t_bgn, t_end, pts){
         this._annot = annot;
@@ -1873,21 +1861,8 @@
         this._pts = pts;
 
         this._user = this._annot.GetUser();
-        var max = new Vec2(Number.MIN_VALUE, Number.MIN_VALUE);
-        var min = new Vec2(Number.MAX_VALUE, Number.MAX_VALUE);
-        for(var i = 0; i < this._pts.length; ++i){
-            var v = this._pts[i];
-            max.x = Math.max(max.x, v.x);
-            max.y = Math.max(max.y, v.y);
-            min.x = Math.min(min.x, v.x);
-            min.y = Math.min(min.y, v.y);
-        }
-        max.x+=r2Const.SPLGHT_WIDTH/2;max.y+=r2Const.SPLGHT_WIDTH/2;
-        min.x-=r2Const.SPLGHT_WIDTH/2;min.y-=r2Const.SPLGHT_WIDTH/2;
-        this._bb = [min, max];
     };
     r2.Ink.Cache.prototype.preRender = function(ctx){
-
         if(this._pts.length == 0){return;}
 
         ctx.beginPath();

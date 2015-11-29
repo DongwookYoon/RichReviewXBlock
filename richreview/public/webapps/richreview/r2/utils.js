@@ -17,7 +17,10 @@
                 if(typeof msg === 'undefined') {
                     msg = 'We caught an invalid operation of the system.';
                 }
-                prompt(msg, s + '\n' + window.location.href);
+                var detail = s + '\n' + window.location.href;
+                console.log(s + '\n' + detail);
+                detail = detail.replace(/(\r\n|\n|\r)/gm,"<n>");
+                prompt(msg, detail);
             }
         };
 

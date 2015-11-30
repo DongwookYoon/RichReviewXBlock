@@ -13,7 +13,7 @@ from scipy.spatial import distance
 import subprocess
 
 
-IMAGE_WIDTH = 768
+IMAGE_WIDTH = 1024
 DPI_TO_PX_RATIO = 72
 HOUGH_THRESHOLD = 175
 HOUGH_THRESHOLD_AFTER_UNDISTORTION = 250
@@ -21,6 +21,7 @@ HOUGH_THETA_THRESHOLD = 30
 HOUGH_THETA_THRESHOLD_AFTER_UNDISTORTION = 10
 RHO_THRESHOLD = 15
 RHO_MERGE_THRESHOLD = 9
+LUMP_DIST_CRITERIA = 5
 
 def getHoughLines(img, hough_threshold):
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
@@ -34,8 +35,21 @@ def getUndistortTransform(img, verbose):
 
     lines = getHoughLines(img, HOUGH_THRESHOLD)
 
+    if verbose:
+        for rho,theta in lines:
+            a = np.cos(theta)
+            b = np.sin(theta)
+            x0 = a*rho
+            y0 = b*rho
+            x1 = int(x0 + 2000*(-b))
+            y1 = int(y0 + 2000*(a))
+            x2 = int(x0 - 2000*(-b))
+            y2 = int(y0 - 2000*(a))
+            cv2.line(img,(x1,y1),(x2,y2),(0,0,255),2)
+
     if len(lines) < 10:
         return np.identity(3)
+
 
     #filter lines by theta
     lines_pts = []
@@ -48,14 +62,14 @@ def getUndistortTransform(img, verbose):
             lines_pts.append(((int(x1),int(y1)),(int(x2),int(y2))))
 
 
+
     X = np.array([[x] for x, y in lines])
     y = np.array([y for x, y in lines])
-
 
     model_ransac = linear_model.RANSACRegressor(
         linear_model.LinearRegression(),
         min_samples=2,
-        residual_threshold=0.005,
+        residual_threshold=0.0005,
         random_state=0)
     model_ransac.fit(X, y)
     inlier_mask = model_ransac.inlier_mask_
@@ -78,12 +92,9 @@ def getUndistortTransform(img, verbose):
     tr = cv2.getPerspectiveTransform(pts_before, pts_after)
 
     if verbose:
-        '''
         for i in xrange(len(lines_pts)):
             pts = lines_pts[i]
             cv2.line(img, pts[0], pts[1], (0,0,255), 0)
-            '''
-
         plt.plot(X[inlier_mask], y[inlier_mask], '.g', label='Inliers')
         plt.plot(X[outlier_mask], y[outlier_mask], '.r', label='Outliers')
         line_X = np.arange(0, 1500)
@@ -110,6 +121,18 @@ def undistort(img, verbose):
     undistorted_img = np.concatenate((img_L, np.fliplr(img_R)), axis=1)
 
     return undistorted_img
+
+def lumpClosePts(l):
+    if len(l) < 2:
+        return l
+    else:
+        dup_indices = [[0]]
+        for i in range(1, len(l)):
+            if abs(l[i-1] - l[i]) > LUMP_DIST_CRITERIA:
+                dup_indices.append([i])
+            else:
+                dup_indices[-1].append(i)
+    return [round(max([l[i] for i in dups]),2) for dups in dup_indices]
 
 def split(img, verbose):
     h, w, cv_img_channel = img.shape
@@ -176,7 +199,13 @@ def split(img, verbose):
                 cv2.line(img,(x1,y1),(x2,y2),(0,255,0),1)
 
         cv2.imshow('undistorted_line', img)
-    return w, h, [-w*0.5/np.tan(theta)+rho/np.sin(theta) for (rho,theta) in lines]
+
+    split_pts = [-w*0.5/np.tan(theta)+rho/np.sin(theta) for (rho,theta) in lines]
+    split_pts.sort()
+
+    split_pts = lumpClosePts(split_pts)
+
+    return w, h, split_pts
 
 def runPage(pdf, n):
     # read the pdf page into bytes array
@@ -208,10 +237,15 @@ def runPage(pdf, n):
 
     cv2.imshow('undistorted', cv_img)
 
-
     structure_data = {}
     structure_data['w'], structure_data['h'], structure_data['split_pts'] = split(cv_img, verbose = False)
-    structure_data['split_pts'].sort()
+
+    lined_img = cv_img.copy()
+    for h in structure_data['split_pts']:
+        h = int(h)
+        cv2.line(lined_img, (0, h), (width, h), (0,0,255), 0)
+
+    cv2.imshow('img', lined_img)
 
     return cv_img, structure_data
 
@@ -222,14 +256,19 @@ def runPdf(path, filename):
     cv2.moveWindow('img', 0, 0)
 
     cv2.namedWindow('undistorted')
-    cv2.moveWindow('undistorted', IMAGE_WIDTH, 0)
+    cv2.moveWindow('undistorted', IMAGE_WIDTH/2, 0)
 
     for n in xrange(0, pdf.getNumPages()):
-        img, structure_data = runPage(pdf, n)
-        print '<page>'
-        print structure_data
-        print '</page>'
-        cv2.imwrite(path+'/'+str(n)+'.jpg', img)
+        try:
+            img, structure_data = runPage(pdf, n)
+            print '<page>'
+            print structure_data
+            print '</page>'
+            cv2.imwrite(path+'/'+str(n)+'.jpg', img)
+        except:
+            print '<page>'
+            print {'error':path + '/' + filename}
+            print '</page>'
 
         key = cv2.waitKey(1)
         if(key == 113):

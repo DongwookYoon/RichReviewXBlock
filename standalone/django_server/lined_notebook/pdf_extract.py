@@ -163,7 +163,7 @@ class Page:
     def setNetId(self, net_id):
         self.net_id = net_id
 
-def Export(pages):
+def Export(pages, submission_id):
     cur_net_id_path = ''
 
     print 'Export'
@@ -185,14 +185,23 @@ def Export(pages):
             param = [
                 convert,
                 Page.getImageDirPath()+'/'+page.net_id+'/*.jpg',
-                Page.getImageDirPath()+'/'+page.net_id+'/merged.pdf'
+                Page.getImageDirPath()+'/'+page.net_id+'/'+submission_id+'.pdf'
             ]
             subprocess.call(param,stdout=subprocess.PIPE)
+
+    for i, page in enumerate(pages):
+        if page.net_id != '':
+            cur_net_id_path = Page.getImageDirPath()+'/'+page.net_id
+            if not os.path.exists(cur_net_id_path):
+                os.makedirs(cur_net_id_path)
+        if not page.to_delete:
+            os.remove(cur_net_id_path+'/'+str(page.n)+'.jpg')
+
 
     print '...done!'
 
 
-def init(filename):
+def init(filename, submission_id):
     NetIdValidator.init(filename)
     pdf = PyPDF2.PdfFileReader(file(filename, "rb"))
     Page.setPdf(pdf, filename)
@@ -225,7 +234,7 @@ def init(filename):
             jump_to_page = raw_input('Jump To Page:')
             cur_page_n = int(jump_to_page)-1
         if key == 113: # <'E'-key>
-            Export(pages)
+            Export(pages, submission_id)
 
 
-init('data/math2220_wk13.pdf')
+init('data/math2220_wk13.pdf', 'assignment1')

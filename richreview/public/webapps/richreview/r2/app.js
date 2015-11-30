@@ -57,10 +57,20 @@
 
             if(r2App.mode == r2App.AppModeEnum.REPLAYING || r2App.mode == r2App.AppModeEnum.IDLE){
                 // upload spotlight cmds
-                var private_spotlight_cmds_to_upload = r2App.annot_private_spotlight.GetCmdsToUpload();
-                if(private_spotlight_cmds_to_upload){
-                    r2Sync.PushToUploadCmd(private_spotlight_cmds_to_upload);
+                var private_spotlight_cmds = r2App.annot_private_spotlight.getCmdsToUpload();
+                if(private_spotlight_cmds){
+                    r2Sync.PushToUploadCmd(private_spotlight_cmds);
                 }
+
+                // upload static ink cmds
+                var annots = r2App.annotStaticInkMgr.getAnnots();
+                annots.forEach(function(annot){
+                    var static_ink_cmds = annot.getCmdsToUpload();
+                    if(static_ink_cmds){
+                        r2Sync.PushToUploadCmd(static_ink_cmds);
+                        console.log(static_ink_cmds);
+                    }
+                });
 
                 // upload and download cmds
                 r2Sync.loop();
@@ -115,7 +125,6 @@
 
             r2App.cur_page.drawBackgroundWhite();
             r2App.cur_page.RunRecursive('DrawPiece');
-            r2App.cur_page.RunRecursive('DrawInk');
             if(r2App.mode !== r2App.AppModeEnum.RECORDING){
                 r2App.cur_page.drawSpotlightPrerendered();
             }
@@ -142,7 +151,7 @@
                     r2App.cur_recording_pieceaudios[r2App.cur_recording_pieceaudios.length-1].DrawPieceDynamic(null, r2.annot_canv_ctx, true); // force
                 }
             }
-            r2.inkCtrl.drawDynamicSceneTraces(r2.annot_canv_ctx);
+            r2.inkCtrl.dynamicScene.draw(r2.annot_canv_ctx);
             r2App.pieceSelector.draw(r2.annot_canv_ctx);
         }
 
@@ -175,7 +184,13 @@
                     r2.resizeWindow({});
 
                     r2.onScreenButtons.Init();
-                    r2.input.setModeDesktop();
+
+                    if(bowser.msedge){
+                        r2.input.setModeTablet();
+                    }
+                    else{
+                        r2.input.setModeDesktop();
+                    }
                     r2.tabletInput.setEventHandlers();
                     return null;
                 }
@@ -369,7 +384,7 @@
 
             var annot_private_spotlight_id = r2.userGroup.cur_user.GetAnnotPrivateSpotlightId();
             r2App.annot_private_spotlight = new r2.AnnotPrivateSpotlight();
-            r2App.annot_private_spotlight.SetAnnot(annot_private_spotlight_id, null, 0, 0, [], r2.userGroup.cur_user.name, "");
+            r2App.annot_private_spotlight.SetAnnot(annot_private_spotlight_id, null, 0, 0, [], r2.userGroup.cur_user.name, '');
             r2App.annots[annot_private_spotlight_id] = r2App.annot_private_spotlight;
 
             r2.booklet.initBooklet();

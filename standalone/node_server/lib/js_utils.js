@@ -146,24 +146,26 @@ exports.LogError = function(where, why){
     console.log('Error from', where, ':', why);
 };
 
-exports.ListFolder = function(path, cb){
-    try {
-        var l = fs.readdirSync(path);
-        var rtn = {files:[], dirs:[]};
-        l.forEach(function (item) {
-            var stats = fs.statSync(path + '/' + item);
-            if(stats.isFile()){
-                rtn.files.push(item);
-            }
-            else if(stats.isDirectory()){
-                rtn.dirs.push(item);
-            }
-        });
-        cb(null, rtn);
-    }
-    catch(err){
-        cb(err);
-    }
+exports.listFolder = function(path){
+    return new Promise(function(resolve, reject){
+        try {
+            var l = fs.readdirSync(path);
+            var rtn = {files:[], dirs:[]};
+            l.forEach(function (item) {
+                var stats = fs.statSync(path + '/' + item);
+                if(stats.isFile()){
+                    rtn.files.push(item);
+                }
+                else if(stats.isDirectory()){
+                    rtn.dirs.push(item);
+                }
+            });
+            resolve(rtn);
+        }
+        catch(err){
+            reject(err);
+        }
+    });
 };
 
 exports.FormatDateTime = function(t){ // t is millisecond from the EPOCH time

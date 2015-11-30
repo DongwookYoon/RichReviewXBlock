@@ -341,10 +341,12 @@ UploadFolderToAzureBlobStorage = function(path, container, blobPrefix, cb){
     azure.svc.createContainerIfNotExists(container, { publicAccessLevel : 'blob' }, function(err, result){
         if(err){cb(err);}
         else{
-            js_utils.ListFolder(path, function(err, result_foldersearch){
-                if(err){cb(err);}
-                else {
-                    if(result_foldersearch.files.length == 0){cb(null, null);}
+            js_utils.listFolder(path).then(
+                function(result_foldersearch){
+                    if(result_foldersearch.files.length == 0){
+                        cb(null, null);
+                        return null;
+                    }
                     else{
                         var job = function(i){
                             azure.svc.createBlockBlobFromLocalFile(
@@ -366,9 +368,10 @@ UploadFolderToAzureBlobStorage = function(path, container, blobPrefix, cb){
                             );
                         };
                         job(0);
+                        return null;
                     }
                 }
-            });
+            );
         }
     });
 };

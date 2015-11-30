@@ -271,7 +271,7 @@ var r2Ctrl = {};
             }
             else if(r2App.mode === r2App.AppModeEnum.IDLE || r2App.mode === r2App.AppModeEnum.REPLAYING) {
                 if(mode === PenMode.MANIPULATION){
-                    if(new_pen_pt.y > pos_dn.y + 0.05){
+                    if(new_pen_pt.y > pos_dn.y + 0.05 || new_pen_pt.y < pos_dn.y - 0.05){
                         mode = PenMode.TEARING;
                         cur_piece_tearing = createPieceTeared();
                     }
@@ -279,7 +279,7 @@ var r2Ctrl = {};
                 if(mode === PenMode.TEARING){
                     if(cur_piece_tearing){
                         var new_height = new_pen_pt.y-cur_piece_tearing.pos.y;
-                        if(new_height > 0.05){
+                        if(new_height >= 0){
                             cur_piece_tearing.resize(new_height);
                             r2.dom_model.updateSizeTextTearing(cur_piece_tearing);
                             r2App.invalidate_page_layout = true;

@@ -326,7 +326,7 @@
                     if(segments.length > 0){
                         var n_total_pts = segments.reduce(function(sum, item){return sum+item.GetNumPts();}, 0);
 
-                        var t_step = (Ink.t_end-Ink.t_bgn)/n_total_pts;
+                        var t_step = (Ink._t_end-Ink._t_bgn)/n_total_pts;
 
                         var segment = segments[0];
                         var cache_tbgn = Ink._t_bgn;
@@ -335,18 +335,7 @@
 
                         for(var j = 1; j < segments.length; ++j){
                             segment = segments[j];
-                            if(!r2.Piece.prototype.isTheSameOrAdjecent(segment.GetPieceId(),cache_pid)){
-                                cache = new r2.Ink.Cache();
-                                var t_end_segment = cache_tbgn + cache_pts.length*t_step;
-                                cache.setCache(
-                                    annot,
-                                    cache_tbgn,
-                                    t_end_segment,
-                                    cache_pts);
-                                this._Ink_cache.push(cache);
-                                cache_pts = [];
-                                cache_tbgn = t_end_segment;
-                            }
+
                             cache_pid = segment.GetPieceId();
                             cache_pts = cache_pts.concat(segment.CopyPtsWithOffset(r2App.pieces_cache[segment.GetPieceId()].pos));
                         }
@@ -361,9 +350,9 @@
                 }
             }
         }
-        r2.InkRenderer.setCanvCtx(r2.viewCtrl.page_width_noscale, this.size.y/this.size.x);
+
         for(i = 0; Ink = this._Ink_cache[i]; ++i){
-            Ink.preRender(r2.InkRenderer.getCanvCtx()); // ctx, ratio
+            Ink.preRender(r2.canv_ctx); // ctx, ratio
         }
     };
 

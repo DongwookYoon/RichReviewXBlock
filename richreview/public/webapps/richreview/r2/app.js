@@ -21,6 +21,12 @@
                     r2App.cur_page.Relayout();
                     r2App.invalidate_page_layout = false;
                     console.log('invalidate_page_layout');
+                    var cur_view = document.getElementById("r2_view");
+                    if(cur_view) {
+                        cur_view.scrollTop += r2.dom_model.toscroll;
+                        r2.dom_model.toscroll=0;
+                    }
+
                 }
 
                 if(r2App.invalidate_size){

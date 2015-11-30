@@ -187,8 +187,12 @@ var r2Ctrl = {};
         var pos_writing = new Vec2(0, 0);
         var pos_splight = new Vec2(0, 0);
         var cur_piece_tearing = null;
-
-
+        pub_pn.getPenPos = function(){
+            return pos_dn;
+        };
+        pub_pn.isPenDown = function(){
+            return cur_dn;
+        };
         pub_pn.dn = function(event){
             dn(event);
         };
@@ -926,7 +930,7 @@ var r2Ctrl = {};
                 if(cur_recording_Ink_segment){
                     cur_recording_Ink_segment = null;
                 }
-
+                r2App.cur_page.refreshInkPrerender();
                 cur_recording_Ink_pt = null;
                 cur_recording_Ink = null;
                 r2App.invalidate_dynamic_scene = true;

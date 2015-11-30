@@ -321,9 +321,11 @@
                 $comment.append($piece);
                 if (r2App.cur_recording_anchor_piece) {
 
-                    var record_place = r2App.cur_recording_anchor_piece.pos.y;
-                    if (r2.pen.isPenDown() && r2.pen.getPenPos().y > record_place) {
-
+                    var record_place = r2App.cur_recording_anchor_piece.pos;
+                    if (r2.pen.isPenDown() && r2.pen.getPenPos().y > record_place.y ) {
+                        if(!pub.toscroll){
+                            pub.toscroll = 0;
+                        }
                         pub.toscroll += $piece[0].offsetHeight;
                     }
                 }

@@ -293,6 +293,7 @@
             }
             else{ // change height it exist
                 r2App.pieces_cache[cmd.data.pid].resize(cmd.data.height);
+                r2.dom_model.updateSizeTextTearing(r2App.pieces_cache[cmd.data.pid]);
                 return true;
             }
 

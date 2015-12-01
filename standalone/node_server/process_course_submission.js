@@ -560,7 +560,7 @@ exports.run = function(course_id, submission_id){
         }
     ).then(
         function(subs){
-            var download = false; // download or upload
+            var download = true; // download or upload
             var pdf_process = false;
             //var uploader_mode = uploader.Mode.UploadPdfToR2Repo;
             //var uploader_mode = uploader.Mode.UploadPdfToCrsRepo;

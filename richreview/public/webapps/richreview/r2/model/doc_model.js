@@ -687,6 +687,17 @@
         this._t_dr_w = 1;
         this._t_dr_h = 1;
         this._t_pdf_w = 1;
+
+        // parameters for preview renderer
+        this._preview_t_src_x = 0;
+        this._preview_t_src_y = 0;
+        this._preview_t_src_w = 1;
+        this._preview_t_src_h = 1;
+        this._preview_t_dr_x = 0;
+        this._preview_t_dr_y = 0;
+        this._preview_t_dr_w = 1;
+        this._preview_t_dr_h = 1;
+        this._preview_t_pdf_w = 1;
     };
     r2.PieceText.prototype = Object.create(r2.Piece.prototype);
 
@@ -732,12 +743,34 @@
         this._t_dr_h = this._t_src_h/this._t_pdf_w;
     };
 
+    r2.PieceText.prototype.SetPreviewPdf = function(canvas_size){
+        this._preview_t_pdf_w = canvas_size.x;
+
+        this._preview_t_src_x = Math.floor(this._texCoordLT.x * canvas_size.x);
+        this._preview_t_src_y = Math.floor((1.0-this._texCoordLT.y) * canvas_size.y);
+        this._preview_t_src_w = Math.floor((this._cnt_size.x) * this._preview_t_pdf_w);
+        this._preview_t_src_h = Math.floor((this._cnt_size.y) * this._preview_t_pdf_w + 1);
+
+        this._preview_t_dr_x = Math.floor(this.pos.x * this._preview_t_pdf_w)/this._preview_t_pdf_w;
+        this._preview_t_dr_y = Math.floor(this.pos.y * this._preview_t_pdf_w)/this._preview_t_pdf_w;
+        this._preview_t_dr_w = this._preview_t_src_w/this._preview_t_pdf_w;
+        this._preview_t_dr_h = this._preview_t_src_h/this._preview_t_pdf_w;
+    };
+
+
     r2.PieceText.prototype.DrawPiece = function(){
         var canv = r2.pdfRenderer.GetCanvas(this.GetNumPage());
         if(canv){
             r2.canv_ctx.drawImage(canv,
                 this._t_src_x, this._t_src_y, this._t_src_w, this._t_src_h,
                 this._t_dr_x, this._t_dr_y, this._t_dr_w, this._t_dr_h);
+        }
+
+        var preview_canv = r2.pdfRenderer.GetPreviewCanvas(this.GetNumPage());
+        if(preview_canv){
+            r2.preview_canv_ctx.drawImage(preview_canv,
+                this._preview_t_src_x, this._preview_t_src_y, this._preview_t_src_w, this._preview_t_src_h,
+                this._preview_t_dr_x, this._preview_t_dr_y, this._preview_t_dr_w, this._preview_t_dr_h);
         }
     };
 

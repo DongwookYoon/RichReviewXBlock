@@ -9,6 +9,26 @@ var r2Ctrl = {};
 /** @namespace r2 */
 (function(r2){
 
+    /* cookie helper functions */
+    r2.setCookie = (function(cname, cvalue, exdays) {
+        var d = new Date();
+        d.setTime(d.getTime() + (exdays*24*60*60*1000));
+        var expires = "expires="+d.toUTCString();
+        document.cookie = cname + "=" + cvalue + "; " + expires;
+    });
+
+    r2.getCookie = (function(cname) {
+        var name = cname + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0; i<ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1);
+            if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
+        }
+         return "";
+    });
+
+
     /* input mode */
     r2.input = (function(){
         var pub = {};
@@ -20,6 +40,7 @@ var r2Ctrl = {};
         var cursor_in_menu = false;
 
         pub.setModeDesktop = function(){
+            r2.setCookie("inputMode", "desktop", 10);
             mode = InpuMode.DESKTOP;
 
             $('#btn-input-set-mode-desktop').toggleClass('btn-primary', true);
@@ -31,6 +52,8 @@ var r2Ctrl = {};
             r2.tabletInput.off();
         };
         pub.setModeTablet = function(){
+            $('.tc_page').clone(true).appendTo('#r2_content_preview');
+            r2.setCookie("inputMode", "tablet", 10);
             mode = InpuMode.TABLET;
             $('#btn-input-set-mode-desktop').toggleClass('btn-primary', false);
             $('#btn-input-set-mode-desktop').toggleClass('btn-default', true);

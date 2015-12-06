@@ -625,8 +625,8 @@ a:active {
   position: absolute;
   right: 20px;
   top: 20px;
-  width: 250px;
-  height: 54px;
+  width: 300px;
+  height: 254px;
   font-size: 50px;
   color: rgba(33, 150, 243, 1.0);
   text-align: center;
@@ -1058,4 +1058,14 @@ body::-webkit-scrollbar-corner {
 
 .rm_btn_center > i {
   font-size: 0.30em;
+}
+
+#r2_content_preview {
+  width: 150px;
+  height: 200px;
+  z-index: 7;
+  position: relative;
+  left: 75px;
+  right: 50px;   
+  background-color: rgba(31, 190, 242, 0.2);
 }

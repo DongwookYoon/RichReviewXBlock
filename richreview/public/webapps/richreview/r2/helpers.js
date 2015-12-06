@@ -897,8 +897,8 @@
     r2.pdfRenderer = (function(){
         var pub = {};
 
-        var canvs = []; // {dom:, ctx:, t:, npage:}
-        var pages = []; // {pdf:, viewport:, ncanv:}
+        var canvs = []; // {dom:, ctx:, preview_dom:, preview_ctx:, t:, npage:}
+        var pages = []; // {pdf:, viewport:, preview_viewport, ncanv:}
         var npage_render = {now: -1, next: -1};
 
         pub.initPdfRenderer = function(pdf_doc){
@@ -908,13 +908,18 @@
                         try{
                             var canv_w = 0;
                             var canv_h = 0;
+                            var preview_canv_w = 0;
+                            var preview_canv_h = 0;
 
                             pages = $.map($(new Array(pdf_pages.length)),
                                 function(val, i){
                                     var pdf = pdf_pages[i];
+                                    var preview_pdf = pdf_pages[i];
                                     var page = {
                                         pdf: pdf,
+                                        preview_pdf: preview_pdf,
                                         viewport: pdf.getViewport( r2.viewCtrl.page_width_noscale / (pdf.pageInfo.view[2]-pdf.pageInfo.view[0])),
+                                        preview_viewport: preview_pdf.getViewport( r2.viewCtrl.preview_page_width_noscale / (preview_pdf.pageInfo.view[2]-preview_pdf.pageInfo.view[0])),
                                         ncanv:-1
                                     };
 
@@ -926,7 +931,16 @@
                                     canv_w = Math.max(canv_w, sz.x);
                                     canv_h = Math.max(canv_h, sz.y);
 
-                                    r2App.doc.GetPage(i).RunRecursive('SetPdf', [sz]);
+                                    var preview_sz = new Vec2(
+                                        Math.floor(page.preview_viewport.width*r2.viewCtrl.hdpi_ratio.sx),
+                                        Math.floor(page.preview_viewport.height*r2.viewCtrl.hdpi_ratio.sy)
+                                    );
+
+                                    preview_canv_w = Math.max(preview_canv_w, preview_sz.x);
+                                    preview_canv_h = Math.max(preview_canv_h, preview_sz.y);
+
+                                    r2App.doc.GetPage(i).RunRecursive('SetPdf', [sz]/*, [preview_sz]*/);
+                                    r2App.doc.GetPage(i).RunRecursive('SetPreviewPdf', [preview_sz]);
 
                                     return page;
                                 }
@@ -939,14 +953,25 @@
                                     dom.width = canv_w;
                                     dom.height = canv_h;
                                     ctx.scale(r2.viewCtrl.hdpi_ratio.sx, r2.viewCtrl.hdpi_ratio.sy);
+
+                                    // parameters for preview canvas
+                                    var preview_dom = document.getElementById('r2_content_preview');
+                                    var preview_ctx = preview_dom.getContext('2d');
+                                    preview_dom.width = preview_canv_w;
+                                    preview_dom.height = preview_canv_h;
+                                    preview_ctx.scale(r2.viewCtrl.hdpi_ratio.sx, r2.viewCtrl.hdpi_ratio.sy);
+
                                     return {
                                         dom: dom,
                                         ctx: ctx,
+                                        preview_dom: preview_dom, 
+                                        preview_ctx: preview_ctx,
                                         t: (new Date()).getTime(),
                                         npage:-1
                                     };
                                 }
                             );
+
                             resolve(pdf_doc);
                         }
                         catch (err){
@@ -956,6 +981,7 @@
 
                 }
             );
+            console.log('init pdf render finished');
         };
 
         /**
@@ -971,6 +997,21 @@
                 ScheduleRender(n_page);
                 return null;
             }
+        };
+
+        pub.GetPreviewCanvas = function(n_page) {
+            var n_canv = pages[n_page].ncanv;
+            if(n_canv != -1){
+                canvs[n_canv].t = (new Date()).getTime();
+                return canvs[n_canv].preview_dom;
+            }
+            return null;
+            /*
+            else{
+                ScheduleRender(n_page);
+                return null;
+            }
+            */
         };
 
         function GetPdfPage(pdf_doc){
@@ -1026,21 +1067,36 @@
                 viewport: pages[n_page].viewport
             };
 
+            var preview_ctx = {
+                canvasContext: canvs[n_canv].preview_ctx,
+                viewport: pages[n_page].preview_viewport
+            };
 
             ShowRenderingIndicator();
             canvs[n_canv].ctx.clearRect(0, 0, canvs[n_canv].dom.width/r2.viewCtrl.hdpi_ratio.sx, canvs[n_canv].dom.height/r2.viewCtrl.hdpi_ratio.sy);
             pages[n_page].pdf.render(ctx).then(function(){
-                HideRenderingIndicator();
-                if(npage_render.next != -1){
-                    var npage_to_render = npage_render.next;
-                    npage_render.next = -1;
-                    Render(npage_to_render);
-                }
-                else{
-                    npage_render.now = -1;
-                }
-                r2App.invalidate_static_scene = true;
+                // render the pdf in the preview area
+                console.log('start the preview render');
+                canvs[n_canv].preview_ctx.clearRect(0, 0, canvs[n_canv].preview_dom.width/r2.viewCtrl.hdpi_ratio.sx, canvs[n_canv].preview_dom.height/r2.viewCtrl.hdpi_ratio.sy);
+                console.log('finished clear rect of preview canvas');
+                pages[n_page].preview_pdf.render(preview_ctx).then(function(){
+                    HideRenderingIndicator();
+                    if(npage_render.next != -1){
+                        var npage_to_render = npage_render.next;
+                        npage_render.next = -1;
+                        console.log('render other pages');
+                        Render(npage_to_render);
+                    }
+                    else{
+                        console.log('dont render other pages');
+                        npage_render.now = -1;
+                    }
+                    r2App.invalidate_static_scene = true;
+                    console.log('finished rendering the preview canvas');
+                });
             });
+
+            console.log('all done');
         }
 
 
@@ -1316,12 +1372,14 @@
         pub.scale = 1;
 
         pub.page_width_noscale = 128;
+        pub.preview_page_width_noscale = 20;
         pub.page_margins = {left: 0.0, rght: 0.0};
         pub.page_size_scaled = Vec2(0.0, 0.0);
 
         var app_container_size = new Vec2(128, 128);
 
         pub.canv_px_size = new Vec2(128, 128);
+        pub.preview_canv_px_size = new Vec2(20, 20);
         pub.hdpi_ratio = {
             sx: 1.0,
             sy: 1.0,
@@ -1401,6 +1459,7 @@
         var view;
         var content;
         var page_canvas;
+        var preview_page_canvas;
         var annot_canvas;
         var overlay_container;
 
@@ -1417,6 +1476,7 @@
             view = document.getElementById("r2_view");
             content = document.getElementById("r2_content");
             page_canvas = document.getElementById("r2_page_canvas");
+            preview_page_canvas = document.getElementById("r2_content_preview");
             annot_canvas = document.getElementById("r2_annot_canvas");
             overlay_container = document.getElementById("overlay_container");
 
@@ -1471,6 +1531,10 @@
         pub.getPageCanvCtx = function(){
             return page_canvas.getContext('2d');
         };
+
+        pub.getPreviewPageCanvCtx = function(){
+            return preview_page_canvas.getContext('2d');
+        }
 
         pub.getAnnotCanvCtx = function(){
             return annot_canvas.getContext('2d');

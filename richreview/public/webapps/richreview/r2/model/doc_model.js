@@ -26,6 +26,10 @@
             child.RunRecursive(func_name, args);
         }
     };
+    r2.Obj.prototype.RunOneTime = function(func_name, args){
+        if(typeof this[func_name] !== 'undefined')
+            this[func_name].apply(this, args);
+    };
     r2.Obj.prototype.AddChildAtBack = function(obj){
         obj.SetParent(this);
         this.child.push(obj);
@@ -766,13 +770,16 @@
                 this._t_dr_x, this._t_dr_y, this._t_dr_w, this._t_dr_h);
         }
 
+    };
+
+    r2.PieceText.prototype.DrawPreviewPiece = function(){
         var preview_canv = r2.pdfRenderer.GetPreviewCanvas(this.GetNumPage());
         if(preview_canv){
             r2.preview_canv_ctx.drawImage(preview_canv,
                 this._preview_t_src_x, this._preview_t_src_y, this._preview_t_src_w, this._preview_t_src_h,
                 this._preview_t_dr_x, this._preview_t_dr_y, this._preview_t_dr_w, this._preview_t_dr_h);
         }
-    };
+    }
 
 
     /*

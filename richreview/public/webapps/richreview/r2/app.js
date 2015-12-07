@@ -128,10 +128,11 @@
         /** draws the scene */
         function drawStaticScene() {
             initCanvasCtx(r2.canv_ctx);
-            initPreviewCanvasCtx(r2.preview_canv_ctx);
+            //initPreviewCanvasCtx(r2.preview_canv_ctx);
 
             r2App.cur_page.drawBackgroundWhite();
             r2App.cur_page.RunRecursive('DrawPiece');
+            r2App.cur_page.RunOneTime('DrawPreviewPiece');
             if(r2App.mode !== r2App.AppModeEnum.RECORDING){
                 r2App.cur_page.drawSpotlightPrerendered();
             }

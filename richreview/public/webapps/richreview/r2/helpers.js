@@ -1372,14 +1372,14 @@
         pub.scale = 1;
 
         pub.page_width_noscale = 128;
-        pub.preview_page_width_noscale = 20;
+        pub.preview_page_width_noscale = 16;
         pub.page_margins = {left: 0.0, rght: 0.0};
         pub.page_size_scaled = Vec2(0.0, 0.0);
 
         var app_container_size = new Vec2(128, 128);
 
         pub.canv_px_size = new Vec2(128, 128);
-        pub.preview_canv_px_size = new Vec2(20, 20);
+        pub.preview_canv_px_size = new Vec2(16, 16);
         pub.hdpi_ratio = {
             sx: 1.0,
             sy: 1.0,

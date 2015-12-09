@@ -7,7 +7,7 @@ function loadRichReview(r2_ctx) {
         r2.platform = 'Azure';
         r2.scroll_wrapper = document.getElementById('r2_app_page');
         r2.ctx = JSON.parse(decodeURIComponent(r2_ctx));
-
+        warnIE();
         loadJsScript("/static_viewer/load.js", "js").then(
             getWebAppUrls
         ).then(
@@ -16,6 +16,21 @@ function loadRichReview(r2_ctx) {
             }
         );
     }(window.r2 = window.r2 || {}));
+}
+
+function warnIE(){
+    var old_ie = -1; // Return value assumes failure.
+    if (navigator.appName == 'Microsoft Internet Explorer')
+    {
+        var ua = navigator.userAgent;
+        var re  = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
+        if (re.exec(ua) != null)
+            old_ie = parseFloat( RegExp.$1 );
+    }
+    var ie11 = /rv:11.0/i.test(navigator.userAgent);
+    if(old_ie != -1 || ie11 ){ // detect ie
+        alert('RichReview works best with Chrome, Firefox, Safari, or MS Edge browsers! Sorry, but there might be some glitches with the browser you are using now.');
+    }
 }
 
 var loadJsScript = function(url, type){

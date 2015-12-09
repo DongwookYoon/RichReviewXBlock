@@ -52,9 +52,6 @@
             $('#'+annot_id_esc).remove();
         };
 
-        pub.relayoutPage = function(){
-        };
-
         /* submodule for data loading bgn */
         var loader = (function(){
             var pub_loader = {};
@@ -127,7 +124,6 @@
 
             return pub_loader;
         }());
-
 
         pub.createBodyText = function($tight_col, piece_text){
             var $comment = appendPieceGroup($tight_col, 'tc_comment_text');

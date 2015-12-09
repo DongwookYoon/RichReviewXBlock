@@ -541,7 +541,11 @@
              */
             this.GetAnnotPrivateSpotlightId = function(){
                 return 'private_highlight_'+this.name;
-            }
+            };
+
+            this.GetAnnotStaticInkId = function(){
+                return 'static_ink_'+this.name;
+            };
         };
 
         pub.Set = function(groupdata){
@@ -608,6 +612,7 @@
             }
             if(!users.hasOwnProperty(name)){
                 users[name] = new R2User(name, nick, email, color, isguest);
+                r2App.annotStaticInkMgr.addNewUser(users[name]);
 
                 if(!isguest) {
                     var div = document.createElement("div");
@@ -636,6 +641,7 @@
 
         pub.SetCurUser = function(name){
             pub.cur_user = users[name];
+            r2App.annotStaticInkMgr.setCurUser(pub.cur_user);
         };
 
         /**

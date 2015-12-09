@@ -28,16 +28,6 @@
          */
         pub.checkEnv = function(){
             return new Promise(function(resolve, reject){
-                /*
-                if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                    reject(new Error(
-                        "RichReviewWebApp WebApp does not support mobile platform yet.\n"+
-                        "Please try again in a desktop or laptop browser."));
-                }
-                else if(!bowser.chrome){
-                    reject(new Error(
-                        "RichReviewWebApp only supports the Chrome browser."));
-                }*/
                 resolve();
             });
         };

@@ -19,14 +19,14 @@
 
                 if(r2App.invalidate_page_layout){
                     r2App.cur_page.Relayout();
-                    r2.dom_model.relayoutPage();
                     r2App.invalidate_page_layout = false;
+                    console.log('invalidate_page_layout');
                 }
 
                 if(r2App.invalidate_size){
                     r2.resizeWindow();
-                    r2App.cur_page.Relayout();
                     r2App.invalidate_size = false;
+                    console.log('invalidate_size');
                 }
 
                 if(r2App.invalidate_static_scene){
@@ -57,10 +57,20 @@
 
             if(r2App.mode == r2App.AppModeEnum.REPLAYING || r2App.mode == r2App.AppModeEnum.IDLE){
                 // upload spotlight cmds
-                var private_spotlight_cmds_to_upload = r2App.annot_private_spotlight.GetCmdsToUpload();
-                if(private_spotlight_cmds_to_upload){
-                    r2Sync.PushToUploadCmd(private_spotlight_cmds_to_upload);
+                var private_spotlight_cmds = r2App.annot_private_spotlight.getCmdsToUpload();
+                if(private_spotlight_cmds){
+                    r2Sync.PushToUploadCmd(private_spotlight_cmds);
                 }
+
+                // upload static ink cmds
+                var annots = r2App.annotStaticInkMgr.getAnnots();
+                annots.forEach(function(annot){
+                    var static_ink_cmds = annot.getCmdsToUpload();
+                    if(static_ink_cmds){
+                        r2Sync.PushToUploadCmd(static_ink_cmds);
+                        console.log(static_ink_cmds);
+                    }
+                });
 
                 // upload and download cmds
                 r2Sync.loop();
@@ -115,9 +125,9 @@
 
             r2App.cur_page.drawBackgroundWhite();
             r2App.cur_page.RunRecursive('DrawPiece');
-            r2App.cur_page.RunRecursive('DrawInk');
-
-            r2App.cur_page.drawSpotlightPrerendered();
+            if(r2App.mode !== r2App.AppModeEnum.RECORDING){
+                r2App.cur_page.drawSpotlightPrerendered();
+            }
             r2App.cur_page.drawInkPrerendered();
         }
 
@@ -141,8 +151,7 @@
                     r2App.cur_recording_pieceaudios[r2App.cur_recording_pieceaudios.length-1].DrawPieceDynamic(null, r2.annot_canv_ctx, true); // force
                 }
             }
-            r2.spotlightCtrl.drawDynamicSceneTraces(r2.annot_canv_ctx);
-            r2.inkCtrl.drawDynamicSceneTraces(r2.annot_canv_ctx);
+            r2.inkCtrl.dynamicScene.draw(r2.annot_canv_ctx);
             r2App.pieceSelector.draw(r2.annot_canv_ctx);
         }
 
@@ -175,7 +184,13 @@
                     r2.resizeWindow({});
 
                     r2.onScreenButtons.Init();
-                    r2.input.setModeDesktop();
+
+                    if(bowser.msedge){
+                        r2.input.setModeTablet();
+                    }
+                    else{
+                        r2.input.setModeDesktop();
+                    }
                     r2.tabletInput.setEventHandlers();
                     return null;
                 }
@@ -199,15 +214,31 @@
         };
 
         function checkPlatform(){
-            if(r2.ctx["pmo"] == ""){ // pass mobile is not set
-                if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            return new Promise(function(resolve, reject){
+                var is_mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                var is_supported_browser = bowser.chrome || bowser.firefox || bowser.safari || bowser.msedge;
+                if(is_mobile) {
                     r2.coverMsg.Show([
-                        "RichReviewWebApp does not support mobile platform yet.",
-                        "Please try again in a desktop or laptop browser."
+                        'Sorry! RichReview does not support mobile platform yet.',
+                        'Please try again on your laptop or desktop.'
                     ]);
-                    throw new Error("RichReviewWebApp does not support mobile platform yet.");
+                    var err = new Error('unsupported mobile access');
+                    err.silent = true;
+                    reject(err);
                 }
-            }
+                else if(!is_supported_browser){
+                    r2.coverMsg.Show([
+                        'Sorry! RichReview only supports Chrome, Firefox, Safari, or MS Edge browsers.',
+                        "But you are using something else..."
+                    ]);
+                    var err = new Error('unsupported browser');
+                    err.silent = true;
+                    reject(err);
+                }
+                else{
+                    resolve();
+                }
+            });
         }
 
         function initAudioPlayer(){
@@ -233,7 +264,7 @@
                     r2.coverMsg.Show([""]);
                 }
             ).catch(
-                function (){
+                function (err){
                     r2.coverMsg.Show([
                         "Failed to set up your mic. Please check the following:",
                         "1. Your machine's mic is working.",
@@ -242,7 +273,6 @@
                         "And, in the Media -> Manage exceptions..., remove blocks of microphone resources to our website.",
                         "If nothing helps, please report this to the manager (dy252@cornell.edu). Thank you."
                     ]);
-                    throw new Error("Failed to set up your mic.");
                 }
             );
         }
@@ -354,7 +384,7 @@
 
             var annot_private_spotlight_id = r2.userGroup.cur_user.GetAnnotPrivateSpotlightId();
             r2App.annot_private_spotlight = new r2.AnnotPrivateSpotlight();
-            r2App.annot_private_spotlight.SetAnnot(annot_private_spotlight_id, null, 0, 0, [], r2.userGroup.cur_user.name, "");
+            r2App.annot_private_spotlight.SetAnnot(annot_private_spotlight_id, null, 0, 0, [], r2.userGroup.cur_user.name, '');
             r2App.annots[annot_private_spotlight_id] = r2App.annot_private_spotlight;
 
             r2.booklet.initBooklet();

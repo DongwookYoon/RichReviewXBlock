@@ -20,6 +20,11 @@
                 elem.onload = resolve;
                 elem.onerror = function(){reject(new Error("Cannot load a resource file:" + url));};
                 document.getElementsByTagName('head')[0].appendChild(elem);
+
+                /* Adding the following application tag to help screenreader navigation to be bypassed 
+                   Role=application causes screen reader not to intercept the keystrokes */
+                var body = document.getElementsByTagName('body')[0] || document.body;
+                body.setAttribute("role","application");
             }
             else{
                 reject(new Error("Cannot load a resource file:" + url));

@@ -1243,8 +1243,8 @@
         this.dom = document.createElement('div');
         this.dom.classList.toggle('r2_piecekeyboard', true);
         this.dom.classList.toggle('unselectable', true);
-        this.dom.setAttribute('aria-label', 'text comment');
-        this.dom.setAttribute('role', 'article');
+        this.dom.setAttribute('aria-label', 'This is a text comment');
+        //this.dom.setAttribute('role', 'article');
 
         this.dom_tr = document.createElement('div');
         this.dom_tr.classList.toggle('r2_peicekeyboard_tr', true);

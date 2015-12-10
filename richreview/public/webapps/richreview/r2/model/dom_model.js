@@ -49,8 +49,118 @@
 
         pub.remove = function(annot_id){
             var annot_id_esc = r2.util.escapeDomId(annot_id);
+            var parentPiece=$('#'+annot_id_esc).parent('.tc_piece');
             $('#'+annot_id_esc).remove();
+            pub.updateCommentCount(parentPiece);   
+            pub.updateusercount(parentPiece);
         };
+
+        pub.updateCommentInformation = function($target,owner){            
+            var ownerText = "Owner is " + owner + '$';
+            var savedText = $target.attr('aria-label');
+            var newText;
+            var docElement="";
+            if(savedText){                             
+                var index = savedText.indexOf('$',savedText.indexOf('$')+1);
+                var metadata = "";
+                if(index!=-1){                    
+                     metadata = savedText.substring(0,index);  
+                     console.log("metadata:" , metadata);                  
+                     docElement = savedText.substring(index+1); 
+                     newText = ownerText + metadata + docElement;                                      
+                }else{
+                   newText = ownerText + savedText; 
+                } 
+            }else{
+                newText = ownerText;
+            }            
+            $target.attr('aria-label', newText);
+        }; 
+
+        pub.updateCommentCount = function($parentPiece){
+            var newCountKeyboard = 0;
+            var newCountVoice = 0;
+            var Ownedkeyboard = 0;
+            if($parentPiece){
+                var parent = $parentPiece.parent('.tc_piecegroup');
+                if(parent){
+                    var savedText = parent.attr('aria-label');
+                    var newText = "";
+                    var ownerinfo ="";
+                    var metadata = "";
+                    var docElement= "";
+                    if(savedText){                                                
+                        var index = savedText.indexOf('$');
+                        if(index!=-1){
+                            ownerinfo = savedText.substring(0,index);
+                            newText = savedText.substring(index+1);
+                            index = newText.indexOf('$');
+                            if(index!=-1){
+                                metadata = newText.substring(0,index);
+                                docText = newText.substring(index+1);
+                            }else{
+                                docText = newText;
+                            }
+                        }else{                            
+                            docText = savedText;
+                        }                        
+                    }
+                    var updatedMetaData="";
+                    newCountKeyboard = $parentPiece.children('.tc_piecegroup.tc_comment_keyboard').length;
+                    if(newCountKeyboard > 0){
+                        updatedMetaData = 'It has ' + newCountKeyboard + ' text comment';
+                    }
+                    newCountVoice = $parentPiece.children('.tc_piecegroup.tc_comment_voice').length;
+                    if(newCountVoice>0){
+                        if(newCountKeyboard>0){
+                            updatedMetaData = updatedMetaData + ' and ' + newCountVoice + ' voice comment';                            
+                        }else{
+                            updatedMetaData = 'It has ' + newCountVoice + 'voice comment';
+                        }                                                   
+                    }
+                    var finaltext = ownerinfo + '$' + updatedMetaData + '$' + docText;
+                    parent.attr('aria-label',finaltext);
+                }
+            }
+        };
+
+        pub.updateusercount = function($parentPiece){
+                var savedText = "";
+                var newText = "";
+                var comment_parent = $parentPiece.parent();
+                var cur_user = r2.userGroup.GetUser(r2.userGroup.cur_user.name);
+                while(comment_parent){
+                    if(comment_parent.is('.tc_piecegroup.tc_comment_text')){
+                        break;
+                    }
+                    else{
+                        comment_parent = comment_parent.parent();
+                    }
+                }
+                if(comment_parent){
+                    var totalChild=comment_parent.children().children('[aria-label*="'+ cur_user.nick +'"]');
+                    var savedText = comment_parent.attr('aria-label');
+                    var curUsertext ="";
+                    var metadoc="";
+                    if(savedText){
+                        var index=savedText.indexOf('$');
+                        if(index >= 0){
+                            curUsertext = savedText.substring(0,index-1);
+                            metadoc = savedText.substring(index+1);
+                        }else{
+                            metadoc = savedText;
+                        }
+                    }
+                    if(totalChild.length > 0){                        
+                        var curUsertext = 'You Own '+ totalChild.length + ' comments within this text';
+                        metadoc = curUsertext + '$' + metadoc;
+                    }else{
+                        metadoc = '$' + metadoc;
+                    }
+
+                    comment_parent.attr('aria-label',metadoc);
+                }
+        };           
 
         /* submodule for data loading bgn */
         var loader = (function(){
@@ -128,7 +238,7 @@
         pub.createBodyText = function($tight_col, piece_text){
             var $comment = appendPieceGroup($tight_col, 'tc_comment_text');
             $comment.attr('aria-label', typeof piece_text.GetPieceText() === 'string' ? piece_text.GetPieceText() : 'empty texts');
-            $comment.attr('role', 'document');
+            //$comment.attr('role', 'document');
             var $piece = $(document.createElement('div'));
             $piece.toggleClass('tc_piece', true);
 
@@ -164,7 +274,7 @@
             if(dom_anchor){
                 var $comment = appendPieceGroup($anchor, 'tc_comment_texttearing');
                 $comment.attr('aria-label', 'whitespace');
-                $comment.attr('role', 'document');
+                //$comment.attr('role', 'document');
                 var id = piece_teared.GetId();
 
                 var $piece = $(document.createElement('div'));
@@ -211,9 +321,11 @@
             if(dom_anchor){
                 var $comment = appendPieceGroup($anchor, 'tc_comment_voice');
                 $comment.attr('id', annot_id_esc);
-                $comment.attr('aria-label', 'voice comment');
-                $comment.attr('role', 'article');
+                $comment.attr('aria-label', 'This is a voice comment');
+                //$comment.attr('role', 'article');
                 $anchor.children().first().after($comment);
+                pub.updateCommentInformation($comment,user.nick);
+                pub.updateusercount($anchor);                
 
                 { /* add menu */
                     var rm_ratio = getCommentRmRatio($comment);
@@ -333,7 +445,8 @@
             var dom_anchor = $anchor.get(0);
             if(dom_anchor){
                 var $comment = appendPieceGroup($anchor, 'tc_comment_keyboard');
-                $comment.attr('id', annot_id_esc);
+                $comment.attr('id', annot_id_esc);                
+                pub.updateCommentInformation($comment,user.nick);
                 var $piece = $(document.createElement('div'));
                 $piece.toggleClass('tc_piece', true);
                 $piece.attr('id', pid);
@@ -352,6 +465,7 @@
                 $dom_piecekeyboard.toggleClass('tc_piece_keyboard', true);
                 $dom_piecekeyboard.css('width', dom_anchor.pp.w*r2Const.FONT_SIZE_SCALE+'em');
                 $comment.append($piece);
+                pub.updateusercount($anchor);
 
                 {/* add menu */
                     var rm_ratio = getPieceRmRatio($piece);
@@ -412,6 +526,9 @@
             pub.focusCtrl.setFocusable($comment);
 
             $target.append($comment);
+            if($target.is('.tc_piece')){
+                pub.updateCommentCount($target);
+            }
             return $comment;
         };
 

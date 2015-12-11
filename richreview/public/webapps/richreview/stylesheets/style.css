@@ -1061,12 +1061,8 @@ body::-webkit-scrollbar-corner {
 }
 
 #r2_content_preview {
+  z-index: 10;
   
-  width: 150px;
-  height: 200px;
-  z-index: 7;
-  /*position: relative;*/
-  left: 75px;
   right: 50px;   
   background-color: rgba(31, 190, 242, 0.2);
 }

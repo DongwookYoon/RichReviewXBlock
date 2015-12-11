@@ -939,6 +939,9 @@
                                     preview_canv_w = Math.max(preview_canv_w, preview_sz.x);
                                     preview_canv_h = Math.max(preview_canv_h, preview_sz.y);
 
+                                    console.log("canv_w " + canv_w + "canv_h " + canv_h);
+                                    console.log("preview_canv_w " + preview_canv_w + "preview_canv_h " + preview_canv_h);
+
                                     r2App.doc.GetPage(i).RunRecursive('SetPdf', [sz]/*, [preview_sz]*/);
                                     r2App.doc.GetPage(i).RunRecursive('SetPreviewPdf', [preview_sz]);
 
@@ -1394,6 +1397,7 @@
             app_container_size = _app_container_size;
 
             pub.page_width_noscale = app_container_size.x-40;
+            pub.preview_page_width_noscale = pub.page_width_noscale / 8.0;
 
             pub.page_size_scaled = Vec2(pub.scale*pub.page_width_noscale, pub.scale*pub.page_width_noscale*view_ratio);
 

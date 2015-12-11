@@ -116,7 +116,6 @@
         <i class="fa fa-eye"></i>
         <p><b>Observer Mode</b> </br> You are not a member of this group, </br>and your comments will not be saved.</p>
         <canvas id="r2_content_preview" class="preview"></canvas>
-        
     </div>
     <div id="uploading_indicator">
         <span id="uploading_indicator_stack" class="fa-stack" >
@@ -125,6 +124,7 @@
     </div>
     <div id="cheatsheet"></div>
     <div id="booklet_nav"></div>
+    <!--<canvas id="r2_content_preview" class="preview"></canvas> -->
 </div>
 <div id="r2_view" class="unselectable">
     <div id="r2_content">

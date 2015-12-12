@@ -766,6 +766,10 @@
             return goToPage(groups[cur_groupn].cur_pagen + 1);
         };
 
+        pub.goToPageIndex = function(index) {
+            return goToPage(index);
+        }
+
         var getBookletData = function(){
             // some hardcoded pieces for experiments
             var bookletjs;
@@ -988,7 +992,7 @@
 
                 }
             );
-            renderPreview();
+            //renderPreview();
             console.log('init pdf render finished');
         };
 
@@ -1023,12 +1027,45 @@
             */
         };
 
+
+        function renderPreviewPdf(cur_index, max_index) {
+            if (cur_index < 0 || cur_index > max_index) return;
+            console.log('started page ' + cur_index);
+            var preview_ctx = {
+                canvasContext: canvs[cur_index].preview_ctx,
+                viewport: pages[cur_index].preview_viewport
+            };
+
+            canvs[cur_index].preview_ctx.clearRect(0, 0, canvs[cur_index].preview_dom.width/r2.viewCtrl.hdpi_ratio.sx, canvs[cur_index].preview_dom.height/r2.viewCtrl.hdpi_ratio.sy);
+
+            pages[cur_index].preview_pdf.render(preview_ctx).then(function() {
+                console.log('finished page ' + cur_index);
+                canvs[cur_index].preview_dom.id = 'pdf_preview_' + cur_index;
+                canvs[cur_index].preview_dom.className = 'r2_preview';  
+                //canvs[cur_index].preview_dom.onclick = 'r2.booklet.goToPage(' + cur_index + ')';
+            }).then(function() {
+                var thumbnail = document.getElementById('r2_thumbnail');
+                thumbnail.appendChild(canvs[cur_index].preview_dom);
+
+                var cur_preview = document.getElementById('pdf_preview_' + cur_index);
+                cur_preview.onclick = function() {r2.booklet.goToPageIndex(cur_index);};
+            }).then(function() {
+                if (cur_index != max_index) {
+                    renderPreviewPdf(cur_index+1, max_index);
+                }
+            });
+        }
+
         function RenderPreview() {
 
-            console.log('start the preview render');
-            var n_canv = 0;
-            var thumbnail = document.getElementById('r2_thumbnail');
+            console.log('RenderPreview started');
+            //var n_canv = 0;
+            //var thumbnail = document.getElementById('r2_thumbnail');
             console.log('canvs length is ' + canvs.length)
+            if (canvs.length <= 0) return; 
+            renderPreviewPdf(0, canvs.length-1);
+            console.log('RenderPreview finished');
+            /*
             for (; n_canv < canvs.length; n_canv ++) {
                 console.log('n_canv ' + n_canv);
                 var preview_ctx = {
@@ -1045,9 +1082,11 @@
                     canvs[cur_canv].preview_dom.className = 'r2_preview';
 
                     // attach preview_dom to thumbnail
+                    thumbnail = document.getElementById('r2_thumbnail');
                     thumbnail.appendChild(canvs[cur_canv].preview_dom);
                 });
             }
+            */
         };
 
         function GetPdfPage(pdf_doc){
@@ -1434,8 +1473,8 @@
 
             app_container_size = _app_container_size;
 
-            pub.page_width_noscale = (app_container_size.x-40)*0.8;
-            pub.preview_page_width_noscale = pub.page_width_noscale / 6.0;
+            pub.page_width_noscale = (app_container_size.x-40)*0.75;
+            pub.preview_page_width_noscale = pub.page_width_noscale / 7.0;
 
             pub.page_size_scaled = Vec2(pub.scale*pub.page_width_noscale, pub.scale*pub.page_width_noscale*view_ratio);
 

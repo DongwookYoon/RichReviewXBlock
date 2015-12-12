@@ -41,7 +41,7 @@ The virtual machine is now ready. Let's ssh into the guest machine:
 
     vagrant ssh
 
-## Installing Libraries in Guest Machine
+## Install Libraries in Guest Machine
 git, Node.js, npm, and Django are required to run RichReview server Let's install'em:
 
     sudo apt-get update
@@ -80,14 +80,20 @@ Before running the system you will need the following files under **RichReviewXB
 * **google_open_id.json** - Google OpenID Connect credential
 * **azure_keys.json** - Azure Blob Storage access keys
 
-Why do you need these? Firstly, the **.crt** and **.key** files are for the standard SSL authentication. Secondly, we authenticates RichReview users with Google OpenID Connect authentication, and **google_open_id.json** is for this OAuth credential. You can simply generate your own at [Google Developers Console](https://console.developers.google.com/project). Remember that the login redirection is to *'/login-oauth2-return'*. Finally, **azure_keys.json** has JSON dictionary for Azure datastorage accesskeys. 'blob_storage_key' key has an access key for the Azure Blob Storage (see [how to get the key](http://justazure.com/azure-blob-storage-part-two-getting-started/)), and 'sql_key_tedious' key has a 'tedious' login information for the Azure SQL datastorage (see an [example](https://github.com/pekim/tedious/wiki/Connect-to-sql-in-azure)).
+Why do we need these? Firstly, the **.crt** and **.key** files are for the standard SSL authentication. Secondly, we authenticates RichReview users with Google OpenID Connect authentication, and **google_open_id.json** is for this OAuth credential. You can simply generate your own at [Google Developers Console](https://console.developers.google.com/project). Remember that the login redirection is to *'/login-oauth2-return'*. Finally, **azure_keys.json** has JSON dictionary for Azure datastorage accesskeys. 'blob_storage_key' key has an access key for the Azure Blob Storage (see [how to get the key](http://justazure.com/azure-blob-storage-part-two-getting-started/)), and 'sql_key_tedious' key has a 'tedious' login information for the Azure SQL datastorage (see an [example](https://github.com/pekim/tedious/wiki/Connect-to-sql-in-azure)).
 
 # Run
 
 This is the easiest part. Change your directory to **/RichReviewXBlock/standalone/node_server/www** and run **www**!
-> node www
 
-In the host machine, open a browser and check ‘localhost:8001’:
+    node www
+
+In the host machine, open a browser and check ‘**localhost:8001**’.
+
+The Node.js server will do most jobs except a part of the upload features. If you want to upload your own PDF files, you need to run the Django server together:
+
+    cd /RichReviewXBlock/standalone/django_server
+    python manager.py runserver 5000
 
 ## License
 The code in this repository is licensed under the AGPL license unless otherwise noted.

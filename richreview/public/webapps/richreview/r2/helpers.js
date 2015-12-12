@@ -900,6 +900,9 @@
         var canvs = []; // {dom:, ctx:, preview_dom:, preview_ctx:, t:, npage:}
         var pages = []; // {pdf:, viewport:, preview_viewport, ncanv:}
         var npage_render = {now: -1, next: -1};
+        var firstTimeRender = true;
+
+
 
         pub.initPdfRenderer = function(pdf_doc){
             return GetPdfPage(pdf_doc).then(
@@ -958,7 +961,8 @@
                                     ctx.scale(r2.viewCtrl.hdpi_ratio.sx, r2.viewCtrl.hdpi_ratio.sy);
 
                                     // parameters for preview canvas
-                                    var preview_dom = document.getElementById('r2_content_preview');
+                                    //var preview_dom = document.getElementById('r2_content_preview');
+                                    var preview_dom = document.createElement('canvas');
                                     var preview_ctx = preview_dom.getContext('2d');
                                     preview_dom.width = preview_canv_w;
                                     preview_dom.height = preview_canv_h;
@@ -984,8 +988,10 @@
 
                 }
             );
+            renderPreview();
             console.log('init pdf render finished');
         };
+
 
         /**
          * @returns {*}
@@ -1015,6 +1021,33 @@
                 return null;
             }
             */
+        };
+
+        function RenderPreview() {
+
+            console.log('start the preview render');
+            var n_canv = 0;
+            var thumbnail = document.getElementById('r2_thumbnail');
+            console.log('canvs length is ' + canvs.length)
+            for (; n_canv < canvs.length; n_canv ++) {
+                console.log('n_canv ' + n_canv);
+                var preview_ctx = {
+                    canvasContext: canvs[n_canv].preview_ctx,
+                    viewport: pages[n_canv].preview_viewport
+                };
+                var cur_canv = n_canv;
+                
+                canvs[n_canv].preview_ctx.clearRect(0, 0, canvs[n_canv].preview_dom.width/r2.viewCtrl.hdpi_ratio.sx, canvs[n_canv].preview_dom.height/r2.viewCtrl.hdpi_ratio.sy);
+                
+                pages[n_canv].preview_pdf.render(preview_ctx).then(function(){
+                    console.log('currrent canv number is ' + cur_canv);
+                    canvs[cur_canv].preview_dom.id = 'pdf_preview_' + (cur_canv + 1);
+                    canvs[cur_canv].preview_dom.className = 'r2_preview';
+
+                    // attach preview_dom to thumbnail
+                    thumbnail.appendChild(canvs[cur_canv].preview_dom);
+                });
+            }
         };
 
         function GetPdfPage(pdf_doc){
@@ -1060,6 +1093,11 @@
         }
 
         function Render(n_page){
+            if (firstTimeRender) {
+                firstTimeRender = false;
+                RenderPreview();
+            }
+
             npage_render.now = n_page;
             var n_canv = GetAvailableCanv();
 
@@ -1079,10 +1117,10 @@
             canvs[n_canv].ctx.clearRect(0, 0, canvs[n_canv].dom.width/r2.viewCtrl.hdpi_ratio.sx, canvs[n_canv].dom.height/r2.viewCtrl.hdpi_ratio.sy);
             pages[n_page].pdf.render(ctx).then(function(){
                 // render the pdf in the preview area
-                console.log('start the preview render');
-                canvs[n_canv].preview_ctx.clearRect(0, 0, canvs[n_canv].preview_dom.width/r2.viewCtrl.hdpi_ratio.sx, canvs[n_canv].preview_dom.height/r2.viewCtrl.hdpi_ratio.sy);
-                console.log('finished clear rect of preview canvas');
-                pages[n_page].preview_pdf.render(preview_ctx).then(function(){
+                //console.log('start the preview render');
+                //canvs[n_canv].preview_ctx.clearRect(0, 0, canvs[n_canv].preview_dom.width/r2.viewCtrl.hdpi_ratio.sx, canvs[n_canv].preview_dom.height/r2.viewCtrl.hdpi_ratio.sy);
+                //console.log('finished clear rect of preview canvas');
+                //pages[n_page].preview_pdf.render(preview_ctx).then(function(){
                     HideRenderingIndicator();
                     if(npage_render.next != -1){
                         var npage_to_render = npage_render.next;
@@ -1096,7 +1134,7 @@
                     }
                     r2App.invalidate_static_scene = true;
                     console.log('finished rendering the preview canvas');
-                });
+                //});
             });
 
             console.log('all done');
@@ -1396,8 +1434,8 @@
 
             app_container_size = _app_container_size;
 
-            pub.page_width_noscale = app_container_size.x-40;
-            pub.preview_page_width_noscale = pub.page_width_noscale / 8.0;
+            pub.page_width_noscale = (app_container_size.x-40)*0.8;
+            pub.preview_page_width_noscale = pub.page_width_noscale / 6.0;
 
             pub.page_size_scaled = Vec2(pub.scale*pub.page_width_noscale, pub.scale*pub.page_width_noscale*view_ratio);
 

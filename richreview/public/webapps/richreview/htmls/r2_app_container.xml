@@ -115,7 +115,7 @@
     <div id="observer_indicator">
         <i class="fa fa-eye"></i>
         <p><b>Observer Mode</b> </br> You are not a member of this group, </br>and your comments will not be saved.</p>
-        <canvas id="r2_content_preview" class="preview"></canvas>
+        <!--<canvas id="r2_content_preview" class="preview" style="display:none;"></canvas>-->
     </div>
     <div id="uploading_indicator">
         <span id="uploading_indicator_stack" class="fa-stack" >
@@ -133,4 +133,7 @@
         <canvas id="r2_annot_canvas"></canvas>
         <div id="onscrbtns"></div>
     </div>
+</div>
+<div id="r2_thumbnail">
+    <canvas id="r2_content_preview" class="preview" style="display:none;"></canvas>
 </div>

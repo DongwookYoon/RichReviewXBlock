@@ -19,13 +19,24 @@
 }
 
 #r2_view {
-  width: 100%;
+  width: 80%;
   position: relative;
   bottom: 0;
-
+  float: left;
   overflow: auto;
   text-align: center;
   background: dimgray;
+}
+
+#r2_thumbnail {
+  width: 20%;
+  position: relative;
+  bottom: 0;
+  float: left;
+  overflow: auto;
+  text-align: center;
+  background: #A0A0A0;
+
 }
 
 
@@ -1061,8 +1072,11 @@ body::-webkit-scrollbar-corner {
 }
 
 #r2_content_preview {
+  z-index: 10;   
+  background-color: rgba(31, 190, 242, 0.2);
+}
+
+.r2_preview {
   z-index: 10;
-  
-  right: 50px;   
   background-color: rgba(31, 190, 242, 0.2);
 }

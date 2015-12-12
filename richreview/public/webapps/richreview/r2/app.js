@@ -132,7 +132,7 @@
 
             r2App.cur_page.drawBackgroundWhite();
             r2App.cur_page.RunRecursive('DrawPiece');
-            r2App.cur_page.RunOneTime('DrawPreviewPiece');
+            //r2App.cur_page.RunOneTime('DrawPreviewPiece');
             if(r2App.mode !== r2App.AppModeEnum.RECORDING){
                 r2App.cur_page.drawSpotlightPrerendered();
             }

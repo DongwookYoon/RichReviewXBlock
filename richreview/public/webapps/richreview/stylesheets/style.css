@@ -19,7 +19,7 @@
 }
 
 #r2_view {
-  width: 75%;
+  width: 74.5%;
   position: relative;
   bottom: 0;
   float: left;
@@ -50,7 +50,7 @@
 }
 
 #r2_page_canvas {
-  width: 100%;
+  width: 95%;
   height: 100%;
   z-index: 1;
   pointer-events: none;
@@ -1075,9 +1075,20 @@ body::-webkit-scrollbar-corner {
 #r2_content_preview {
   z-index: 10;   
   background-color: rgba(31, 190, 242, 0.2);
+  overflow: auto;
 }
+
+#dragbar{
+   background-color:black;
+   height:100%;
+   float:  left;
+   width: 0.5%;
+   cursor: col-resize;
+}
+
 
 .r2_preview {
   z-index: 10;
   background-color: rgba(31, 190, 242, 0.2);
+  overflow: auto;
 }

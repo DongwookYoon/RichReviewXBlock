@@ -134,6 +134,7 @@
         <div id="onscrbtns"></div>
     </div>
 </div>
+<div id="dragbar" draggable="true" ondragstart="r2.dragStart(event)" ondragend="r2.dragEnd(event)"></div>
 <div id="r2_thumbnail">
     <canvas id="r2_content_preview" class="preview" style="display:none;"></canvas>
 </div>

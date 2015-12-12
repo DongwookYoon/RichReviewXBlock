@@ -28,6 +28,53 @@ var r2Ctrl = {};
          return "";
     });
 
+    /*
+    r2.drag = (function() {
+        console.log("enter r2.drag");
+        var dragging = false;
+
+        $('#dragbar').mousedown(function(e) {
+            //e.preventDefault();
+            console.log("drag bar mouse down");
+            dragging = true;
+        });
+
+        $('#dragbar').mouseup(function(e) {
+            if (dragging) {
+                console.log("drag resize");
+                var app_container_size = r2.viewCtrl.getAppContainerSize();
+                var left_percentage = (e.pageX / (app_container_size - 40)) * 100;
+                var right_percentage = 100 - left_percentage;
+                $('#r2_view').css("width", left_percentage + "%");
+                $('#r2_thumbnail').css("width", right_percentage + "%");
+                dragging = false;
+            }
+        });
+
+    }());
+    */
+    r2.dragging = false;
+
+    r2.dragStart = (function(event) {
+        console.log("drag enter");
+        r2.dragging = true;
+    });
+
+    r2.dragEnd = (function(event) {
+        console.log("drag leave");
+        if (r2.dragging) {
+            var app_container_size = r2.viewCtrl.getAppContainerSize();
+            console.log("event x " + event.pageX + " app size " + app_container_size.x);
+            var left_percentage = (event.pageX / (app_container_size.x - 40)) * 100;
+            var right_percentage = 99.5 - left_percentage;
+            console.log('left percentage ' + left_percentage + 'right_percentage ' + right_percentage);
+            $('#r2_view').css("width", left_percentage + "%");
+            $('#r2_thumbnail').css("width", right_percentage + "%");
+            r2.dragging = false;
+        }
+    });
+
+
 
     /* input mode */
     r2.input = (function(){

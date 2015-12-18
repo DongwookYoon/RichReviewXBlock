@@ -55,6 +55,11 @@
             function getR2RgnFromPageJs(rgnjs, page_bbox, npage, nrgn){
                 var region = new r2.Region();
                 for(var i = 0; i < rgnjs.rects.length; i ++){
+                    if(rgnjs.ttX === null && rgnjs.ttW === null){
+                        var w = rgnjs.rects[0][2]-rgnjs.rects[0][0];
+                        rgnjs.ttX = 0.1*w;
+                        rgnjs.ttW = 0.8*w;
+                    }
                     var piecetext = getR2PieceTextFromPageJs(rgnjs.rects[i], page_bbox, npage, nrgn, i, rgnjs.ttX, rgnjs.ttW);
                     region.AddChildAtBack(piecetext);
                 }
@@ -317,7 +322,6 @@
             var anchorpage = doc.GetPage(cmd.anchorTo.page);
             var anchorpiece = getAnchorPiece(anchorpage, cmd);
 
-
             if(anchorpiece){
                 var annot = new r2.Annot();
                 annot.SetAnnot(cmd.data.aid, anchorpiece.GetId(), cmd.time, cmd.data.duration, cmd.data.waveform_sample, cmd.user, cmd.data.audiofileurl);
@@ -434,6 +438,7 @@
             var anchorpage = doc.GetPage(cmd.anchorTo.page);
 
             var anchorpiece = getAnchorPiece(anchorpage, cmd);
+
             if(anchorpiece && !cmd.data.isprivate){
                 var piecekeyboard = new r2.PieceKeyboard();
                 piecekeyboard.SetPiece(
@@ -448,6 +453,7 @@
                 anchorpiece.AddChildrenChronologically([piecekeyboard]);
                 return true;
             }
+
             return false;
         };
 

@@ -48,119 +48,109 @@
         };
 
         pub.remove = function(annot_id){
-            var annot_id_esc = r2.util.escapeDomId(annot_id);
+            var annot_id_esc = r2.util.escapeDomId(annot_id);                      
             var parentPiece=$('#'+annot_id_esc).parent('.tc_piece');
             $('#'+annot_id_esc).remove();
-            pub.updateCommentCount(parentPiece);   
-            pub.updateusercount(parentPiece);
-        };
-
-        pub.updateCommentInformation = function($target,owner){            
-            var ownerText = "Owner is " + owner + '$';
-            var savedText = $target.attr('aria-label');
-            var newText;
-            var docElement="";
-            if(savedText){                             
-                var index = savedText.indexOf('$',savedText.indexOf('$')+1);
-                var metadata = "";
-                if(index!=-1){                    
-                     metadata = savedText.substring(0,index);  
-                     console.log("metadata:" , metadata);                  
-                     docElement = savedText.substring(index+1); 
-                     newText = ownerText + metadata + docElement;                                      
-                }else{
-                   newText = ownerText + savedText; 
-                } 
-            }else{
-                newText = ownerText;
-            }            
-            $target.attr('aria-label', newText);
+            pub.updateCommentInfo(parentPiece);
         }; 
 
-        pub.updateCommentCount = function($parentPiece){
-            var newCountKeyboard = 0;
-            var newCountVoice = 0;
-            var Ownedkeyboard = 0;
-            if($parentPiece){
-                var parent = $parentPiece.parent('.tc_piecegroup');
-                if(parent){
-                    var savedText = parent.attr('aria-label');
-                    var newText = "";
-                    var ownerinfo ="";
-                    var metadata = "";
-                    var docElement= "";
-                    if(savedText){                                                
-                        var index = savedText.indexOf('$');
-                        if(index!=-1){
-                            ownerinfo = savedText.substring(0,index);
-                            newText = savedText.substring(index+1);
-                            index = newText.indexOf('$');
-                            if(index!=-1){
-                                metadata = newText.substring(0,index);
-                                docText = newText.substring(index+1);
-                            }else{
-                                docText = newText;
-                            }
-                        }else{                            
-                            docText = savedText;
-                        }                        
-                    }
-                    var updatedMetaData="";
-                    newCountKeyboard = $parentPiece.children('.tc_piecegroup.tc_comment_keyboard').length;
-                    if(newCountKeyboard > 0){
-                        updatedMetaData = 'It has ' + newCountKeyboard + ' text comment';
-                    }
-                    newCountVoice = $parentPiece.children('.tc_piecegroup.tc_comment_voice').length;
-                    if(newCountVoice>0){
-                        if(newCountKeyboard>0){
-                            updatedMetaData = updatedMetaData + ' and ' + newCountVoice + ' voice comment';                            
-                        }else{
-                            updatedMetaData = 'It has ' + newCountVoice + 'voice comment';
-                        }                                                   
-                    }
-                    var finaltext = ownerinfo + '$' + updatedMetaData + '$' + docText;
-                    parent.attr('aria-label',finaltext);
+        pub.updateCommentInfo = function(anchor){                       
+            var cur_user =r2.userGroup.cur_user.name;
+            var cur_user_nickname = r2.userGroup.cur_user.nick;
+            var keyboardCommentCount = anchor.children('.tc_comment_keyboard').length;
+            var voiceCommentCount = anchor.children('.tc_comment_voice').length;
+            var totalCount = keyboardCommentCount + voiceCommentCount;            
+            var parentPiece = anchor.parent();            
+            if( parentPiece.is('.tc_piecegroup.tc_comment_text')){
+                currentUserCommentCount=0;
+                var keyboardComments = anchor.children('.tc_comment_keyboard');
+                var VoiceComments = anchor.children('.tc_comment_voice');                
+                for(var i= 0 ; i< keyboardComments.length; i++) {                   
+                    var keyboardCommentUserId =anchor.children('.tc_comment_keyboard:eq('+ i +')').children('.tc_piece:eq(0)').children('.tc_piece_keyboard:eq(0)').attr('userid');
+                    if(keyboardCommentUserId == cur_user){
+                        currentUserCommentCount= currentUserCommentCount+1;
+                    }                  
                 }
-            }
-        };
+                for(var i = 0 ; i < VoiceComments.length; i++) {                   
+                    var voiceCommentUserId =anchor.children('.tc_comment_voice:eq('+ i +')').attr('userid');                    
+                   if(voiceCommentUserId == cur_user){
+                        currentUserCommentCount= currentUserCommentCount+1;
+                    }                 
+                }
 
-        pub.updateusercount = function($parentPiece){
-                var savedText = "";
-                var newText = "";
-                var comment_parent = $parentPiece.parent();
-                var cur_user = r2.userGroup.GetUser(r2.userGroup.cur_user.name);
-                while(comment_parent){
-                    if(comment_parent.is('.tc_piecegroup.tc_comment_text')){
-                        break;
-                    }
-                    else{
-                        comment_parent = comment_parent.parent();
-                    }
-                }
-                if(comment_parent){
-                    var totalChild=comment_parent.children().children('[aria-label*="'+ cur_user.nick +'"]');
-                    var savedText = comment_parent.attr('aria-label');
-                    var curUsertext ="";
-                    var metadoc="";
-                    if(savedText){
-                        var index=savedText.indexOf('$');
-                        if(index >= 0){
-                            curUsertext = savedText.substring(0,index-1);
-                            metadoc = savedText.substring(index+1);
-                        }else{
-                            metadoc = savedText;
+                var textContent = parentPiece.attr('aria-label');                
+                if(currentUserCommentCount > 0){
+                    var metadata = "You have " + currentUserCommentCount + " comment";
+                    if(keyboardCommentCount > 0){
+                        metadata = metadata + " out of " + keyboardCommentCount + " text comment";
+                        if(voiceCommentCount > 0){
+                            metadata = metadata + " and "+ voiceCommentCount + " voice comment.";
+                        }
+                        else{
+                            metadata = metadata + ".";
                         }
                     }
-                    if(totalChild.length > 0){                        
-                        var curUsertext = 'You Own '+ totalChild.length + ' comments within this text';
-                        metadoc = curUsertext + '$' + metadoc;
-                    }else{
-                        metadoc = '$' + metadoc;
+                    else if(voiceCommentCount > 0){
+                        metadata = metadata + " out of "+ voiceCommentCount + " voice comment.";
                     }
+                    
+                } else{ 
+                    if(keyboardCommentCount > 0){
+                        metadata = keyboardCommentCount + " text comment";
+                        if(voiceCommentCount > 0){
+                            metadata = metadata + " and "+ voiceCommentCount + " voice comment.";
+                        }
+                        else{
+                            metadata = metadata + ".";
+                        }
+                    }
+                    else if(voiceCommentCount > 0){
+                        metadata = voiceCommentCount + " voice comment.";
+                    }                   
 
-                    comment_parent.attr('aria-label',metadoc);
                 }
-        };           
+
+                if(textContent.indexOf(' comment.') >=0){
+                    textContent=textContent.substring(textContent.indexOf(' comment.')+ 9);
+                }
+                var finaltext = "";
+                if(metadata){
+                    finaltext = metadata + textContent;
+                } else{
+                    finaltext = textContent;
+                }
+                parentPiece.attr('aria-label', finaltext);
+            }else if( parentPiece.is('.tc_piecegroup.tc_comment_keyboard') || parentPiece.is('.tc_piecegroup.tc_comment_voice')){                
+                var keyboardComments = anchor.children('.tc_comment_keyboard');
+                var VoiceComments = anchor.children('.tc_comment_voice');
+                var currentCommentOwner="";
+                var commentType="";
+                if (parentPiece.is('.tc_piecegroup.tc_comment_keyboard')) {
+                    currentCommentOwner = r2.userGroup.GetUser(anchor.children('.tc_piece_keyboard').attr('userid')).nick; 
+                    commentType="Text comment";                    
+                }
+                else{                    
+                    currentCommentOwner = r2.userGroup.GetUser(parentPiece.attr('userid')).nick;
+                    commentType="Voice comment";
+                }                
+                var metadata = commentType + " by "+ currentCommentOwner;
+                if(keyboardCommentCount > 0){
+                    metadata = metadata + " having " + keyboardCommentCount + " text comment";
+                    if(voiceCommentCount > 0){
+                        metadata = metadata + " and "+ voiceCommentCount + " voice comment.";
+                    }else{
+                        metadata = metadata + ".";
+                    }
+                }else if(voiceCommentCount > 0){
+                    metadata = metadata + " having "+ voiceCommentCount + " voice comment.";
+                }else {                                      
+                    metadata = metadata + ".";
+                }            
+                var finaltext = metadata;
+                parentPiece.attr('aria-label', finaltext);
+                
+            }
+        }
 
         /* submodule for data loading bgn */
         var loader = (function(){
@@ -298,7 +288,6 @@
                 $content.width(dom_anchor.pp.w*r2Const.FONT_SIZE_SCALE+'em');
                 $content[0].dom_model = piece_teared;
                 $piece.append($content);
-
                 $comment.append($piece);
                 $anchor.children().first().after($comment);
                 return true;
@@ -312,7 +301,7 @@
         };
 
         pub.createCommentVoice = function(annot, pagen, live_recording){
-            var user = r2.userGroup.GetUser(annot.GetUsername());
+            var user = r2.userGroup.GetUser(annot.GetUsername());            
             var annot_id = annot.GetId();
             var annot_id_esc = r2.util.escapeDomId(annot_id);
 
@@ -321,11 +310,11 @@
             if(dom_anchor){
                 var $comment = appendPieceGroup($anchor, 'tc_comment_voice');
                 $comment.attr('id', annot_id_esc);
-                $comment.attr('aria-label', 'This is a voice comment');
+                $comment.attr('aria-label', 'voice comment');
                 //$comment.attr('role', 'article');
+                $comment.attr('userid', user.name);                
                 $anchor.children().first().after($comment);
-                pub.updateCommentInformation($comment,user.nick);
-                pub.updateusercount($anchor);                
+                pub.updateCommentInfo($anchor);
 
                 { /* add menu */
                     var rm_ratio = getCommentRmRatio($comment);
@@ -392,7 +381,7 @@
                     $comment.prepend($rm);
                 }
 
-
+                pub.updateCommentInfo($anchor);
                 return true;
             }
             return false;
@@ -431,6 +420,7 @@
 
                 $piece.append($content);
                 $comment.append($piece);
+                pub.updateCommentInfo($piece);
             }
         };
 
@@ -446,7 +436,6 @@
             if(dom_anchor){
                 var $comment = appendPieceGroup($anchor, 'tc_comment_keyboard');
                 $comment.attr('id', annot_id_esc);                
-                pub.updateCommentInformation($comment,user.nick);
                 var $piece = $(document.createElement('div'));
                 $piece.toggleClass('tc_piece', true);
                 $piece.attr('id', pid);
@@ -460,13 +449,13 @@
                     dom_anchor.pp.tt_w
                 );
 
-                $piece.append($dom_piecekeyboard);
+                $piece.append($dom_piecekeyboard);                
                 $dom_piecekeyboard.toggleClass('tc_content', true);
-                $dom_piecekeyboard.toggleClass('tc_piece_keyboard', true);
+                $dom_piecekeyboard.toggleClass('tc_piece_keyboard', true); 
                 $dom_piecekeyboard.css('width', dom_anchor.pp.w*r2Const.FONT_SIZE_SCALE+'em');
                 $comment.append($piece);
-                pub.updateusercount($anchor);
-
+                pub.updateCommentInfo($piece);
+                
                 {/* add menu */
                     var rm_ratio = getPieceRmRatio($piece);
                     var rm_size = rm_ratio*0.00063;
@@ -510,6 +499,7 @@
                 }
 
                 $anchor.children().first().after($comment);
+                pub.updateCommentInfo($anchor);
                 return true;
             }
             return false;
@@ -526,8 +516,8 @@
             pub.focusCtrl.setFocusable($comment);
 
             $target.append($comment);
-            if($target.is('.tc_piece')){
-                pub.updateCommentCount($target);
+             if($target.is('.tc_piece')){
+                pub.updateCommentInfo($target);
             }
             return $comment;
         };

@@ -1239,12 +1239,13 @@
             page: this.GetNumPage()
         };
     };
-    r2.PieceKeyboard.prototype.CreateDom = function(){
+    r2.PieceKeyboard.prototype.CreateDom = function(){       
         this.dom = document.createElement('div');
         this.dom.classList.toggle('r2_piecekeyboard', true);
         this.dom.classList.toggle('unselectable', true);
         this.dom.setAttribute('aria-label', 'text comment');
-        this.dom.setAttribute('role', 'article');
+        this.dom.setAttribute('userid',this._username);
+        //this.dom.setAttribute('role', 'article');
 
         this.dom_tr = document.createElement('div');
         this.dom_tr.classList.toggle('r2_peicekeyboard_tr', true);
@@ -1254,7 +1255,7 @@
         this.dom_pre = document.createElement('pre');
         this.dom_pre.classList.toggle('r2_piecekeyboard_pre', true);
         this.dom_pre.classList.toggle('unselectable', true);
-        this.dom_pre.setAttribute('aria-hidden', true);
+        //this.dom_pre.setAttribute('aria-hidden', true);
 
         this.dom_span = document.createElement('span');
         this.dom_span.classList.toggle('unselectable', true);
@@ -1300,6 +1301,9 @@
                         r2Sync.PushToUploadCmd(this.ExportToTextChange());
                         this.__contentschanged = false;
                     }
+                    if(this._username != r2.userGroup.cur_user.name) {                        
+                        this.dom_textarea.setAttribute('aria-label',"");
+                    }
                 }.bind(this));
                 $(this.dom_textarea).focus(function() {
                     console.log('>>>>focusin');
@@ -1308,7 +1312,9 @@
                             r2.userGroup.GetUser(this._username).color_piecekeyboard_private_box_shadow :
                             r2.userGroup.GetUser(this._username).color_piecekeyboard_box_shadow;
                     this.dom_textarea.style.boxShadow = "0 0 0.2em "+color+" inset, 0 0 0.2em "+color;
-                    if(this._username == r2.userGroup.cur_user.name) {
+                    if(this._username != r2.userGroup.cur_user.name) {
+                        var textCont= this.dom_span.textContent;                        
+                        this.dom_textarea.setAttribute('aria-label',textCont);                        
                         //this.dom_btn_rmv.style.display = "block";
                         //this.dom_btn_pub.style.display = "block";
                     }

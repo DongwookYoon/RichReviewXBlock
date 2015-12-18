@@ -215,6 +215,12 @@ function postRespUploadDocLayout(req, res, myuuid) {
         Post_UploadDocLayout_CreateDocAndGroupDb
     ).then(
         function(_ctx){
+            return R2D.Group.connectUserAndGroup(_ctx.groupid.substring(4), _ctx.user.id).then(
+                function(){return _ctx;}
+            );
+        }
+    ).then(
+        function(_ctx){
             var redirect_url = js_utils.getHostname() +
                 "/viewer?access_code="+_ctx.pdf_hash +
                 "&docid=" + _ctx.docid.substring(4) +

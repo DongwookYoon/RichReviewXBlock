@@ -64,7 +64,11 @@ var r2Ctrl = {};
 
         var enabled = false;
         var $content = null;
+        var zoom_target = null;
+        var start_scale = null;
 
+        var zoom_target = null;
+        var zoom_gesture = null;
         pub_ti.setEventHandlers = function(){
             if($content === null){
                 $content = $('#r2_content');
@@ -74,12 +78,28 @@ var r2Ctrl = {};
             $content.on('pointermove', mv);
             $content.on('pointerenter', en);
             $content.on('pointerleave', lv);
+            zoom_gesture = new MSGesture();
+            zoom_target = document.getElementById("r2_content");
+            zoom_gesture.target = zoom_target;
+            zoom_target.addEventListener("MSGestureStart", zoomBg);
+            zoom_target.addEventListener("MSGestureChange", zoomMv);
+
         };
 
         pub_ti.on = function(){
             enabled = true;
         };
+        var zoomBg = function(e){
+            start_scale = r2.viewCtrl.scale;
 
+        };
+        var zoomMv = function(e) {
+            if (e.scale) {
+                r2.viewCtrl.scale = r2.viewCtrl.scale * e.scale;
+                r2App.invalidate_size = true;
+            }
+
+        };
         pub_ti.off = function(){
             enabled = false;
         };
@@ -91,7 +111,9 @@ var r2Ctrl = {};
                 r2.pen.dn(event);
             }
             else if(event.originalEvent.pointerType === 'touch'){
+
                 r2.touch.dn(event);
+
             }
         };
 
@@ -123,6 +145,11 @@ var r2Ctrl = {};
             if(event.originalEvent.pointerType === 'pen'){
                 r2.pen.en(event);
             }
+            else if(event.originalEvent.pointerType === 'touch'){
+                zoom_gesture.addPointer(event.originalEvent.pointerId);
+                console.log(event.originalEvent.pointerId);
+            }
+
         };
 
         var lv = function(event){
@@ -141,6 +168,7 @@ var r2Ctrl = {};
         var pub_tc = {};
 
         pub_tc.dn = function(event){
+
         };
 
         pub_tc.up = function(event){
@@ -188,7 +216,7 @@ var r2Ctrl = {};
         var pos_splight = new Vec2(0, 0);
         var cur_piece_tearing = null;
         pub_pn.getPenPos = function(){
-            return pos_dn;
+            return pos_writing;
         };
         pub_pn.isPenDown = function(){
             return cur_dn;
@@ -224,7 +252,7 @@ var r2Ctrl = {};
             var pos_px = new Vec2(event.clientX, event.clientY);
             if(r2App.mode === r2App.AppModeEnum.RECORDING){
                 r2.inkCtrl.recordingInkDn(r2.viewCtrl.mapScrToDoc(new_pen_pt), r2App.cur_recording_annot);
-                pos_writing = pos_px;
+                pos_writing = new_pen_pt;
                 r2.spotlightCtrl.recordingSpotlightCancel(); // just in case
             }
             else if(r2App.mode === r2App.AppModeEnum.IDLE || r2App.mode === r2App.AppModeEnum.REPLAYING) {
@@ -275,9 +303,9 @@ var r2Ctrl = {};
             var new_pen_pt = r2.input.getPos(event);
             var pos_px = new Vec2(event.clientX, event.clientY);
             if(r2App.mode === r2App.AppModeEnum.RECORDING){
-                if(pos_writing.distance(pos_px) > 1 ){
+                if(pos_writing.distance(new_pen_pt) > 0.00001 ){
                     r2.inkCtrl.recordingInkMv(r2.viewCtrl.mapScrToDoc(new_pen_pt), r2App.cur_recording_annot);
-                    pos_writing = pos_px;
+                    pos_writing = new_pen_pt;
                 }
             }
             else if(r2App.mode === r2App.AppModeEnum.IDLE || r2App.mode === r2App.AppModeEnum.REPLAYING) {
@@ -926,7 +954,6 @@ var r2Ctrl = {};
                 cur_recording_Ink.smoothing();
                 cur_recording_Ink_piece.AddInk(target_annot.GetId(),cur_recording_Ink);
                 target_annot.AddInk(cur_recording_Ink, toupload = true);
-                pub.dynamicScene.addInk(cur_recording_Ink);
                 if(cur_recording_Ink_segment){
                     cur_recording_Ink_segment = null;
                 }
@@ -1031,7 +1058,8 @@ var r2Ctrl = {};
                 if(cur_recording_spotlight_segment){
                     cur_recording_spotlight_segment = null;
                 }
-                if(cur_recording_spotlight.segments.length>0){
+                var curt = cur_recording_spotlight.t_end-cur_recording_spotlight.t_bgn;
+                if(cur_recording_spotlight.segments.length>0&&curt>500){
                     target_annot.AddSpotlight(cur_recording_spotlight, toupload = true);
                 }
                 cur_recording_spotlight_pt = null;

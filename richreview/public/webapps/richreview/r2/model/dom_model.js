@@ -291,7 +291,7 @@
 
             var $comment = $('#' + annot_id_esc);
             var dom_comment = $comment.get(0);
-            if(dom_comment){
+            if(dom_comment) {
                 var i = $comment.find('.tc_piece').length;
                 var $anchor = $comment.parent();
                 var dom_anchor = $anchor.get(0);
@@ -307,18 +307,28 @@
                     id,
                     (new Date(time)).getTime(),
                     dom_anchor.pp.w,
-                    dom_anchor.pp.tt_depth+1,
+                    dom_anchor.pp.tt_depth + 1,
                     dom_anchor.pp.tt_x,
                     dom_anchor.pp.tt_w
                 );
 
                 var $content = $(document.createElement('div'));
                 $content.toggleClass('tc_content', true);
-                $content.height(r2Const.PIECEAUDIO_HEIGHT*r2Const.FONT_SIZE_SCALE+'em');
-                $content.width($anchor.get(0).pp.w*r2Const.FONT_SIZE_SCALE+'em');
+                $content.height(r2Const.PIECEAUDIO_HEIGHT * r2Const.FONT_SIZE_SCALE + 'em');
+                $content.width($anchor.get(0).pp.w * r2Const.FONT_SIZE_SCALE + 'em');
 
                 $piece.append($content);
                 $comment.append($piece);
+                if (r2App.cur_recording_anchor_piece) {
+
+                    var record_place = r2App.cur_recording_anchor_piece.pos;
+                    if (r2.pen.isPenDown() && r2.pen.getPenPos().y > record_place.y ) {
+                        if(!pub.toscroll){
+                            pub.toscroll = 0;
+                        }
+                        pub.toscroll += $piece[0].offsetHeight;
+                    }
+                }
             }
         };
 

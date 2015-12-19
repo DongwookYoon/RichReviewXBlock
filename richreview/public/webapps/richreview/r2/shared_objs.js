@@ -124,6 +124,8 @@ var r2App = (function() {
     pub.docid = null;
     pub.groupid = null;
 
+    pub.toscroll = 0;
+
     pub.url_queries = new r2.util.urlQuery(location.search);
 
     pub.pieceSelector = (function(){

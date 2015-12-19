@@ -21,6 +21,14 @@
                     r2App.cur_page.Relayout();
                     r2App.invalidate_page_layout = false;
                     console.log('invalidate_page_layout');
+                    var cur_view = document.getElementById("r2_view");
+                    var cur_piece = r2App.cur_recording_anchor_piece;
+                    var a = r2.pen.getPenPos();
+                    if(cur_view && cur_piece &&r2App.mode === r2App.AppModeEnum.RECORDING && cur_piece.pos.x<r2.pen.getPenPos().x && cur_piece.pos.x+cur_piece._cnt_size.x + cur_piece.pos.x >r2.pen.getPenPos().x && r2.dom_model.toscroll) {
+                        cur_view.scrollTop += r2.dom_model.toscroll;
+                        r2.dom_model.toscroll=0;
+                    }
+
                 }
 
                 if(r2App.invalidate_size){

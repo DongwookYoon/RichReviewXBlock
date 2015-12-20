@@ -961,6 +961,7 @@ var r2Ctrl = {};
                 cur_recording_Ink_pt = null;
                 cur_recording_Ink = null;
                 r2App.invalidate_dynamic_scene = true;
+                r2App.invalidate_static_scene = true;
                 return true;
             }
             else{

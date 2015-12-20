@@ -350,9 +350,9 @@
                 }
             }
         }
-
+        r2.InkRenderer.setCanvCtx(r2.viewCtrl.page_width_noscale, this.size.y/this.size.x);
         for(i = 0; Ink = this._Ink_cache[i]; ++i){
-            Ink.preRender(r2.canv_ctx); // ctx, ratio
+            Ink.preRender(r2.InkRenderer.getCanvCtx()); // ctx, ratio
         }
     };
 

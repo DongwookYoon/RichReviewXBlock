@@ -19,13 +19,25 @@
 }
 
 #r2_view {
-  width: 100%;
+  width: 74.5%;
   position: relative;
   bottom: 0;
-
+  float: left;
   overflow: auto;
   text-align: center;
   background: dimgray;
+}
+
+#r2_thumbnail {
+  width: 25%;
+  height: 100%;
+  position: relative;
+  bottom: 0;
+  float: left;
+  overflow: auto;
+  text-align: center;
+  background: #A0A0A0;
+
 }
 
 
@@ -38,7 +50,7 @@
 }
 
 #r2_page_canvas {
-  width: 100%;
+  width: 95%;
   height: 100%;
   z-index: 1;
   pointer-events: none;
@@ -625,8 +637,8 @@ a:active {
   position: absolute;
   right: 20px;
   top: 20px;
-  width: 250px;
-  height: 54px;
+  width: 300px;
+  height: 254px;
   font-size: 50px;
   color: rgba(33, 150, 243, 1.0);
   text-align: center;
@@ -1058,4 +1070,29 @@ body::-webkit-scrollbar-corner {
 
 .rm_btn_center > i {
   font-size: 0.30em;
+}
+
+#r2_preview_content {
+  z-index: 10;   
+  background-color: rgba(31, 190, 242, 0.2);
+  overflow: auto;
+}
+
+#r2_preview_bar{
+   background-color:black;
+   height:100%;
+   float:  left;
+   width: 0.5%;
+   cursor: col-resize;
+}
+
+
+.r2_preview_thumb {
+  z-index: 10;
+  background-color: rgba(31, 190, 242, 0.2);
+  overflow: auto;
+  margin-top:5px;
+  margin-left:5px;
+  margin-bottom:5px;
+  margin-right:5px;
 }

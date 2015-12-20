@@ -766,6 +766,10 @@
             return goToPage(groups[cur_groupn].cur_pagen + 1);
         };
 
+        pub.goToPageIndex = function(index) {
+            return goToPage(index);
+        }
+
         var getBookletData = function(){
             // some hardcoded pieces for experiments
             var bookletjs;
@@ -897,9 +901,12 @@
     r2.pdfRenderer = (function(){
         var pub = {};
 
-        var canvs = []; // {dom:, ctx:, t:, npage:}
-        var pages = []; // {pdf:, viewport:, ncanv:}
+        var canvs = []; // {dom:, ctx:, preview_dom:, preview_ctx:, t:, npage:}
+        var pages = []; // {pdf:, viewport:, preview_viewport, ncanv:}
         var npage_render = {now: -1, next: -1};
+        var firstTimeRender = true;
+
+
 
         pub.initPdfRenderer = function(pdf_doc){
             return GetPdfPage(pdf_doc).then(
@@ -908,13 +915,18 @@
                         try{
                             var canv_w = 0;
                             var canv_h = 0;
+                            var preview_canv_w = 0;
+                            var preview_canv_h = 0;
 
                             pages = $.map($(new Array(pdf_pages.length)),
                                 function(val, i){
                                     var pdf = pdf_pages[i];
+                                    var preview_pdf = pdf_pages[i];
                                     var page = {
                                         pdf: pdf,
+                                        preview_pdf: preview_pdf,
                                         viewport: pdf.getViewport( r2.viewCtrl.page_width_noscale / (pdf.pageInfo.view[2]-pdf.pageInfo.view[0])),
+                                        preview_viewport: preview_pdf.getViewport( r2.viewCtrl.preview_page_width_noscale / (preview_pdf.pageInfo.view[2]-preview_pdf.pageInfo.view[0])),
                                         ncanv:-1
                                     };
 
@@ -926,7 +938,19 @@
                                     canv_w = Math.max(canv_w, sz.x);
                                     canv_h = Math.max(canv_h, sz.y);
 
-                                    r2App.doc.GetPage(i).RunRecursive('SetPdf', [sz]);
+                                    var preview_sz = new Vec2(
+                                        Math.floor(page.preview_viewport.width*r2.viewCtrl.hdpi_ratio.sx),
+                                        Math.floor(page.preview_viewport.height*r2.viewCtrl.hdpi_ratio.sy)
+                                    );
+
+                                    preview_canv_w = Math.max(preview_canv_w, preview_sz.x);
+                                    preview_canv_h = Math.max(preview_canv_h, preview_sz.y);
+
+                                    console.log("canv_w " + canv_w + "canv_h " + canv_h);
+                                    console.log("preview_canv_w " + preview_canv_w + "preview_canv_h " + preview_canv_h);
+
+                                    r2App.doc.GetPage(i).RunRecursive('SetPdf', [sz]/*, [preview_sz]*/);
+                                    r2App.doc.GetPage(i).RunRecursive('SetPreviewPdf', [preview_sz]);
 
                                     return page;
                                 }
@@ -939,14 +963,26 @@
                                     dom.width = canv_w;
                                     dom.height = canv_h;
                                     ctx.scale(r2.viewCtrl.hdpi_ratio.sx, r2.viewCtrl.hdpi_ratio.sy);
+
+                                    // parameters for preview canvas
+                                    //var preview_dom = document.getElementById('r2_content_preview');
+                                    var preview_dom = document.createElement('canvas');
+                                    var preview_ctx = preview_dom.getContext('2d');
+                                    preview_dom.width = preview_canv_w;
+                                    preview_dom.height = preview_canv_h;
+                                    preview_ctx.scale(r2.viewCtrl.hdpi_ratio.sx, r2.viewCtrl.hdpi_ratio.sy);
+
                                     return {
                                         dom: dom,
                                         ctx: ctx,
+                                        preview_dom: preview_dom, 
+                                        preview_ctx: preview_ctx,
                                         t: (new Date()).getTime(),
                                         npage:-1
                                     };
                                 }
                             );
+
                             resolve(pdf_doc);
                         }
                         catch (err){
@@ -956,7 +992,9 @@
 
                 }
             );
+
         };
+
 
         /**
          * @returns {*}
@@ -971,6 +1009,46 @@
                 ScheduleRender(n_page);
                 return null;
             }
+        };
+
+        pub.getPreviewCanvas = function(n_page) {
+            var n_canv = pages[n_page].ncanv;
+            if(n_canv != -1){
+                return canvs[n_canv].preview_dom;
+            }
+            return null;
+        };
+
+
+        function renderPreviewPdf(cur_index, max_index) {
+            if (cur_index < 0 || cur_index > max_index) return;
+            
+            var preview_ctx = {
+                canvasContext: canvs[cur_index].preview_ctx,
+                viewport: pages[cur_index].preview_viewport
+            };
+
+            canvs[cur_index].preview_ctx.clearRect(0, 0, canvs[cur_index].preview_dom.width/r2.viewCtrl.hdpi_ratio.sx, canvs[cur_index].preview_dom.height/r2.viewCtrl.hdpi_ratio.sy);
+
+            pages[cur_index].preview_pdf.render(preview_ctx).then(function() {
+                canvs[cur_index].preview_dom.id = 'pdf_preview_' + cur_index;
+                canvs[cur_index].preview_dom.className = 'r2_preview_thumb';  
+            }).then(function() {
+                var thumbnail = document.getElementById('r2_thumbnail');
+                thumbnail.appendChild(canvs[cur_index].preview_dom);
+
+                var cur_preview = document.getElementById('pdf_preview_' + cur_index);
+                cur_preview.onclick = function() {r2.booklet.goToPageIndex(cur_index);};
+            }).then(function() {
+                if (cur_index != max_index) {
+                    renderPreviewPdf(cur_index+1, max_index);
+                }
+            });
+        }
+
+        function RenderPreview() {
+            if (canvs.length <= 0) return; 
+            renderPreviewPdf(0, canvs.length-1);
         };
 
         function GetPdfPage(pdf_doc){
@@ -1016,6 +1094,11 @@
         }
 
         function Render(n_page){
+            if (firstTimeRender) {
+                firstTimeRender = false;
+                RenderPreview();
+            }
+
             npage_render.now = n_page;
             var n_canv = GetAvailableCanv();
 
@@ -1026,21 +1109,36 @@
                 viewport: pages[n_page].viewport
             };
 
+            var preview_ctx = {
+                canvasContext: canvs[n_canv].preview_ctx,
+                viewport: pages[n_page].preview_viewport
+            };
 
             ShowRenderingIndicator();
             canvs[n_canv].ctx.clearRect(0, 0, canvs[n_canv].dom.width/r2.viewCtrl.hdpi_ratio.sx, canvs[n_canv].dom.height/r2.viewCtrl.hdpi_ratio.sy);
             pages[n_page].pdf.render(ctx).then(function(){
-                HideRenderingIndicator();
-                if(npage_render.next != -1){
-                    var npage_to_render = npage_render.next;
-                    npage_render.next = -1;
-                    Render(npage_to_render);
-                }
-                else{
-                    npage_render.now = -1;
-                }
-                r2App.invalidate_static_scene = true;
+                // render the pdf in the preview area
+                //console.log('start the preview render');
+                //canvs[n_canv].preview_ctx.clearRect(0, 0, canvs[n_canv].preview_dom.width/r2.viewCtrl.hdpi_ratio.sx, canvs[n_canv].preview_dom.height/r2.viewCtrl.hdpi_ratio.sy);
+                //console.log('finished clear rect of preview canvas');
+                //pages[n_page].preview_pdf.render(preview_ctx).then(function(){
+                    HideRenderingIndicator();
+                    if(npage_render.next != -1){
+                        var npage_to_render = npage_render.next;
+                        npage_render.next = -1;
+                        console.log('render other pages');
+                        Render(npage_to_render);
+                    }
+                    else{
+                        console.log('dont render other pages');
+                        npage_render.now = -1;
+                    }
+                    r2App.invalidate_static_scene = true;
+                    console.log('finished rendering the preview canvas');
+                //});
             });
+
+            console.log('all done');
         }
 
 
@@ -1316,12 +1414,14 @@
         pub.scale = 1;
 
         pub.page_width_noscale = 128;
+        pub.preview_page_width_noscale = 16;
         pub.page_margins = {left: 0.0, rght: 0.0};
         pub.page_size_scaled = Vec2(0.0, 0.0);
 
         var app_container_size = new Vec2(128, 128);
 
         pub.canv_px_size = new Vec2(128, 128);
+        pub.preview_canv_px_size = new Vec2(16, 16);
         pub.hdpi_ratio = {
             sx: 1.0,
             sy: 1.0,
@@ -1335,7 +1435,8 @@
 
             app_container_size = _app_container_size;
 
-            pub.page_width_noscale = app_container_size.x-40;
+            pub.page_width_noscale = (app_container_size.x-40)*0.75;
+            pub.preview_page_width_noscale = pub.page_width_noscale / 7.0;
 
             pub.page_size_scaled = Vec2(pub.scale*pub.page_width_noscale, pub.scale*pub.page_width_noscale*view_ratio);
 
@@ -1401,6 +1502,7 @@
         var view;
         var content;
         var page_canvas;
+        var preview_page_canvas;
         var annot_canvas;
         var overlay_container;
 
@@ -1417,6 +1519,7 @@
             view = document.getElementById("r2_view");
             content = document.getElementById("r2_content");
             page_canvas = document.getElementById("r2_page_canvas");
+            preview_page_canvas = document.getElementById("r2_preview_content");
             annot_canvas = document.getElementById("r2_annot_canvas");
             overlay_container = document.getElementById("overlay_container");
 
@@ -1471,6 +1574,10 @@
         pub.getPageCanvCtx = function(){
             return page_canvas.getContext('2d');
         };
+
+        pub.getPreviewPageCanvCtx = function(){
+            return preview_page_canvas.getContext('2d');
+        }
 
         pub.getAnnotCanvCtx = function(){
             return annot_canvas.getContext('2d');

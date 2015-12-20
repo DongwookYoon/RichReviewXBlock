@@ -119,12 +119,20 @@
             canvas_ctx.scale(r2.viewCtrl.canv_px_size.x, r2.viewCtrl.canv_px_size.x);
         }
 
+        function initPreviewCanvasCtx(preview_canvas_ctx) {
+            preview_canvas_ctx.setTransform(1, 0, 0, 1, 0, 0);
+            preview_canvas_ctx.clearRect(0, 0, r2.viewCtrl.preview_canv_px_size.x, r2.viewCtrl.preview_canv_px_size.y);
+            preview_canvas_ctx.scale(r2.viewCtrl.preview_canv_px_size.x, r2.viewCtrl.preview_canv_px_size.x);
+        }
+
         /** draws the scene */
         function drawStaticScene() {
             initCanvasCtx(r2.canv_ctx);
+            //initPreviewCanvasCtx(r2.preview_canv_ctx);
 
             r2App.cur_page.drawBackgroundWhite();
             r2App.cur_page.RunRecursive('DrawPiece');
+            //r2App.cur_page.RunOneTime('DrawPreviewPiece');
             if(r2App.mode !== r2App.AppModeEnum.RECORDING){
                 r2App.cur_page.drawSpotlightPrerendered();
             }
@@ -179,19 +187,34 @@
                 function(){
                     r2.dom.initDom();
                     r2.canv_ctx = r2.dom.getPageCanvCtx();
+                    r2.preview_canv_ctx = r2.dom.getPreviewPageCanvCtx();
                     r2.annot_canv_ctx = r2.dom.getAnnotCanvCtx();
 
                     r2.resizeWindow({});
 
                     r2.onScreenButtons.Init();
 
+                    /*
                     if(bowser.msedge){
                         r2.input.setModeTablet();
                     }
                     else{
                         r2.input.setModeDesktop();
                     }
+                    */
+                    var mode = r2.cookie.get("inputMode");
+                    if (mode == "tablet") {
+                        r2.input.setModeTablet();
+                    }
+                    else {
+                        r2.input.setModeDesktop();
+                    }
                     r2.tabletInput.setEventHandlers();
+                    //$('.fa fa-eye').clone(true).appendTo("#r2_content_preview");
+                    //$('#r2_content').livePreview({
+                    //    previewElement: $('#r2_content_preview')
+                    //});
+                    //$('#r2_content_preview').html($('#dashboard-comments-title').html()); 
                     return null;
                 }
             ).then(
@@ -208,6 +231,7 @@
                 function(){
                     initR2();
                     initSystem();
+                    //$('.tc_page').clone(true).appendTo('#r2_content_preview');
                     r2.loop.tick();
                 }
             ).catch(r2.util.handleError);

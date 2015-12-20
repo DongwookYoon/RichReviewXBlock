@@ -103,7 +103,6 @@
     <div id="main_progress_bar">
     </div>
 </div>
-
 <div id="overlay_container">
     <div id="rendering_spinner">
         <i class="fa fa-spinner faa-spin animated"></i>
@@ -132,4 +131,8 @@
         <canvas id="r2_annot_canvas"></canvas>
         <div id="onscrbtns"></div>
     </div>
+</div>
+<div id="r2_preview_bar" draggable="true" ondragstart="r2.dragStart(event)" ondragend="r2.dragEnd(event)"></div>
+<div id="r2_thumbnail">
+    <canvas id="r2_preview_content" class="preview" style="display:none;"></canvas>
 </div>

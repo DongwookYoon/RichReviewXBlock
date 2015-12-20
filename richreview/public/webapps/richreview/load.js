@@ -39,6 +39,7 @@
             ['lib_ext/sha1.js', 'js'],
             ['lib_ext/vec2.min.js', 'js'],
             ['lib_ext/bowser.min.js', 'js'],
+            ['lib_ext/jquery-live-preview.js', 'js'],
             ['r2/audio_utils.js', 'js'],
             ['r2/utils.js', 'js'],
             ['r2/helpers.js', 'js'],

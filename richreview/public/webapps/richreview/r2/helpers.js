@@ -1512,6 +1512,10 @@
             return page_offset;
         };
 
+        pub.getView = function(){
+            return view;
+        };
+
         /** helper */
         function getDomWidth(dom){
             return dom.getBoundingClientRect().width;

@@ -26,10 +26,6 @@
             child.RunRecursive(func_name, args);
         }
     };
-    r2.Obj.prototype.RunOneTime = function(func_name, args){
-        if(typeof this[func_name] !== 'undefined')
-            this[func_name].apply(this, args);
-    };
     r2.Obj.prototype.AddChildAtBack = function(obj){
         obj.SetParent(this);
         this.child.push(obj);

@@ -202,7 +202,7 @@
                         r2.input.setModeDesktop();
                     }
                     */
-                    var mode = r2.getCookie("inputMode");
+                    var mode = r2.cookie.get("inputMode");
                     if (mode == "tablet") {
                         r2.input.setModeTablet();
                     }

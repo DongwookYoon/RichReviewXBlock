@@ -10,49 +10,58 @@ var r2Ctrl = {};
 (function(r2){
 
     /* cookie helper functions */
-    r2.setCookie = (function(cname, cvalue, exdays) {
-        var d = new Date();
-        d.setTime(d.getTime() + (exdays*24*60*60*1000));
-        var expires = "expires="+d.toUTCString();
-        document.cookie = cname + "=" + cvalue + "; " + expires;
-    });
+    r2.cookie = (function() {
+        var pub = {};
 
-    r2.getCookie = (function(cname) {
-        var name = cname + "=";
-        var ca = document.cookie.split(';');
-        for(var i=0; i<ca.length; i++) {
-            var c = ca[i];
-            while (c.charAt(0)==' ') c = c.substring(1);
-            if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
-        }
-         return "";
-    });
+        pub.set = (function(cname, cvalue, exdays) {
+            var d = new Date();
+            d.setTime(d.getTime() + (exdays*24*60*60*1000));
+            var expires = "expires="+d.toUTCString();
+            document.cookie = cname + "=" + cvalue + "; " + expires;
+        });
 
-    /*
-    r2.drag = (function() {
-        console.log("enter r2.drag");
+        pub.get = (function(cname) {
+            var name = cname + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0; i<ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0)==' ') c = c.substring(1);
+                if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
+            }
+            return "";
+        });
+
+        return pub;
+
+    }());
+
+    r2.previewDragBar = (function() {
+        var pub = {};
         var dragging = false;
 
-        $('#dragbar').mousedown(function(e) {
-            //e.preventDefault();
-            console.log("drag bar mouse down");
+        pub.Start = (function(event) {
             dragging = true;
         });
 
-        $('#dragbar').mouseup(function(e) {
+        pub.End = (function(event) {
             if (dragging) {
-                console.log("drag resize");
                 var app_container_size = r2.viewCtrl.getAppContainerSize();
-                var left_percentage = (e.pageX / (app_container_size - 40)) * 100;
-                var right_percentage = 100 - left_percentage;
+                console.log("event x " + event.pageX + " app size " + app_container_size.x);
+                var left_percentage = (event.pageX / (app_container_size.x - 40)) * 100;
+                var right_percentage = 99.5 - left_percentage;
+                console.log('left percentage ' + left_percentage + 'right_percentage ' + right_percentage);
                 $('#r2_view').css("width", left_percentage + "%");
                 $('#r2_thumbnail').css("width", right_percentage + "%");
+                r2App.invalidate_size = true;
                 dragging = false;
             }
         });
 
+        return pub;
+
     }());
-    */
+
+
     r2.dragging = false;
 
     r2.dragStart = (function(event) {
@@ -70,6 +79,7 @@ var r2Ctrl = {};
             console.log('left percentage ' + left_percentage + 'right_percentage ' + right_percentage);
             $('#r2_view').css("width", left_percentage + "%");
             $('#r2_thumbnail').css("width", right_percentage + "%");
+            r2App.invalidate_size = true;
             r2.dragging = false;
         }
     });
@@ -87,7 +97,7 @@ var r2Ctrl = {};
         var cursor_in_menu = false;
 
         pub.setModeDesktop = function(){
-            r2.setCookie("inputMode", "desktop", 10);
+            r2.cookie.set("inputMode", "desktop", 10);
             mode = InpuMode.DESKTOP;
 
             $('#btn-input-set-mode-desktop').toggleClass('btn-primary', true);
@@ -99,8 +109,7 @@ var r2Ctrl = {};
             r2.tabletInput.off();
         };
         pub.setModeTablet = function(){
-            $('.tc_page').clone(true).appendTo('#r2_content_preview');
-            r2.setCookie("inputMode", "tablet", 10);
+            r2.cookie.set("inputMode", "tablet", 10);
             mode = InpuMode.TABLET;
             $('#btn-input-set-mode-desktop').toggleClass('btn-primary', false);
             $('#btn-input-set-mode-desktop').toggleClass('btn-default', true);

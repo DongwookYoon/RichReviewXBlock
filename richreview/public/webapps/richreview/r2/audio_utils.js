@@ -90,7 +90,7 @@
                 processCmd();
             }, false);
             m_audio.addEventListener('error', function(event) {
-                alert("error while loading audiofile:", cur_cmd.param_url);
+                alert("error while loading audio file: \n" + cur_cmd.param_url);
                 if(cur_cmd.cb_loading_end)
                     cur_cmd.cb_loading_end();
                 cur_cmd = null;
@@ -242,8 +242,13 @@
                                     blob.append(get_worker_script.responseText);
                                     blob = blob.getBlob();
                                 }
-                                var input = audio_context.createMediaStreamSource(stream);
-                                recorder = new Recorder(input, {workerPath: URL.createObjectURL(blob)});
+                                recorder = new Recorder(
+                                    audio_context.createMediaStreamSource(stream),
+                                    {
+                                        worker_path: URL.createObjectURL(blob),
+                                        buffer_size: r2.audioRecorder.RECORDER_BUFFER_LEN
+                                    }
+                                );
                                 resolve();
                             }
                         };
@@ -271,9 +276,6 @@
             });
         };
 
-        pub.GetBuffer = function(cb){
-            recorder.getBuffer(cb)
-        };
         pub.getDbs = function(cb){
             recorder.getDbs(cb)
         };

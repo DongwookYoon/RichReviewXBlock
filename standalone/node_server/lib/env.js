@@ -30,6 +30,7 @@ exports.webapp_urls = {
 
 exports.config_files = {
     azure_keys:     '../ssl/azure_keys.json',
+    bluemix_stt_auth: '../ssl/bluemix_stt_auth.json',
     google_open_id: '../ssl/google_open_id.json',
     ssl_key:        '../ssl/richreview_net.key',
     ssl_cert:       '../ssl/richreview_net.crt',

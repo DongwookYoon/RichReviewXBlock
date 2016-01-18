@@ -46,14 +46,14 @@ var bluemix_stt = (function(bluemix_stt) {
                 if (!listening) {
                     return;
                 }
-                console.log('Bluemix STT socket close requested');
+                //console.log('Bluemix STT socket close requested');
                 sock.send(JSON.stringify({action:'stop'}));
             });
             $.subscribe('socketstop', function(data) {
                 if (!listening) {
                     return;
                 }
-                console.log('Bluemix STT socket closed');
+                //console.log('Bluemix STT socket closed');
                 sock.close();
             });
             sock.send(JSON.stringify(message));
@@ -71,7 +71,7 @@ var bluemix_stt = (function(bluemix_stt) {
                     onlistening(sock);
                     listening = true;
                 } else {
-                    console.log('MICROPHONE: Closing socket.');
+                    console.log('Bluemix STT socket closed');
                     sock.close();
                 }
             }

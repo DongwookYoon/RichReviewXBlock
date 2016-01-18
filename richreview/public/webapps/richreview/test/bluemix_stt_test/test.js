@@ -20,11 +20,28 @@
                 localStorage.clear();
             };
 
+            // set event trigger
+            bluemix_stt.messageParser.setCallbacks(
+                function(words){
+                    result_disp.append_temp(words);
+                },
+                function(words, conf){
+                    result_disp.append_final(words);
+                }
+            );
+            result_disp.init();
+
             return;
         }
     ).catch(
         function(err){
-            alert(err);
+            if(err instanceof Error){
+                alert(err.message);
+            }
+            else{
+                alert(JSON.stringify(err));
+            }
+
         }
     );
 
@@ -33,8 +50,6 @@
             alert(err.message);
         }
     );
-
-    r2.audioRecorder.liveRecording = true;
 
     test.recordBgn = function(){
         bluemix_stt.handleMicrophone(
@@ -48,7 +63,7 @@
                 }
             },
             function(msg){ // transcript
-                console.log(JSON.stringify(msg));
+                bluemix_stt.messageParser.run(msg);
             },
             function() { // closed
                 console.log('Done');
@@ -63,6 +78,46 @@
             console.log(url);
         })
     };
+
+    var result_disp = (function(){
+        var pub = {};
+        var $p = null;
+        var last_temp_n = 0;
+
+        pub.init = function(){
+            $p = $('#stt_result');
+        };
+
+        pub.append_temp = function(words){
+            var i;
+            for(i = 0; i < last_temp_n; ++i){
+                $p.find(':last-child').remove();
+                console.log('remove');
+            }
+            for(let w of words){
+                var $span = $(document.createElement('div'));
+                $span.text(w[0]);
+                $p.append($span);
+            }
+            last_temp_n = words.length;
+        };
+
+        pub.append_final = function(words){
+            var i;
+            for(i = 0; i < last_temp_n; ++i){
+                $p.find(':last-child').remove();
+                console.log('remove');
+            }
+            for(let w of words){
+                var $span = $(document.createElement('div'));
+                $span.text(w[0]);
+                $p.append($span);
+            }
+            last_temp_n = 0;
+        };
+
+        return pub;
+    }());
 
 }(window.test = window.test || {}));
 

@@ -5,7 +5,7 @@
 
     var Recorder = function(media_stream_source, cfg){
         var recording = false;
-        var cur_callback = null;
+        var callbacks = {};
 
         this.context = media_stream_source.context;
         this.config = cfg || {};
@@ -32,9 +32,7 @@
                 command: 'record',
                 channel_buffer: channel_buffer
             });
-            if (r2.audioRecorder.liveRecording) {
-                cur_callback = r2.audioRecorder.onAudio;
-                if (!cur_callback) throw new Error('Callback not set');
+            if(callbacks.onExportChunk) {
                 worker.postMessage({
                     command: 'exportChunk',
                     channel_buffer: channel_buffer
@@ -45,13 +43,13 @@
         worker.onmessage = function(e){
             switch(e.data.command){
                 case 'exportWAV':
-                    cur_callback(e.data.blob, e.data.buffer);
+                    callbacks.onExportWav(e.data.blob, e.data.buffer);
                     break;
                 case 'exportChunk':
-                    cur_callback(e.data.chunk_buffer);
+                    callbacks.onExportChunk(e.data.chunk_buffer);
                     break;
                 case 'getDbs':
-                    cur_callback(e.data.dbs);
+                    callbacks.onGetDbs(e.data.dbs);
                     break;
             }
         };
@@ -62,28 +60,17 @@
         r2.audioRecorder.RECORDER_SOURCE_SAMPLE_RATE = this.config.sample_rate_src;
         r2.audioRecorder.RECORDER_SAMPLE_RATE = this.config.sample_rate_dst;
 
-        this.record = function(){
-            recording = true;
-        };
-
-        this.stop = function(){
-            recording = false;
-        };
-
-        this.clear = function(){
-            worker.postMessage({ command: 'clear' });
-        };
-
         this.exportWAV = function(cb, type){
-            cur_callback = cb || this.config.callback;
-            if (!cur_callback) throw new Error('Callback not set');
+            callbacks.onExportWav = cb || this.config.callback;
+            if (!callbacks.onExportWav) throw new Error('Recorder callback set failed: onExportWav');
             worker.postMessage({
                 command: 'exportWAV'
             });
         };
 
         this.getDbs = function(cb) {
-            cur_callback = cb || this.config.callback;
+            callbacks.onGetDbs = cb || this.config.callback;
+            if (!callbacks.onGetDbs) throw new Error('Recorder callback set failed: onGetDbs');
             worker.postMessage({ command: 'getDbs' })
         };
 
@@ -106,6 +93,22 @@
                 bitsPerSample: readInt(34, 2),
                 samples: wav.subarray(44)
             };
+        };
+
+        this.setOnExportChunkCallback = function(onExportChunkCallback){
+            callbacks.onExportChunk = onExportChunkCallback;
+        };
+
+        this.record = function(){
+            recording = true;
+        };
+
+        this.stop = function(){
+            recording = false;
+        };
+
+        this.clear = function(){
+            worker.postMessage({ command: 'clear' });
         };
 
     };

@@ -54,7 +54,11 @@ var bluemix_stt = (function(bluemix_stt) {
     bluemix_stt.getAuthInfo = function() {
         return new Promise(function(resolve, reject) {
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", AUTH_URL, true);
+            if ("withCredentials" in xhr) { // "withCredentials" only exists on XMLHTTPRequest2 objects.
+                xhr.open("GET", AUTH_URL, true);
+                xhr.withCredentials = true;
+                xhr.responseType = 'text';
+            }
             xhr.onreadystatechange = function(){
                 if(xhr.readyState == 4){
                     if(xhr.status == 200) {
@@ -66,6 +70,48 @@ var bluemix_stt = (function(bluemix_stt) {
                 }
             };
             xhr.onerror = reject;
+            xhr.send();
+        });
+    };
+    var getUrlData = function(path, resp_type, progress_cb){
+        return new Promise(function(resolve, reject){
+            var xhr = new XMLHttpRequest();
+            if ("withCredentials" in xhr) { // "withCredentials" only exists on XMLHTTPRequest2 objects.
+                xhr.open('GET', path, true);
+                xhr.withCredentials = true;
+                xhr.responseType = resp_type;
+            }
+            else if (typeof XDomainRequest != "undefined") { // Otherwise, XDomainRequest only exists in IE, and is IE's way of making CORS requests.
+                xhr = new XDomainRequest();
+                xhr.open(method, path);
+            }
+            else {
+                reject(new Error('Error from GetUrlData: CORS is not supported by the browser.'));
+            }
+
+            if (!xhr) {
+                reject(new Error('Error from GetUrlData: CORS is not supported by the browser.'));
+            }
+            xhr.onerror = reject;
+
+            xhr.addEventListener('progress', function(event) {
+                if(event.lengthComputable) {
+                    var progress = (event.loaded / event.total) * 100;
+                    if(progress_cb)
+                        progress_cb(progress);
+                }
+            });
+
+            xhr.onreadystatechange = function(){
+                if (xhr.readyState === 4){   //if complete
+                    if(xhr.status === 200){  //check if "OK" (200)
+                        resolve(xhr.response);
+                    } else {
+                        reject(new Error("XMLHttpRequest Error, Status code:" + xhr.status));
+                    }
+                }
+            };
+
             xhr.send();
         });
     };
@@ -103,11 +149,13 @@ var bluemix_stt = (function(bluemix_stt) {
                 // The user might want to upload a file through the socket instead of transmitting microphone information.
                 return;
             }
-            mic.onAudio = function (blob) {
-                if (socket.readyState < 2) {
-                    socket.send(blob)
+            mic.setOnAudioCallback(
+                function (blob) {
+                    if (socket.readyState < 2) {
+                        socket.send(blob)
+                    }
                 }
-            };
+            );
         }
 
         function onMessage(msg, socket) {
@@ -129,9 +177,32 @@ var bluemix_stt = (function(bluemix_stt) {
         }
 
         bluemix_stt.socket.initSocket(options, onOpen, onListening, onMessage, onError, onClose);
-
     };
 
+    bluemix_stt.messageParser = (function(){
+        var pub = {};
+
+        var callbacks = {};
+
+        pub.run = function(msg){
+            if(msg.results && msg.results.length){
+                var best_alternative = msg.results[0].alternatives[0];
+                if(msg.results[0].final){
+                    callbacks.onFinal(best_alternative.timestamps, best_alternative.word_confidence);
+                }
+                else{
+                    callbacks.onTemp(best_alternative.timestamps);
+                }
+            }
+        };
+
+        pub.setCallbacks = function(onTemp, onFinal){
+            callbacks.onTemp = onTemp;
+            callbacks.onFinal = onFinal;
+        };
+
+        return pub;
+    }());
 
     /**
      * Get chunked array from a file's offset

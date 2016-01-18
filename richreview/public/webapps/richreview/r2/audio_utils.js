@@ -206,9 +206,6 @@
         pub.RECORDER_BUFFER_LEN = 1024;
         pub.RECORDER_SAMPLE_RATE = 22050;
         pub.RECORDER_SOURCE_SAMPLE_RATE = 44100;
-        // If liveRecording is set to true, the microphone will send packets of audio continuously throughout recording.
-        pub.liveRecording = false;
-        pub.onAudio = function() {};
 
         var recorder = null;
         var audio_context = null;
@@ -353,6 +350,10 @@
             var click = document.createEvent("Event");
             click.initEvent("click", true, true);
             link.dispatchEvent(click);
+        };
+
+        pub.setOnAudioCallback = function(onAudioCallback){
+            recorder.setOnExportChunkCallback(onAudioCallback);
         };
 
         return pub;

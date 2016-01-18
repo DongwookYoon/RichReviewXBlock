@@ -20,6 +20,7 @@ exports.get = function(req, res) {
         },
         function (error, response, body) {
             res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8000');
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
             res.send(body);
         }
     );

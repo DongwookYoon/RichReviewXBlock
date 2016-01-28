@@ -89,7 +89,7 @@ passport.use(
             R2D.User.prototype.findByEmail(profile.upn).then(
                 function(user){
                     if(user){
-                        return done(null, user);
+                        return user;
                     }
                     else{
                         var email = profile.upn;

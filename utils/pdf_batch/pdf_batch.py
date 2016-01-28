@@ -1,5 +1,6 @@
 __author__ = 'yoon'
 
+import sys
 import csv
 import cv2
 import numpy as np
@@ -13,13 +14,29 @@ import cPickle
 from difflib import SequenceMatcher
 import subprocess
 
-# read the pdf page into bytes array
-
 IMAGE_WIDTH = 1024
 DPI_TO_PX_RATIO = 72
 
 pages = []
 valid_net_ids = []
+
+class PdfsToImages():
+
+    @staticmethod
+    def run(path):
+        pdfs = PdfsToImages.getPdfs(path)
+        
+        print pdfs
+        return 0
+
+    @staticmethod
+    def getPdfs(path):
+        pdfs = []
+        n = 0
+        while os.path.isfile(path+'/scan'+str(n)+'.pdf'):
+            pdfs.append(PyPDF2.PdfFileReader(file(path+'/scan'+str(n)+'.pdf', 'rb')))
+            n+=1
+        return pdfs
 
 class NetIdValidator():
     net_ids = []
@@ -48,8 +65,6 @@ class NetIdValidator():
                 return NetIdValidator.net_ids[l[int(n)-1]]
             except Exception:
                 return ''
-
-
 
 def saveMetadata(pages, filename):
     l = []
@@ -118,8 +133,6 @@ class Page:
                     img[y, x, 1] = struct.unpack('B', blob[3*(y*width+x)+1])[0]
                     img[y, x, 2] = struct.unpack('B', blob[3*(y*width+x)+0])[0]
             cv2.imwrite(self.getImgFilepath(), img)
-
-
 
     def show(self):
         if self.cv_img == None:
@@ -237,4 +250,24 @@ def init(filename, submission_id):
             Export(pages, submission_id)
 
 
-init('data/math2220_wk13.pdf', 'assignment1')
+#init('data/math2220_wk13.pdf', 'assignment1')
+
+if __name__ == '__main__':
+    try:
+        if len(sys.argv) != 2 or not os.path.isdir('data/'+sys.argv[1]):
+            raise Exception('InvalidArgs')
+        working_dir = 'data/'+sys.argv[1]
+
+        PdfsToImages.run(working_dir)
+
+    except Exception as e:
+        if len(e.args) != 0:
+            if e.args[0] == 'InvalidArgs':
+                print '>>>> Urg... This script takes only 1 argument designating the working directory.'
+                print '>>>> Put the scanned pdf(s) into \'data/<folder_name>\', and then run \'python pdf_batch.py <folder_name>.\''
+            else:
+                print e
+        else:
+            print e
+
+

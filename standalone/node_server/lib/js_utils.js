@@ -10,6 +10,13 @@ var moment = require('moment');
 var Promise = require("promise");
 var nodemailer = require('nodemailer');
 var os = require("os");
+var crypto = require('crypto');
+
+exports.generateSaltedSha1 = function(raw_key, salt){
+    var shasum = crypto.createHash('sha1');
+    shasum.update(raw_key+salt);
+    return shasum.digest('hex').toLowerCase();
+};
 
 exports.CreateCleanFolderAsync = function(_path, callback){
     try {
@@ -393,7 +400,7 @@ exports.redirectUnknownUser = function(req, res){
         return true;
     }
     else{
-        res.redirect('/login');
+        res.redirect('/login_cornell');
         return false;
     }
 };

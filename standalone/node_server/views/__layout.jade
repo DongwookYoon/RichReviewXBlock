@@ -53,10 +53,9 @@ html
                     ul.nav.navbar-nav.navbar-right
                         li(class = cur_page === "Account" ? "active" : "")
                             if user == undefined
-                                a(href="/login")
+                                a(href="/login_cornell")
                                     i.fa.fa-sign-in
-                                    |&nbspLogin with&nbsp
-                                    i.fa.fa-google-plus
+                                    |&nbspNetID Login
                             else
                                 a(href="/account")
                                     i.fa.fa-user

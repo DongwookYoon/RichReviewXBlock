@@ -101,11 +101,21 @@ User.prototype.findById = function(id){
 };
 
 User.prototype.findByEmail = function(email){
-    return RedisClient.HGET('email_user_lookup', email).then(
-        function(id){
-            return User.prototype.cache.get(id.substring(4));
-        }
-    );
+    if(js_utils.validateEmail(email)){
+        return RedisClient.HGET('email_user_lookup', email).then(
+            function(id){
+                if(id){
+                    return User.prototype.cache.get(id.substring(4));
+                }
+                else{
+                    return new Promise(function(resolve){resolve(null);});
+                }
+            }
+        );
+    }
+    else{
+        return new Promise(function(resolve){resolve(null);});
+    }
 };
 
 User.prototype.create = function(id, email){
@@ -114,7 +124,7 @@ User.prototype.create = function(id, email){
 
     return RedisClient.HMSET(
         'usr:'+id,
-        'nick', 'user'+id.substr(3, 1)+id.substr(6, 2),
+        'nick', email.substring(0, email.indexOf('@')),
         'email', email,
         'groupNs', '[]'
     ).then(

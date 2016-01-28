@@ -11,6 +11,7 @@ var fs = require('fs');
 
 var passport = require('passport');
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+var wsfedsaml2 = require('passport-azure-ad').WsfedStrategy;
 var R2D = require('./lib/r2d.js');
 var redis_client = require('./lib/redis_client.js');
 var env = require('./lib/env.js');
@@ -81,6 +82,32 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+passport.use(
+    new wsfedsaml2(
+        env.cornell_wsfed,
+        function(profile, done){
+            R2D.User.prototype.findByEmail(profile.upn).then(
+                function(user){
+                    if(user){
+                        return done(null, user);
+                    }
+                    else{
+                        var email = profile.upn;
+                        var newid = js_utils.generateSaltedSha1(email, env.sha1_salt.netid).substring(0, 21);
+                        return R2D.User.prototype.create(
+                            newid,
+                            email
+                        );
+                    }
+                }
+            ).then(
+                function(user){
+                    done(null, user);
+                }
+            ).catch(done);
+        }
+    )
+);
 
 var google_oauth = JSON.parse(fs.readFileSync(env.config_files.google_open_id, 'utf-8'));
 passport.use(
@@ -155,15 +182,36 @@ app.post('/uploadaudioblob', upload.post_audioblob);
 app.post('/resources',  resources.post);
 app.post('/course',     course.post);
 
+
+/*
+ Google ID logins
+ */
 app.get(
-    '/login',
+    '/login_google',
     passport.authenticate(
         'google', {scope:['email']}
     )
 );
 app.get(
     '/login-oauth2-return',
-    passport.authenticate('google', { failureRedirect: '/login' }),
+    passport.authenticate('google', { failureRedirect: '/login_google' }),
+    function(req, res) {
+        res.redirect(req.session.latestUrl || '/');
+    }
+);
+
+/*
+ Cornell ID logins
+ */
+app.get(
+    '/login_cornell',
+    passport.authenticate('wsfed-saml2', { failureRedirect: '/login_cornell', failureFlash: true }),
+    function(req, res){
+        res.redirect(req.session.latestUrl || '/');
+    }
+);
+app.post('/login_cornell_return',
+    passport.authenticate('wsfed-saml2', { failureRedirect: '/login_cornell', failureFlash: true }),
     function(req, res) {
         res.redirect(req.session.latestUrl || '/');
     }

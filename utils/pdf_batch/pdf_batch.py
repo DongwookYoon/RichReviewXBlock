@@ -24,10 +24,27 @@ class PdfsToImages():
 
     @staticmethod
     def run(path):
+        print '    Extracting images:',
         pdfs = PdfsToImages.getPdfs(path)
-        
-        print pdfs
-        return 0
+        path_img = path+'/imgs'
+
+        if not os.path.exists(path_img):
+            os.makedirs(path_img)
+
+        n_total_pages = sum(map(lambda x: x.getNumPages(), pdfs))
+        print 'total', n_total_pages, 'pages'
+
+        n = 1
+        for pdf in pdfs:
+            for i in xrange(pdf.getNumPages()):
+                img_path = path_img+'/'+str(n)+'.jpg'
+                if not os.path.isfile(img_path):
+                    print '        '+str(n)+' :', img_path,
+                    PdfsToImages.extractImg(pdf = pdf, n = i, out_path = img_path)
+                    print '... done!'
+                n += 1
+
+        return n_total_pages
 
     @staticmethod
     def getPdfs(path):
@@ -38,16 +55,41 @@ class PdfsToImages():
             n+=1
         return pdfs
 
+    @staticmethod
+    def extractImg(pdf, n, out_path):
+        writer = PyPDF2.PdfFileWriter()
+        page = pdf.getPage(n)
+        writer.addPage(page)
+
+        bytes = io.BytesIO()
+        writer.write(bytes)
+        bytes.seek(0)
+
+        wand_img = Image(file = bytes, resolution = int(IMAGE_WIDTH*DPI_TO_PX_RATIO/(page.mediaBox[3])))
+        width, height = wand_img.width, wand_img.height
+        wand_img.depth = 8
+        blob = wand_img.make_blob(format='RGB')
+
+        # convert wand_image to cv_image
+        img = np.zeros((height, width, 3), dtype = np.uint8)
+        for y in xrange(height):
+            for x in xrange(width):
+                img[y, x, 0] = struct.unpack('B', blob[3*(y*width+x)+2])[0]
+                img[y, x, 1] = struct.unpack('B', blob[3*(y*width+x)+1])[0]
+                img[y, x, 2] = struct.unpack('B', blob[3*(y*width+x)+0])[0]
+        cv2.imwrite(out_path, img)
+
+
 class NetIdValidator():
     net_ids = []
 
     @staticmethod
-    def init(filename):
-        with open(filename+'.csv', 'rb') as csvfile:
+    def init(working_dir):
+        with open(working_dir+'/roster.csv', 'rb') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             for line in reader:
                 NetIdValidator.net_ids.append(line[0])
-        print 'NetIds:', NetIdValidator.net_ids
+        print '    NetIdValidator: total', len(NetIdValidator.net_ids), 'NetIDs'
 
     @staticmethod
     def getSimilarNetIds(net_id):
@@ -258,13 +300,15 @@ if __name__ == '__main__':
             raise Exception('InvalidArgs')
         working_dir = 'data/'+sys.argv[1]
 
-        PdfsToImages.run(working_dir)
+        n_total_pages = PdfsToImages.run(working_dir)
+
+        NetIdValidator.init(working_dir)
 
     except Exception as e:
         if len(e.args) != 0:
             if e.args[0] == 'InvalidArgs':
-                print '>>>> Urg... This script takes only 1 argument designating the working directory.'
-                print '>>>> Put the scanned pdf(s) into \'data/<folder_name>\', and then run \'python pdf_batch.py <folder_name>.\''
+                print '    Urg... This script takes only 1 argument designating the working directory.'
+                print '    Put the scanned pdf(s) into \'data/<folder_name>\', and then run \'python pdf_batch.py <folder_name>.\''
             else:
                 print e
         else:

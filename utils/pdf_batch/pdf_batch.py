@@ -15,55 +15,62 @@ from difflib import SequenceMatcher
 import subprocess
 import traceback
 
-IMAGE_WIDTH = 1024
+IMAGE_WIDTH = 800
 DPI_TO_PX_RATIO = 72
 
-class PdfsToImages():
+class MergePdfs():
     @staticmethod
-    def run(path):
-        print '    Extracting images:',
-        pdfs = PdfsToImages.getPdfs(path)
-        path_img = path+'/imgs'
-
-        if not os.path.exists(path_img):
-            os.makedirs(path_img)
-
-        print 'total', sum(map(lambda x: x.getNumPages(), pdfs)), 'pages'
-
-        img_paths = []
-        n = 1
-        for pdf in pdfs:
-            for i in xrange(pdf.getNumPages()):
-                img_path = path_img+'/'+str(n)+'.jpg'
-                img_paths.append(img_path)
-                if not os.path.isfile(img_path):
-                    print '        '+str(n)+' :', img_path,
-                    PdfsToImages.extractImg(pdf = pdf, n = i, out_path = img_path)
-                    print '... done!'
-                n += 1
-
-        return img_paths
-
-    @staticmethod
-    def getPdfs(path):
+    def Run(path):
+        print '    Merging PDFs',
         pdfs = []
         n = 0
         while os.path.isfile(path+'/scan'+str(n)+'.pdf'):
             pdfs.append(PyPDF2.PdfFileReader(file(path+'/scan'+str(n)+'.pdf', 'rb')))
             n+=1
+
+        pdf_merger = PyPDF2.PdfFileMerger()
+        for pdf in pdfs:
+            pdf_merger.append(pdf)
+        pdf_merger.write(open(path+'/merged.pdf', "wb"))
+        print '... done!'
         return pdfs
 
+class PdfsToImages():
     @staticmethod
-    def extractImg(pdf, n, out_path):
+    def run(path):
+        print '    Extracting images:',
+        pdf_reader = PyPDF2.PdfFileReader(file(path+'/merged.pdf', 'rb'))
+
+        print 'total', pdf_reader.getNumPages(), 'pages'
+
+        path_img = path+'/imgs'
+
+        if not os.path.exists(path_img):
+            os.makedirs(path_img)
+
+        img_paths = []
+        for i in xrange(pdf_reader.getNumPages()):
+            img_path = path_img+'/'+str(i+1)+'.jpg'
+            img_paths.append(img_path)
+            if not os.path.isfile(img_path):
+                print '        '+str(i+1)+' :', img_path,
+                sys.stdout.flush()
+                PdfsToImages.ExtractImg(pdf_reader = pdf_reader, n = i, out_path = img_path)
+                print '... done!'
+
+        return img_paths
+
+    @staticmethod
+    def ExtractImg(pdf_reader, n, out_path):
         writer = PyPDF2.PdfFileWriter()
-        page = pdf.getPage(n)
+        page = pdf_reader.getPage(n)
         writer.addPage(page)
 
         bytes = io.BytesIO()
         writer.write(bytes)
         bytes.seek(0)
 
-        wand_img = Image(file = bytes, resolution = int(IMAGE_WIDTH*DPI_TO_PX_RATIO/(page.mediaBox[3])))
+        wand_img = Image(file = bytes, resolution = IMAGE_WIDTH*DPI_TO_PX_RATIO/(page.mediaBox[3]))
         width, height = wand_img.width, wand_img.height
         wand_img.depth = 8
         blob = wand_img.make_blob(format='RGB')
@@ -166,54 +173,19 @@ class Page:
         self.net_id = net_id
 
 
-def Export(pages, submission_id):
-    cur_net_id_path = ''
-
-    print 'Export'
-    for i, page in enumerate(pages):
-        if page.net_id != '':
-            cur_net_id_path = Page.getImageDirPath()+'/'+page.net_id
-            if not os.path.exists(cur_net_id_path):
-                os.makedirs(cur_net_id_path)
-        if not page.to_delete:
-            shutil.copy(page.getImgFilepath(), cur_net_id_path+'/'+str(page.n)+'.jpg')
-
-
-    for i, page in enumerate(pages):
-        if page.net_id != '':
-
-            convert = 'convert'
-            if os.name == 'nt':
-                convert = 'convert2' # avoid collision with windows' convert.exe
-            param = [
-                convert,
-                Page.getImageDirPath()+'/'+page.net_id+'/*.jpg',
-                Page.getImageDirPath()+'/'+page.net_id+'/'+submission_id+'.pdf'
-            ]
-            subprocess.call(param,stdout=subprocess.PIPE)
-
-    for i, page in enumerate(pages):
-        if page.net_id != '':
-            cur_net_id_path = Page.getImageDirPath()+'/'+page.net_id
-            if not os.path.exists(cur_net_id_path):
-                os.makedirs(cur_net_id_path)
-        if not page.to_delete:
-            os.remove(cur_net_id_path+'/'+str(page.n)+'.jpg')
-
-    print '...done!'
-
-
 class PdfBatch():
     def __init__(self, working_dir):
         self.cv_img = None
         self.working_dir = working_dir
         NetIdValidator.init(working_dir)
+        MergePdfs.Run(working_dir)
         self.pdf_imgs = PdfsToImages.run(working_dir)
         self.metadata = self.loadMetadata()
         self.pages = self.CreatePages(self.pdf_imgs, self.metadata)
         self.n_total_page = len(self.pages)
 
     def run(self):
+        print '    Launch!'
         cur_page_n = 0
         q = False
         while(not q):
@@ -238,7 +210,7 @@ class PdfBatch():
                 jump_to_page = raw_input('    >>>>Jump To Page:')
                 cur_page_n = int(jump_to_page)-1
             if key == 101: # <'E'-key>
-                Export(pages, submission_id)
+                self.Export(self.pages)
 
     def saveMetadata(self, pages):
         filename = self.working_dir+'/metadata.pickle'
@@ -268,6 +240,39 @@ class PdfBatch():
         for i in xrange(len(imgs)):
             pages.append(Page(imgs[i], metadata[i]))
         return pages
+
+
+    def Export(self, pages):
+        print '    Export begin',
+        sys.stdout.flush()
+
+        pdf_reader = PyPDF2.PdfFileReader(file(self.working_dir+'/merged.pdf', 'rb'))
+
+
+
+
+        page_sets = []
+
+        for i, page in enumerate(pages):
+            if page.net_id != '': # new NetID
+                page_sets.append({'NetID': page.net_id, 'pages':[]})
+            if len(page_sets) >= 1:
+                if not page.to_delete:
+                    page_sets[-1]['pages'].append(i)
+
+        for page_set in page_sets:
+            cur_net_id_path = self.working_dir+'/pdfs/'+page_set['NetID']
+            if not os.path.exists(cur_net_id_path):
+                os.makedirs(cur_net_id_path)
+            pdf_merger = PyPDF2.PdfFileMerger()
+            for npage in page_set['pages']:
+                pdf_merger.append(pdf_reader, '', (npage, npage+1))
+            pdf_merger.write(open(cur_net_id_path+'/doc.pdf', 'wb'))
+
+            print '.',
+            sys.stdout.flush()
+
+        print 'done!'
 
 
 if __name__ == '__main__':

@@ -43,5 +43,5 @@ standalone/node_server/ssl/
 standalone/node_server/cache/
 standalone/node_server/_temp/
 
-#lined_notebook data
-standalone/django_server/lined_notebook/data/
+#pdf_batch data
+utils/pdf_batch/data/

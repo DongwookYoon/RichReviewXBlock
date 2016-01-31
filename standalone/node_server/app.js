@@ -30,6 +30,7 @@ var dataviewer = require('./routes/dataviewer');
 var dbs = require('./routes/dbs');
 var resources = require('./routes/resources');
 var course = require('./routes/course');
+var bluemix_stt_auth = require('./routes/bluemix_stt_auth');
 
 mkdirp('../_temp');
 mkdirp('../cache');
@@ -170,6 +171,7 @@ app.get('/dataviewer',  dataviewer.get);
 app.get('/account',     account.get);
 app.get('/resources',   resources.get);
 app.get('/math2220_fall2015',    course.get);
+app.get('/bluemix_stt_auth', bluemix_stt_auth.get);
 //app.get('/docs',        docs.page);
 
 app.post('/dbs',        dbs.post);

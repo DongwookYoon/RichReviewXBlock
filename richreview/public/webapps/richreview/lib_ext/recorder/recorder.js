@@ -10,7 +10,7 @@
         this.context = media_stream_source.context;
         this.config = cfg || {};
         this.config.sample_rate_src = this.context.sampleRate;
-        this.config.sample_rate_dst = this.context.sampleRate > 22050 ? this.context.sampleRate / 2 : this.context.sampleRate;
+        this.config.sample_rate_dst = this.context.sampleRate / cfg.downsample_ratio;
 
         this.node = (
             this.context.createScriptProcessor ||
@@ -22,14 +22,14 @@
         var worker = new Worker(this.config.worker_path || DEF_WORKER_PATH);
         worker.postMessage({
             command: 'init',
-            sample_rate: this.config.sample_rate_dst
+            config: this.config
         });
 
         this.node.onaudioprocess = function(event){
             if (!recording) return;
             var channel_buffer = event.inputBuffer.getChannelData(0);
             worker.postMessage({
-                command: 'record',
+                command: 'recordChannelBuffer',
                 channel_buffer: channel_buffer
             });
             if(callbacks.onExportChunk) {

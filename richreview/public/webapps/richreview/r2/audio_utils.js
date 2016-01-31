@@ -239,11 +239,13 @@
                                     blob.append(get_worker_script.responseText);
                                     blob = blob.getBlob();
                                 }
+                                var src = audio_context.createMediaStreamSource(stream);
                                 recorder = new Recorder(
-                                    audio_context.createMediaStreamSource(stream),
+                                    src,
                                     {
                                         worker_path: URL.createObjectURL(blob),
-                                        buffer_size: r2.audioRecorder.RECORDER_BUFFER_LEN
+                                        buffer_size: r2.audioRecorder.RECORDER_BUFFER_LEN,
+                                        downsample_ratio: src.context.sampleRate < 44100 ? 1 : 2
                                     }
                                 );
                                 resolve();

@@ -5,7 +5,7 @@
 var bluemix_stt = (function(bluemix_stt) {
     'use strict';
 
-    var AUTH_URL = 'https://localhost:8001/bluemix_stt_auth';
+    var AUTH_URL = 'https://richreview.net/bluemix_stt_auth';
 
     /**
      * Initialize the publish/subscribe system utils is going to use.

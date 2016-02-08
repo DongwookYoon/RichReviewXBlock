@@ -839,6 +839,7 @@
             r2App.pieceSelector.reset();
 
             r2App.SetCurPdfPageN(n);
+            r2.dom.resetScroll();
             r2App.cur_page.RunRecursive("ResizeDom", []);
             r2App.invalidate_page_layout = true;
 
@@ -1510,6 +1511,10 @@
 
         pub.getPageOffset = function(){
             return page_offset;
+        };
+
+        pub.resetScroll = function(){
+            $(view).scrollTop(0);
         };
 
         /** helper */

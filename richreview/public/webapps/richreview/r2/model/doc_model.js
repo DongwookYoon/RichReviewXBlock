@@ -437,6 +437,7 @@
     };
     r2.Region.prototype.DrawRect = function(){
         r2.Obj.prototype.DrawRect.apply(this, ['rgba(255,50,50,0.3)']);
+        var p;
         for(var i = 0; p = this.child[i]; ++i) {
             p.DrawRect('rgba(50,255,50,0.3)');
         }

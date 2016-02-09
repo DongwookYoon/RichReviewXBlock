@@ -828,6 +828,7 @@
 
             SetPdfPageN(getCurPdfPageN());
         }
+
         function SetPdfPageN(n){
             if(r2App.mode == r2App.AppModeEnum.REPLAYING){
                 r2.log.Log_AudioStop('SetPdfPageN', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
@@ -841,6 +842,7 @@
             r2App.SetCurPdfPageN(n);
             r2.dom.resetScroll();
             r2App.cur_page.RunRecursive("ResizeDom", []);
+            r2App.invalidate_size = true;
             r2App.invalidate_page_layout = true;
 
             updatePageNavBar();
@@ -1451,6 +1453,7 @@
 
             $(page_canvas).width(page_size.x); // html size
             $(page_canvas).height(page_size.y);
+            page_canvas.dom_width = page_size.x;
 
             $(annot_canvas).width(page_size.x); // html size
             $(annot_canvas).height(page_size.y);
@@ -1461,8 +1464,8 @@
             annot_canvas.width = canv_px_size.x;
             annot_canvas.height = canv_px_size.y;
 
-
             updateScroll();
+
         };
 
         pub.calcAppContainerSize = function(){
@@ -1515,6 +1518,17 @@
 
         pub.resetScroll = function(){
             $(view).scrollTop(0);
+        };
+
+        pub.getPosAndWidthInPage = function(dom){
+            var rect = dom.getBoundingClientRect();
+            var rtn = [
+                (rect.left - page_offset.x) / page_canvas.dom_width,
+                (rect.top - page_offset.y) / page_canvas.dom_width,
+                rect.width / page_canvas.dom_width,
+                rect.height / page_canvas.dom_width
+            ];
+            return rtn;
         };
 
         /** helper */

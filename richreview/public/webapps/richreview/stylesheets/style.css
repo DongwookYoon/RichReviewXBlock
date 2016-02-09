@@ -547,7 +547,7 @@ a:active {
 #dashboard > #browse_row > div > .dashboard-title {
   display: inline-block;
   font-weight: bold;
-  padding: 7px 12px;
+  padding: 10px 12px;
   font-size: 13px;
 }
 

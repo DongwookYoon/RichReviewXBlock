@@ -32,6 +32,10 @@
             $tc_cur_page.css('display','block');
         };
 
+        pub.getCurPage = function(){
+            return $tc_cur_page;
+        };
+
         pub.cbAudioPlay = function(annot_id){
             r2.radialMenu.changeCenterIcon('rm_'+r2.util.escapeDomId(annot_id), 'fa-pause');
             r2.log.Log_AudioPlay('radialmenu', annot_id, r2.audioPlayer.getPlaybackTime());
@@ -50,6 +54,12 @@
         pub.remove = function(annot_id){
             var annot_id_esc = r2.util.escapeDomId(annot_id);
             $('#'+annot_id_esc).remove();
+        };
+
+        pub.getPieceLayout = function(piece){
+            var $piece = $tc_cur_page.find('#'+piece.GetId());
+            var $content = $piece.find('.tc_content');
+
         };
 
         /* submodule for data loading bgn */
@@ -131,6 +141,7 @@
             $comment.attr('role', 'document');
             var $piece = $(document.createElement('div'));
             $piece.toggleClass('tc_piece', true);
+            piece_text.SetDom($piece);
 
             var id = piece_text.GetId();
             var creationTime = 0;
@@ -169,6 +180,7 @@
 
                 var $piece = $(document.createElement('div'));
                 $piece.toggleClass('tc_piece', true);
+                piece_teared.SetDom($piece);
 
                 $piece.attr('id', id);
                 setPieceProperties(
@@ -286,7 +298,7 @@
             return false;
         };
 
-        pub.appendPieceVoice = function(annot_id, order, time){
+        pub.appendPieceVoice = function(annot_id, order, time, pieceaudio){
             var annot_id_esc = r2.util.escapeDomId(annot_id);
 
             var $comment = $('#' + annot_id_esc);
@@ -300,6 +312,7 @@
 
                 var $piece = $(document.createElement('div'));
                 $piece.toggleClass('tc_piece', true);
+                pieceaudio.SetDom($piece);
 
                 $piece.attr('id', id);
                 setPieceProperties(
@@ -336,6 +349,7 @@
                 $comment.attr('id', annot_id_esc);
                 var $piece = $(document.createElement('div'));
                 $piece.toggleClass('tc_piece', true);
+                doc_model_piecekeyboard.SetDom($piece);
                 $piece.attr('id', pid);
                 setPieceProperties(
                     $piece,

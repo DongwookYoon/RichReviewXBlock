@@ -293,6 +293,7 @@ var r2Ctrl = {};
                         if(new_height >= 0){
                             cur_piece_tearing.resize(new_height);
                             r2.dom_model.updateSizeTextTearing(cur_piece_tearing);
+                            r2App.invalidate_size = true;
                             r2App.invalidate_page_layout = true;
                         }
                     }
@@ -1114,6 +1115,9 @@ var r2Ctrl = {};
             r2App.cur_page.Relayout();
             piecekeyboard.Focus();
             r2Sync.PushToUploadCmd(piecekeyboard.ExportToCmd());
+
+            r2App.invalidate_size = true;
+            r2App.invalidate_page_layout = true;
         }
     };
 

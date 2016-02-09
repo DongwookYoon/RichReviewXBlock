@@ -17,16 +17,16 @@
             try {
                 update();
 
-                if(r2App.invalidate_page_layout){
-                    r2App.cur_page.Relayout();
-                    r2App.invalidate_page_layout = false;
-                    console.log('invalidate_page_layout');
-                }
-
                 if(r2App.invalidate_size){
                     r2.resizeWindow();
                     r2App.invalidate_size = false;
                     console.log('invalidate_size');
+                }
+
+                if(r2App.invalidate_page_layout){
+                    r2App.cur_page.Relayout();
+                    r2App.invalidate_page_layout = false;
+                    console.log('invalidate_page_layout');
                 }
 
                 if(r2App.invalidate_static_scene){
@@ -181,7 +181,7 @@
                     r2.canv_ctx = r2.dom.getPageCanvCtx();
                     r2.annot_canv_ctx = r2.dom.getAnnotCanvCtx();
 
-                    r2.resizeWindow({});
+                    r2.resizeWindow();
 
                     r2.onScreenButtons.Init();
 
@@ -209,6 +209,7 @@
                     initR2();
                     initSystem();
                     r2.loop.tick();
+                    return null;
                 }
             ).catch(r2.util.handleError);
         };
@@ -357,6 +358,9 @@
             function setFromJs(docjs){
                 r2App.doc = r2.createDoc.createR2DocFromDocJs(docjs);
                 r2.dom_model.init(r2App.doc);
+                r2App.invalidate_size = true;
+                r2App.invalidate_page_layout = true;
+                return null;
             }
 
             function setFromLegacyDoc(docjs){
@@ -368,6 +372,8 @@
                         for(var i = 0; i < cmds.length; ++i){
                             r2.cmd.executeCmd(r2App.doc, cmds[i], true, false); // legacy_user_only, skip_self
                         }
+                        r2App.invalidate_size = true;
+                        r2App.invalidate_page_layout = true;
                     }
                 );
             }
@@ -398,7 +404,6 @@
             r2.coverMsg.Hide();
             r2.modalWindowLoading.hideModalWindow();
             r2.modalWindowIntro.Init();
-
             r2.log.Log_Simple('DoneLoading');
         }
 

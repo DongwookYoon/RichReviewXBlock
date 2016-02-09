@@ -83,7 +83,7 @@
         r2.canv_ctx.rect(this.pos.x,this.pos.y,this.size.x,this.size.y);
         r2.canv_ctx.stroke();
     };
-    r2.Obj.prototype.Relayout = function(origin){
+    r2.Obj.prototype.Relayout = function(){
         console.log("Relayout from r2.Obj");
     };
     r2.Obj.prototype.SearchPiece = function(id){
@@ -252,7 +252,6 @@
 
         r2App.invalidate_static_scene = true;
         r2App.invalidate_dynamic_scene = true;
-        r2App.invalidate_size = true;
 
         return this.size;
     };
@@ -427,7 +426,7 @@
         var my = 0;
         var piece;
         for(var i = 0; piece = this.child[i]; ++i){
-            var s = piece.Relayout(new Vec2(origin.x, origin.y + my));
+            var s = piece.Relayout();
             mx = Math.max(mx, s.x);
             my += s.y;
         }
@@ -463,6 +462,7 @@
         this._ttW = 0;
         this._inks = {}; // [annoid][idx]
         this._isprivate = false;
+        this._dom_piece = null;
     };
     r2.Piece.prototype = Object.create(r2.Obj.prototype);
 
@@ -493,6 +493,9 @@
 
         r2App.pieces_cache[this._id] = this;
     };
+    r2.Piece.prototype.SetDom = function($dom_piece){
+        this._dom_piece = $dom_piece.get(0);
+    };
     r2.Piece.prototype.GetNewPieceSize = function(){
         return new Vec2(this._cnt_size.x, r2Const.PIECEAUDIO_HEIGHT);
     };
@@ -508,34 +511,21 @@
     r2.Piece.prototype.GetTtWidth = function(){
         return this._ttW;
     };
-    r2.Piece.prototype.Relayout = function(origin){
-        origin = typeof origin !== 'undefined' ? origin : new Vec2(0, 0);
-        this.pos = origin.clone();
-
-        var mx = this._cnt_size.x;
-        var my = this._cnt_size.y;
-        if(!this._isvisible){
-            my = 0;
+    r2.Piece.prototype.Relayout = function(){
+        var dom_piece = this._dom_piece === null ? $(document.getElementById(this.GetId())).get(0) : this._dom_piece;
+        if(this._dom_piece === null){
+            console.log('x');
         }
+        var rect = r2.dom.getPosAndWidthInPage(dom_piece);
+
+        this.pos = new Vec2(rect[0], rect[1]);
+        this.size = new Vec2(rect[2], rect[3]);
+
         var piece;
         for(var i = 0; piece = this.child[i]; ++i){
-            var s = piece.Relayout(new Vec2(origin.x, origin.y + my));
-            mx = Math.max(mx, s.x);
-            my += s.y;
+            piece.Relayout();
         }
-        this.size = new Vec2(mx, my); // done for the piece background
-
-        // this is for inks
-        var ink;
-        for (var key in this._inks) {
-            if (this._inks.hasOwnProperty(key)) {
-                for (var i = 0; ink = this._inks[key][i]; ++i) {
-                    ink.Relayout(this.pos);
-                }
-            }
-        }
-
-        return this.size;
+        return  this.size;
     };
     r2.Piece.prototype.GetPieceOfClosestBottom = function(pt, dy_obj){
         if (typeof dy_obj === 'undefined'){
@@ -711,8 +701,8 @@
         r2.Obj.prototype.SetVisibility.apply(this, [visible]);
         this._isvisible = true;
     };
-    r2.PieceText.prototype.Relayout = function(origin){
-        var rtn = r2.Piece.prototype.Relayout.apply(this, [origin]);
+    r2.PieceText.prototype.Relayout = function(){
+        var rtn = r2.Piece.prototype.Relayout.apply(this, []);
         var pdf_x = Math.floor(this.pos.x * this._t_pdf_w);
         var pdf_y = Math.floor(this.pos.y * this._t_pdf_w);
         this._t_dr_x = pdf_x/this._t_pdf_w;
@@ -930,8 +920,8 @@
             }
         }
     };
-    r2.PieceAudio.prototype.Relayout = function(origin){
-        var rtn = r2.Piece.prototype.Relayout.apply(this, [origin]);
+    r2.PieceAudio.prototype.Relayout = function(){
+        var rtn = r2.Piece.prototype.Relayout.apply(this, []);
         return rtn;
     };
     r2.PieceAudio.prototype.DrawPiece = function(){
@@ -1288,11 +1278,11 @@
                     this.__contentschanged = true;
                     this.dom_span.textContent = this.dom_textarea.value;
                     if(func_UpdateSizeWithTextInput()){
-                        r2App.invalidate_page_layout = true
+                        r2App.invalidate_size = true;
+                        r2App.invalidate_page_layout = true;
                     }
                 }.bind(this), false);
                 $(this.dom_textarea).focusout(function() {
-                    console.log('>>>>focusout');
                     r2App.cur_focused_piece_keyboard = null;
                     this.dom_textarea.style.boxShadow = "none";
                     $(this.dom).css("pointer-events", 'none');
@@ -1303,7 +1293,6 @@
                     }
                 }.bind(this));
                 $(this.dom_textarea).focus(function() {
-                    console.log('>>>>focusin');
                     r2App.cur_focused_piece_keyboard = this;
                     var color = this._isprivate ?
                             r2.userGroup.GetUser(this._username).color_piecekeyboard_private_box_shadow :
@@ -1341,9 +1330,9 @@
         }
         this.dom_textarea.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
     };
-    r2.PieceKeyboard.prototype.Relayout = function(origin){
+    r2.PieceKeyboard.prototype.Relayout = function(){
         this._isvisible = (!this._isprivate || r2.userGroup.cur_user.name == this._username);
-        return r2.Piece.prototype.Relayout.apply(this, [origin]);
+        return r2.Piece.prototype.Relayout.apply(this, []);
     };
     r2.PieceKeyboard.prototype.DrawPiece = function(){
         var x_shift = this._isprivate ? this.GetPrivateShiftX() : 0;

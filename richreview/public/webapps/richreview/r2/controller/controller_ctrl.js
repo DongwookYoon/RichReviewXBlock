@@ -54,8 +54,9 @@
 
         /* dom */
         r2.dom_model.createCommentVoice(r2App.cur_recording_annot, r2App.cur_pdf_pagen, true); /* live_recording = true */
-        r2.dom_model.appendPieceVoice(annotid, 0, r2App.cur_recording_annot.GetBgnTime());
+        r2.dom_model.appendPieceVoice(annotid, 0, r2App.cur_recording_annot.GetBgnTime(), pieceaudio);
 
+        r2App.invalidate_size = true;
         r2App.invalidate_page_layout = true;
     };
 
@@ -108,10 +109,11 @@
                 r2App.cur_recording_pieceaudios.push(pieceaudio);
                 anchorpiece.AddChildrenAtFront(r2App.cur_recording_pieceaudios);
 
+                r2App.invalidate_size = true;
                 r2App.invalidate_page_layout = true;
 
                 /* dom */
-                r2.dom_model.appendPieceVoice(annot.GetId(), npiece-1, r2App.cur_recording_annot.GetBgnTime());
+                r2.dom_model.appendPieceVoice(annot.GetId(), npiece-1, r2App.cur_recording_annot.GetBgnTime(), pieceaudio);
             }
             r2.PieceAudio.prototype.NormalizePieceAudio(r2App.cur_recording_pieceaudios, refresh_all = false);
         });
@@ -137,6 +139,7 @@
                 else{ /* when a typewritten comment*/
 
                 }
+                r2App.invalidate_size = true;
                 r2App.invalidate_page_layout = true;
                 return true;
             }
@@ -240,7 +243,16 @@
 
     /** reset canvas size */
     r2.resizeWindow = function(){
-        var doc_yx_ratio = r2App.cur_page === null ? 1 : r2App.cur_page.size.y/r2App.cur_page.size.x;
+        var doc_yx_ratio;
+        if(r2.dom_model.getCurPage()){
+            var x = r2.dom.getPosAndWidthInPage(r2.dom_model.getCurPage().get(0));
+            doc_yx_ratio = x[3]/x[2];
+        }
+        else{
+            doc_yx_ratio = 1;
+        }
+
+         //= 1;//r2App.cur_page === null ? 1 : r2App.cur_page.size.y/r2App.cur_page.size.x;
         var app_container_size = r2.dom.calcAppContainerSize();
 
         var scale = r2.viewCtrl.scale;
@@ -255,8 +267,6 @@
         }
         r2App.invalidate_static_scene = true;
         r2App.invalidate_dynamic_scene = true;
-
-
 
         r2.log.Log_RefreshCanvasSize();
     };

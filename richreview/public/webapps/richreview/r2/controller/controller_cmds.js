@@ -82,7 +82,6 @@
                 var page = getR2PageFromPageJs(docjs.pages[i], i);
                 page.SetPage(i);
                 doc.AddPage(page);
-                page.Relayout();
             }
             return doc;
         };
@@ -115,7 +114,6 @@
                         r2region.AddChildAtBack(r2piecetext);
                     }
                 }
-                r2page.Relayout();
             }
 
             return r2doc;
@@ -293,12 +291,16 @@
                     anchorpiece.AddChildrenChronologically([pieceteared]);
 
                     r2.dom_model.createTextTearing(pieceteared);
+                    r2App.invalidate_size = true;
+                    r2App.invalidate_page_layout = true;
                     return true;
                 }
             }
             else{ // change height it exist
                 r2App.pieces_cache[cmd.data.pid].resize(cmd.data.height);
                 r2.dom_model.updateSizeTextTearing(r2App.pieces_cache[cmd.data.pid]);
+                r2App.invalidate_size = true;
+                r2App.invalidate_page_layout = true;
                 return true;
             }
 
@@ -332,8 +334,6 @@
                 var npiece = Math.ceil(cmd.data.duration/timePerPiece);
                 var l = [];
                 for(var i = 0; i < npiece; ++i){
-                    r2.dom_model.appendPieceVoice(cmd.data.aid, i, cmd.time); /* dom */
-
                     var pieceaudio = new r2.PieceAudio();
                     pieceaudio.SetPiece(
                         r2.pieceHashId.voice(cmd.data.aid, i),
@@ -343,8 +343,11 @@
                     );
                     pieceaudio.SetPieceAudio(cmd.data.aid, cmd.user, i*timePerPiece, Math.min(cmd.data.duration, (i+1)*timePerPiece));
                     l.push(pieceaudio);
+                    r2.dom_model.appendPieceVoice(cmd.data.aid, i, cmd.time, pieceaudio); /* dom */
                 }
                 anchorpiece.AddChildrenChronologically(l);
+                r2App.invalidate_size = true;
+                r2App.invalidate_page_layout = true;
 
                 var cmd_spotlight;
                 for(i = 0; cmd_spotlight = cmd.data.Spotlights[i]; ++i){
@@ -451,6 +454,9 @@
                     anchorpiece.GetId(), cmd.data.aid, cmd.user, cmd.data.text, cmd.data.isprivate, anchorpiece.IsOnLeftColumn()
                 );
                 anchorpiece.AddChildrenChronologically([piecekeyboard]);
+
+                r2App.invalidate_size = true;
+                r2App.invalidate_page_layout = true;
                 return true;
             }
 
@@ -530,6 +536,8 @@
             var target = doc.GetTargetPiece(cmd.target);
             if(target){
                 target.SetText(cmd.data);
+                r2App.invalidate_size = true;
+                r2App.invalidate_page_layout = true;
                 return true;
             }
             return false;

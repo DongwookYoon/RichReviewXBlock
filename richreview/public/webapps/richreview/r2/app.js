@@ -435,13 +435,13 @@
             // prevent data loss
             window.onbeforeunload = function () {
                 r2.log.Consume(false); // delayed
-                var now_tying = r2.keyboard.getMode() === r2.KeyboardModeEnum.FOCUSED &&
-                    r2App.cur_focused_piece_keyboard != null &&
-                    r2App.cur_focused_piece_keyboard.WasChanged();
+                var now_typing = r2.keyboard.getMode() === r2.KeyboardModeEnum.FOCUSED &&
+                        r2App.cur_focused_piece_keyboard != null &&
+                        r2App.cur_focused_piece_keyboard.WasChanged();
                 var now_uploading = r2Sync.NowUploading();
-                if (now_tying || now_uploading || r2App.annot_private_spotlight.changed) {
-                    if (now_tying)
-                        $(r2App.cur_focused_piece_keyboard.dom_textarea).blur();
+                if (now_typing || now_uploading || r2App.annot_private_spotlight.changed) {
+                    if (now_typing)
+                        $(r2App.cur_focused_piece_keyboard.dom_textbox).blur();
                     return "The webapp is uploading your note. Please wait for seconds, and retry.";
                 }
             };

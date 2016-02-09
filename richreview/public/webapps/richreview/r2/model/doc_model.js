@@ -1066,7 +1066,6 @@
         }
     };
 
-
     /*
      * PieceKeyboard
      */
@@ -1076,9 +1075,7 @@
         this._username = null;
 
         this.dom = null;
-        this.dom_span = null;
-        this.dom_pre = null;
-        this.dom_textarea = null;
+        this.dom_textbox = null;
 
         this.__private_shift_x = null;
         this._isprivate = false;
@@ -1103,8 +1100,7 @@
         return this.__contentschanged;
     };
     r2.PieceKeyboard.prototype.SetText = function(text){
-        this.dom_span.textContent = text;
-        this.dom_textarea.value = this.dom_textarea.textContent = text;
+        this.dom_textbox.innerHTML = text;
         this.ResizeDom();
     };
     r2.PieceKeyboard.prototype.ExportToCmd = function(){
@@ -1123,7 +1119,7 @@
         cmd.data = {};
         cmd.data.pid = this._id;
         cmd.data.aid = this._annotid;
-        cmd.data.text = this.dom_textarea.value;
+        cmd.data.text = this.dom_textbox.innerHTML;
         cmd.data.isprivate = this._isprivate;
 
         return cmd;
@@ -1141,7 +1137,7 @@
         cmd.op = "ChangeProperty";
         cmd.type = "PieceKeyboardTextChange";
         cmd.target = this.GetTargetData();
-        cmd.data = this.dom_textarea.value;
+        cmd.data = this.dom_textbox.innerHTML;
 
         return cmd;
     };
@@ -1187,9 +1183,6 @@
         }
         else{
             //$(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(false, isOnLeftColumn));
-        }
-        if(this._username != r2.userGroup.cur_user.name){
-            $(this.dom_textarea).prop('readonly', true);
         }
 
         r2.dom_model.appendPieceKeyboard(
@@ -1242,80 +1235,55 @@
         this.dom_tr.classList.toggle('unselectable', true);
         this.dom.appendChild(this.dom_tr);
 
-        this.dom_pre = document.createElement('pre');
-        this.dom_pre.classList.toggle('r2_piecekeyboard_pre', true);
-        this.dom_pre.classList.toggle('unselectable', true);
-        this.dom_pre.setAttribute('aria-hidden', true);
-
-        this.dom_span = document.createElement('span');
-        this.dom_span.classList.toggle('unselectable', true);
-        this.dom_pre.appendChild(this.dom_span);
-        this.dom_pre.appendChild(document.createElement('br'));
-        this.dom_tr.appendChild(this.dom_pre);
-
-
-        this.dom_textarea = document.createElement('textarea');
-        this.dom_textarea.classList.toggle('r2_piecekeyboard_textarea', true);
-        this.dom_textarea.classList.toggle('unselectable', true);
-        this.dom_textarea.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
-        if(this._username != r2.userGroup.cur_user.name){
-            this.dom_textarea.setAttribute('readonly', 'readonly');
-        }
-        this.dom_tr.appendChild(this.dom_textarea);
+        this.dom_textbox = document.createElement('div');
+        this.dom_textbox.classList.toggle('r2_piecekeyboard_textbox', true);
+        this.dom_textbox.setAttribute('contenteditable', 'true');
+        this.dom_textbox.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
+        this.dom_tr.appendChild(this.dom_textbox);
 
         $(this.dom_tr).css('left', this.GetTtIndent()*r2Const.FONT_SIZE_SCALE+'em');
         $(this.dom_tr).css('width', this.GetTtIndentedWidth()*r2Const.FONT_SIZE_SCALE+'em');
 
-        //fa-times-circle
-        //fa-share-square
+        if(this._username != r2.userGroup.cur_user.name){
+            this.dom_textbox.setAttribute('contenteditable', 'false');
+        }
 
-        ///////////////
-        this.AddEventHandle = function () {
-            //var TextAreaCommit = this.CommitTextAreaContent.bind(this);
-            var func_UpdateSizeWithTextInput = this.UpdateSizeWithTextInput.bind(this);
-            if (this.dom_textarea.addEventListener) {
-                this.dom_textarea.addEventListener('input', function() {
-                    this.__contentschanged = true;
-                    this.dom_span.textContent = this.dom_textarea.value;
-                    if(func_UpdateSizeWithTextInput()){
-                        r2App.invalidate_size = true;
-                        r2App.invalidate_page_layout = true;
-                    }
-                }.bind(this), false);
-                $(this.dom_textarea).focusout(function() {
-                    r2App.cur_focused_piece_keyboard = null;
-                    this.dom_textarea.style.boxShadow = "none";
-                    $(this.dom).css("pointer-events", 'none');
-                    if(this.__contentschanged){
-                        console.log('>>>>__contentschanged:', this.ExportToTextChange());
-                        r2Sync.PushToUploadCmd(this.ExportToTextChange());
-                        this.__contentschanged = false;
-                    }
-                }.bind(this));
-                $(this.dom_textarea).focus(function() {
-                    r2App.cur_focused_piece_keyboard = this;
-                    var color = this._isprivate ?
-                            r2.userGroup.GetUser(this._username).color_piecekeyboard_private_box_shadow :
-                            r2.userGroup.GetUser(this._username).color_piecekeyboard_box_shadow;
-                    this.dom_textarea.style.boxShadow = "0 0 0.2em "+color+" inset, 0 0 0.2em "+color;
-                    if(this._username == r2.userGroup.cur_user.name) {
-                        //this.dom_btn_rmv.style.display = "block";
-                        //this.dom_btn_pub.style.display = "block";
-                    }
-                    $(this.dom).css("pointer-events", 'auto');
-                }.bind(this));
+        /* add event handlers*/
+        var func_UpdateSizeWithTextInput = this.UpdateSizeWithTextInput.bind(this);
+
+        this.dom_textbox.addEventListener('input', function() {
+            this.__contentschanged = true;
+            if(func_UpdateSizeWithTextInput()){
+                r2App.invalidate_size = true;
+                r2App.invalidate_page_layout = true;
             }
-        }.bind(this);
+        }.bind(this), false);
 
-        this.AddEventHandle();
+        this.dom_textbox.addEventListener('focus', function(event){
+            r2App.cur_focused_piece_keyboard = this;
+            var color = r2.userGroup.GetUser(this._username).color_piecekeyboard_box_shadow;
+            this.dom_textbox.style.boxShadow = "0 0 0.2em "+color+" inset, 0 0 0.2em "+color;
+            $(this.dom).css("pointer-events", 'auto');
+        }.bind(this));
 
-        //r2.dom.appendToPageDom(this.dom);
+        this.dom_textbox.addEventListener('blur', function(event){
+            r2App.cur_focused_piece_keyboard = null;
+            this.dom_textbox.style.boxShadow = "none";
+            $(this.dom).css("pointer-events", 'none');
+            if(this.__contentschanged){
+                console.log('>>>>__contentschanged:', this.ExportToTextChange());
+                r2Sync.PushToUploadCmd(this.ExportToTextChange());
+                this.__contentschanged = false;
+            }
+        }.bind(this));
+        /* add event handlers*/
+
         this.ResizeDom();
 
         return this.dom;
     };
     r2.PieceKeyboard.prototype.edit = function(){
-        this.dom_textarea.focus();
+        this.dom_textbox.focus();
     };
 
     r2.PieceKeyboard.prototype.SetPubPrivate = function(isprivate){
@@ -1328,7 +1296,6 @@
         else{
             //$(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(false, this.IsOnLeftColumn()));
         }
-        this.dom_textarea.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
     };
     r2.PieceKeyboard.prototype.Relayout = function(){
         this._isvisible = (!this._isprivate || r2.userGroup.cur_user.name == this._username);
@@ -1402,12 +1369,10 @@
         return false;
     };
     r2.PieceKeyboard.prototype.ResizeDom = function(){
-        var w = r2.viewCtrl.mapDocToDomScale(this.GetTtIndentedWidth());
-        this.__dom_size = new Vec2(w, this.dom.clientHeight);
         this.UpdateSizeWithTextInput();
     };
     r2.PieceKeyboard.prototype.Focus = function(){
-        this.dom_textarea.focus();
+        this.dom_textbox.focus();
     };
     r2.PieceKeyboard.prototype.IsAnnotHasComment = function(annotid, rtn){
         if(this._annotid == annotid){

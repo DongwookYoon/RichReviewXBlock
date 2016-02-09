@@ -519,7 +519,7 @@ var r2Ctrl = {};
         var updateMode = function(){
             $focus = $(':focus');
             if($focus.length !== 0){
-                if($focus.hasClass('r2_piecekeyboard_textarea')){
+                if($focus.hasClass('r2_piecekeyboard_textbox')){
                     mode = r2.KeyboardModeEnum.FOCUSED;
                     return;
                 }

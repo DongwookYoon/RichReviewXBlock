@@ -1067,6 +1067,130 @@
     };
 
     /*
+     * PieceEditableAudio
+     */
+
+    r2.PieceEditableAudio = function(){
+        r2.Piece.call(this);
+        this._annotid = null;
+        this._username = null;
+
+        this.dom = null;
+        this.dom_textbox = null;
+    };
+    r2.PieceEditableAudio.prototype = Object.create(r2.Piece.prototype);
+    r2.PieceEditableAudio.prototype.Destructor = function(){
+        r2.Piece.prototype.Destructor.apply(this);
+    };
+    r2.PieceEditableAudio.prototype.SetPieceKeyboard = function(anchor_pid, annotid, username){
+        this._annotid = annotid;
+        this._username = username;
+
+        var dom = this.CreateDom();
+
+        r2.dom_model.appendPieceKeyboard(
+            this._username,
+            this._annotid,
+            this.GetId(),
+            anchor_pid,
+            this._creationTime,
+            dom,
+            this
+        );
+
+        this.UpdateSizeWithTextInput();
+
+        return dom;
+    };
+    r2.PieceEditableAudio.prototype.GetAnnotId = function(){
+        if(this._annotid != null){
+            return this._annotid;
+        }
+    };
+
+    r2.PieceEditableAudio.prototype.CreateDom = function(){
+        this.dom = document.createElement('div');
+        this.dom.classList.toggle('r2_piecekeyboard', true);
+        this.dom.classList.toggle('unselectable', true);
+        this.dom.setAttribute('aria-label', 'text comment');
+        this.dom.setAttribute('role', 'article');
+
+        this.dom_tr = document.createElement('div');
+        this.dom_tr.classList.toggle('r2_peicekeyboard_tr', true);
+        this.dom_tr.classList.toggle('unselectable', true);
+        this.dom.appendChild(this.dom_tr);
+
+        this.dom_textbox = document.createElement('div');
+        this.dom_textbox.classList.toggle('r2_piecekeyboard_textbox', true);
+        this.dom_textbox.setAttribute('contenteditable', 'true');
+        this.dom_textbox.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
+        this.dom_tr.appendChild(this.dom_textbox);
+
+        $(this.dom_tr).css('left', this.GetTtIndent()*r2Const.FONT_SIZE_SCALE+'em');
+        $(this.dom_tr).css('width', this.GetTtIndentedWidth()*r2Const.FONT_SIZE_SCALE+'em');
+
+        if(this._username != r2.userGroup.cur_user.name){
+            this.dom_textbox.setAttribute('contenteditable', 'false');
+        }
+
+        /* add event handlers*/
+        var func_UpdateSizeWithTextInput = this.UpdateSizeWithTextInput.bind(this);
+
+        this.dom_textbox.addEventListener('input', function() {
+            this.__contentschanged = true;
+            if(func_UpdateSizeWithTextInput()){
+                r2App.invalidate_size = true;
+                r2App.invalidate_page_layout = true;
+            }
+        }.bind(this), false);
+
+        this.dom_textbox.addEventListener('focus', function(event){
+            r2App.cur_focused_piece_keyboard = this;
+            var color = r2.userGroup.GetUser(this._username).color_piecekeyboard_box_shadow;
+            this.dom_textbox.style.boxShadow = "0 0 0.2em "+color+" inset, 0 0 0.2em "+color;
+            $(this.dom).css("pointer-events", 'auto');
+        }.bind(this));
+
+        this.dom_textbox.addEventListener('blur', function(event){
+            r2App.cur_focused_piece_keyboard = null;
+            this.dom_textbox.style.boxShadow = "none";
+            $(this.dom).css("pointer-events", 'none');
+            if(this.__contentschanged){
+                console.log('>>>>__contentschanged:', this.ExportToTextChange());
+                r2Sync.PushToUploadCmd(this.ExportToTextChange());
+                this.__contentschanged = false;
+            }
+        }.bind(this));
+        /* add event handlers*/
+
+        this.ResizeDom();
+
+        return this.dom;
+    };
+    r2.PieceEditableAudio.prototype.UpdateSizeWithTextInput = function(){
+        var getHeight = function($target){
+            var $next = $target.next();
+            if($next.length !== 0){
+                return $next.offset().top-$target.offset().top;
+            }
+            else{
+                return $target.innerHeight();
+            }
+        };
+
+        var new_height = r2.viewCtrl.mapDomToDocScale(getHeight($(this.dom)));
+        if(this._cnt_size.y != new_height){
+            this._cnt_size.y = new_height;
+            return true;
+        }
+        return false;
+    };
+    r2.PieceEditableAudio.prototype.ResizeDom = function(){
+        this.UpdateSizeWithTextInput();
+    };
+
+
+    /*
      * PieceKeyboard
      */
     r2.PieceKeyboard = function() {
@@ -1081,7 +1205,6 @@
         this._isprivate = false;
 
         this.__contentschanged = false;
-        this.__dom_size = new Vec2(0,0);
     };
     r2.PieceKeyboard.prototype = Object.create(r2.Piece.prototype);
 

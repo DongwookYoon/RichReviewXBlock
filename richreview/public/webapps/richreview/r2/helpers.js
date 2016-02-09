@@ -1505,11 +1505,13 @@
         };
 
         pub.recordingBgn = function(){
-            $(overlay_container).toggleClass("recording", true);
+            $('#recording_indicator').css("display","block");
+            $(view).toggleClass("recording", true);
         };
 
         pub.recordingEnd = function(){
-            $(overlay_container).toggleClass("recording", false);
+            $('#recording_indicator').css("display","none");
+            $(view).toggleClass("recording", false);
         };
 
         pub.getPageOffset = function(){

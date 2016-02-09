@@ -81,6 +81,12 @@ var r2App = (function() {
         RECORDING: 2
     };
 
+    pub.RecordingUI = {
+        WAVEFORM : 0,
+        SIMPLE_SPEECH : 1,
+        NEW_SPEAK: 2
+    };
+
     r2.util.setAjaxCsrfToken();
 
     pub.file_storage_url = "https://richreview.blob.core.windows.net/";
@@ -175,29 +181,6 @@ var r2App = (function() {
         };
 
         return pub_ps;
-    }());
-
-    pub.recordingTrigger = (function(){
-        var pub = {};
-
-        var triggered = false;
-        var target = null;
-
-        pub.set = function(target_piece){
-            triggered = true;
-            target = target_piece;
-        };
-
-        pub.isReady = function(){
-            return triggered;
-        };
-
-        pub.bgn = function(){
-            triggered = false;
-            r2.recordingBgn(target);
-        };
-
-        return pub;
     }());
 
     pub.asyncErr = (function(){

@@ -102,12 +102,12 @@
         };
 
         var triggerReservedRecordingBgn = function(){
-            if(r2App.recordingTrigger.isReady()){
+            if(r2.recordingCtrl.isReady()){
                 if(r2App.mode === r2App.AppModeEnum.REPLAYING){
                     r2.rich_audio.stop();
                 }
                 if(r2App.mode === r2App.AppModeEnum.IDLE && r2.audioPlayer.isIdle()){
-                    r2App.recordingTrigger.bgn();
+                    r2.recordingCtrl.bgn();
                 }
             }
         };

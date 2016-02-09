@@ -28,6 +28,9 @@
   background: dimgray;
 }
 
+#r2_view.recording {
+  box-shadow: inset 3px 3px 16px red;
+}
 
 #r2_content {
   width: 125px;
@@ -559,7 +562,7 @@ a:active {
 #dashboard > #browse_row > div > .dashboard-title {
   display: inline-block;
   font-weight: bold;
-  padding: 7px 12px;
+  padding: 10px 12px;
   font-size: 13px;
 }
 
@@ -589,9 +592,6 @@ a:active {
   margin-top: 4px;
   padding:4px 2px;
 }
-
-line-height: 0.8;
-
 
 #page_nav_input {
   width: 33px;
@@ -628,10 +628,6 @@ line-height: 0.8;
   position: relative;
   width: 100%;
   z-index: 9;
-}
-
-#r2_app_container > #overlay_container.recording {
-  box-shadow: inset 0px 0px 16px red;
 }
 
 

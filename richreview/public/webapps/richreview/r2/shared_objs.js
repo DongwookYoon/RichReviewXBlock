@@ -92,6 +92,7 @@ var r2App = (function() {
     pub.file_storage_url = "https://richreview.blob.core.windows.net/";
     pub.server_url = document.location.hostname == "localhost" ? "https://localhost:8001/" : "https://richreview.net/";
 
+    pub.bluemix_tts_auth_context = null;
     pub.invalidate_static_scene = false;
     pub.invalidate_dynamic_scene = false;
     pub.invalidate_size = false;
@@ -117,10 +118,10 @@ var r2App = (function() {
     pub.annot_static_ink = null;
     pub.pieces_cache = {};
 
-    pub.cur_recording_anchor_piece = null;
 
     pub.cur_recording_annot = null;
     pub.cur_recording_pieceaudios = null;
+    pub.cur_recording_anchor_piece = null;
     pub.cur_recording_minmax = [0.05, 0.25];
     pub.cur_focused_piece_keyboard = null;
 

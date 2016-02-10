@@ -688,7 +688,7 @@ var r2Ctrl = {};
                 switch (event.which) {
                     case CONST.KEY_SPACE:
                     case CONST.KEY_ENTER:
-                        r2.recordingStop(toupload = true);
+                        r2.recordingCtrl.stop(toupload = true);
                         r2.log.Log_Simple("Recording_Stop");
                         break;
                     default:
@@ -761,7 +761,7 @@ var r2Ctrl = {};
                 event.preventDefault();
                 if(event.which != 1 || r2.keyboard.ctrlkey_dn){return;}
                 if(r2App.mode == r2App.AppModeEnum.RECORDING){
-                    r2.recordingStop(toupload = true);
+                    r2.recordingCtrl.stop(toupload = true);
                     r2.log.Log_Simple("Recording_Stop_OnScrBtn");
                 }
                 else{
@@ -1079,7 +1079,7 @@ var r2Ctrl = {};
 
     var replacePieceAudioToPieceKeyboard = function(){
         var annotid = r2App.cur_recording_annot.GetId();
-        r2.recordingStop(toupload = false);
+        r2.recordingCtrl.stop(toupload = false);
         r2.log.Log_Simple("Recording_Stop_CancelForTextComment");
         r2.log.Log_Simple("CreatePieceKeyboard_Public_Enter");
         r2.removeAnnot(annotid, askuser = false, mute = true);
@@ -1103,9 +1103,11 @@ var r2Ctrl = {};
                 );
                 pieceteared.SetPieceTeared(r2.userGroup.cur_user.name);
                 anchorpiece.AddChildAtFront(pieceteared);
-                r2App.cur_page.Relayout();
 
                 r2.dom_model.createTextTearing(pieceteared);
+
+                r2App.invalidate_size = true;
+                r2App.invalidate_page_layout = true;
                 return pieceteared;
             }
         }
@@ -1136,7 +1138,6 @@ var r2Ctrl = {};
                 anchorpiece.GetId(), annotid, r2.userGroup.cur_user.name, '', isprivate, anchorpiece.IsOnLeftColumn()
             );
             anchorpiece.AddChildAtFront(piecekeyboard);
-            r2App.cur_page.Relayout();
             piecekeyboard.Focus();
             r2Sync.PushToUploadCmd(piecekeyboard.ExportToCmd());
 

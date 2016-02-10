@@ -1069,7 +1069,6 @@
     /*
      * PieceEditableAudio
      */
-
     r2.PieceEditableAudio = function(){
         r2.Piece.call(this);
         this._annotid = null;
@@ -1077,28 +1076,30 @@
 
         this.dom = null;
         this.dom_textbox = null;
+        this._temporary_n = 0;
     };
     r2.PieceEditableAudio.prototype = Object.create(r2.Piece.prototype);
     r2.PieceEditableAudio.prototype.Destructor = function(){
         r2.Piece.prototype.Destructor.apply(this);
     };
-    r2.PieceEditableAudio.prototype.SetPieceKeyboard = function(anchor_pid, annotid, username){
+    r2.PieceEditableAudio.prototype.SetPieceEditableAudio = function(anchor_pid, annotid, username, inner_html, live_recording){
         this._annotid = annotid;
         this._username = username;
 
         var dom = this.CreateDom();
 
-        r2.dom_model.appendPieceKeyboard(
+        r2.dom_model.appendPieceEditableAudio(
             this._username,
             this._annotid,
             this.GetId(),
             anchor_pid,
             this._creationTime,
             dom,
-            this
+            this,
+            live_recording
         );
 
-        this.UpdateSizeWithTextInput();
+        this.setInnerHtml(inner_html);
 
         return dom;
     };
@@ -1110,18 +1111,18 @@
 
     r2.PieceEditableAudio.prototype.CreateDom = function(){
         this.dom = document.createElement('div');
-        this.dom.classList.toggle('r2_piecekeyboard', true);
+        this.dom.classList.toggle('r2_piece_editable_audio', true);
         this.dom.classList.toggle('unselectable', true);
         this.dom.setAttribute('aria-label', 'text comment');
         this.dom.setAttribute('role', 'article');
 
         this.dom_tr = document.createElement('div');
-        this.dom_tr.classList.toggle('r2_peicekeyboard_tr', true);
+        this.dom_tr.classList.toggle('r2_piece_editable_audio_tr', true);
         this.dom_tr.classList.toggle('unselectable', true);
         this.dom.appendChild(this.dom_tr);
 
         this.dom_textbox = document.createElement('div');
-        this.dom_textbox.classList.toggle('r2_piecekeyboard_textbox', true);
+        this.dom_textbox.classList.toggle('r2_piece_editable_audio_textbox', true);
         this.dom_textbox.setAttribute('contenteditable', 'true');
         this.dom_textbox.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
         this.dom_tr.appendChild(this.dom_textbox);
@@ -1134,7 +1135,7 @@
         }
 
         /* add event handlers*/
-        var func_UpdateSizeWithTextInput = this.UpdateSizeWithTextInput.bind(this);
+        var func_UpdateSizeWithTextInput = this.updateSizeWithTextInput.bind(this);
 
         this.dom_textbox.addEventListener('input', function() {
             this.__contentschanged = true;
@@ -1163,11 +1164,11 @@
         }.bind(this));
         /* add event handlers*/
 
-        this.ResizeDom();
+        this.resizeDom();
 
         return this.dom;
     };
-    r2.PieceEditableAudio.prototype.UpdateSizeWithTextInput = function(){
+    r2.PieceEditableAudio.prototype.updateSizeWithTextInput = function(){
         var getHeight = function($target){
             var $next = $target.next();
             if($next.length !== 0){
@@ -1185,9 +1186,65 @@
         }
         return false;
     };
-    r2.PieceEditableAudio.prototype.ResizeDom = function(){
-        this.UpdateSizeWithTextInput();
+    r2.PieceEditableAudio.prototype.DrawPiece = function(){
+        var x_bgn = this.pos.x + this.GetTtIndent();
+        var y_bgn = this.pos.y-r2Const.PIECEAUDIO_LINE_WIDTH;
+
+        r2.canv_ctx.beginPath();
+        r2.canv_ctx.moveTo(x_bgn, y_bgn);
+        r2.canv_ctx.lineTo(x_bgn, y_bgn+this._cnt_size.y);
+        r2.canv_ctx.moveTo(x_bgn, y_bgn+this._cnt_size.y);
+        r2.canv_ctx.lineTo(x_bgn+this.GetTtIndentedWidth(), y_bgn+this._cnt_size.y);
+
+        r2.canv_ctx.strokeStyle = r2.userGroup.GetUser(this._username).color_light_html;
+        r2.canv_ctx.lineWidth = r2Const.PIECEAUDIO_LINE_WIDTH;
+        r2.canv_ctx.lineCap = 'round';
+        r2.canv_ctx.lineJoin = 'round';
+        r2.canv_ctx.stroke();
     };
+    r2.PieceEditableAudio.prototype.resizeDom = function(){
+        this.updateSizeWithTextInput();
+    };
+    r2.PieceEditableAudio.prototype.setInnerHtml = function(inner_html){
+        this.dom_textbox.innerHTML = inner_html;
+        this.resizeDom();
+    };
+    r2.PieceEditableAudio.prototype.setCaptionTemporary = function(words){
+        var i;
+        for(i = 0; i < this._temporary_n; ++i){
+            $(this.dom_textbox).find(':last-child').remove();
+            console.log('remove');
+        }
+        for(let w of words){
+            var $span = $(document.createElement('span'));
+            $span.text(w[0]+' ');
+            $(this.dom_textbox).append($span);
+        }
+        this._temporary_n = words.length;
+        if(this.updateSizeWithTextInput()){
+            r2App.invalidate_size = true;
+            r2App.invalidate_page_layout = true;
+        }
+    };
+    r2.PieceEditableAudio.prototype.setCaptionFinal = function(words){
+        var i;
+        for(i = 0; i < this._temporary_n; ++i){
+            $(this.dom_textbox).find(':last-child').remove();
+            console.log('remove');
+        }
+        for(let w of words){
+            var $span = $(document.createElement('span'));
+            $span.text(w[0]+' ');
+            $(this.dom_textbox).append($span);
+        }
+        this._temporary_n = 0;
+        if(this.updateSizeWithTextInput()){
+            r2App.invalidate_size = true;
+            r2App.invalidate_page_layout = true;
+        }
+    };
+
+
 
 
     /*

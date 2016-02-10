@@ -1504,12 +1504,12 @@
             $(content).on('contextmenu', func);
         };
 
-        pub.recordingBgn = function(){
+        pub.enableRecordingIndicators = function(){
             $('#recording_indicator').css("display","block");
             $(view).toggleClass("recording", true);
         };
 
-        pub.recordingEnd = function(){
+        pub.disableRecordingIndicators = function(){
             $('#recording_indicator').css("display","none");
             $(view).toggleClass("recording", false);
         };

@@ -75,10 +75,10 @@
                 // upload and download cmds
                 r2Sync.loop();
 
-                triggerReservedRecordingBgn();
+                triggerReservedRecording();
             }
             else if(r2App.mode == r2App.AppModeEnum.RECORDING){
-                r2.recordingUpdate();
+                r2.recordingCtrl.update();
             }
 
             r2.log.Consume(true); // delayed consumption of the log upload queue
@@ -101,7 +101,7 @@
             }
         };
 
-        var triggerReservedRecordingBgn = function(){
+        var triggerReservedRecording = function(){
             if(r2.recordingCtrl.isReady()){
                 if(r2App.mode === r2App.AppModeEnum.REPLAYING){
                     r2.rich_audio.stop();
@@ -434,6 +434,7 @@
 
             // prevent data loss
             window.onbeforeunload = function () {
+                localStorage.clear();
                 r2.log.Consume(false); // delayed
                 var now_typing = r2.keyboard.getMode() === r2.KeyboardModeEnum.FOCUSED &&
                         r2App.cur_focused_piece_keyboard != null &&

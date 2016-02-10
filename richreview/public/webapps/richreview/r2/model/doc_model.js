@@ -1108,7 +1108,6 @@
             return this._annotid;
         }
     };
-
     r2.PieceEditableAudio.prototype.CreateDom = function(){
         this.dom = document.createElement('div');
         this.dom.classList.toggle('r2_piece_editable_audio', true);
@@ -1151,6 +1150,7 @@
             this.dom_textbox.style.boxShadow = "0 0 0.2em "+color+" inset, 0 0 0.2em "+color;
             $(this.dom).css("pointer-events", 'auto');
         }.bind(this));
+        r2.keyboard.pieceEventListener.setTextbox(this.dom_textbox);
 
         this.dom_textbox.addEventListener('blur', function(event){
             r2App.cur_focused_piece_keyboard = null;
@@ -1213,7 +1213,6 @@
         var i;
         for(i = 0; i < this._temporary_n; ++i){
             $(this.dom_textbox).find(':last-child').remove();
-            console.log('remove');
         }
         for(let w of words){
             var $span = $(document.createElement('span'));
@@ -1230,7 +1229,6 @@
         var i;
         for(i = 0; i < this._temporary_n; ++i){
             $(this.dom_textbox).find(':last-child').remove();
-            console.log('remove');
         }
         for(let w of words){
             var $span = $(document.createElement('span'));
@@ -1243,9 +1241,12 @@
             r2App.invalidate_page_layout = true;
         }
     };
-
-
-
+    r2.PieceEditableAudio.prototype.doneCaptioning = function(){
+        this.Focus();
+    };
+    r2.PieceEditableAudio.prototype.Focus = function(){
+        this.dom_textbox.focus();
+    };
 
     /*
      * PieceKeyboard
@@ -1445,6 +1446,7 @@
             this.dom_textbox.style.boxShadow = "0 0 0.2em "+color+" inset, 0 0 0.2em "+color;
             $(this.dom).css("pointer-events", 'auto');
         }.bind(this));
+        r2.keyboard.pieceEventListener.setTextbox(this.dom_textbox);
 
         this.dom_textbox.addEventListener('blur', function(event){
             r2App.cur_focused_piece_keyboard = null;

@@ -166,7 +166,7 @@
                     bluemix_stt.messageParser.run(msg);
                 },
                 function() { // closed
-                    console.log('Done');
+                    piece_editable_audio.doneCaptioning();
                 }
             );
         };

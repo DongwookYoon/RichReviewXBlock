@@ -436,7 +436,7 @@
             window.onbeforeunload = function () {
                 localStorage.clear();
                 r2.log.Consume(false); // delayed
-                var now_typing = r2.keyboard.getMode() === r2.KeyboardModeEnum.FOCUSED &&
+                var now_typing = r2.keyboard.getMode() === r2.KeyboardModeEnum.TEXTBOX &&
                         r2App.cur_focused_piece_keyboard != null &&
                         r2App.cur_focused_piece_keyboard.WasChanged();
                 var now_uploading = r2Sync.NowUploading();

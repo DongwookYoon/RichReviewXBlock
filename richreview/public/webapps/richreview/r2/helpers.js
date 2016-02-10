@@ -1200,6 +1200,7 @@
             $btn_center.append(createIcon(btn_center_fa_font));
             if(typeof cb !== 'undefined'){$btn_center.click(closeRadialMenuAndRun($menu,cb));}
             $menu.append($btn_center);
+            r2.keyboard.pieceEventListener.setBtn($btn_center.get(0));
 
             var $btn_radials = $(document.createElement('div'));
             $btn_radials.addClass('rm_btn_raidial');
@@ -1219,6 +1220,7 @@
             $btn.append(createIcon(fa_font));
             $btn.click(closeRadialMenuAndRun($menu, cb));
             $menu.find('.rm_btn_raidial').append($btn);
+            r2.keyboard.pieceEventListener.setBtn($btn.get(0));
 
             setBtnRadialPos($menu);
         };

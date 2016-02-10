@@ -456,6 +456,9 @@ var r2Ctrl = {};
         else if(obj_front instanceof r2.PieceKeyboard){
             obj_front.Focus();
         }
+        else if(obj_front instanceof r2.PieceEditableAudio){
+            obj_front.Focus();
+        }
         else{
             if(obj_front instanceof r2.PieceText){
                 r2.dom_model.focusCtrl.focusPiece(obj_front.GetId());
@@ -475,7 +478,7 @@ var r2Ctrl = {};
 
     /* keyboard */
     r2.KeyboardModeEnum = {
-        FOCUSED : 0,
+        TEXTBOX : 0,
         NORMAL : 1,
         ON_BTN : 2
     };
@@ -519,28 +522,28 @@ var r2Ctrl = {};
             return mode;
         };
 
-        var updateMode = function(){
-            $focus = $(':focus');
-            if($focus.length !== 0){
-                if($focus.hasClass('r2_piecekeyboard_textbox')){
-                    mode = r2.KeyboardModeEnum.FOCUSED;
-                    return;
-                }
-                else if($focus.hasClass('rm_btn')){
+        pub.pieceEventListener = (function(){
+            var pub_ph = {};
+            pub_ph.setTextbox = function(dom_textbox){
+                dom_textbox.addEventListener('focus', function(){
+                    mode = r2.KeyboardModeEnum.TEXTBOX;
+                });
+                dom_textbox.addEventListener('blur', function(){
+                    mode = r2.KeyboardModeEnum.NORMAL;
+                });
+            };
+            pub_ph.setBtn = function(dom_btn){
+                dom_btn.addEventListener('focus', function(){
                     mode = r2.KeyboardModeEnum.ON_BTN;
-                    return;
-                }
-                else if($focus.hasClass('btn-dashboard')){
-                    mode = r2.KeyboardModeEnum.ON_BTN;
-                    return;
-                }
-            }
-            mode = r2.KeyboardModeEnum.NORMAL;
-            return;
-        };
+                });
+                dom_btn.addEventListener('blur', function(){
+                    mode = r2.KeyboardModeEnum.NORMAL;
+                });
+            };
+            return pub_ph;
+        }());
 
         pub.handleDn = function(event){
-            updateMode();
             if(r2App.mode === r2App.AppModeEnum.IDLE && mode === r2.KeyboardModeEnum.NORMAL){
                 ;
             }
@@ -557,7 +560,7 @@ var r2Ctrl = {};
                     }
                 }
             }
-            if(mode !== r2.KeyboardModeEnum.FOCUSED){
+            if(mode !== r2.KeyboardModeEnum.TEXTBOX){
                 switch(event.which){
                     case CONST.KEY_CTRL: // left ctrl
                         pub.ctrlkey_dn = true;

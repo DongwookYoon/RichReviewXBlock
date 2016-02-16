@@ -27,7 +27,7 @@ var r2Const = (function () {
 
     // inks
     pub.INK_WIDTH = 0.001;
-    pub.ERASER_RADIUS = 0.001;
+    pub.ERASER_RADIUS = 0.01;
 
     // page navbar
     pub.NAVBAR_PAGES_N = 5; // should be an odd number

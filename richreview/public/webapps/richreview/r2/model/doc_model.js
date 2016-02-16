@@ -570,7 +570,7 @@
         }
         this._inks[annotid].push(stroke);
     };
-    r2.Piece.prototype.eraseInk = function(pt){
+    r2.Piece.prototype.eraseInk = function(pt, rtn){
         var min_dist = Number.POSITIVE_INFINITY;
         var ink;
         var pt_on_piece = pt.subtract(this.pos, true);
@@ -583,11 +583,11 @@
                     {
                         min_dist = Math.min(min_dist, ink.dist(pt_on_piece));
                     }
+                    if(ink.dist(pt_on_piece) <  r2Const.ERASER_RADIUS){
+                        rtn.push({piece:this, key: key, ink: ink})
+                    }
                 }
             }
-        }
-        if(min_dist < 0.01){
-            console.log(min_dist);
         }
     };
     r2.Piece.prototype.drawInkReplaying = function(canvas_ctx){

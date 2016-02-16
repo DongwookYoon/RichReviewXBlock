@@ -666,7 +666,6 @@ var r2Ctrl = {};
                 }
             }
 
-
             if( mode === r2.KeyboardModeEnum.NORMAL &&
                     (event.which === CONST.KEY_ENTER || event.which === CONST.KEY_SPACE) ){
                 event.preventDefault();
@@ -1022,19 +1021,40 @@ var r2Ctrl = {};
             var eraser_pos = null;
             pub_er.up = function(){
                 eraser_pos = null;
+                r2App.invalidate_dynamic_scene = true;
             };
 
             pub_er.mv = function(pt){
-                r2App.cur_page.RunRecursive('eraseInk', [pt]);
+                var rtn = [];
+                r2App.cur_page.RunRecursive('eraseInk', [pt, rtn]);
                 eraser_pos = pt;
                 r2App.invalidate_dynamic_scene = true;
+                if(rtn.length){
+                    for(var i = 0, l = rtn.length; i < l; ++i){
+                        var ink = rtn[i].ink;
+                        var idx;
+                        idx = rtn[i].piece._inks[rtn[i].key].indexOf(ink);
+                        if(idx > -1) {
+                            rtn[i].piece._inks[rtn[i].key].splice(idx, 1);
+                        }
+                        var annot;
+                        annot = ink._annotid === '' ? r2App.annots[r2.userGroup.GetUser(ink._username).GetAnnotStaticInkId()] : r2App.annots[ink._annotid];
+
+                        var idx = annot._inks.indexOf(ink);
+                        if(idx > -1){
+                            annot._inks.splice(idx, 1);
+                        }
+                    }
+                    console.log(rtn.length);
+                    r2App.invalidate_page_layout = true;
+                }
             };
 
             pub_er.draw = function(ctx){
                 if(eraser_pos){
                     ctx.beginPath();
-                    ctx.arc(eraser_pos.x/1000, eraser_pos.y/1000, 0.02, 0, 2 * Math.PI, false);
-                    ctx.lineWidth = 5;
+                    ctx.arc(eraser_pos.x, eraser_pos.y, r2Const.ERASER_RADIUS, 0, 2 * Math.PI, false);
+                    ctx.lineWidth = 0.001;
                     ctx.strokeStyle = '#003300';
                     ctx.stroke();
                 }

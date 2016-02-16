@@ -570,6 +570,26 @@
         }
         this._inks[annotid].push(stroke);
     };
+    r2.Piece.prototype.eraseInk = function(pt){
+        var min_dist = Number.POSITIVE_INFINITY;
+        var ink;
+        var pt_on_piece = pt.subtract(this.pos, true);
+        var i, l;
+        for (var key in this._inks) {
+            if (this._inks.hasOwnProperty(key)) {
+                for (i = 0, l = this._inks[key].length; i < l; ++i) {
+                    ink = this._inks[key][i];
+                    //if(ink._username === r2.userGroup.cur_user.name)
+                    {
+                        min_dist = Math.min(min_dist, ink.dist(pt_on_piece));
+                    }
+                }
+            }
+        }
+        if(min_dist < 0.01){
+            console.log(min_dist);
+        }
+    };
     r2.Piece.prototype.drawInkReplaying = function(canvas_ctx){
         var ink;
         for (var key in this._inks) {
@@ -1930,6 +1950,14 @@
             segment.smoothing();
         }
     };
+    r2.Ink.prototype.dist = function(pt){
+        var min_dist = Number.POSITIVE_INFINITY;
+        var i, segment;
+        for(i = 0; segment = this.segments[i]; ++i) {
+            min_dist = Math.min(min_dist, segment.dist(pt));
+        }
+        return min_dist;
+    };
 
     /*
     ink segment
@@ -2002,6 +2030,14 @@
             }
         }
         return wasbgn;
+    };
+    r2.Ink.Segment.prototype.dist = function(pt){
+        var min_dist = Number.POSITIVE_INFINITY;
+        var i, l;
+        for(i = 0, l = this._pts.length; i < l; ++i) {
+            min_dist = Math.min(min_dist, pt.distance(this._pts[i]));
+        }
+        return min_dist;
     };
     /*
       ink cache

@@ -28,7 +28,7 @@ var r2Ctrl = {};
             $('#btn-input-set-mode-tablet').toggleClass('btn-default', true);
 
             r2.mouse.setEventHandlers();
-            r2.mouse.rightClickContextMenu.enable();
+            r2.mouse.rightClickContextMenu.disable();
             r2.tabletInput.off();
         };
         pub.setModeTablet = function(){
@@ -181,7 +181,8 @@ var r2Ctrl = {};
         var PenMode = {
             NORMAL: 0,
             MANIPULATION: 1,
-            TEARING: 2
+            TEARING: 2,
+            ERASER: 3
         };
         var mode = PenMode.NORMAL;
         var cur_dn = false;
@@ -232,6 +233,9 @@ var r2Ctrl = {};
                 else if(event.which === PenEventType.FIRST_BTN){
                     mode = PenMode.MANIPULATION;
                 }
+                else if(event.which === PenEventType.SECOND_BTN){
+                    mode = PenMode.ERASER;
+                }
             }
             pos_dn = new_pen_pt;
         };
@@ -266,6 +270,9 @@ var r2Ctrl = {};
                     r2Sync.PushToUploadCmd(cur_piece_tearing.ExportToCmd());
                     cur_piece_tearing = null;
                 }
+                if(mode === PenMode.ERASER){
+                    mode = PenMode.NORMAL;
+                }
             }
             cur_dn = false;
         };
@@ -299,6 +306,9 @@ var r2Ctrl = {};
                             r2App.invalidate_page_layout = true;
                         }
                     }
+                }
+                if(mode === PenMode.ERASER){
+                    r2.inkCtrl.eraseInkMv(r2.viewCtrl.mapScrToDoc(new_pen_pt));
                 }
             }
         };
@@ -338,7 +348,14 @@ var r2Ctrl = {};
     /* mouse */
     r2.MouseModeEnum = {
         HOVER : 0,
+        RDN : 1,
         LDN : 2
+    };
+    r2.MouseBtn = {
+        NONE : 0,
+        LEFT : 1,
+        MDDL : 2,
+        RGHT : 3
     };
 
     r2.mouse = (function(){
@@ -368,7 +385,7 @@ var r2Ctrl = {};
             var new_mouse_pt = r2.input.getPos(event);
             if(pub.mode === r2.MouseModeEnum.HOVER){
                 switch (event.which) {
-                    case 1: // left click
+                    case r2.MouseBtn.LEFT: // left click
                         pub.mode = r2.MouseModeEnum.LDN;
                         pos_dn = new_mouse_pt;
                         if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
@@ -378,6 +395,10 @@ var r2Ctrl = {};
                         else if(r2App.mode == r2App.AppModeEnum.RECORDING){
                             r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                         }
+                        break;
+                    case r2.MouseBtn.RGHT:
+                        pub.mode = r2.MouseModeEnum.RDN;
+                        r2.inkCtrl.eraser.mv(r2.viewCtrl.mapScrToDoc(new_mouse_pt));
                         break;
                     default:
                         break;
@@ -406,6 +427,9 @@ var r2Ctrl = {};
                     r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                 }
             }
+            else if(pub.mode == r2.MouseModeEnum.RDN){
+                r2.inkCtrl.eraser.mv(r2.viewCtrl.mapScrToDoc(new_mouse_pt));
+            }
 
             r2App.cur_mouse_pt = new_mouse_pt;
         };
@@ -431,6 +455,10 @@ var r2Ctrl = {};
                 }
 
                 r2.onScreenButtons.mouseUp();
+                pub.mode = r2.MouseModeEnum.HOVER;
+            }
+            else if(pub.mode == r2.MouseModeEnum.RDN){
+                r2.inkCtrl.eraser.up();
                 pub.mode = r2.MouseModeEnum.HOVER;
             }
 
@@ -933,6 +961,7 @@ var r2Ctrl = {};
                 cur_recording_Ink_pt = pt;
             }
         };
+
         pub.recordingInkMv = function(pt, target_annot){
             if(cur_recording_Ink && cur_recording_Ink_segment){
                 var piece = r2App.cur_page.GetPieceByHitTest(pt);
@@ -986,6 +1015,33 @@ var r2Ctrl = {};
                 return false;
             }
         };
+
+        pub.eraser = (function(){
+            var pub_er = {};
+
+            var eraser_pos = null;
+            pub_er.up = function(){
+                eraser_pos = null;
+            };
+
+            pub_er.mv = function(pt){
+                r2App.cur_page.RunRecursive('eraseInk', [pt]);
+                eraser_pos = pt;
+                r2App.invalidate_dynamic_scene = true;
+            };
+
+            pub_er.draw = function(ctx){
+                if(eraser_pos){
+                    ctx.beginPath();
+                    ctx.arc(eraser_pos.x/1000, eraser_pos.y/1000, 0.02, 0, 2 * Math.PI, false);
+                    ctx.lineWidth = 5;
+                    ctx.strokeStyle = '#003300';
+                    ctx.stroke();
+                }
+            };
+
+            return pub_er;
+        }());
 
         return pub;
     }());

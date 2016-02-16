@@ -153,6 +153,7 @@
             }
             r2.inkCtrl.dynamicScene.draw(r2.annot_canv_ctx);
             r2App.pieceSelector.draw(r2.annot_canv_ctx);
+            r2.inkCtrl.eraser.draw(r2.annot_canv_ctx);
         }
 
         return pub;

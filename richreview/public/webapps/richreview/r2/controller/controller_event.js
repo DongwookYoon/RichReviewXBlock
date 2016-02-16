@@ -28,6 +28,7 @@ var r2Ctrl = {};
             $('#btn-input-set-mode-tablet').toggleClass('btn-default', true);
 
             r2.mouse.setEventHandlers();
+            r2.mouse.rightClickContextMenu.enable();
             r2.tabletInput.off();
         };
         pub.setModeTablet = function(){
@@ -38,6 +39,7 @@ var r2Ctrl = {};
             $('#btn-input-set-mode-tablet').toggleClass('btn-default', false);
 
             r2.mouse.removeEventHandlers();
+            r2.mouse.rightClickContextMenu.disable();
             r2.tabletInput.on();
         };
 
@@ -434,6 +436,25 @@ var r2Ctrl = {};
 
             r2App.cur_mouse_pt = new_mouse_pt;
         };
+
+        pub.rightClickContextMenu = (function(){
+            var pub_rc = {};
+
+            pub_rc.enable = function(){
+                document.getElementById('r2_app_container').removeEventListener('contextmenu', disableFunc, false);
+            };
+
+            pub_rc.disable = function(){
+                document.getElementById('r2_app_container').addEventListener('contextmenu', disableFunc, false);
+            };
+
+            function disableFunc(e){
+                e.preventDefault();
+            }
+
+            return pub_rc;
+        }());
+
 
         return pub;
     }());

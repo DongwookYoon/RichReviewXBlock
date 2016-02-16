@@ -220,6 +220,22 @@
                     return true;
                 }
             }
+            else if(cmd.target.type === 'Ink'){
+                var annot = r2App.annots[cmd.target.aid];
+                var piece = r2App.pieces_cache[cmd.target.pid];
+                if(typeof piece !== 'undefined' && typeof annot !== 'undefined'){
+                    var ink = piece.getInkByTimeBgn(cmd.target.t_bgn, cmd.target.aid);
+                    if(ink){
+                        piece.detachInk(ink);
+                        annot.detachInk(ink);
+                        r2App.invalidate_page_layout = true;
+                        return true;
+                    }
+                }
+                else{
+                    console.error('deleteComment, Ink: ', cmd, annot, piece);
+                }
+            }
             return false;
         };
 
@@ -413,6 +429,9 @@
             if(anchorpiece){
                 var stroke;
                 for(var i = 0; stroke = cmd.data.strokes[i]; ++i){
+                    cmd.data.aid = cmd.data.aid !== '' ?
+                        cmd.data.aid :
+                        r2.userGroup.GetUser(r2Const.LEGACY_USERNAME).GetAnnotStaticInkId();
                     var ink = new r2.Ink();
                     ink.SetInk(anchorpiece.GetId(), cmd.user, cmd.data.aid, stroke.time);
                     var segment = new r2.Ink.Segment();
@@ -423,7 +442,7 @@
                         r2App.annots[cmd.data.aid].AddInk(ink);
                     }
                     else{
-                        r2App.annots[r2.userGroup.GetUser(r2Const.LEGACY_USERNAME).GetAnnotStaticInkId()].AddInk(ink);
+                        r2App.annots[r2.userGroup.GetUser(r2Const.LEGACY_USERNAME).GetAnnotStaticInkId()].AddInk(ink); // this can be removed after a database review
                     }
                 }
                 return true;
@@ -520,7 +539,6 @@
                 }
 
                 var annot = r2App.annots[r2.userGroup.GetUser(cmd_ink.username).GetAnnotStaticInkId()];
-                //.AddInk(cmd.data.aid, ink);
                 annot.AddInk(ink);
             });
             return true;

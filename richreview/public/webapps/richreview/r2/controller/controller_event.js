@@ -1025,27 +1025,14 @@ var r2Ctrl = {};
             };
 
             pub_er.mv = function(pt){
-                var rtn = [];
-                r2App.cur_page.RunRecursive('eraseInk', [pt, rtn]);
+                var inks = [];
+                r2App.cur_page.RunRecursive('getCollidingInks', [pt, inks]);
                 eraser_pos = pt;
                 r2App.invalidate_dynamic_scene = true;
-                if(rtn.length){
-                    for(var i = 0, l = rtn.length; i < l; ++i){
-                        var ink = rtn[i].ink;
-                        var idx;
-                        idx = rtn[i].piece._inks[rtn[i].key].indexOf(ink);
-                        if(idx > -1) {
-                            rtn[i].piece._inks[rtn[i].key].splice(idx, 1);
-                        }
-                        var annot;
-                        annot = ink._annotid === '' ? r2App.annots[r2.userGroup.GetUser(ink._username).GetAnnotStaticInkId()] : r2App.annots[ink._annotid];
-
-                        var idx = annot._inks.indexOf(ink);
-                        if(idx > -1){
-                            annot._inks.splice(idx, 1);
-                        }
+                if(inks.length){
+                    for(var i = 0, l = inks.length; i < l; ++i){
+                        inks[i].erase(true); // to_upload
                     }
-                    console.log(rtn.length);
                     r2App.invalidate_page_layout = true;
                 }
             };

@@ -828,6 +828,7 @@
 
             SetPdfPageN(getCurPdfPageN());
         }
+
         function SetPdfPageN(n){
             if(r2App.mode == r2App.AppModeEnum.REPLAYING){
                 r2.log.Log_AudioStop('SetPdfPageN', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
@@ -839,7 +840,9 @@
             r2App.pieceSelector.reset();
 
             r2App.SetCurPdfPageN(n);
+            r2.dom.resetScroll();
             r2App.cur_page.RunRecursive("ResizeDom", []);
+            r2App.invalidate_size = true;
             r2App.invalidate_page_layout = true;
 
             updatePageNavBar();
@@ -1197,6 +1200,7 @@
             $btn_center.append(createIcon(btn_center_fa_font));
             if(typeof cb !== 'undefined'){$btn_center.click(closeRadialMenuAndRun($menu,cb));}
             $menu.append($btn_center);
+            r2.keyboard.pieceEventListener.setBtn($btn_center.get(0));
 
             var $btn_radials = $(document.createElement('div'));
             $btn_radials.addClass('rm_btn_raidial');
@@ -1216,6 +1220,7 @@
             $btn.append(createIcon(fa_font));
             $btn.click(closeRadialMenuAndRun($menu, cb));
             $menu.find('.rm_btn_raidial').append($btn);
+            r2.keyboard.pieceEventListener.setBtn($btn.get(0));
 
             setBtnRadialPos($menu);
         };
@@ -1450,6 +1455,7 @@
 
             $(page_canvas).width(page_size.x); // html size
             $(page_canvas).height(page_size.y);
+            page_canvas.dom_width = page_size.x;
 
             $(annot_canvas).width(page_size.x); // html size
             $(annot_canvas).height(page_size.y);
@@ -1460,8 +1466,8 @@
             annot_canvas.width = canv_px_size.x;
             annot_canvas.height = canv_px_size.y;
 
-
             updateScroll();
+
         };
 
         pub.calcAppContainerSize = function(){
@@ -1500,16 +1506,33 @@
             $(content).on('contextmenu', func);
         };
 
-        pub.recordingBgn = function(){
-            $(overlay_container).toggleClass("recording", true);
+        pub.enableRecordingIndicators = function(){
+            $('#recording_indicator').css("display","block");
+            $(view).toggleClass("recording", true);
         };
 
-        pub.recordingEnd = function(){
-            $(overlay_container).toggleClass("recording", false);
+        pub.disableRecordingIndicators = function(){
+            $('#recording_indicator').css("display","none");
+            $(view).toggleClass("recording", false);
         };
 
         pub.getPageOffset = function(){
             return page_offset;
+        };
+
+        pub.resetScroll = function(){
+            $(view).scrollTop(0);
+        };
+
+        pub.getPosAndWidthInPage = function(dom){
+            var rect = dom.getBoundingClientRect();
+            var rtn = [
+                (rect.left - page_offset.x) / page_canvas.dom_width,
+                (rect.top - page_offset.y) / page_canvas.dom_width,
+                rect.width / page_canvas.dom_width,
+                rect.height / page_canvas.dom_width
+            ];
+            return rtn;
         };
 
         /** helper */
@@ -1533,6 +1556,35 @@
 
         return pub;
     }());
+
+    /* upload timer */
+    r2.CmdTimedUploader = function(){
+        this._time_interval = 0;
+        this._time_last_modified = 0;
+        this._modified = false;
+        this._cmds_to_upload = [];
+    };
+    r2.CmdTimedUploader.prototype.init = function(time_interval){
+        this._time_interval = time_interval;
+    };
+    r2.CmdTimedUploader.prototype.addCmd = function(cmd){
+        this._cmds_to_upload.push(cmd);
+        this._modified = true;
+        this._time_last_modified = r2App.cur_time;
+    };
+    r2.CmdTimedUploader.prototype.getCmdsToUpload = function(){
+        if( this._modified && r2App.cur_time-this._time_last_modified > this._time_interval){
+            var rtn = this._cmds_to_upload.slice(); // copy array
+
+            this._cmds_to_upload = [];
+            this._modified = false;
+
+            return {time: this._time_last_modified, cmds: rtn};
+        }
+        else{
+            return null;
+        }
+    };
 
     r2.pieceHashId = (function(){
         var pub = {};

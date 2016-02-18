@@ -83,7 +83,7 @@
         r2.canv_ctx.rect(this.pos.x,this.pos.y,this.size.x,this.size.y);
         r2.canv_ctx.stroke();
     };
-    r2.Obj.prototype.Relayout = function(origin){
+    r2.Obj.prototype.Relayout = function(){
         console.log("Relayout from r2.Obj");
     };
     r2.Obj.prototype.SearchPiece = function(id){
@@ -252,7 +252,6 @@
 
         r2App.invalidate_static_scene = true;
         r2App.invalidate_dynamic_scene = true;
-        r2App.invalidate_size = true;
 
         return this.size;
     };
@@ -427,7 +426,7 @@
         var my = 0;
         var piece;
         for(var i = 0; piece = this.child[i]; ++i){
-            var s = piece.Relayout(new Vec2(origin.x, origin.y + my));
+            var s = piece.Relayout();
             mx = Math.max(mx, s.x);
             my += s.y;
         }
@@ -437,6 +436,7 @@
     };
     r2.Region.prototype.DrawRect = function(){
         r2.Obj.prototype.DrawRect.apply(this, ['rgba(255,50,50,0.3)']);
+        var p;
         for(var i = 0; p = this.child[i]; ++i) {
             p.DrawRect('rgba(50,255,50,0.3)');
         }
@@ -462,6 +462,7 @@
         this._ttW = 0;
         this._inks = {}; // [annoid][idx]
         this._isprivate = false;
+        this._dom_piece = null;
     };
     r2.Piece.prototype = Object.create(r2.Obj.prototype);
 
@@ -492,6 +493,9 @@
 
         r2App.pieces_cache[this._id] = this;
     };
+    r2.Piece.prototype.SetDom = function($dom_piece){
+        this._dom_piece = $dom_piece.get(0);
+    };
     r2.Piece.prototype.GetNewPieceSize = function(){
         return new Vec2(this._cnt_size.x, r2Const.PIECEAUDIO_HEIGHT);
     };
@@ -507,34 +511,21 @@
     r2.Piece.prototype.GetTtWidth = function(){
         return this._ttW;
     };
-    r2.Piece.prototype.Relayout = function(origin){
-        origin = typeof origin !== 'undefined' ? origin : new Vec2(0, 0);
-        this.pos = origin.clone();
-
-        var mx = this._cnt_size.x;
-        var my = this._cnt_size.y;
-        if(!this._isvisible){
-            my = 0;
+    r2.Piece.prototype.Relayout = function(){
+        var dom_piece = this._dom_piece === null ? $(document.getElementById(this.GetId())).get(0) : this._dom_piece;
+        if(this._dom_piece === null){
+            console.log('x');
         }
+        var rect = r2.dom.getPosAndWidthInPage(dom_piece);
+
+        this.pos = new Vec2(rect[0], rect[1]);
+        this.size = new Vec2(rect[2], rect[3]);
+
         var piece;
         for(var i = 0; piece = this.child[i]; ++i){
-            var s = piece.Relayout(new Vec2(origin.x, origin.y + my));
-            mx = Math.max(mx, s.x);
-            my += s.y;
+            piece.Relayout();
         }
-        this.size = new Vec2(mx, my); // done for the piece background
-
-        // this is for inks
-        var ink;
-        for (var key in this._inks) {
-            if (this._inks.hasOwnProperty(key)) {
-                for (var i = 0; ink = this._inks[key][i]; ++i) {
-                    ink.Relayout(this.pos);
-                }
-            }
-        }
-
-        return this.size;
+        return  this.size;
     };
     r2.Piece.prototype.GetPieceOfClosestBottom = function(pt, dy_obj){
         if (typeof dy_obj === 'undefined'){
@@ -573,11 +564,57 @@
     r2.Piece.prototype.GetTtIndentedWidth = function(){
         return this._ttX+this._ttW-this.GetTtIndent();
     };
-    r2.Piece.prototype.AddInk = function(annotid, stroke){
+    r2.Piece.prototype.addInk = function(annotid, stroke){
         if(!this._inks.hasOwnProperty(annotid)){
             this._inks[annotid] = [];
         }
         this._inks[annotid].push(stroke);
+    };
+    r2.Piece.prototype.getCollidingInks = function(pt, rtn){
+        var ink;
+        var pt_on_piece = pt.subtract(this.pos, true);
+        var i, l;
+        for (var key in this._inks) {
+            if (this._inks.hasOwnProperty(key)) {
+                for (i = 0, l = this._inks[key].length; i < l; ++i) {
+                    ink = this._inks[key][i];
+                    if(ink.getUsername() === r2.userGroup.cur_user.name){
+                        if(ink.dist(pt_on_piece) <  r2Const.ERASER_RADIUS){
+                            rtn.push(ink)
+                        }
+                    }
+                }
+            }
+        }
+    };
+    r2.Piece.prototype.detachInk = function(ink){
+        var inks = this._inks[ink._annotid];
+            if(inks){
+            var idx = inks.indexOf(ink);
+            if(idx > -1) {
+                inks.splice(idx, 1);
+            }
+        }
+        else{
+            throw new Error('detachInk:' + ink._annotid + JSON.stringify(ink));
+        }
+    };
+    r2.Piece.prototype.getInkByTimeBgn = function(time, annotid){
+        var inks = this._inks[annotid];
+        if(typeof inks === 'undefined'){
+            inks = this._inks[''];
+        }
+        if(inks){
+            var i, l;
+            for (i = 0, l = inks.length; i < l; ++i) {
+                var t = inks[i].getTimeBgn();
+                if(t === time){
+                    return inks[i];
+                }
+            }
+        }
+        console.error('getInkByTimeBgn:', time, annotid);
+        return null;
     };
     r2.Piece.prototype.drawInkReplaying = function(canvas_ctx){
         var ink;
@@ -710,8 +747,8 @@
         r2.Obj.prototype.SetVisibility.apply(this, [visible]);
         this._isvisible = true;
     };
-    r2.PieceText.prototype.Relayout = function(origin){
-        var rtn = r2.Piece.prototype.Relayout.apply(this, [origin]);
+    r2.PieceText.prototype.Relayout = function(){
+        var rtn = r2.Piece.prototype.Relayout.apply(this, []);
         var pdf_x = Math.floor(this.pos.x * this._t_pdf_w);
         var pdf_y = Math.floor(this.pos.y * this._t_pdf_w);
         this._t_dr_x = pdf_x/this._t_pdf_w;
@@ -929,8 +966,8 @@
             }
         }
     };
-    r2.PieceAudio.prototype.Relayout = function(origin){
-        var rtn = r2.Piece.prototype.Relayout.apply(this, [origin]);
+    r2.PieceAudio.prototype.Relayout = function(){
+        var rtn = r2.Piece.prototype.Relayout.apply(this, []);
         return rtn;
     };
     r2.PieceAudio.prototype.DrawPiece = function(){
@@ -1075,6 +1112,187 @@
         }
     };
 
+    /*
+     * PieceEditableAudio
+     */
+    r2.PieceEditableAudio = function(){
+        r2.Piece.call(this);
+        this._annotid = null;
+        this._username = null;
+
+        this.dom = null;
+        this.dom_textbox = null;
+        this._temporary_n = 0;
+    };
+    r2.PieceEditableAudio.prototype = Object.create(r2.Piece.prototype);
+    r2.PieceEditableAudio.prototype.Destructor = function(){
+        r2.Piece.prototype.Destructor.apply(this);
+    };
+    r2.PieceEditableAudio.prototype.SetPieceEditableAudio = function(anchor_pid, annotid, username, inner_html, live_recording){
+        this._annotid = annotid;
+        this._username = username;
+
+        var dom = this.CreateDom();
+
+        r2.dom_model.appendPieceEditableAudio(
+            this._username,
+            this._annotid,
+            this.GetId(),
+            anchor_pid,
+            this._creationTime,
+            dom,
+            this,
+            live_recording
+        );
+
+        this.setInnerHtml(inner_html);
+
+        return dom;
+    };
+    r2.PieceEditableAudio.prototype.GetAnnotId = function(){
+        if(this._annotid != null){
+            return this._annotid;
+        }
+    };
+    r2.PieceEditableAudio.prototype.CreateDom = function(){
+        this.dom = document.createElement('div');
+        this.dom.classList.toggle('r2_piece_editable_audio', true);
+        this.dom.classList.toggle('unselectable', true);
+        this.dom.setAttribute('aria-label', 'text comment');
+        this.dom.setAttribute('role', 'article');
+
+        this.dom_tr = document.createElement('div');
+        this.dom_tr.classList.toggle('r2_piece_editable_audio_tr', true);
+        this.dom_tr.classList.toggle('unselectable', true);
+        this.dom.appendChild(this.dom_tr);
+
+        this.dom_textbox = document.createElement('div');
+        this.dom_textbox.classList.toggle('r2_piece_editable_audio_textbox', true);
+        this.dom_textbox.setAttribute('contenteditable', 'true');
+        this.dom_textbox.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
+        this.dom_tr.appendChild(this.dom_textbox);
+
+        $(this.dom_tr).css('left', this.GetTtIndent()*r2Const.FONT_SIZE_SCALE+'em');
+        $(this.dom_tr).css('width', this.GetTtIndentedWidth()*r2Const.FONT_SIZE_SCALE+'em');
+
+        if(this._username != r2.userGroup.cur_user.name){
+            this.dom_textbox.setAttribute('contenteditable', 'false');
+        }
+
+        /* add event handlers*/
+        var func_UpdateSizeWithTextInput = this.updateSizeWithTextInput.bind(this);
+
+        this.dom_textbox.addEventListener('input', function() {
+            this.__contentschanged = true;
+            if(func_UpdateSizeWithTextInput()){
+                r2App.invalidate_size = true;
+                r2App.invalidate_page_layout = true;
+            }
+        }.bind(this), false);
+
+        this.dom_textbox.addEventListener('focus', function(event){
+            r2App.cur_focused_piece_keyboard = this;
+            var color = r2.userGroup.GetUser(this._username).color_piecekeyboard_box_shadow;
+            this.dom_textbox.style.boxShadow = "0 0 0.2em "+color+" inset, 0 0 0.2em "+color;
+            $(this.dom).css("pointer-events", 'auto');
+        }.bind(this));
+        r2.keyboard.pieceEventListener.setTextbox(this.dom_textbox);
+
+        this.dom_textbox.addEventListener('blur', function(event){
+            r2App.cur_focused_piece_keyboard = null;
+            this.dom_textbox.style.boxShadow = "none";
+            $(this.dom).css("pointer-events", 'none');
+            if(this.__contentschanged){
+                console.log('>>>>__contentschanged:', this.ExportToTextChange());
+                r2Sync.PushToUploadCmd(this.ExportToTextChange());
+                this.__contentschanged = false;
+            }
+        }.bind(this));
+        /* add event handlers*/
+
+        this.resizeDom();
+
+        return this.dom;
+    };
+    r2.PieceEditableAudio.prototype.updateSizeWithTextInput = function(){
+        var getHeight = function($target){
+            var $next = $target.next();
+            if($next.length !== 0){
+                return $next.offset().top-$target.offset().top;
+            }
+            else{
+                return $target.innerHeight();
+            }
+        };
+
+        var new_height = r2.viewCtrl.mapDomToDocScale(getHeight($(this.dom)));
+        if(this._cnt_size.y != new_height){
+            this._cnt_size.y = new_height;
+            return true;
+        }
+        return false;
+    };
+    r2.PieceEditableAudio.prototype.DrawPiece = function(){
+        var x_bgn = this.pos.x + this.GetTtIndent();
+        var y_bgn = this.pos.y-r2Const.PIECEAUDIO_LINE_WIDTH;
+
+        r2.canv_ctx.beginPath();
+        r2.canv_ctx.moveTo(x_bgn, y_bgn);
+        r2.canv_ctx.lineTo(x_bgn, y_bgn+this._cnt_size.y);
+        r2.canv_ctx.moveTo(x_bgn, y_bgn+this._cnt_size.y);
+        r2.canv_ctx.lineTo(x_bgn+this.GetTtIndentedWidth(), y_bgn+this._cnt_size.y);
+
+        r2.canv_ctx.strokeStyle = r2.userGroup.GetUser(this._username).color_light_html;
+        r2.canv_ctx.lineWidth = r2Const.PIECEAUDIO_LINE_WIDTH;
+        r2.canv_ctx.lineCap = 'round';
+        r2.canv_ctx.lineJoin = 'round';
+        r2.canv_ctx.stroke();
+    };
+    r2.PieceEditableAudio.prototype.resizeDom = function(){
+        this.updateSizeWithTextInput();
+    };
+    r2.PieceEditableAudio.prototype.setInnerHtml = function(inner_html){
+        this.dom_textbox.innerHTML = inner_html;
+        this.resizeDom();
+    };
+    r2.PieceEditableAudio.prototype.setCaptionTemporary = function(words){
+        var i;
+        for(i = 0; i < this._temporary_n; ++i){
+            $(this.dom_textbox).find(':last-child').remove();
+        }
+        for(let w of words){
+            var $span = $(document.createElement('span'));
+            $span.text(w[0]+' ');
+            $(this.dom_textbox).append($span);
+        }
+        this._temporary_n = words.length;
+        if(this.updateSizeWithTextInput()){
+            r2App.invalidate_size = true;
+            r2App.invalidate_page_layout = true;
+        }
+    };
+    r2.PieceEditableAudio.prototype.setCaptionFinal = function(words){
+        var i;
+        for(i = 0; i < this._temporary_n; ++i){
+            $(this.dom_textbox).find(':last-child').remove();
+        }
+        for(let w of words){
+            var $span = $(document.createElement('span'));
+            $span.text(w[0]+' ');
+            $(this.dom_textbox).append($span);
+        }
+        this._temporary_n = 0;
+        if(this.updateSizeWithTextInput()){
+            r2App.invalidate_size = true;
+            r2App.invalidate_page_layout = true;
+        }
+    };
+    r2.PieceEditableAudio.prototype.doneCaptioning = function(){
+        this.Focus();
+    };
+    r2.PieceEditableAudio.prototype.Focus = function(){
+        this.dom_textbox.focus();
+    };
 
     /*
      * PieceKeyboard
@@ -1085,15 +1303,12 @@
         this._username = null;
 
         this.dom = null;
-        this.dom_span = null;
-        this.dom_pre = null;
-        this.dom_textarea = null;
+        this.dom_textbox = null;
 
         this.__private_shift_x = null;
         this._isprivate = false;
 
         this.__contentschanged = false;
-        this.__dom_size = new Vec2(0,0);
     };
     r2.PieceKeyboard.prototype = Object.create(r2.Piece.prototype);
 
@@ -1112,8 +1327,7 @@
         return this.__contentschanged;
     };
     r2.PieceKeyboard.prototype.SetText = function(text){
-        this.dom_span.textContent = text;
-        this.dom_textarea.value = this.dom_textarea.textContent = text;
+        this.dom_textbox.innerHTML = text;
         this.ResizeDom();
     };
     r2.PieceKeyboard.prototype.ExportToCmd = function(){
@@ -1132,7 +1346,7 @@
         cmd.data = {};
         cmd.data.pid = this._id;
         cmd.data.aid = this._annotid;
-        cmd.data.text = this.dom_textarea.value;
+        cmd.data.text = this.dom_textbox.innerHTML;
         cmd.data.isprivate = this._isprivate;
 
         return cmd;
@@ -1150,7 +1364,7 @@
         cmd.op = "ChangeProperty";
         cmd.type = "PieceKeyboardTextChange";
         cmd.target = this.GetTargetData();
-        cmd.data = this.dom_textarea.value;
+        cmd.data = this.dom_textbox.innerHTML;
 
         return cmd;
     };
@@ -1196,9 +1410,6 @@
         }
         else{
             //$(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(false, isOnLeftColumn));
-        }
-        if(this._username != r2.userGroup.cur_user.name){
-            $(this.dom_textarea).prop('readonly', true);
         }
 
         r2.dom_model.appendPieceKeyboard(
@@ -1251,81 +1462,56 @@
         this.dom_tr.classList.toggle('unselectable', true);
         this.dom.appendChild(this.dom_tr);
 
-        this.dom_pre = document.createElement('pre');
-        this.dom_pre.classList.toggle('r2_piecekeyboard_pre', true);
-        this.dom_pre.classList.toggle('unselectable', true);
-        this.dom_pre.setAttribute('aria-hidden', true);
-
-        this.dom_span = document.createElement('span');
-        this.dom_span.classList.toggle('unselectable', true);
-        this.dom_pre.appendChild(this.dom_span);
-        this.dom_pre.appendChild(document.createElement('br'));
-        this.dom_tr.appendChild(this.dom_pre);
-
-
-        this.dom_textarea = document.createElement('textarea');
-        this.dom_textarea.classList.toggle('r2_piecekeyboard_textarea', true);
-        this.dom_textarea.classList.toggle('unselectable', true);
-        this.dom_textarea.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
-        if(this._username != r2.userGroup.cur_user.name){
-            this.dom_textarea.setAttribute('readonly', 'readonly');
-        }
-        this.dom_tr.appendChild(this.dom_textarea);
+        this.dom_textbox = document.createElement('div');
+        this.dom_textbox.classList.toggle('r2_piecekeyboard_textbox', true);
+        this.dom_textbox.setAttribute('contenteditable', 'true');
+        this.dom_textbox.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
+        this.dom_tr.appendChild(this.dom_textbox);
 
         $(this.dom_tr).css('left', this.GetTtIndent()*r2Const.FONT_SIZE_SCALE+'em');
         $(this.dom_tr).css('width', this.GetTtIndentedWidth()*r2Const.FONT_SIZE_SCALE+'em');
 
-        //fa-times-circle
-        //fa-share-square
+        if(this._username != r2.userGroup.cur_user.name){
+            this.dom_textbox.setAttribute('contenteditable', 'false');
+        }
 
-        ///////////////
-        this.AddEventHandle = function () {
-            //var TextAreaCommit = this.CommitTextAreaContent.bind(this);
-            var func_UpdateSizeWithTextInput = this.UpdateSizeWithTextInput.bind(this);
-            if (this.dom_textarea.addEventListener) {
-                this.dom_textarea.addEventListener('input', function() {
-                    this.__contentschanged = true;
-                    this.dom_span.textContent = this.dom_textarea.value;
-                    if(func_UpdateSizeWithTextInput()){
-                        r2App.invalidate_page_layout = true
-                    }
-                }.bind(this), false);
-                $(this.dom_textarea).focusout(function() {
-                    console.log('>>>>focusout');
-                    r2App.cur_focused_piece_keyboard = null;
-                    this.dom_textarea.style.boxShadow = "none";
-                    $(this.dom).css("pointer-events", 'none');
-                    if(this.__contentschanged){
-                        console.log('>>>>__contentschanged:', this.ExportToTextChange());
-                        r2Sync.PushToUploadCmd(this.ExportToTextChange());
-                        this.__contentschanged = false;
-                    }
-                }.bind(this));
-                $(this.dom_textarea).focus(function() {
-                    console.log('>>>>focusin');
-                    r2App.cur_focused_piece_keyboard = this;
-                    var color = this._isprivate ?
-                            r2.userGroup.GetUser(this._username).color_piecekeyboard_private_box_shadow :
-                            r2.userGroup.GetUser(this._username).color_piecekeyboard_box_shadow;
-                    this.dom_textarea.style.boxShadow = "0 0 0.2em "+color+" inset, 0 0 0.2em "+color;
-                    if(this._username == r2.userGroup.cur_user.name) {
-                        //this.dom_btn_rmv.style.display = "block";
-                        //this.dom_btn_pub.style.display = "block";
-                    }
-                    $(this.dom).css("pointer-events", 'auto');
-                }.bind(this));
+        /* add event handlers*/
+        var func_UpdateSizeWithTextInput = this.UpdateSizeWithTextInput.bind(this);
+
+        this.dom_textbox.addEventListener('input', function() {
+            this.__contentschanged = true;
+            if(func_UpdateSizeWithTextInput()){
+                r2App.invalidate_size = true;
+                r2App.invalidate_page_layout = true;
             }
-        }.bind(this);
+        }.bind(this), false);
 
-        this.AddEventHandle();
+        this.dom_textbox.addEventListener('focus', function(event){
+            r2App.cur_focused_piece_keyboard = this;
+            var color = r2.userGroup.GetUser(this._username).color_piecekeyboard_box_shadow;
+            this.dom_textbox.style.boxShadow = "0 0 0.2em "+color+" inset, 0 0 0.2em "+color;
+            $(this.dom).css("pointer-events", 'auto');
+        }.bind(this));
+        r2.keyboard.pieceEventListener.setTextbox(this.dom_textbox);
 
-        //r2.dom.appendToPageDom(this.dom);
+        this.dom_textbox.addEventListener('blur', function(event){
+            r2App.cur_focused_piece_keyboard = null;
+            this.dom_textbox.style.boxShadow = "none";
+            $(this.dom).css("pointer-events", 'none');
+            if(this.__contentschanged){
+                console.log('>>>>__contentschanged:', this.ExportToTextChange());
+                r2Sync.PushToUploadCmd(this.ExportToTextChange());
+                this.__contentschanged = false;
+            }
+        }.bind(this));
+        /* add event handlers*/
+
         this.ResizeDom();
 
         return this.dom;
     };
     r2.PieceKeyboard.prototype.edit = function(){
-        this.dom_textarea.focus();
+        this.dom_textbox.focus();
     };
 
     r2.PieceKeyboard.prototype.SetPubPrivate = function(isprivate){
@@ -1338,11 +1524,10 @@
         else{
             //$(this.dom_btn_pub).toggleClass("fa-flip-horizontal", r2.util.myXOR(false, this.IsOnLeftColumn()));
         }
-        this.dom_textarea.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
     };
-    r2.PieceKeyboard.prototype.Relayout = function(origin){
+    r2.PieceKeyboard.prototype.Relayout = function(){
         this._isvisible = (!this._isprivate || r2.userGroup.cur_user.name == this._username);
-        return r2.Piece.prototype.Relayout.apply(this, [origin]);
+        return r2.Piece.prototype.Relayout.apply(this, []);
     };
     r2.PieceKeyboard.prototype.DrawPiece = function(){
         var x_shift = this._isprivate ? this.GetPrivateShiftX() : 0;
@@ -1412,12 +1597,10 @@
         return false;
     };
     r2.PieceKeyboard.prototype.ResizeDom = function(){
-        var w = r2.viewCtrl.mapDocToDomScale(this.GetTtIndentedWidth());
-        this.__dom_size = new Vec2(w, this.dom.clientHeight);
         this.UpdateSizeWithTextInput();
     };
     r2.PieceKeyboard.prototype.Focus = function(){
-        this.dom_textarea.focus();
+        this.dom_textbox.focus();
     };
     r2.PieceKeyboard.prototype.IsAnnotHasComment = function(annotid, rtn){
         if(this._annotid == annotid){
@@ -1545,9 +1728,15 @@
     r2.Annot.prototype.AddSpotlight = function(spotlight, toupload){
         this._spotlights.push(spotlight);
     };
-    r2.Annot.prototype.AddInk = function(ink, toupload){
+    r2.Annot.prototype.addInk = function(ink, toupload){
         if(ink.segments.length>0){
             this._inks.push(ink);
+        }
+    };
+    r2.Annot.prototype.detachInk = function(ink){
+        var idx = this._inks.indexOf(ink);
+        if(idx > -1){
+            this._inks.splice(idx, 1);
         }
     };
     r2.Annot.prototype.GetAudioFileUrl = function(){
@@ -1630,54 +1819,39 @@
     /* abstract annot that contains static inks */
     r2.AnnotStaticInk = function(){
         r2.Annot.call(this);
-        this.is_static_ink = true;
-        this.time_last_modified = 0;
-        this.modified = false;
         this.inks_dict = {};
-        this.inks_to_upload = [];
+        this.add_ink_cmd_uploader = new r2.CmdTimedUploader();
+        this.add_ink_cmd_uploader.init(r2Const.TIMEOUT_STATIC_INK_UPDATE);
     };
     r2.AnnotStaticInk.prototype = Object.create(r2.Annot.prototype);
-    r2.AnnotStaticInk.prototype.ExportToCmd = function(){
-        // time: 2014-12-21T13...
-        // user: 'red user'
-        // op: 'CreateComment'
-        // type: PrivateHighlight
-        // data: {Spotlights: [Spotlight, Spotlight, ...] };
-        var cmd ={};
-        cmd.time = new Date(this.time_last_modified).toISOString();
-        cmd.user = r2.userGroup.cur_user.name;
-        cmd.op = "CreateComment";
-        cmd.type = "StaticInk";
-        cmd.data = {};
-        cmd.data.inks = [];
-        this.inks_to_upload.forEach(function(ink){
-            cmd.data.inks.push(ink.ExportToCmd());
-        });
-        this.inks_to_upload = [];
-        return cmd;
-    };
-    r2.AnnotStaticInk.prototype.AddInk = function(ink, to_upload){
+    r2.AnnotStaticInk.prototype.addInk = function(ink, to_upload){
         if(ink._t_bgn in this.inks_dict){return;}
 
         this._inks.push(ink);
-        this.inks_dict[ink.time] = true;
+        this.inks_dict[ink._t_bgn] = true;
 
         if(to_upload){
-            this.inks_to_upload.push(ink);
-            this.modified = true;
-            this.time_last_modified = r2App.cur_time;
+            this.add_ink_cmd_uploader.addCmd(ink.ExportToCmd());
         }
     };
     r2.AnnotStaticInk.prototype.getCmdsToUpload = function(){
-        if( this.modified &&
-            r2App.cur_time-this.time_last_modified > r2Const.TIMEOUT_PRIVATE_HIGHLIGHT_UPDATE){
-
-            this.modified = false;
-            return this.ExportToCmd();
+        // time: 2014-12-21T13...
+        // user: 'red user'
+        // op: 'CreateComment'
+        // type: 'StaticInk'
+        // data: {inks: [Ink, Ink, ...] };
+        var ink_cmds = this.add_ink_cmd_uploader.getCmdsToUpload();
+        if(ink_cmds){
+            var cmd ={};
+            cmd.time = new Date(ink_cmds.time).toISOString();
+            cmd.user = r2.userGroup.cur_user.name;
+            cmd.op = "CreateComment";
+            cmd.type = "StaticInk";
+            cmd.data = {};
+            cmd.data.inks = ink_cmds.cmds;
+            return cmd;
         }
-        else{
-            return null;
-        }
+        return null;
     };
 
     /*
@@ -1689,27 +1863,63 @@
         this._t_bgn = 0;
         this._t_end = 0;
         this.npage = 0;
+        this._pid = '';
         this.segments = [];
     };
-    r2.Ink.prototype.SetInk = function(anchorpid, username, annotid, t_bgn_and_end){
-        this._anchorpid = anchorpid;
+    r2.Ink.prototype.SetInk = function(pid, username, annotid, t_bgn_and_end, npage){
+        this._pid = pid;
         this._username = username;
 
-        this._annotid = annotid;
+        this._annotid = annotid !== '' ?
+            annotid :
+            r2.userGroup.GetUser(this._username).GetAnnotStaticInkId();
         this._t_bgn = t_bgn_and_end[0];
         this._t_end = t_bgn_and_end[1];
+        this.npage = npage;
     };
-    r2.Ink.prototype.SetPage = function(pagen){
-        this.npage=pagen;
+    r2.Ink.prototype.erase = function(to_upload){
+        var piece = r2App.pieces_cache[this._pid];
+        var annot = this._annotid === '' ?
+            r2App.annots[r2.userGroup.GetUser(this._username).GetAnnotStaticInkId()] :
+            r2App.annots[this._annotid];
+
+        piece.detachInk(this);
+        annot.detachInk(this);
+        if(to_upload){
+            return this.exportToDeleteComment();
+        }
+        return null;
+    };
+    r2.Ink.prototype.exportToDeleteComment = function(){
+        // time: 2014-12-21T13...
+        // user: 'red user'
+        // op: 'DeleteComment'
+        // type: 'Ink'
+        // target: {pid: pid, page: 2, aid: annotid, t_bgn: <time>}
+        var cmd = {};
+        cmd.time = (new Date()).toISOString();
+        cmd.target = {
+            pid: this._pid,
+            aid: this._annotid,
+            t_bgn: this._t_bgn
+        };
+        return cmd;
     };
     r2.Ink.prototype.GetPage = function(){
         return this.npage;
+    };
+    r2.Ink.prototype.getTimeBgn = function(){
+        return this._t_bgn;
+    };
+    r2.Ink.prototype.getUsername = function(){
+        return this._username;
     };
     r2.Ink.prototype.ExportToCmd = function(){
         //Ink: {_username: ..., _annotid:..., t_bgn:..., t_end:..., npage: 0, segments: [Segment, Segment, ...]}
         var cmd = {};
         cmd.username = this._username;
         cmd.annotid = this._annotid;
+        cmd.pid = this._pid;
         cmd.t_bgn = this._t_bgn;
         cmd.t_end = this._t_end;
         cmd.npage = this.npage;
@@ -1718,7 +1928,6 @@
             cmd.segments.push(sgmnt.ExportToCmd());
         });
 
-        cmd.anchorpid = this._anchorpid;
         return cmd;
     };
     r2.Ink.prototype.Relayout = function(piece_pos){
@@ -1793,6 +2002,14 @@
             segment.smoothing();
         }
     };
+    r2.Ink.prototype.dist = function(pt){
+        var min_dist = Number.POSITIVE_INFINITY;
+        var i, segment;
+        for(i = 0; segment = this.segments[i]; ++i) {
+            min_dist = Math.min(min_dist, segment.dist(pt));
+        }
+        return min_dist;
+    };
 
     /*
     ink segment
@@ -1865,6 +2082,14 @@
             }
         }
         return wasbgn;
+    };
+    r2.Ink.Segment.prototype.dist = function(pt){
+        var min_dist = Number.POSITIVE_INFINITY;
+        var i, l;
+        for(i = 0, l = this._pts.length; i < l; ++i) {
+            min_dist = Math.min(min_dist, pt.distance(this._pts[i]));
+        }
+        return min_dist;
     };
     /*
       ink cache

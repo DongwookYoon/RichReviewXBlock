@@ -32,6 +32,10 @@
             $tc_cur_page.css('display','block');
         };
 
+        pub.getCurPage = function(){
+            return $tc_cur_page;
+        };
+
         pub.cbAudioPlay = function(annot_id){
             r2.radialMenu.changeCenterIcon('rm_'+r2.util.escapeDomId(annot_id), 'fa-pause');
             r2.log.Log_AudioPlay('radialmenu', annot_id, r2.audioPlayer.getPlaybackTime());
@@ -50,6 +54,12 @@
         pub.remove = function(annot_id){
             var annot_id_esc = r2.util.escapeDomId(annot_id);
             $('#'+annot_id_esc).remove();
+        };
+
+        pub.getPieceLayout = function(piece){
+            var $piece = $tc_cur_page.find('#'+piece.GetId());
+            var $content = $piece.find('.tc_content');
+
         };
 
         /* submodule for data loading bgn */
@@ -131,6 +141,7 @@
             $comment.attr('role', 'document');
             var $piece = $(document.createElement('div'));
             $piece.toggleClass('tc_piece', true);
+            piece_text.SetDom($piece);
 
             var id = piece_text.GetId();
             var creationTime = 0;
@@ -169,6 +180,7 @@
 
                 var $piece = $(document.createElement('div'));
                 $piece.toggleClass('tc_piece', true);
+                piece_teared.SetDom($piece);
 
                 $piece.attr('id', id);
                 setPieceProperties(
@@ -218,7 +230,6 @@
                 { /* add menu */
                     var rm_ratio = getCommentRmRatio($comment);
                     var rm_size = rm_ratio*0.00063;
-                    var rm_btn_size = 30;
 
                     var $rm = r2.radialMenu.create(
                         'rm_'+annot_id_esc,
@@ -228,7 +239,7 @@
                         function(){
                             if(r2App.mode === r2App.AppModeEnum.RECORDING){
                                 if(annot_id === r2App.cur_recording_annot.GetId()){
-                                    r2.recordingStop(true); /* to upload */
+                                    r2.recordingCtrl.stop(true); /* to upload */
                                     r2.log.Log_Simple("Recording_Stop_RadialMenu");
                                     r2.radialMenu.changeCenterIcon('rm_'+annot_id_esc, 'fa-play');
                                 }
@@ -286,7 +297,7 @@
             return false;
         };
 
-        pub.appendPieceVoice = function(annot_id, order, time){
+        pub.appendPieceVoice = function(annot_id, order, time, pieceaudio){
             var annot_id_esc = r2.util.escapeDomId(annot_id);
 
             var $comment = $('#' + annot_id_esc);
@@ -300,6 +311,7 @@
 
                 var $piece = $(document.createElement('div'));
                 $piece.toggleClass('tc_piece', true);
+                pieceaudio.SetDom($piece);
 
                 $piece.attr('id', id);
                 setPieceProperties(
@@ -336,6 +348,7 @@
                 $comment.attr('id', annot_id_esc);
                 var $piece = $(document.createElement('div'));
                 $piece.toggleClass('tc_piece', true);
+                doc_model_piecekeyboard.SetDom($piece);
                 $piece.attr('id', pid);
                 setPieceProperties(
                     $piece,
@@ -359,10 +372,10 @@
                     var rm_btn_size = 30;
 
                     var $rm = r2.radialMenu.create('rm_'+pid, rm_size, 'fa-keyboard-o', 'select text comment', function(){
-                            doc_model_piecekeyboard.edit();
+                        doc_model_piecekeyboard.edit();
                     });
                     r2.radialMenu.addBtnCircular($rm, 'fa-chevron-up', 'fold layout', function(){
-                            ;
+                        ;
                     });
                     r2.radialMenu.addBtnCircular($rm, 'fa-link', 'share', function(){
                         var lnk = r2App.server_url+"viewer?access_code=" + r2.ctx["pdfid"] +
@@ -392,6 +405,104 @@
                     $rm.css('left', (rm_x)/rm_size/r2Const.RAIDALMENU_FONTSIZE_SCALE+'em');
                     //$rm.css('top', (rm_size*0.4*rm_btn_size)/rm_size+'em');
 
+                    $comment.prepend($rm);
+                }
+
+                $anchor.children().first().after($comment);
+                return true;
+            }
+            return false;
+        };
+
+        pub.appendPieceEditableAudio = function(username, annot_id, pid, anchor_id, creation_time, dom, piece, live_recording){
+            var user = r2.userGroup.GetUser(username);
+            var annot_id_esc = r2.util.escapeDomId(annot_id);
+            if($('#'+annot_id_esc).length !== 0){
+                return true;
+            }
+            var $anchor = $('#'+anchor_id);
+            var $dom_piecekeyboard = $(dom);
+            var dom_anchor = $anchor.get(0);
+            if(dom_anchor){
+                var $comment = appendPieceGroup($anchor, 'tc_comment_editable_audio');
+                $comment.attr('id', annot_id_esc);
+                var $piece = $(document.createElement('div'));
+                $piece.toggleClass('tc_piece', true);
+                piece.SetDom($piece);
+                $piece.attr('id', pid);
+                setPieceProperties(
+                    $piece,
+                    anchor_id,
+                    creation_time,
+                    dom_anchor.pp.w,
+                    dom_anchor.pp.tt_depth+1,
+                    dom_anchor.pp.tt_x,
+                    dom_anchor.pp.tt_w
+                );
+
+                $piece.append($dom_piecekeyboard);
+                $dom_piecekeyboard.toggleClass('tc_content', true);
+                $dom_piecekeyboard.toggleClass('tc_piece_editable_audio', true);
+                $dom_piecekeyboard.css('width', dom_anchor.pp.w*r2Const.FONT_SIZE_SCALE+'em');
+                $comment.append($piece);
+
+                { /* add menu */
+                    var rm_ratio = getCommentRmRatio($comment);
+                    var rm_size = rm_ratio*0.00063;
+
+                    var $rm = r2.radialMenu.create(
+                        'rm_'+annot_id_esc,
+                        rm_size,
+                        (live_recording === true ? 'fa-stop' : 'fa-play'),
+                        'play or stop audio',
+                        function(){
+                            if(r2App.mode === r2App.AppModeEnum.RECORDING){
+                                if(annot_id === r2App.cur_recording_annot.GetId()){
+                                    r2.recordingCtrl.stop(true); /* to upload */
+                                    r2.log.Log_Simple("Recording_Stop_RadialMenu");
+                                    r2.radialMenu.changeCenterIcon('rm_'+annot_id_esc, 'fa-play');
+                                }
+                            }
+                            else{
+                                if (r2App.mode === r2App.AppModeEnum.IDLE) {
+                                    r2.rich_audio.play(annot_id, -1);
+                                }
+                                else if (r2App.mode === r2App.AppModeEnum.REPLAYING) {
+                                    if (r2App.cur_annot_id === annot_id) {
+                                        r2.rich_audio.stop();
+                                    }
+                                    else {
+                                        r2.rich_audio.play(annot_id, -1);
+                                    }
+                                }
+                            }
+                        }
+                    );
+                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-up', 'fold layout', function(){
+                        ;
+                    });
+                    r2.radialMenu.addBtnCircular($rm, 'fa-link', 'share', function(){
+                        var lnk = r2App.server_url+"viewer?access_code=" + r2.ctx["pdfid"] +
+                            "&docid=" + r2.ctx["docid"] +
+                            "&groupid=" + r2.ctx["groupid"] +
+                            "&comment=" +encodeURIComponent(annot_id);
+                        window.prompt("Link to the Comment", lnk);
+                    });
+                    r2.radialMenu.addBtnCircular($rm, 'fa-chevron-down', 'expand layout', function(){
+                        ;
+                    });
+                    r2.radialMenu.addBtnCircular($rm, 'fa-trash', 'erase', function(){
+                        if(r2.userGroup.cur_user.name === user.name){
+                            alert("This feature is yet to be implemented.")
+                        }
+                        else{
+                            alert("You can only delete your own comments.")
+                        }
+                    });
+                    r2.radialMenu.finishInit($rm, user.color_radial_menu_unselected, user.color_radial_menu_selected);
+
+                    var rm_x = getCommentTtIndentX($comment)-r2Const.RADIALMENU_OFFSET_X*rm_ratio;
+                    $rm.css('left', (rm_x)/rm_size/r2Const.RAIDALMENU_FONTSIZE_SCALE+'em');
                     $comment.prepend($rm);
                 }
 
@@ -549,7 +660,7 @@
 
             pub_fc.esc = function(){
                 var $focused = $(':focus');
-                if($focused.hasClass('r2_piecekeyboard_textarea')){
+                if($focused.hasClass('r2_piecekeyboard_textbox')){
                     $focused.parent().parent().parent().parent().focus();
                 }
                 else if($focused.hasClass('rm_btn')){
@@ -567,6 +678,16 @@
 
             pub_fc.setFocusable = function($target){
                 $target.attr('tabindex', 0);
+                $target.get(0).addEventListener('focus', function(){
+                    $(this).css('outline', 'rgba(77, 144, 254, 0.5) solid 1px');
+                    $(this).css('box-shadow', 'inset 0 0 0 0.003em rgba(77, 144, 254, 0.5)');
+                    last_focused_comment = $(this);
+                });
+                $target.get(0).addEventListener('blur', function(){
+                    $(this).css('outline', 'none');
+                    $(this).css('box-shadow', 'none');
+                });
+                /*
                 $target.on(
                     'focus',
                     function(evt){
@@ -580,7 +701,7 @@
                         $(this).css('outline', 'none');
                         $(this).css('box-shadow', 'none');
                     }
-                );
+                );*/
             };
 
             var getPrevTcCols = function($tc_cols){

@@ -27,6 +27,7 @@ var r2Const = (function () {
 
     // inks
     pub.INK_WIDTH = 0.001;
+    pub.ERASER_RADIUS = 0.01;
 
     // page navbar
     pub.NAVBAR_PAGES_N = 5; // should be an odd number
@@ -55,7 +56,9 @@ var r2Const = (function () {
     pub.TIMEOUT_MINIMAL = 10;
     pub.TIMEOUT_FRAMERATE = 1000/30;
     pub.TIMEOUT_RESIZE_DELAY = 100;
-    pub.TIMEOUT_PRIVATE_HIGHLIGHT_UPDATE = 3*1000;
+    pub.TIMEOUT_PRIVATE_HIGHLIGHT_UPDATE = 5*1000;
+    pub.TIMEOUT_STATIC_INK_UPDATE = 5*1000;
+
 
     // db sync polling interval
     pub.DB_SYNC_POLLING_INTERVAL = 5*1000; // 5 secs
@@ -81,11 +84,18 @@ var r2App = (function() {
         RECORDING: 2
     };
 
+    pub.RecordingUI = {
+        WAVEFORM : 0,
+        SIMPLE_SPEECH : 1,
+        NEW_SPEAK: 2
+    };
+
     r2.util.setAjaxCsrfToken();
 
     pub.file_storage_url = "https://richreview.blob.core.windows.net/";
     pub.server_url = document.location.hostname == "localhost" ? "https://localhost:8001/" : "https://richreview.net/";
 
+    pub.bluemix_tts_auth_context = null;
     pub.invalidate_static_scene = false;
     pub.invalidate_dynamic_scene = false;
     pub.invalidate_size = false;
@@ -111,10 +121,10 @@ var r2App = (function() {
     pub.annot_static_ink = null;
     pub.pieces_cache = {};
 
-    pub.cur_recording_anchor_piece = null;
 
     pub.cur_recording_annot = null;
     pub.cur_recording_pieceaudios = null;
+    pub.cur_recording_anchor_piece = null;
     pub.cur_recording_minmax = [0.05, 0.25];
     pub.cur_focused_piece_keyboard = null;
 
@@ -175,29 +185,6 @@ var r2App = (function() {
         };
 
         return pub_ps;
-    }());
-
-    pub.recordingTrigger = (function(){
-        var pub = {};
-
-        var triggered = false;
-        var target = null;
-
-        pub.set = function(target_piece){
-            triggered = true;
-            target = target_piece;
-        };
-
-        pub.isReady = function(){
-            return triggered;
-        };
-
-        pub.bgn = function(){
-            triggered = false;
-            r2.recordingBgn(target);
-        };
-
-        return pub;
     }());
 
     pub.asyncErr = (function(){

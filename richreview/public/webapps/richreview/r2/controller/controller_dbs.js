@@ -171,10 +171,9 @@ var r2Sync = (function(){
                     if(!((cmdObjs[i].user+"_"+cmdObjs[i].time) in cmds_my_own)){
                         if(r2.cmd.executeCmd(r2App.doc, cmdObjs[i], false)){
                             r2.commentHistory.consumeCmd(cmdObjs[i]);
-                            r2App.invalidate_page_layout = true;
                         }
                         else{
-                            console.error('error from cmd: ', cmdObjs[i]);
+                            console.error('error from cmd: ', JSON.stringify(cmdObjs[i]));
                         }
                         $( "#main_progress_bar" ).progressbar({
                             value: parseInt(100*(i)/(cmdObjs.length-1))

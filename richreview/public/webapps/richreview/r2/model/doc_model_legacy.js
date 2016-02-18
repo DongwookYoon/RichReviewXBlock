@@ -488,7 +488,7 @@ var r2Legacy = {
     r2Legacy.Piece = Piece;
     Piece.prototype.GetId = function(){
         return this._id;
-    };;
+    };
     Piece.prototype.ExportArgumentsToR2Doc_Piece = function(){
         return [this._id, 0, this.size.clone(), [this._tt_level, this._tt_x0, this._tt_x1-this._tt_x0]];
     };

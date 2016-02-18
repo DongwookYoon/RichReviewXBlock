@@ -28,6 +28,7 @@ var r2Ctrl = {};
             $('#btn-input-set-mode-tablet').toggleClass('btn-default', true);
 
             r2.mouse.setEventHandlers();
+            r2.mouse.rightClickContextMenu.disable();
             r2.tabletInput.off();
         };
         pub.setModeTablet = function(){
@@ -38,6 +39,7 @@ var r2Ctrl = {};
             $('#btn-input-set-mode-tablet').toggleClass('btn-default', false);
 
             r2.mouse.removeEventHandlers();
+            r2.mouse.rightClickContextMenu.disable();
             r2.tabletInput.on();
         };
 
@@ -179,7 +181,8 @@ var r2Ctrl = {};
         var PenMode = {
             NORMAL: 0,
             MANIPULATION: 1,
-            TEARING: 2
+            TEARING: 2,
+            ERASER: 3
         };
         var mode = PenMode.NORMAL;
         var cur_dn = false;
@@ -230,6 +233,10 @@ var r2Ctrl = {};
                 else if(event.which === PenEventType.FIRST_BTN){
                     mode = PenMode.MANIPULATION;
                 }
+                else if(event.which === PenEventType.SECOND_BTN){
+                    mode = PenMode.ERASER;
+                    r2.inkCtrl.eraser.dn();
+                }
             }
             pos_dn = new_pen_pt;
         };
@@ -243,7 +250,7 @@ var r2Ctrl = {};
                 if(r2.input.isTap(pos_dn, new_pen_pt)){
                     if(mode === PenMode.MANIPULATION){
                         if(!r2App.pieceSelector.isNull()){
-                            r2App.recordingTrigger.set(r2App.pieceSelector.get());
+                            r2.recordingCtrl.set(r2App.pieceSelector.get(), r2App.RecordingUI.WAVEFORM);
                             r2.log.Log_Simple("Recording_Bgn_PenTap");
                         }
                     }
@@ -263,6 +270,10 @@ var r2Ctrl = {};
                     mode = PenMode.NORMAL;
                     r2Sync.PushToUploadCmd(cur_piece_tearing.ExportToCmd());
                     cur_piece_tearing = null;
+                }
+                if(mode === PenMode.ERASER){
+                    r2.inkCtrl.eraser.up();
+                    mode = PenMode.NORMAL;
                 }
             }
             cur_dn = false;
@@ -293,9 +304,13 @@ var r2Ctrl = {};
                         if(new_height >= 0){
                             cur_piece_tearing.resize(new_height);
                             r2.dom_model.updateSizeTextTearing(cur_piece_tearing);
+                            r2App.invalidate_size = true;
                             r2App.invalidate_page_layout = true;
                         }
                     }
+                }
+                if(mode === PenMode.ERASER){
+                    r2.inkCtrl.eraser.mv(r2.viewCtrl.mapScrToDoc(new_pen_pt));
                 }
             }
         };
@@ -335,7 +350,14 @@ var r2Ctrl = {};
     /* mouse */
     r2.MouseModeEnum = {
         HOVER : 0,
+        RDN : 1,
         LDN : 2
+    };
+    r2.MouseBtn = {
+        NONE : 0,
+        LEFT : 1,
+        MDDL : 2,
+        RGHT : 3
     };
 
     r2.mouse = (function(){
@@ -365,7 +387,7 @@ var r2Ctrl = {};
             var new_mouse_pt = r2.input.getPos(event);
             if(pub.mode === r2.MouseModeEnum.HOVER){
                 switch (event.which) {
-                    case 1: // left click
+                    case r2.MouseBtn.LEFT: // left click
                         pub.mode = r2.MouseModeEnum.LDN;
                         pos_dn = new_mouse_pt;
                         if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
@@ -375,6 +397,10 @@ var r2Ctrl = {};
                         else if(r2App.mode == r2App.AppModeEnum.RECORDING){
                             r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                         }
+                        break;
+                    case r2.MouseBtn.RGHT:
+                        pub.mode = r2.MouseModeEnum.RDN;
+                        r2.inkCtrl.eraser.dn();
                         break;
                     default:
                         break;
@@ -403,6 +429,9 @@ var r2Ctrl = {};
                     r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                 }
             }
+            else if(pub.mode == r2.MouseModeEnum.RDN){
+                r2.inkCtrl.eraser.mv(r2.viewCtrl.mapScrToDoc(new_mouse_pt));
+            }
 
             r2App.cur_mouse_pt = new_mouse_pt;
         };
@@ -430,9 +459,32 @@ var r2Ctrl = {};
                 r2.onScreenButtons.mouseUp();
                 pub.mode = r2.MouseModeEnum.HOVER;
             }
+            else if(pub.mode == r2.MouseModeEnum.RDN){
+                r2.inkCtrl.eraser.up();
+                pub.mode = r2.MouseModeEnum.HOVER;
+            }
 
             r2App.cur_mouse_pt = new_mouse_pt;
         };
+
+        pub.rightClickContextMenu = (function(){
+            var pub_rc = {};
+
+            pub_rc.enable = function(){
+                document.getElementById('r2_app_container').removeEventListener('contextmenu', disableFunc, false);
+            };
+
+            pub_rc.disable = function(){
+                document.getElementById('r2_app_container').addEventListener('contextmenu', disableFunc, false);
+            };
+
+            function disableFunc(e){
+                e.preventDefault();
+            }
+
+            return pub_rc;
+        }());
+
 
         return pub;
     }());
@@ -455,6 +507,9 @@ var r2Ctrl = {};
         else if(obj_front instanceof r2.PieceKeyboard){
             obj_front.Focus();
         }
+        else if(obj_front instanceof r2.PieceEditableAudio){
+            obj_front.Focus();
+        }
         else{
             if(obj_front instanceof r2.PieceText){
                 r2.dom_model.focusCtrl.focusPiece(obj_front.GetId());
@@ -474,7 +529,7 @@ var r2Ctrl = {};
 
     /* keyboard */
     r2.KeyboardModeEnum = {
-        FOCUSED : 0,
+        TEXTBOX : 0,
         NORMAL : 1,
         ON_BTN : 2
     };
@@ -491,6 +546,8 @@ var r2Ctrl = {};
             KEY_END: 35,
             KEY_PAGEUP: 33,
             KEY_PAGEDN: 34,
+            KEY_PLUS: 107,
+            KEY_MINUS: 109,
 
             KEY_C: 67,
             KEY_X: 88,
@@ -510,33 +567,34 @@ var r2Ctrl = {};
 
         var mode = r2.KeyboardModeEnum.NORMAL;
         pub.ctrlkey_dn = false;
+        pub.shift_key_dn = false;
 
         pub.getMode = function(){
             return mode;
         };
 
-        var updateMode = function(){
-            $focus = $(':focus');
-            if($focus.length !== 0){
-                if($focus.hasClass('r2_piecekeyboard_textarea')){
-                    mode = r2.KeyboardModeEnum.FOCUSED;
-                    return;
-                }
-                else if($focus.hasClass('rm_btn')){
+        pub.pieceEventListener = (function(){
+            var pub_ph = {};
+            pub_ph.setTextbox = function(dom_textbox){
+                dom_textbox.addEventListener('focus', function(){
+                    mode = r2.KeyboardModeEnum.TEXTBOX;
+                });
+                dom_textbox.addEventListener('blur', function(){
+                    mode = r2.KeyboardModeEnum.NORMAL;
+                });
+            };
+            pub_ph.setBtn = function(dom_btn){
+                dom_btn.addEventListener('focus', function(){
                     mode = r2.KeyboardModeEnum.ON_BTN;
-                    return;
-                }
-                else if($focus.hasClass('btn-dashboard')){
-                    mode = r2.KeyboardModeEnum.ON_BTN;
-                    return;
-                }
-            }
-            mode = r2.KeyboardModeEnum.NORMAL;
-            return;
-        };
+                });
+                dom_btn.addEventListener('blur', function(){
+                    mode = r2.KeyboardModeEnum.NORMAL;
+                });
+            };
+            return pub_ph;
+        }());
 
         pub.handleDn = function(event){
-            updateMode();
             if(r2App.mode === r2App.AppModeEnum.IDLE && mode === r2.KeyboardModeEnum.NORMAL){
                 ;
             }
@@ -553,10 +611,13 @@ var r2Ctrl = {};
                     }
                 }
             }
-            if(mode !== r2.KeyboardModeEnum.FOCUSED){
+            if(mode !== r2.KeyboardModeEnum.TEXTBOX){
                 switch(event.which){
                     case CONST.KEY_CTRL: // left ctrl
                         pub.ctrlkey_dn = true;
+                        break;
+                    case CONST.KEY_SHIFT: // left shift
+                        pub.shift_key_dn = true;
                         break;
                     case CONST.KEY_PAGEUP:
                         r2.clickPrevPage();
@@ -595,6 +656,9 @@ var r2Ctrl = {};
                     case CONST.KEY_CTRL: // left ctrl
                         pub.ctrlkey_dn = true;
                         break;
+                    case CONST.KEY_SHIFT: // left shift
+                        pub.shift_key_dn = true;
+                        break;
                     case CONST.KEY_ESC:
                         r2.dom_model.focusCtrl.esc();
                         event.preventDefault();
@@ -603,7 +667,6 @@ var r2Ctrl = {};
                         break;
                 }
             }
-
 
             if( mode === r2.KeyboardModeEnum.NORMAL &&
                     (event.which === CONST.KEY_ENTER || event.which === CONST.KEY_SPACE) ){
@@ -627,10 +690,16 @@ var r2Ctrl = {};
                             createPieceKeyboard(isprivate = true);
                             r2.log.Log_Simple("CreatePieceKeyboard_Private_Enter");
                         }
-                        else {
+                        else if(pub.shift_key_dn){ // trigger recording using SimpleSpeech UI
                             if(!r2App.pieceSelector.isNull()){
-                                r2App.recordingTrigger.set(r2App.pieceSelector.get());
-                                r2.log.Log_Simple("Recording_Bgn_Enter");
+                                r2.recordingCtrl.set(r2App.pieceSelector.get(), r2App.RecordingUI.SIMPLE_SPEECH);
+                                r2.log.Log_Simple("Recording_Bgn_Enter_SimpleSpeech");
+                            }
+                        }
+                        else { // trigger recording using Waveform UI
+                            if(!r2App.pieceSelector.isNull()){
+                                r2.recordingCtrl.set(r2App.pieceSelector.get(), r2App.RecordingUI.WAVEFORM);
+                                r2.log.Log_Simple("Recording_Bgn_Enter_Waveform");
                             }
                         }
                         break;
@@ -651,10 +720,16 @@ var r2Ctrl = {};
                             createPieceKeyboard(isprivate = true);
                             r2.log.Log_Simple("CreatePieceKeyboard_Private_Enter");
                         }
+                        else if(pub.shift_key_dn){ // trigger recording using SimpleSpeech UI
+                            if(!r2App.pieceSelector.isNull()){
+                                r2.recordingCtrl.set(r2App.pieceSelector.get(), r2App.RecordingUI.SIMPLE_SPEECH);
+                                r2.log.Log_Simple("Recording_Bgn_Enter_SimpleSpeech");
+                            }
+                        }
                         else {
                             if(!r2App.pieceSelector.isNull()){
-                                r2App.recordingTrigger.set(r2App.pieceSelector.get());
-                                r2.log.Log_Simple("Recording_Bgn_Enter");
+                                r2.recordingCtrl.set(r2App.pieceSelector.get(), r2App.RecordingUI.WAVEFORM);
+                                r2.log.Log_Simple("Recording_Bgn_Enter_Waveform");
                             }
                         }
                         break;
@@ -666,7 +741,7 @@ var r2Ctrl = {};
                 switch (event.which) {
                     case CONST.KEY_SPACE:
                     case CONST.KEY_ENTER:
-                        r2.recordingStop(toupload = true);
+                        r2.recordingCtrl.stop(toupload = true);
                         r2.log.Log_Simple("Recording_Stop");
                         break;
                     default:
@@ -678,11 +753,14 @@ var r2Ctrl = {};
                 case CONST.KEY_CTRL: // left ctrl
                     pub.ctrlkey_dn = false;
                     break;
-                case 107:
+                case CONST.KEY_SHIFT: // left shift
+                    pub.shift_key_dn = false;
+                    break;
+                case CONST.KEY_PLUS:
                     if(mode == r2.KeyboardModeEnum.NORMAL)
                         r2.zoom.in();
                     break;
-                case 109:
+                case CONST.KEY_MINUS:
                     if(mode == r2.KeyboardModeEnum.NORMAL)
                         r2.zoom.out();
                     break;
@@ -736,12 +814,12 @@ var r2Ctrl = {};
                 event.preventDefault();
                 if(event.which != 1 || r2.keyboard.ctrlkey_dn){return;}
                 if(r2App.mode == r2App.AppModeEnum.RECORDING){
-                    r2.recordingStop(toupload = true);
+                    r2.recordingCtrl.stop(toupload = true);
                     r2.log.Log_Simple("Recording_Stop_OnScrBtn");
                 }
                 else{
                     if(!r2App.pieceSelector.isNull()){
-                        r2App.recordingTrigger.set(r2App.pieceSelector.get());
+                        r2.recordingCtrl.set(r2App.pieceSelector.get(), r2App.RecordingUI.WAVEFORM);
                         r2.log.Log_Simple("Recording_Bgn_OnScrBtn");
                     }
                 }
@@ -860,30 +938,31 @@ var r2Ctrl = {};
             return pub_ds;
         }());
 
-
         pub.recordingInkDn = function(pt, target_annot){
             var piece = r2App.cur_page.GetPieceByHitTest(pt);
             cur_recording_Ink_piece = piece;
             if(piece){
-                var Ink = new r2.Ink();
-                Ink.SetInk(
-                    target_annot.GetAnchorPid(),
+                var ink = new r2.Ink();
+                ink.SetInk(
+                    piece.GetId(),
                     target_annot.GetUsername(),
                     target_annot.GetId(),
-                    [r2App.cur_time-target_annot.GetBgnTime(),r2App.cur_time-target_annot.GetBgnTime()]);
+                    [r2App.cur_time-target_annot.GetBgnTime(),r2App.cur_time-target_annot.GetBgnTime()],
+                    r2App.cur_pdf_pagen
+                );
 
-                Ink.SetPage(r2App.cur_pdf_pagen);
                 var segment  = new r2.Ink.Segment();
                 segment.SetSegment(piece.GetId(), [pt.subtract(piece.pos, true)]);
 
-                Ink.AddSegment(segment);
+                ink.AddSegment(segment);
 
-                cur_recording_Ink = Ink;
+                cur_recording_Ink = ink;
                 cur_recording_Ink_segment = segment;
                 cur_recording_Ink_segment_piece = piece;
                 cur_recording_Ink_pt = pt;
             }
         };
+
         pub.recordingInkMv = function(pt, target_annot){
             if(cur_recording_Ink && cur_recording_Ink_segment){
                 var piece = r2App.cur_page.GetPieceByHitTest(pt);
@@ -920,8 +999,8 @@ var r2Ctrl = {};
         pub.recordingInkUp = function(pt, target_annot){
             if(cur_recording_Ink){
                 cur_recording_Ink.smoothing();
-                cur_recording_Ink_piece.AddInk(target_annot.GetId(),cur_recording_Ink);
-                target_annot.AddInk(cur_recording_Ink, toupload = true);
+                cur_recording_Ink_piece.addInk(target_annot.GetId(),cur_recording_Ink);
+                target_annot.addInk(cur_recording_Ink, toupload = true);
                 pub.dynamicScene.addInk(cur_recording_Ink);
                 if(cur_recording_Ink_segment){
                     cur_recording_Ink_segment = null;
@@ -937,6 +1016,74 @@ var r2Ctrl = {};
                 return false;
             }
         };
+
+        pub.eraser = (function(){
+            var pub_er = {};
+
+            var pos = null;
+            var eraser_dn_time = null;
+            var reserved_operations = [];
+            var uploader = new r2.CmdTimedUploader();
+            uploader.init(r2Const.TIMEOUT_STATIC_INK_UPDATE);
+
+            pub_er.dn = function(){
+                eraser_dn_time = r2App.cur_time;
+            };
+
+            pub_er.up = function(){
+                if(reserved_operations.length){
+                    uploader.addCmd(createCmd());
+                }
+                pos = null;
+                r2App.invalidate_dynamic_scene = true;
+            };
+
+            pub_er.mv = function(pt){
+                var inks = [];
+                r2App.cur_page.RunRecursive('getCollidingInks', [pt, inks]);
+                pos = pt;
+                r2App.invalidate_dynamic_scene = true;
+                if(inks.length){
+                    console.log(inks.length);
+                    for(var i = 0, l = inks.length; i < l; ++i){
+                        reserved_operations.push(inks[i].erase(true)); // to_upload
+                    }
+                    r2App.invalidate_page_layout = true;
+                }
+            };
+
+            pub_er.draw = function(ctx){
+                if(pos){
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, r2Const.ERASER_RADIUS, 0, 2 * Math.PI, false);
+                    ctx.lineWidth = 0.001;
+                    ctx.strokeStyle = '#003300';
+                    ctx.stroke();
+                }
+            };
+
+            pub_er.getCmdsToUpload = function(){
+                return uploader.getCmdsToUpload();
+            };
+
+            function createCmd(){
+                var cmd ={};
+                cmd.time = new Date(eraser_dn_time).toISOString();
+                cmd.user = r2.userGroup.cur_user.name;
+                cmd.op = 'DeleteComment';
+                cmd.type = 'Inks';
+                cmd.target = {
+                    type: 'Inks'
+                };
+                cmd.data = reserved_operations.slice(0); // clone array
+
+                reserved_operations = [];
+
+                return cmd;
+            }
+
+            return pub_er;
+        }());
 
         return pub;
     }());
@@ -1054,7 +1201,7 @@ var r2Ctrl = {};
 
     var replacePieceAudioToPieceKeyboard = function(){
         var annotid = r2App.cur_recording_annot.GetId();
-        r2.recordingStop(toupload = false);
+        r2.recordingCtrl.stop(toupload = false);
         r2.log.Log_Simple("Recording_Stop_CancelForTextComment");
         r2.log.Log_Simple("CreatePieceKeyboard_Public_Enter");
         r2.removeAnnot(annotid, askuser = false, mute = true);
@@ -1078,9 +1225,11 @@ var r2Ctrl = {};
                 );
                 pieceteared.SetPieceTeared(r2.userGroup.cur_user.name);
                 anchorpiece.AddChildAtFront(pieceteared);
-                r2App.cur_page.Relayout();
 
                 r2.dom_model.createTextTearing(pieceteared);
+
+                r2App.invalidate_size = true;
+                r2App.invalidate_page_layout = true;
                 return pieceteared;
             }
         }
@@ -1111,9 +1260,11 @@ var r2Ctrl = {};
                 anchorpiece.GetId(), annotid, r2.userGroup.cur_user.name, '', isprivate, anchorpiece.IsOnLeftColumn()
             );
             anchorpiece.AddChildAtFront(piecekeyboard);
-            r2App.cur_page.Relayout();
             piecekeyboard.Focus();
             r2Sync.PushToUploadCmd(piecekeyboard.ExportToCmd());
+
+            r2App.invalidate_size = true;
+            r2App.invalidate_page_layout = true;
         }
     };
 

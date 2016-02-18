@@ -28,6 +28,9 @@
   background: dimgray;
 }
 
+#r2_view.recording {
+  box-shadow: inset 3px 3px 16px red;
+}
 
 #r2_content {
   width: 125px;
@@ -239,9 +242,9 @@ a:active {
 }
 
 
-/**
-*** Text Area
-**/
+/*
+* Text Area
+*/
 .r2_piecekeyboard{
   border: 0;
   pointer-events: none;
@@ -253,67 +256,16 @@ a:active {
   width: 1em; /* will be tt_w */
 }
 
-.r2_piecekeyboard_pre{
-  color: transparent;
-  display: block;
-  text-align: left;
-}
-.r2_piecekeyboard_pre > span{
-  font-family: wf_SegoeUI,"Segoe UI","Segoe","Tahoma","Helvetica","sans-serif";
-  line-height: 1em;
-  color: transparent;
-}
-
-.r2_piecekeyboard_pre,
-.r2_piecekeyboard_textarea
-{
+.r2_piecekeyboard_textbox {
+  border: 0;
+  overflow: auto;
+  padding: 0.3em;
   font-family: wf_SegoeUI,"Segoe UI","Segoe","Tahoma","Helvetica","sans-serif";
   font-size: 0.8em; /* variant to FONT_SIZE_SCALE  */
-  margin: 0;
-  padding: 0.2em; /* variant to FONT_SIZE_SCALE  */
-  outline: 0 none;
-  border: 0;
   line-height: 1.2em;
-  letter-spacing: 0.13em;
-  /* Make the text soft-wrap */
+  text-align: left;
+  white-space: pre;
   white-space: pre-wrap;
-  word-break: normal;
-  word-wrap: break-word;
-  background: transparent;
-  /*box-shadow: 0 0 0.2em dodgerblue inset, 0 0 0.2em dodgerblue;*/
-  box-shadow: none;
-}
-
-
-.r2_piecekeyboard_textarea:focus
-{
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-.r2_piecekeyboard_textarea,
-.r2_piecekeyboard_textarea:focus{
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  -ms-box-sizing: border-box;
-  box-sizing: border-box;
-  width: 100%;
-  background: transparent;
-}
-
-.r2_piecekeyboard_textarea,
-.r2_piecekeyboard_textarea:focus{
-  /* Hide any scrollbars */
-  overflow: hidden;
-  position: absolute;
-  top: 0;
-  left: 0;
-  resize: none;
-  height: 100%;
-}
-
-.r2_piecekeyboard_textarea::selection {
-  background-color: #f0f0f0;
 }
 
 .r2_piecekeyboard_btn_rmv {
@@ -328,6 +280,35 @@ a:active {
   background: white;
 }
 
+
+/*
+* Text Area
+*/
+
+.r2_piece_editable_audio {
+  border: 0;
+  pointer-events: none;
+}
+.r2_piece_editable_audio_tr {
+  position: relative;
+  left: 0; /* will be tt_x */
+  width: 1em; /* will be tt_w */
+}
+.r2_piece_editable_audio_textbox {
+  border: 0;
+  overflow: auto;
+  padding: 0.3em;
+  font-family: wf_SegoeUI,"Segoe UI","Segoe","Tahoma","Helvetica","sans-serif";
+  font-size: 0.8em; /* variant to FONT_SIZE_SCALE  */
+  line-height: 1.2em;
+  text-align: left;
+  white-space: pre;
+  white-space: pre-wrap;
+}
+
+/*
+* booklet
+*/
 
 #booklet_nav{
     position:absolute;
@@ -547,7 +528,7 @@ a:active {
 #dashboard > #browse_row > div > .dashboard-title {
   display: inline-block;
   font-weight: bold;
-  padding: 7px 12px;
+  padding: 10px 12px;
   font-size: 13px;
 }
 
@@ -577,7 +558,6 @@ a:active {
   margin-top: 4px;
   padding:4px 2px;
 }
-
 
 #page_nav_input {
   width: 33px;
@@ -614,10 +594,6 @@ a:active {
   position: relative;
   width: 100%;
   z-index: 9;
-}
-
-#r2_app_container > #overlay_container.recording {
-  box-shadow: inset 0px 0px 16px red;
 }
 
 

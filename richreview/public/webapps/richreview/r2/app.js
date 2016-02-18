@@ -17,16 +17,16 @@
             try {
                 update();
 
-                if(r2App.invalidate_page_layout){
-                    r2App.cur_page.Relayout();
-                    r2App.invalidate_page_layout = false;
-                    console.log('invalidate_page_layout');
-                }
-
                 if(r2App.invalidate_size){
                     r2.resizeWindow();
                     r2App.invalidate_size = false;
                     console.log('invalidate_size');
+                }
+
+                if(r2App.invalidate_page_layout){
+                    r2App.cur_page.Relayout();
+                    r2App.invalidate_page_layout = false;
+                    console.log('invalidate_page_layout');
                 }
 
                 if(r2App.invalidate_static_scene){
@@ -63,8 +63,8 @@
                 }
 
                 // upload static ink cmds
-                var annots = r2App.annotStaticInkMgr.getAnnots();
-                annots.forEach(function(annot){
+                var static_ink_annots = r2App.annotStaticInkMgr.getAnnots();
+                static_ink_annots.forEach(function(annot){
                     var static_ink_cmds = annot.getCmdsToUpload();
                     if(static_ink_cmds){
                         r2Sync.PushToUploadCmd(static_ink_cmds);
@@ -72,13 +72,21 @@
                     }
                 });
 
+                // upload erase ink cmds
+                var erase_ink_cmds = r2.inkCtrl.eraser.getCmdsToUpload();
+                if(erase_ink_cmds){
+                    erase_ink_cmds.cmds.forEach(function(cmd){
+                        r2Sync.PushToUploadCmd(cmd);
+                    });
+                }
+
                 // upload and download cmds
                 r2Sync.loop();
 
-                triggerReservedRecordingBgn();
+                triggerReservedRecording();
             }
             else if(r2App.mode == r2App.AppModeEnum.RECORDING){
-                r2.recordingUpdate();
+                r2.recordingCtrl.update();
             }
 
             r2.log.Consume(true); // delayed consumption of the log upload queue
@@ -101,13 +109,13 @@
             }
         };
 
-        var triggerReservedRecordingBgn = function(){
-            if(r2App.recordingTrigger.isReady()){
+        var triggerReservedRecording = function(){
+            if(r2.recordingCtrl.isReady()){
                 if(r2App.mode === r2App.AppModeEnum.REPLAYING){
                     r2.rich_audio.stop();
                 }
                 if(r2App.mode === r2App.AppModeEnum.IDLE && r2.audioPlayer.isIdle()){
-                    r2App.recordingTrigger.bgn();
+                    r2.recordingCtrl.bgn();
                 }
             }
         };
@@ -153,6 +161,7 @@
             }
             r2.inkCtrl.dynamicScene.draw(r2.annot_canv_ctx);
             r2App.pieceSelector.draw(r2.annot_canv_ctx);
+            r2.inkCtrl.eraser.draw(r2.annot_canv_ctx);
         }
 
         return pub;
@@ -181,7 +190,7 @@
                     r2.canv_ctx = r2.dom.getPageCanvCtx();
                     r2.annot_canv_ctx = r2.dom.getAnnotCanvCtx();
 
-                    r2.resizeWindow({});
+                    r2.resizeWindow();
 
                     r2.onScreenButtons.Init();
 
@@ -209,6 +218,7 @@
                     initR2();
                     initSystem();
                     r2.loop.tick();
+                    return null;
                 }
             ).catch(r2.util.handleError);
         };
@@ -357,6 +367,9 @@
             function setFromJs(docjs){
                 r2App.doc = r2.createDoc.createR2DocFromDocJs(docjs);
                 r2.dom_model.init(r2App.doc);
+                r2App.invalidate_size = true;
+                r2App.invalidate_page_layout = true;
+                return null;
             }
 
             function setFromLegacyDoc(docjs){
@@ -368,6 +381,8 @@
                         for(var i = 0; i < cmds.length; ++i){
                             r2.cmd.executeCmd(r2App.doc, cmds[i], true, false); // legacy_user_only, skip_self
                         }
+                        r2App.invalidate_size = true;
+                        r2App.invalidate_page_layout = true;
                     }
                 );
             }
@@ -398,7 +413,6 @@
             r2.coverMsg.Hide();
             r2.modalWindowLoading.hideModalWindow();
             r2.modalWindowIntro.Init();
-
             r2.log.Log_Simple('DoneLoading');
         }
 
@@ -429,14 +443,15 @@
 
             // prevent data loss
             window.onbeforeunload = function () {
+                localStorage.clear();
                 r2.log.Consume(false); // delayed
-                var now_tying = r2.keyboard.getMode() === r2.KeyboardModeEnum.FOCUSED &&
-                    r2App.cur_focused_piece_keyboard != null &&
-                    r2App.cur_focused_piece_keyboard.WasChanged();
+                var now_typing = r2.keyboard.getMode() === r2.KeyboardModeEnum.TEXTBOX &&
+                        r2App.cur_focused_piece_keyboard != null &&
+                        r2App.cur_focused_piece_keyboard.WasChanged();
                 var now_uploading = r2Sync.NowUploading();
-                if (now_tying || now_uploading || r2App.annot_private_spotlight.changed) {
-                    if (now_tying)
-                        $(r2App.cur_focused_piece_keyboard.dom_textarea).blur();
+                if (now_typing || now_uploading || r2App.annot_private_spotlight.changed) {
+                    if (now_typing)
+                        $(r2App.cur_focused_piece_keyboard.dom_textbox).blur();
                     return "The webapp is uploading your note. Please wait for seconds, and retry.";
                 }
             };

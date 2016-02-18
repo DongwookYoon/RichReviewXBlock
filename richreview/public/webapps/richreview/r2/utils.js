@@ -187,7 +187,6 @@
                 ctx.oBackingStorePixelRatio ||
                 ctx.backingStorePixelRatio || 1;
             var pixelRatio = devicePixelRatio / backingStoreRatio;
-            console.log("pixelratio:", devicePixelRatio, backingStoreRatio);
             return {
                 sx: pixelRatio,
                 sy: pixelRatio,

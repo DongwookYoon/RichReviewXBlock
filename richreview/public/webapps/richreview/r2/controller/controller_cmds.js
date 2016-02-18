@@ -220,21 +220,23 @@
                     return true;
                 }
             }
-            else if(cmd.target.type === 'Ink'){
-                var annot = r2App.annots[cmd.target.aid];
-                var piece = r2App.pieces_cache[cmd.target.pid];
-                if(typeof piece !== 'undefined' && typeof annot !== 'undefined'){
-                    var ink = piece.getInkByTimeBgn(cmd.target.t_bgn, cmd.target.aid);
-                    if(ink){
-                        piece.detachInk(ink);
-                        annot.detachInk(ink);
-                        r2App.invalidate_page_layout = true;
-                        return true;
+            else if(cmd.target.type === 'Inks'){
+                cmd.data.forEach(function(erase_cmd){
+                    var annot = r2App.annots[erase_cmd.target.aid];
+                    var piece = r2App.pieces_cache[erase_cmd.target.pid];
+                    if(typeof piece !== 'undefined' && typeof annot !== 'undefined'){
+                        var ink = piece.getInkByTimeBgn(erase_cmd.target.t_bgn, erase_cmd.target.aid);
+                        if(ink){
+                            piece.detachInk(ink);
+                            annot.detachInk(ink);
+                            r2App.invalidate_page_layout = true;
+                        }
                     }
-                }
-                else{
-                    console.error('deleteComment, Ink: ', cmd, annot, piece);
-                }
+                    else{
+                        console.error('deleteComment, Ink: ', cmd, annot, piece);
+                    }
+                });
+                return true;
             }
             return false;
         };
@@ -392,23 +394,25 @@
                 if(cmd.data.Inks){
                     var cmd_ink;
                     for(i = 0; cmd_ink = cmd.data.Inks[i]; ++i) {
-                        var ink = new r2.Ink();
-                        ink.SetInk(
-                            cmd_ink.anchorpid,
-                            cmd_ink.username,
-                            cmd_ink.annotid,
-                            [cmd_ink.t_bgn, cmd_ink.t_end]
-                        );
-                        ink.SetPage(cmd_ink.npage);
-                        for(var j = 0; j < cmd_ink.segments.length; ++j){
-                            if(r2App.pieces_cache.hasOwnProperty(cmd_ink.segments[j].pid)){
-                                var segment = new r2.Ink.Segment();
-                                segment.SetSegment(cmd_ink.segments[j].pid, r2.util.numListToVec2List(cmd_ink.segments[j].pts));
-                                ink.AddSegment(segment);
+                        if(cmd_ink.pid) { // filters out the old inking that is using .anchorpid
+                            var ink = new r2.Ink();
+                            ink.SetInk(
+                                cmd_ink.pid,
+                                cmd_ink.username,
+                                cmd_ink.annotid,
+                                [cmd_ink.t_bgn, cmd_ink.t_end],
+                                cmd_ink.npage
+                            );
+                            for (var j = 0; j < cmd_ink.segments.length; ++j) {
+                                if (r2App.pieces_cache.hasOwnProperty(cmd_ink.segments[j].pid)) {
+                                    var segment = new r2.Ink.Segment();
+                                    segment.SetSegment(cmd_ink.segments[j].pid, r2.util.numListToVec2List(cmd_ink.segments[j].pts));
+                                    ink.AddSegment(segment);
+                                }
                             }
+                            anchorpiece.addInk(cmd.data.aid, ink);
+                            annot.addInk(ink);
                         }
-                        anchorpiece.AddInk(cmd.data.aid, ink);
-                        annot.AddInk(ink);
                     }
                 }
                 return true;
@@ -416,7 +420,7 @@
             return false;
         };
 
-        var createCommentInk = function(doc, cmd){
+        var createCommentInk = function(doc, cmd){ // inks from the legacy app
             // time: 2014-12-21T13...
             // user: 'red user'
             // op: 'CreateComment'
@@ -433,16 +437,16 @@
                         cmd.data.aid :
                         r2.userGroup.GetUser(r2Const.LEGACY_USERNAME).GetAnnotStaticInkId();
                     var ink = new r2.Ink();
-                    ink.SetInk(anchorpiece.GetId(), cmd.user, cmd.data.aid, stroke.time);
+                    ink.SetInk(anchorpiece.GetId(), cmd.user, cmd.data.aid, stroke.time, anchorpage.GetNumPage());
                     var segment = new r2.Ink.Segment();
                     segment.SetSegment(anchorpiece.GetId(), r2.util.numListToVec2List(stroke.pts));
                     ink.AddSegment(segment);
-                    anchorpiece.AddInk(cmd.data.aid, ink);
+                    anchorpiece.addInk(cmd.data.aid, ink);
                     if(r2App.annots[cmd.data.aid]){
-                        r2App.annots[cmd.data.aid].AddInk(ink);
+                        r2App.annots[cmd.data.aid].addInk(ink);
                     }
                     else{
-                        r2App.annots[r2.userGroup.GetUser(r2Const.LEGACY_USERNAME).GetAnnotStaticInkId()].AddInk(ink); // this can be removed after a database review
+                        r2App.annots[r2.userGroup.GetUser(r2Const.LEGACY_USERNAME).GetAnnotStaticInkId()].addInk(ink); // this can be removed after a database review
                     }
                 }
                 return true;
@@ -522,25 +526,30 @@
 
         var createStaticInk = function(doc, cmd){
             cmd.data.inks.forEach(function(cmd_ink){
-                var ink = new r2.Ink();
-                ink.SetInk(
-                    cmd_ink.anchorpid,
-                    cmd_ink.username,
-                    cmd_ink.annotid,
-                    [cmd_ink.t_bgn, cmd_ink.t_end]
-                );
-                ink.SetPage(cmd_ink.npage);
-                for(var j = 0; j < cmd_ink.segments.length; ++j){
-                    if(r2App.pieces_cache.hasOwnProperty(cmd_ink.segments[j].pid)){
-                        var segment = new r2.Ink.Segment();
-                        segment.SetSegment(cmd_ink.segments[j].pid, r2.util.numListToVec2List(cmd_ink.segments[j].pts));
-                        ink.AddSegment(segment);
+                if(cmd_ink.pid){ // filters out the old inking that is using .anchorpid
+                    var ink = new r2.Ink();
+                    ink.SetInk(
+                        cmd_ink.pid,
+                        cmd_ink.username,
+                        cmd_ink.annotid,
+                        [cmd_ink.t_bgn, cmd_ink.t_end],
+                        cmd_ink.npage
+                    );
+                    for(var j = 0; j < cmd_ink.segments.length; ++j){
+                        if(r2App.pieces_cache.hasOwnProperty(cmd_ink.segments[j].pid)){
+                            var segment = new r2.Ink.Segment();
+                            segment.SetSegment(cmd_ink.segments[j].pid, r2.util.numListToVec2List(cmd_ink.segments[j].pts));
+                            ink.AddSegment(segment);
+                        }
                     }
-                }
 
-                var annot = r2App.annots[r2.userGroup.GetUser(cmd_ink.username).GetAnnotStaticInkId()];
-                annot.AddInk(ink);
+                    var piece = r2App.pieces_cache[cmd_ink.pid];
+                    piece.addInk(cmd_ink.annotid, ink);
+                    var annot = r2App.annots[r2.userGroup.GetUser(cmd_ink.username).GetAnnotStaticInkId()];
+                    annot.addInk(ink);
+                }
             });
+            r2App.invalidate_page_layout = true;
             return true;
         };
 

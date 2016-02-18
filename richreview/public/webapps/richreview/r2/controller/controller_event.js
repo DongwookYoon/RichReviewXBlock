@@ -235,6 +235,7 @@ var r2Ctrl = {};
                 }
                 else if(event.which === PenEventType.SECOND_BTN){
                     mode = PenMode.ERASER;
+                    r2.inkCtrl.eraser.dn();
                 }
             }
             pos_dn = new_pen_pt;
@@ -271,6 +272,7 @@ var r2Ctrl = {};
                     cur_piece_tearing = null;
                 }
                 if(mode === PenMode.ERASER){
+                    r2.inkCtrl.eraser.up();
                     mode = PenMode.NORMAL;
                 }
             }
@@ -308,7 +310,7 @@ var r2Ctrl = {};
                     }
                 }
                 if(mode === PenMode.ERASER){
-                    r2.inkCtrl.eraseInkMv(r2.viewCtrl.mapScrToDoc(new_pen_pt));
+                    r2.inkCtrl.eraser.mv(r2.viewCtrl.mapScrToDoc(new_pen_pt));
                 }
             }
         };
@@ -398,7 +400,7 @@ var r2Ctrl = {};
                         break;
                     case r2.MouseBtn.RGHT:
                         pub.mode = r2.MouseModeEnum.RDN;
-                        r2.inkCtrl.eraser.mv(r2.viewCtrl.mapScrToDoc(new_mouse_pt));
+                        r2.inkCtrl.eraser.dn();
                         break;
                     default:
                         break;
@@ -936,25 +938,25 @@ var r2Ctrl = {};
             return pub_ds;
         }());
 
-
         pub.recordingInkDn = function(pt, target_annot){
             var piece = r2App.cur_page.GetPieceByHitTest(pt);
             cur_recording_Ink_piece = piece;
             if(piece){
-                var Ink = new r2.Ink();
-                Ink.SetInk(
-                    target_annot.GetAnchorPid(),
+                var ink = new r2.Ink();
+                ink.SetInk(
+                    piece.GetId(),
                     target_annot.GetUsername(),
                     target_annot.GetId(),
-                    [r2App.cur_time-target_annot.GetBgnTime(),r2App.cur_time-target_annot.GetBgnTime()]);
+                    [r2App.cur_time-target_annot.GetBgnTime(),r2App.cur_time-target_annot.GetBgnTime()],
+                    r2App.cur_pdf_pagen
+                );
 
-                Ink.SetPage(r2App.cur_pdf_pagen);
                 var segment  = new r2.Ink.Segment();
                 segment.SetSegment(piece.GetId(), [pt.subtract(piece.pos, true)]);
 
-                Ink.AddSegment(segment);
+                ink.AddSegment(segment);
 
-                cur_recording_Ink = Ink;
+                cur_recording_Ink = ink;
                 cur_recording_Ink_segment = segment;
                 cur_recording_Ink_segment_piece = piece;
                 cur_recording_Ink_pt = pt;
@@ -997,8 +999,8 @@ var r2Ctrl = {};
         pub.recordingInkUp = function(pt, target_annot){
             if(cur_recording_Ink){
                 cur_recording_Ink.smoothing();
-                cur_recording_Ink_piece.AddInk(target_annot.GetId(),cur_recording_Ink);
-                target_annot.AddInk(cur_recording_Ink, toupload = true);
+                cur_recording_Ink_piece.addInk(target_annot.GetId(),cur_recording_Ink);
+                target_annot.addInk(cur_recording_Ink, toupload = true);
                 pub.dynamicScene.addInk(cur_recording_Ink);
                 if(cur_recording_Ink_segment){
                     cur_recording_Ink_segment = null;
@@ -1018,34 +1020,67 @@ var r2Ctrl = {};
         pub.eraser = (function(){
             var pub_er = {};
 
-            var eraser_pos = null;
+            var pos = null;
+            var eraser_dn_time = null;
+            var reserved_operations = [];
+            var uploader = new r2.CmdTimedUploader();
+            uploader.init(r2Const.TIMEOUT_STATIC_INK_UPDATE);
+
+            pub_er.dn = function(){
+                eraser_dn_time = r2App.cur_time;
+            };
+
             pub_er.up = function(){
-                eraser_pos = null;
+                if(reserved_operations.length){
+                    uploader.addCmd(createCmd());
+                }
+                pos = null;
                 r2App.invalidate_dynamic_scene = true;
             };
 
             pub_er.mv = function(pt){
                 var inks = [];
                 r2App.cur_page.RunRecursive('getCollidingInks', [pt, inks]);
-                eraser_pos = pt;
+                pos = pt;
                 r2App.invalidate_dynamic_scene = true;
                 if(inks.length){
+                    console.log(inks.length);
                     for(var i = 0, l = inks.length; i < l; ++i){
-                        inks[i].erase(true); // to_upload
+                        reserved_operations.push(inks[i].erase(true)); // to_upload
                     }
                     r2App.invalidate_page_layout = true;
                 }
             };
 
             pub_er.draw = function(ctx){
-                if(eraser_pos){
+                if(pos){
                     ctx.beginPath();
-                    ctx.arc(eraser_pos.x, eraser_pos.y, r2Const.ERASER_RADIUS, 0, 2 * Math.PI, false);
+                    ctx.arc(pos.x, pos.y, r2Const.ERASER_RADIUS, 0, 2 * Math.PI, false);
                     ctx.lineWidth = 0.001;
                     ctx.strokeStyle = '#003300';
                     ctx.stroke();
                 }
             };
+
+            pub_er.getCmdsToUpload = function(){
+                return uploader.getCmdsToUpload();
+            };
+
+            function createCmd(){
+                var cmd ={};
+                cmd.time = new Date(eraser_dn_time).toISOString();
+                cmd.user = r2.userGroup.cur_user.name;
+                cmd.op = 'DeleteComment';
+                cmd.type = 'Inks';
+                cmd.target = {
+                    type: 'Inks'
+                };
+                cmd.data = reserved_operations.slice(0); // clone array
+
+                reserved_operations = [];
+
+                return cmd;
+            }
 
             return pub_er;
         }());

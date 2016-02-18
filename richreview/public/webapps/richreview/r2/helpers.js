@@ -1557,6 +1557,35 @@
         return pub;
     }());
 
+    /* upload timer */
+    r2.CmdTimedUploader = function(){
+        this._time_interval = 0;
+        this._time_last_modified = 0;
+        this._modified = false;
+        this._cmds_to_upload = [];
+    };
+    r2.CmdTimedUploader.prototype.init = function(time_interval){
+        this._time_interval = time_interval;
+    };
+    r2.CmdTimedUploader.prototype.addCmd = function(cmd){
+        this._cmds_to_upload.push(cmd);
+        this._modified = true;
+        this._time_last_modified = r2App.cur_time;
+    };
+    r2.CmdTimedUploader.prototype.getCmdsToUpload = function(){
+        if( this._modified && r2App.cur_time-this._time_last_modified > this._time_interval){
+            var rtn = this._cmds_to_upload.slice(); // copy array
+
+            this._cmds_to_upload = [];
+            this._modified = false;
+
+            return {time: this._time_last_modified, cmds: rtn};
+        }
+        else{
+            return null;
+        }
+    };
+
     r2.pieceHashId = (function(){
         var pub = {};
 

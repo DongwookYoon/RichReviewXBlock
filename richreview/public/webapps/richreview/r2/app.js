@@ -63,14 +63,22 @@
                 }
 
                 // upload static ink cmds
-                var annots = r2App.annotStaticInkMgr.getAnnots();
-                annots.forEach(function(annot){
+                var static_ink_annots = r2App.annotStaticInkMgr.getAnnots();
+                static_ink_annots.forEach(function(annot){
                     var static_ink_cmds = annot.getCmdsToUpload();
                     if(static_ink_cmds){
                         r2Sync.PushToUploadCmd(static_ink_cmds);
                         console.log(static_ink_cmds);
                     }
                 });
+
+                // upload erase ink cmds
+                var erase_ink_cmds = r2.inkCtrl.eraser.getCmdsToUpload();
+                if(erase_ink_cmds){
+                    erase_ink_cmds.cmds.forEach(function(cmd){
+                        r2Sync.PushToUploadCmd(cmd);
+                    });
+                }
 
                 // upload and download cmds
                 r2Sync.loop();

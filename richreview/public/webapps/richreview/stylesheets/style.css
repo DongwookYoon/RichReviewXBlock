@@ -516,6 +516,9 @@ a:active {
 #dashboard > .row > div > div > #btn-cheatsheet {
   text-transform:none;
 }
+#dashboard > .row > div > div > #btn-tutorial {
+  text-transform:none;
+}
 
 #dashboard > #main_row {
   width: 100%; height:auto; text-align:center;

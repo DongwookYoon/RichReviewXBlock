@@ -1,7 +1,7 @@
 <div class="modal-dialog">
     <div class="modal-content">
         <div class="modal-header" style="padding-bottom:0;">
-            <h4 class="modal-title">Introducing RichReview</h4>
+            <h4 class="modal-title">20 sec Tutorial of RichReview</h4>
         </div>
         <div class="modal-body" style="width:auto;position:relative;padding-bottom:0;">
             <video style="width:100%;" controls>

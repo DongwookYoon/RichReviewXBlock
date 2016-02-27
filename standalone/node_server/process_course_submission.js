@@ -833,7 +833,7 @@ exports.run = function(course_id, submission_id){
                     student: netid+'@cornell.edu',
                     instructors: ['jg878@cornell.edu', 'by238@cornell.edu']
                 };
-                return crsGroupGenerator.run('math2220_sp2016', 'prelim1', pdf_hash, emails).then(
+                return crsGroupGenerator.run2('math2220_sp2016', 'prelim1', pdf_hash, emails).then(
                     function(){
                         console.log('    done');
                         return null;

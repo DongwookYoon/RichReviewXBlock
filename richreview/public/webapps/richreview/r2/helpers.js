@@ -231,7 +231,7 @@
         pub.Init = function(){
             if(r2.util.getCookie("r2_intro_video_never_show_again") == ""){
                 // ToDo bootstrap fix
-                //$('#modal-window-intro-video').modal('show');
+                $('#modal-window-intro-video').modal('show');
             }
         };
         pub.Dismiss = function(never_show_again){
@@ -239,7 +239,11 @@
                 r2.util.setCookie("r2_intro_video_never_show_again", true, 7); // never show the window for 7days
             }
             // ToDo bootstrap fix
-            //$('#modal-window-intro-video').modal('hide');
+            $('#modal-window-intro-video').modal('hide');
+        };
+        pub.show = function(){
+            $('#modal-window-intro-video').modal('show');
+            r2.util.resetCookie("r2_intro_video_never_show_again");
         };
 
         return pub;
@@ -278,8 +282,7 @@
                 $a.click(function(){
                     var searchresult = r2App.doc.SearchPieceByAnnotId(annotid);
                     if(searchresult){
-                        r2.dom_model.focusCtrl.focusPiece(annotid);
-                        r2.turnPageAndSetFocus(searchresult);
+                        r2.turnPageAndSetFocus(searchresult, annotid);
                         r2.log.Log_CommentHistory("audio", annotid);
                     }
                 });
@@ -291,8 +294,7 @@
                 $a.click(function(){
                     var searchresult = r2App.doc.SearchPieceByAnnotId(annotid);
                     if(searchresult){
-                        r2.dom_model.focusCtrl.focusPiece(annotid);
-                        r2.turnPageAndSetFocus(searchresult);
+                        r2.turnPageAndSetFocus(searchresult, annotid);
                         r2.log.Log_CommentHistory('text', annotid);
                     }
                 });
@@ -1608,6 +1610,44 @@
             return Sha1.hash(annotid+" PieceKeyboard 0")
         };
 
+        return pub;
+    }());
+
+    r2.environment_detector = (function(){
+        var pub = {};
+
+        pub.is_mobile = false;
+        pub.is_msedge = false;
+        pub.is_supported_browser = false;
+
+        pub.init = function(){
+            return new Promise(function(resolve, reject){
+                pub.is_mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                pub.is_supported_browser = bowser.chrome || bowser.firefox || bowser.safari || bowser.msedge;
+                pub.is_msedge = bowser.msedge;
+                if(pub.is_mobile) {
+                    r2.coverMsg.Show([
+                        'Sorry! RichReview does not support mobile platform yet.',
+                        'Please try again on your laptop or desktop.'
+                    ]);
+                    var err = new Error('unsupported mobile access');
+                    err.silent = true;
+                    reject(err);
+                }
+                else if(!pub.is_supported_browser){
+                    r2.coverMsg.Show([
+                        'Sorry! RichReview only supports Chrome, Firefox, Safari, or MS Edge browsers.',
+                        "But you are using something else..."
+                    ]);
+                    var err = new Error('unsupported browser');
+                    err.silent = true;
+                    reject(err);
+                }
+                else{
+                    resolve();
+                }
+            });
+        };
         return pub;
     }());
 

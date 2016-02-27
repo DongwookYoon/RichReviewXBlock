@@ -40,7 +40,16 @@
     </div>
     <div class="horizontal_line"></div>
     <div id="main_row" class="row">
-        <div style="float:left; margin:0 12px;" >
+        <div style="float:left; margin:0 6px;" >
+            <div>
+                <button id="btn-tutorial" onclick="r2.modalWindowIntro.show()" class="btn btn-sm btn-primary btn-dashboard"
+                        data-toggle="tooltip" data-html="true" data-container="body" data-placement="bottom"
+                        aria-label="Tutorial">
+                    Tutorial
+                </button>
+            </div>
+        </div>
+        <div style="float:left; margin:0 0px;" >
             <div>
                 <button id="btn-cheatsheet" onclick="r2.clickHowTo()" class="btn btn-sm btn-primary btn-dashboard"
                         data-toggle="tooltip" data-html="true" data-container="body" data-placement="bottom"
@@ -49,7 +58,9 @@
                 </button>
             </div>
         </div>
-        <div style="float:left;margin:0 6px;" >
+
+
+        <div style="float:right;margin:0 6px;" >
             <div style="float:left;margin: 0" >
                 <button id="btn-input-set-mode-desktop" onclick="r2.input.setModeDesktop()" class="btn btn-sm btn-primary btn-dashboard"
                         aria-label="Desktop Mode" style="padding: 5px 6px" >
@@ -66,7 +77,7 @@
             </div>
         </div>
 
-        <div style="float: right;margin: 0 12px;">
+        <div style="float:right;margin: 0 12px;">
             <div>
                 <button onclick="r2.clickPlay()" class="btn btn-sm btn-primary btn-dashboard" aria-label="play">
                     <i class="fa fa-play"></i></button>

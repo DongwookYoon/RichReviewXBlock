@@ -687,8 +687,8 @@ var r2Ctrl = {};
                         break;
                     case CONST.KEY_ENTER: // enter
                         if (pub.ctrlkey_dn) {
-                            createPieceKeyboard(isprivate = true);
-                            r2.log.Log_Simple("CreatePieceKeyboard_Private_Enter");
+                            createPieceKeyboard(isprivate = false);
+                            r2.log.Log_Simple("CreatePieceKeyboard_Enter");
                         }
                         else if(pub.shift_key_dn){ // trigger recording using SimpleSpeech UI
                             if(!r2App.pieceSelector.isNull()){
@@ -717,8 +717,8 @@ var r2Ctrl = {};
                         r2.log.Log_AudioStop('enter_0', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
                         r2.rich_audio.stop();
                         if (pub.ctrlkey_dn) {
-                            createPieceKeyboard(isprivate = true);
-                            r2.log.Log_Simple("CreatePieceKeyboard_Private_Enter");
+                            createPieceKeyboard(isprivate = false);
+                            r2.log.Log_Simple("CreatePieceKeyboard_Enter");
                         }
                         else if(pub.shift_key_dn){ // trigger recording using SimpleSpeech UI
                             if(!r2App.pieceSelector.isNull()){
@@ -839,13 +839,8 @@ var r2Ctrl = {};
                 event.preventDefault();
 
                 if(event.which != 1 || r2.keyboard.ctrlkey_dn){return;}
-                createPieceKeyboard(isprivate = r2.keyboard.ctrlkey_dn);
-                if(r2.keyboard.ctrlkey_dn){
-                    r2.log.Log_Simple("CreatePieceKeyboard_Private_OnScrBtn");
-                }
-                else{
-                    r2.log.Log_Simple("CreatePieceKeyboard_Public_OnScrBtn");
-                }
+                createPieceKeyboard(isprivate = false);
+                r2.log.Log_Simple("CreatePieceKeyboard_OnScrBtn");
                 pub.mode = r2.MouseModeEnum.HOVER; // should set mouse mode here, since we are calling stopPropagation().
                 hideDom();
             })
@@ -1202,10 +1197,11 @@ var r2Ctrl = {};
     var replacePieceAudioToPieceKeyboard = function(){
         var annotid = r2App.cur_recording_annot.GetId();
         r2.recordingCtrl.stop(toupload = false);
-        r2.log.Log_Simple("Recording_Stop_CancelForTextComment");
-        r2.log.Log_Simple("CreatePieceKeyboard_Public_Enter");
         r2.removeAnnot(annotid, askuser = false, mute = true);
+        r2.log.Log_Simple("Recording_Stop_CancelForTextComment");
+
         createPieceKeyboard(isprivate = false);
+        r2.log.Log_Simple("CreatePieceKeyboard_Enter");
     };
 
     var createPieceTeared = function(){

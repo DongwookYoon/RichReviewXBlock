@@ -106,7 +106,6 @@
             r2App.mode = r2App.AppModeEnum.RECORDING;
             r2App.invalidate_size = true;
             r2App.invalidate_page_layout = true;
-
         };
 
         var createPieceAudio = function(anchor_piece, annotid){

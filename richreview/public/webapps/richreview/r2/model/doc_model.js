@@ -1260,7 +1260,8 @@
         for(i = 0; i < this._temporary_n; ++i){
             $(this.dom_textbox).find(':last-child').remove();
         }
-        for(let w of words){
+        for(i = 0; i < words.length; ++i){
+            var w = words[i];
             var $span = $(document.createElement('span'));
             $span.text(w[0]+' ');
             $(this.dom_textbox).append($span);
@@ -1276,7 +1277,8 @@
         for(i = 0; i < this._temporary_n; ++i){
             $(this.dom_textbox).find(':last-child').remove();
         }
-        for(let w of words){
+        for(i = 0; i < words.length; ++i){
+            var w = words[i];
             var $span = $(document.createElement('span'));
             $span.text(w[0]+' ');
             $(this.dom_textbox).append($span);

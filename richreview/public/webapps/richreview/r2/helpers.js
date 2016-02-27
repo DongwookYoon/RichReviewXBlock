@@ -241,6 +241,10 @@
             // ToDo bootstrap fix
             $('#modal-window-intro-video').modal('hide');
         };
+        pub.show = function(){
+            $('#modal-window-intro-video').modal('show');
+            r2.util.resetCookie("r2_intro_video_never_show_again");
+        };
 
         return pub;
     }());

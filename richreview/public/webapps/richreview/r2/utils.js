@@ -31,6 +31,11 @@
             document.cookie = cname + "=" + cvalue + "; " + expires;
         };
 
+        pub.resetCookie = function(cname){
+            var expires = "expires=Thu, 01-Jan-70 00:00:01 GMT;";
+            document.cookie = cname + "=" + "x" + "; " + expires;
+        };
+
         pub.getCookie = function (cname) {
             var name = cname + "=";
             var ca = document.cookie.split(';');

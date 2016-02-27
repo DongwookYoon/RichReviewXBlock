@@ -13,22 +13,6 @@ block content_with_cprght
         #announcement_items.panel-body
             p
                 |Welcome to RichReview math feedback tool.
-            p
-                |Please finish your assignment on a&nbsp;
-                a(href='http://stationary.prissed.com/images/lined-paper.gif' target='_blank')
-                    |lined notebook
-                |. Digitize the hard-copy to a PDF by using a mobile scanning app (e.g. GeniusScan for&nbsp;
-                a(href='https://itunes.apple.com/us/app/genius-scan-pdf-scanner/id377672876?mt=8' target='_blank')
-                    |iOS
-                |&nbsp;or&nbsp;
-                a(href='https://play.google.com/store/apps/details?id=com.thegrizzlylabs.geniusscan.free&hl=en' target='_blank')
-                    |Android
-                |&nbsp;),  and submit the PDF to the list below.
-            p
-                |If you don't have an access to the mobile app, please submit the hard-copy (still written on the&nbsp;
-                a(href='http://stationary.prissed.com/images/lined-paper.gif' target='_blank')
-                    |lined notebook
-                |) to the designated place as usual.
 
     #surveys.panel.panel-default
         .panel-heading
@@ -44,10 +28,7 @@ block content_with_cprght
             table( class="table table-striped table-hover ")
                 thead
                     tr
-                        <th></th>
-                        <th>Due</th>
-                        <th>File</th>
-                        <th>Submission</th>
+                        <th>Item</th>
                         <th>Review</th>
                 tbody
 
@@ -66,7 +47,7 @@ block content_with_cprght
         | r2.course.init(
         |  '#{BLOB_HOST}',
         |  '#{HOST}',
-        |  'math2220_fall2015',
+        |  'math2220_sp2016',
         |  'student',
         |  '#{user.email}',
         |  '#{key}'

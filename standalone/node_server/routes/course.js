@@ -53,7 +53,9 @@ stu:math2220_fall2015_<email> = {
 
 */
 
-var MATH_COURSE_ID = 'math2220_fall2015';
+
+//var MATH_COURSE_ID = 'math2220_fall2015'; // last semester's course ID
+var MATH_COURSE_ID = 'math2220_sp2016';
 
 var cmsUtil = {};
 

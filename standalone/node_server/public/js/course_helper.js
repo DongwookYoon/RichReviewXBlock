@@ -175,6 +175,10 @@
                 var addDom = function(email){
                     var $tr = $(document.createElement('tr'));
                     {
+                        var $title = $(document.createElement('td'));
+                        $title.text($('#enrollment_items').children().length+1);
+                        $tr.append($title);
+
                         var $email = $(document.createElement('td'));
                         $email.text(email);
                         $tr.append($email);
@@ -290,49 +294,6 @@
                         var $title = $(document.createElement('td'));
                         $title.text(submission.title);
                         $tr.append($title);
-
-                        var $due = $(document.createElement('td'));
-                        $due.text(formatDate(submission.due));
-                        $tr.append($due);
-
-                        var $status = $(document.createElement('td'));
-                        {
-                            if(submission.status === 'Submitted' || submission.status === 'ReadyForReview'){
-                                var $btn = createNewDomElement('a', ['btn', 'btn-default','btn-sm']);
-
-                                $btn.text('Download ');
-                                $btn.toggleClass('download_btn');
-                                $btn.attr('download');
-                                $btn.attr(
-                                    'href',
-                                    blob_host+course_id.replace('_', '-')+'/'+user_key+'/'+submission.id+'.pdf'
-                                );
-
-                                var $icon = getIcon('fa-file-pdf-o');
-                                $btn.append($icon);
-                                $status.append($btn);
-
-                                var $p = $(document.createElement('p'));
-                                console.log(JSON.stringify(submission));
-                                $p.text(formatDate(new Date(submission.submission_time)));
-                                $status.append($p);
-                            }
-                            else{
-                                $status.text('Not Submitted');
-                            }
-                        }
-                        $tr.append($status);
-
-                        var $submissions = $(document.createElement('td'));
-                        {
-                            var $file_input = uploadPdf.getFileInput();
-                            var $upload_btn = uploadPdf.getUploadBtn(submission.id);
-                            uploadPdf.link($upload_btn, $file_input, submission.id);
-
-                            $submissions.append($file_input);
-                            $submissions.append($upload_btn);
-                        }
-                        $tr.append($submissions);
 
                         var $review = $(document.createElement('td'));
                         if(submission.status === 'ReadyForReview'){
@@ -507,6 +468,7 @@
                         }
                     ).then(
                         function(review_items){
+                            review_items.sort(sortByEmail);
                             review_items.forEach(function(item){
                                 add(item);
                             });
@@ -517,25 +479,20 @@
                 var add = function(item){
                     var submitted = item.submission_time !== null &&
                         (item.status === 'Submitted' || item.status === 'ReadyForReview');
-                    var ready = submitted && item.status === 'ReadyForReview';
+                    var ready = item.status === 'ReadyForReview';
                     var $tr = $(document.createElement('tr'));
                     {
-                        var $title = $(document.createElement('td'));
-                        $title.text(item.email);
-                        $tr.append($title);
+                        var $n = $(document.createElement('td'));
+                        $n.text($('#review_items').children().length+1);
+                        $tr.append($n);
+
+                        var $email = $(document.createElement('td'));
+                        $email.text(item.email);
+                        $tr.append($email);
 
                         var $due = $(document.createElement('td'));
                         $due.text(formatDate(new Date(item.due)));
                         $tr.append($due);
-
-                        var $status = $(document.createElement('td'));
-                        if(submitted){
-                            $status.text(formatDate(new Date(item.submission_time)));
-                        }
-                        else{
-                            $status.text('Not Submitted');
-                        }
-                        $tr.append($status);
 
                         var $review = $(document.createElement('td'));
                         {
@@ -611,6 +568,14 @@
             if (a.due > b.due)
                 return 1;
             if (a.due < b.due)
+                return -1;
+            return 0;
+        };
+
+        var sortByEmail = function(a, b) {
+            if (a.email > b.email)
+                return 1;
+            if (a.email < b.email)
                 return -1;
             return 0;
         };

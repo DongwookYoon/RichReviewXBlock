@@ -543,50 +543,323 @@ var uploader = (function(){
     return pub;
 }());
 
-exports.run = function(course_id, submission_id){
+/* for Math2220 deployment study */
+var jsDocGenerator = (function(){
+    var pub = {};
+    var path = '';
 
-    RedisClient.HGET('crs:'+course_id, 'students').then(
-        function(stus){
-            var promises = JSON.parse(stus).map(function(stu){
-                return RedisClient.HGET('stu:'+course_id+'_'+stu, 'submissions').then(
-                    function(sub){
-                        sub = JSON.parse(sub);
-                        sub[submission_id].email = stu;
-                        return sub[submission_id];
+    pub.run = function(path, netid){
+        var buf = fs.readFileSync(path+'/'+netid+'/'+netid+'.txt');
+        var json = JSON.parse(buf.toString());
+
+        var vs_doc = {};
+        vs_doc.ver = 6;
+        vs_doc.pages = [];
+        for(var i = 0; i < json.length; ++i){
+            var page = json[i];
+            vs_doc.pages.push(constructVsDocPage(page['w'], page['h'], page['lineYs']));
+        }
+        return JSON.stringify(vs_doc);
+    };
+
+    var constructVsDocPage = function(w, h, splits){
+
+        var RGNS = {
+            HEAD:0,
+            LEFT:1,
+            RGHT:2,
+            FOOT:3
+        };
+
+        var round2 = function(x){
+            return Math.round(x * 100.0) / 100.0;
+        };
+
+        var margin = w*0.05;
+
+        var page = {};
+        page.bbox = [0, 0, w, h];
+        page.rgns = [
+            {
+                ttX: round2(margin),
+                ttW: round2(w-2*margin)
+            },
+            {
+                ttX: 0.0,
+                ttW: 0.5
+            },
+            {
+                ttX: 0.0,
+                ttW: 0.5
+            },
+            {
+                ttX: round2(margin),
+                ttW: round2(w-2*margin)
+            }
+        ];
+        page.rgns[RGNS.HEAD].rects = [];
+        var top_split = 0;
+        splits.forEach(function(split){
+            page.rgns[RGNS.HEAD].rects.push(
+                [0, top_split, w, split]
+            );
+            top_split = split;
+        });
+        page.rgns[RGNS.HEAD].rects.push(
+            [0, top_split, w, h]
+        );
+        page.rgns[RGNS.LEFT].rects = [
+            [0, h, 0.5*w, h]
+        ];
+        page.rgns[RGNS.RGHT].rects = [
+            [0.5*w, h, w, h]
+        ];
+        page.rgns[RGNS.FOOT].rects = [
+            [0, h, w, h]
+        ];
+        for(var r = 0; r < 4; ++r){
+            for(var p = 0, l = page.rgns[r].rects.length; p < l; ++p){
+                for(var i = 0; i < 4; ++i) {
+                    page.rgns[r].rects[p][i] = round2(page.rgns[r].rects[p][i]);
+                }
+            }
+        }
+
+        return page;
+    };
+
+    return pub;
+}());
+
+var pdfAndVsDocUploader = (function(){
+    var pub = {};
+    pub.run = function(pdf_path, vs_doc_path){
+        var pdf_hash = '';
+        return getFileSha1(pdf_path).then(
+            function(rtn){
+                pdf_hash = rtn;
+                return null;
+            }
+        ).then(
+            function(){
+                return Promise.denodeify(azure.svc.createContainerIfNotExists.bind(azure.svc))(
+                    pdf_hash,
+                    { publicAccessLevel : 'blob' }
+                );
+            }
+        ).then(
+            function(){
+                return Promise.denodeify(azure.svc.createBlockBlobFromLocalFile.bind(azure.svc))(
+                    pdf_hash,
+                    'doc.pdf',
+                    pdf_path
+                ).then(
+                    function(rtn){
+                        console.log('    uploaded:', azure.BLOB_HOST+pdf_hash+'/doc.pdf');
                     }
                 );
-            });
-            return Promise.all(promises);
-        }
-    ).then(
-        function(subs){
-            var download = true; // download or upload
-            var pdf_process = false;
-            //var uploader_mode = uploader.Mode.UploadPdfToR2Repo;
-            //var uploader_mode = uploader.Mode.UploadPdfToCrsRepo;
-            var uploader_mode = uploader.Mode.CreateCrsGroups;
-            if(download) { // download_and_process
-                var promises = subs.map(function (sub) {
-                    return function () {
-                        return downloader.run(course_id, submission_id, sub);
+            }
+        ).then(
+            function(){ // upload the metadata file
+                return Promise.denodeify(azure.svc.createBlockBlobFromLocalFile.bind(azure.svc))(
+                    pdf_hash,
+                    'doc.vs_doc',
+                    vs_doc_path
+                )
+            }
+        ).then(
+            function(){
+                return pdf_hash;
+            }
+        );
+    };
+
+    var getFileSha1 = function(path){
+        return Promise.denodeify(fs.readFile)(path, "binary").then(
+            function(pdf_str){
+                var shasum = crypto.createHash('sha1');
+                shasum.update(pdf_str);
+                return shasum.digest('hex').toLowerCase();
+            }
+        );
+    };
+
+    return pub;
+}());
+
+var crsGroupGenerator = (function(){
+    var pub = {};
+
+    pub.run = function(course_id, submission_id, pdf_hash, emails){
+        var doc_id = '';
+        var group_id = '';
+        var ids = {};
+
+        return get_ids(emails).then(
+            function(_ids){
+                ids = _ids;
+                return;
+            }
+        ).then(
+            function(){
+                return R2D.Doc.CreateNew( // create doc
+                    ids.manager.substring(4),
+                    (new Date()).getTime(),
+                    pdf_hash,
+                    {course_id: course_id, subject_id: submission_id, student_email: emails.student}
+                )
+            }
+        ).then(
+            function(_doc_id){ // create group
+                doc_id = _doc_id;
+                return R2D.Doc.AddNewGroup(ids.manager.substring(4), doc_id);
+            }
+        ).then(
+            function(_group_id){ // add instructors
+                group_id = _group_id;
+
+                var promises = ids.instructors.map(
+                    function(instructor_id){
+                        return function(){
+                            return R2D.Group.connectUserAndGroup(group_id.substring(4), instructor_id.substring(4));
+                        }
                     }
-                });
+                );
+                return js_utils.serialPromiseFuncs(promises).then(
+                    function(results){
+                        return results;
+                    }
+                );
             }
-            else if(pdf_process){
-                var promises = [function(){return pdf_processor.run(course_id, submission_id, subs);}];
+        ).then(
+            function(){ // set doc name
+                var course_title = null;
+                return RedisClient.HGET('crs:'+course_id, 'title').then(
+                    function(_course_title){
+                        course_title = _course_title;
+                        return RedisClient.HGET('crs:'+course_id, 'submissions');
+                    }
+                ).then(
+                    function(submissions){
+                        submissions = JSON.parse(submissions);
+                        return R2D.Doc.Rename(doc_id, course_title + ', ' + submissions[submission_id].title + ', '+ emails.student);
+                    }
+                );
             }
-            else{ // upload
-                var promises = [function(){return uploader.run(course_id, submission_id, subs, uploader_mode);}];
+        ).then( // set group name
+            function(){
+                return R2D.Group.Rename(group_id, 'Instructor\'s Feedback');
             }
-            return js_utils.serialPromiseFuncs(promises);
-        }
-    ).then(
-        function(results){
-            return RedisClient.end();
-        }
-    ).catch(
-        function(err){
-            console.error(err);
+        ).then(
+            function() {
+                var group_data = {
+                    doc_id: doc_id,
+                    group_id: group_id,
+                    pdf_hash: pdf_hash
+                };
+                return RedisClient.HGET('stu:' + course_id + '_' + emails.student, 'submissions').then(
+                    function (submissions) {
+                        submissions = JSON.parse(submissions);
+                        submissions[submission_id].status = 'ReadyForReview';
+                        submissions[submission_id].group = group_data;
+                        return RedisClient.HSET('stu:' + course_id + '_' + emails.student, 'submissions', JSON.stringify(submissions));
+                    }
+                );
+            }
+        );
+
+        /*
+        */
+    };
+
+    var get_ids = function(emails){
+        var manager_id = '';
+        return RedisClient.HGET(
+            'email_user_lookup',
+            emails.manager
+        ).then(
+            function(_manager_id){
+                manager_id = _manager_id;
+
+                var promises = emails.instructors.map(
+                    function(instructor_email){
+                        return function(){
+                            return RedisClient.HGET(
+                                'email_user_lookup',
+                                instructor_email
+                            );
+                        }
+                    }
+                );
+                return js_utils.serialPromiseFuncs(promises).then(
+                    function(results){
+                        return results;
+                    }
+                );
+            }
+        ).then(
+            function(_instructor_ids){
+                return {manager: manager_id, instructors: _instructor_ids};
+            }
+        );
+    };
+
+    return pub;
+}());
+
+exports.run = function(course_id, submission_id){
+    var PATH = '../../../utils/pdf_batch/data/'+submission_id;
+    var netids = js_utils.listFolderSync(PATH)['dirs'];
+
+    console.log('generate js_doc');
+    for(var i = 0, l = netids.length; i < l; ++i){
+        var netid = netids[i];
+        var js_doc_content = jsDocGenerator.run(PATH, netid);
+        fs.writeFileSync(PATH+'/'+netid+'/'+'vs_doc.txt', js_doc_content);
+        console.log('    '+netid);
+    }
+    console.log('');
+
+
+    var uploadPdfAndGenerateGroup = function(netid){
+        console.log('    '+netid);
+        return pdfAndVsDocUploader.run(
+            PATH+'/'+netid+'.pdf',
+            PATH+'/'+netid+'/'+'vs_doc.txt'
+        ).then(
+            function(pdf_hash){
+                var emails = {
+                    manager:'dy252@cornell.edu',
+                    student: netid+'@cornell.edu',
+                    instructors: ['jg878@cornell.edu', 'by238@cornell.edu']
+                };
+                return crsGroupGenerator.run('math2220_sp2016', 'prelim1', pdf_hash, emails).then(
+                    function(){
+                        console.log('    done');
+                        return null;
+                    }
+                );
+            }
+        )
+    };
+
+    console.log('upload files');
+    var promises = netids.map(
+        function(netid){
+            return function(){
+                return uploadPdfAndGenerateGroup(netid);
+            }
         }
     );
+    return js_utils.serialPromiseFuncs(promises).then(
+        function(results){
+            return results;
+        }
+    ).catch(
+        function(e){
+            console.error(e);
+        }
+    );
+
+
 };

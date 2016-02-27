@@ -170,7 +170,7 @@ app.get('/viewer',      viewer.page);
 app.get('/dataviewer',  dataviewer.get);
 app.get('/account',     account.get);
 app.get('/resources',   resources.get);
-app.get('/math2220_fall2015',    course.get);
+app.get('/math2220_sp2016',    course.get);
 app.get('/bluemix_stt_auth', bluemix_stt_auth.get);
 //app.get('/docs',        docs.page);
 
@@ -223,7 +223,7 @@ app.post('/login_cornell_return',
 app.get(
     '/math2220',
     function(req, res) {
-        res.redirect("/math2220_fall2015");
+        res.redirect("/math2220_sp2016");
     }
 );
 

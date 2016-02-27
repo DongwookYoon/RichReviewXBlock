@@ -12,9 +12,9 @@ block content_with_cprght
             table(class="table table-striped table-hover ")
                 thead
                     tr
-                        <th>Email</th>
-                        <th>Due</th>
-                        <th>Submission Time</th>
+                        <th>#</th>
+                        <th>Student</th>
+                        <th>Submission Due</th>
                         <th>Review</th>
                 tbody#review_items
 
@@ -26,7 +26,7 @@ block content_with_cprght
         | r2.course.init(
         |  '#{BLOB_HOST}',
         |  '#{HOST}',
-        |  'math2220_fall2015',
+        |  'math2220_sp2016',
         |  'instructor_review',
         |  '#{user.email}',
         |  '#{key}',

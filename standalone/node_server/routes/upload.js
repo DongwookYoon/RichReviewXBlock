@@ -61,6 +61,29 @@ exports.post = function (req, res) {
     }
 };
 
+/*
+ upload intro.mp4 video
+ */
+
+exports.upload_intro_video = function(){
+    return new Promise(
+        function(resolve, reject){
+            azure.svc.createBlockBlobFromLocalFile(
+                'data',
+                'video/intro.mp4',
+                '../cache/intro.mp4',
+                function(err, result){
+                    if(err){
+                        reject(err);
+                    }
+                    else{
+                        resolve(result);
+                    }
+                }
+            );
+        }
+    );
+};
 
 /**
  * The first action of the upload handshake. Create a pdfs/{uuid} folder for this upload transaction.

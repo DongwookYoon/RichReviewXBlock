@@ -1,10 +1,10 @@
 <div class="modal-dialog">
     <div class="modal-content">
         <div class="modal-header" style="padding-bottom:0;">
-            <h4 class="modal-title">20 sec Tutorial of RichReview</h4>
+            <h4 class="modal-title">RichReview Tutorial (1 min)</h4>
         </div>
         <div class="modal-body" style="width:auto;position:relative;padding-bottom:0;">
-            <video style="width:100%;" controls>
+            <video style="width:100%;border:1px solid lightgray;" controls>
                 <source src="https://richreview.blob.core.windows.net/data/video/intro.mp4" type="video/mp4">
             </video>
         </div>

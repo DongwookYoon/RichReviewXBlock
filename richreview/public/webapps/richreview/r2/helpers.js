@@ -1608,5 +1608,41 @@
         return pub;
     }());
 
+    r2.environment_detection = (function(){
+        var pub = {};
+
+        pub.is_mobile = false;
+        pub.is_edge = false;
+
+        pub.init = function(){
+            return new Promise(function(resolve, reject){
+                pub.is_mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                var is_supported_browser = bowser.chrome || bowser.firefox || bowser.safari || bowser.msedge;
+                pub.is_edge = bowser.msedge;
+                if(pub.is_mobile) {
+                    r2.coverMsg.Show([
+                        'Sorry! RichReview does not support mobile platform yet.',
+                        'Please try again on your laptop or desktop.'
+                    ]);
+                    var err = new Error('unsupported mobile access');
+                    err.silent = true;
+                    reject(err);
+                }
+                else if(!is_supported_browser){
+                    r2.coverMsg.Show([
+                        'Sorry! RichReview only supports Chrome, Firefox, Safari, or MS Edge browsers.',
+                        "But you are using something else..."
+                    ]);
+                    var err = new Error('unsupported browser');
+                    err.silent = true;
+                    reject(err);
+                }
+                else{
+                    resolve();
+                }
+            });
+        };
+    }());
+
 }(window.r2 = window.r2 || {}));
 

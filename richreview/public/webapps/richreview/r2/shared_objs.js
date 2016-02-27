@@ -234,6 +234,15 @@ var r2App = (function() {
             return annots;
         };
 
+        pub.checkCmdToUploadExist = function(){
+            for(var i = 0; i < annots.length; ++i){
+                if(annots[i].checkCmdToUploadExist()){
+                    return true;
+                }
+            }
+            return false;
+        };
+
         return pub;
     }());
 

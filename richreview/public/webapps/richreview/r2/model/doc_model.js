@@ -1853,6 +1853,9 @@
         }
         return null;
     };
+    r2.AnnotStaticInk.prototype.checkCmdToUploadExist = function(){
+        return this.add_ink_cmd_uploader.checkCmdToUploadExist();
+    };
 
     /*
      * Ink

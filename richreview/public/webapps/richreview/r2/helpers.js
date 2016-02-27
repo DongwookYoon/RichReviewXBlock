@@ -1585,6 +1585,9 @@
             return null;
         }
     };
+    r2.CmdTimedUploader.prototype.checkCmdToUploadExist = function(){
+        return this._cmds_to_upload.length !== 0;
+    };
 
     r2.pieceHashId = (function(){
         var pub = {};

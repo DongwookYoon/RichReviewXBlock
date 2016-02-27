@@ -448,11 +448,11 @@
                 var now_typing = r2.keyboard.getMode() === r2.KeyboardModeEnum.TEXTBOX &&
                         r2App.cur_focused_piece_keyboard != null &&
                         r2App.cur_focused_piece_keyboard.WasChanged();
-                var now_uploading = r2Sync.NowUploading();
+                var now_uploading = r2Sync.NowUploading() || r2App.annotStaticInkMgr.checkCmdToUploadExist();
                 if (now_typing || now_uploading || r2App.annot_private_spotlight.changed) {
                     if (now_typing)
                         $(r2App.cur_focused_piece_keyboard.dom_textbox).blur();
-                    return "The webapp is uploading your note. Please wait for seconds, and retry.";
+                    return "The webapp is now uploading your data. Please wait for seconds, and retry.";
                 }
             };
 

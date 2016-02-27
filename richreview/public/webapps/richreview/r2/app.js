@@ -174,7 +174,7 @@
         pub.Run = function(resource_urls) {
             r2.HtmlTemplate.initHT(resource_urls).then(
                 function(){
-                    return checkPlatform();
+                    return r2.environment_detector.init();
                 }
             ).then(
                 function(){
@@ -194,7 +194,7 @@
 
                     r2.onScreenButtons.Init();
 
-                    if(bowser.msedge){
+                    if(r2.environment_detector.is_msedge){
                         r2.input.setModeTablet();
                     }
                     else{
@@ -222,34 +222,6 @@
                 }
             ).catch(r2.util.handleError);
         };
-
-        function checkPlatform(){
-            return new Promise(function(resolve, reject){
-                var is_mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                var is_supported_browser = bowser.chrome || bowser.firefox || bowser.safari || bowser.msedge;
-                if(is_mobile) {
-                    r2.coverMsg.Show([
-                        'Sorry! RichReview does not support mobile platform yet.',
-                        'Please try again on your laptop or desktop.'
-                    ]);
-                    var err = new Error('unsupported mobile access');
-                    err.silent = true;
-                    reject(err);
-                }
-                else if(!is_supported_browser){
-                    r2.coverMsg.Show([
-                        'Sorry! RichReview only supports Chrome, Firefox, Safari, or MS Edge browsers.',
-                        "But you are using something else..."
-                    ]);
-                    var err = new Error('unsupported browser');
-                    err.silent = true;
-                    reject(err);
-                }
-                else{
-                    resolve();
-                }
-            });
-        }
 
         function initAudioPlayer(){
             r2.audioPlayer.cbPlay(

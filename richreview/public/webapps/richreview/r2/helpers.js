@@ -1608,17 +1608,18 @@
         return pub;
     }());
 
-    r2.environment_detection = (function(){
+    r2.environment_detector = (function(){
         var pub = {};
 
         pub.is_mobile = false;
-        pub.is_edge = false;
+        pub.is_msedge = false;
+        pub.is_supported_browser = false;
 
         pub.init = function(){
             return new Promise(function(resolve, reject){
                 pub.is_mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                var is_supported_browser = bowser.chrome || bowser.firefox || bowser.safari || bowser.msedge;
-                pub.is_edge = bowser.msedge;
+                pub.is_supported_browser = bowser.chrome || bowser.firefox || bowser.safari || bowser.msedge;
+                pub.is_msedge = bowser.msedge;
                 if(pub.is_mobile) {
                     r2.coverMsg.Show([
                         'Sorry! RichReview does not support mobile platform yet.',
@@ -1628,7 +1629,7 @@
                     err.silent = true;
                     reject(err);
                 }
-                else if(!is_supported_browser){
+                else if(!pub.is_supported_browser){
                     r2.coverMsg.Show([
                         'Sorry! RichReview only supports Chrome, Firefox, Safari, or MS Edge browsers.',
                         "But you are using something else..."
@@ -1642,6 +1643,7 @@
                 }
             });
         };
+        return pub;
     }());
 
 }(window.r2 = window.r2 || {}));

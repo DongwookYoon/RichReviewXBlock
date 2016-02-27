@@ -231,7 +231,7 @@
         pub.Init = function(){
             if(r2.util.getCookie("r2_intro_video_never_show_again") == ""){
                 // ToDo bootstrap fix
-                //$('#modal-window-intro-video').modal('show');
+                $('#modal-window-intro-video').modal('show');
             }
         };
         pub.Dismiss = function(never_show_again){
@@ -239,7 +239,7 @@
                 r2.util.setCookie("r2_intro_video_never_show_again", true, 7); // never show the window for 7days
             }
             // ToDo bootstrap fix
-            //$('#modal-window-intro-video').modal('hide');
+            $('#modal-window-intro-video').modal('hide');
         };
 
         return pub;
@@ -278,8 +278,7 @@
                 $a.click(function(){
                     var searchresult = r2App.doc.SearchPieceByAnnotId(annotid);
                     if(searchresult){
-                        r2.dom_model.focusCtrl.focusPiece(annotid);
-                        r2.turnPageAndSetFocus(searchresult);
+                        r2.turnPageAndSetFocus(searchresult, annotid);
                         r2.log.Log_CommentHistory("audio", annotid);
                     }
                 });
@@ -291,8 +290,7 @@
                 $a.click(function(){
                     var searchresult = r2App.doc.SearchPieceByAnnotId(annotid);
                     if(searchresult){
-                        r2.dom_model.focusCtrl.focusPiece(annotid);
-                        r2.turnPageAndSetFocus(searchresult);
+                        r2.turnPageAndSetFocus(searchresult, annotid);
                         r2.log.Log_CommentHistory('text', annotid);
                     }
                 });

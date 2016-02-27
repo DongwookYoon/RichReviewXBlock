@@ -379,7 +379,7 @@
 
             if(r2.ctx["comment"] != ''){
                 var searchresult = r2App.doc.SearchPieceByAnnotId(r2.ctx["comment"]);
-                r2.turnPageAndSetFocus(searchresult);
+                r2.turnPageAndSetFocus(searchresult, r2.ctx["comment"]);
             }
 
             r2.coverMsg.Hide();

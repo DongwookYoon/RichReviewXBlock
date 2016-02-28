@@ -7,6 +7,7 @@ var js_utils = require("../lib/js_utils.js");
 var R2D = require("../lib/r2d.js");
 var azure = require('../lib/azure');
 var Promise = require("promise");
+var RedisClient = require('../lib/redis_client').RedisClient;
 
 var GetMyself = function(req, res){
     if(req.user) {
@@ -406,6 +407,23 @@ var WebAppLog = function(req, res){
     });
 };
 
+var isDocCourseSubmission = function(req, res){
+    RedisClient.HGETALL('doc:'+req.body.docid).then(
+        function(doc){
+            if(doc.crs_submission && JSON.parse(doc.crs_submission).course_id === req.body.course_id){
+                js_utils.PostResp(res, req, 200, {resp:true});
+            }
+            else{
+                js_utils.PostResp(res, req, 200, {resp:false});
+            }
+        }
+    ).catch(
+        function(err){
+            js_utils.PostResp(res, req, 400, err);
+        }
+    )
+};
+
 exports.post = function(req, res){
     switch(req.query['op']){
         case "GetMyself":
@@ -458,6 +476,9 @@ exports.post = function(req, res){
             break;
         case "WebAppLog":
             WebAppLog(req, res);
+            break;
+        case "isDocCourseSubmission":
+            isDocCourseSubmission(req, res);
             break;
         default:
             js_utils.PostResp(res, req, 500, "Unidentified request: "+req.query['op']);

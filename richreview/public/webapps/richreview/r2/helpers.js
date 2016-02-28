@@ -502,11 +502,12 @@
         var user_color_anonymous =
             [50, 50, 50]; // gray
 
-        var R2User = function(_name, nick, email, _color, isguest){
+        var R2User = function(_name, nick, email, _color, isguest, n){
             this.name = _name;
             this.nick = nick;
             this.email = email;
             this.isguest = isguest;
+            this.n = n;
 
             this.color_normal = _color.map(function(v){return v/255.;});
             this.color_dark = _color.map(function(v){return v/400.;});
@@ -522,6 +523,8 @@
             this.color_light_html = this.GetHtmlColor(this.color_light, 1.0);
             this.color_normal_html = this.GetHtmlColor(this.color_normal, 1.0);
             this.color_dark_html = this.GetHtmlColor(this.color_dark, 1.0);
+            this.color_transparent_normal_html = this.GetHtmlColor(this.color_normal, 0.5);
+            this.color_transparent_dark_html = this.GetHtmlColor(this.color_dark, 0.5);
             this.color_splight_static = this.GetHtmlColor(this.color_light, 0.15);
             this.color_splight_dynamic = this.GetHtmlColor(this.color_normal, 0.6);
             this.color_splight_private = this.GetHtmlColor(this.color_normal, 0.2);
@@ -579,6 +582,7 @@
             $("#observer_indicator").css("display", pub.cur_user.isguest ? "block" : "none");
             r2.onScreenButtons.SetUserColor(r2.userGroup.cur_user);
             r2App.invalidate_size = true;
+            return null;
         };
 
         pub.GetUser = function(name){
@@ -613,7 +617,7 @@
                     break;
             }
             if(!users.hasOwnProperty(name)){
-                users[name] = new R2User(name, nick, email, color, isguest);
+                users[name] = new R2User(name, nick, email, color, isguest, Object.keys(users).length);
                 r2App.annotStaticInkMgr.addNewUser(users[name]);
 
                 if(!isguest) {

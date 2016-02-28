@@ -13,6 +13,10 @@
         var ui_type = null; // WAVEFORM, SIMPLE_SPEECH, OR NEW_SPEAK
 
         pub.set = function(_anchor_piece, _ui_type){
+            if(r2App.disable_comment_production){
+                alert('This page is only for the review. Features for creating comments are disabled.');
+                return;
+            }
             triggered = true;
             anchor_piece = _anchor_piece;
             ui_type = _ui_type;

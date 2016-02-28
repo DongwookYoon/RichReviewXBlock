@@ -630,12 +630,12 @@
         var line_color; var glow_color;
         if(this._username && !this._isprivate){
             var user = r2.userGroup.GetUser(this._username);
-            line_color = user.color_dark_html;
-            glow_color = user.color_normal_html;
+            line_color = user.color_transparent_dark_html;
+            glow_color = user.color_transparent_normal_html;
         }
         else{
-            line_color = 'black';
-            glow_color = 'gray';
+            line_color = 'rgba(0, 0, 0, 0.5)';
+            glow_color = 'rgba(75, 75, 75, 0.5)';
         }
         return [line_color, glow_color];
     };
@@ -666,8 +666,9 @@
             canvas_ctx.shadowBlur = 0;
 
             // triangles
-            var tri_w = 0.01;
-            var tri_h_half = 0.005;
+
+            var tri_w = 0.005;
+            var tri_h_half = 0.0025;
 
             canvas_ctx.beginPath();
             canvas_ctx.fillStyle = colors[1];

@@ -274,6 +274,27 @@
                         users: group.users
                     })
                 }
+            ).then(
+                function(){
+                    return r2.util.postToDbsServer(
+                        'isDocCourseSubmission',
+                        {
+                            docid: r2App.url_queries.get('docid'),
+                            course_id: 'math2220_sp2016'
+                        }
+                    ).then(
+                        function(is_doc_crs_submission){
+                            r2App.disable_comment_production = false;
+                            if(is_doc_crs_submission.resp){
+                                if(r2.userGroup.cur_user.n-1 > 2){ // disable comment production of the student user in math2220
+                                    r2App.disable_comment_production = true;
+                                }
+                            }
+                        }
+                    ).catch(function(e){
+                        console.log(e);
+                    })
+                }
             )
         }
 

@@ -821,6 +821,8 @@ exports.run = function(course_id, submission_id){
     console.log('');
 
 
+
+    /*
     var uploadPdfAndGenerateGroup = function(netid){
         console.log('    '+netid);
         return pdfAndVsDocUploader.run(
@@ -861,5 +863,5 @@ exports.run = function(course_id, submission_id){
         }
     );
 
-
+    */
 };

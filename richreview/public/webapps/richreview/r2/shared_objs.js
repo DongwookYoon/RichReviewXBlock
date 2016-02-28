@@ -102,6 +102,7 @@ var r2App = (function() {
     pub.invalidate_page_layout = false;
 
     pub.mode = pub.AppModeEnum.IDLE;
+    pub.disable_comment_production = false;
 
     pub.is_first_error = true;
 

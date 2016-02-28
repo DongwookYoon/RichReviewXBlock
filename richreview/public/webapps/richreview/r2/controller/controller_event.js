@@ -1233,6 +1233,10 @@ var r2Ctrl = {};
     };
 
     var createPieceKeyboard = function(isprivate){
+        if(r2App.disable_comment_production){
+            alert('This page is only for the review. Features for creating comments are disabled.');
+            return;
+        }
         var anchorpiece = null;
         if(r2App.mode == r2App.AppModeEnum.REPLAYING){
             r2.log.Log_AudioStop('enter', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());

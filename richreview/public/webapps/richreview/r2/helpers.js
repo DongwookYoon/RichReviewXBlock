@@ -1644,6 +1644,7 @@
                     var err = new Error('unsupported mobile access');
                     err.silent = true;
                     reject(err);*/
+                    resolve();
                 }
                 else if(!pub.is_supported_browser){
                     r2.coverMsg.Show([

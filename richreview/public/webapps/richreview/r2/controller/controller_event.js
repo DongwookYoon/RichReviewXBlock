@@ -28,7 +28,7 @@ var r2Ctrl = {};
             $('#btn-input-set-mode-tablet').toggleClass('btn-default', true);
 
             r2.mouse.setEventHandlers();
-            r2.mouse.rightClickContextMenu.disable();
+            r2.mouse.rightClickContextMenu.enable();
             r2.tabletInput.off();
         };
         pub.setModeTablet = function(){
@@ -571,6 +571,10 @@ var r2Ctrl = {};
 
         pub.getMode = function(){
             return mode;
+        };
+
+        pub.setMode = function(_mode){
+            mode = _mode;
         };
 
         pub.pieceEventListener = (function(){
@@ -1267,5 +1271,28 @@ var r2Ctrl = {};
             r2App.invalidate_page_layout = true;
         }
     };
+
+    r2.pageNumBox = (function(){
+        var pub = {};
+        var page_nav_input_dom = null;
+
+        pub.init = function(){
+            page_nav_input_dom = document.getElementById('page_nav_input');
+
+            page_nav_input_dom.addEventListener('focus', function(){
+                r2.keyboard.setMode(r2.KeyboardModeEnum.TEXTBOX);
+            });
+            page_nav_input_dom.addEventListener('blur', function(){
+                r2.keyboard.setMode(r2.KeyboardModeEnum.NORMAL);
+            });
+            page_nav_input_dom.addEventListener('keydown', function(e){
+                if(e.which == 13) {
+                    r2.booklet.goToAbsPage(parseInt(page_nav_input_dom.value)-1, 0);
+                }
+            });
+        };
+
+        return pub;
+    }());
 
 }(window.r2 = window.r2 || {}));

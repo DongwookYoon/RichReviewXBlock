@@ -758,9 +758,12 @@
                 }
             }
             if(typeof booklet_n !== 'undefined'){
-                var group = groups[booklet_n];
-                group.cur_pagen = n-group.page_range[0];
-                gelectGroup(booklet_n);
+                if(booklet_n < groups.length) {
+                    var group = groups[booklet_n];
+                    group.cur_pagen = n - group.page_range[0];
+                    gelectGroup(booklet_n);
+                }
+
             }
         };
 

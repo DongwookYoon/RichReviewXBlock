@@ -240,7 +240,7 @@
 
         function initAudioRecorder(resource_urls){
             if(r2.environment_detector.is_mobile) { // pass mobile
-                alert('The latest Chrome Desktop browser is recommended. In the mobile browsers, voice recording feature is not supported, and some audio comments may not be replayed properly.');
+                alert('The latest Chrome Desktop browser is recommended. In mobile browsers, voice recording feature is not supported, and some audio comments may not be replayed properly.');
                 return;
             }
             return r2.audioRecorder.Init(resource_urls).then(

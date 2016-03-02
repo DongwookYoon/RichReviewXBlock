@@ -239,7 +239,8 @@
         }
 
         function initAudioRecorder(resource_urls){
-            if(r2.ctx["pmo"] !== "") { // pass mobile is not set
+            if(r2.environment_detector.is_mobile) { // pass mobile
+                alert('Voice recording feature is not supported in the mobile browsers.');
                 return;
             }
             return r2.audioRecorder.Init(resource_urls).then(

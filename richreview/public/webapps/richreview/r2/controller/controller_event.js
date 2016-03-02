@@ -718,7 +718,7 @@ var r2Ctrl = {};
                         r2.rich_audio.stop();
                         break;
                     case CONST.KEY_ENTER: // enter
-                        r2.log.Log_AudioStop('enter_0', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
+                        r2.log.Log_AudioStop('enter', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
                         r2.rich_audio.stop();
                         if (pub.ctrlkey_dn) {
                             createPieceKeyboard(isprivate = false);
@@ -1243,7 +1243,7 @@ var r2Ctrl = {};
         }
         var anchorpiece = null;
         if(r2App.mode == r2App.AppModeEnum.REPLAYING){
-            r2.log.Log_AudioStop('enter', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
+            r2.log.Log_AudioStop('createPieceKeyboard', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
             r2.rich_audio.stop();
             anchorpiece = r2App.cur_page.SearchPieceAudioByAnnotId(this._annotid, r2.audioPlayer.getPlaybackTime());
         }

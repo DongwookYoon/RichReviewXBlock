@@ -112,6 +112,7 @@
         var triggerReservedRecording = function(){
             if(r2.recordingCtrl.isReady()){
                 if(r2App.mode === r2App.AppModeEnum.REPLAYING){
+                    r2.log.Log_AudioStop('triggerReservedRecording', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
                     r2.rich_audio.stop();
                 }
                 if(r2App.mode === r2App.AppModeEnum.IDLE && r2.audioPlayer.isIdle()){

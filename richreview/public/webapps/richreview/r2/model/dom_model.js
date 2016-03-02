@@ -38,17 +38,14 @@
 
         pub.cbAudioPlay = function(annot_id){
             r2.radialMenu.changeCenterIcon('rm_'+r2.util.escapeDomId(annot_id), 'fa-pause');
-            r2.log.Log_AudioPlay('radialmenu', annot_id, r2.audioPlayer.getPlaybackTime());
         };
 
         pub.cbAudioStop = function(annot_id){
             r2.radialMenu.changeCenterIcon('rm_'+r2.util.escapeDomId(annot_id), 'fa-play');
-            r2.log.Log_AudioStop('radialmenu', annot_id, r2.audioPlayer.getPlaybackTime());
         };
 
         pub.cbRecordingStop = function(annot_id){
             r2.radialMenu.changeCenterIcon('rm_'+r2.util.escapeDomId(annot_id), 'fa-play');
-            r2.log.Log_AudioStop('radialmenu', annot_id, r2.audioPlayer.getPlaybackTime());
         };
 
         pub.remove = function(annot_id){
@@ -247,13 +244,19 @@
                             else{
                                 if (r2App.mode === r2App.AppModeEnum.IDLE) {
                                     r2.rich_audio.play(annot_id, -1);
+                                    r2.log.Log_AudioPlay('play_btn', annot_id, r2.audioPlayer.getPlaybackTime());
+                                    console.log(r2.audioPlayer.getPlaybackTime());
                                 }
                                 else if (r2App.mode === r2App.AppModeEnum.REPLAYING) {
                                     if (r2App.cur_annot_id === annot_id) {
+                                        r2.log.Log_AudioStop('stop_btn', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
                                         r2.rich_audio.stop();
+                                        console.log(r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
                                     }
                                     else {
                                         r2.rich_audio.play(annot_id, -1);
+                                        r2.log.Log_AudioPlay('play_btn', annot_id, r2.audioPlayer.getPlaybackTime());
+                                        console.log(r2.audioPlayer.getPlaybackTime());
                                     }
                                 }
                             }
@@ -466,13 +469,16 @@
                             else{
                                 if (r2App.mode === r2App.AppModeEnum.IDLE) {
                                     r2.rich_audio.play(annot_id, -1);
+                                    r2.log.Log_AudioPlay('play_btn', annot_id, r2.audioPlayer.getPlaybackTime());
                                 }
                                 else if (r2App.mode === r2App.AppModeEnum.REPLAYING) {
                                     if (r2App.cur_annot_id === annot_id) {
+                                        r2.log.Log_AudioStop('stop_btn', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
                                         r2.rich_audio.stop();
                                     }
                                     else {
                                         r2.rich_audio.play(annot_id, -1);
+                                        r2.log.Log_AudioPlay('play_btn', annot_id, r2.audioPlayer.getPlaybackTime());
                                     }
                                 }
                             }

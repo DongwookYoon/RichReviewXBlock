@@ -758,9 +758,12 @@
                 }
             }
             if(typeof booklet_n !== 'undefined'){
-                var group = groups[booklet_n];
-                group.cur_pagen = n-group.page_range[0];
-                gelectGroup(booklet_n);
+                if(booklet_n < groups.length) {
+                    var group = groups[booklet_n];
+                    group.cur_pagen = n - group.page_range[0];
+                    gelectGroup(booklet_n);
+                }
+
             }
         };
 
@@ -836,6 +839,7 @@
         }
 
         function SetPdfPageN(n){
+            r2.log.Log_Nav('SetPdfPageN_'+n);
             if(r2App.mode == r2App.AppModeEnum.REPLAYING){
                 r2.log.Log_AudioStop('SetPdfPageN', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
                 r2.rich_audio.stop();
@@ -1629,14 +1633,18 @@
                 pub.is_mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
                 pub.is_supported_browser = bowser.chrome || bowser.firefox || bowser.safari || bowser.msedge;
                 pub.is_msedge = bowser.msedge;
+                r2.log.Log_Simple('openbrowser_'+bowser.name+'_'+bowser.version);
                 if(pub.is_mobile) {
+                    alert('Mobile data warning: listening voice comments can consume your mobile data very quickly.');
+                    /*
                     r2.coverMsg.Show([
                         'Sorry! RichReview does not support mobile platform yet.',
                         'Please try again on your laptop or desktop.'
                     ]);
                     var err = new Error('unsupported mobile access');
                     err.silent = true;
-                    reject(err);
+                    reject(err);*/
+                    resolve();
                 }
                 else if(!pub.is_supported_browser){
                     r2.coverMsg.Show([

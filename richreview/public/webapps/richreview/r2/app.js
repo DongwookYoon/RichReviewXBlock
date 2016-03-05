@@ -112,6 +112,7 @@
         var triggerReservedRecording = function(){
             if(r2.recordingCtrl.isReady()){
                 if(r2App.mode === r2App.AppModeEnum.REPLAYING){
+                    r2.log.Log_AudioStop('triggerReservedRecording', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
                     r2.rich_audio.stop();
                 }
                 if(r2App.mode === r2App.AppModeEnum.IDLE && r2.audioPlayer.isIdle()){
@@ -238,7 +239,8 @@
         }
 
         function initAudioRecorder(resource_urls){
-            if(r2.ctx["pmo"] !== "") { // pass mobile is not set
+            if(r2.environment_detector.is_mobile) { // pass mobile
+                alert('The latest Chrome Desktop browser is recommended. In mobile browsers, voice recording feature is not supported, and some audio comments may not be replayed properly.');
                 return;
             }
             return r2.audioRecorder.Init(resource_urls).then(
@@ -407,6 +409,8 @@
             r2.modalWindowLoading.hideModalWindow();
             r2.modalWindowIntro.Init();
             r2.log.Log_Simple('DoneLoading');
+
+            r2.pageNumBox.init();
         }
 
         /** init system */

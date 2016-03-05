@@ -13,10 +13,10 @@ import json
 
 IMAGE_WIDTH = 1024
 DPI_TO_PX_RATIO = 72
-HOUGH_THRESHOLD = 300
-HOUGH_THETA_THRESHOLD = 10
-RHO_THRESHOLD = 15
-RHO_MERGE_THRESHOLD = 9
+HOUGH_THRESHOLD = 275./1024.
+HOUGH_THETA_THRESHOLD = 15
+RHO_THRESHOLD = 25
+RHO_MERGE_THRESHOLD = 25
 
 def getHoughLines(img, hough_threshold):
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
@@ -109,7 +109,7 @@ class PdfLineDetection:
 
     def detectLines(self, cv_img, verbose = False):
         h, w, cv_img_channel = cv_img.shape
-        lines = getHoughLines(cv_img, HOUGH_THRESHOLD)
+        lines = getHoughLines(cv_img, int(HOUGH_THRESHOLD*w))
         lineYs = []
         for rho, theta in lines:
             if(abs(np.pi/2-theta) < np.pi*HOUGH_THETA_THRESHOLD/2.0/180.0 ):

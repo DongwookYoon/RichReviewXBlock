@@ -289,7 +289,7 @@
                             r2App.disable_comment_production = false;
                             if(is_doc_crs_submission.resp){
                                 if(r2.userGroup.cur_user.n-1 > 2){ // disable comment production of the student user in math2220
-                                    r2App.disable_comment_production = true;
+                                    r2App.disable_comment_production = false;
                                 }
                             }
                         }

@@ -1467,6 +1467,7 @@
 
         this.dom_textbox = document.createElement('div');
         this.dom_textbox.classList.toggle('r2_piecekeyboard_textbox', true);
+        this.dom_textbox.classList.toggle('text_selectable', true);
         this.dom_textbox.setAttribute('contenteditable', 'true');
         this.dom_textbox.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
         this.dom_tr.appendChild(this.dom_textbox);

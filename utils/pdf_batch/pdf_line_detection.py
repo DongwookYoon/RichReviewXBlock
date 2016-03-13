@@ -13,7 +13,7 @@ import json
 
 IMAGE_WIDTH = 1024
 DPI_TO_PX_RATIO = 72
-HOUGH_THRESHOLD = 275./1024.
+HOUGH_THRESHOLD = 350./1024.
 HOUGH_THETA_THRESHOLD = 15
 RHO_THRESHOLD = 25
 RHO_MERGE_THRESHOLD = 25
@@ -94,20 +94,23 @@ class PdfLineDetection:
         while os.path.isfile(self.path+'/'+self.folder_name+'/'+str(n_page)+'.jpg'):
             n_page += 1
             self.n_page = n_page
+        self.manualLines = self.loadManualLines()
         self.metadata = [ [] for x in xrange(self.n_page) ]
+        self.tempLineY = -1
 
     def getNumPage(self):
         return self.n_page
 
-    def run(self, n_page):
+    def run(self, n_page, to_export = True):
         cv_img = cv2.imread(self.path+'/'+self.folder_name+'/'+str(n_page)+'.jpg')
         data = {}
-        data['w'], data['h'], data['lineYs'] = self.detectLines(cv_img, verbose = False)
+        data['w'], data['h'], data['lineYs'] = self.detectLines(cv_img, n_page, verbose = False)
         self.metadata[n_page] = data
         cv2.imshow('img', cv_img)
-        self.exportMetadata()
+        if to_export:
+            self.exportMetadata()
 
-    def detectLines(self, cv_img, verbose = False):
+    def detectLines(self, cv_img, n_page, verbose = False):
         h, w, cv_img_channel = cv_img.shape
         lines = getHoughLines(cv_img, int(HOUGH_THRESHOLD*w))
         lineYs = []
@@ -130,6 +133,18 @@ class PdfLineDetection:
 
         for y in lineYs:
             cv2.line(cv_img,(0,y),(IMAGE_WIDTH,y),(0,0,255),1)
+
+        if self.tempLineY > -1:
+            cv2.line(cv_img,(0,self.tempLineY),(IMAGE_WIDTH,self.tempLineY),(255,150,150),1)
+
+        for y in self.manualLines[n_page]:
+            cv2.line(cv_img,(0,y),(IMAGE_WIDTH,y),(255,0,0),1)
+            lineYs.append(y)
+
+        lineYs.sort()
+        lineYs = lumpClosePts(lineYs)
+        lineYs = [int(y) for y in lineYs]
+
         sys.stdout.flush()
         return w, h, lineYs
 
@@ -139,12 +154,36 @@ class PdfLineDetection:
                 json.dump(self.metadata, outfile)
                 print 'Metadata dumped'
 
+    def exportManualLines(self):
+        with open(self.path+'/'+self.folder_name+'/manualLines.txt', 'w') as f:
+            json.dump(self.manualLines, f)
+            print 'Manual line dumped'
+
+    def loadManualLines(self):
+        if os.path.isfile(self.path+'/'+self.folder_name+'/manualLines.txt'):
+            with open(self.path+'/'+self.folder_name+'/manualLines.txt', 'r') as f:
+                print f
+                return json.load(f)
+        else:
+            return [ [] for x in xrange(self.n_page) ]
+
+    def mouseMove(self, n_page, y):
+        self.tempLineY = y
+        self.run(n_page, to_export=False)
+
+    def mouseUp(self, n_page, y):
+        self.manualLines[n_page].append(y)
+        self.tempLineY = -1
+        self.exportManualLines()
+        self.run(n_page)
+
 class Ctrl:
     def __init__(self, files):
         self.files = files
         self.n_file = 0
         self.n_page = -1
         self.app = self.app = PdfLineDetection('data/'+sys.argv[1], files[self.n_file][:-4])
+        self.mouse_dn = False
 
         cv2.namedWindow('img')
         cv2.moveWindow('img', 0, 0)
@@ -186,11 +225,23 @@ class Ctrl:
                 self.n_page = n_page
                 new_page = True
 
-
         if new_file:
             self.app = PdfLineDetection('data/'+sys.argv[1], files[self.n_file][:-4])
         if new_file or new_page:
             self.app.run(self.n_page)
+            cv2.setMouseCallback("img", self.mouse)
+
+    def mouse(self, event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            self.mouse_dn = True
+            self.app.mouseMove(self.n_page, y)
+        if event == cv2.EVENT_MOUSEMOVE:
+            if self.mouse_dn:
+                self.app.mouseMove(self.n_page, y)
+        if event == cv2.EVENT_LBUTTONUP:
+            self.mouse_dn = False
+            self.app.mouseUp(self.n_page, y)
+
 
 if __name__ == '__main__':
     try:

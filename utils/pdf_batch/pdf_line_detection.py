@@ -256,6 +256,8 @@ if __name__ == '__main__':
         cv2.namedWindow('img')
         cv2.moveWindow('img', 0, 0)
 
+        if len(files) == 0:
+            raise Exception('No pdf files in the folder')
         ctrl = Ctrl(files)
         ctrl.run()
 

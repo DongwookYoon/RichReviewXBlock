@@ -695,7 +695,7 @@ var crsGroupGenerator = (function(){
         var group_id = '';
         var ids = {};
 
-        return get_ids(emails).then(
+        return getIds(emails).then(
             function(_ids){
                 ids = _ids;
                 return;
@@ -717,7 +717,6 @@ var crsGroupGenerator = (function(){
         ).then(
             function(_group_id){ // add instructors
                 group_id = _group_id;
-
                 var promises = ids.instructors.map(
                     function(instructor_id){
                         return function(){
@@ -730,6 +729,10 @@ var crsGroupGenerator = (function(){
                         return results;
                     }
                 );
+            }
+        ).then(
+            function(){
+                return R2D.Group.connectUserAndGroup(group_id.substring(4), ids.student.substring(4));
             }
         ).then(
             function(){ // set doc name
@@ -772,15 +775,31 @@ var crsGroupGenerator = (function(){
         */
     };
 
-    var get_ids = function(emails){
+    var getIds = function(emails){
         var manager_id = '';
+        var student_id = '';
         return RedisClient.HGET(
             'email_user_lookup',
             emails.manager
         ).then(
-            function(_manager_id){
+            function(_manager_id) {
                 manager_id = _manager_id;
-
+                return;
+            }
+        ).then(
+            function(){
+                return RedisClient.HGET(
+                    'email_user_lookup',
+                    emails.student
+                )
+            }
+        ).then(
+            function(_student_id) {
+                student_id = _student_id;
+                return;
+            }
+        ).then(
+            function(){
                 var promises = emails.instructors.map(
                     function(instructor_email){
                         return function(){
@@ -799,7 +818,7 @@ var crsGroupGenerator = (function(){
             }
         ).then(
             function(_instructor_ids){
-                return {manager: manager_id, instructors: _instructor_ids};
+                return {manager: manager_id, student: student_id, instructors: _instructor_ids};
             }
         );
     };
@@ -808,60 +827,130 @@ var crsGroupGenerator = (function(){
 }());
 
 exports.run = function(course_id, submission_id){
+    /*
+     */
     var PATH = '../../../utils/pdf_batch/data/'+submission_id;
     var netids = js_utils.listFolderSync(PATH)['dirs'];
 
-    console.log('generate js_doc');
-    for(var i = 0, l = netids.length; i < l; ++i){
-        var netid = netids[i];
-        var js_doc_content = jsDocGenerator.run(PATH, netid);
-        fs.writeFileSync(PATH+'/'+netid+'/'+'vs_doc.txt', js_doc_content);
-        console.log('    '+netid);
+    var generate_jsdocs = false;
+    var upload_files_and_generate_groups = true;
+
+    if(generate_jsdocs){
+        console.log('generate js_doc');
+        for(var i = 0, l = netids.length; i < l; ++i){
+            var netid = netids[i];
+            var js_doc_content = jsDocGenerator.run(PATH, netid);
+            fs.writeFileSync(PATH+'/'+netid+'/'+'doc.vs_doc', js_doc_content);
+            console.log('    '+netid);
+        }
+        console.log('');
     }
-    console.log('');
 
+    if(upload_files_and_generate_groups){
+        console.log('upload files', course_id, submission_id);
+        var uploadPdfAndGenerateGroup = function(netid){
+            console.log('    '+netid);
+            return pdfAndVsDocUploader.run(
+                PATH+'/'+netid+'.pdf',
+                PATH+'/'+netid+'/'+'doc.vs_doc'
+            ).then(
+                function(pdf_hash){
+                    var emails = {
+                        manager:'dy252@cornell.edu',
+                        student: netid+'@cornell.edu',
+                        instructors: ['jg878@cornell.edu', 'by238@cornell.edu']
+                    };
+                    return crsGroupGenerator.run('math2220_sp2016', submission_id, pdf_hash, emails).then(
+                        function(){
+                            console.log('    done');
+                            return null;
+                        }
+                    );
+                }
+            )
+        };
+        var promises = netids.map(
+            function(netid){
+                return function(){
+                    return uploadPdfAndGenerateGroup(netid);
+                }
+            }
+        );
+        return js_utils.serialPromiseFuncs(promises).then(
+            function(results){
+                return results;
+            }
+        ).catch(
+            function(e){
+                console.error(e);
+            }
+        );
+    }
 
+    /* hot fix
 
-    /*
-    var uploadPdfAndGenerateGroup = function(netid){
-        console.log('    '+netid);
-        return pdfAndVsDocUploader.run(
-            PATH+'/'+netid+'.pdf',
-            PATH+'/'+netid+'/'+'vs_doc.txt'
-        ).then(
-            function(pdf_hash){
-                var emails = {
-                    manager:'dy252@cornell.edu',
-                    student: netid+'@cornell.edu',
-                    instructors: ['jg878@cornell.edu', 'by238@cornell.edu']
-                };
-                return crsGroupGenerator.run2('math2220_sp2016', 'prelim1', pdf_hash, emails).then(
-                    function(){
-                        console.log('    done');
-                        return null;
+    var docids = [];
+    RedisClient.KEYS('doc:116730002901619859123_*').then(
+        function(_docids){
+            docids = _docids;
+            var promises = docids.map(
+                function(docid){
+                    return function(){
+                        return RedisClient.HGETALL(
+                            docid
+                        );
                     }
-                );
+                }
+            );
+            return js_utils.serialPromiseFuncs(promises);
+        }
+    ).then(
+        function(docs){
+            var data = [];
+            for(var i = 0; i < docs.length; ++i){
+                var doc = docs[i];
+                if(doc.crs_submission != null && doc.crs_submission[0] === '{'){
+                    var docid = docids[i];
+                    var date = new Date(parseInt(docid.substring(docid.indexOf('_')+1)));
+                    doc.crs_submission = JSON.parse(doc.crs_submission);
+                    if(doc.crs_submission.subject_id === 'prelim1' && date.toISOString().indexOf('2016-03-05T') < 0 && doc.crs_submission.student_email != 'dongwook@edx.org'){
+                        var datum = {};
+                        datum.email = doc.crs_submission.student_email;
+                        datum.group_id = JSON.parse(doc.groups)[0];
+                        datum.doc_id = docid;
+                        datum.pdf_hash = doc.pdfid;
+                        data.push(datum);
+                    }
+                }
             }
-        )
-    };
+            return data;
+        }
+    ).then(
+        function(data){
 
-    console.log('upload files');
-    var promises = netids.map(
-        function(netid){
-            return function(){
-                return uploadPdfAndGenerateGroup(netid);
-            }
+            var promises = data.map(
+                function(datum){
+                    return function(){
+                        return RedisClient.HGET('stu:math2220_sp2016_'+datum.email, 'submissions').then(
+                            function (submissions) {
+                                submissions = JSON.parse(submissions);
+                                submissions['prelim1'].group = {
+                                    'doc_id':datum.doc_id,
+                                    'pdf_hash': datum.pdf_hash,
+                                    'group_id': datum.group_id
+                                };
+                                return RedisClient.HSET('stu:math2220_sp2016_'+datum.email, 'submissions', JSON.stringify(submissions));
+                            }
+                        );
+                    };
+                }
+            );
+            return js_utils.serialPromiseFuncs(promises);
         }
-    );
-    return js_utils.serialPromiseFuncs(promises).then(
-        function(results){
-            return results;
-        }
-    ).catch(
-        function(e){
-            console.error(e);
-        }
-    );
-
+    ).catch(function(e){
+        var x = 0;
+    })
     */
+
+
 };

@@ -240,6 +240,7 @@
                                     blob = blob.getBlob();
                                 }
                                 var src = audio_context.createMediaStreamSource(stream);
+                                window.leakMyAudioNodes = [src];
                                 recorder = new Recorder(
                                     src,
                                     {

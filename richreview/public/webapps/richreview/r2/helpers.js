@@ -913,9 +913,10 @@
         var canvs = []; // {dom:, ctx:, t:, npage:}
         var pages = []; // {pdf:, viewport:, ncanv:}
         var npage_render = {now: -1, next: -1};
+        var now_rendering = -1;
 
         pub.initPdfRenderer = function(pdf_doc){
-            return GetPdfPage(pdf_doc).then(
+            return getPdfPages(pdf_doc).then(
                 function(pdf_pages){
                     return new Promise(function(resolve, reject){
                         try{
@@ -930,12 +931,10 @@
                                         viewport: pdf.getViewport( r2.viewCtrl.page_width_noscale / (pdf.pageInfo.view[2]-pdf.pageInfo.view[0])),
                                         ncanv:-1
                                     };
-
                                     var sz = new Vec2(
                                         Math.floor(page.viewport.width*r2.viewCtrl.hdpi_ratio.sx),
                                         Math.floor(page.viewport.height*r2.viewCtrl.hdpi_ratio.sy)
                                     );
-
                                     canv_w = Math.max(canv_w, sz.x);
                                     canv_h = Math.max(canv_h, sz.y);
 
@@ -951,7 +950,9 @@
                                     var ctx = dom.getContext('2d');
                                     dom.width = canv_w;
                                     dom.height = canv_h;
+
                                     ctx.scale(r2.viewCtrl.hdpi_ratio.sx, r2.viewCtrl.hdpi_ratio.sy);
+
                                     return {
                                         dom: dom,
                                         ctx: ctx,
@@ -971,66 +972,65 @@
             );
         };
 
-        /**
-         * @returns {*}
-         */
-        pub.GetCanvas = function(n_page){
+        function getPdfPages(pdf_doc){
+            var promises = [];
+            for(var i = 0; i < pdf_doc.numPages; ++i){
+                promises.push(pdf_doc.getPage(i+1));
+            }
+            return Promise.all(promises);
+        }
+
+
+        pub.getCanvas = function(n_page){
             var n_canv = pages[n_page].ncanv;
-            if(n_canv != -1){
+            if(n_canv !== -1){
                 canvs[n_canv].t = (new Date()).getTime();
+                renderNextPage(n_page);
                 return canvs[n_canv].dom;
             }
             else{
-                ScheduleRender(n_page);
+                render_q.pushFront(n_page);
+                runRender().then(function(){
+                    return renderNextPage(n_page);
+                }).catch(
+                    function(err){
+                        console.error(err);
+                    }
+                );
                 return null;
+            }
+
+            // push next page if available
+            function renderNextPage(_n_page){
+                if(_n_page+1 < pages.length && pages[_n_page+1].ncanv === -1){
+                    render_q.pushFront(_n_page+1);
+                    return runRender();
+                }
+                else{
+                    return Promise.resolve();
+                }
             }
         };
 
-        function GetPdfPage(pdf_doc){
-            return new Promise(function(resolve, reject){
-                var pdf_pages = [];
-                var job = function(n){
-                    if(n != pdf_doc.numPages){
-                        pdf_doc.getPage(n+1).then(function (pdf_page) {
-                            pdf_pages.push(pdf_page);
-                            job(n+1);
-                        }).catch(reject);
+        function runRender(){
+            if(now_rendering === -1){
+                now_rendering = render_q.popFront();
+                return runRenderPage(now_rendering).then(
+                    function(){
+                        now_rendering = -1;
+                        if(!render_q.isEmpty()){
+                            return runRender();
+                        }
                     }
-                    else{
-                        resolve(pdf_pages);
-                    }
-                };
-                job(0);
-            });
-        }
-
-        function ScheduleRender(n_page){
-            if(npage_render.now == -1){ //
-                Render(n_page);
+                )
             }
-            else{ // now rendering
-                npage_render.next = n_page;
+            else{
+                return Promise.resolve();
             }
         }
 
-        function ShowRenderingIndicator(){
-            var app_container_size = r2.viewCtrl.getAppContainerSize();
-            var $ri = $("#rendering_spinner");
-            var $ri_w = 25;
-            $ri.css("top", app_container_size.y/2-$ri_w+"px");
-            $ri.css("left", app_container_size.x/2-$ri_w+"px");
-            $ri.css("display", "block");
-            $ri.toggleClass("animated", "true");
-        }
-        function HideRenderingIndicator(){
-            var $ri = $("#rendering_spinner");
-            $ri.toggleClass("animated", "false");
-            $ri.css("display", "none");
-        }
-
-        function Render(n_page){
-            npage_render.now = n_page;
-            var n_canv = GetAvailableCanv();
+        function runRenderPage(n_page){
+            var n_canv = getAvailableCanv();
 
             canvs[n_canv].npage = n_page;
             pages[n_page].ncanv = n_canv;
@@ -1039,15 +1039,78 @@
                 viewport: pages[n_page].viewport
             };
 
+            spinner.show();
+            canvs[n_canv].ctx.clearRect(0, 0, canvs[n_canv].dom.width/r2.viewCtrl.hdpi_ratio.sx, canvs[n_canv].dom.height/r2.viewCtrl.hdpi_ratio.sy);
+            return pages[n_page].pdf.render(ctx).then(function(){
+                spinner.hide();
+                r2App.invalidate_static_scene = true;
+                return null;
+            });
+        }
 
-            ShowRenderingIndicator();
+        var render_q = (function(){
+            var pub_q = {};
+
+            var q = [];
+
+            pub_q.pushFront = function(v){
+                removeDup(v);
+                q.unshift(v);
+            };
+
+            pub_q.popFront = function(){
+                return q.shift();
+            };
+
+            pub_q.isEmpty = function(){
+                return q.length === 0;
+            };
+
+            var removeDup = function(v){
+                var i = q.indexOf(v);
+                if(i != -1) {q.splice(i, 1);}
+            };
+
+            return pub_q;
+        }());
+
+
+        function scheduleRender(n_page){
+            if(now_rendering !== -1){
+
+            }
+            else{
+
+            }
+
+
+            if(npage_render.now == -1){ //
+                renderPage(n_page);
+            }
+            else{ // now rendering
+                npage_render.next = n_page;
+            }
+        }
+
+        function renderPage(n_page){
+            npage_render.now = n_page;
+            var n_canv = getAvailableCanv();
+
+            canvs[n_canv].npage = n_page;
+            pages[n_page].ncanv = n_canv;
+            var ctx = {
+                canvasContext: canvs[n_canv].ctx,
+                viewport: pages[n_page].viewport
+            };
+
+            spinner.show();
             canvs[n_canv].ctx.clearRect(0, 0, canvs[n_canv].dom.width/r2.viewCtrl.hdpi_ratio.sx, canvs[n_canv].dom.height/r2.viewCtrl.hdpi_ratio.sy);
             pages[n_page].pdf.render(ctx).then(function(){
-                HideRenderingIndicator();
+                spinner.hide();
                 if(npage_render.next != -1){
-                    var npage_to_render = npage_render.next;
+                    var n = npage_render.next;
                     npage_render.next = -1;
-                    Render(npage_to_render);
+                    renderPage(n);
                 }
                 else{
                     npage_render.now = -1;
@@ -1056,15 +1119,13 @@
             });
         }
 
+        function getAvailableCanv(){
+            function getCurRenderingCanv(){if(npage_render.now == -1){return -1;}else{return pages[npage_render.now].ncanv;}}
 
-        /**
-         * @returns {number}
-         */
-        function GetAvailableCanv(){
             var min_t = Number.POSITIVE_INFINITY;
             var min_i = 0;
             for(var i = 0; i < canvs.length; ++i){
-                if(i != GetCurRenderingCanv()){
+                if(i !== getCurRenderingCanv()){
                     if(canvs[i].npage == -1){
                         return i;
                     }
@@ -1078,17 +1139,29 @@
             return min_i;
         }
 
-        /**
-         * @returns {*}
-         */
-        function GetCurRenderingCanv(){
-            if(npage_render.now == -1){
-                return -1;
-            }
-            else{
-                return pages[npage_render.now].ncanv;
-            }
-        }
+        var spinner = (function(){
+            var pub_sp = {};
+
+            pub_sp.show = function(){
+                var app_container_size = r2.viewCtrl.getAppContainerSize();
+                var $ri = $("#rendering_spinner");
+                var $ri_w = 25;
+                $ri.css("top", app_container_size.y/2-$ri_w+"px");
+                $ri.css("left", app_container_size.x/2-$ri_w+"px");
+                $ri.css("display", "block");
+                $ri.toggleClass("animated", "true");
+            };
+
+            pub_sp.hide = function(){
+                var $ri = $("#rendering_spinner");
+                $ri.toggleClass("animated", "false");
+                $ri.css("display", "none");
+            };
+
+            return pub_sp;
+        }());
+
+
 
         return pub;
     }());

@@ -20,13 +20,13 @@
                 if(r2App.invalidate_size){
                     r2.resizeWindow();
                     r2App.invalidate_size = false;
-                    console.log('invalidate_size');
+                    //console.log('invalidate_size');
                 }
 
                 if(r2App.invalidate_page_layout){
                     r2App.cur_page.Relayout();
                     r2App.invalidate_page_layout = false;
-                    console.log('invalidate_page_layout');
+                    //console.log('invalidate_page_layout');
                 }
 
                 if(r2App.invalidate_static_scene){

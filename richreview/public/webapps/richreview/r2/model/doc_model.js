@@ -771,7 +771,7 @@
     };
 
     r2.PieceText.prototype.DrawPiece = function(){
-        var canv = r2.pdfRenderer.GetCanvas(this.GetNumPage());
+        var canv = r2.pdfRenderer.getCanvas(this.GetNumPage());
         if(canv){
             r2.canv_ctx.drawImage(canv,
                 this._t_src_x, this._t_src_y, this._t_src_w, this._t_src_h,

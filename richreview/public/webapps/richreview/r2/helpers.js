@@ -1585,6 +1585,18 @@
             $(content).off('mouseup', up);
         };
 
+        pub.onTouchEventHandlers = function(dn, mv, up){
+            content.addEventListener('touchstart', dn, false);
+            content.addEventListener('touchmove', mv, false);
+            content.addEventListener('touchend', up, false);
+        };
+
+        pub.offTouchEventHandlers = function(dn, mv, up){
+            content.removeEventListener('touchstart', dn, false);
+            content.removeEventListener('touchmove', mv, false);
+            content.removeEventListener('touchend', up, false);
+        };
+
         pub.setContextMenuEvent = function(func){
             $(content).on('contextmenu', func);
         };
@@ -1605,6 +1617,15 @@
 
         pub.resetScroll = function(){
             $(view).scrollTop(0);
+        };
+
+        pub.setScroll = function(x, y){
+            $(view).scrollLeft(x);
+            $(view).scrollTop(y);
+        };
+
+        pub.getScroll = function(){
+            return new Vec2($(view).scrollLeft(), $(view).scrollTop());
         };
 
         pub.getPosAndWidthInPage = function(dom){
@@ -1635,7 +1656,6 @@
                 page_offset.y -= $(window).scrollTop();
             }
         }
-
 
         return pub;
     }());

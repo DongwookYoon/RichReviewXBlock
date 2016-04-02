@@ -12,35 +12,36 @@ var r2Ctrl = {};
     /* input mode */
     r2.input = (function(){
         var pub = {};
-        var InpuMode = {
+        var InputMode = {
             DESKTOP : 0,
             TABLET : 1,
             TABLET_TOUCH: 2
         };
-        var mode = InpuMode.DESKTOP;
+        var mode = InputMode.DESKTOP;
         var cursor_in_menu = false;
 
         pub.setModeDesktop = function(){
-            mode = InpuMode.DESKTOP;
+            resetMode();
 
+            mode = InputMode.DESKTOP;
             $('#btn-input-set-mode-desktop').toggleClass('btn-primary', true);
-            $('#btn-input-set-mode-desktop').toggleClass('btn-default', false);
-            $('#btn-input-set-mode-tablet').toggleClass('btn-primary', false);
-            $('#btn-input-set-mode-tablet').toggleClass('btn-default', true);
-
-            r2.mouse.setEventHandlers();
             r2.mouse.rightClickContextMenu.enable();
-            r2.tabletInput.off();
+            r2.mouse.setEventHandlers();
+        };
+        pub.setModeTabletTouch = function(){
+            resetMode();
+
+            mode = InputMode.TABLET_TOUCH;
+            $('#btn-input-set-mode-tablet-touch').toggleClass('btn-primary', true);
+            r2.mouse.rightClickContextMenu.enable();
+            r2.tabletTouchInput.setEventHandlers();
+            r2.mouse.setEventHandlers();
         };
         pub.setModeTablet = function(){
-            mode = InpuMode.TABLET;
+            resetMode();
 
-            $('#btn-input-set-mode-desktop').toggleClass('btn-primary', false);
-            $('#btn-input-set-mode-desktop').toggleClass('btn-default', true);
+            mode = InputMode.TABLET;
             $('#btn-input-set-mode-tablet').toggleClass('btn-primary', true);
-            $('#btn-input-set-mode-tablet').toggleClass('btn-default', false);
-
-            r2.mouse.removeEventHandlers();
             r2.mouse.rightClickContextMenu.disable();
             r2.tabletInput.on();
         };
@@ -59,10 +60,173 @@ var r2Ctrl = {};
         pub.outMenu = function(){cursor_in_menu = false;};
         pub.isInMenu = function(){return cursor_in_menu;};
 
+        function resetMode(){
+            $('#btn-input-set-mode-desktop').toggleClass('btn-primary', false);
+            $('#btn-input-set-mode-desktop').toggleClass('btn-default', true);
+            $('#btn-input-set-mode-tablet-touch').toggleClass('btn-primary', false);
+            $('#btn-input-set-mode-tablet-touch').toggleClass('btn-default', true);
+            $('#btn-input-set-mode-tablet').toggleClass('btn-primary', false);
+            $('#btn-input-set-mode-tablet').toggleClass('btn-default', true);
+
+            r2.mouse.removeEventHandlers();
+            r2.tabletTouchInput.removeEventHandlers();
+            r2.tabletInput.off();
+        }
+
         return pub;
     }());
     /* end of input mode*/
 
+    r2.tabletTouchInput = (function(){
+        var pub_tti = {};
+
+        var InputMode = {
+            IDLE : 0,
+            NAV_TRANS : 1,
+            NAV_SCALE : 2,
+            GESTURE : 3
+        };
+        var touches = {};
+        var zoom_indices = [-1, -1];
+        var mode = InputMode.IDLE;
+
+        pub_tti.setEventHandlers = function(){
+            r2.dom.onTouchEventHandlers(dnEvent, mvEvent, upEvent);
+        };
+
+        pub_tti.removeEventHandlers = function(){
+            r2.dom.offTouchEventHandlers(dnEvent, mvEvent, upEvent);
+            mode = InputMode.IDLE;
+            touches = {};
+        };
+
+        function getLastTouch(id, idx){
+            idx = typeof idx === 'undefined' ? 0 : idx;
+            return touches[id][touches[id].length-1+idx];
+        }
+        function createTouch(touch){
+            return {
+                clientPos: new Vec2(touch.clientX, touch.clientY),
+                docPos: r2.input.getPos(touch),
+                time: new Date().getTime()
+            }
+        }
+        function theOtherTouchId(id){
+            var keys = Object.keys(touches);
+            keys = keys.map(function(k){return parseInt(k);});
+            if(keys.length === 2){
+                var x = keys.indexOf(id);
+                return keys[1-keys.indexOf(id)];
+            }
+            else{
+                console.error('theOtherTouchId:', touches);
+                throw new Error('theOtherTouchId:' + JSON.Stringify(touches));
+            }
+        }
+
+        function dnTouch(touch, event){
+            if(Object.keys(touches).length < 2){
+                touches[touch.identifier] = [createTouch(touch)];
+                if(mode === InputMode.IDLE){
+                    if(r2App.mode === r2App.AppModeEnum.RECORDING){
+                        mode = InputMode.GESTURE;
+                        r2.spotlightCtrl.recordingSpotlightDn(
+                            r2.viewCtrl.mapScrToDoc(getLastTouch(touch.identifier).docPos),
+                            r2App.cur_recording_annot
+                        );
+                    }
+                    else{
+                        mode = InputMode.NAV_TRANS;
+                    }
+                }
+                else if(mode === InputMode.NAV_TRANS || mode === InputMode.GESTURE){
+                    if(mode === InputMode.GESTURE){
+                        r2.spotlightCtrl.recordingSpotlightCancel();
+                    }
+                    mode = InputMode.NAV_SCALE;
+                    zoom_indices[0] = touch.identifier;
+                    zoom_indices[1] = theOtherTouchId(touch.identifier);
+                    r2.zoom.touch.dn(
+                        getLastTouch(zoom_indices[0]).clientPos,
+                        getLastTouch(zoom_indices[1]).clientPos
+                    );
+                }
+            }
+            if(Object.keys(touches).length >= 2){
+                event.preventDefault(); // prevents default zoom of the browser
+            }
+        }
+        function mvTouch(touch, event){
+            if(touches.hasOwnProperty(touch.identifier)){
+                touches[touch.identifier].push(createTouch(touch));
+                if(mode === InputMode.GESTURE){
+                    r2.spotlightCtrl.recordingSpotlightMv(
+                        r2.viewCtrl.mapScrToDoc(getLastTouch(touch.identifier).docPos),
+                        r2App.cur_recording_annot
+                    );
+                    event.preventDefault(); // prevent default translation
+                }
+                else if(mode === InputMode.NAV_SCALE){
+                    r2.zoom.touch.mv(
+                        getLastTouch(zoom_indices[0]).clientPos,
+                        getLastTouch(zoom_indices[1]).clientPos
+                    );
+                }
+                if(Object.keys(touches).length >= 2){
+                    event.preventDefault(); // prevents default zoom of the browser
+                }
+            }
+            else{
+                event.preventDefault();
+            }
+        }
+        function upTouch(touch, event){
+            if(touches.hasOwnProperty(touch.identifier)){
+                //console.log('touchUp:', touch.identifier, touches[touch.identifier].length);
+                touches[touch.identifier].push(createTouch(touch));
+                if(Object.keys(touches).length >= 2){
+                    event.preventDefault();
+                }
+                if(mode === InputMode.GESTURE){
+                    r2.spotlightCtrl.recordingSpotlightUp(
+                        r2.viewCtrl.mapScrToDoc(getLastTouch(touch.identifier).docPos),
+                        r2App.cur_recording_annot
+                    );
+                }
+                else if(mode === InputMode.NAV_SCALE) {
+                    r2.zoom.touch.up(
+                        getLastTouch(zoom_indices[0]).clientPos,
+                        getLastTouch(zoom_indices[1]).clientPos
+                    );
+                }
+                delete touches[touch.identifier];
+                mode = InputMode.IDLE;
+            }
+            else{
+                event.preventDefault();
+            }
+        }
+
+        function dnEvent(event){
+            for(var i = 0; i < event.changedTouches.length; ++i){
+                dnTouch(event.changedTouches[i], event);
+            }
+        }
+        function mvEvent(event){
+            for(var i = 0; i < event.changedTouches.length; ++i){
+                mvTouch(event.changedTouches[i], event);
+            }
+        }
+        function upEvent(event){
+            for(var i = 0; i < event.changedTouches.length; ++i){
+                upTouch(event.changedTouches[i], event);
+            }
+        }
+
+        return pub_tti;
+    }());
+
+    /* input controller for the tablet with pen and touch */
     r2.tabletInput = (function(){
         var pub_ti = {};
 
@@ -145,6 +309,7 @@ var r2Ctrl = {};
         var pub_tc = {};
 
         pub_tc.dn = function(event){
+            var x = 0;
         };
 
         pub_tc.up = function(event){

@@ -591,13 +591,19 @@ a:active {
   width: 35px;
   height: 54px;
   font-size: 54px;
-  color: indianred;
+  color: rgba(205, 92, 92, 0.85);
   display: none;
+  pointer-events: none;
 }
 
 #recording_indicator_stack{
   width: 35px;
   height: 54px;
+  display: block;
+}
+
+#recording_indicator_stack i {
+  display: block;
 }
 
 #r2_app_container > #overlay_container {
@@ -611,13 +617,14 @@ a:active {
   position: absolute;
   right: 20px;
   top: 20px;
-  width: 250px;
+  width: 225px;
   height: 54px;
   font-size: 50px;
-  color: rgba(33, 150, 243, 1.0);
+  color: rgba(33, 150, 243, 0.85);
   text-align: center;
   z-index: 7;
   display: none;
+  pointer-events: none;
 }
 #observer_indicator_stack{
   width: 70px;
@@ -626,11 +633,11 @@ a:active {
 
 #observer_indicator > p{
   font-size: 12px;
-  background: rgba(33, 150, 243, 1.0);
-  color: white;
+  background: rgba(33, 150, 243, 0.85);
+  color: rgba(255, 255, 255, 0.85);
   padding:5px;
   border-style: solid;
-  border-color: lightskyblue;
+  border-color: rgba(135, 206, 250, 0.85);
   border-width: 1px;
 }
 

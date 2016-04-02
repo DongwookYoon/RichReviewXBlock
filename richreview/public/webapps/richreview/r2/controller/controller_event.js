@@ -14,7 +14,8 @@ var r2Ctrl = {};
         var pub = {};
         var InpuMode = {
             DESKTOP : 0,
-            TABLET : 1
+            TABLET : 1,
+            TABLET_TOUCH: 2
         };
         var mode = InpuMode.DESKTOP;
         var cursor_in_menu = false;
@@ -33,6 +34,7 @@ var r2Ctrl = {};
         };
         pub.setModeTablet = function(){
             mode = InpuMode.TABLET;
+
             $('#btn-input-set-mode-desktop').toggleClass('btn-primary', false);
             $('#btn-input-set-mode-desktop').toggleClass('btn-default', true);
             $('#btn-input-set-mode-tablet').toggleClass('btn-primary', true);
@@ -154,19 +156,6 @@ var r2Ctrl = {};
         return pub_tc;
     }());
     /* end of touch*/
-
-    var preventDefault = function(event){
-        if(event.preventDefault){
-            event.preventDefault()
-        }
-        if(event.stopPropagation){
-            event.stopPropagation();
-        }
-        if(event.originalEvent){
-            event.originalEvent.returnValue = false;
-            event.originalEvent.cancelBubble = true;
-        }
-    };
 
     /* pen */
     r2.pen = (function(){

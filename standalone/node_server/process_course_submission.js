@@ -732,7 +732,12 @@ var crsGroupGenerator = (function(){
             }
         ).then(
             function(){
-                return R2D.Group.connectUserAndGroup(group_id.substring(4), ids.student.substring(4));
+                if(ids.student){
+                    return R2D.Group.connectUserAndGroup(group_id.substring(4), ids.student.substring(4));
+                }
+                else{
+                    return R2D.Group.InviteUser(group_id.substring(4), emails.student);
+                }
             }
         ).then(
             function(){ // set doc name

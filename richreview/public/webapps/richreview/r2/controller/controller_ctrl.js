@@ -157,6 +157,12 @@
         return pub;
     }());
 
+    r2.clickFirstPage = function(){
+        if(r2.booklet.goToFirstPage()){
+            r2.log.Log_Simple("first_page");
+        }
+    };
+
     r2.clickPrevPage = function(){
         if(r2.booklet.goToPrevPage()){
             r2.log.Log_Simple("prev_page");
@@ -166,6 +172,12 @@
     r2.clickNextPage = function(){
         if(r2.booklet.goToNextPage()){
             r2.log.Log_Simple("next_page");
+        }
+    };
+
+    r2.clickLastPage = function(){
+        if(r2.booklet.goToLastPage()){
+            r2.log.Log_Simple("last_page");
         }
     };
 

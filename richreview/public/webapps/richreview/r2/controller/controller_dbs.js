@@ -173,7 +173,7 @@ var r2Sync = (function(){
                             r2.commentHistory.consumeCmd(cmdObjs[i]);
                         }
                         else{
-                            console.error('error from cmd: ', JSON.stringify(cmdObjs[i]));
+                            //console.error('error from cmd: ', JSON.stringify(cmdObjs[i]));
                         }
                         $( "#main_progress_bar" ).progressbar({
                             value: parseInt(100*(i)/(cmdObjs.length-1))

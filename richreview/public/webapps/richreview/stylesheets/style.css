@@ -1,13 +1,6 @@
-/*body {
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-  margin:0;
-  padding:0;
-  overflow: hidden;
-  position:fixed;
-  top:0;
-  bottom:0;
-  width:100%;
-}*/
+body{
+  -ms-content-zooming: none;
+}
 
 #r2_app_container{
   overflow: hidden;

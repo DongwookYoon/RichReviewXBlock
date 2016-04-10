@@ -309,7 +309,6 @@ var r2Ctrl = {};
         var pub_tc = {};
 
         pub_tc.dn = function(event){
-            var x = 0;
         };
 
         pub_tc.up = function(event){
@@ -1197,7 +1196,6 @@ var r2Ctrl = {};
                 pos = pt;
                 r2App.invalidate_dynamic_scene = true;
                 if(inks.length){
-                    console.log(inks.length);
                     for(var i = 0, l = inks.length; i < l; ++i){
                         reserved_operations.push(inks[i].erase(true)); // to_upload
                     }

@@ -1541,8 +1541,8 @@
             // ToDo prevent layout thrashing
 
             dashboard_height = getDomheight(dashboard);
-            $(view).height(app_container_size.y-getDomheight(dashboard));
             $(browse_comments).width(getDomWidth(browse_row)-getDomWidth(dashboard_users));
+            $(view).height(app_container_size.y-getDomheight(dashboard));
 
             $(content).width(page_size.x + scale*(page_margins.left + page_margins.rght));
             $(content).height(page_size.y);

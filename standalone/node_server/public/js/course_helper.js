@@ -468,7 +468,7 @@
                         }
                     ).then(
                         function(review_items){
-                            review_items.sort(sortByEmail);
+                            review_items.sort(sortByGroupAndEmail);
                             review_items.forEach(function(item){
                                 add(item);
                             });
@@ -572,7 +572,12 @@
             return 0;
         };
 
-        var sortByEmail = function(a, b) {
+        var sortByGroupAndEmail = function(a, b) {
+            if(a.group !== null && b.group === null)
+                return -1;
+            if(a.group === null && b.group !== null)
+                return 1;
+
             if (a.email > b.email)
                 return 1;
             if (a.email < b.email)

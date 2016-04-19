@@ -74,44 +74,94 @@
 
         var scale_presets = [0.5, 0.75, 1.0, 1.25, 1.5];
 
-        var zoom = function(delta){
-            var i_match = 0;
-            for(var i = 0; i < scale_presets.length; ++i){
-                if(r2.viewCtrl.scale == scale_presets[i]){
-                    i_match = i;
-                    break;
-                }
-            }
-            var new_scale = scale_presets[Math.max(0, Math.min(scale_presets.length-1, i_match+delta))];
-
-            var scale_change_ratio = r2.viewCtrl.scale/new_scale;
-            r2.viewCtrl.scale = new_scale;
-
-            r2App.invalidate_size = true;
-
-            /*
-            var cur_pt = new Vec2(0.5, 0.5*r2.viewCtrl.app_container_size.y/r2.viewCtrl.app_container_size.x);
-            cur_pt.subtract(r2.viewCtrl.pos);
-            cur_pt.multiply(1.0-scale_change_ratio);
-            cur_pt.add(r2.viewCtrl.pos);
-            r2.viewCtrl.pos = cur_pt;
-
-            r2.viewCtrl.pos.x = Math.round(r2.viewCtrl.pos.x*r2.viewCtrl.app_container_size.x)/r2.viewCtrl.app_container_size.x; // make it integer for sharper image
-            r2.viewCtrl.pos.y = Math.round(r2.viewCtrl.pos.y*r2.viewCtrl.app_container_size.x)/r2.viewCtrl.app_container_size.x;*/
-        };
-
         pub.in = function(){
-            zoom(+1);
+            zoomStep(+1);
             r2.log.Log_Nav("r2.zoom.in");
         };
 
         pub.out = function(){
-            zoom(-1);
+            zoomStep(-1);
             r2.log.Log_Nav("r2.zoom.out");
         };
 
+        pub.touch = (function(){
+            var pub_tc = {};
+
+            var anchor = {
+                scale: 1.0,
+                scrollPos: new Vec2(0.0,0.0),
+                screenPos: new Vec2(0.0,0.0),
+                screenPosDist: 1.0
+            };
+
+            pub_tc.dn = function(p0, p1){
+                anchor.scale = r2.viewCtrl.scale;
+                anchor.scrollPos = r2.dom.getScroll();
+                anchor.screenPos = p0.add(p1, true).multiply(0.5);
+                anchor.screenPosDist = p0.distance(p1);
+            };
+            pub_tc.mv = function(p0, p1){
+                r2.viewCtrl.scale = limitScale(
+                    anchor.scale*p0.distance(p1)/anchor.screenPosDist
+                );
+
+                var s0 = anchor.scale;
+                var x0 = anchor.screenPos;
+                var t0 = anchor.scrollPos;
+
+                var s1 = r2.viewCtrl.scale;
+                var x1 = p0.add(p1, true).multiply(0.5);
+                var t1 = new Vec2(
+                    x1.x + (s1/s0)*(-t0.x-x0.x),
+                    x1.y + (s1/s0)*(-t0.y-x0.y)
+                );
+
+                r2.dom.setScroll(-t1.x, -t1.y);
+                r2App.invalidate_size = true;
+            };
+            pub_tc.up = function(p0, p1){
+                pub_tc.mv(p0, p1); // verbose
+            };
+
+            function limitScale(scale){
+                var mn = scale_presets[0];
+                var mx = scale_presets[scale_presets.length-1];
+                return Math.max(mn, Math.min(mx, scale));
+            }
+
+            return pub_tc;
+        }());
+
+        function zoomStep(delta){
+            var new_scale = scale_presets[
+                Math.max(0, Math.min(scale_presets.length-1,
+                    getClosestPresetScaleIdx(r2.viewCtrl.scale)+delta))
+                ];
+            r2.viewCtrl.scale = new_scale;
+            r2App.invalidate_size = true;
+
+            function getClosestPresetScaleIdx(scale){
+                var i_min = 0;
+                var d_min = Number.POSITIVE_INFINITY;
+                for(var i = 0; i < scale_presets.length; ++i){
+                    var d = Math.abs(scale - scale_presets[i]);
+                    if(d < d_min) {
+                        i_min = i;
+                        d_min = d;
+                    }
+                }
+                return i_min;
+            }
+        }
+
         return pub;
     }());
+
+    r2.clickFirstPage = function(){
+        if(r2.booklet.goToFirstPage()){
+            r2.log.Log_Simple("first_page");
+        }
+    };
 
     r2.clickPrevPage = function(){
         if(r2.booklet.goToPrevPage()){
@@ -122,6 +172,12 @@
     r2.clickNextPage = function(){
         if(r2.booklet.goToNextPage()){
             r2.log.Log_Simple("next_page");
+        }
+    };
+
+    r2.clickLastPage = function(){
+        if(r2.booklet.goToLastPage()){
+            r2.log.Log_Simple("last_page");
         }
     };
 

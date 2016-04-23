@@ -1729,6 +1729,28 @@
         this._audiofileurl = audiofileurl;
         this._reacordingaudioblob = null;
     };
+    r2.Annot.prototype.normalizeAudioDbs = function(){
+        if(this._audio_dbs.length === 0){return 0;}
+
+        normalize(this._audio_dbs);
+
+        function normalize(arr){
+            var mm = getMinMax(arr);
+            for(var i = 0; i < arr.length; ++i){
+                arr[i] = (arr[i]-mm.min)/mm.diff;
+            }
+        }
+
+        function getMinMax(arr){
+            var min = Number.MAX_VALUE;
+            var max = Number.MIN_VALUE;
+            arr.forEach(function(v){
+                min = Math.min(min, v);
+                max = Math.max(max, v);
+            });
+            return {min: min, max: max, diff: max-min};
+        }
+    };
     r2.Annot.prototype.AddSpotlight = function(spotlight, toupload){
         this._spotlights.push(spotlight);
     };

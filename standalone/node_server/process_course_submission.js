@@ -4,6 +4,8 @@
 
 var fs = require('fs');
 var env = require('./lib/env.js');
+var url = require('url');
+var querystring = require('querystring');
 var spawn = require("child_process").spawn;
 var crypto = require('crypto');
 var mkdirp = require('mkdirp');
@@ -838,7 +840,74 @@ exports.run = function(course_id, submission_id){
     var netids = js_utils.listFolderSync(PATH)['dirs'];
 
     var generate_jsdocs = false;
-    var upload_files_and_generate_groups = true;
+    var upload_files_and_generate_groups = false;
+    var upload_from_json = false;
+
+    if(upload_from_json){
+        var buf = fs.readFileSync(PATH+'/'+submission_id+'.json');
+        var js = JSON.parse(buf.toString());
+        var to_upload = [];
+        var others = [];
+
+        js.forEach(function(v){
+            if(v.Participating === 'x' || v.link === 0){
+                others.push(v);
+            }
+            else{
+                to_upload.push(v);
+            }
+        });
+
+        console.log('List of submissions to upload.');
+        to_upload.forEach(function(v){
+            console.log('    ', v.NetId, querystring.parse(url.parse(v.link).query).access_code);
+        });
+        console.log('');
+
+        console.log('Others');
+        others.forEach(function(v){
+            console.log('    ', v.NetId, v.Participating, v.link);
+        });
+        console.log('');
+
+        console.log('upload files', course_id, submission_id);
+        var generateGroup = function(netid, pdf_hash){
+            console.log('    '+netid);
+            return Promise.resolve(pdf_hash).then(
+                function(pdf_hash){
+                    var emails = {
+                        manager:'dy252@cornell.edu',
+                        student: netid+'@cornell.edu',
+                        instructors: ['jg878@cornell.edu', 'by238@cornell.edu']
+                    };
+                    return crsGroupGenerator.run('math2220_sp2016', submission_id, pdf_hash, emails).then(
+                        function(){
+                            console.log('    done');
+                            return null;
+                        }
+                    );
+                }
+            )
+        };
+        var promises = to_upload.map(
+            function(v){
+                return function(){
+                    return generateGroup(v.NetId, querystring.parse(url.parse(v.link).query).access_code);
+                }
+            }
+        );
+        return js_utils.serialPromiseFuncs(promises).then(
+            function(results){
+                return results;
+            }
+        ).catch(
+            function(e){
+                console.error(e);
+            }
+        );
+
+
+    }
 
     if(generate_jsdocs){
         console.log('generate js_doc');

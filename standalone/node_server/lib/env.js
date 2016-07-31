@@ -40,3 +40,5 @@ exports.config_files = {
 exports.cornell_wsfed = JSON.parse(fs.readFileSync('../ssl/cornell_wsfed.json', 'utf-8'));
 
 exports.sha1_salt = JSON.parse(fs.readFileSync('../ssl/sha1_salt.json', 'utf-8'));
+
+exports.redis_config = JSON.parse(fs.readFileSync('../ssl/redis_config.json', 'utf-8'));

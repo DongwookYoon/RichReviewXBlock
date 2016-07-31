@@ -1,7 +1,8 @@
 var Promise = require("promise");
 var redis = require('redis');
+var env = require('../lib/env');
 var redisClient = redis.createClient(6379, "richreview.net");
-redisClient.auth('rich.reviewer@cornell');
+redisClient.auth(env.redis_config.auth);
 redisClient.on('error', function(err) {
     // "Redis connection to <hostname>:6379 failed - read ETIMEDOUT";
     console.log('Redis error: ' + err);

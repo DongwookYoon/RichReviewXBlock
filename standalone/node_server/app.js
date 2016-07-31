@@ -54,7 +54,7 @@ app.use(
                 {
                     client: redis_client.redisClient
                 }),
-            secret: 'rich.reviewer@cornell',
+            secret: env.redis_config.auth,
             saveUninitialized: true,
             resave: false,
             cookie: { maxAge: 3*60*60*1000 }

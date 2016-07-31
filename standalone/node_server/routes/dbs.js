@@ -484,5 +484,4 @@ exports.post = function(req, res){
             js_utils.PostResp(res, req, 500, "Unidentified request: "+req.query['op']);
             break;
     }
-    console.log("Query DBS Post : ", req.query['op']);
 };

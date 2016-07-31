@@ -1,30 +1,29 @@
 #!/usr/bin/env node
 
 var run_node_server = function() {
-    var debug = require('debug');
     var app = require('../app');
     var fs = require("fs");
     var os = require("os");
-    httpsPort = 8001;
-    httpPort = 8002;
     var hostname = os.hostname();
-    if (hostname == 'richreview') {
+    if (hostname == 'richreview') { // on richreview.net
         httpsPort = 443;
         httpPort = 80;
     }
+    else{ // on localhost
+        httpsPort = 8001;
+        httpPort = 8002;
+    }
 
+    process.env.NODE_ENV = 'production';
     process.setMaxListeners(0);
     app.https.set('port', process.env.PORT || httpsPort);
     app.http.set('port', process.env.PORT || httpPort);
-
-
     var http_server = require('http').createServer(app.http).listen(
         app.http.get('port'),
         function () {
             console.log('Express HTTP server listening on port ' + app.http.get('port'));
         }
     );
-    //http_server.timeout = 3*1000; // 30 sec
 
     var https_server = require('https').createServer(
         {
@@ -36,18 +35,16 @@ var run_node_server = function() {
     ).listen(
         app.https.get('port'),
         function () {
-            debug('Express server listening on port ' + app.https.get('port'));
+            console.log('Express HTTPS server listening on port ' + app.https.get('port'));
         }
     );
-    //https_server.timeout = 3*1000; // 30 sec
-};
-
-var process_course_submission = function(course_id, submission_id){
-    var pcs = require('../process_course_submission');
-    pcs.run(course_id, submission_id);
 };
 
 if(process.argv[2]){
+    var process_course_submission = function(course_id, submission_id){
+        var pcs = require('../process_course_submission');
+        pcs.run(course_id, submission_id);
+    };
     process_course_submission(process.argv[2], process.argv[3]);
 }
 else{

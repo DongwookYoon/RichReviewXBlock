@@ -3,10 +3,8 @@
  */
 
 var js_error = require("../lib/js_error");
-var R2D = require("../lib/r2d.js");
 var azure = require("../lib/azure");
 var js_utils = require("../lib/js_utils");
-var Promise = require("promise");
 
 exports.get = function(req, res){
     req.session.latestUrl = req.originalUrl;

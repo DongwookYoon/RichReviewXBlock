@@ -14,6 +14,7 @@ var passport = require('passport');
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 var wsfedsaml2 = require('passport-azure-ad').WsfedStrategy;
 
+var js_utils = require('./lib/js_utils.js');
 var R2D = require('./lib/r2d.js');
 var redis_client = require('./lib/redis_client.js');
 var RedisStore = require('connect-redis')(expressSession);

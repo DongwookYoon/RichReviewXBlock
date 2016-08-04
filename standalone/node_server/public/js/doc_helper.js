@@ -15,15 +15,21 @@
         ).then(
             function(docids_list){
                 var docids = merge(docids_list[0], docids_list[1]);
-                return postDbs('GetDocByIds', {docids: docids});
-            }
-        ).then(
-            function(docs){
-                docs = sortDocs(docs);
+                if(docids.length !== 0){
+                    return postDbs('GetDocByIds', {docids: docids}).then(
+                        function(docs){
+                            docs = sortDocs(docs);
 
-                loadingIcon.removeFrom($doc_container);
-                var promises = docs.map(function(doc){return setDocDom(doc);});
-                return Promise.all(promises);
+                            loadingIcon.removeFrom($doc_container);
+                            var promises = docs.map(function(doc){return setDocDom(doc);});
+                            return Promise.all(promises);
+                        }
+                    );
+                }
+                else{
+                    loadingIcon.removeFrom($doc_container);
+                    $doc_container.text('You are yet to have any document.');
+                }
             }
         ).catch(
             function(err){

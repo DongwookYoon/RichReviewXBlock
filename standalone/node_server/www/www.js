@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+process.env.NODE_ENV = 'production'; // should be placed before require(app)
+
 var run_node_server = function() {
     var app = require('../app');
     var fs = require("fs");
@@ -14,7 +16,6 @@ var run_node_server = function() {
         httpPort = 8002;
     }
 
-    process.env.NODE_ENV = 'production';
     process.setMaxListeners(0);
     app.https.set('port', process.env.PORT || httpsPort);
     app.http.set('port', process.env.PORT || httpPort);

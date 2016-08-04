@@ -13,7 +13,9 @@ var env = require('./lib/env.js');
 var passport = require('passport');
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 var wsfedsaml2 = require('passport-azure-ad').WsfedStrategy;
+var LtiStrategy = require('passport-lti');
 
+var js_utils = require('./lib/js_utils.js');
 var R2D = require('./lib/r2d.js');
 var redis_client = require('./lib/redis_client.js');
 var RedisStore = require('connect-redis')(expressSession);
@@ -106,12 +108,22 @@ function passportSetup(){
         done(null, user.id);
     });
     passport.deserializeUser(function(id, done){
-        R2D.User.prototype.findById(id).then(
+        R2D.LtiUserPool.getById(id).catch(
+            function(err){
+                return R2D.User.prototype.findById(id).then(
+                    function(user){
+                        return user;
+                    }
+                );
+            }
+        ).then(
             function(user){
                 done(null, user);
+                return null;
             }
         ).catch(
             function(err){
+                console.error(err);
                 done(null, null);
             }
         );
@@ -203,6 +215,44 @@ function passportSetup(){
             res.redirect(req.session.latestUrl || '/');
         }
     );
+
+    // LTI ID
+    passport.use(
+        new LtiStrategy(
+            {
+                consumerKey: 'xh0rSz5O03-richreview.cornellx.edu',
+                consumerSecret: 'sel0Luv73Q'
+                // pass the req object to callback
+                // passReqToCallback: true,
+                // https://github.com/omsmith/ims-lti#nonce-stores
+                // nonceStore: new RedisNonceStore('testconsumerkey', redisClient)
+            },
+            function(lti, done) {
+                console.log(lti);
+                R2D.LtiUserPool.logIn(lti).then(
+                    function(user){
+                        return done(null, user);
+                    }
+                ).catch(
+                    function(err){
+                        console.error(err);
+                        return done(err, null);
+                    }
+                );
+            }
+        )
+    );
+    app.post(
+        '/login_lti',
+        passport.authenticate(
+            'lti',
+            {
+                scope:['email'],
+                successRedirect: '/lti_welcome',
+                failureRedirect: '/login_lti_failure'
+            }
+        )
+    );
 }
 
 
@@ -225,6 +275,7 @@ function setupServices(){
     app.get('/resources',   resources.get);
     app.get('/math2220_sp2016',    course.get);
     app.get('/bluemix_stt_auth', bluemix_stt_auth.get);
+    app.get('/lti_welcome', _pages.lti_welcome);
 
     // post requests
     app.post('/dbs',        dbs.post);

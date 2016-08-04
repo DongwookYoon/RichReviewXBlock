@@ -15,8 +15,7 @@
         ).then(
             function(docids_list){
                 var docids = merge(docids_list[0], docids_list[1]);
-                var promises = docids.map(function(docid){return postDbs('GetDocById', {docid:docid});});
-                return Promise.all(promises);
+                return postDbs('GetDocByIds', {docids: docids});
             }
         ).then(
             function(docs){
@@ -310,19 +309,33 @@
 
         var $panel_body = createNewDomElement('div', ['panel-body'], $panel);
         loadingIcon.appendTo($panel_body);
+        if(doc.groups.length !== 0){
+            return postDbs('GetGroupsData', {groupids: doc.groups}).then(
+                function(resp){
+                    loadingIcon.removeFrom($panel_body);
+                    resp.forEach(function(group_data){
+                        setGroupDom(group_data, doc, $panel_body);
+                    });
+                }
+            );
+        }
+        else{
+            loadingIcon.removeFrom($panel_body);
+        }
 
-        var promises = doc.groups.map(function(group_id){
-            return postDbs('GetGroupData', {groupid: group_id});
-        });
-
-        return Promise.all(promises).then(
-            function(resp){
-                loadingIcon.removeFrom($panel_body);
-                resp.forEach(function(group_data){
-                    setGroupDom(group_data, doc, $panel_body);
-                });
-            }
-        );
+//        console.log(doc.groups);
+//        var promises = doc.groups.map(function(group_id){
+//            return postDbs('GetGroupData', {groupid: group_id});
+//        });
+//
+//        return Promise.all(promises).then(
+//            function(resp){
+//                loadingIcon.removeFrom($panel_body);
+//                resp.forEach(function(group_data){
+//                    setGroupDom(group_data, doc, $panel_body);
+//                });
+//            }
+//        );
     };
 
     var deleteDoc = function(doc, $panel){

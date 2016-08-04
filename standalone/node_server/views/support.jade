@@ -3,7 +3,7 @@
 
 extends __layout_cprght
 block content_with_cprght
-   form.form-horizontal(action="support" method="post" onsubmit="")
+   form.form-horizontal(action="/support" method="POST" onsubmit="$('#submit_btn').toggleClass('disabled', true);")
       fieldset
          .well.support_well
             legend
@@ -12,15 +12,19 @@ block content_with_cprght
                label.col-lg-12.control-lable(for="inputSubject")
                   |Subject
                .col-lg-12.support-item
-                  input.form-control(name='subject' type="text" placeholder="Subject")
+                  input.form-control(name='subject' type="text" placeholder="Subject" required)
                label.col-lg-12.control-lable(for="inputReply")
-                  |Your Contact Information (not required)
+                  |Your Contact Information
                .col-lg-12.support-item
-                  input.form-control(name='reply' type="text" placeholder="Please provide your email address so that we can contact you back.")
+                  input.form-control(name='reply' type="email" placeholder="Please provide your email address so that we can contact you back." required)
                label.col-lg-12.control-lable(for="inputText")
                   |Contents
                .col-lg-12.support-item
-                  textarea.form-control(name='mailbody' rows="8" placeholder="Describe this problem")
+                  textarea.form-control(name='mailbody' rows="8" placeholder="Describe this problem" required)
                .col-lg-12
-                  button.btn.btn-primary.float_right(id="submit_btn" type="submit" onclick="$('#submit_btn').toggleClass('disabled', true);")
+                  button.btn.btn-primary.float_right(id="submit_btn" type="submit" onclick="")
                      |Send
+   script(type='text/javascript')
+      | if(#{after_submitted}){
+      | alert('Submitted');
+      | };

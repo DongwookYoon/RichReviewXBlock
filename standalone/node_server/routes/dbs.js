@@ -35,7 +35,7 @@ var GetGroupData = function(req, res){
             groupObj.users.participating.forEach(function(group_member){
                 promises.push(R2D.User.prototype.findById(group_member));
             });
-            Promise.all(promises).then(
+            return Promise.all(promises).then(
                 function(groupMembers){
                     var resp = {users:groupMembers, invited: groupObj.users.invited ,group:groupObj};
                     js_utils.PostResp(res, req, 200, resp);
@@ -55,6 +55,37 @@ var GetGroupData = function(req, res){
             else{
                 js_utils.PostResp(res, req, 400, err);
             }
+        }
+    );
+};
+
+var GetGroupsData = function(req, res){
+    var groupids = req.body.groupids;
+    if(typeof groupids === 'undefined'){
+        var x = 0;
+    }
+    var promises_grp = groupids.map(function(groupid){
+        return R2D.Group.GetGroupObj_Promise(groupid).then(
+            function(groupObj){
+                var promises = [];
+                groupObj.users.participating.forEach(function(group_member){
+                    promises.push(R2D.User.prototype.findById(group_member));
+                });
+                return Promise.all(promises).then(
+                    function(groupMembers){
+                        return {users:groupMembers, invited: groupObj.users.invited ,group:groupObj};
+                    }
+                )
+            }
+        )
+    });
+    Promise.all(promises_grp).then(
+        function(resp){
+            js_utils.PostResp(res, req, 200, resp);
+        }
+    ).catch(
+        function(err){
+            js_utils.PostResp(res, req, 400, err);
         }
     );
 };
@@ -101,6 +132,25 @@ var GetDocsParticipated = function(req, res){
                 js_utils.PostResp(res, req, 400, err);
             }
         );
+    }
+};
+
+var GetDocByIds = function(req, res){
+    if(js_utils.identifyUser(req, res)){
+        var promise = req.body.docids.map(
+            function(docid){
+                return R2D.Doc.GetDocById_Promise(docid);
+            }
+        );
+        Promise.all(promise).then(
+            function(resp){
+                js_utils.PostResp(res, req, 200, resp);
+            }
+        ).catch(
+            function(err){
+                js_utils.PostResp(res, req, 400, err);
+            }
+        )
     }
 };
 
@@ -432,8 +482,14 @@ exports.post = function(req, res){
         case "GetGroupData":
             GetGroupData(req, res);
             break;
+        case "GetGroupsData":
+            GetGroupsData(req, res);
+            break;
         case "GetDocsOwned":
             GetDocsOwned(req, res);
+            break;
+        case "GetDocByIds":
+            GetDocByIds(req, res);
             break;
         case "GetDocById":
             GetDocById(req, res);

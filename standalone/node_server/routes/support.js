@@ -11,7 +11,7 @@ exports.get = function (req, res) {
 };
 
 exports.post = function(req, res){
-    if(req.body.subject != '' || req.body.mailbody != ''){
+    if(req.body.subject !== '' || req.body.mailbody !== '' || req.body.reply !== ''){
         var userdata = "";
         if(req.user){
             userdata = JSON.stringify(req.user);
@@ -26,19 +26,20 @@ exports.post = function(req, res){
         ).then(
             function(info){
                 console.log('Support Email Sent: ' + JSON.stringify(info));
-                res.render('_pages_about', {cur_page: 'About', user: req.user });
-                js_utils.PostResp(res, req, 200);
+                res.render('support', {cur_page: 'About', user: req.user, after_submitted:true });
+                //js_utils.PostResp(res, req, 200);
+                return null;
             }
         ).catch(
             function(err){
-                console.log('Support Email Senting Error: ' + JSON.stringify(err));
+                console.log('Support Email Sending Error: ' + JSON.stringify(err));
                 js_utils.PostResp(res, req, 500);
             }
         );
     }
     else{
         js_error.HandleError('Invalid Report',
-            'Please fill the subject and body of the report.',
+            'Please fill the subject, contact, and body of the report.',
             res);
     }
 };

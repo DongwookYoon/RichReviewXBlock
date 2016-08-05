@@ -33,6 +33,7 @@ var dbs = require('./routes/dbs');
 var resources = require('./routes/resources');
 var course = require('./routes/course');
 var bluemix_stt_auth = require('./routes/bluemix_stt_auth');
+var lti = require('./routes/lti');
 
 mkdirp('../_temp');
 mkdirp('../cache');
@@ -67,10 +68,10 @@ app.use(
 
 passportSetup();
 
-setupStaticPages();
 
 setupServices();
 
+setupStaticPages();
 setRedirections();
 
 setErrLog();
@@ -127,6 +128,15 @@ function passportSetup(){
                 done(null, null);
             }
         );
+    });
+
+    app.use(function(req, res, next){
+        if(req.user instanceof R2D.LtiUser){
+            if( ['/lti_login', '/lti_welcome', '/lti_welcome/', '/lti_scrning'].indexOf(req.url) < 0 ){
+                req.logout();
+            }
+        }
+        next();
     });
 
     // Cornell NetID
@@ -228,7 +238,6 @@ function passportSetup(){
                 // nonceStore: new RedisNonceStore('testconsumerkey', redisClient)
             },
             function(lti, done) {
-                console.log(lti);
                 R2D.LtiUserPool.logIn(lti).then(
                     function(user){
                         return done(null, user);
@@ -275,7 +284,7 @@ function setupServices(){
     app.get('/resources',   resources.get);
     app.get('/math2220_sp2016',    course.get);
     app.get('/bluemix_stt_auth', bluemix_stt_auth.get);
-    app.get('/lti_welcome', _pages.lti_welcome);
+    app.get('/lti_welcome', lti.get_welcome);
 
     // post requests
     app.post('/dbs',        dbs.post);
@@ -286,6 +295,7 @@ function setupServices(){
     app.post('/uploadaudioblob', upload.post_audioblob);
     app.post('/resources',  resources.post);
     app.post('/course',     course.post);
+    app.post('/lti_scrning', lti.post_scrning);
 }
 
 // redirections

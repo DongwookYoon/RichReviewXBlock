@@ -1,6 +1,12 @@
 #!/usr/bin/env node
 
-process.env.NODE_ENV = 'production'; // should be placed before require(app)
+if(typeof v8debug === 'object'){
+    process.env.NODE_ENV = 'development';
+}
+else{
+    process.env.NODE_ENV = 'production'; // should be placed before require(app)
+}
+console.log('App NODE_ENV:', process.env.NODE_ENV);
 
 var run_node_server = function() {
     var app = require('../app');

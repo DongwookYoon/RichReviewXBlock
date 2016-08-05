@@ -316,6 +316,7 @@ var LtiUserPool = (function(){
                 'email', lti.lis_person_contact_email_primary,
                 'lti_group', '',
                 'grade', 'wait_sub',
+                'env', '',
                 'groupNs', '[]'
          ).then(
              function(){

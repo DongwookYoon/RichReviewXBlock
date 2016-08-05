@@ -33,7 +33,3 @@ exports.admin = function(req, res){
         res.render('_pages_admin', {user: req.user, access: 'user'});
     }
 };
-
-exports.lti_welcome = function(req, res){
-    res.sendFile('../public/lti_welcome/index.html');
-};

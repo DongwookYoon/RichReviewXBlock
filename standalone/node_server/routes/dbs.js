@@ -22,7 +22,7 @@ var GetMyself = function(req, res){
         );
     }
     else{
-        js_utils.PostResp(res, req, 200, null);
+        js_utils.PostResp(res, req, 200, 'User authentication failed.');
     }
 };
 

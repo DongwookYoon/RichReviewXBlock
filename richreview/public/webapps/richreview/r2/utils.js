@@ -11,15 +11,24 @@
         pub.handleError = function(err, msg){
             if(r2App.is_first_error && !err.silent){
                 r2App.is_first_error = false; // do not prompt error msgs for the subsequent errors
+                var detail = 'Error log: ';
 
-                var s = "Error Message: " + err.message + "\n\nDetails: " + err.stack;
-
-                if(typeof msg === 'undefined') {
-                    msg = 'We caught an invalid operation of the system.';
+                if(typeof err.status === 'number' && typeof err.statusText === 'string'){ // http error
+                    if(typeof msg === 'undefined') {
+                        msg = 'The server responded with an error.';
+                    }
+                    detail += err.status + ':' + err.statusText+ ', ' + (err.responseText || 'no reponse text') + ', ';
                 }
-                var detail = s + '\n' + window.location.href;
-                console.log(s + '\n' + detail);
+                else{ // javascript error
+                    if(typeof msg === 'undefined') {
+                        msg = 'The system caught an error.';
+                    }
+                    detail += err.message + ', ' + err.stack + ', ';
+                }
+                detail += window.location.href;
                 detail = detail.replace(/(\r\n|\n|\r)/gm,"<n>");
+
+                console.error(msg + '\n' + detail);
                 prompt(msg, detail);
             }
         };

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head profile="http://www.w3.org/2005/10/profile">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <link rel="shortcut icon" href="https://richreview.azureedge.net/favicon.ico" type="image/x-icon" />
+        <meta charset="UTF-8">
+        <title>CornellX Discussion System</title>
+        <style>
+            fieldset{
+                margin-bottom: 1em;
+            }
+            h3{
+                margin-bottom: 0;
+            }
+            p{
+                margin-top: 0.6em;
+                margin-bottom: 0;
+            }
+            .signature{
+                font-style: italic;
+                display: inline;
+            }
+            #today_date{
+                display: inline;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Welcome to CornellX Discussion System</h1>
+        <p>Please answer the following questions. We will use this information to guide you toward the optimal discussion environment.</p>
+        <form id="lti_form" method="POST" action="/lti_survey">
+            <fieldset>
+                <legend>Are you using a screen reader software for this course?</legend>
+                <input type="radio" name="scr_rdr" value="no" required>No, I don't use a screen reader.</input><br/>
+                <input type="radio" name="scr_rdr" value="jaws" required>JAWS</input><br/>
+                <input type="radio" name="scr_rdr" value="nvda" required>NVDA</input><br/>
+                <input type="radio" name="scr_rdr" value="others" required>Others</input><br/>
+                If you selected others, please specify:
+                <input type="text" name="scr_rdr_type">
+            </fieldset>
+            <fieldset>
+                <legend>Are you above or equal to 18 AND the legal age of consent in your country of residence and citizenship?</legend>
+                <input type="radio" name="age_legal" value="yes" required>Yes</input><br/>
+                <input type="radio" name="age_legal" value="no" required>No</input>
+            </fieldset>
+            <fieldset id="consent">
+                <legend>Do you want to participate in the rich online discussion user study?</legend>
+                <h2>Consent form: an evaluation study of the RichReview discussion system</h2>
+                <h3>What this study is about</h3>
+                <p>
+                    The purpose of this study is to evaluate efficacy of the voice-and-gesture-based commenting system,
+                    <a href="https://richreview.net" target="_blank">RichReview</a>,
+                    for supporting peer discussion in online courses.
+                    This study will give insight into the way users use the tool, reveal potential design issues,
+                    and provide design ideas to tackle the problems.
+                </p>
+                <h3>What we will ask you to do</h3>
+                <p>This week’s assignment is to conduct online peer discussion on the given NY Times article.
+                For the assignment, the students who agree to volunteer for the study will use the RichReview system,
+                while non participating students will use the traditional text-based bulletin board system.
+                All students, regardless of their participation status,
+                will be evaluated by the instructor under the consistent grading policy without any advantages or disadvantages.
+                The study also includes an optional 5 min online survey.</p>
+
+                <p>A participating student will be randomly assigned to one of the two groups,
+                where one group will use the voice version of RichReview,
+                while the other group will use the text version of RichReview.
+                Your discussion activities, and the final scores will be collected for a post-analysis.
+                During the analysis, however, the data will be thoroughly anonymized by removing all identifiers.</p>
+
+                <p>If you are not using one of the modern browsers (Chrome, Firefox, and Microsoft Edge),
+                you will be encouraged to install one of them to run the RichReview web app.
+                </p>
+
+                <h3>Taking part is voluntary</h3>
+                <p>Participation in this study is voluntary.
+                    You may withdraw from this study at any time without penalty.
+                    You may also choose to not answer any or all questions in the interview that you do not wish to,
+                    and there will be no penalty.</p>
+
+                <h3>Benefits and risks</h3>
+                <p>We are not aware of any risks to you.
+                Your use of the research software will NOT have an effect on the instructor’s practice of grading.
+                Also if you are not able to complete a task
+                or answer a question in any practices of this study including the final survey,
+                we do NOT consider it a reflection on your abilities.
+                You can opt out of any question or any task at any time during the experiment
+                by sending a mail to the leading investigator Dongwook Yoon (dy252@cornell.edu).
+                If you decide to discontinue the use of our research software,
+                we will provide you the traditional bulletin board system.</p>
+
+                <h3>Confidentiality</h3>
+                <p>The information you will share with the researchers,
+                if you participate in this study, it will be kept completely confidential.
+                You will be assigned a number at the start of the experiment
+                and this number will be the only identifier with the information the researchers will track.</p>
+
+                <h3>If you have questions</h3>
+                <p>If you have any questions about this study,
+                please contact Dongwook Yoon, dy252@cornell.edu, or Francois Guimbretiere, francois@cs.cornell.edu.
+                This research project #\<IRB-number\> was exempted by the Cornell University IRB on \<exception date\>.
+                If you have any questions or concerns regarding your rights as a subject in this study,
+                you may also contact the Institutional Review Board (IRB) at 607-255-5138 or http://www.irb.cornell.edu.</p>
+
+                <h3>Statement of consent</h3>
+                <p>I have read the above information, and have received answers to any questions I asked.
+                I consent to take part in the study.
+                I also give permission for assignment submissions and my comments on the submissions
+                that may possibly be used for future publications in the form of
+                conference proceeding, research journal, research report, and academic thesis.
+                This digital consent form will be kept by the researcher for at least three years beyond the end of the study.
+                The researcher will provide a copy of the consent to the participant upon request.</p>
+                <br/>
+                <div>Printed name of person obtaining the consent: Dongwook Yoon</div>
+                <div>Signature of person obtaining the consent: <div class="signature">Dongwook Yoon</div>, <div id="today_date"></div>.</div>
+                <br/>
+                <input id="participant_checkbox" type="checkbox" name="consent" value="yes" checked>
+                Yes, I would like to participate in this study.
+                <br/>
+                Participant's digital signature (print your name):
+                <input type="text" name="signature">
+            </fieldset>
+            Please click the submit button after answering the questions above:
+            <input type="submit" value="Submit">
+            <br/>
+            <br/>
+            <br/>
+        </form>
+        <script>
+            var form = document.getElementById("lti_form");
+            var $form = $(form);
+            $("#today_date").text(getDateStr());
+            var $fieldset_vault = $("#consent").detach();
+            function getFormData(){
+                var val = {};
+                var arr = $form.serializeArray();
+                var i;
+                for(i = 0; i < arr.length; ++i){
+                    val[arr[i].name] = arr[i].value;
+                }
+                return val;
+            }
+            function answeredRadio(name){
+                var radios = document.getElementsByName(name);
+                var valid = false;
+                var i;
+                for(i = 0; !valid && i < radios.length; i++) {
+                    if (radios[i].checked){
+                        valid = true;
+                    }
+                }
+                return valid;
+            }
+            function getDateStr(){
+                return (new Date()).toUTCString().substring(5, 16);
+            }
+            function toShowConsentForm(){
+                var val = getFormData();
+                if(val["scr_rdr"] === "no" && val["age_legal"] === "yes"){
+                    return true;
+                }
+                else{
+                    return false;
+                }
+            }
+            $form.change(function(){
+                if(toShowConsentForm()){
+                    if(form !== null){
+                        $("#lti_form").children().eq(1).after($fieldset_vault);
+                        $fieldset_vault = null;
+                    }
+                }
+                else{
+                    if($fieldset_vault === null){
+                        $fieldset_vault = $("#consent").detach();
+                    }
+                }
+            });
+            form.addEventListener("submit", function(event) {
+                event.preventDefault();
+                if (answeredRadio("scr_rdr") && answeredRadio("age_legal")) {
+                    var form_val = getFormData();
+                    if(!toShowConsentForm() ||
+                            (form_val.consent === "yes" && form_val.signature !== "")
+                    ){
+                        $.post("/lti_survey", {survey_resp: form_val})
+                            .done(function() {
+                                alert("Your answers were successfully submitted. Now you will be redirected to the discussion tool.");
+                                window.location.replace(
+                                    form_val.consent === "yes" ? "/lti_discuss_rr" : "lti_discuss_bb"
+                                );
+                            })
+                            .fail(function() {
+                                alert("Oops. Server error. Please get back to the edX.org and retry. If it\'s the same after 10 min, please report this to dy252@cornell.edu.\n\n");
+                            });
+                    }
+                    else{
+                        alert("Please provide your signature to confirm your consent.");
+                    }
+                    return true;
+                }
+                else{
+                    alert("Please answer all the items.");
+                    return false;
+                }
+            }, false);
+
+        </script>
+    </body>
+</html>

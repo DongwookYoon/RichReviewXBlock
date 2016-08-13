@@ -1,0 +1,24 @@
+//
+   Created by yoon on 8/12/16.
+
+doctype html(lang='en')
+head(profile='http://www.w3.org/2005/10/profile')
+    script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js')
+    link(rel='shortcut icon', href='https://richreview.azureedge.net/favicon.ico', type='image/x-icon')
+    link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css')
+    script(src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js')
+    meta(charset='UTF-8')
+    title CornellX Online System
+    style
+        |
+body
+    .well
+        table.table.table-condensed#my_table
+            thead
+                tr#my_thead_tr
+            tbody#my_tbody
+
+    script
+        include ./lti_discuss_bb.js
+        |run('#{users_str}');
+

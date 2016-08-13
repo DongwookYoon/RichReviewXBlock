@@ -210,7 +210,7 @@
         var recorder = null;
         var audio_context = null;
 
-        pub.Init = function(resource_urls){
+        pub.Init = function(){
             return new Promise(function(resolve, reject){
                 try {
                     // webkit shim
@@ -227,7 +227,7 @@
                     {audio: true},
                     function(stream){
                         var get_worker_script = new XMLHttpRequest();
-                        get_worker_script.open("GET", resource_urls['lib_ext/recorder/recorderWorker.js'], true);
+                        get_worker_script.open("GET", r2.webappUrlMaps.get('lib_ext/recorder/recorderWorker.js'), true);
                         get_worker_script.onreadystatechange = function() {
                             if(get_worker_script.readyState == 4 && get_worker_script.status == 200) {
                                 var blob;

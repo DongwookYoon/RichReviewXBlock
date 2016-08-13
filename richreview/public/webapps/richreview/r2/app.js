@@ -172,8 +172,8 @@
     r2.main = (function(){
         var pub = {};
 
-        pub.Run = function(resource_urls) {
-            r2.HtmlTemplate.initHT(resource_urls).then(
+        pub.Run = function() {
+            r2.HtmlTemplate.initHT().then(
                 function(){
                     return r2.environment_detector.init();
                 }
@@ -183,7 +183,7 @@
                 }
             ).then(
                 function(){
-                    return initAudioRecorder(resource_urls);
+                    return initAudioRecorder();
                 }
             ).then(
                 function(){
@@ -205,7 +205,14 @@
                     return null;
                 }
             ).then(
-                initUserSet
+                function(){
+                    if(r2.ctx.lti) {
+                        return initLtiUserSet();
+                    }
+                    else{
+                        return initUserSet();
+                    }
+                }
             ).then(
                 getDocMetaData
             ).then(
@@ -238,12 +245,12 @@
             return;
         }
 
-        function initAudioRecorder(resource_urls){
+        function initAudioRecorder(){
             if(r2.environment_detector.is_mobile) { // pass mobile
                 alert('The latest Chrome Desktop browser is recommended. In mobile browsers, voice recording feature is not supported, and some audio comments may not be replayed properly.');
                 return;
             }
-            return r2.audioRecorder.Init(resource_urls).then(
+            return r2.audioRecorder.Init().then(
                 function(){
                     r2.coverMsg.Show([""]);
                 }
@@ -298,6 +305,14 @@
                     })
                 }
             )
+        }
+
+        function initLtiUserSet(){
+            r2.userGroup.Set({
+                self: r2.ctx.lti_data.user,
+                users: r2.ctx.lti_data.grp_users
+            });
+            return null;
         }
 
         function getDocMetaData(){
@@ -400,7 +415,7 @@
             r2.booklet.initBooklet();
             r2.cheatSheet.Init();
 
-            if(r2.ctx["comment"] != ''){
+            if(typeof r2.ctx["comment"] === 'string' && r2.ctx["comment"] !== ''){
                 var searchresult = r2App.doc.SearchPieceByAnnotId(r2.ctx["comment"]);
                 r2.turnPageAndSetFocus(searchresult, r2.ctx["comment"]);
             }

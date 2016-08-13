@@ -460,7 +460,7 @@ var WebAppLog = function(req, res){
 var isDocCourseSubmission = function(req, res){
     RedisClient.HGETALL('doc:'+req.body.docid).then(
         function(doc){
-            if(doc.crs_submission && JSON.parse(doc.crs_submission).course_id === req.body.course_id){
+            if(doc !== null && doc.crs_submission && JSON.parse(doc.crs_submission).course_id === req.body.course_id){
                 js_utils.PostResp(res, req, 200, {resp:true});
             }
             else{

@@ -9,10 +9,8 @@ function loadRichReview(r2_ctx) {
         r2.ctx = JSON.parse(decodeURIComponent(r2_ctx));
         warnIE();
         loadJsScript("/static_viewer/load.js", "js").then(
-            getWebAppUrls
-        ).then(
             function(){
-                r2.loadApp(r2.ctx.app_urls);
+                r2.loadApp(null);
             }
         );
     }(window.r2 = window.r2 || {}));
@@ -58,19 +56,6 @@ var loadJsScript = function(url, type){
         }
     });
 };
-
-var getWebAppUrls = function(){
-    return new Promise(function(resolve, reject){
-        $.get('/resources?op=get_richreview_webapp_urls')
-            .success(function(data){
-                r2.ctx.app_urls = data;
-                resolve();
-            }).error(function(jqXHR, textStatus, errorThrown) {
-                reject(errorThrown);
-            });
-    });
-};
-
 
 var resizePageBody = function(){
     var win_rect = {

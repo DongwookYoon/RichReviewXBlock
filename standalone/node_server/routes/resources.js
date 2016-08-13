@@ -16,24 +16,16 @@ exports.get = function(req, res){
     else{
         switch(req.query['op']){
             case 'get_richreview_webapp_urls':
-                getMulticolumnWebappUrls(req, res);
+                res.send(env.webapp_urls.richreview);
                 break;
             case 'get_multicolumn_webapp_urls':
-                getRichReviewWebappUrls(req, res);
+                res.send(env.webapp_urls.multicolumn);
                 break;
             default:
                 res.status(400).send({'error': req.query['op'] + ' is an undefined operation'});
                 break;
         }
     }
-};
-
-var getRichReviewWebappUrls = function(req, res){
-    res.send(env.webapp_urls.richreview);
-};
-
-var getMulticolumnWebappUrls = function(req, res){
-    res.send(env.webapp_urls.multicolumn);
 };
 
 

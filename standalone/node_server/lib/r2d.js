@@ -267,103 +267,6 @@ User.prototype.GetGroupNs = function(userid_n, cb){
     );
 };
 
-
-// Lti user management
-
-var LtiUser = function(id){
-    this.id = id;
-};
-
-LtiUser.prototype.SetData = function(data){
-    for( var k in data ){
-        this[k] = data[k];
-    }
-};
-
-var LtiUserPool = (function(){
-    var pub = {};
-
-    var cache = {}; // id to LtiUser obj
-
-    // get user by id (not including 'ltiusr')
-    pub.getById = function(id){
-        if(id in cache){
-            return Promise.resolve(cache[id]);
-        }
-        else{
-            return new Promise.reject(new Error('Invalid Id'));
-        }
-    };
-
-    pub.logIn = function(lti){
-        if(typeof lti === 'object' && typeof lti.user_id === 'string'){
-            if(lti.user_id in cache){
-                return Promise.resolve(cache[lti.user_id]);
-            }
-            else{
-                return createNew(lti);
-            }
-        }
-        else{
-            return new Promise.reject(new Error('Invalid LTI authentication profile'));
-        }
-    };
-
-    function createNew(lti){
-         return RedisClient.HMSET(
-                'ltiusr:'+lti.user_id,
-                'nick', lti.lis_person_sourcedid,
-                'email', lti.lis_person_contact_email_primary,
-                'lti_group', '',
-                'grade', 'wait_sub',
-                'env', '',
-                'groupNs', '[]'
-         ).then(
-             function(){
-                 return loadFromDb(lti.user_id);
-             }
-         )
-    }
-
-    function loadFromDb(id){
-        return RedisClient.HGETALL("ltiusr:"+id).then(
-            function(result){
-                var usr = new LtiUser(
-                    id
-                );
-                usr.SetData(result);
-                cache[id] = usr;
-                return usr;
-            }
-        )
-    }
-
-    function populateCache(){
-        return RedisClient.KEYS("ltiusr:*").then(
-            function(ids_str){
-                return Promise.all(
-                    ids_str.map(function(id_str){
-                        return loadFromDb(id_str.substring(7));
-                    })
-                );
-            }
-        ).then(
-            function(users){
-                console.log('Lti users populated : ' + Object.keys(cache).length + '');
-                return users;
-            }
-        ).catch(
-            function(err){
-                console.error(err);
-            }
-        )
-    }
-
-    populateCache();
-
-    return pub;
-})();
-
 /*
  * Group
  */
@@ -968,8 +871,6 @@ var Log = function(group_n, logStr, cb){
 
 
 exports.User = User;
-exports.LtiUser = LtiUser;
-exports.LtiUserPool = LtiUserPool;
 exports.Doc = Doc;
 exports.Group = Group;
 exports.Cmd = Cmd;

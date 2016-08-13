@@ -29,19 +29,45 @@
         return runSerialPromises;
     }());
 
-    r2.loadApp = function(resource_urls){
+    r2.webappUrlMaps = (function(){
+        var pub = {};
+
+        var map = null;
+
+        pub.init = function(src){
+            if(src){
+                map = src;
+            }
+        };
+
+        pub.get = function(url){
+            if(map === null){
+                return '/static_viewer/'+url;
+            }
+            else{
+                return map[url];
+            }
+        };
+
+        return pub;
+    })();
+
+    r2.loadApp = function(webapp_url_maps){
+
+        r2.webappUrlMaps.init(webapp_url_maps);
+
         var run = function(){
             var scripts = [
                 ['https://code.jquery.com/ui/1.11.4/themes/ui-lightness/jquery-ui.css', 'css'],
                 ['https://code.jquery.com/ui/1.11.4/jquery-ui.js', 'js'],
                 ['https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css', 'css'],
-                ['lib_ext/font-awesome-animation.min.css', 'css'],
+                ['https://cdnjs.cloudflare.com/ajax/libs/font-awesome-animation/0.0.9/font-awesome-animation.min.css', 'css'],
+                ['https://richreview.azureedge.net/richreview/lib_ext/pdfjs/pdf.js', 'js'],
+                ['https://richreview.azureedge.net/richreview/lib_ext/sha1.js', 'js'],
+                ['https://richreview.azureedge.net/richreview/lib_ext/vec2.min.js', 'js'],
+                ['https://richreview.azureedge.net/richreview/lib_ext/bowser.min.js', 'js'],
                 ['stylesheets/style.css', 'css'],
-                ['lib_ext/pdfjs/pdf.js', 'js'],
                 ['lib_ext/recorder/recorder.js', 'js'],
-                ['lib_ext/sha1.js', 'js'],
-                ['lib_ext/vec2.min.js', 'js'],
-                ['lib_ext/bowser.min.js', 'js'],
                 ['lib_ext/bluemix/bluemix_socket.js', 'js'],
                 ['lib_ext/bluemix/bluemix_utils.js', 'js'],
                 ['r2/audio_utils.js', 'js'],
@@ -60,26 +86,30 @@
             ];
 
             var promises = scripts.map(function(script){
-                return function(){return loadScript(script);}
+                return function(){
+                    var is_absolute_path = script[0].indexOf('http://') === 0 || script[0].indexOf('https://') === 0;
+                    return loadScriptByUrlAndType(
+                        is_absolute_path ? script[0] : r2.webappUrlMaps.get(script[0]), // url
+                        script[1] // type
+                    );
+                };
             });
 
             r2.runSerialPromises(promises).then(
                 function(){
-                    PDFJS.workerSrc = resource_urls['lib_ext/pdfjs/pdf.worker.js'];
-                    return r2.main.Run(resource_urls);
+                    PDFJS.workerSrc = 'https://richreview.azureedge.net/richreview/lib_ext/pdfjs/pdf.worker.js';
+                    return r2.main.Run();
                 }
             ).catch(
                 function(err){
+                    //ToDo redirect back to the webpage when failed to load a resource.
                     console.log(err);
                     alert(err);
-                    //ToDo redirect back to the webpage when failed to load a resource.
                 }
             );
         };
 
-
-        /* helpers */
-        var loadScriptByUrlAndType = function(url, type){
+        function loadScriptByUrlAndType(url, type){
             return new Promise(function(resolve, reject){
                 var elem = null;
                 if(type === 'js'){
@@ -97,29 +127,15 @@
                     elem.onload = resolve;
                     elem.onerror = function(){reject()};
                     document.getElementsByTagName('head')[0].appendChild(elem);
+                    $('#r2_app_container').append('&nbsp;&nbsp;&nbsp;&nbsp;'+url+'<br/>');
                 }
                 else{
-                    reject(new Error("Cannot load a resource file:" + url));
+                    reject(new Error("    Cannot load a resource file:" + url));
                 }
-            });
-        };
-
-        function loadScript(script){
-            return new Promise(function(resolve, reject){
-                var path = script[0].substring(0, 8);
-                if(script[0].substring(0, 7)==='http://' || script[0].substring(0, 8)==='https://'){
-                    path = script[0];
-                }
-                else{
-                    path = resource_urls[script[0]];
-                }
-                loadScriptByUrlAndType(path, script[1]).then(
-                    resolve
-                ).catch(
-                    reject
-                );
             });
         }
+
+        $('#r2_app_container').append('<br/><p>&nbsp;&nbsp;Launching Web App</p>');
 
         run();
     };

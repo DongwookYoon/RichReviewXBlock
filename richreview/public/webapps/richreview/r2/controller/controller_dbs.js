@@ -25,7 +25,7 @@ var r2Sync = (function(){
                 uploadAndConsumeCmds();
             }
         }
-        if(r2App.cur_time - last_downloaded_time > r2Const.DB_SYNC_POLLING_INTERVAL){ // 5sec
+        if(r2App.cur_time - last_downloaded_time > r2Const.DB_SYNC_POLLING_INTERVAL){
             pub.DownloadCmds();
             last_downloaded_time = r2App.cur_time;
         }

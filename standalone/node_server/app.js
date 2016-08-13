@@ -17,6 +17,7 @@ var LtiStrategy = require('passport-lti');
 
 var js_utils = require('./lib/js_utils.js');
 var R2D = require('./lib/r2d.js');
+var LtiEngine = require('./lib/lti_engine.js');
 var redis_client = require('./lib/redis_client.js');
 var RedisStore = require('connect-redis')(expressSession);
 
@@ -68,10 +69,20 @@ app.use(
 
 passportSetup();
 
+setupStaticPages();
+
+app.use(function(req, res, next){
+    if(req.user instanceof LtiEngine.User){
+        if( req.url.substring(0, 5) !== '/lti_' && req.method !== 'POST'){
+            req.logout();
+        }
+    }
+    next();
+});
+
 
 setupServices();
 
-setupStaticPages();
 setRedirections();
 
 setErrLog();
@@ -109,7 +120,7 @@ function passportSetup(){
         done(null, user.id);
     });
     passport.deserializeUser(function(id, done){
-        R2D.LtiUserPool.getById(id).catch(
+        LtiEngine.UserMgr.getById(id).catch(
             function(err){
                 return R2D.User.prototype.findById(id).then(
                     function(user){
@@ -130,16 +141,7 @@ function passportSetup(){
         );
     });
 
-    app.use(function(req, res, next){
-        if(req.user instanceof R2D.LtiUser){
-            if( ['/lti_login', '/lti_welcome', '/lti_welcome/', '/lti_scrning'].indexOf(req.url) < 0 ){
-                req.logout();
-            }
-        }
-        next();
-    });
-
-    // Cornell NetID
+   // Cornell NetID
     passport.use(
         new wsfedsaml2(
             env.cornell_wsfed,
@@ -238,7 +240,7 @@ function passportSetup(){
                 // nonceStore: new RedisNonceStore('testconsumerkey', redisClient)
             },
             function(lti, done) {
-                R2D.LtiUserPool.logIn(lti).then(
+                LtiEngine.UserMgr.logIn(lti).then(
                     function(user){
                         return done(null, user);
                     }
@@ -257,7 +259,7 @@ function passportSetup(){
             'lti',
             {
                 scope:['email'],
-                successRedirect: '/lti_welcome',
+                successRedirect: '/lti_entry',
                 failureRedirect: '/login_lti_failure'
             }
         )
@@ -284,7 +286,11 @@ function setupServices(){
     app.get('/resources',   resources.get);
     app.get('/math2220_sp2016',    course.get);
     app.get('/bluemix_stt_auth', bluemix_stt_auth.get);
-    app.get('/lti_welcome', lti.get_welcome);
+    app.get('/lti_entry',   lti.get_entry);
+    app.get('/lti_admin',   lti.get_admin);
+    app.get('/lti_survey', lti.get_survey);
+    app.get('/lti_discuss_rr', lti.get_discuss_rr);
+    app.get('/lti_discuss_bb', lti.get_discuss_bb);
 
     // post requests
     app.post('/dbs',        dbs.post);
@@ -295,7 +301,8 @@ function setupServices(){
     app.post('/uploadaudioblob', upload.post_audioblob);
     app.post('/resources',  resources.post);
     app.post('/course',     course.post);
-    app.post('/lti_scrning', lti.post_scrning);
+    app.post('/lti_dbs',    lti.post_dbs);
+    app.post('/lti_survey', lti.post_survey);
 }
 
 // redirections

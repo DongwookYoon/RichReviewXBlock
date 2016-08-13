@@ -12,19 +12,22 @@
 
         var l = [];
 
-        pub.initHT = function(resource_urls){
-            var promises = l.map(function(template){
-                return pub.loadOnce(resource_urls, template);
-            });
-            return Promise.all(promises);
+        pub.initHT = function(){
+            var p = Promise.resolve();
+            l.forEach(
+                function(template){
+                    p = p.then(function(){return loadOnce(template)})
+                }
+            );
+            return p;
         };
 
         pub.add = function(name){
             l.push(name);
         };
 
-        pub.loadOnce = function(resource_urls, name){
-            return r2.util.getUrlData(resource_urls['htmls/' + name + '.xml'], '').then(
+        function loadOnce(name){
+            return r2.util.getUrlData(r2.webappUrlMaps.get('htmls/' + name + '.xml'), '').then(
                 function(resp) {
                     $("#" + name).html(resp);
                     return null;
@@ -410,7 +413,12 @@
             ).catch(
                 function(){
                     console.log('Logger Post Failed: ', log);
-                    log_q.push(log);
+                    window.setTimeout(
+                        function(){
+                            log_q.push(log);
+                        },
+                        r2Const.DELAY_WEBLOG_RETRY
+                    );
                 }
             );
         };

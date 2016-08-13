@@ -16,12 +16,12 @@ exports.path = {
 };
 
 exports.webapp_urls = {
-    'richreview': js_utils.getWebAppUrls(
+    'multicolumn': js_utils.getWebAppUrls(
         '../../../richreview/public/webapps/multicolumn',
         '/static_multicolumn/',
         /((\/|^)\..*)/
     ),
-    'multicolumn': js_utils.getWebAppUrls(
+    'richreview': js_utils.getWebAppUrls(
         '../../../richreview/public/webapps/richreview',
         '/static_viewer/',
         /((\/|^)\..*)|(^test\/.*)/

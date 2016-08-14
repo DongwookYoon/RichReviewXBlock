@@ -398,25 +398,6 @@
             log.what = what;
             log_q.push(log);
         };
-        pub.Post = function(log){
-            r2.util.postToDbsServer(
-                "WebAppLog",
-                {
-                    group_n : r2.ctx["groupid"],
-                    log : JSON.stringify(log)
-                }
-            ).catch(
-                function(){
-                    console.log('Logger Post Failed: ', log);
-                    window.setTimeout(
-                        function(){
-                            log_q.push(log);
-                        },
-                        r2Const.DELAY_WEBLOG_RETRY
-                    );
-                }
-            );
-        };
 
         var upload = function(logs){
             return r2.util.postToDbsServer(

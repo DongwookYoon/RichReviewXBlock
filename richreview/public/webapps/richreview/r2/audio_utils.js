@@ -240,34 +240,6 @@
                                 );
                                 resolve();
                             });
-/*
-                        var get_worker_script = new XMLHttpRequest();
-                        get_worker_script.open("GET", r2.webappUrlMaps.get('lib_ext/recorder/recorderWorker.js'), true);
-                        get_worker_script.onreadystatechange = function() {
-                            if(get_worker_script.readyState == 4 && get_worker_script.status == 200) {
-                                var blob;
-                                try {
-                                    blob = new Blob([get_worker_script.responseText], {type: 'application/javascript'});
-                                } catch (e) { // Backwards-compatibility
-                                    window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
-                                    blob = new BlobBuilder();
-                                    blob.append(get_worker_script.responseText);
-                                    blob = blob.getBlob();
-                                }
-                                var src = audio_context.createMediaStreamSource(stream);
-                                window.leakMyAudioNodes = [src];
-                                recorder = new Recorder(
-                                    src,
-                                    {
-                                        worker_path: URL.createObjectURL(blob),
-                                        buffer_size: r2.audioRecorder.RECORDER_BUFFER_LEN,
-                                        downsample_ratio: src.context.sampleRate < 44100 ? 1 : 2
-                                    }
-                                );
-                                resolve();
-                            }
-                        };
-                        get_worker_script.send();*/
                     },
                     function(err){
                         console.log(err);

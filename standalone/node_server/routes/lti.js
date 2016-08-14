@@ -56,7 +56,7 @@ function assertLtiUser(req, res){
         return true;
     }
     else{
-        handleLtiError(req, res, 'Unauthorized access. Please make sure that you access this webpage through edX.org.');
+        handleLtiError(req, res, 'Unauthorized access. Please go back to the edX.org and retry.');
     }
 }
 
@@ -152,48 +152,49 @@ exports.post_survey = function(req, res){
     }
 };
 
-function getDiscussionRR(req, res, grp_data){
-}
-
 exports.get_discuss_rr = function(req, res){
-    if(assertLtiUser(req, res) &&
-        (req.user.status === 'rr')
-    ){
-        var r2_ctx = {
-            pdfid: DISCUSS_PDF_ID,
-            docid: DISCUSS_DOC_ID,
-            groupid: "",
-            pdf_url: azure.BLOB_HOST + DISCUSS_PDF_ID + "/doc.pdf",
-            pdfjs_url: azure.BLOB_HOST + DISCUSS_PDF_ID + "/doc.vs_doc",
-            serve_dbs_url: js_utils.getHostname() + '/lti_dbs?',
-            upload_audio_url: js_utils.getHostname() + '/uploadaudioblob?',
-            lti: true,
-            lti_data: {}
-        };
-        return LtiEngine.GroupMgrRR.assignUserIfNotSet(req.user)
-            .then(function(grp_data) {
-                r2_ctx.lti_data.user = req.user;
-                r2_ctx.lti_data.group = grp_data;
+    if(assertLtiUser(req, res)){
+        if(req.user.status === 'rr'){
+            var r2_ctx = {
+                pdfid: DISCUSS_PDF_ID,
+                docid: DISCUSS_DOC_ID,
+                groupid: "",
+                pdf_url: azure.BLOB_HOST + DISCUSS_PDF_ID + "/doc.pdf",
+                pdfjs_url: azure.BLOB_HOST + DISCUSS_PDF_ID + "/doc.vs_doc",
+                serve_dbs_url: js_utils.getHostname() + '/lti_dbs?',
+                upload_audio_url: js_utils.getHostname() + '/uploadaudioblob?',
+                lti: true,
+                lti_data: {}
+            };
+            return LtiEngine.GroupMgrRR.assignUserIfNotSet(req.user)
+                .then(function(grp_data) {
+                    r2_ctx.lti_data.user = req.user;
+                    r2_ctx.lti_data.group = grp_data;
 
-                var promises = r2_ctx.lti_data.group.users.map(function (user_id) {
-                    return LtiEngine.UserMgr.getById(user_id);
+                    var promises = r2_ctx.lti_data.group.users.map(function (user_id) {
+                        return LtiEngine.UserMgr.getById(user_id);
+                    });
+                    return Promise.all(promises);
+                })
+                .then(function(grp_users){
+                    r2_ctx.lti_data.grp_users = grp_users;
+                    res.render(
+                        'lti_discuss_rr',
+                        {
+                            user: req.user,
+                            r2_ctx: encodeURIComponent(JSON.stringify(r2_ctx))
+                        }
+                    );
+                    return null;
+                })
+                .catch(function(err){
+                    handleLtiError(req, res, err);
                 });
-                return Promise.all(promises);
-            })
-            .then(function(grp_users){
-                r2_ctx.lti_data.grp_users = grp_users;
-                res.render(
-                    'lti_discuss_rr',
-                    {
-                        user: req.user,
-                        r2_ctx: encodeURIComponent(JSON.stringify(r2_ctx))
-                    }
-                );
-                return null;
-            })
-            .catch(function(err){
-                handleLtiError(req, res, err);
-            });
+
+        }
+        else{
+            handleLtiError(req, res, 'Invalid status :' + req.user.status);
+        }
     }
 };
 
@@ -235,6 +236,25 @@ function delGrp(req, res){
     }
 }
 
+function downloadCmds(req, res){
+    if(assertLtiUser(req, res)){
+        LtiEngine.CmdRR.getAfter(
+            req.body.groupid_n,
+            req.body.cmds_downloaded_n)
+            .then(function(cmds){
+                return js_utils.PostResp(res, req, 200,
+                    {
+                        group_update: false,
+                        cmds: cmds
+                    }
+                );
+            })
+            .catch(function(err){
+                js_utils.PostResp(res, req, 400, err);
+            });
+    }
+}
+
 exports.post_dbs = function(req, res){
     switch(req.query['op']){
         case 'del_user':
@@ -243,8 +263,11 @@ exports.post_dbs = function(req, res){
         case 'del_grp':
             delGrp(req, res);
             break;
+        case 'DownloadCmds':
+            downloadCmds(req, res);
+            break;
         default:
-            handleLtiError(req, res, 'Invalid post operation');
+            handleLtiError(req, res, 'Invalid post operation : '+ req.query['op']);
             break;
     }
 };

@@ -156,6 +156,9 @@ var GroupMgr = function(prefix){
     };
 
     this.delById = function(id){
+        if(next_grp_id === id){
+            next_grp_id = null;
+        }
         delete cache[id];
         return RedisClient.DEL(prefix+id);
     };
@@ -268,6 +271,20 @@ var GroupMgr = function(prefix){
         });
 };
 
+var ListDb = function(_prefix){
+    var prefix = _prefix;
+
+    this.pushBack= function(id, cmdStr){
+        return RedisClient.RPUSH(prefix+id, cmdStr);
+    };
+
+    this.getAfter = function(id, n){ // get n+1 th to the last item
+        return RedisClient.LRANGE(prefix+id, n, -1);
+    };
+
+};
+
+exports.CmdRR = new ListDb('lticmd_rr:');
 exports.GroupMgrRR = new GroupMgr('ltigrp_rr:');
 exports.GroupMgrBB = new GroupMgr('ltigrp_bb:');
 exports.User = User;

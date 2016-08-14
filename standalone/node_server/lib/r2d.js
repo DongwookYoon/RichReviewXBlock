@@ -723,6 +723,12 @@ var Log = function(group_n, logStr, cb){
     });
 };
 
+var Logs = function(group_n, logs){
+    var promises = logs.map(function(log){
+        return RedisClient.RPUSH("log:"+group_n, log);
+    });
+    return Promise.all(promises);
+};
 /* data sanity check-up*/
 
 (function dataSanityCheckup(){
@@ -875,4 +881,5 @@ exports.Doc = Doc;
 exports.Group = Group;
 exports.Cmd = Cmd;
 exports.Log = Log;
+exports.Logs = Logs;
 exports.redisClient = redisClient;

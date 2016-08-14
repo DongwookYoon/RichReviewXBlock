@@ -279,7 +279,7 @@
                         if(r2.userGroup.cur_user.name === user.name){
                             var annottodelete = r2App.annots[annot_id];
                             if(r2.removeAnnot(annot_id, true, false)){ // askuser, mute
-                                r2Sync.PushToUploadCmd(annottodelete.ExportToCmdDeleteComment());
+                                r2Sync.uploader.pushCmd(annottodelete.ExportToCmdDeleteComment());
                                 r2.log.Log_Simple("RemoveAnnot_Audio_RadialMenu");
                             }
                         }
@@ -393,7 +393,7 @@
                     r2.radialMenu.addBtnCircular($rm, 'fa-trash', 'erase', function(){
                         if(r2.userGroup.cur_user.name === username){
                             if(r2.removeAnnot(annot_id, true, false)){ // askuser, mute
-                                r2Sync.PushToUploadCmd(doc_model_piecekeyboard.ExportToCmdDeleteComment());
+                                r2Sync.uploader.pushCmd(doc_model_piecekeyboard.ExportToCmdDeleteComment());
                                 r2.log.Log_Simple("RemoveAnnot_Text_OnScrBtn");
                             }
                         }

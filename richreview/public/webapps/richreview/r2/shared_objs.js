@@ -58,8 +58,11 @@ var r2Const = (function () {
     pub.TIMEOUT_RESIZE_DELAY = 100;
     pub.TIMEOUT_PRIVATE_HIGHLIGHT_UPDATE = 5*1000;
     pub.TIMEOUT_STATIC_INK_UPDATE = 5*1000;
-    pub.DELAY_WEBLOG_RETRY = 3*1000;
-
+    pub.DELAY_WEBLOG_RETRY = 5*1000;
+    pub.DELAY_UPLOADCMDS_RETRY = 5*1000;
+    pub.INTERVAL_LOGPOST = 10*1000;
+    pub.INTERVAL_LOGRETRY = 3*1000;
+    pub.N_LOGRETRY = 3;
     // db sync polling interval
     pub.DB_SYNC_POLLING_INTERVAL = 10*1000; // 10 secs
 

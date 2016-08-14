@@ -421,7 +421,7 @@ var r2Ctrl = {};
                 }
                 if(mode === PenMode.TEARING){
                     mode = PenMode.NORMAL;
-                    r2Sync.PushToUploadCmd(cur_piece_tearing.ExportToCmd());
+                    r2Sync.uploader.pushCmd(cur_piece_tearing.ExportToCmd());
                     cur_piece_tearing = null;
                 }
                 if(mode === PenMode.ERASER){
@@ -1417,7 +1417,7 @@ var r2Ctrl = {};
             );
             anchorpiece.AddChildAtFront(piecekeyboard);
             piecekeyboard.Focus();
-            r2Sync.PushToUploadCmd(piecekeyboard.ExportToCmd());
+            r2Sync.uploader.pushCmd(piecekeyboard.ExportToCmd());
 
             r2App.invalidate_size = true;
             r2App.invalidate_page_layout = true;

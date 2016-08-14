@@ -29,6 +29,23 @@
         return runSerialPromises;
     }());
 
+    r2.makeLocalJs = function(url){
+        return $.get(url)
+            .then(function(data){
+                var blob;
+                try {
+                    blob = new Blob([data], {type: 'application/javascript'});
+                } catch (e) { // Backwards-compatibility
+                    window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+                    blob = new BlobBuilder();
+                    blob.append(data);
+                    blob = blob.getBlob();
+                }
+                return URL.createObjectURL(blob);
+            });
+    };
+
+
     r2.webappUrlMaps = (function(){
         var pub = {};
 
@@ -97,7 +114,10 @@
 
             r2.runSerialPromises(promises).then(
                 function(){
-                    PDFJS.workerSrc = 'https://richreview.azureedge.net/richreview/lib_ext/pdfjs/pdf.worker.js';
+                    r2.makeLocalJs('https://richreview.azureedge.net/richreview/lib_ext/pdfjs/pdf.worker.js') // prevent CORS issue
+                        .then(function(local_url){
+                            PDFJS.workerSrc = local_url;
+                        });
                     return r2.main.Run();
                 }
             ).catch(

@@ -59,7 +59,7 @@
                 // upload spotlight cmds
                 var private_spotlight_cmds = r2App.annot_private_spotlight.getCmdsToUpload();
                 if(private_spotlight_cmds){
-                    r2Sync.PushToUploadCmd(private_spotlight_cmds);
+                    r2Sync.uploader.pushCmd(private_spotlight_cmds);
                 }
 
                 // upload static ink cmds
@@ -67,7 +67,7 @@
                 static_ink_annots.forEach(function(annot){
                     var static_ink_cmds = annot.getCmdsToUpload();
                     if(static_ink_cmds){
-                        r2Sync.PushToUploadCmd(static_ink_cmds);
+                        r2Sync.uploader.pushCmd(static_ink_cmds);
                         console.log(static_ink_cmds);
                     }
                 });
@@ -76,7 +76,7 @@
                 var erase_ink_cmds = r2.inkCtrl.eraser.getCmdsToUpload();
                 if(erase_ink_cmds){
                     erase_ink_cmds.cmds.forEach(function(cmd){
-                        r2Sync.PushToUploadCmd(cmd);
+                        r2Sync.uploader.pushCmd(cmd);
                     });
                 }
 
@@ -300,8 +300,8 @@
                                 }
                             }
                         }
-                    ).catch(function(e){
-                        console.log(e);
+                    ).catch(function(err){
+                        console.error(err);
                     })
                 }
             )
@@ -460,7 +460,7 @@
                 var now_typing = r2.keyboard.getMode() === r2.KeyboardModeEnum.TEXTBOX &&
                         r2App.cur_focused_piece_keyboard != null &&
                         r2App.cur_focused_piece_keyboard.WasChanged();
-                var now_uploading = r2Sync.NowUploading() || r2App.annotStaticInkMgr.checkCmdToUploadExist();
+                var now_uploading = r2Sync.uploader.busy() || r2App.annotStaticInkMgr.checkCmdToUploadExist();
                 if (now_typing || now_uploading || r2App.annot_private_spotlight.changed) {
                     if (now_typing)
                         $(r2App.cur_focused_piece_keyboard.dom_textbox).blur();

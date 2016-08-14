@@ -446,6 +446,17 @@ var GetDocGroups = function(req, res){
     });
 };
 
+var WebAppLogs = function(req, res){
+    R2D.Logs(req.body.group_n, req.body.logs)
+        .then(function() {
+            js_utils.PostResp(res, req, 200);
+        })
+        .catch(function(err){
+            js_utils.PostResp(res, req, 500, err);
+
+        });
+};
+
 var WebAppLog = function(req, res){
     R2D.Log(req.body.group_n, req.body.log, function(err){
         if(err){
@@ -460,7 +471,10 @@ var WebAppLog = function(req, res){
 var isDocCourseSubmission = function(req, res){
     RedisClient.HGETALL('doc:'+req.body.docid).then(
         function(doc){
-            if(doc !== null && doc.crs_submission && JSON.parse(doc.crs_submission).course_id === req.body.course_id){
+            if(doc !== null &&
+                    doc.crs_submission &&
+                doc.crs_submission !== 'undefined' &&
+                JSON.parse(doc.crs_submission).course_id === req.body.course_id){
                 js_utils.PostResp(res, req, 200, {resp:true});
             }
             else{
@@ -529,6 +543,9 @@ exports.post = function(req, res){
             break;
         case "GetDocGroups":
             GetDocGroups(req, res);
+            break;
+        case "WebAppLogs":
+            WebAppLogs(req, res);
             break;
         case "WebAppLog":
             WebAppLog(req, res);

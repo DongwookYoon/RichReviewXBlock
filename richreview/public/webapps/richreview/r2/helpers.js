@@ -343,8 +343,9 @@
     r2.log = (function(){
         var pub = {};
         var log_q = [];
+        var upload_q = [];
 
-        pub.GetLogTemplate = function(op) {
+        var getLogTemplate = function(op) {
             var log = {};
             log.op = op;
             log.event_time = (new Date(r2App.cur_time)).toISOString();
@@ -356,50 +357,44 @@
         };
 
         pub.Log_Simple = function(op) {
-            log_q.push(this.GetLogTemplate(op));
+            log_q.push(getLogTemplate(op));
         };
 
         pub.Log_Nav = function(input){
-            var log = this.GetLogTemplate('Nav');
+            var log = getLogTemplate('Nav');
             log.viewpos = new Vec2();
             log.viewscale = new Vec2(r2.viewCtrl.scale);
             log.pagen = r2App.cur_pdf_pagen;
             log.input = input;
             log_q.push(log);
         };
-        pub.Log_RefreshCanvasSize = function(){
-            var log = this.GetLogTemplate('RefreshCanvasSize');
-            log.app_container_size = new Vec2(r2.viewCtrl.getAppContainerSize());
-            log.canv_px_size = new Vec2(r2.viewCtrl.canv_px_size);
-            log_q.push(log);
-        };
         pub.Log_AudioPlay = function(type, annotId, pbtime){
-            var log = this.GetLogTemplate('AudioPlay');
+            var log = getLogTemplate('AudioPlay');
             log.type = type;
             log.annotId = annotId;
             log.time = pbtime;
             log_q.push(log);
         };
         pub.Log_AudioStop = function(type, annotId, pbtime){
-            var log = this.GetLogTemplate('AudioStop');
+            var log = getLogTemplate('AudioStop');
             log.type = type;
             log.annotId = annotId;
             log.time = pbtime;
             log_q.push(log);
         };
         pub.Log_CommentHistory = function(type, annotId){
-            var log = this.GetLogTemplate('CommentHistory');
+            var log = getLogTemplate('CommentHistory');
             log.type = type;
             log.annotId = annotId;
             log_q.push(log);
         };
         pub.Log_Collapse = function(what){
-            var log = this.GetLogTemplate('Collapse');
+            var log = getLogTemplate('Collapse');
             log.what = what;
             log_q.push(log);
         };
         pub.Log_Expand = function(what){
-            var log = this.GetLogTemplate('Expand');
+            var log = getLogTemplate('Expand');
             log.what = what;
             log_q.push(log);
         };
@@ -422,7 +417,18 @@
                 }
             );
         };
-        pub.RemoveDuplicatesInQ = function(){
+
+        var upload = function(logs){
+            return r2.util.postToDbsServer(
+                'WebAppLogs',
+                {
+                    group_n : r2.ctx['groupid'],
+                    logs : logs.map(function(log){return JSON.stringify(log);})
+                }
+            )
+        };
+
+        var removeDuplicatesInQ = function(){
             var n_wheel = 0;
             var n, i;
             for(i = 0; i < log_q.length; ++i){
@@ -441,51 +447,46 @@
                     }
                 }
             }
-            var n_refresh_size = 0;
-            for(i = 0; i < log_q.length; ++i){
-                if(log_q[i].op == 'RefreshCanvasSize'){
-                    ++n_refresh_size;
-                }
+        };
+
+        var uploadReady = function(delayed) {
+            if( log_q.length === 0 || // when there's nothing to upload, or
+                upload_q.length !== 0){ // when there's something uploading now
+                return false;
             }
-            if(n_refresh_size > 0){
-                n = 1; // th
-                for(i = 0; i < log_q.length; ++i) {
-                    if(log_q[i].op == 'RefreshCanvasSize') {
-                        if(n != n_refresh_size){
-                            log_q.splice(i--, 1);
-                        }
-                        n++;
-                    }
-                }
+            // now there's something to upload
+            if(!delayed){ // upload right away
+                return true;
+            }
+            else if(Date.now() - (new Date(log_q[0].event_time)).getTime() > r2Const.INTERVAL_LOGPOST){
+                return true;
+            }
+            else{
+                return false;
             }
         };
-        /**
-         * @returns {boolean}
-         */
-        pub.GoodToFlushPost = function(delayed) {
-            var toPost = false;
-            if(log_q.length > 0){
-                if(delayed){
-                    if(Date.now() - (new Date(log_q[0].event_time)).getTime() > 3000){
-                        toPost = true;
-                    }
-                }
-                else{
-                    toPost = true;
-                }
-            }
-            return toPost;
-        };
+
         pub.Consume = function(delayed){
-            if(this.GoodToFlushPost(delayed)){
-                this.RemoveDuplicatesInQ();
-                while(log_q.length > 0){
-                    var l = log_q.shift();
-                    //console.log('r2.log Consume:', JSON.stringify(l));
-                    this.Post(l);
+            if(uploadReady(delayed)){
+                removeDuplicatesInQ();
+
+                while(log_q.length !== 0){
+                    upload_q.push(log_q.shift());
                 }
+
+                r2.util.retryPromise(upload(upload_q), r2Const.INTERVAL_LOGRETRY, r2Const.N_LOGRETRY)
+                    .then(function(){
+                        upload_q = [];
+                    })
+                    .catch(function(err){
+                        console.error(err, err.stack);
+                        r2.notify(
+                            'Failed to sync your data to the server. Please check your internet connection and retry.'
+                        );
+                    });
             }
         };
+
         return pub;
     })();
 
@@ -1092,24 +1093,6 @@
 
             return pub_q;
         }());
-
-
-        function scheduleRender(n_page){
-            if(now_rendering !== -1){
-
-            }
-            else{
-
-            }
-
-
-            if(npage_render.now == -1){ //
-                renderPage(n_page);
-            }
-            else{ // now rendering
-                npage_render.next = n_page;
-            }
-        }
 
         function renderPage(n_page){
             npage_render.now = n_page;

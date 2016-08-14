@@ -226,6 +226,21 @@
                 navigator.getUserMedia(
                     {audio: true},
                     function(stream){
+                        r2.makeLocalJs(r2.webappUrlMaps.get('lib_ext/recorder/recorderWorker.js'))
+                            .then(function(local_url){
+                                var src = audio_context.createMediaStreamSource(stream);
+                                window.leakMyAudioNodes = [src];
+                                recorder = new Recorder(
+                                    src,
+                                    {
+                                        worker_path: local_url,
+                                        buffer_size: r2.audioRecorder.RECORDER_BUFFER_LEN,
+                                        downsample_ratio: src.context.sampleRate < 44100 ? 1 : 2
+                                    }
+                                );
+                                resolve();
+                            });
+/*
                         var get_worker_script = new XMLHttpRequest();
                         get_worker_script.open("GET", r2.webappUrlMaps.get('lib_ext/recorder/recorderWorker.js'), true);
                         get_worker_script.onreadystatechange = function() {
@@ -252,7 +267,7 @@
                                 resolve();
                             }
                         };
-                        get_worker_script.send();
+                        get_worker_script.send();*/
                     },
                     function(err){
                         console.log(err);

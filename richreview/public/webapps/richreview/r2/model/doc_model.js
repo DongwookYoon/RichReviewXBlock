@@ -1205,7 +1205,7 @@
             $(this.dom).css("pointer-events", 'none');
             if(this.__contentschanged){
                 console.log('>>>>__contentschanged:', this.ExportToTextChange());
-                r2Sync.PushToUploadCmd(this.ExportToTextChange());
+                r2Sync.uploader.pushCmd(this.ExportToTextChange());
                 this.__contentschanged = false;
             }
         }.bind(this));
@@ -1504,7 +1504,7 @@
             $(this.dom).css("pointer-events", 'none');
             if(this.__contentschanged){
                 console.log('>>>>__contentschanged:', this.ExportToTextChange());
-                r2Sync.PushToUploadCmd(this.ExportToTextChange());
+                r2Sync.uploader.pushCmd(this.ExportToTextChange());
                 this.__contentschanged = false;
             }
         }.bind(this));

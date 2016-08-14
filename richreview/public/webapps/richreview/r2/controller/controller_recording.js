@@ -193,7 +193,7 @@
                 function(url, blob){
                     this.SetRecordingAudioFileUrl(url, blob);
                     if(to_upload)
-                        r2Sync.PushToUploadCmd(this.ExportToCmd());
+                        r2Sync.uploader.pushCmd(this.ExportToCmd());
                 }.bind(r2App.cur_recording_annot)
             );
             r2.PieceAudio.prototype.NormalizePieceAudio(r2App.cur_recording_pieceaudios, refresh_all = true);

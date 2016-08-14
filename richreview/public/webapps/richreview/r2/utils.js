@@ -337,6 +337,28 @@
             }
         };
 
+        pub.retryPromise = function(promise, interval, count){
+            return promise
+                .catch(function(err){
+                    if(count === 1){
+                        return Promise.reject(err);
+                    }
+                    else{
+                        return new Promise(function(resolve, reject){
+                            window.setTimeout(function(){
+                                pub.retryPromise(promise, interval, count-1)
+                                    .then(function(resp){
+                                        resolve(resp);
+                                    })
+                                    .catch(function(err){
+                                        reject(err);
+                                    })
+                            }, interval);
+                        });
+                    }
+                });
+        };
+
         return pub;
     }());
 

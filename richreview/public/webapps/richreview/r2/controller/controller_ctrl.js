@@ -225,8 +225,6 @@
         }
         r2App.invalidate_static_scene = true;
         r2App.invalidate_dynamic_scene = true;
-
-        //r2.log.Log_RefreshCanvasSize();
     };
 
 }(window.r2 = window.r2 || {}));

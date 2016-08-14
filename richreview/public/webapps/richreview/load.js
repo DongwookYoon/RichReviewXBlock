@@ -112,21 +112,21 @@
                 };
             });
 
-            r2.runSerialPromises(promises).then(
-                function(){
-                    r2.makeLocalJs('https://richreview.azureedge.net/richreview/lib_ext/pdfjs/pdf.worker.js') // prevent CORS issue
+            r2.runSerialPromises(promises)
+                .then(function(){
+                    return r2.makeLocalJs('https://richreview.azureedge.net/richreview/lib_ext/pdfjs/pdf.worker.js') // prevent CORS issue
                         .then(function(local_url){
                             PDFJS.workerSrc = local_url;
                         });
+                })
+                .then(function(){
                     return r2.main.Run();
-                }
-            ).catch(
-                function(err){
+                })
+                .catch(function(err){
                     //ToDo redirect back to the webpage when failed to load a resource.
                     console.log(err);
                     alert(err);
-                }
-            );
+                });
         };
 
         function loadScriptByUrlAndType(url, type){

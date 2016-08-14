@@ -255,15 +255,29 @@ function downloadCmds(req, res){
     }
 }
 
-var WebAppLogs = function(req, res){
-    LtiEngine.logs(req.body.group_n, req.body.logs)
-        .then(function() {
-            js_utils.PostResp(res, req, 200);
-        })
-        .catch(function(err){
-            js_utils.PostResp(res, req, 500, err);
+function uploadCmd(req, res){
+    if(assertLtiUser(req, res)){
+        LtiEngine.CmdRR.pushBack(req.body.groupid_n, req.body.cmd)
+            .then(function(){
+                js_utils.PostResp(res, req, 200);
+            })
+            .catch(function(err){
+                js_utils.PostResp(res, req, 500, err);
+            });
+    }
+}
 
-        });
+var WebAppLogs = function(req, res){
+    if(assertLtiUser(req, res)) {
+        LtiEngine.logs(req.body.group_n, req.body.logs)
+            .then(function () {
+                js_utils.PostResp(res, req, 200);
+            })
+            .catch(function (err) {
+                js_utils.PostResp(res, req, 500, err);
+
+            });
+    }
 };
 
 exports.post_dbs = function(req, res){
@@ -279,6 +293,9 @@ exports.post_dbs = function(req, res){
             break;
         case 'DownloadCmds':
             downloadCmds(req, res);
+            break;
+        case 'UploadCmd':
+            uploadCmd(req, res);
             break;
         default:
             handleLtiError(req, res, 'Invalid post operation : '+ req.query['op']);

@@ -281,11 +281,19 @@ var ListDb = function(_prefix){
     this.getAfter = function(id, n){ // get n+1 th to the last item
         return RedisClient.LRANGE(prefix+id, n, -1);
     };
-
 };
 
+var logs = function(group_n, logs){
+    var promises = logs.map(function(log){
+        return RedisClient.RPUSH('ltilog:'+group_n, log);
+    });
+    return Promise.all(promises);
+};
+
+exports.logs = logs;
 exports.CmdRR = new ListDb('lticmd_rr:');
 exports.GroupMgrRR = new GroupMgr('ltigrp_rr:');
 exports.GroupMgrBB = new GroupMgr('ltigrp_bb:');
 exports.User = User;
 exports.UserMgr = UserMgr;
+

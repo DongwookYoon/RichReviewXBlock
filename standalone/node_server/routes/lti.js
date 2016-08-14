@@ -255,6 +255,17 @@ function downloadCmds(req, res){
     }
 }
 
+var WebAppLogs = function(req, res){
+    LtiEngine.logs(req.body.group_n, req.body.logs)
+        .then(function() {
+            js_utils.PostResp(res, req, 200);
+        })
+        .catch(function(err){
+            js_utils.PostResp(res, req, 500, err);
+
+        });
+};
+
 exports.post_dbs = function(req, res){
     switch(req.query['op']){
         case 'del_user':
@@ -262,6 +273,9 @@ exports.post_dbs = function(req, res){
             break;
         case 'del_grp':
             delGrp(req, res);
+            break;
+        case 'WebAppLogs':
+            WebAppLogs(req, res);
             break;
         case 'DownloadCmds':
             downloadCmds(req, res);

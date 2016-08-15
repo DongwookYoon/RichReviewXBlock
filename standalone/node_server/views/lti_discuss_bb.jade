@@ -8,17 +8,46 @@ head(profile='http://www.w3.org/2005/10/profile')
     link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css')
     script(src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js')
     meta(charset='UTF-8')
-    title CornellX Online System
+    title CornellX Online Discussion System
     style
-        |
+        |#dposts{
+        |margin-bottom: 10px;
+        |}
+        |label{
+        |margin-top: 12px;
+        |}
 body
     .well
-        table.table.table-condensed#my_table
-            thead
-                tr#my_thead_tr
-            tbody#my_tbody
+        h1 CornellX Online Discussion System
+        label(for='goal')
+            |Assignment goal:
+        p(name='goal')
+            | The goal of this assignment is to have a discussion on a NY Times article about vanishing bees [
+            a(href ='https://www.nytimes.com/2014/09/29/us/the-head-scratching-case-of-the-vanishing-bees.html' target='_blank') link
+            | ].
+            | Your credit will be given after you write 3 new posts and 3 replies about other students' posts.
+
+        label(for='users')
+            |Users in this group:
+        p(name='users')
+            | You are the only user in this group.
+            | Other users will join this group soon.
+            | Refresh this page after waiting for ~30 min.
+
+        label(for='posts')
+            |Discussion Posts:
+        ul(id='dposts' class='list-group' name='posts')
+            li(class='list-group-item') There's no post yet.
+
+
+        html
+            body
+                form#lti_form(method='POST', action='/lti_discuss_bb')
+                    label(for='post') Write a Comment:
+                    textarea(class='form-control' rows='5' name='post' placeholder='Enter text here...')
+                    input(type="submit" value="Submit")
 
     script
         include ./lti_discuss_bb.js
-        |run('#{users_str}');
+        |run('#{bb_ctx}');
 

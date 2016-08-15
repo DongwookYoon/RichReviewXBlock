@@ -199,6 +199,14 @@ exports.get_discuss_rr = function(req, res){
 };
 
 exports.get_discuss_bb = function(req, res){
+    if(assertLtiUser(req, res)){
+        if(req.user.status === 'bb'){
+            res.render('lti_discuss_bb');
+        }
+        else{
+            handleLtiError(req, res, 'Invalid status :' + req.user.status);
+        }
+    }
 };
 
 function delUser(req, res){

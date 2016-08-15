@@ -1,4 +1,6 @@
 /**
  * Created by yoon on 8/12/16.
  */
-console.log('Lti Discuss');
+var run = function(bb_ctx){
+    console.log(bb_ctx);
+};

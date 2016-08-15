@@ -53,6 +53,9 @@ var r2Sync = (function(){
                 })
                 .catch(function(err){
                     busy = false;
+                    r2.notify(
+                        'Failed to sync your data to the server. Please check your internet connection and retry.'
+                    );
                     r2App.asyncErr.throw(err);
                 });
         };

@@ -11,15 +11,19 @@
         pub.handleError = function(err, msg){
             if(r2App.is_first_error && !err.silent){
                 r2App.is_first_error = false; // do not prompt error msgs for the subsequent errors
-                var detail = 'Error log: ';
+                var detail;
 
                 if(typeof err.status === 'number' && typeof err.statusText === 'string'){ // http error
+                    detail = 'HTTP ';
                     if(typeof msg === 'undefined') {
                         msg = 'The server responded with an error.';
                     }
+                    console.error(err);
+                    console.error(err.stack);
                     detail += err.status + ':' + err.statusText+ ', ' + (err.responseText || 'no reponse text') + ', ';
                 }
                 else{ // javascript error
+                    detail = 'System ';
                     if(typeof msg === 'undefined') {
                         msg = 'The system caught an error.';
                     }

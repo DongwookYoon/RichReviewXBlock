@@ -1045,3 +1045,29 @@ body::-webkit-scrollbar-corner {
 .rm_btn_center > i {
   font-size: 0.30em;
 }
+
+#cornellx_inst{
+  position: absolute;
+  width: 100%;
+  text-align: left;
+  padding: 2em;
+  padding-bottom: 0;
+  -webkit-user-select: all;
+  z-index: 100;
+}
+
+#cornellx_inst > h2{
+  font-size: 1em;
+  padding-top: 0;
+}
+
+#cornellx_inst > iframe{
+  float: right;
+  padding-right: 0.5em;
+  padding-left: 0.3em;
+  width: 20em;
+  height: 13em;
+}
+#cornellx_inst > p{
+  font-size: 0.8em;
+}

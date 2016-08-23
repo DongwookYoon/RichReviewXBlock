@@ -33,7 +33,7 @@
                     return null;
                 }
             );
-        };
+        }
 
         return pub;
     }());

@@ -303,6 +303,7 @@ function setupServices(){
     app.post('/course',     course.post);
     app.post('/lti_dbs',    lti.post_dbs);
     app.post('/lti_survey', lti.post_survey);
+    app.post('/lti_discuss_bb', lti.post_bb);
 }
 
 // redirections

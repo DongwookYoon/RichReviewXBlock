@@ -92,6 +92,10 @@ exports.get_admin = function(req, res){
             })
             .then(function(grps_rr){
                 data.grps_rr = grps_rr;
+                return LtiEngine.GroupMgrBB.loadAllFromDb();
+            })
+            .then(function(grps_bb){
+                data.grps_bb = grps_bb;
                 return null;
             })
             .then(function(){
@@ -170,7 +174,7 @@ exports.get_discuss_rr = function(req, res){
                 .then(function(grp_data) {
                     r2_ctx.lti_data.user = req.user;
                     r2_ctx.lti_data.group = grp_data;
-
+                    r2_ctx.groupid = grp_data.id;
                     var promises = r2_ctx.lti_data.group.users.map(function (user_id) {
                         return LtiEngine.UserMgr.getById(user_id);
                     });
@@ -201,7 +205,28 @@ exports.get_discuss_rr = function(req, res){
 exports.get_discuss_bb = function(req, res){
     if(assertLtiUser(req, res)){
         if(req.user.status === 'bb'){
-            res.render('lti_discuss_bb');
+            return LtiEngine.GroupMgrBB.assignUserIfNotSet(req.user)
+                .then(function(grp_data){
+                    var users = [];
+                    for(var i = 0; i < grp_data.users.length; i++){
+                        users.push(LtiEngine.UserMgr.getByIdSync(grp_data.users[i]));
+                    }
+                    var bb_ctx = {
+                        user: req.user,
+                        users: users,
+                        group: grp_data
+                    };
+                    res.render(
+                        'lti_discuss_bb',
+                        {
+                            bb_ctx: encodeURIComponent(JSON.stringify(bb_ctx))
+                        }
+                    );
+                    return null;
+                })
+                .catch(function(err){
+                    handleLtiError(req, res, err);
+                });
         }
         else{
             handleLtiError(req, res, 'Invalid status :' + req.user.status);
@@ -304,6 +329,49 @@ exports.post_dbs = function(req, res){
             break;
         case 'UploadCmd':
             uploadCmd(req, res);
+            break;
+        default:
+            handleLtiError(req, res, 'Invalid post operation : '+ req.query['op']);
+            break;
+    }
+};
+
+function postBbGet(req, res){
+    if(assertLtiUser(req, res)) {
+        var resp = {};
+        LtiEngine.CmdBB.getAfter(
+            req.body.groupid_n,
+            0) // get all
+            .then(function(cmds) {
+                return js_utils.PostResp(res, req, 200, cmds);
+            })
+            .catch(function(err){
+                js_utils.PostResp(res, req, 400, err);
+            });
+    }
+}
+
+function postBbCmd(req, res){
+    if(assertLtiUser(req, res)) {
+        req.body.cmd.time = (new Date()).getTime();
+        LtiEngine.CmdBB.pushBack(req.body.groupid_n, JSON.stringify(req.body.cmd))
+            .then(function(){
+                js_utils.PostResp(res, req, 200);
+            })
+            .catch(function(err){
+                js_utils.PostResp(res, req, 500, err);
+            });
+    }
+}
+
+// services for bbs
+exports.post_bb = function(req, res){
+    switch(req.query['op']){
+        case 'get':
+            postBbGet(req, res);
+            break;
+        case 'cmd':
+            postBbCmd(req, res);
             break;
         default:
             handleLtiError(req, res, 'Invalid post operation : '+ req.query['op']);

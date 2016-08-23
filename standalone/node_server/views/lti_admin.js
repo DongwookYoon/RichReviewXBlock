@@ -87,11 +87,9 @@ function setUsers(users){
     }
 }
 
-function setGroupsRR(grps){
+function setGroups(grps, $thead_tr, $tbody, type_str){
     var i, j, $tr, $td, grp;
     var row_items = ['id', 'users', 'creationTime'];
-    var $thead_tr = $('#thead_tr_rr');
-    var $tbody = $('#tbody_rr');
 
     for(i = 0, row_item = null; i < row_items.length; i++){
         row_item = row_items[i];
@@ -127,7 +125,7 @@ function setGroupsRR(grps){
                         'delete',
                         function(){
                             if(confirm('Delete a group?')){
-                                $.post("/lti_dbs?op=del_grp", {type: 'rr', grp_id: grp.id})
+                                $.post("/lti_dbs?op=del_grp", {type: type_str, grp_id: grp.id})
                                     .done(function() {
                                         window.location.reload();
                                     })
@@ -149,8 +147,8 @@ function setGroupsRR(grps){
 function run(data_str){
     var data = JSON.parse(decodeURIComponent(data_str));
     setUsers(data.users);
-    setGroupsRR(data.grps_rr);
-
+    setGroups(data.grps_rr, $('#thead_tr_rr'), $('#tbody_rr'), 'rr');
+    setGroups(data.grps_bb, $('#thead_tr_bb'), $('#tbody_bb'), 'bb');
 
     var $table = $('.table');
     $table.css('font-size', 'small');

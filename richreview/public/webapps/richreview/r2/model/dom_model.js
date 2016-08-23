@@ -72,6 +72,7 @@
                     $tc_page.css('display','none');
                     $tc_pages.push($tc_page);
                 }
+                insertCornellXinstruction($tc_pages[0]);
             };
 
             var loadPage = function(page, npage){
@@ -127,6 +128,19 @@
                 }
 
                 return $tight_col;
+            };
+
+            var insertCornellXinstruction = function($tc_page0){
+                if(r2.ctx.pdf_url.indexOf('34811a7b62e4461316fc5aab8f655041fc3b01bc/doc.pdf') > 0){
+                    r2.util.getUrlData(r2.webappUrlMaps.get('htmls/cornellx_intro.xml'), '')
+                        .then(function(resp) {
+                            var $div = $('<div></div>');
+                            $div.attr('id', 'cornellx_inst');
+                            $div.html(resp);
+                            $tc_page0.prepend($div);
+                            return null;
+                        });
+                }
             };
 
             return pub_loader;

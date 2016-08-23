@@ -180,22 +180,20 @@
                 event.preventDefault();
                 if (answeredRadio("scr_rdr") && answeredRadio("age_legal")) {
                     var form_val = getFormData();
-                    if(!toShowConsentForm() ||
-                            (form_val.consent === "yes" && form_val.signature !== "")
-                    ){
+                    if(toShowConsentForm() && form_val.consent === "yes" && form_val.signature === ""){
+                        alert("Please provide your signature to confirm your consent.");
+                    }
+                    else{
                         $.post("/lti_survey", {survey_resp: form_val})
                             .done(function() {
                                 alert("Your answers were successfully submitted. Now you will be redirected to the discussion tool.");
                                 window.location.replace(
-                                    form_val.consent === "yes" ? "/lti_discuss_rr" : "lti_discuss_bb"
+                                        form_val.consent === "yes" ? "/lti_discuss_rr" : "lti_discuss_bb"
                                 );
                             })
                             .fail(function() {
                                 alert("Oops. Server error. Please get back to the edX.org and retry. If it\'s the same after 10 min, please report this to dy252@cornell.edu.\n\n");
                             });
-                    }
-                    else{
-                        alert("Please provide your signature to confirm your consent.");
                     }
                     return true;
                 }

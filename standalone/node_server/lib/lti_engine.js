@@ -26,6 +26,10 @@ var UserMgr = (function(){
         return assertId(id);
     };
 
+    pub.getByIdSync = function(id){
+        return cache[id];
+    };
+
     pub.delById= function(id){
         return assertId(id)
             .then(function(user){
@@ -141,7 +145,6 @@ var GroupMgr = function(prefix){
     var next_grp_id = null; // without prefix
 
     this.assignUserIfNotSet = function(user){
-        var data = {};
         if(user.group === ''){ // if not set
             return lock.acquire('assignUserIfNotSet', function(){ // lock
                 return getAvailableGroup(user)
@@ -228,7 +231,7 @@ var GroupMgr = function(prefix){
                     grp.id,
                     'users',
                     grp.users,
-                    true
+                    true // json type
                 )
             }.bind(this));
     }.bind(this);
@@ -292,6 +295,7 @@ var logs = function(group_n, logs){
 
 exports.logs = logs;
 exports.CmdRR = new ListDb('lticmd_rr:');
+exports.CmdBB = new ListDb('lticmd_bb:');
 exports.GroupMgrRR = new GroupMgr('ltigrp_rr:');
 exports.GroupMgrBB = new GroupMgr('ltigrp_bb:');
 exports.User = User;

@@ -4,48 +4,85 @@
 doctype html(lang='en')
 head(profile='http://www.w3.org/2005/10/profile')
     script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js')
+    script(src='https://richreview.azureedge.net/lib/jquery.timeago.js')
     link(rel='shortcut icon', href='https://richreview.azureedge.net/favicon.ico', type='image/x-icon')
     link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css')
+    link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css')
+    link(rel='stylesheet', href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome-animation/0.0.9/font-awesome-animation.min.css')
     script(src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js')
     meta(charset='UTF-8')
     title CornellX Online Discussion System
     style
-        |#dposts{
+        |h2{
+        |font-size: 14px;
+        |font-weight:bold;
+        |}
+        |h3{
+        |font-size: 14px;
+        |font-weight:bold;
+        |margin-top: 4px;
+        |margin-bottom: 4px;
+        |margin-left: 4px;
+        |}
+        |form{
+        |margin-bottom: 0;
+        |}
+        |.list-group{
+        |margin-bottom:0;
+        |}
+        |h3.replies_indent{
+        |margin-top: 14px;
+        |}
+        |.replies_indent{
+        |margin-left: 5%;
+        |}
+        |#posts_ul{
         |margin-bottom: 10px;
         |}
-        |label{
-        |margin-top: 12px;
+        |li.list-group-item{
+        |overflow: auto;
+        |padding: 15px 20px;
+        |}
+        |p.ago{
+        |margin-bottom: 0;
+        |margin-right: 8px;
+        |display: inline-block;
+        |font-style: italic;
+        |font-weight: bold;
+        |}
+        |button.posts_btn{
+        |padding: 0 6px;
+        |margin-right: 5px;
+        |margin-top: 5px;
+        |font-size: 14px;
+        |vertical-align: baseline;
         |}
 body
     .well
         h1 CornellX Online Discussion System
-        label(for='goal')
-            |Assignment goal:
-        p(name='goal')
+
+        h2 Assignment goal:
+        p
             | The goal of this assignment is to have a discussion on a NY Times article about vanishing bees [
             a(href ='https://www.nytimes.com/2014/09/29/us/the-head-scratching-case-of-the-vanishing-bees.html' target='_blank') link
             | ].
             | Your credit will be given after you write 3 new posts and 3 replies about other students' posts.
 
-        label(for='users')
-            |Users in this group:
-        p(name='users')
+        h2 Users in this group:
+        p#users_text
             | You are the only user in this group.
             | Other users will join this group soon.
-            | Refresh this page after waiting for ~30 min.
+            | Refresh this page after waiting for ~15 min.
 
-        label(for='posts')
-            |Discussion Posts:
-        ul(id='dposts' class='list-group' name='posts')
-            li(class='list-group-item') There's no post yet.
-
-
-        html
-            body
-                form#lti_form(method='POST', action='/lti_discuss_bb')
-                    label(for='post') Write a Comment:
-                    textarea(class='form-control' rows='5' name='post' placeholder='Enter text here...')
-                    input(type="submit" value="Submit")
+        h2 Discussion posts:
+        ul#posts_ul.list-group
+            li.list-group-item#new_comment_li
+                form#new_comment_form
+                    h3 Write a New Post:
+                    textarea(class='form-control' rows='5' name='texts' placeholder='Enter text here...')
+                    button.btn.btn-sm.btn-primary.posts_btn#new_comment_btn Save
+            li.list-group-item#spinner
+                i.fa.fa-refresh.fa-spin
 
     script
         include ./lti_discuss_bb.js

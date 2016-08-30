@@ -154,3 +154,17 @@ exports.CreateBlobFromLocalFile = function(ctx){
         }
     });
 };
+
+exports.ListBlobsWithPrefix = function(container, prefix){
+    return new Promise(function(resolve, reject){
+        blob_svc.listBlobsSegmentedWithPrefix(container, prefix, undefined, function(err, resp){
+            if(err){
+                reject(err);
+            }
+            else{
+                resolve(resp.entries.map(function(entity){return BLOB_HOST+'data/'+entity.name;}));
+            }
+        });
+
+    })
+};

@@ -501,6 +501,21 @@ var GetUploadSas = function(req, res){
     }
 };
 
+var GetRrrDatabase = function(req, res){
+    if(req.user){
+        azure.ListBlobsWithPrefix('data', 'audio/rrr_')
+            .then(function(resp){
+                js_utils.PostResp(res, req, 200, resp);
+            })
+            .catch(function(err){
+                js_utils.PostResp(res, req, 400, err);
+            })
+    }
+    else{
+        js_utils.PostResp(res, req, 400, 'Invalid user identity');
+    }
+};
+
 exports.post = function(req, res){
     switch(req.query['op']){
         case "GetMyself":
@@ -568,6 +583,9 @@ exports.post = function(req, res){
             break;
         case "GetUploadSas":
             GetUploadSas(req, res);
+            break;
+        case "GetRrrDatabase":
+            GetRrrDatabase(req, res);
             break;
         default:
             js_utils.PostResp(res, req, 500, "Unidentified request: "+req.query['op']);

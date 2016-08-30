@@ -260,37 +260,6 @@
             });
         };
 
-        pub.ajaxPostTextData = function(data, progressCb){
-            return new Promise(function(resolve, reject){
-                var posting = $.ajax({
-                    type: 'POST',
-                    url: r2.ctx.upload_audio_url,
-                    data: data,
-                    dataType: 'text',
-                    xhr: function() {  // custom xhr
-                        var myXhr = $.ajaxSettings.xhr();
-                        if(myXhr.upload){ // check if upload property exists
-                            myXhr.upload.addEventListener(
-                                'progress',
-                                progressCb,
-                                false); // for handling the progress of the upload
-                        }
-                        return myXhr;
-                    }
-                });
-                posting.success(
-                    function(resp) {
-                        resolve(resp);
-                    }
-                );
-                posting.fail(
-                    function(err) {
-                        reject(err);
-                    }
-                );
-            });
-        };
-
         pub.postToDbsServer = function(op, msg){
             return new Promise(function(resolve, reject){
                 var url = r2.ctx.serve_dbs_url + 'op=' + op;
@@ -303,6 +272,40 @@
                 });
             });
         };
+
+        pub.putBlobWithSas = function(url, sas, blob){
+            return new Promise(function(resolve, reject){
+                var blob_reader = new FileReader();
+                blob_reader.onloadend = function(evt){
+                    if (evt.target.readyState === FileReader.DONE) {
+                        var requestData = new Uint8Array(evt.target.result);
+                        $.ajax({
+                            url: url+'?'+sas,
+                            type: 'PUT',
+                            data: requestData,
+                            processData: false,
+                            beforeSend: function(xhr) {
+                                xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
+                            },
+                            xhr: function(){
+                                var xhr = new window.XMLHttpRequest();
+                                xhr.upload.addEventListener(
+                                    'load',
+                                    function(e){
+                                        resolve(url);
+                                    },
+                                    false
+                                );
+                                return xhr;
+                            },
+                            error: reject
+                        });
+                    }
+                };
+                blob_reader.readAsArrayBuffer(blob);
+            });
+        };
+
 
         pub.escapeDomId = function(s){
             return s.replace(/\.|\-|T|\:/g, '_');

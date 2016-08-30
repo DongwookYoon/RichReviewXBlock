@@ -166,7 +166,6 @@ exports.get_discuss_rr = function(req, res){
                 pdf_url: azure.BLOB_HOST + DISCUSS_PDF_ID + "/doc.pdf",
                 pdfjs_url: azure.BLOB_HOST + DISCUSS_PDF_ID + "/doc.vs_doc",
                 serve_dbs_url: js_utils.getHostname() + '/lti_dbs?',
-                upload_audio_url: js_utils.getHostname() + '/uploadaudioblob?',
                 lti: true,
                 lti_data: {}
             };

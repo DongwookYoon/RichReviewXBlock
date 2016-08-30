@@ -28,7 +28,6 @@ exports.page = function (req, res) {
             pdf_url: azure.BLOB_HOST + urlqueries["access_code"] + "/doc.pdf",
             pdfjs_url: azure.BLOB_HOST + urlqueries["access_code"] + "/doc.vs_doc",
             serve_dbs_url: js_utils.getHostname() + '/dbs?',
-            upload_audio_url: js_utils.getHostname() + '/uploadaudioblob?',
             pmo: urlqueries["pmo"] || "",
             comment: urlqueries["comment"] || ""
         };

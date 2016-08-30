@@ -134,31 +134,11 @@ var r2Sync = (function(){
         };
 
         var uploadAudioBlob = function(annot){
-            return new Promise(function(resolve, reject){
-                var blob = annot.GetRecordingAudioBlob();
-                var reader = new FileReader();
-                reader.onload = function(event){
-                    var data = {};
-                    data["fname"] = annot.GetUsername()+"_"+annot.GetId();
-                    data["data"] = event.target.result;
-                    var progressCb = function (event) {
-                        if (event.lengthComputable) {
-                            $( "#main_progress_bar" ).progressbar({
-                                value: 100.0*event.loaded/event.total
-                            });
-                        }
-                    };
-                    r2.util.ajaxPostTextData(
-                        data,
-                        progressCb
-                    ).then(
-                        function(blob_url){
-                            resolve(r2App.file_storage_url+"data/"+blob_url);
-                        }
-                    ).catch(reject);
-                };
-                reader.readAsDataURL(blob);
-            });
+            return r2.util.postToDbsServer('GetUploadSas', {fname:annot.GetUsername()+"_"+annot.GetId()})
+                .then(function(resp){
+                    return r2.util.putBlobWithSas(resp.url, resp.sas, annot.GetRecordingAudioBlob());
+                })
+
         };
 
         var uploadAudioBlobIfNeeded = function(){

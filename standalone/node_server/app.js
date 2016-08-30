@@ -35,6 +35,7 @@ var resources = require('./routes/resources');
 var course = require('./routes/course');
 var bluemix_stt_auth = require('./routes/bluemix_stt_auth');
 var lti = require('./routes/lti');
+var rrr = require('./routes/rrr');
 
 mkdirp('../_temp');
 mkdirp('../cache');
@@ -108,7 +109,10 @@ function setupStaticPages(){
         '/mupla_pdfs',
         express.static(path.resolve(__dirname, env.path.temp_pdfs), { maxAge: 30*1000 })
     );
-
+    app.use(
+        '/rrr',
+        express.static('/Users/rrr/', { maxAge: 30*1000 })
+    );
 }
 
 // passport-based login layer
@@ -298,7 +302,6 @@ function setupServices(){
     app.post('/dataviewer', dataviewer.post);
     app.post('/upload',     upload.post);
     app.post('/support',    support.post);
-    app.post('/uploadaudioblob', upload.post_audioblob);
     app.post('/resources',  resources.post);
     app.post('/course',     course.post);
     app.post('/lti_dbs',    lti.post_dbs);

@@ -57,7 +57,6 @@ function RichReviewXBlock(runtime, element) {
                         r2.scroll_wrapper = window;
                         r2.ctx = r2_ctx;
                         r2.ctx.serve_dbs_url = runtime.handlerUrl(element, 'serve_dbs')+'?';
-                        r2.ctx.upload_audio_url = runtime.handlerUrl(element, 'upload_audio')+'?';
                         r2.ctx.pmo = "";
                         r2.ctx.comment = "";
                         r2.loadApp(r2_ctx.app_urls);

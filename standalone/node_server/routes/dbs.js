@@ -488,6 +488,19 @@ var isDocCourseSubmission = function(req, res){
     )
 };
 
+var GetUploadSas = function(req, res){
+    if(req.user){
+        var filename = "audio/"+req.body.fname+".wav";
+        filename = filename.replace(":", "_");
+        var sas = azure.getSas('data', filename, 300);// 5 minutes
+        js_utils.PostResp(res, req, 200, {sas: sas, url: azure.BLOB_HOST+'data/'+filename});
+        return null;
+    }
+    else{
+        js_utils.PostResp(res, req, 400, 'Invalid user identity');
+    }
+};
+
 exports.post = function(req, res){
     switch(req.query['op']){
         case "GetMyself":
@@ -552,6 +565,9 @@ exports.post = function(req, res){
             break;
         case "isDocCourseSubmission":
             isDocCourseSubmission(req, res);
+            break;
+        case "GetUploadSas":
+            GetUploadSas(req, res);
             break;
         default:
             js_utils.PostResp(res, req, 500, "Unidentified request: "+req.query['op']);

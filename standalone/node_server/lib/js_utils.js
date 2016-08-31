@@ -425,3 +425,7 @@ exports.validateEmail = function(email){
         return false;
     }
 };
+
+exports.logTimeAndUser = function(req, msg){
+    console.log('>>>', msg, (new Date()).toString(), req.user ? req.user.email : 'unknown user');
+};

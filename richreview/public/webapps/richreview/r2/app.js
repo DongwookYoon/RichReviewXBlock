@@ -424,6 +424,7 @@
             r2.modalWindowLoading.hideModalWindow();
             r2.modalWindowIntro.Init();
             r2.log.Log_Simple('DoneLoading');
+            r2.log.SyncLog('WebAppBgn');
 
             r2.pageNumBox.init();
         }
@@ -456,6 +457,7 @@
             // prevent data loss
             window.onbeforeunload = function () {
                 localStorage.clear();
+                r2.log.SyncLog('WebAppEnd');
                 r2.log.Consume(false); // delayed
                 var now_typing = r2.keyboard.getMode() === r2.KeyboardModeEnum.TEXTBOX &&
                         r2App.cur_focused_piece_keyboard != null &&

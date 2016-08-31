@@ -399,6 +399,13 @@
             log_q.push(log);
         };
 
+        pub.SyncLog = function(what){
+            $.get('synclog?what='+what)
+                .fail(function(err){
+                    console.error(err);
+                });
+        };
+
         var upload = function(logs){
             return r2.util.postToDbsServer(
                 'WebAppLogs',

@@ -111,7 +111,7 @@ function setupStaticPages(){
     );
     app.use(
         '/rrr',
-        express.static('/Users/rrr/', { maxAge: 30*1000 })
+        express.static('/home/rrr/', { maxAge: 30*1000 })
     );
 }
 

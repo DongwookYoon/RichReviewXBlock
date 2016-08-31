@@ -10,6 +10,7 @@ exports.about = function (req, res) {
 };
 
 exports.logout = function(req, res){
+    js_utils.logTimeAndUser(req, 'Logout');
     req.logout();
     res.redirect(
         'https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue='+
@@ -32,4 +33,9 @@ exports.admin = function(req, res){
     catch(err){
         res.render('_pages_admin', {user: req.user, access: 'user'});
     }
+};
+
+exports.getSyncLog = function(req, res){
+    js_utils.logTimeAndUser(req, 'SyncLog/'+req.query.what);
+    res.send(200);
 };

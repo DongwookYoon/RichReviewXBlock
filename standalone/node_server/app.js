@@ -35,7 +35,6 @@ var resources = require('./routes/resources');
 var course = require('./routes/course');
 var bluemix_stt_auth = require('./routes/bluemix_stt_auth');
 var lti = require('./routes/lti');
-var rrr = require('./routes/rrr');
 
 mkdirp('../_temp');
 mkdirp('../cache');
@@ -182,6 +181,7 @@ function passportSetup(){
     app.post('/login_cornell_return',
         passport.authenticate('wsfed-saml2', { failureRedirect: '/login_cornell', failureFlash: true }),
         function(req, res) {
+            js_utils.logTimeAndUser(req, 'Login');
             res.redirect(req.session.latestUrl || '/');
         }
     );
@@ -295,6 +295,7 @@ function setupServices(){
     app.get('/lti_survey', lti.get_survey);
     app.get('/lti_discuss_rr', lti.get_discuss_rr);
     app.get('/lti_discuss_bb', lti.get_discuss_bb);
+    app.get('/synclog',     _pages.getSyncLog);
 
     // post requests
     app.post('/dbs',        dbs.post);

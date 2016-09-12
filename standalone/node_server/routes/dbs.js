@@ -501,19 +501,22 @@ var GetUploadSas = function(req, res){
     }
 };
 
+var GetRrrUploadSas = function(req, res){
+    var filename = "audio/"+req.body.fname+".wav";
+    filename = filename.replace(":", "_");
+    var sas = azure.getSas('data', filename, 300);// 5 minutes
+    js_utils.PostResp(res, req, 200, {sas: sas, url: azure.BLOB_HOST+'data/'+filename});
+    return null;
+};
+
 var GetRrrDatabase = function(req, res){
-    if(req.user){
-        azure.ListBlobsWithPrefix('data', 'audio/rrr_')
-            .then(function(resp){
-                js_utils.PostResp(res, req, 200, resp);
-            })
-            .catch(function(err){
-                js_utils.PostResp(res, req, 400, err);
-            })
-    }
-    else{
-        js_utils.PostResp(res, req, 400, 'Invalid user identity');
-    }
+    azure.ListBlobsWithPrefix('data', 'audio/rrr_')
+        .then(function(resp){
+            js_utils.PostResp(res, req, 200, resp);
+        })
+        .catch(function(err){
+            js_utils.PostResp(res, req, 400, err);
+        })
 };
 
 exports.post = function(req, res){
@@ -583,6 +586,9 @@ exports.post = function(req, res){
             break;
         case "GetUploadSas":
             GetUploadSas(req, res);
+            break;
+        case "GetRrrUploadSas":
+            GetRrrUploadSas(req, res);
             break;
         case "GetRrrDatabase":
             GetRrrDatabase(req, res);

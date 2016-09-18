@@ -227,5 +227,47 @@
         r2App.invalidate_dynamic_scene = true;
     };
 
+    r2.speechUi = (function(){
+        var pub = {};
+
+        pub.mode = null;
+
+        var mode_map = {
+            'waveform': r2App.RecordingUI.WAVEFORM,
+            'simplespeech': r2App.RecordingUI.SIMPLE_SPEECH,
+            'newspeak': r2App.RecordingUI.NEW_SPEAK
+        };
+
+        pub.init = function(){
+            var cookie_setting = r2.util.getCookie('r2_speech_ui');
+            if( cookie_setting === 'waveform' ||
+                cookie_setting === 'newspeak' ||
+                cookie_setting === 'simplespeech'){
+                pub.set(cookie_setting);
+            }
+            else{
+                pub.set('waveform');
+            }
+        };
+
+        pub.set = function(type_str){
+            reset();
+            pub.mode = mode_map[type_str];
+            $('#btn-group-speech-ui-select').find('.'+type_str).toggleClass('btn-primary', true);
+            r2.util.setCookie('r2_speech_ui', type_str, 7);
+        };
+
+        function reset(){
+            var uis = ['.waveform', '.newspeak', '.simplespeech'];
+            for(var i = 0; i < uis.length; ++i){
+                var ui = uis[i];
+                $('#btn-group-speech-ui-select').find(ui).toggleClass('btn-default', true);
+                $('#btn-group-speech-ui-select').find(ui).toggleClass('btn-primary', false);
+            }
+        }
+
+        return pub;
+    }());
+
 }(window.r2 = window.r2 || {}));
 

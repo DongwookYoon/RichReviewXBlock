@@ -414,6 +414,7 @@
 
             r2.booklet.initBooklet();
             r2.cheatSheet.Init();
+            r2.speechUi.init();
 
             if(typeof r2.ctx["comment"] === 'string' && r2.ctx["comment"] !== ''){
                 var searchresult = r2App.doc.SearchPieceByAnnotId(r2.ctx["comment"]);

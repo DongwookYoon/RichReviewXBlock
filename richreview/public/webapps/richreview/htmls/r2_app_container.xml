@@ -2,7 +2,7 @@
 <div id="cover_msg">
     <div id="cover_msg_text">
         <p>
-            <i class="fa fa-microphone"></i> &nbspRichReview is setting up your microphone.
+            <i class="fa fa-microphone"></i> RichReview is setting up your microphone.
         </p>
         <p>
             <a>
@@ -58,7 +58,18 @@
                 </button>
             </div>
         </div>
-
+        <div style="float:right;margin: 0 6px;">
+            <div id="btn-group-speech-ui-select" class="btn-group">
+                <button type="button" class="btn btn-sm btn-primary btn-dashboard dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fa fa-gear"></i>
+                </button>
+                <div class="dropdown-menu  pull-right">
+                    <button class="waveform dropdown-item btn btn-sm btn-default" onclick="r2.speechUi.set('waveform')">Waveform</button>
+                    <button class="newspeak dropdown-item btn btn-sm btn-default" onclick="r2.speechUi.set('newspeak')">NS</button>
+                    <button class="simplespeech dropdown-item btn btn-sm btn-default" onclick="r2.speechUi.set('simplespeech')">SS</button>
+                </div>
+            </div>
+        </div>
 
         <div style="float:right;margin:0 6px;" >
             <div style="float:left;margin: 0" >

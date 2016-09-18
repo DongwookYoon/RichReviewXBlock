@@ -562,6 +562,19 @@ a:active {
   padding:4px 2px;
 }
 
+#btn-group-speech-ui-select .dropdown-menu {
+  padding: 5px;
+  margin: 0;
+  min-width: 0;
+  position: absolute;
+  background: white;
+}
+
+#btn-group-speech-ui-select .dropdown-item {
+  margin: 0;
+  width: 120px;
+}
+
 #page_nav_input {
   width: 33px;
   text-align: center;

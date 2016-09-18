@@ -98,6 +98,7 @@
             /* set context */
             r2App.cur_recording_anchor_piece = anchor_piece;
             r2App.cur_recording_pieceaudios = [];
+            r2App.cur_recording_piece = null;
 
             /* create piece */
             funcCreatePiece(anchor_piece, annotid);
@@ -123,6 +124,7 @@
             );
             pieceaudio.SetPieceAudio(annotid, r2.userGroup.cur_user.name, 0, 0);
             r2App.cur_recording_pieceaudios.push(pieceaudio);
+            r2App.cur_recording_piece = pieceaudio;
             anchor_piece.AddChildrenAtFront(r2App.cur_recording_pieceaudios);
 
             /* update dom with the object */
@@ -144,6 +146,7 @@
                 true // live_recording
             );
             anchor_piece.AddChildAtFront(piece_editable_audio);
+            r2App.cur_recording_piece = piece_editable_audio;
 
             // set event trigger
             bluemix_stt.messageParser.setCallbacks(
@@ -188,30 +191,39 @@
         };
 
         var run = function(to_upload, funcOn){
-            /* end audio recording */
-            r2.audioRecorder.EndRecording(
-                function(url, blob){
-                    this.SetRecordingAudioFileUrl(url, blob);
-                    if(to_upload)
-                        r2Sync.uploader.pushCmd(this.ExportToCmd());
-                }.bind(r2App.cur_recording_annot)
-            );
-            r2.PieceAudio.prototype.NormalizePieceAudio(r2App.cur_recording_pieceaudios, refresh_all = true);
-
-            /* update dom */
-            r2.dom_model.cbRecordingStop(r2App.cur_recording_annot.GetId());
-
-            /* release context */
-            r2App.cur_recording_annot = null;
-            r2App.cur_recording_pieceaudios = null;
-
-            /* update system variables */
-            r2.dom.disableRecordingIndicators();
+            // stop recording mode
             r2App.mode = r2App.AppModeEnum.IDLE;
-            r2App.invalidate_size = true;
-            r2App.invalidate_page_layout = true;
 
-            funcOn();
+            /* end audio recording */
+            r2.audioRecorder.EndRecording().then(
+                function(result){
+                    r2.PieceAudio.prototype.NormalizePieceAudio(r2App.cur_recording_pieceaudios, refresh_all = true);
+
+                    /* annot */
+                    r2App.cur_recording_annot.SetRecordingAudioFileUrl(result.url, result.blob, result.buffer);
+
+                    /* upload */
+                    if(to_upload)
+                        r2Sync.uploader.pushCmd(r2App.cur_recording_annot.ExportToCmd());
+
+                    /* update dom */
+                    r2.dom.disableRecordingIndicators();
+
+                    r2.dom_model.cbRecordingStop(r2App.cur_recording_piece.GetAnnotId());
+
+                    /* release context */
+                    r2App.cur_recording_annot = null;
+                    r2App.cur_recording_pieceaudios = null;
+                    r2App.cur_recording_piece = null;
+
+                    r2App.invalidate_size = true;
+                    r2App.invalidate_page_layout = true;
+                    r2App.invalidate_dynamic_scene = true;
+                    r2App.invalidate_static_scene = true;
+
+                    funcOn();
+                }
+            );
         };
 
         var onPieceAudio = function(){

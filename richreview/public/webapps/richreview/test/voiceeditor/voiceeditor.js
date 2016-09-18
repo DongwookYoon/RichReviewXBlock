@@ -727,30 +727,32 @@ var VoiceAnnotationController = function (annotationElement, editable, staticBlo
         recordButton.html('<i class="fa fa-microphone"></i>');
         this.enterLoadingMode('Processing...');
         $.publish('hardsocketstop');
-        r2.audioRecorder.EndRecording(function(url, blob, buffer){
-            finishedRecordingUrl = url;
-            recordingBuffer = buffer.subarray(44);
+        r2.audioRecorder.EndRecording().then(
+            function(result){
+                finishedRecordingUrl = result.url;
+                recordingBuffer = result.buffer.subarray(44);
 
-            //For regular, non-streamed transcriptions:
-            if (r2.audioRecorder.liveRecording == false) {
-                _this.transcriptAudio(viewContext, finishedRecordingUrl);
-            } else {
-                if (socketClosed && finishedRecordingUrl) {
-                    if (transcriptFinalized)
-                        finishRecording();
-                    else {
-                        recordingProcessTimeout = setTimeout(function () {
-                            alert("We didn't quite catch that. Please try again!");
-                            AudioCoordinator.renderAudio(renderCompletion);
-                            areaElement.find('.recording_start_btn').stopLoadingBlink();
-                            areaElement.find('.play_btn').implicitEnable();
-                            _this.exitLoadingMode();
-                            currentlyRecording = false;
-                        }, 3000);
+                //For regular, non-streamed transcriptions:
+                if (r2.audioRecorder.liveRecording == false) {
+                    _this.transcriptAudio(viewContext, finishedRecordingUrl);
+                } else {
+                    if (socketClosed && finishedRecordingUrl) {
+                        if (transcriptFinalized)
+                            finishRecording();
+                        else {
+                            recordingProcessTimeout = setTimeout(function () {
+                                alert("We didn't quite catch that. Please try again!");
+                                AudioCoordinator.renderAudio(renderCompletion);
+                                areaElement.find('.recording_start_btn').stopLoadingBlink();
+                                areaElement.find('.play_btn').implicitEnable();
+                                _this.exitLoadingMode();
+                                currentlyRecording = false;
+                            }, 3000);
+                        }
                     }
                 }
             }
-        });
+        );
     };
 
     /**

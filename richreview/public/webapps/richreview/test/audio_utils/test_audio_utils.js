@@ -24,15 +24,15 @@ var clickRecordingStart = function(){
 };
 
 var clickRecordingStop = function(){
-    r2.audioRecorder.EndRecording(
-        function(url, blob){
+    r2.audioRecorder.EndRecording().then(
+        function(result){
             $("#recording_start_btn").prop("disabled",false);
             $("#recording_stop_btn").prop("disabled",true);
 
-            recordings.push({id:recordings.length, url:url});
+            recordings.push({id:recordings.length, url:result.url});
 
             $("#wav_file_url").text("wav file link");
-            $("#wav_file_url").attr("href", url);
+            $("#wav_file_url").attr("href", result.url);
 
             $("#playbar").mousedown(playbarMouseDown)
         }

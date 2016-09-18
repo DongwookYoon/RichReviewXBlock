@@ -74,9 +74,7 @@
 
     test.recordStop = function(){
         $.publish('hardsocketstop');
-        r2.audioRecorder.EndRecording(function(url, blob, buffer){
-            console.log(url);
-        })
+        r2.audioRecorder.EndRecording();
     };
 
     var result_disp = (function(){

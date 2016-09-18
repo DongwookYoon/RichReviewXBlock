@@ -8,19 +8,16 @@ this.onmessage = function(e){
             init(e.data.config);
             break;
         case 'recordChannelBuffer':
-            recordChannelBuffer(e.data.channel_buffer);
+            recordChannelBuffer(e.data.channel_buffer, e.data.residual);
             break;
         case 'exportWAV':
             exportWAV();
             break;
-        case 'exportChunk':
-            exportChunk(e.data.channel_buffer);
+        case 'getChunkBuf':
+            getChunkBuf(e.data.channel_buffer, e.data.residual);
             break;
         case 'getDbs':
             getDbs();
-            break;
-        case 'clear':
-            clear();
             break;
     }
 };
@@ -30,36 +27,42 @@ function init(config){
     downsample_ratio = config.downsample_ratio;
 }
 
-function recordChannelBuffer(channel_buffer){
+function recordChannelBuffer(channel_buffer, is_residual){
     channel_buffers.push(channel_buffer);
-}
 
-function clear(){
-    channel_buffers = [];
+    this.postMessage(
+        {
+            command: 'recordChannelBufferResp',
+            is_residual: is_residual
+        }
+    );
 }
 
 function exportWAV(){
     var merged = mergeBuffers(channel_buffers);
     var downsampled = downsample(merged, downsample_ratio);
     var encoded = encodeWAV(downsampled);
+    channel_buffers = []; // clear
+
     this.postMessage(
         {
-            command: 'exportWAV',
+            command: 'exportWavResp',
             blob: new Blob([encoded.dataView], { type: 'audio/wav' }),
-            buffer: new Uint8Array(encoded.buffer)
+            buffer: encoded.buffer
         }
     );
 }
 
-function exportChunk(buffer) { // buffer: Float32Array
+function getChunkBuf(buffer, is_residual) { // buffer: Float32Array
     var buffer_bytes = new ArrayBuffer(buffer.length * 2);
     var view = new DataView(buffer_bytes);
 
     floatTo16BitPCM(view, 0, buffer);
     this.postMessage(
         {
-            command: 'exportChunk',
-            chunk_buffer: buffer_bytes
+            command: 'getChunkBufResp',
+            chunk_buffer: buffer_bytes,
+            is_residual: is_residual
         }
     );
 }

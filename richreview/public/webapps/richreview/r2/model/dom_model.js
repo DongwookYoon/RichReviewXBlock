@@ -280,6 +280,7 @@
                         ;
                     });
                     r2.radialMenu.addBtnCircular($rm, 'fa-link', 'share', function(){
+                        if(r2App.mode === r2App.AppModeEnum.RECORDING){ return; }
                         var lnk = r2App.server_url+"viewer?access_code=" + r2.ctx["pdfid"] +
                             "&docid=" + r2.ctx["docid"] +
                             "&groupid=" + r2.ctx["groupid"] +
@@ -290,6 +291,7 @@
                         ;
                     });
                     r2.radialMenu.addBtnCircular($rm, 'fa-trash', 'erase', function(){
+                        if(r2App.mode === r2App.AppModeEnum.RECORDING){ return; }
                         if(r2.userGroup.cur_user.name === user.name){
                             var annottodelete = r2App.annots[annot_id];
                             if(r2.removeAnnot(annot_id, true, false)){ // askuser, mute
@@ -395,6 +397,7 @@
                         ;
                     });
                     r2.radialMenu.addBtnCircular($rm, 'fa-link', 'share', function(){
+                        if(r2App.mode === r2App.AppModeEnum.RECORDING){ return; }
                         var lnk = r2App.server_url+"viewer?access_code=" + r2.ctx["pdfid"] +
                             "&docid=" + r2.ctx["docid"] +
                             "&groupid=" + r2.ctx["groupid"] +
@@ -405,6 +408,7 @@
                         ;
                     });
                     r2.radialMenu.addBtnCircular($rm, 'fa-trash', 'erase', function(){
+                        if(r2App.mode === r2App.AppModeEnum.RECORDING){ return; }
                         if(r2.userGroup.cur_user.name === username){
                             if(r2.removeAnnot(annot_id, true, false)){ // askuser, mute
                                 r2Sync.uploader.pushCmd(doc_model_piecekeyboard.ExportToCmdDeleteComment());
@@ -502,6 +506,7 @@
                         ;
                     });
                     r2.radialMenu.addBtnCircular($rm, 'fa-link', 'share', function(){
+                        if(r2App.mode === r2App.AppModeEnum.RECORDING){ return; }
                         var lnk = r2App.server_url+"viewer?access_code=" + r2.ctx["pdfid"] +
                             "&docid=" + r2.ctx["docid"] +
                             "&groupid=" + r2.ctx["groupid"] +
@@ -512,6 +517,7 @@
                         ;
                     });
                     r2.radialMenu.addBtnCircular($rm, 'fa-trash', 'erase', function(){
+                        if(r2App.mode === r2App.AppModeEnum.RECORDING){ return; }
                         if(r2.userGroup.cur_user.name === user.name){
                             alert("This feature is yet to be implemented.")
                         }

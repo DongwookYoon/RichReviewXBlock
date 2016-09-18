@@ -147,7 +147,8 @@
                     elem.onload = resolve;
                     elem.onerror = function(){reject()};
                     document.getElementsByTagName('head')[0].appendChild(elem);
-                    $('#r2_app_container').append('&nbsp;&nbsp;&nbsp;&nbsp;'+url+'<br/>');
+                    $('#r2_app_container').append('.');
+                    console.log('Loaded:', url);
                 }
                 else{
                     reject(new Error("    Cannot load a resource file:" + url));
@@ -155,7 +156,7 @@
             });
         }
 
-        $('#r2_app_container').append('<br/><p>&nbsp;&nbsp;Launching Web App</p>');
+        $('#r2_app_container').append('<br/>&nbsp;&nbsp;Launching Web App&nbsp;');
 
         run();
     };

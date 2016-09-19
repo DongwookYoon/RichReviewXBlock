@@ -149,13 +149,15 @@ var r2App = (function() {
             return selected_piece;
         };
 
-        pub_ps.set = function(piece){
+        pub_ps.set = function(piece, from_dom_model){
             if(typeof piece === 'string'){
                 selected_piece = pub.pieces_cache[piece];
             }
             else{
                 selected_piece = piece;
             }
+            r2.dom_model.focusCtrl.focusPiece(selected_piece.GetId());
+            r2.onScreenButtons.setOnPiece(r2.dom_model.getPieceDom(selected_piece));
             r2App.invalidate_dynamic_scene = true;
         };
 
@@ -173,10 +175,12 @@ var r2App = (function() {
 
         pub_ps.update = function(cur_mouse_pt){
             if(r2.mouse.mode !== r2.MouseModeEnum.HOVER){return}
-            var piece_dy_obj = r2App.cur_page.GetPieceOfClosestBottom(r2.viewCtrl.mapScrToDoc(cur_mouse_pt));
-            if(selected_piece !== piece_dy_obj[1]){ // piece[0] is dy, piece[1] is the obj.
-                selected_piece = piece_dy_obj[1];
-                r2App.invalidate_dynamic_scene = true;
+            if(r2App.cur_focused_piece_keyboard){return;}
+            if(r2App.mode === r2App.AppModeEnum.RECORDING){return;}
+
+            var hit_piece = r2App.cur_page.GetPieceByHitTest(r2.viewCtrl.mapScrToDoc(cur_mouse_pt));
+            if(hit_piece){ // piece[0] is dy, piece[1] is the obj.
+                pub_ps.set(hit_piece);
             }
         };
 

@@ -76,7 +76,7 @@ var r2Sync = (function(){
                                     r2.commentHistory.consumeCmd(cmds[i]);
                                 }
                                 else{
-                                    console.error('Skipped a cmd, as we cannot understood it : ' + JSON.stringify(cmds[i]));
+                                    console.error('Skipped an invalid cmd : ' + JSON.stringify(cmds[i]));
                                 }
                                 $( "#main_progress_bar" ).progressbar({
                                     value: parseInt(100*(i)/(cmds.length-1))

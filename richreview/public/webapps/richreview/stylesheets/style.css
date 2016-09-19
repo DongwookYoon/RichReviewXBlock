@@ -350,6 +350,23 @@ a:active {
 
 /* on screen drag down buttons */
 
+#onscrbtns_static{
+  position: absolute;
+  z-index: 3;
+  font-size: 0.45em;
+  right: 0;
+  bottom: 0;
+  color: black;
+}
+
+#onscrbtns_static > .comment_btn.fa-stack {
+  opacity: 0.5;
+}
+
+#onscrbtns_static > .comment_btn.fa-stack:hover {
+  opacity: 1.0;
+}
+
 #onscrbtns{
   display: none; /* javascript switches this to inline-block*/
   position: absolute;
@@ -879,8 +896,7 @@ body::-webkit-scrollbar-corner {
 }
 
 .tc_page .tc_piecegroup:focus {
-  /*background: rgba(255,0,0,0.1);*/
-  /*outline:none;*/
+  background: rgba(0,0,255,0.03);
 }
 .tc_page .tc_piece:focus {
   /*background: rgba(255,0,0,0.1);*/
@@ -896,6 +912,7 @@ body::-webkit-scrollbar-corner {
 
 .tc_page .tc_content {
   display: block;
+  position: relative;
 }
 
 

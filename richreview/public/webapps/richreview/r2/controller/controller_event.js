@@ -538,6 +538,13 @@ var r2Ctrl = {};
 
         pub.handleDn = function(event){
             var new_mouse_pt = r2.input.getPos(event);
+
+            if(r2.onScreenButtons.eventOnBtns(event)){
+                pub.mode = r2.MouseModeEnum.HOVER;
+                r2App.cur_mouse_pt = new_mouse_pt;
+                return
+            }
+
             if(pub.mode === r2.MouseModeEnum.HOVER){
                 switch (event.which) {
                     case r2.MouseBtn.LEFT: // left click
@@ -574,9 +581,6 @@ var r2Ctrl = {};
                     if(r2.spotlightCtrl.nowRecording()){
                         r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
                     }
-                    else{
-                        r2.onScreenButtons.mouseMv(pos_dn, new_mouse_pt);
-                    }
                 }
                 else if(r2App.mode == r2App.AppModeEnum.RECORDING){
                     r2.spotlightCtrl.recordingSpotlightMv(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
@@ -591,6 +595,12 @@ var r2Ctrl = {};
 
         pub.handleUp = function(event){
             var new_mouse_pt = r2.input.getPos(event);
+
+            if(r2.onScreenButtons.eventOnBtns(event)){
+                pub.mode = r2.MouseModeEnum.HOVER;
+                r2App.cur_mouse_pt = new_mouse_pt;
+                return
+            }
 
             if(pub.mode == r2.MouseModeEnum.HOVER){
                 // do nothing, there's something weird.
@@ -609,7 +619,6 @@ var r2Ctrl = {};
                     r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                 }
 
-                r2.onScreenButtons.mouseUp();
                 pub.mode = r2.MouseModeEnum.HOVER;
             }
             else if(pub.mode == r2.MouseModeEnum.RDN){
@@ -654,7 +663,7 @@ var r2Ctrl = {};
             if(playback){
                 r2.rich_audio.play(playback.annot, playback.t);
                 r2.log.Log_AudioPlay('indexing_wf', playback.annot, playback.t);
-                r2.dom_model.focusCtrl.focusPiece(playback.annot);
+                r2.dom_model.focusCtrl.focusAnnot(playback.annot);
             }
         }
         else if(obj_front instanceof r2.PieceKeyboard){
@@ -936,116 +945,54 @@ var r2Ctrl = {};
     r2.onScreenButtons = (function(){
         var pub = {};
 
-        var modeEnum = {
-            HIDDEN : 0,
-            VISIBLE : 1
-        };
-        var VERTICAL_DRAG_CRITERIA = 0.015;
-
-        r2.HtmlTemplate.add('onscrbtns');
-
-        var mode = modeEnum.HIDDEN;
-        var show_pos_x = 0.0;
-
-        var $btns_dom = null;
-        var $voice_btn_dom = null;
-        var $text_btn_dom = null;
-
+        var $dom = $('<div id="onscrbtns_static"></div>');
 
         pub.Init = function(){
-            $btns_dom = $('#onscrbtns');
-            $voice_btn_dom = $btns_dom.find('.voice_comment_btn');
-            $text_btn_dom = $btns_dom.find('.text_comment_btn');
+            r2.HtmlTemplate.loadDataFromUrl('onscrbtns')
+                .then(function(resp){
+                    $dom.html(resp);
+                });
         };
 
-        pub.SetUserColor = function(user){
-            $voice_btn_dom.mouseover(function(){
-                $voice_btn_dom.find('.fa-btn-bg').css('color', user.color_onscrbtn_hover);
-                $voice_btn_dom.find('span').css('color', user.color_onscrbtn_hover);
-            });
-            $voice_btn_dom.mouseout(function(){
-                $voice_btn_dom.find('.fa-btn-bg').css('color', user.color_onscrbtn_normal);
-                $voice_btn_dom.find('span').css('color', user.color_onscrbtn_normal);
-            });
-            $voice_btn_dom.mouseup(function(event){
-                event.preventDefault();
-                if(event.which != 1 || r2.keyboard.ctrlkey_dn){return;}
-                if(r2App.mode == r2App.AppModeEnum.RECORDING){
+        pub.setOnPiece = function($piece){
+            if(!$dom.parent().is($piece.children('.tc_content'))){
+                $dom.remove();
+                $piece.children('.tc_content').append($dom);
+            }
+        };
+
+        pub.onClick = function(type){
+            if(type === 'keyboard'){
+                if(r2.keyboard.ctrlkey_dn){return;}
+                createPieceKeyboard(isprivate = false);
+                r2.log.Log_Simple("CreatePieceKeyboard_OnScrBtn");
+            }
+            else if(type === 'waveform'){
+                if(r2.keyboard.ctrlkey_dn){return;}
+                if(r2App.mode === r2App.AppModeEnum.RECORDING){
                     r2.recordingCtrl.stop(toupload = true);
                     r2.log.Log_Simple("Recording_Stop_OnScrBtn");
+                    $dom.children('.voice_comment_btn').children('.fa-stop').removeClass('fa-stop').addClass('fa-microphone');
                 }
                 else{
                     if(!r2App.pieceSelector.isNull()){
                         r2.recordingCtrl.set(r2App.pieceSelector.get(), r2App.RecordingUI.WAVEFORM);
                         r2.log.Log_Simple("Recording_Bgn_OnScrBtn");
+                        $dom.children('.voice_comment_btn').children('.fa-microphone').removeClass('fa-microphone').addClass('fa-stop');
                     }
                 }
-                r2.mouse.mode = r2.MouseModeEnum.HOVER; // should set mouse mode here, since we are calling stopPropagation().
-                hideDom();
-            });
-
-            $text_btn_dom.mouseover(function(){
-                $text_btn_dom.find('.fa-btn-bg').css('color', user.color_onscrbtn_hover);
-                $text_btn_dom.find('span').css('color', user.color_onscrbtn_hover);
-            });
-            $text_btn_dom.mouseout(function(){
-                $text_btn_dom.find('.fa-btn-bg').css('color', user.color_onscrbtn_normal);
-                $text_btn_dom.find('span').css('color', user.color_onscrbtn_normal);
-            });
-            $text_btn_dom.mouseup(function(event){
-                event.preventDefault();
-
-                if(event.which != 1 || r2.keyboard.ctrlkey_dn){return;}
-                createPieceKeyboard(isprivate = false);
-                r2.log.Log_Simple("CreatePieceKeyboard_OnScrBtn");
-                pub.mode = r2.MouseModeEnum.HOVER; // should set mouse mode here, since we are calling stopPropagation().
-                hideDom();
-            })
-        };
-
-        pub.ResizeDom = function(){
-
-        };
-
-        pub.mouseMv = function(mouse_dn, mouse_mv){
-            if(mode === modeEnum.VISIBLE){
-                if(mouse_mv.y < mouse_dn.y + VERTICAL_DRAG_CRITERIA){
-                    mode = modeEnum.HIDDEN;
-                    hideDom();
-                }
-                else{
-                    moveDom(show_pos_x, mouse_mv.y);
-                }
             }
-            else if(mode === modeEnum.HIDDEN){
-                if(mouse_mv.y > mouse_dn.y + VERTICAL_DRAG_CRITERIA){
-                    show_pos_x = mouse_mv.x;
-                    mode = modeEnum.VISIBLE;
-                    showDom();
-                    moveDom(mouse_mv);
-                }
+            else if(type === 'simplespeech'){
+
             }
         };
 
-        pub.mouseUp = function(){
-            mode = modeEnum.HIDDEN;
-            hideDom();
+        pub.SetUserColor = function(user){
+            $dom.css('color', user.color_onscrbtn_normal);
         };
 
-        var hideDom = function(){
-            $btns_dom.css('display', 'none');
-        };
-
-        var showDom = function(){
-            $btns_dom.css('display', 'inline-block');
-            $btns_dom[0].focus();
-        };
-
-        var moveDom = function(x, y){
-            var pos = r2.viewCtrl.mapDocToDom(Vec2(x, y));
-            $btns_dom.css('left', Math.floor(pos.x) + 'px');
-            $btns_dom.css('top', Math.floor(pos.y)+ 'px');
-            mode = modeEnum.VISIBLE;
+        pub.eventOnBtns = function(event){
+            return $dom.has($(event.target)).length > 0;
         };
 
         return pub;

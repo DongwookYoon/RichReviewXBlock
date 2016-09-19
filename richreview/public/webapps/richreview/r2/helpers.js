@@ -26,13 +26,15 @@
             l.push(name);
         };
 
+        pub.loadDataFromUrl = function(name){
+            return r2.util.getUrlData(r2.webappUrlMaps.get('htmls/' + name + '.xml'), '');
+        };
+
         function loadOnce(name){
-            return r2.util.getUrlData(r2.webappUrlMaps.get('htmls/' + name + '.xml'), '').then(
-                function(resp) {
-                    $("#" + name).html(resp);
-                    return null;
-                }
-            );
+            return pub.loadDataFromUrl(name)
+                .then(function(resp){
+                    return $('#' + name).html(resp);
+                });
         }
 
         return pub;
@@ -539,7 +541,7 @@
             this.color_piecekeyboard_box_shadow = this.GetHtmlColor(this.color_normal, 0.8);
             this.color_piecekeyboard_private_box_shadow = 'rgba(64,64,64, 0.8)';
             this.color_piecekeyboard_text = this.GetHtmlColor(this.color_dark, 1.0);
-            this.color_onscrbtn_normal = this.GetHtmlColor(this.color_normal, 0.5);
+            this.color_onscrbtn_normal = this.GetHtmlColor(this.color_normal, 1.0);
             this.color_onscrbtn_hover = this.GetHtmlColor(this.color_normal, 1.0);
             this.color_meta_comment_list_normal = this.GetHtmlColor(this.color_normal, 0.6);
             this.color_meta_comment_list_hover = this.GetHtmlColor(this.color_normal, 1.0);

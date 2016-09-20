@@ -149,10 +149,10 @@ var bluemix_stt = (function(bluemix_stt) {
                 // The user might want to upload a file through the socket instead of transmitting microphone information.
                 return;
             }
-            mic.setOnAudioCallback(
+            mic.getRecorder().setOnGetChunkBufCallback(
                 function (blob) {
                     if (socket.readyState < 2) {
-                        socket.send(blob)
+                        socket.send(blob);
                     }
                 }
             );
@@ -186,9 +186,19 @@ var bluemix_stt = (function(bluemix_stt) {
 
         pub.run = function(msg){
             if(msg.results && msg.results.length){
+                var is_final = msg.results[0].final;
                 var best_alternative = msg.results[0].alternatives[0];
-                if(msg.results[0].final){
-                    callbacks.onFinal(best_alternative.timestamps, best_alternative.word_confidence);
+                for(var i = 0; i < best_alternative.timestamps.length; ++i){
+                    if(best_alternative.timestamps[i][0]=='%HESITATION'){
+                        best_alternative.timestamps[i][0] = '...';
+                    }
+                    if(is_final){
+                        // push word-confidence
+                        best_alternative.timestamps[i].push(best_alternative.word_confidence[i][1]);
+                    }
+                }
+                if(is_final){
+                    callbacks.onFinal(best_alternative.timestamps, msg.results[0].alternatives);
                 }
                 else{
                     callbacks.onTemp(best_alternative.timestamps);

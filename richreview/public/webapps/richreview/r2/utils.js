@@ -344,6 +344,26 @@
             }
         };
 
+        pub.jqueryInsert = function($target, $elem, idx){
+            var idx_last = $target.children().size();
+            $target.append($elem);
+            if (idx < idx_last) {
+                $target.children().eq(idx).before($target.children().last())
+            }
+        };
+
+        /*
+         * Jon Surrell's GUID function from SO: http://stackoverflow.com/a/105074
+         */
+        pub.generateGuid = function(){
+            function s4() {
+                return Math.floor((1 + Math.random()) * 0x10000)
+                    .toString(16)
+                    .substring(1);
+            }
+            return s4() + s4() + s4() + s4() + s4() + s4() + s4() + s4();
+        };
+
         pub.retryPromise = function(promise, interval, count){
             return promise
                 .catch(function(err){

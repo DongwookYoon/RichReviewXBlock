@@ -65,8 +65,8 @@
                 </button>
                 <div class="dropdown-menu  pull-right">
                     <button class="waveform dropdown-item btn btn-sm btn-default" onclick="r2.speechUi.set('waveform')">Waveform</button>
-                    <button class="newspeak dropdown-item btn btn-sm btn-default" onclick="r2.speechUi.set('newspeak')">NS</button>
-                    <button class="simplespeech dropdown-item btn btn-sm btn-default" onclick="r2.speechUi.set('simplespeech')">SS</button>
+                    <button class="simplespeech dropdown-item btn btn-sm btn-default" onclick="r2.speechUi.set('simplespeech')">SimpleSpeech</button>
+                    <button class="newspeak dropdown-item btn btn-sm btn-default" onclick="r2.speechUi.set('newspeak')">NewSpeak</button>
                 </div>
             </div>
         </div>

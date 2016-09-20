@@ -88,6 +88,7 @@
                 ['lib_ext/bluemix/bluemix_socket.js', 'js'],
                 ['lib_ext/bluemix/bluemix_utils.js', 'js'],
                 ['r2/audio_utils.js', 'js'],
+                ['lib_ext/transcription-ui.js', 'js'],
                 ['r2/utils.js', 'js'],
                 ['r2/helpers.js', 'js'],
                 ['r2/shared_objs.js', 'js'],

@@ -3,7 +3,7 @@
  */
 //written by Yuan Huang
 //written by Tianwei Huang
- 
+
 /** @namespace r2 */
 (function(r2){
     "use strict";
@@ -259,7 +259,10 @@
         this._spotlight_cache = [];
         var i, spotlight, cache;
         for (var annotid in r2App.annots) {
-            if (r2App.annots.hasOwnProperty(annotid)){
+            if (
+                (r2App.annots.hasOwnProperty(annotid) && !r2App.annots[annotid].getIsBaseAnnot()) ||
+                (r2App.cur_recording_annot !== null && annotid === r2App.cur_recording_annot.GetId())
+            ){
                 var annot = r2App.annots[annotid];
                 var spotlights_of_page = annot.GetSpotlightsByNumPage(this._num);
 
@@ -1114,9 +1117,9 @@
     };
 
     /*
-     * PieceEditableAudio
+     * PieceNewSpeak
      */
-    r2.PieceEditableAudio = function(){
+    r2.PieceNewSpeak = function(){
         r2.Piece.call(this);
         this._annotid = null;
         this._username = null;
@@ -1124,14 +1127,40 @@
         this.dom = null;
         this.dom_textbox = null;
         this._temporary_n = 0;
+        this.annotids = [];
     };
-    r2.PieceEditableAudio.prototype = Object.create(r2.Piece.prototype);
-    r2.PieceEditableAudio.prototype.Destructor = function(){
+    r2.PieceNewSpeak.prototype = Object.create(r2.Piece.prototype);
+
+
+    /*
+     * PieceSimpleSpeech
+     */
+    r2.PieceSimpleSpeech = function(){
+        r2.Piece.call(this);
+        this._annotid = null;
+        this._username = null;
+
+        this.dom = null;
+        this.dom_textbox = null;
+        this.done_recording = true;
+        this.done_captioning = true;
+        this.annotids = [];
+        this.ui_type = r2App.RecordingUI.SIMPLE_SPEECH;
+    };
+    r2.PieceSimpleSpeech.prototype = Object.create(r2.Piece.prototype);
+    r2.PieceSimpleSpeech.prototype.Destructor = function(){
         r2.Piece.prototype.Destructor.apply(this);
     };
-    r2.PieceEditableAudio.prototype.SetPieceEditableAudio = function(anchor_pid, annotid, username, inner_html, live_recording){
+    r2.PieceSimpleSpeech.prototype.GetAnnotId = function(){
+        return this._annotid;
+    };
+    r2.PieceSimpleSpeech.prototype.SetPieceSimpleSpeech = function(
+        anchor_pid, annotid, username, inner_html, live_recording, ui_type
+    ){
         this._annotid = annotid;
         this._username = username;
+        this._waiting_for_watson = false;
+        this.ui_type = ui_type;
 
         var dom = this.CreateDom();
 
@@ -1146,16 +1175,24 @@
             live_recording
         );
 
-        this.setInnerHtml(inner_html);
+        this.resizeDom();
 
         return dom;
     };
-    r2.PieceEditableAudio.prototype.GetAnnotId = function(){
+    r2.PieceSimpleSpeech.prototype.GetAnnotId = function(){
         if(this._annotid != null){
             return this._annotid;
         }
     };
-    r2.PieceEditableAudio.prototype.CreateDom = function(){
+    r2.PieceSimpleSpeech.prototype.GetAnchorTo = function(){
+        // anchorTo: {type: 'PieceText', id: pid, page: 2} or
+        var anchorCmd = {};
+        anchorCmd.type = 'PieceSimpleSpeech';
+        anchorCmd.id = this.GetId();
+        anchorCmd.page = this.GetNumPage();
+        return anchorCmd;
+    };
+    r2.PieceSimpleSpeech.prototype.CreateDom = function(){
         this.dom = document.createElement('div');
         this.dom.classList.toggle('r2_piece_editable_audio', true);
         this.dom.classList.toggle('unselectable', true);
@@ -1165,57 +1202,100 @@
         this.dom_tr = document.createElement('div');
         this.dom_tr.classList.toggle('r2_piece_editable_audio_tr', true);
         this.dom_tr.classList.toggle('unselectable', true);
+        $(this.dom_tr).css('left', this.GetTtIndent()*r2Const.FONT_SIZE_SCALE+'em');
+        $(this.dom_tr).css('width', this.GetTtIndentedWidth()*r2Const.FONT_SIZE_SCALE+'em');
         this.dom.appendChild(this.dom_tr);
 
+        var dom_overlay = document.createElement('div');
+        dom_overlay.classList.toggle('ssui-overlay', true);
+        dom_overlay.classList.toggle('unselectable', true);
+
+        this.dom_tr.appendChild(dom_overlay);
+
         this.dom_textbox = document.createElement('div');
-        this.dom_textbox.classList.toggle('r2_piece_editable_audio_textbox', true);
-        this.dom_textbox.setAttribute('contenteditable', 'true');
+        this.dom_textbox.setAttribute('contenteditable', this._username === r2.userGroup.cur_user.name);
+        this.dom_textbox.classList.toggle('r2_piece_simplespeech', true);
+        this.dom_textbox.classList.toggle('text_selectable', true);
         this.dom_textbox.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
         this.dom_tr.appendChild(this.dom_textbox);
 
-        $(this.dom_tr).css('left', this.GetTtIndent()*r2Const.FONT_SIZE_SCALE+'em');
-        $(this.dom_tr).css('width', this.GetTtIndentedWidth()*r2Const.FONT_SIZE_SCALE+'em');
-
-        if(this._username != r2.userGroup.cur_user.name){
-            this.dom_textbox.setAttribute('contenteditable', 'false');
-        }
+        // SimpleSpeech UI wrapper
+        this.simplespeech = new r2.transcriptionUI(
+            this.dom_textbox, dom_overlay, this._annotid, this.annotids, this.ui_type
+        );
 
         /* add event handlers*/
-        var func_UpdateSizeWithTextInput = this.updateSizeWithTextInput.bind(this);
-
-        this.dom_textbox.addEventListener('input', function() {
-            this.__contentschanged = true;
-            if(func_UpdateSizeWithTextInput()){
+        this.simplespeech.on_input = function() {
+            if(this.updateSizeWithTextInput()){
                 r2App.invalidate_size = true;
                 r2App.invalidate_page_layout = true;
+                r2App.invalidate_dynamic_scene = true;
+                r2App.invalidate_static_scene = true;
             }
-        }.bind(this), false);
+        }.bind(this);
+
+        this.simplespeech.synthesizeAndPlay = function(content_changed, time){
+            return new Promise(function(resolve, reject){
+                if(content_changed){
+                    this.simplespeech.synthesizeNewAnnot(this._annotid).then(
+                        function(){
+                            r2.rich_audio.play(this._annotid, time);
+                            resolve();
+                        }.bind(this)
+                    );
+                }
+                else{
+                    r2.rich_audio.play(this._annotid,time);
+                    resolve();
+                }
+            }.bind(this));
+        }.bind(this);
+
+        this.simplespeech.insertRecording = function(){
+            r2.recordingCtrl.set(
+                this._parent,
+                { // option
+                    ui_type: r2App.RecordingUI.SIMPLE_SPEECH,
+                    caption_major: true,
+                    piece_to_insert: this
+                }
+            );
+        }.bind(this);
+
+        this.simplespeech.bgn_streaming = function(){
+            r2.radialMenu.bgnLoading('rm_'+r2.util.escapeDomId(this._annotid));
+        }.bind(this);
+        this.simplespeech.end_streaming = function(){
+            r2.radialMenu.endLoading('rm_'+r2.util.escapeDomId(this._annotid));
+        }.bind(this);
+
+
 
         this.dom_textbox.addEventListener('focus', function(event){
             r2App.cur_focused_piece_keyboard = this;
             var color = r2.userGroup.GetUser(this._username).color_piecekeyboard_box_shadow;
             this.dom_textbox.style.boxShadow = "0 0 0.2em "+color+" inset, 0 0 0.2em "+color;
             $(this.dom).css("pointer-events", 'auto');
+            $(this.dom_textbox).toggleClass('editing', true);
         }.bind(this));
         r2.keyboard.pieceEventListener.setTextbox(this.dom_textbox);
 
         this.dom_textbox.addEventListener('blur', function(event){
+            // remove cursor complete from the textbox,
+            // otherwise it will interfere with mouse interaction for other visaul entities
+            window.getSelection().removeAllRanges();
+
             r2App.cur_focused_piece_keyboard = null;
             this.dom_textbox.style.boxShadow = "none";
-            $(this.dom).css("pointer-events", 'none');
-            if(this.__contentschanged){
-                console.log('>>>>__contentschanged:', this.ExportToTextChange());
-                r2Sync.uploader.pushCmd(this.ExportToTextChange());
-                this.__contentschanged = false;
-            }
+
+            //$(this.dom).css("pointer-events", 'none');
+            $(this.dom_textbox).toggleClass('editing', false);
         }.bind(this));
         /* add event handlers*/
 
-        this.resizeDom();
-
         return this.dom;
     };
-    r2.PieceEditableAudio.prototype.updateSizeWithTextInput = function(){
+    r2.PieceSimpleSpeech.prototype.updateSizeWithTextInput = function(){
         var getHeight = function($target){
             var $next = $target.next();
             if($next.length !== 0){
@@ -1233,7 +1313,7 @@
         }
         return false;
     };
-    r2.PieceEditableAudio.prototype.DrawPiece = function(){
+    r2.PieceSimpleSpeech.prototype.DrawPiece = function(){
         var x_bgn = this.pos.x + this.GetTtIndent();
         var y_bgn = this.pos.y-r2Const.PIECEAUDIO_LINE_WIDTH;
 
@@ -1249,52 +1329,76 @@
         r2.canv_ctx.lineJoin = 'round';
         r2.canv_ctx.stroke();
     };
-    r2.PieceEditableAudio.prototype.resizeDom = function(){
-        this.updateSizeWithTextInput();
+    r2.PieceSimpleSpeech.prototype.DrawPieceDynamic = function(cur_annot_id, canvas_ctx, force) {
+        if (this._annotid != cur_annot_id) {
+            return;
+        }
+        this.simplespeech.drawDynamic(r2App.cur_audio_time);
     };
-    r2.PieceEditableAudio.prototype.setInnerHtml = function(inner_html){
-        this.dom_textbox.innerHTML = inner_html;
+    r2.PieceSimpleSpeech.prototype.resizeDom = function(){
+        if(this.updateSizeWithTextInput()){
+            r2App.invalidate_size = true;
+            r2App.invalidate_page_layout = true;
+            r2App.invalidate_dynamic_scene = true;
+            r2App.invalidate_static_scene = true;
+        }
+    };
+    r2.PieceSimpleSpeech.prototype.bgnCommenting = function(recording_annot_id){
+        r2App.annots[recording_annot_id].setIsBaseAnnot();
+        this.annotids.push(recording_annot_id);
+        this.done_recording = false;
+        this.done_captioning = false;
+        this.simplespeech.bgnCommenting();
+    };
+    r2.PieceSimpleSpeech.prototype.bgnCommentingAsync = function(recording_annot_id){
+        this.simplespeech.bgnCommentingAsync();
+    };
+    r2.PieceSimpleSpeech.prototype.setCaptionTemporary = function(words){
+        this.simplespeech.setCaptionTemporary(words, this.annotids[this.annotids.length-1]);
         this.resizeDom();
     };
-    r2.PieceEditableAudio.prototype.setCaptionTemporary = function(words){
-        var i;
-        for(i = 0; i < this._temporary_n; ++i){
-            $(this.dom_textbox).find(':last-child').remove();
-        }
-        for(i = 0; i < words.length; ++i){
-            var w = words[i];
-            var $span = $(document.createElement('span'));
-            $span.text(w[0]+' ');
-            $(this.dom_textbox).append($span);
-        }
-        this._temporary_n = words.length;
-        if(this.updateSizeWithTextInput()){
-            r2App.invalidate_size = true;
-            r2App.invalidate_page_layout = true;
-        }
+    r2.PieceSimpleSpeech.prototype.setCaptionFinal = function(words){
+        this.simplespeech.setCaptionFinal(words, this.annotids[this.annotids.length-1]);
+        this.resizeDom();
     };
-    r2.PieceEditableAudio.prototype.setCaptionFinal = function(words){
-        var i;
-        for(i = 0; i < this._temporary_n; ++i){
-            $(this.dom_textbox).find(':last-child').remove();
-        }
-        for(i = 0; i < words.length; ++i){
-            var w = words[i];
-            var $span = $(document.createElement('span'));
-            $span.text(w[0]+' ');
-            $(this.dom_textbox).append($span);
-        }
-        this._temporary_n = 0;
-        if(this.updateSizeWithTextInput()){
-            r2App.invalidate_size = true;
-            r2App.invalidate_page_layout = true;
-        }
-    };
-    r2.PieceEditableAudio.prototype.doneCaptioning = function(){
+    r2.PieceSimpleSpeech.prototype.doneCaptioning = function(){
         this.Focus();
+        this.done_captioning = true;
+        this.doneCommentingAsync();
+        this.resizeDom();
     };
-    r2.PieceEditableAudio.prototype.Focus = function(){
+    r2.PieceSimpleSpeech.prototype.onEndRecording = function(audioURL) {
+        this.done_recording = true;
+        this.simplespeech.endCommenting();
+        r2.radialMenu.bgnLoading('rm_'+r2.util.escapeDomId(this._annotid));
+        this.doneCommentingAsync();
+    };
+    r2.PieceSimpleSpeech.prototype.doneCommentingAsync = function() {
+        if(this.done_captioning && this.done_recording){
+            r2.radialMenu.endLoading('rm_'+r2.util.escapeDomId(this._annotid));
+            this.simplespeech.doneCommentingAsync();
+            this.simplespeech.synthesizeNewAnnot(this._annotid);
+        }
+    };
+    r2.PieceSimpleSpeech.prototype.Focus = function(){
         this.dom_textbox.focus();
+    };
+    r2.PieceSimpleSpeech.prototype.SearchPieceByAnnotId = function(annotid){
+        var result = r2.Obj.prototype.SearchPieceByAnnotId.apply(this, [annotid]);
+        if(result){
+            return result;
+        }
+        else{
+            if(this._annotid == annotid){ // ToDo check it returns the first piece
+                return this;
+            }
+            else{
+                return null;
+            }
+        }
+    };
+    r2.PieceSimpleSpeech.prototype.SetData = function(data){
+        this.simplespeech.SetData(data);
     };
 
     /*
@@ -1499,6 +1603,10 @@
         r2.keyboard.pieceEventListener.setTextbox(this.dom_textbox);
 
         this.dom_textbox.addEventListener('blur', function(event){
+            // remove cursor complete from the textbox,
+            // otherwise it will interfere with mouse interaction for other visaul entities
+            window.getSelection().removeAllRanges();
+
             r2App.cur_focused_piece_keyboard = null;
             this.dom_textbox.style.boxShadow = "none";
             $(this.dom).css("pointer-events", 'none');
@@ -1639,6 +1747,7 @@
         this._spotlights = [];
         this._inks = [];
         this._audiofileurl = "";
+        this._is_base_annot = false;
     };
 
     r2.Annot.prototype.ExportToCmd = function(){
@@ -1670,6 +1779,12 @@
         });
         cmd.data.audiofileurl = this._audiofileurl;
         return cmd;
+    };
+    r2.Annot.prototype.setIsBaseAnnot = function(){
+        this._is_base_annot = true;
+    };
+    r2.Annot.prototype.getIsBaseAnnot = function(){
+        return this._is_base_annot;
     };
     r2.Annot.prototype.ExportToCmdDeleteComment = function(){
         // time: 2014-12-21T13...
@@ -1729,28 +1844,6 @@
         this._audiofileurl = audiofileurl;
         this._reacordingaudioblob = null;
     };
-    r2.Annot.prototype.normalizeAudioDbs = function(){
-        if(this._audio_dbs.length === 0){return 0;}
-
-        normalize(this._audio_dbs);
-
-        function normalize(arr){
-            var mm = getMinMax(arr);
-            for(var i = 0; i < arr.length; ++i){
-                arr[i] = (arr[i]-mm.min)/mm.diff;
-            }
-        }
-
-        function getMinMax(arr){
-            var min = Number.MAX_VALUE;
-            var max = Number.MIN_VALUE;
-            arr.forEach(function(v){
-                min = Math.min(min, v);
-                max = Math.max(max, v);
-            });
-            return {min: min, max: max, diff: max-min};
-        }
-    };
     r2.Annot.prototype.AddSpotlight = function(spotlight, toupload){
         this._spotlights.push(spotlight);
     };
@@ -1768,9 +1861,38 @@
     r2.Annot.prototype.GetAudioFileUrl = function(){
         return r2.util.normalizeUrl(this._audiofileurl);
     };
-    r2.Annot.prototype.SetRecordingAudioFileUrl = function(url, blob){
+    r2.Annot.prototype.SetRecordingAudioFileUrl = function(url, blob, buffer){
         this._audiofileurl = url;
         this._reacordingaudioblob = blob;
+
+        if(buffer){
+            var view = new DataView(buffer);
+            var l = [];
+            for(var i = 44; i < buffer.byteLength; i+=2){
+                var v = view.getInt16(i, true);
+                l.push(v);
+            }
+
+            this._duration = 1000*l.length/r2.audioRecorder.RECORDER_SAMPLE_RATE;
+
+            var samples_per_sec = 256;
+            var n_chunk = Math.floor(r2.audioRecorder.RECORDER_SAMPLE_RATE/samples_per_sec+0.5); // 32 power samples per sec
+            this._audio_dbs = [];
+            for(var i = 0, d = Math.floor(l.length/n_chunk); i < d; ++i){
+                this._audio_dbs.push(r2.util.rootMeanSquare(l, n_chunk*i, n_chunk*(i+1)));
+            }
+
+            var min = 0.0;
+            var max = 0.2;
+            this._audio_dbs.forEach(function(v){
+                min = Math.min(min, v);
+                max = Math.max(max, v);
+            });
+            for(var i = 0; i < this._audio_dbs.length; ++i){
+                this._audio_dbs[i] = (this._audio_dbs[i]-min)/(max-min);
+            }
+
+        }
     };
 
     r2.Annot.prototype.SampleAudioDbs = function(msec) {
@@ -1781,10 +1903,10 @@
         return v0+v1;
     };
     r2.Annot.prototype.UpdateDbs = function(dbs){
-        var dbsPerSec = r2.audioRecorder.RECORDER_SOURCE_SAMPLE_RATE/r2.audioRecorder.RECORDER_BUFFER_LEN/1000;
-        var nDbs = Math.floor((r2App.cur_time-this._bgn_time) * dbsPerSec);
+        this._duration = r2App.cur_time-this._bgn_time;
 
-        this._duration = nDbs/dbsPerSec;
+        var dbsPerSec = r2.audioRecorder.RECORDER_POWER_SAMPLE_PER_SEC;
+        var nDbs = Math.floor((r2App.cur_time-this._bgn_time) * dbsPerSec);
 
         for(var i = this._audio_dbs.length; i < nDbs; ++i) {
             this._audio_dbs.push((r2.audioRecorder.RECORDER_SAMPLE_SCALE*dbs).toFixed(3));
@@ -1795,8 +1917,6 @@
     /* abstract annot that contains private spotlights */
     r2.AnnotPrivateSpotlight = function() {
         r2.Annot.call(this);
-        this.isPrivateSpotlight = true;
-
         this.timeLastChanged = 0;
         this.changed = false;
         this._spotlightsDictionary = {};
@@ -2230,19 +2350,20 @@
 
         var color;
         var width;
-        if(!r2App.annots[this.annotid].isPrivateSpotlight){
-            color = r2.userGroup.GetUser(this.username).color_splight_static;
-            width = Math.floor(r2Const.SPLGHT_WIDTH);
-        }
-        else{
-            color = r2.userGroup.GetUser(this.username).color_splight_private;
-            width = Math.floor(r2Const.SPLGHT_PRIVATE_WIDTH);
-        }
+        color = r2.userGroup.GetUser(this.username).color_splight_static;
+        width = r2Const.SPLGHT_WIDTH;
         canvas_ctx.strokeStyle = color;
         canvas_ctx.lineWidth = width;
         canvas_ctx.lineCap = 'round';
         canvas_ctx.lineJoin = 'round';
         canvas_ctx.stroke();
+    };
+    r2.Spotlight.prototype.Retarget = function(annotid, t_bgn, t_end){
+        var rtn = jQuery.extend({}, this);
+        rtn.annotid = annotid;
+        rtn.t_bgn = t_bgn;
+        rtn.t_end = t_end;
+        return rtn;
     };
 
     /*
@@ -2339,14 +2460,9 @@
 
         var color;
         var width;
-        if(!this._annot.isPrivateSpotlight){
-            color = this._user.color_splight_static;
-            width = Math.floor(r2Const.SPLGHT_WIDTH*ratio);
-        }
-        else{
-            color = this._user.color_splight_private;
-            width = Math.floor(r2Const.SPLGHT_PRIVATE_WIDTH*ratio);
-        }
+        color = this._user.color_splight_static;
+        width = Math.floor(r2Const.SPLGHT_WIDTH*ratio);
+
         ctx.strokeStyle = color;
         ctx.lineWidth = width;
         ctx.lineCap = 'round';
@@ -2408,8 +2524,7 @@
     };
     r2.Spotlight.Cache.prototype.HitTest = function(pt){
         if( pt.x > this._bb[0].x && pt.y > this._bb[0].y &&
-            pt.x < this._bb[1].x && pt.y < this._bb[1].y &&
-            !this._annot.isPrivateSpotlight){
+            pt.x < this._bb[1].x && pt.y < this._bb[1].y){
             return this;
         }
         else{

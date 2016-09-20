@@ -1325,6 +1325,7 @@
             var $icon = $('#'+rm_id).find('.rm_btn_center').find('i');
             $icon.toggleClass($icon[0].fa_font, false);
             $icon.toggleClass(fa_font, true);
+            $icon.toggleClass('fa-spin', false);
             $icon[0].fa_font = fa_font;
         };
 
@@ -1335,6 +1336,20 @@
 
         pub.getNextRmBtn = function($rm_btn){
             return getRmBtnOffset($rm_btn, +1);
+        };
+
+        pub.bgnLoading = function(rm_id){
+            var $icon = $('#'+rm_id).find('.rm_btn_center').find('i');
+            $icon.toggleClass($icon[0].fa_font, false);
+            $icon.toggleClass('fa-refresh', true);
+            $icon.toggleClass('fa-spin', true);
+        };
+
+        pub.endLoading = function(rm_id){
+            var $icon = $('#'+rm_id).find('.rm_btn_center').find('i');
+            $icon.toggleClass($icon[0].fa_font, true);
+            $icon.toggleClass('fa-refresh', false);
+            $icon.toggleClass('fa-spin', false);
         };
 
         var getRmBtnOffset = function($rm_btn, offset){
@@ -1637,6 +1652,10 @@
             return rtn;
         };
 
+        pub.getCanvasWidth = function(){
+            return page_canvas.dom_width;
+        };
+
         /** helper */
         function getDomWidth(dom){
             return dom.getBoundingClientRect().width;
@@ -1718,6 +1737,7 @@
         pub.is_mobile = false;
         pub.is_msedge = false;
         pub.is_supported_browser = false;
+        pub.is_mac = navigator.platform.indexOf('Mac') > -1;
 
         pub.init = function(){
             return new Promise(function(resolve, reject){
@@ -1752,6 +1772,321 @@
             });
         };
         return pub;
+    }());
+
+    r2.gestureSynthesizer = (function(){
+        var pub = {};
+
+        pub.run = function(target_annot_id, talkens){
+            /*
+             // data description
+             You can use it like...
+
+             r2.gestureSynthesizer.run(
+             this._annotid,
+             [
+             {
+             base_annotid: <this.annots[0]> or null,
+             base_bgn: <...>,
+             base_end: <...>,
+             new_bgn: <...>,
+             new_end: <...>
+             word: <...>,
+             },
+             {
+
+             }
+             ...
+             ]
+             )
+             */
+
+            talkens.forEach(function(talken){
+                talken.base_bgn *= 1000.;
+                talken.base_end *= 1000.;
+                talken.new_bgn *= 1000.;
+                talken.new_end *= 1000.;
+            });
+
+            var getGestureChops = function(talken){
+                var rtn = [];
+                if(talken.base_annotid){
+                    r2App.annots[talken.base_annotid]._spotlights.forEach(function(spotlight, idx){
+                        // when overlapping
+                        if( !(spotlight.t_end < talken.base_bgn || talken.base_end < spotlight.t_bgn )){
+                            /*
+                             r0 = (t0-g0)/(g1-g0)
+                             r1 = (t1-g0)/(g1-g0)
+                             */
+                            var spotlight_duration = spotlight.t_end-spotlight.t_bgn;
+                            if( spotlight_duration > 0){
+                                rtn.push({
+                                    gesture_id: talken.base_annotid+'___'+idx,
+                                    t_ratio: [
+                                        (talken.base_bgn-spotlight.t_bgn)/spotlight_duration,
+                                        (talken.base_end-spotlight.t_bgn)/spotlight_duration
+                                    ]
+                                });
+                            }
+                        }
+                    });
+                }
+                return rtn;
+            };
+
+            var gesture_ids_to_check = new Set();
+            var gesture_stack = [];
+            talkens.forEach(function(talken){
+                var stk = {};
+                var chops = getGestureChops(talken);
+                chops.forEach(function(chop){
+                    stk[chop.gesture_id] = chop.t_ratio;
+                    gesture_ids_to_check.add(chop.gesture_id);
+                });
+                gesture_stack.push(stk);
+            });
+
+
+
+            r2App.annots[target_annot_id]._spotlights = [];
+            gesture_ids_to_check.forEach(function(gesture_id){
+                var last_t_ratio_bgn = Number.MAX_VALUE;
+                var streak_talken_idxs = [];
+                gesture_stack.forEach(function(stk, idx){
+                    if(stk.hasOwnProperty(gesture_id)){
+                        if(last_t_ratio_bgn > stk[gesture_id][0]){ // streak broken
+                            streak_talken_idxs.push([idx, idx]);
+                        }
+                        else{  // streak continues
+                            streak_talken_idxs[streak_talken_idxs.length-1][1] = idx;
+                        }
+                        last_t_ratio_bgn = stk[gesture_id][0];
+                    }
+                });
+
+                streak_talken_idxs.forEach(function(streak_talken_idx){
+                    var gidsplit = gesture_id.split('___');
+                    var base_annotid = gidsplit[0];
+                    var spotlight_idx = parseInt(gidsplit[1]);
+
+                    var ratio_bgn = gesture_stack[streak_talken_idx[0]][gesture_id][0];
+                    var ratio_end = gesture_stack[streak_talken_idx[1]][gesture_id][1];
+
+                    var target_bgn = talkens[streak_talken_idx[0]].new_bgn;
+                    var target_end = talkens[streak_talken_idx[1]].new_end;
+                    /*
+                     g0 = (r1*t0-r0*t1) / (r1-r0)
+                     g1 = (g0*(r0-1)+t0)/r0
+                     */
+
+                    var g0 = (ratio_end*target_bgn-ratio_bgn*target_end)/(ratio_end-ratio_bgn);
+                    var g1 = (g0*(ratio_bgn-1.)+target_bgn)/ratio_bgn;
+
+                    var src_spotlight = r2App.annots[base_annotid]._spotlights[spotlight_idx];
+                    r2App.annots[target_annot_id]._spotlights.push(
+                        src_spotlight.Retarget(
+                            target_annot_id,
+                            g0,
+                            g1
+                        )
+                    );
+                });
+                //console.log(gesture_id, streak_talken_idxs);
+            });
+
+
+
+            r2App.invalidate_page_layout = true;
+
+            return new Promise(function(resolve, reject){
+                resolve();
+            });
+        };
+
+        return pub;
+    }());
+
+    r2.tooltip = function($parent, init_text, pos, cb_done, cb_cancel){
+        var $tooltip = $(document.createElement('div'));
+        $tooltip.addClass('simplespeech_tooltip');
+        $tooltip.addClass('text_selectable');
+        $tooltip.css('left', pos.x);
+        $tooltip.css('top', pos.y);
+        $parent.append($tooltip);
+
+        var $arrow_up = $(document.createElement('div'));
+        $arrow_up.addClass('arrow_up');
+        $tooltip.append($arrow_up);
+
+        var $tooltip_input = $(document.createElement('div'));
+        $tooltip_input.addClass('tooltip_input');
+        $tooltip_input.attr('contenteditable', true);
+        r2.keyboard.pieceEventListener.setToolTip($tooltip_input[0]);
+        $tooltip.append($tooltip_input);
+
+        var done_by_enter = false;
+
+        $tooltip.find('.tooltip_input')[0].addEventListener('keyup', function(event){
+            if(event.which === r2.keyboard.CONST.KEY_ENTER){
+                event.preventDefault();
+            }
+            else if(event.which === r2.keyboard.CONST.KEY_ESC){
+                $tooltip_input.blur();
+                event.preventDefault();
+            }
+            else{
+                //centerDiv();
+            }
+        });
+        $tooltip.find('.tooltip_input')[0].addEventListener('keydown', function(event){
+            if(event.which === r2.keyboard.CONST.KEY_ENTER){
+                done_by_enter = true;
+                $tooltip_input.blur();
+                event.preventDefault();
+            }
+            else if(event.which === r2.keyboard.CONST.KEY_ESC){
+                event.preventDefault();
+            }
+        });
+        $tooltip.find('.tooltip_input')[0].addEventListener('input', function(event){
+            centerDiv();
+        });
+
+        $tooltip.find('.tooltip_input')[0].addEventListener('blur', function(event){
+            done();
+        });
+
+        var centerDiv = function(){
+            $tooltip.css('margin-left', -$tooltip[0].getBoundingClientRect().width/2+'px');
+        };
+
+        var done = function(){
+            if(done_by_enter){
+                cb_done($tooltip_input.text());
+            }
+            else{
+                cb_cancel();
+            }
+            $tooltip.remove();
+        };
+
+        this.focus = function(){
+            $tooltip_input.focus();
+            var sel = window.getSelection();
+            var range = document.createRange();
+            range.setStart($tooltip_input[0], 1);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        };
+
+        this.selectAll = function(){
+            $tooltip_input.focus();
+            var sel = window.getSelection();
+            var range = document.createRange();
+            range.selectNodeContents($tooltip_input[0]);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        };
+
+        this.setText = function(text){
+            $tooltip_input.text(text);
+            centerDiv();
+        };
+
+        this.setText(init_text);
+    };
+
+    r2.tooltipAudioWaveform = (function(){
+        var pub_ta = {};
+
+        var CONST = {
+            CANV_W: 120,
+            CANV_H: 40,
+            CANV_W_DOM: '3.6em',
+            CANV_H_DOM: '1.2em'
+        };
+
+        var is_display = false;
+
+        var $tooltip = $(document.createElement('div'));
+        $tooltip.addClass('tooltip_audio_waveform');
+
+        //var $arrow_up = $(document.createElement('div'));
+        //$arrow_up.addClass('arrow_up');
+        //$tooltip.append($arrow_up);
+
+        var canv = document.createElement('canvas');
+        //$(canv).addClass('arrow_up');
+        canv.width = CONST.CANV_W;
+        canv.height = CONST.CANV_H;
+        //$(canv).css('width', CONST.CANV_W_DOM);
+        //$(canv).css('height', CONST.CANV_H_DOM);
+        var ctx = canv.getContext('2d');
+        $tooltip.append($(canv));
+
+        pub_ta.show = function($parent, pos){
+            is_display = true;
+            $parent = $('#recording_indicator');
+            $parent.append($tooltip);
+            //$tooltip.css('left', pos.x);
+            //$tooltip.css('top', pos.y);
+            centerDiv();
+        };
+
+        pub_ta.dismiss = function(){
+            is_display = false;
+            $tooltip.remove();
+        };
+
+        pub_ta.drawDynamic = function(){
+            if(is_display){
+                var l = r2.audioRecorder.getRecorder().getPower();
+                var power = [];
+                var p = 0;
+                while(l.length + p < CONST.CANV_W){
+                    power.push(0);
+                    p++;
+                }
+                for(var i = l.length-(CONST.CANV_W-p); i < l.length; ++i ){
+                    power.push(l[i]);
+                }
+
+                var min = 0.0;
+                var max = 0.2;
+                power.forEach(function(v){
+                    min = Math.min(min, v);
+                    max = Math.max(max, v);
+                });
+
+                for(var i = 0; i < power.length; ++i){
+                    power[i] = (power[i]-min) / (max-min);
+                }
+
+                ctx.clearRect(0, 0, CONST.CANV_W, CONST.CANV_H);
+                ctx.beginPath();
+                var x = 0;
+                var y = CONST.CANV_H;
+                ctx.moveTo(x, y);
+                for(var i = 0; i < CONST.CANV_W; ++i){
+                    x = i;
+                    y = CONST.CANV_H*(1.0-power[i]*1.2);
+                    ctx.lineTo(x, y);
+                }
+                y = CONST.CANV_H;
+                ctx.lineTo(x, y);
+                ctx.fillStyle = "rgb(200,0,0)";
+                ctx.closePath();
+                ctx.fill();
+            }
+        };
+
+        function centerDiv(){
+            $tooltip.css('margin-left', -$tooltip[0].getBoundingClientRect().width/2+'px');
+        }
+
+        return pub_ta;
+
     }());
 
 }(window.r2 = window.r2 || {}));

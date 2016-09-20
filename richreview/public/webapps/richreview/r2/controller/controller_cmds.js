@@ -345,7 +345,6 @@
             if(anchorpiece){
                 var annot = new r2.Annot();
                 annot.SetAnnot(cmd.data.aid, anchorpiece.GetId(), cmd.time, cmd.data.duration, cmd.data.waveform_sample, cmd.user, cmd.data.audiofileurl);
-                annot.normalizeAudioDbs();
                 r2App.annots[cmd.data.aid] = annot;
                 r2.dom_model.createCommentVoice(annot, cmd.anchorTo.page, false); /* live_recording = false */
 

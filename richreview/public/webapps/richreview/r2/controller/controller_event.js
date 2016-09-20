@@ -403,8 +403,10 @@ var r2Ctrl = {};
                 if(r2.input.isTap(pos_dn, new_pen_pt)){
                     if(mode === PenMode.MANIPULATION){
                         if(!r2App.pieceSelector.isNull()){
-                            r2.recordingCtrl.set(r2App.pieceSelector.get(), r2App.RecordingUI.WAVEFORM);
-                            r2.log.Log_Simple("Recording_Bgn_PenTap");
+                            r2.recordingCtrl.set(
+                                r2App.pieceSelector.get(),
+                                {ui_type: r2.speechUi.mode, log_type: 'PenTap'}
+                            );
                         }
                     }
                     else if(mode === PenMode.NORMAL){
@@ -551,8 +553,8 @@ var r2Ctrl = {};
                         pub.mode = r2.MouseModeEnum.LDN;
                         pos_dn = new_mouse_pt;
                         if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
-                            if(r2.keyboard.ctrlkey_dn)
-                                r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);
+                            /*if(r2.keyboard.ctrlkey_dn)
+                                r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);// no private spotlight */
                         }
                         else if(r2App.mode == r2App.AppModeEnum.RECORDING){
                             r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
@@ -619,6 +621,7 @@ var r2Ctrl = {};
                     r2.spotlightCtrl.recordingSpotlightUp(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);
                 }
 
+                //r2.onScreenButtons.mouseUp();
                 pub.mode = r2.MouseModeEnum.HOVER;
             }
             else if(pub.mode == r2.MouseModeEnum.RDN){
@@ -669,7 +672,10 @@ var r2Ctrl = {};
         else if(obj_front instanceof r2.PieceKeyboard){
             obj_front.Focus();
         }
-        else if(obj_front instanceof r2.PieceEditableAudio){
+        else if(obj_front instanceof r2.PieceSimpleSpeech){
+            obj_front.Focus();
+        }
+        else if(obj_front instanceof r2.PieceNewSpeak){
             obj_front.Focus();
         }
         else{
@@ -693,7 +699,8 @@ var r2Ctrl = {};
     r2.KeyboardModeEnum = {
         TEXTBOX : 0,
         NORMAL : 1,
-        ON_BTN : 2
+        ON_BTN : 2,
+        TOOLTIP: 3
     };
 
     r2.keyboard = (function(){
@@ -712,6 +719,7 @@ var r2Ctrl = {};
             KEY_MINUS: 109,
 
             KEY_C: 67,
+            KEY_V: 86,
             KEY_X: 88,
             KEY_Z: 90,
 
@@ -730,6 +738,8 @@ var r2Ctrl = {};
         var mode = r2.KeyboardModeEnum.NORMAL;
         pub.ctrlkey_dn = false;
         pub.shift_key_dn = false;
+        pub.modifier_key_dn = false;
+        pub.CONST = CONST;
 
         pub.getMode = function(){
             return mode;
@@ -756,6 +766,17 @@ var r2Ctrl = {};
                 dom_btn.addEventListener('blur', function(){
                     mode = r2.KeyboardModeEnum.NORMAL;
                 });
+                $(dom_btn).bind('destroyed', function(){
+                    mode = r2.KeyboardModeEnum.NORMAL;
+                });
+            };
+            pub_ph.setToolTip = function(dom_btn){
+                dom_btn.addEventListener('focus', function(){
+                    mode = r2.KeyboardModeEnum.TOOLTIP;
+                });
+                dom_btn.addEventListener('blur', function(){
+                    mode = r2.KeyboardModeEnum.NORMAL;
+                });
             };
             return pub_ph;
         }());
@@ -777,7 +798,7 @@ var r2Ctrl = {};
                     }
                 }
             }
-            if(mode !== r2.KeyboardModeEnum.TEXTBOX){
+            if(mode === r2.KeyboardModeEnum.NORMAL || mode === r2.KeyboardModeEnum.ON_BTN){
                 switch(event.which){
                     case CONST.KEY_CTRL: // left ctrl
                         pub.ctrlkey_dn = true;
@@ -821,6 +842,10 @@ var r2Ctrl = {};
                 switch(event.which){
                     case CONST.KEY_CTRL: // left ctrl
                         pub.ctrlkey_dn = true;
+                        pub.modifier_key_dn = modifierKeyCtrl.dn(event.which);
+                        break;
+                    case CONST.KEY_CMD:
+                        pub.modifier_key_dn = modifierKeyCtrl.dn(event.which);
                         break;
                     case CONST.KEY_SHIFT: // left shift
                         pub.shift_key_dn = true;
@@ -852,21 +877,11 @@ var r2Ctrl = {};
                         }
                         break;
                     case CONST.KEY_ENTER: // enter
-                        if (pub.ctrlkey_dn) {
-                            createPieceKeyboard(isprivate = false);
-                            r2.log.Log_Simple("CreatePieceKeyboard_Enter");
-                        }
-                        else if(pub.shift_key_dn){ // trigger recording using SimpleSpeech UI
-                            if(!r2App.pieceSelector.isNull()){
-                                r2.recordingCtrl.set(r2App.pieceSelector.get(), r2App.RecordingUI.SIMPLE_SPEECH);
-                                r2.log.Log_Simple("Recording_Bgn_Enter_SimpleSpeech");
-                            }
-                        }
-                        else { // trigger recording using Waveform UI
-                            if(!r2App.pieceSelector.isNull()){
-                                r2.recordingCtrl.set(r2App.pieceSelector.get(), r2App.RecordingUI.WAVEFORM);
-                                r2.log.Log_Simple("Recording_Bgn_Enter_Waveform");
-                            }
+                        if(!r2App.pieceSelector.isNull()){
+                            r2.recordingCtrl.set(
+                                r2App.pieceSelector.get(),
+                                {ui_type: r2.speechUi.mode, log_type: 'Enter'}
+                            );
                         }
                         break;
                     default:
@@ -882,21 +897,11 @@ var r2Ctrl = {};
                     case CONST.KEY_ENTER: // enter
                         r2.log.Log_AudioStop('enter', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
                         r2.rich_audio.stop();
-                        if (pub.ctrlkey_dn) {
-                            createPieceKeyboard(isprivate = false);
-                            r2.log.Log_Simple("CreatePieceKeyboard_Enter");
-                        }
-                        else if(pub.shift_key_dn){ // trigger recording using SimpleSpeech UI
-                            if(!r2App.pieceSelector.isNull()){
-                                r2.recordingCtrl.set(r2App.pieceSelector.get(), r2App.RecordingUI.SIMPLE_SPEECH);
-                                r2.log.Log_Simple("Recording_Bgn_Enter_SimpleSpeech");
-                            }
-                        }
-                        else {
-                            if(!r2App.pieceSelector.isNull()){
-                                r2.recordingCtrl.set(r2App.pieceSelector.get(), r2App.RecordingUI.WAVEFORM);
-                                r2.log.Log_Simple("Recording_Bgn_Enter_Waveform");
-                            }
+                        if(!r2App.pieceSelector.isNull()){
+                            r2.recordingCtrl.set(
+                                r2App.pieceSelector.get(),
+                                {ui_type: r2.speechUi.mode, log_type: 'Enter'}
+                            );
                         }
                         break;
                     default:
@@ -918,6 +923,10 @@ var r2Ctrl = {};
             switch(event.which){
                 case CONST.KEY_CTRL: // left ctrl
                     pub.ctrlkey_dn = false;
+                    pub.modifier_key_dn = modifierKeyCtrl.up(event.which);
+                    break;
+                case CONST.KEY_CMD:
+                    pub.modifier_key_dn = modifierKeyCtrl.up(event.which);
                     break;
                 case CONST.KEY_SHIFT: // left shift
                     pub.shift_key_dn = false;
@@ -934,6 +943,28 @@ var r2Ctrl = {};
                     break;
             }
         };
+
+        var modifierKeyCtrl = (function(){
+            var pub_mk = {};
+
+            var is_dn = false;
+
+            pub_mk.dn = function(which){
+                if(which === r2.environment_detector.is_mac ? CONST.KEY_CMD : CONST.KEY_CTRL){
+                    is_dn = true;
+                }
+                return is_dn;
+            };
+
+            pub_mk.up = function(which){
+                if(which === r2.environment_detector.is_mac ? CONST.KEY_CMD : CONST.KEY_CTRL){
+                    is_dn = false;
+                }
+                return is_dn;
+            };
+
+            return pub_mk;
+        }());
 
         document.onkeyup = pub.handleUp;
         document.onkeydown = pub.handleDn;
@@ -976,14 +1007,13 @@ var r2Ctrl = {};
                 }
                 else{
                     if(!r2App.pieceSelector.isNull()){
-                        r2.recordingCtrl.set(r2App.pieceSelector.get(), r2App.RecordingUI.WAVEFORM);
-                        r2.log.Log_Simple("Recording_Bgn_OnScrBtn");
+                        r2.recordingCtrl.set(
+                            r2App.pieceSelector.get(),
+                            {ui_type: r2.speechUi.mode, log_type: 'OnScrBtn'}
+                        );
                         $dom.children('.voice_comment_btn').children('.fa-microphone').removeClass('fa-microphone').addClass('fa-stop');
                     }
                 }
-            }
-            else if(type === 'simplespeech'){
-
             }
         };
 
@@ -1208,6 +1238,12 @@ var r2Ctrl = {};
                     canv_ctx
                 );
             }
+            if(cur_recording_spotlight){
+                cur_recording_spotlight.Draw(canv_ctx);
+            }
+            if(cur_recording_spotlight_segment){
+                //cur_recording_spotlight_segment.Draw(canv_ctx, true);
+            }
         };
 
         pub.recordingSpotlightDn = function(pt, target_annot){
@@ -1280,6 +1316,7 @@ var r2Ctrl = {};
 
                 cur_recording_spotlight = null;
                 r2App.invalidate_dynamic_scene = true;
+                r2App.invalidate_static_scene = true;
                 return true;
             }
             else{

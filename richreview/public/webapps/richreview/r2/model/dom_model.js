@@ -48,6 +48,10 @@
             r2.radialMenu.changeCenterIcon('rm_'+r2.util.escapeDomId(annot_id), 'fa-play');
         };
 
+        pub.cbRecordingBgn = function(annot_id){
+            r2.radialMenu.changeCenterIcon('rm_'+r2.util.escapeDomId(annot_id), 'fa-stop');
+        };
+
         pub.remove = function(annot_id){
             var annot_id_esc = r2.util.escapeDomId(annot_id);
             $('#'+annot_id_esc).remove();
@@ -474,7 +478,7 @@
                         'play or stop audio',
                         function(){
                             if(r2App.mode === r2App.AppModeEnum.RECORDING){
-                                if(annot_id === r2App.cur_recording_annot.GetId()){
+                                if(annot_id === r2App.cur_recording_piece.GetAnnotId()){
                                     r2.recordingCtrl.stop(true); /* to upload */
                                     r2.log.Log_Simple("Recording_Stop_RadialMenu");
                                     r2.radialMenu.changeCenterIcon('rm_'+annot_id_esc, 'fa-play');
@@ -482,7 +486,30 @@
                             }
                             else{
                                 if (r2App.mode === r2App.AppModeEnum.IDLE) {
-                                    r2.rich_audio.play(annot_id, -1);
+                                    var piece = r2App.pieces_cache[pid];
+                                    if(typeof piece.simplespeech !== 'undefined' && piece.simplespeech.isContentChanged()){
+                                        piece.simplespeech.synthesizeNewAnnot(annot_id).then(
+                                            function(){
+                                                r2.rich_audio.play(annot_id, -1);
+                                            }.bind(this)
+                                        );
+                                    }
+                                    else if (typeof piece.speak_ctrl !== 'undefined') {
+                                        piece.renderAndPlay();
+                                    }
+                                    else{
+                                        r2.rich_audio.play(
+                                            annot_id,
+                                            -1,
+                                            function() {
+                                                r2.radialMenu.bgnLoading('rm_' + r2.util.escapeDomId(annot_id));
+                                            },
+                                            function() {
+                                                r2.radialMenu.endLoading('rm_' + r2.util.escapeDomId(annot_id));
+                                            }
+                                        );
+                                    }
+
                                     r2.log.Log_AudioPlay('play_btn', annot_id, r2.audioPlayer.getPlaybackTime());
                                 }
                                 else if (r2App.mode === r2App.AppModeEnum.REPLAYING) {
@@ -491,7 +518,16 @@
                                         r2.rich_audio.stop();
                                     }
                                     else {
-                                        r2.rich_audio.play(annot_id, -1);
+                                        r2.rich_audio.play(
+                                            annot_id,
+                                            -1,
+                                            function() {
+                                                r2.radialMenu.bgnLoading('rm_' + r2.util.escapeDomId(annot_id));
+                                            },
+                                            function() {
+                                                r2.radialMenu.endLoading('rm_' + r2.util.escapeDomId(annot_id));
+                                            }
+                                        );
                                         r2.log.Log_AudioPlay('play_btn', annot_id, r2.audioPlayer.getPlaybackTime());
                                     }
                                 }
@@ -515,7 +551,8 @@
                     r2.radialMenu.addBtnCircular($rm, 'fa-trash', 'erase', function(){
                         if(r2App.mode === r2App.AppModeEnum.RECORDING){ return; }
                         if(r2.userGroup.cur_user.name === user.name){
-                            alert("This feature is yet to be implemented.")
+                            if(r2.removeAnnot(annot_id, true, false)){ // askuser, mute
+                            }
                         }
                         else{
                             alert("You can only delete your own comments.")

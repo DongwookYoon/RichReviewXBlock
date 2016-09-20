@@ -10,16 +10,21 @@
 
         var triggered = false;
         var anchor_piece = null;
-        var ui_type = null; // WAVEFORM, SIMPLE_SPEECH, OR NEW_SPEAK
+        var options = {}; // has ui_type WAVEFORM, SIMPLE_SPEECH, OR NEW_SPEAK
 
-        pub.set = function(_anchor_piece, _ui_type){
+        pub.set = function(_anchor_piece, _options){
+            if(r2App.is_recording_or_transcribing){
+                alert('Recording and transcribing is currently in progress.');
+                return;
+            }
             if(r2App.disable_comment_production){
                 alert('This page is only for the review. Features for creating comments are disabled.');
                 return;
             }
             triggered = true;
             anchor_piece = _anchor_piece;
-            ui_type = _ui_type;
+            options = _options;
+            r2.log.Log_Simple('Recording_Bgn_' + _options.log_type + '_' + JSON.stringify(_options.ui_type));
         };
 
         pub.isReady = function(){
@@ -28,27 +33,36 @@
 
         pub.bgn = function(){
             triggered = false;
-            if(ui_type === r2App.RecordingUI.WAVEFORM){
-                r2.recordingBgn.waveform(anchor_piece);
+            if(options.ui_type === r2App.RecordingUI.WAVEFORM){
+                r2.recordingBgn.waveform(anchor_piece, options);
             }
-            else if(ui_type === r2App.RecordingUI.SIMPLE_SPEECH){
+            else{
                 var done = function(){
-                    r2.recordingBgn.simpleSpeech(anchor_piece);
+                    r2.recordingBgn.transcription(anchor_piece, options);
                 };
                 if(r2App.bluemix_tts_auth_context){
-                    console.log('auth_set', r2App.bluemix_tts_auth_context);
                     done();
                 }
                 else{ // if auth context not set
-                    bluemix_stt.getAuthInfo().then(
+                    bluemix_stt.getAuthInfo().catch(
+                        function(e){
+                            throw 'Invalid BlueMix authentication error: need login';
+                        }
+                    ).then(
                         function(authToken) {
-                            console.log('auth', authToken);
-                            r2App.bluemix_tts_auth_context = {
-                                token: authToken,
-                                model: 'en-US_BroadbandModel', // audio sampled at >= 16 KHz
-                                requestLogging: 'false' // opt-in for data logging that enhances model
-                            };
-                            return done();
+                            if(authToken){ // auth successful
+                                console.log('Got Bluemix token', authToken);
+                                r2App.bluemix_tts_auth_context = {
+                                    token: authToken,
+                                    model: 'en-US_BroadbandModel', // audio sampled at >= 16 KHz
+                                    requestLogging: 'false' // opt-in for data logging that enhances model
+                                };
+                                return done();
+                            }
+                            else{ // auth failed
+                                console.log('Getting Bluemix auth failed:', authToken);
+                                throw 'Invalid BlueMix authentication error: invalid user';
+                            }
                         }
                     );
                 }
@@ -56,20 +70,17 @@
         };
 
         pub.stop = function(){
-            if(ui_type === r2App.RecordingUI.WAVEFORM){
+            if(options.ui_type === r2App.RecordingUI.WAVEFORM){
                 r2.recordingStop.waveform(anchor_piece);
             }
-            else if(ui_type === r2App.RecordingUI.SIMPLE_SPEECH){
-                r2.recordingStop.simpleSpeech(anchor_piece);
+            else{
+                r2.recordingStop.transcription(anchor_piece);
             }
         };
 
         pub.update = function(){
-            if(ui_type === r2App.RecordingUI.WAVEFORM){
+            if(options.ui_type === r2App.RecordingUI.WAVEFORM){
                 r2.recordingUpdate();
-            }
-            else if(ui_type === r2App.RecordingUI.SIMPLE_SPEECH){
-                ;
             }
         };
 
@@ -78,21 +89,20 @@
 
     r2.recordingBgn = (function(){
         var pub = {};
-        pub.waveform = function(anchor_piece){
-            run(anchor_piece, createPieceAudio);
+        pub.waveform = function(anchor_piece, options){
+            run(anchor_piece, createPieceAudio, options);
         };
-        pub.simpleSpeech = function(anchor_piece){
-            run(anchor_piece, createPieceEditableAudio);
+        pub.transcription = function(anchor_piece, options){
+            run(anchor_piece, createPieceTranscription, options);
         };
 
-        var run = function(anchor_piece, funcCreatePiece){
-
+        var run = function(anchor_piece, funcCreatePiece, options){
             /* create Annot */
-            r2App.cur_recording_annot = new r2.Annot();
             var annotid = new Date(r2App.cur_time).toISOString();
-            r2App.cur_recording_annot.SetAnnot(
-                annotid, anchor_piece.GetId(), r2App.cur_time, r2App.cur_time, [], r2.userGroup.cur_user.name, ""
-            );
+            var args_new_annot = [annotid, anchor_piece.GetId(), r2App.cur_time, 0, [], r2.userGroup.cur_user.name, ""];
+
+            r2App.cur_recording_annot = new r2.Annot();
+            r2.Annot.prototype.SetAnnot.apply(r2App.cur_recording_annot, args_new_annot);
             r2App.annots[annotid] = r2App.cur_recording_annot;
 
             /* set context */
@@ -101,80 +111,140 @@
             r2App.cur_recording_piece = null;
 
             /* create piece */
-            funcCreatePiece(anchor_piece, annotid);
+            funcCreatePiece(anchor_piece, annotid, options).then(
+                function(){
+                    /* begin audio recording */
+                    r2.audioRecorder.BgnRecording();
 
-            /* begin audio recording */
-            r2.audioRecorder.BgnRecording();
+                    /* update system variables */
+                    if(r2App.cur_recording_piece.bgnCommentingAsync)
+                        r2App.cur_recording_piece.bgnCommentingAsync();
+                    if(options.piece_to_insert){
+                        r2.dom_model.cbRecordingBgn(options.piece_to_insert.GetAnnotId(), 'fa-stop');
+                    }
+                    r2.dom.enableRecordingIndicators();
+                    r2App.mode = r2App.AppModeEnum.RECORDING;
+                }
+            ).catch(
+                function(err){
+                    throw err;
+                }
+            );
 
-            /* update system variables */
-            r2.dom.enableRecordingIndicators();
-            r2App.mode = r2App.AppModeEnum.RECORDING;
             r2App.invalidate_size = true;
             r2App.invalidate_page_layout = true;
         };
 
         var createPieceAudio = function(anchor_piece, annotid){
-            /* create piece object */
-            var pieceaudio = new r2.PieceAudio();
-            pieceaudio.SetPiece(
-                r2.pieceHashId.voice(annotid, 0), // this piece is the first waveform line
-                r2App.cur_recording_annot.GetBgnTime(),
-                anchor_piece.GetNewPieceSize(),
-                anchor_piece.GetTTData()
-            );
-            pieceaudio.SetPieceAudio(annotid, r2.userGroup.cur_user.name, 0, 0);
-            r2App.cur_recording_pieceaudios.push(pieceaudio);
-            r2App.cur_recording_piece = pieceaudio;
-            anchor_piece.AddChildrenAtFront(r2App.cur_recording_pieceaudios);
+            return new Promise(function(resolve, reject){
+                /* create piece object */
+                var pieceaudio = new r2.PieceAudio();
+                pieceaudio.SetPiece(
+                    r2.pieceHashId.voice(annotid, 0), // this piece is the first waveform line
+                    r2App.cur_recording_annot.GetBgnTime(),
+                    anchor_piece.GetNewPieceSize(),
+                    anchor_piece.GetTTData()
+                );
+                pieceaudio.SetPieceAudio(annotid, r2.userGroup.cur_user.name, 0, 0);
+                r2App.cur_recording_pieceaudios.push(pieceaudio);
+                r2App.cur_recording_piece = pieceaudio;
+                anchor_piece.AddChildrenAtFront(r2App.cur_recording_pieceaudios);
 
-            /* update dom with the object */
-            r2.dom_model.createCommentVoice(r2App.cur_recording_annot, r2App.cur_pdf_pagen, true); /* live_recording = true */
-            r2.dom_model.appendPieceVoice(annotid, 0, r2App.cur_recording_annot.GetBgnTime(), pieceaudio);
+                /* update dom with the object */
+                r2.dom_model.createCommentVoice(r2App.cur_recording_annot, r2App.cur_pdf_pagen, true); /* live_recording = true */
+                /* live_recording = true */
+                r2.dom_model.appendPieceVoice(annotid, 0, r2App.cur_recording_annot.GetBgnTime(), pieceaudio);
+                resolve();
+            });
         };
 
-        var createPieceEditableAudio = function(anchor_piece, annotid){
-            var piece_editable_audio = new r2.PieceEditableAudio();
-            piece_editable_audio.SetPiece(
-                r2.pieceHashId.voice(annotid, 0), // this piece is the first waveform line
-                r2App.cur_recording_annot.GetBgnTime(),
-                anchor_piece.GetNewPieceSize(),
-                anchor_piece.GetTTData()
-            );
-            piece_editable_audio.SetPieceEditableAudio(
-                anchor_piece.GetId(), annotid, r2.userGroup.cur_user.name,
-                '', // inner_html
-                true // live_recording
-            );
-            anchor_piece.AddChildAtFront(piece_editable_audio);
-            r2App.cur_recording_piece = piece_editable_audio;
+        var createPieceTranscription = function(anchor_piece, recording_annot_id, options){
+            return new Promise(function(resolve, reject){
 
-            // set event trigger
-            bluemix_stt.messageParser.setCallbacks(
-                function(words){
-                    piece_editable_audio.setCaptionTemporary(words);
-                },
-                function(words, conf){
-                    piece_editable_audio.setCaptionFinal(words);
+                var NewPieceType = null;
+                var setPieceFunc = '';
+                if(options.ui_type === r2App.RecordingUI.NEW_SPEAK){
+                    NewPieceType = r2.PieceNewSpeak;
+                    setPieceFunc = r2.PieceNewSpeak.prototype.SetPieceNewSpeak;
                 }
-            );
-            // begin recording
-            bluemix_stt.handleMicrophone(
-                r2App.bluemix_tts_auth_context,
-                r2.audioRecorder,
-                function(err, socket) { // opened
-                    if (err) {
+                else if(
+                    options.ui_type === r2App.RecordingUI.SIMPLE_SPEECH ||
+                    options.ui_type === r2App.RecordingUI.WAVE_WEAVER
+                ){
+                    NewPieceType = r2.PieceSimpleSpeech;
+                    setPieceFunc = r2.PieceSimpleSpeech.prototype.SetPieceSimpleSpeech;
+                }
 
-                    } else {
+                var piece_simple_speech = null;
+                if(options.piece_to_insert){
+                    piece_simple_speech = options.piece_to_insert;
+                }
+                else{
+                    var time_simple_speech = r2App.cur_time+128;
+                    var piece_annot_id = new Date(time_simple_speech).toISOString();
+                    var piece_annot = new r2.Annot();
+                    var args_new_annot = [piece_annot_id, anchor_piece.GetId(), time_simple_speech, time_simple_speech, [], r2.userGroup.cur_user.name, ""];
 
+                    r2.Annot.prototype.SetAnnot.apply(piece_annot, args_new_annot);
+                    r2App.annots[piece_annot_id] = piece_annot;
+
+                    piece_simple_speech = new NewPieceType();
+
+                    var args_set_piece = [
+                        r2.pieceHashId.voice(piece_annot_id, 0),
+                        piece_annot.GetBgnTime(),
+                        anchor_piece.GetNewPieceSize(),
+                        anchor_piece.GetTTData()
+                    ];
+                    piece_simple_speech.SetPiece.apply(
+                        piece_simple_speech, args_set_piece
+                    );
+
+                    var args_set_piece_func = [
+                        anchor_piece.GetId(),
+                        piece_annot_id,
+                        r2.userGroup.cur_user.name,
+                        '',
+                        true, // live_recording
+                        options.ui_type
+                    ];
+                    setPieceFunc.apply(
+                        piece_simple_speech, args_set_piece_func
+                    );
+                    anchor_piece.AddChildAtFront(piece_simple_speech);
+                }
+
+                r2App.cur_recording_piece = piece_simple_speech;
+                piece_simple_speech.bgnCommenting(recording_annot_id);
+
+                // set event trigger
+                bluemix_stt.messageParser.setCallbacks(
+                    function(words){
+                        piece_simple_speech.setCaptionTemporary(words);
+                    },
+                    function(words, conf){
+                        piece_simple_speech.setCaptionFinal(words);
                     }
-                },
-                function(msg){ // transcript
-                    bluemix_stt.messageParser.run(msg);
-                },
-                function() { // closed
-                    piece_editable_audio.doneCaptioning();
-                }
-            );
+                );
+                // begin recording
+                bluemix_stt.handleMicrophone(
+                    r2App.bluemix_tts_auth_context,
+                    r2.audioRecorder,
+                    function(err, socket) { // opened
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve();
+                        }
+                    },
+                    function(msg){ // transcript
+                        bluemix_stt.messageParser.run(msg);
+                    },
+                    function() { // closed
+                        piece_simple_speech.doneCaptioning();
+                    }
+                );
+            });
         };
 
         return pub;
@@ -186,8 +256,8 @@
         pub.waveform = function(to_upload){
             run(to_upload, onPieceAudio);
         };
-        pub.simpleSpeech = function(to_upload){
-            run(to_upload, onPieceEditableAudio);
+        pub.transcription = function(to_upload){
+            run(to_upload, onPieceTranscription);
         };
 
         var run = function(to_upload, funcOn){
@@ -211,6 +281,9 @@
 
                     r2.dom_model.cbRecordingStop(r2App.cur_recording_piece.GetAnnotId());
 
+                    if(r2App.cur_recording_piece.onEndRecording)
+                        r2App.cur_recording_piece.onEndRecording(result.url);
+
                     /* release context */
                     r2App.cur_recording_annot = null;
                     r2App.cur_recording_pieceaudios = null;
@@ -229,7 +302,7 @@
         var onPieceAudio = function(){
         };
 
-        var onPieceEditableAudio = function(){
+        var onPieceTranscription = function(){
             $.publish('hardsocketstop');
         };
 
@@ -237,7 +310,10 @@
     }());
 
     r2.recordingUpdate = function(){
-        r2.audioRecorder.getDbs(function(dbs){
+        var l = r2.audioRecorder.getRecorder().getPower();
+        var dbs = l[l.length-1];
+        //console.log(dbs, l.length);
+        {
             r2App.cur_recording_annot.UpdateDbs(dbs);
             r2.util.lastOf(r2App.cur_recording_pieceaudios).UpdateAudioDbsRecording(r2App.cur_time-r2App.cur_recording_annot.GetBgnTime());
 
@@ -260,17 +336,19 @@
                     (npiece-1)*timePerPiece,
                     r2App.cur_time-annot.GetBgnTime());
 
-
                 r2App.cur_recording_pieceaudios.push(pieceaudio);
+                r2App.cur_recording_piece = pieceaudio;
                 anchorpiece.AddChildrenAtFront(r2App.cur_recording_pieceaudios);
 
                 r2App.invalidate_size = true;
                 r2App.invalidate_page_layout = true;
+                r2App.invalidate_dynamic_scene = true;
+                r2App.invalidate_static_scene = true;
 
                 /* dom */
                 r2.dom_model.appendPieceVoice(annot.GetId(), npiece-1, r2App.cur_recording_annot.GetBgnTime(), pieceaudio);
             }
             r2.PieceAudio.prototype.NormalizePieceAudio(r2App.cur_recording_pieceaudios, refresh_all = false);
-        });
+        }
     };
 }(window.r2 = window.r2 || {}));

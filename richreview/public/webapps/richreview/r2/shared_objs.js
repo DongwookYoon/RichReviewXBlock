@@ -42,6 +42,7 @@ var r2Const = (function () {
     pub.RADIALMENU_RADIUS = pub.RADIALMENU_SIZE*1.6*0.5; // 23px*1.6em/2
     pub.RAIDALMENU_FONTSIZE_SCALE = 100; // this is required to circumvent minimum font size setting
     pub.FONT_SIZE_SCALE = 50;
+    pub.SIMPLESPEECH_FONT_SIZE = 0.8;
 
     // on screen btn
     pub.ONSCRBTN_SIZE = 13/920;
@@ -131,6 +132,7 @@ var r2App = (function() {
     pub.cur_recording_piece = null;
     pub.cur_recording_minmax = [0.05, 0.25];
     pub.cur_focused_piece_keyboard = null;
+    pub.is_recording_or_transcribing = false;
 
     pub.splight_prerender = null;
     pub.splight_prerender_ctx = null;

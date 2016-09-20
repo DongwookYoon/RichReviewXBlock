@@ -259,7 +259,7 @@ a:active {
   border: 0;
   overflow: auto;
   padding: 0.3em;
-  font-family: wf_SegoeUI,"Segoe UI","Segoe","Tahoma","Helvetica","sans-serif";
+  font-family: 'Lucida Grande', Helvetica, Arial, sans-serif;
   font-size: 0.8em; /* variant to FONT_SIZE_SCALE  */
   line-height: 1.2em;
   min-height: 1.8em; /* line-height + 2*padding */
@@ -294,17 +294,125 @@ a:active {
   left: 0; /* will be tt_x */
   width: 1em; /* will be tt_w */
 }
-.r2_piece_editable_audio_textbox {
+.r2_piece_simplespeech {
   border: 0;
   overflow: auto;
   padding: 0.3em;
   font-family: wf_SegoeUI,"Segoe UI","Segoe","Tahoma","Helvetica","sans-serif";
-  font-size: 0.8em; /* variant to FONT_SIZE_SCALE  */
-  line-height: 1.2em;
+  line-height: 1.0em;
+  min-height: 1.0em;
   text-align: left;
   white-space: pre;
   white-space: pre-wrap;
 }
+.r2_piece_simplespeech.editing {
+  background: rgba(255, 255, 255, 0.74902);
+}
+.r2_piece_simplespeech > .ssui-ctrltalken {
+  position:relative;
+  margin: 0;
+
+  font-size: 0.8em; /* variant to FONT_SIZE_SCALE  */
+  letter-spacing: 0;
+  z-index: 2;
+}
+.ssui-overlay {
+  position: absolute;
+  padding: 0;
+  width: 0;
+  height: 0;
+  z-index: 0;
+}
+.ssui-overlay > .ssui-viewtalken {
+  display: inline-block;
+  position: absolute;
+  margin: 0;
+  z-index: 7;
+  white-space: nowrap;
+
+  height: 0.8em;
+}
+
+.ssui-overlay > .ssui-viewtalken > .ssui-viewtalken-span {
+  display: -webkit-inline-box;
+  margin: 0;
+  padding: 0;
+  position: relative;
+
+  font-size: 0.8em; /* variant to FONT_SIZE_SCALE  */
+
+}
+.ssui-overlay > .ssui-viewtalken > .ssui-viewtalken-canv {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+  vertical-align: top;
+}
+
+.ssui-overlay > .ssui-viewtalken > .ssui-waveform-span-wrapper-div {
+  display: block;
+  margin: 0;
+  padding: 0;
+  position: relative;
+
+  width: 100%;
+  padding-top: -1em;
+  height: 0;
+  z-index: 8;
+}
+
+.ssui-overlay > .ssui-viewtalken > .ssui-waveform-span-wrapper-div > .ssui-waveform-span {
+  margin: 0;
+  padding: 0;
+
+  font-size: 0.6em;
+  vertical-align: -webkit-baseline-middle;
+}
+.ssui-overlay >  .ssui-viewtalken {
+  background-color: rgb(245, 245, 245);
+  color: black;
+}
+.ssui-overlay >  .ssui-viewtalken.fresh-recording {
+  background-color: rgb(214, 225, 235);
+  color: black;
+}
+.ssui-overlay > .ssui-viewtalken.ssui-word {
+  border-radius: 0.1em;
+  padding-top: 0.1em;
+  padding-left: 0.1em;
+  padding-right: 0.1em;
+}
+
+.ssui-overlay > .ssui-viewtalken.ssui-waveform {
+  border-radius: 0.1em;
+  padding-top: 0.1em;
+}
+
+.ssui-overlay > .ssui-viewtalken.ssui-pause {
+  border-radius: 0.2em;
+}
+.ssui-overlay > .ssui-viewtalken.replay_highlight {
+  background-color: lightsteelblue;
+  color: black;
+}
+.ssui-overlay > .ssui-viewtalken.ssui-recording-indicator {
+  background-color: rgba(205, 92, 92, 0.85);
+  color: transparent;
+  border: solid 0.1em rgb(205, 92, 92);
+  min-width: 0.5em;
+}
+.blink_me {
+  animation: blinker 1.5s linear infinite;
+}
+@keyframes blinker {
+  50% { opacity: 0.5; }
+}
+
+
 
 /*
 * booklet
@@ -348,7 +456,7 @@ a:active {
     width: 350px;
 }
 
-/* on screen drag down buttons */
+/* on screen buttons */
 
 #onscrbtns_static{
   position: absolute;
@@ -357,6 +465,7 @@ a:active {
   right: 0;
   bottom: 0;
   color: black;
+  pointer-events: all;
 }
 
 #onscrbtns_static > .comment_btn.fa-stack {
@@ -592,6 +701,7 @@ a:active {
   width: 120px;
 }
 
+
 #page_nav_input {
   width: 33px;
   text-align: center;
@@ -611,7 +721,6 @@ a:active {
   position: absolute;
   left: 25px;
   top: 25px;
-  width: 35px;
   height: 54px;
   font-size: 54px;
   color: rgba(205, 92, 92, 0.85);
@@ -622,7 +731,8 @@ a:active {
 #recording_indicator_stack{
   width: 35px;
   height: 54px;
-  display: block;
+  display: inline-block;
+  vertical-align: text-top;
 }
 
 #recording_indicator_stack i {
@@ -640,7 +750,7 @@ a:active {
   position: absolute;
   right: 20px;
   top: 20px;
-  width: 225px;
+  width: 235px;
   height: 54px;
   font-size: 50px;
   color: rgba(33, 150, 243, 0.85);
@@ -658,7 +768,7 @@ a:active {
   font-size: 12px;
   background: rgba(33, 150, 243, 0.85);
   color: rgba(255, 255, 255, 0.85);
-  padding:5px;
+  padding:3px;
   border-style: solid;
   border-color: rgba(135, 206, 250, 0.85);
   border-width: 1px;
@@ -1074,6 +1184,56 @@ body::-webkit-scrollbar-corner {
 
 .rm_btn_center > i {
   font-size: 0.30em;
+}
+
+
+div.simplespeech_tooltip{
+  position: absolute;
+  z-index: 20;
+}
+
+div.simplespeech_tooltip > div.tooltip_input {
+  padding: 5px;
+  border: solid cornflowerblue 1px;
+  border-radius: 4px;
+  width: auto;
+  background:white;
+  color: black;
+  line-height: 1em;
+  font-size: 0.8em;
+}
+
+
+div.simplespeech_tooltip > div.arrow_up {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 7px solid cornflowerblue;
+  margin: auto;
+}
+
+
+div.tooltip_audio_waveform {
+  display: inline-block;
+}
+
+div.tooltip_audio_waveform canvas{
+  padding: 3px 0;
+  border: solid rgba(205, 92, 92, 0.85) 1px;
+  border-radius: 4px;
+  background: white;
+  width: 150px;
+  height: 50px;
+}
+
+div.tooltip_audio_waveform div.arrow_up {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 7px solid rgba(205, 92, 92, 0.85);
+  margin: auto;
 }
 
 #cornellx_inst{

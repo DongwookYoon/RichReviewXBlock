@@ -19,6 +19,9 @@
         pub.stop = function(){
             r2.audioPlayer.stop();
         };
+        pub.jump = function(annot_id, time){
+            r2.audioPlayer.jump(annot_id, r2App.annots[annot_id].GetAudioFileUrl(), time);
+        };
         return pub;
     }());
 

@@ -224,6 +224,116 @@
     }());
 
 
+    /* speech synthesizer*/
+    r2.speechSynth = (function(){
+        var pub = {};
+
+        pub.Status = {
+            UNINITIALIZE : 0,
+            LOADING : 1,
+            STOPPED : 2,
+            PLAYING : 3
+        };
+        pub.is_canceled = false;
+        var mode = pub.Status.UNINITIALIZE;
+        var last_status = null;
+
+        var synth;
+        var utterance;
+        var end_event = new Event('endSpeechSynth');
+        var err_event = new Event('errSpeechSynth');
+        var err_cache = null;
+        var annot_id = null;
+
+        pub.init = function(){
+            if(typeof SpeechSynthesisUtterance === 'undefined'){
+                throw 'SpeechSyntehsis engine not supported';
+            }
+            synth = window.speechSynthesis;
+            mode = pub.Status.STOPPED;
+        };
+
+        pub.getStatusChange = function(){
+            if(last_status !== mode){
+                last_status = mode;
+                return mode;
+            }
+            else{
+                return null;
+            }
+        };
+        pub.getPlaybackTime = function(){
+            return 0;
+        };
+        pub.getCurAudioFileId = function(){
+            return annot_id;
+        };
+
+        pub.play = function(s, _annot_id, cbLoadingBgn, cbLoadingEnd){
+            if(synth.pending || synth.speaking){
+                return Promise.reject('Now speaking');
+            }
+            else{
+                pub.is_canceled = false;
+                annot_id = _annot_id;
+                mode = pub.Status.LOADING;
+                cbLoadingBgn();
+                utterance = new SpeechSynthesisUtterance(s);
+                synth.speak(utterance);
+                utterance.onstart = function(event){
+                    mode = pub.Status.PLAYING;
+                    cbLoadingEnd();
+                    r2.dom_model.cbAudioPlay(annot_id);
+                };
+                utterance.onend = function (event) {
+                    utterance.dispatchEvent(end_event);
+                    mode = pub.Status.STOPPED;
+                };
+                utterance.onerror = function (error) {
+                    err_cache = error;
+                    utterance.dispatchEvent(err_event);
+                    mode = pub.Status.STOPPED;
+                };
+
+                return new Promise(function(resolve, reject){
+                    utterance.addEventListener('endSpeechSynth', function(event){
+                        mode = pub.Status.STOPPED;
+                        r2.dom_model.cbAudioStop(annot_id);
+                        resolve(event);
+                    });
+                    utterance.addEventListener('errSpeechSynth', function(event){
+                        mode = pub.Status.STOPPED;
+                        reject(err_cache);
+                    });
+                });
+            }
+        };
+
+        pub.cancel = function(){
+            if(!synth.pending && !synth.speaking){
+                return Promise.reject('Nothing to cancel');
+            }
+            synth.cancel();
+            pub.is_canceled = true;
+            return new Promise(function(resolve, reject) {
+                utterance.addEventListener('endSpeechSynth', function(event){
+                    mode = pub.Status.STOPPED;
+                    r2.dom_model.cbAudioStop(annot_id);
+                    annot_id = null;
+                    resolve(event);
+                });
+                utterance.addEventListener('errSpeechSynth', function(event){
+                    mode = pub.Status.STOPPED;
+                    annot_id = null;
+                    reject(err_cache);
+                });
+            });
+        };
+
+        return pub;
+    }());
+
+
     /** Audio Recorder */
     r2.audioRecorder = (function(){
         var pub = {};

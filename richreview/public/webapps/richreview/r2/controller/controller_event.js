@@ -687,8 +687,12 @@ var r2Ctrl = {};
             for(var i = 0; spotlight = spotlights[i]; ++i){
                 playback = spotlight.GetPlayback(pt);
                 if(playback){
-                    r2.rich_audio.play(playback.annot, playback.t);
-                    r2.log.Log_AudioPlay('indexing_sp', playback.annot, playback.t);
+                    console.log(r2App.annots[playback.annot]._ui_type);
+                    console.log(r2App.annots[playback.annot]);
+                    if(r2App.annots[playback.annot]._ui_type !== 'new_speak'){
+                        r2.rich_audio.play(playback.annot, playback.t);
+                        r2.log.Log_AudioPlay('indexing_sp', playback.annot, playback.t);
+                    }
                     break;
                 }
             }

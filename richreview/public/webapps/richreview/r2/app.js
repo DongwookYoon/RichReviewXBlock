@@ -96,17 +96,39 @@
             r2App.cur_audio_time = r2.audioPlayer.getPlaybackTime();
             r2App.cur_annot_id = r2.audioPlayer.getCurAudioFileId();
 
-            var status_transition = r2.audioPlayer.getStatusChange();
-            if(status_transition !== null && status_transition !== r2.audioPlayer.Status.LOADING){
-                if(status_transition === r2.audioPlayer.Status.UNINITIALIZE ||
-                    status_transition === r2.audioPlayer.Status.STOPPED){
-                    r2App.mode = r2App.AppModeEnum.IDLE;
+            // state transition from audio
+            if(r2.speechUi.mode === r2App.RecordingUI.WAVEFORM || r2.speechUi.mode === r2App.RecordingUI.SIMPLE_SPEECH){
+                var status_transition = r2.audioPlayer.getStatusChange();
+                if(status_transition !== null && status_transition !== r2.audioPlayer.Status.LOADING){
+                    if(status_transition === r2.audioPlayer.Status.UNINITIALIZE ||
+                        status_transition === r2.audioPlayer.Status.STOPPED){
+                        r2App.mode = r2App.AppModeEnum.IDLE;
+                    }
+                    else if(status_transition === r2.audioPlayer.Status.PLAYING){
+                        r2App.mode = r2App.AppModeEnum.REPLAYING;
+                    }
+                    pub.invalidate_dynamic_scene = true;
                 }
-                else if(status_transition === r2.audioPlayer.Status.PLAYING){
-                    r2App.mode = r2App.AppModeEnum.REPLAYING;
-                }
-                pub.invalidate_dynamic_scene = true;
             }
+
+            if(r2.speechUi.mode === r2App.RecordingUI.NEW_SPEAK){
+                r2App.cur_audio_time = r2.speechSynth.getPlaybackTime();
+                r2App.cur_annot_id = r2.speechSynth.getCurAudioFileId();
+
+                // state transition from speechSynthesizer
+                status_transition = r2.speechSynth.getStatusChange();
+                if(status_transition !== null && status_transition !== r2.speechSynth.Status.LOADING){
+                    if(status_transition === r2.speechSynth.Status.UNINITIALIZE ||
+                        status_transition === r2.speechSynth.Status.STOPPED){
+                        r2App.mode = r2App.AppModeEnum.IDLE;
+                    }
+                    else if(status_transition === r2.speechSynth.Status.PLAYING){
+                        r2App.mode = r2App.AppModeEnum.REPLAYING;
+                    }
+                    pub.invalidate_dynamic_scene = true;
+                }
+            }
+
         };
 
         var triggerReservedRecording = function(){
@@ -134,9 +156,7 @@
 
             r2App.cur_page.drawBackgroundWhite();
             r2App.cur_page.RunRecursive('DrawPiece');
-            if(r2App.mode !== r2App.AppModeEnum.RECORDING){
-                r2App.cur_page.drawSpotlightPrerendered();
-            }
+            r2App.cur_page.drawSpotlightPrerendered();
             r2App.cur_page.drawInkPrerendered();
         }
 
@@ -255,6 +275,7 @@
             return r2.audioRecorder.Init().then(
                 function(){
                     r2.coverMsg.Show([""]);
+                    r2.speechSynth.init();
                 }
             ).catch(
                 function (err){
@@ -411,7 +432,7 @@
 
             var annot_private_spotlight_id = r2.userGroup.cur_user.GetAnnotPrivateSpotlightId();
             r2App.annot_private_spotlight = new r2.AnnotPrivateSpotlight();
-            r2App.annot_private_spotlight.SetAnnot(annot_private_spotlight_id, null, 0, 0, [], r2.userGroup.cur_user.name, '');
+            r2App.annot_private_spotlight.SetAnnot(annot_private_spotlight_id, null, 0, 0, [], r2.userGroup.cur_user.name, '', 'private_spotlight');
             r2App.annots[annot_private_spotlight_id] = r2App.annot_private_spotlight;
 
             r2.booklet.initBooklet();

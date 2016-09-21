@@ -99,7 +99,9 @@
         var run = function(anchor_piece, funcCreatePiece, options){
             /* create Annot */
             var annotid = new Date(r2App.cur_time).toISOString();
-            var args_new_annot = [annotid, anchor_piece.GetId(), r2App.cur_time, 0, [], r2.userGroup.cur_user.name, ""];
+            var args_new_annot = [annotid, anchor_piece.GetId(), r2App.cur_time, 0, [], r2.userGroup.cur_user.name, "",
+                options.ui_type === r2App.RecordingUI.NEW_SPEAK ? 'new_speak' : null];
+            console.log(annotid, args_new_annot);
 
             r2App.cur_recording_annot = new r2.Annot();
             r2.Annot.prototype.SetAnnot.apply(r2App.cur_recording_annot, args_new_annot);
@@ -183,7 +185,8 @@
                     var time_simple_speech = r2App.cur_time+128;
                     var piece_annot_id = new Date(time_simple_speech).toISOString();
                     var piece_annot = new r2.Annot();
-                    var args_new_annot = [piece_annot_id, anchor_piece.GetId(), time_simple_speech, time_simple_speech, [], r2.userGroup.cur_user.name, ""];
+                    var args_new_annot = [piece_annot_id, anchor_piece.GetId(), time_simple_speech, time_simple_speech, [], r2.userGroup.cur_user.name, "",
+                        options.ui_type === r2App.RecordingUI.NEW_SPEAK ? 'new_speak' : null];
 
                     r2.Annot.prototype.SetAnnot.apply(piece_annot, args_new_annot);
                     r2App.annots[piece_annot_id] = piece_annot;

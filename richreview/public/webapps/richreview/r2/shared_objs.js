@@ -231,7 +231,7 @@ var r2App = (function() {
             else{
                 var annot = new r2.AnnotStaticInk();
                 annots.push(annot);
-                annot.SetAnnot(annot_static_ink_id, null, 0, 0, [], user.name, '');
+                annot.SetAnnot(annot_static_ink_id, null, 0, 0, [], user.name, '', 'static_ink');
                 r2App.annots[annot_static_ink_id] = annot;
             }
         };

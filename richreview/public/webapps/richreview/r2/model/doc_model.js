@@ -223,6 +223,7 @@
         this._num = _num;
         this.size = size;
         this._spotlight_cache = [];
+        this._spotlight_cache_newspeak = [];
     };
     r2.Page.prototype.GetNumPage = function(){
         return this._num;
@@ -311,7 +312,69 @@
             spotlight.preRender(r2.spotlightRenderer.getCanvCtx(), r2.spotlightRenderer.getCanvWidth()); // ctx, ratio
         }
     };
+    r2.Page.prototype.refreshSpotlightPrerenderNewspeak = function(){
+        this._spotlight_cache_newspeak = [];
+        var i, spotlight, cache;
+        for (var annotid in r2App.annots) {
+            if ((r2App.annots.hasOwnProperty(annotid) && r2App.annots[annotid].getIsBaseAnnot()))
+            {
+                var annot = r2App.annots[annotid];
+                var spotlights_of_page = annot.GetSpotlightsByNumPage(this._num);
 
+                for(i = 0; spotlight = spotlights_of_page[i]; ++i){
+                    var segments = spotlight.getValidSegments();
+                    if(segments.length > 0){
+                        var n_total_pts = segments.reduce(function(sum, item){return sum+item.GetNumPts();}, 0);
+                        var t_step = (spotlight.t_end-spotlight.t_bgn)/n_total_pts;
+
+                        var segment = segments[0];
+                        var cache_tbgn = spotlight.t_bgn;
+                        var cache_pid = segment.GetPieceId();
+                        var cache_pts = segment.CopyPtsWithOffset(r2App.pieces_cache[segment.GetPieceId()].pos);
+
+                        for(var j = 1; j < segments.length; ++j){
+                            segment = segments[j];
+                            if(!r2.Piece.prototype.isTheSameOrAdjecent(segment.GetPieceId(),cache_pid)){
+                                cache = new r2.Spotlight.Cache();
+                                var t_end_segment = cache_tbgn + cache_pts.length*t_step;
+                                cache.setCache(
+                                    annot,
+                                    cache_tbgn,
+                                    t_end_segment,
+                                    cache_pts);
+                                this._spotlight_cache_newspeak.push(cache);
+                                cache_pts = [];
+                                cache_tbgn = t_end_segment;
+                            }
+                            cache_pid = segment.GetPieceId();
+                            cache_pts = cache_pts.concat(segment.CopyPtsWithOffset(r2App.pieces_cache[segment.GetPieceId()].pos));
+                        }
+                        cache = new r2.Spotlight.Cache();
+                        cache.setCache(
+                            annot,
+                            cache_tbgn,
+                            spotlight.t_end,
+                            cache_pts);
+                        this._spotlight_cache_newspeak.push(cache);
+                    }
+                }
+            }
+        }
+
+    };
+    r2.Page.prototype.dynamicSpotlightNewspeak = function(canvas_ctx, l){
+        var spotlight;
+        for(var i = 0; spotlight = this._spotlight_cache_newspeak[i]; ++i){
+            for(var j = 0; j < l.length; ++j){
+                if(l[j].annot === spotlight._annot){
+                    if(!(l[j].bgn > spotlight._t_end || l[j].end < spotlight._t_bgn)){
+                        spotlight.drawReplayNewSpeak(canvas_ctx); // ctx
+                        break;
+                    }
+                }
+            }
+        }
+    };
 
     r2.Page.prototype.refreshInkPrerender = function(){
         r2.inkCtrl.dynamicScene.clear();
@@ -1269,7 +1332,7 @@
         if (this._annotid != cur_annot_id) {
             return;
         }
-        this.newspeak.drawDynamic();
+        this.newspeak.drawDynamic(canvas_ctx);
     };
     r2.PieceNewSpeak.prototype.resizeDom = function(){
         if(this.updateSizeWithTextInput()){
@@ -1332,6 +1395,9 @@
     };
     r2.PieceNewSpeak.prototype.SetData = function(data){
         this.newspeak.setData(data);
+    };
+    r2.PieceNewSpeak.prototype.Play = function(cbLoadingBgn, cbLoadingEnd){
+        this.newspeak.Play(cbLoadingBgn, cbLoadingEnd);
     };
 
     /*
@@ -1943,6 +2009,7 @@
         this._inks = [];
         this._audiofileurl = "";
         this._is_base_annot = false;
+        this._ui_type = null;
     };
 
     r2.Annot.prototype.ExportToCmd = function(){
@@ -1973,6 +2040,7 @@
             cmd.data.Inks.push(ink.ExportToCmd());
         });
         cmd.data.audiofileurl = this._audiofileurl;
+        cmd.data.ui_type = this._ui_type;
         return cmd;
     };
     r2.Annot.prototype.setIsBaseAnnot = function(){
@@ -2028,7 +2096,7 @@
     r2.Annot.prototype.GetUsername = function(){
         return this._username;
     };
-    r2.Annot.prototype.SetAnnot = function(id, anchorpid, t_bgn, duration, audio_dbs, username, audiofileurl){
+    r2.Annot.prototype.SetAnnot = function(id, anchorpid, t_bgn, duration, audio_dbs, username, audiofileurl, ui_type){
         this._id = id;
         this._anchorpid = anchorpid;
         this._bgn_time = t_bgn;
@@ -2038,6 +2106,7 @@
 
         this._audiofileurl = audiofileurl;
         this._reacordingaudioblob = null;
+        this._ui_type = ui_type;
     };
     r2.Annot.prototype.AddSpotlight = function(spotlight, toupload){
         this._spotlights.push(spotlight);
@@ -2690,6 +2759,26 @@
                 );
             }
         }
+    };
+    r2.Spotlight.Cache.prototype.drawReplayNewSpeak = function(ctx){
+        if(this._pts.length == 0){return;}
+
+        ctx.beginPath();
+        ctx.moveTo(this._pts[0].x, this._pts[0].y);
+        for(var i = 0; i < this._pts.length; ++i) {
+            ctx.lineTo(this._pts[i].x, this._pts[i].y);
+        }
+
+        var color;
+        var width;
+        color = this._user.color_splight_dynamic_newspeak;
+        width = r2Const.SPLGHT_WIDTH;
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
     };
     r2.Spotlight.Cache.prototype.drawMovingBlob = function(p0, p1, forprivate, color, canvas_ctx){
         var line_width = 0;

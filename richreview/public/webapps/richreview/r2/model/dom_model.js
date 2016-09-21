@@ -493,20 +493,32 @@
                             else{
                                 if (r2App.mode === r2App.AppModeEnum.IDLE) {
                                     var piece = r2App.pieces_cache[pid];
-                                    if(typeof piece.simplespeech !== 'undefined' && piece.simplespeech.isContentChanged()){
-                                        piece.simplespeech.synthesizeNewAnnot(annot_id).then(
-                                            function(){
-                                                r2.rich_audio.play(annot_id, -1);
-                                            }.bind(this)
-                                        );
+                                    if(piece.simplespeech){
+                                        if(typeof piece.simplespeech !== 'undefined' && piece.simplespeech.isContentChanged()){
+                                            piece.simplespeech.synthesizeNewAnnot(annot_id).then(
+                                                function(){
+                                                    r2.rich_audio.play(annot_id, -1);
+                                                }.bind(this)
+                                            );
+                                        }
+                                        else if (typeof piece.speak_ctrl !== 'undefined') {
+                                            piece.renderAndPlay();
+                                        }
+                                        else{
+                                            r2.rich_audio.play(
+                                                annot_id,
+                                                -1,
+                                                function() {
+                                                    r2.radialMenu.bgnLoading('rm_' + r2.util.escapeDomId(annot_id));
+                                                },
+                                                function() {
+                                                    r2.radialMenu.endLoading('rm_' + r2.util.escapeDomId(annot_id));
+                                                }
+                                            );
+                                        }
                                     }
-                                    else if (typeof piece.speak_ctrl !== 'undefined') {
-                                        piece.renderAndPlay();
-                                    }
-                                    else{
-                                        r2.rich_audio.play(
-                                            annot_id,
-                                            -1,
+                                    else if(piece.newspeak){
+                                        piece.Play(
                                             function() {
                                                 r2.radialMenu.bgnLoading('rm_' + r2.util.escapeDomId(annot_id));
                                             },
@@ -514,27 +526,51 @@
                                                 r2.radialMenu.endLoading('rm_' + r2.util.escapeDomId(annot_id));
                                             }
                                         );
+                                        r2.log.Log_AudioPlay('play_btn', annot_id, null);
                                     }
 
                                     r2.log.Log_AudioPlay('play_btn', annot_id, r2.audioPlayer.getPlaybackTime());
                                 }
                                 else if (r2App.mode === r2App.AppModeEnum.REPLAYING) {
-                                    if (r2App.cur_annot_id === annot_id) {
-                                        r2.log.Log_AudioStop('stop_btn', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
-                                        r2.rich_audio.stop();
+                                    var piece = r2App.pieces_cache[pid];
+                                    if(piece.simplespeech){
+                                        if (r2App.cur_annot_id === annot_id) {
+                                            r2.log.Log_AudioStop('stop_btn', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
+                                            r2.rich_audio.stop();
+                                        }
+                                        else {
+                                            r2.rich_audio.play(
+                                                annot_id,
+                                                -1,
+                                                function() {
+                                                    r2.radialMenu.bgnLoading('rm_' + r2.util.escapeDomId(annot_id));
+                                                },
+                                                function() {
+                                                    r2.radialMenu.endLoading('rm_' + r2.util.escapeDomId(annot_id));
+                                                }
+                                            );
+                                            r2.log.Log_AudioPlay('play_btn', annot_id, r2.audioPlayer.getPlaybackTime());
+                                        }
                                     }
-                                    else {
-                                        r2.rich_audio.play(
-                                            annot_id,
-                                            -1,
-                                            function() {
-                                                r2.radialMenu.bgnLoading('rm_' + r2.util.escapeDomId(annot_id));
-                                            },
-                                            function() {
-                                                r2.radialMenu.endLoading('rm_' + r2.util.escapeDomId(annot_id));
-                                            }
-                                        );
-                                        r2.log.Log_AudioPlay('play_btn', annot_id, r2.audioPlayer.getPlaybackTime());
+                                    else if(piece.newspeak){
+                                        if (r2App.cur_annot_id === annot_id) {
+                                            r2.speechSynth.cancel();
+                                            r2.log.Log_AudioStop('stop_btn', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
+                                        }
+                                        else {
+                                            r2.speechSynth.cancel()
+                                                .then(function(){
+                                                    piece.Play(
+                                                        function() {
+                                                            r2.radialMenu.bgnLoading('rm_' + r2.util.escapeDomId(annot_id));
+                                                        },
+                                                        function() {
+                                                            r2.radialMenu.endLoading('rm_' + r2.util.escapeDomId(annot_id));
+                                                        }
+                                                    );
+                                                    r2.log.Log_AudioPlay('play_btn', annot_id, null);
+                                                });
+                                        }
                                     }
                                 }
                             }

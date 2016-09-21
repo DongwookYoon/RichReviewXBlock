@@ -32,15 +32,34 @@
         }, false);
 
         r2.anchoredTextBox = function(id){
-            var tbox = $(id);
-            tbox.append($('<span>quick</span>'));
-            tbox.append($('<span> </span>'));
-            tbox.append($('<span>brown</span>'));
-            tbox.append($('<span> </span>'));
-            tbox.append($('<span id="test">fox</span>'));
-            tbox.append($('<span> </span>'));
-            tbox.append($('<span> jumps.</span>'));
-            console.log(tbox.length);
+            var $tbox = $(id);
+            $tbox.append($('<span>quick<span>a b c</span><span>d e f.</span></span>'));
+            $tbox.append($('<span> </span>'));
+            $tbox.append($('<span>brown </span>'));
+            $tbox.append($('<span> </span>'));
+            $tbox.append($('<span id="test">fox</span>'));
+            $tbox.append($('<span> </span>'));
+            $tbox.append($('<span> jumps.</span>'));
+            
+            var $spans = $tbox.children('span');
+            var cuts = [];
+            for(var i = 0; i < $spans.length; ++i){
+                var $span = $spans.eq(i);
+                var s = $span.text().trim();
+                if(s.length > 0 && (s.charAt(s.length-1) === '.' || s.charAt(s.length-1) === ',')){
+                    cuts.push(i);
+                }
+            }
+            if(cuts[cuts.length-1] !== $spans.length-1){
+                cuts.push($spans.length-1);
+            }
+            var segments = [];
+            var last_idx = 0;
+            cuts.forEach(function(cut){
+                segments.push($spans.slice(last_idx, cut+1));
+                last_idx = cut+1;
+            });
+            console.log(segments);
         };
         var text = new r2.anchoredTextBox('#textbox');
 

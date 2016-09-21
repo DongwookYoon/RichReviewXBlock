@@ -314,7 +314,7 @@ a:active {
   word-break: break-all;
 }
 
-.r2_piece_newspeak > span.fresh-recording {
+.r2_piece_newspeak > span.replaying{
   background-color: rgb(214, 225, 235);
   color: black;
 }

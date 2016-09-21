@@ -720,6 +720,7 @@ a:active {
 .dashboard-btn > a:active {
   color:inherit;
   text-decoration: none;
+  font-size: 12px;
 }
 
 .dashboard-comments-icon{
@@ -1299,4 +1300,5 @@ div.tooltip_audio_waveform div.arrow_up {
 }
 #cornellx_inst > p{
   font-size: 0.8em;
+  line-height: 1.4em;
 }

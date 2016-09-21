@@ -645,7 +645,7 @@
 
                     var a = document.createElement("a");
                     $(a).attr('href', 'javascript:void(0);');
-                    a.textContent = " " + nick;
+                    a.textContent = " " + nick.slice(0,4) + '...';
                     div.appendChild(a);
                 }
             }

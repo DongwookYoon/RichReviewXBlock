@@ -217,6 +217,14 @@
                     return true;
                 }
             }
+            else if(cmd.target.type == "PieceNewSpeak"){
+                var target = doc.GetTargetPiece(cmd.target);
+                if(target){
+                    r2.removeAnnot(target.GetAnnotId(), askuser = false, mute = true);
+                    cmd.target.aid = target.GetAnnotId();
+                    return true;
+                }
+            }
             else if(cmd.target.type == "CommentAudio"){
                 if(r2App.annots.hasOwnProperty(cmd.target.aid)){
                     r2.removeAnnot(cmd.target.aid, askuser = false, mute = true);

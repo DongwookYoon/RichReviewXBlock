@@ -1243,6 +1243,18 @@
 
         return cmd;
     };
+    r2.PieceNewSpeak.prototype.ExportToCmdDeleteComment = function(){
+        // time: 2014-12-21T13...
+        // user: 'red user'
+        // op: 'DeleteComment'
+        // target: {type: 'PieceKeyboard', pid: pid, page: 2}
+        var cmd = {};
+        cmd.time = (new Date()).toISOString();
+        cmd.user = this._username;
+        cmd.op = "DeleteComment";
+        cmd.target = this.GetTargetData();
+        return cmd;
+    };
     r2.PieceNewSpeak.prototype.GetTargetData = function() {
         return {
             type: 'PieceNewSpeak',

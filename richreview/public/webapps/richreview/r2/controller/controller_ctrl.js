@@ -249,8 +249,17 @@
                 pub.set(cookie_setting);
             }
             else{
+                pub.set('newspeak');
+            }
+            pub.set('newspeak'); // default newspeak
+
+            if(r2.ctx.pdf_url.indexOf('34811a7b62e4461316fc5aab8f655041fc3b01bc') > 0){ // edx/cornellX
+                pub.set('newspeak');
+            }
+            if(r2.ctx.pdf_url.indexOf('7bf0f0add24f13dda0c0a64da0f45a0a6909809e') > 0){ // demo
                 pub.set('waveform');
             }
+
         };
 
         pub.set = function(type_str){

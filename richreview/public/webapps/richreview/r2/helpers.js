@@ -327,12 +327,18 @@
                     if(cmd.data.isprivate == false || (cmd.data.isprivate && cmd.user == r2.userGroup.cur_user.name) )
                         addItem(cmd.user, "text", cmd.data.aid);
                 }
+                if(cmd.type == "CommentNewSpeak"){
+                    addItem(cmd.user, "audio", cmd.data.aid);
+                }
             }
             else if(cmd.op == "DeleteComment"){
                 if(cmd.target.type == "PieceKeyboard"){
                     removeItem(cmd.user, cmd.target.aid);
                 }
                 if(cmd.target.type == "CommentAudio"){
+                    removeItem(cmd.user, cmd.target.aid);
+                }
+                if(cmd.target.type == "PieceNewSpeak"){
                     removeItem(cmd.user, cmd.target.aid);
                 }
             }

@@ -58,7 +58,7 @@
                 </button>
             </div>
         </div>
-        <div style="float:right;margin: 0 6px;">
+        <div style="float:right;margin: 0 6px;display:none;">
             <div id="btn-group-speech-ui-select" class="btn-group">
                 <button type="button" class="btn btn-sm btn-primary btn-dashboard dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="fa fa-gear"></i>

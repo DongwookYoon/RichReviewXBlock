@@ -596,6 +596,8 @@
                         if(r2App.mode === r2App.AppModeEnum.RECORDING){ return; }
                         if(r2.userGroup.cur_user.name === user.name){
                             if(r2.removeAnnot(annot_id, true, false)){ // askuser, mute
+                                r2Sync.uploader.pushCmd(piece.ExportToCmdDeleteComment());
+                                r2.log.Log_Simple("RemoveAnnot_NewSpeak_RadialMenu");
                             }
                         }
                         else{

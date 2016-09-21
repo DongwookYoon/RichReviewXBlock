@@ -5,7 +5,7 @@
         </div>
         <div class="modal-body" style="width:auto;position:relative;padding-bottom:0;">
             <video style="width:100%;border:1px solid lightgray;" controls>
-                <source src="https://richreview.blob.core.windows.net/data/video/intro.mp4" type="video/mp4">
+                <source src="https://richreview.blob.core.windows.net/data/video/intro_typetalker.mp4" type="video/mp4">
             </video>
         </div>
         <div class="modal-footer">

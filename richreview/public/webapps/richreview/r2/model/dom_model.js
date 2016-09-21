@@ -46,10 +46,12 @@
 
         pub.cbRecordingStop = function(annot_id){
             r2.radialMenu.changeCenterIcon('rm_'+r2.util.escapeDomId(annot_id), 'fa-play');
+            r2.onScreenButtons.changeVoiceCommentBtnIcon('fa-stop', 'fa-microphone');
         };
 
         pub.cbRecordingBgn = function(annot_id){
             r2.radialMenu.changeCenterIcon('rm_'+r2.util.escapeDomId(annot_id), 'fa-stop');
+            r2.onScreenButtons.changeVoiceCommentBtnIcon('fa-microphone', 'fa-stop');
         };
 
         pub.remove = function(annot_id){

@@ -122,6 +122,9 @@
                     if(options.piece_to_insert){
                         r2.dom_model.cbRecordingBgn(options.piece_to_insert.GetAnnotId(), 'fa-stop');
                     }
+                    else {
+                        r2.dom_model.cbRecordingBgn(r2App.cur_recording_piece.GetAnnotId(), 'fa-stop');
+                    }
                     r2.dom.enableRecordingIndicators();
                     r2App.mode = r2App.AppModeEnum.RECORDING;
                 }

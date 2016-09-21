@@ -1003,7 +1003,6 @@ var r2Ctrl = {};
                 if(r2App.mode === r2App.AppModeEnum.RECORDING){
                     r2.recordingCtrl.stop(toupload = true);
                     r2.log.Log_Simple("Recording_Stop_OnScrBtn");
-                    $dom.children('.voice_comment_btn').children('.fa-stop').removeClass('fa-stop').addClass('fa-microphone');
                 }
                 else{
                     if(!r2App.pieceSelector.isNull()){
@@ -1011,10 +1010,13 @@ var r2Ctrl = {};
                             r2App.pieceSelector.get(),
                             {ui_type: r2.speechUi.mode, log_type: 'OnScrBtn'}
                         );
-                        $dom.children('.voice_comment_btn').children('.fa-microphone').removeClass('fa-microphone').addClass('fa-stop');
                     }
                 }
             }
+        };
+
+        pub.changeVoiceCommentBtnIcon = function(old_fa, new_fa){
+            $dom.children('.voice_comment_btn').children('.'+old_fa).removeClass(old_fa).addClass(new_fa);
         };
 
         pub.SetUserColor = function(user){

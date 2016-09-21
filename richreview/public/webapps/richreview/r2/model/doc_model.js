@@ -1130,7 +1130,258 @@
         this.annotids = [];
     };
     r2.PieceNewSpeak.prototype = Object.create(r2.Piece.prototype);
+    r2.PieceNewSpeak.prototype.Destructor = function(){
+        r2.Piece.prototype.Destructor.apply(this);
+    };
+    r2.PieceNewSpeak.prototype.GetAnnotId = function(){
+        return this._annotid;
+    };
+    r2.PieceNewSpeak.prototype.SetPieceNewSpeak = function(
+        anchor_pid, annotid, username, inner_html, live_recording, ui_type
+    ){
+        this._annotid = annotid;
+        this._username = username;
+        this._waiting_for_watson = false;
+        this.ui_type = ui_type;
 
+        var dom = this.CreateDom();
+
+        r2.dom_model.appendPieceEditableAudio(
+            this._username,
+            this._annotid,
+            this.GetId(),
+            anchor_pid,
+            this._creationTime,
+            dom,
+            this,
+            live_recording
+        );
+
+        this.resizeDom();
+
+        return dom;
+    };
+    r2.PieceNewSpeak.prototype.GetAnnotId = function(){
+        if(this._annotid != null){
+            return this._annotid;
+        }
+    };
+    r2.PieceNewSpeak.prototype.GetAnchorTo = function(){
+        // anchorTo: {type: 'PieceText', id: pid, page: 2} or
+        var anchorCmd = {};
+        anchorCmd.type = 'PieceNewSpeak';
+        anchorCmd.id = this.GetId();
+        anchorCmd.page = this.GetNumPage();
+        return anchorCmd;
+    };
+    r2.PieceNewSpeak.prototype.CreateDom = function(){
+        this.dom = document.createElement('div');
+        this.dom.classList.toggle('r2_piece_editable_audio', true);
+        this.dom.classList.toggle('unselectable', true);
+        this.dom.setAttribute('aria-label', 'text comment');
+        this.dom.setAttribute('role', 'article');
+
+        this.dom_tr = document.createElement('div');
+        this.dom_tr.classList.toggle('r2_piece_editable_audio_tr', true);
+        this.dom_tr.classList.toggle('unselectable', true);
+        $(this.dom_tr).css('left', this.GetTtIndent()*r2Const.FONT_SIZE_SCALE+'em');
+        $(this.dom_tr).css('width', this.GetTtIndentedWidth()*r2Const.FONT_SIZE_SCALE+'em');
+        this.dom.appendChild(this.dom_tr);
+
+        var dom_overlay = document.createElement('div');
+        dom_overlay.classList.toggle('ssui-overlay', true);
+        dom_overlay.classList.toggle('unselectable', true);
+
+        this.dom_tr.appendChild(dom_overlay);
+
+        this.dom_textbox = document.createElement('div');
+        this.dom_textbox.setAttribute('contenteditable', this._username === r2.userGroup.cur_user.name);
+        this.dom_textbox.classList.toggle('r2_piece_simplespeech', true);
+        this.dom_textbox.classList.toggle('text_selectable', true);
+        this.dom_textbox.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
+        this.dom_tr.appendChild(this.dom_textbox);
+
+        // SimpleSpeech UI wrapper
+        this.simplespeech = new r2.transcriptionUI(
+            this.dom_textbox, dom_overlay, this._annotid, this.annotids, this.ui_type
+        );
+
+        /* add event handlers*/
+        this.simplespeech.on_input = function() {
+            if(this.updateSizeWithTextInput()){
+                r2App.invalidate_size = true;
+                r2App.invalidate_page_layout = true;
+                r2App.invalidate_dynamic_scene = true;
+                r2App.invalidate_static_scene = true;
+            }
+        }.bind(this);
+
+        this.simplespeech.synthesizeAndPlay = function(content_changed, time){
+            return new Promise(function(resolve, reject){
+                if(content_changed){
+                    this.simplespeech.synthesizeNewAnnot(this._annotid).then(
+                        function(){
+                            r2.rich_audio.play(this._annotid, time);
+                            resolve();
+                        }.bind(this)
+                    );
+                }
+                else{
+                    r2.rich_audio.play(this._annotid,time);
+                    resolve();
+                }
+            }.bind(this));
+        }.bind(this);
+
+        this.simplespeech.insertRecording = function(){
+            r2.recordingCtrl.set(
+                this._parent,
+                { // option
+                    ui_type: r2App.RecordingUI.SIMPLE_SPEECH,
+                    caption_major: true,
+                    piece_to_insert: this
+                }
+            );
+        }.bind(this);
+
+        this.simplespeech.bgn_streaming = function(){
+            r2.radialMenu.bgnLoading('rm_'+r2.util.escapeDomId(this._annotid));
+        }.bind(this);
+        this.simplespeech.end_streaming = function(){
+            r2.radialMenu.endLoading('rm_'+r2.util.escapeDomId(this._annotid));
+        }.bind(this);
+
+
+
+        this.dom_textbox.addEventListener('focus', function(event){
+            r2App.cur_focused_piece_keyboard = this;
+            var color = r2.userGroup.GetUser(this._username).color_piecekeyboard_box_shadow;
+            this.dom_textbox.style.boxShadow = "0 0 0.2em "+color+" inset, 0 0 0.2em "+color;
+            $(this.dom).css("pointer-events", 'auto');
+            $(this.dom_textbox).toggleClass('editing', true);
+        }.bind(this));
+        r2.keyboard.pieceEventListener.setTextbox(this.dom_textbox);
+
+        this.dom_textbox.addEventListener('blur', function(event){
+            // remove cursor complete from the textbox,
+            // otherwise it will interfere with mouse interaction for other visaul entities
+            window.getSelection().removeAllRanges();
+
+            r2App.cur_focused_piece_keyboard = null;
+            this.dom_textbox.style.boxShadow = "none";
+
+            //$(this.dom).css("pointer-events", 'none');
+            $(this.dom_textbox).toggleClass('editing', false);
+        }.bind(this));
+        /* add event handlers*/
+
+        return this.dom;
+    };
+    r2.PieceNewSpeak.prototype.updateSizeWithTextInput = function(){
+        var getHeight = function($target){
+            var $next = $target.next();
+            if($next.length !== 0){
+                return $next.offset().top-$target.offset().top;
+            }
+            else{
+                return $target.innerHeight();
+            }
+        };
+
+        var new_height = r2.viewCtrl.mapDomToDocScale(getHeight($(this.dom)));
+        if(this._cnt_size.y != new_height){
+            this._cnt_size.y = new_height;
+            return true;
+        }
+        return false;
+    };
+    r2.PieceNewSpeak.prototype.DrawPiece = function(){
+        var x_bgn = this.pos.x + this.GetTtIndent();
+        var y_bgn = this.pos.y-r2Const.PIECEAUDIO_LINE_WIDTH;
+
+        r2.canv_ctx.beginPath();
+        r2.canv_ctx.moveTo(x_bgn, y_bgn);
+        r2.canv_ctx.lineTo(x_bgn, y_bgn+this._cnt_size.y);
+        r2.canv_ctx.moveTo(x_bgn, y_bgn+this._cnt_size.y);
+        r2.canv_ctx.lineTo(x_bgn+this.GetTtIndentedWidth(), y_bgn+this._cnt_size.y);
+
+        r2.canv_ctx.strokeStyle = r2.userGroup.GetUser(this._username).color_light_html;
+        r2.canv_ctx.lineWidth = r2Const.PIECEAUDIO_LINE_WIDTH;
+        r2.canv_ctx.lineCap = 'round';
+        r2.canv_ctx.lineJoin = 'round';
+        r2.canv_ctx.stroke();
+    };
+    r2.PieceNewSpeak.prototype.DrawPieceDynamic = function(cur_annot_id, canvas_ctx, force) {
+        if (this._annotid != cur_annot_id) {
+            return;
+        }
+        this.simplespeech.drawDynamic(r2App.cur_audio_time);
+    };
+    r2.PieceNewSpeak.prototype.resizeDom = function(){
+        if(this.updateSizeWithTextInput()){
+            r2App.invalidate_size = true;
+            r2App.invalidate_page_layout = true;
+            r2App.invalidate_dynamic_scene = true;
+            r2App.invalidate_static_scene = true;
+        }
+    };
+    r2.PieceNewSpeak.prototype.bgnCommenting = function(recording_annot_id){
+        r2App.annots[recording_annot_id].setIsBaseAnnot();
+        this.annotids.push(recording_annot_id);
+        this.done_recording = false;
+        this.done_captioning = false;
+        this.simplespeech.bgnCommenting();
+    };
+    r2.PieceNewSpeak.prototype.bgnCommentingAsync = function(recording_annot_id){
+        this.simplespeech.bgnCommentingAsync();
+    };
+    r2.PieceNewSpeak.prototype.setCaptionTemporary = function(words){
+        this.simplespeech.setCaptionTemporary(words, this.annotids[this.annotids.length-1]);
+        this.resizeDom();
+    };
+    r2.PieceNewSpeak.prototype.setCaptionFinal = function(words){
+        this.simplespeech.setCaptionFinal(words, this.annotids[this.annotids.length-1]);
+        this.resizeDom();
+    };
+    r2.PieceNewSpeak.prototype.doneCaptioning = function(){
+        this.Focus();
+        this.done_captioning = true;
+        this.doneCommentingAsync();
+        this.resizeDom();
+    };
+    r2.PieceNewSpeak.prototype.onEndRecording = function(audioURL) {
+        this.done_recording = true;
+        this.simplespeech.endCommenting();
+        r2.radialMenu.bgnLoading('rm_'+r2.util.escapeDomId(this._annotid));
+        this.doneCommentingAsync();
+    };
+    r2.PieceNewSpeak.prototype.doneCommentingAsync = function() {
+        if(this.done_captioning && this.done_recording){
+            r2.radialMenu.endLoading('rm_'+r2.util.escapeDomId(this._annotid));
+            this.simplespeech.doneCommentingAsync();
+            this.simplespeech.synthesizeNewAnnot(this._annotid);
+        }
+    };
+    r2.PieceNewSpeak.prototype.Focus = function(){
+        this.dom_textbox.focus();
+    };
+    r2.PieceNewSpeak.prototype.SearchPieceByAnnotId = function(annotid){
+        var result = r2.Obj.prototype.SearchPieceByAnnotId.apply(this, [annotid]);
+        if(result){
+            return result;
+        }
+        else{
+            if(this._annotid == annotid){ // ToDo check it returns the first piece
+                return this;
+            }
+            else{
+                return null;
+            }
+        }
+    };
+    r2.PieceNewSpeak.prototype.SetData = function(data){
+        this.simplespeech.SetData(data);
+    };
 
     /*
      * PieceSimpleSpeech

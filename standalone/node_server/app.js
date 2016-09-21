@@ -73,7 +73,7 @@ setupStaticPages();
 
 app.use(function(req, res, next){
     if(req.user instanceof LtiEngine.User){
-        if( req.url.substring(0, 5) !== '/lti_' && req.method !== 'POST'){
+        if( (req.url !== '/bluemix_stt_auth' && req.url.substring(0, 5) !== '/lti_') && req.method !== 'POST'){
             req.logout();
         }
     }

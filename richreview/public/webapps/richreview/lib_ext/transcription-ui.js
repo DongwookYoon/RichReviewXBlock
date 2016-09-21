@@ -11,7 +11,7 @@
 (function(r2) {
     'use strict';
 
-    r2.transcriptionUI = function(_textbox, _overlay, _annotid, _annotids, _type) {
+    r2.transcriptionUI = function(_textbox, _overlay, _annotid, _annotids) {
         var pub = {};
 
         // DOM elements
@@ -31,12 +31,8 @@
         var annotid_copy = _annotid; // The r2.Annot id of the SimpleSpeech piece. This is a copy from the piece's this._annotid.
         var annotids_copy = _annotids; // The list ([]) of r2.Annot ids for the base recordings. This is a copy from the piece's this._annotids.
         var base_data_buf = [];
-        var type = _type; // r2App.RecordingUI.SIMPLE_SPEECH or r2.RecordingUI.WAVE_WEAVER
 
-        var insertNewTalken =
-            _type === r2App.RecordingUI.SIMPLE_SPEECH ?
-                insertNewTalkenSimpleSpeech :
-                insertNewTalkenWaveWeaver;
+        var insertNewTalken = insertNewTalkenSimpleSpeech;
 
         // Listener callbacks
         pub.on_input = null;
@@ -118,7 +114,7 @@
         };
 
         pub.bgnCommentingAsync = function(){
-            r2.tooltipAudioWaveform.show($textbox.parent(), getPopUpPos(insert_pos-1, insert_pos));
+            r2.tooltipAudioWaveform.show();
         };
 
         pub.endCommenting = function(){
@@ -439,138 +435,6 @@
                 return $ct;
             }
         }
-
-        function insertNewTalkenWaveWeaver(talken_data, idx, is_fresh){
-            is_fresh = typeof is_fresh === 'undefined' ? false : is_fresh; // default false
-
-            r2.util.jqueryInsert($textbox, createTalken(talken_data), idx);
-
-            function createTalken(talken_data){
-                var uid = r2.util.generateGuid();
-                var word;
-                if(typeof talken_data.word === 'string'){
-                    word = talken_data.word;
-                }
-                else{
-                    word = talken_data.data.map(function(datum){return datum.word;}).join(' ').replace(/\s+/g, '\xa0').trim();
-                }
-                if (word === ''){
-                    word = '\xa0';
-                }
-
-                var $vt = newViewTalken(uid, word);
-                $overlay.append($vt);
-                var $ct = newCtrlTalken($vt, uid);
-                if(is_fresh){
-                    $vt.toggleClass('fresh-recording', true);
-                    $ct.toggleClass('fresh-recording', true);
-                }
-                return $ct;
-            }
-
-            function newViewTalken(uid, word) {
-                var $vt = $(document.createElement('div'));
-                $vt.addClass('ssui-viewtalken');
-                $vt.attr('uid', uid);
-
-
-                var CONST = {
-                    EM_PER_SEC: 6,
-                    WV_HGHT_MRGN: 0.5,
-                    SPAN_OPACITY_RANGE: {low: 0.0, upper: 0.75},
-                    PX_PER_SEC: 128
-                };
-
-                if (word === '\xa0'){
-                    CONST.EM_PER_SEC = 2; // shorten visual width of pauses
-                }
-
-                var data = talken_data.data;
-                var duration = data.reduce(function(accum, item){return accum+item.end-item.bgn;}, 0);
-                var px_w = duration*CONST.PX_PER_SEC;
-                var px_h = 64;
-                var t_step = duration/px_w;
-
-
-                var canv = document.createElement('canvas');
-                canv.width = px_w;
-                canv.height = px_h;
-
-                var $vt_span_wrapper = $(document.createElement('div'));
-                $vt_span_wrapper.addClass('ssui-waveform-span-wrapper-div');
-                $vt.append($vt_span_wrapper);
-
-                var $vt_span = $(document.createElement('span'));
-                $vt_span.addClass('ssui-waveform-span');
-                $vt_span.text(word);
-                var span_opacity =
-                    talken_data.data[0].conf*(CONST.SPAN_OPACITY_RANGE.upper-CONST.SPAN_OPACITY_RANGE.low)
-                    +CONST.SPAN_OPACITY_RANGE.low;
-                var cutoff = 0.5;
-                if(talken_data.data[0].conf > cutoff){
-                    span_opacity = (talken_data.data[0].conf-cutoff)/(1.0-cutoff);
-                }
-                else{
-                    span_opacity = 0;
-                }
-                $vt_span.css('color', 'rgba(0, 0, 0, '+span_opacity+')');
-                $vt_span_wrapper.append($vt_span);
-
-                var $vt_canv = $(canv);
-                $vt_canv.addClass('ssui-viewtalken-canv');
-                $vt.append($vt_canv);
-
-                $vt.css('width', Math.max(waveWeaverWordWidth.get(word), duration*CONST.EM_PER_SEC)+'em');
-                $vt.addClass('ssui-waveform');
-
-                var ctx = canv.getContext('2d');
-                ctx.clearRect(0, 0, px_w, px_h);
-                ctx.beginPath();
-                var x = 0;
-                var y = px_h;
-                ctx.moveTo(x, y);
-
-                var t_token_progress = 0;
-                var datum_idx = 0;
-                var datum = data[datum_idx];
-                for(var i = 0; i < px_w; ++i){
-                    while(i*t_step-t_token_progress > datum.end-datum.bgn && datum_idx+1 < data.length){
-                        t_token_progress += datum.end-datum.bgn;
-                        datum_idx += 1;
-                        datum = data[datum_idx];
-                    }
-                    x = i;
-                    var pwr = r2App.annots[datum.annotid].SampleAudioDbs((datum.bgn+i*t_step-t_token_progress)*1000);
-                    y = px_h*(1.0-(1.0+CONST.WV_HGHT_MRGN)*pwr);
-                    ctx.lineTo(x, y, pwr);
-                }
-
-                y = px_h;
-                ctx.lineTo(x, y);
-                ctx.fillStyle = 'rgba(33, 150, 243, 0.85)';
-                ctx.closePath();
-                ctx.fill();
-
-                return $vt;
-            }
-
-            function newCtrlTalken ($vt, uid) {
-                var CTRL_TKN_MARGIN = 0.075;
-                var $ct = $(document.createElement('span'));
-                $ct.addClass('ssui-ctrltalken');
-                $ct.text('\xa0');
-
-                $ct[0].talken_data = talken_data;
-                $ct[0].$vt = $vt; // cache the view_talken corresponding to this ctrl_talken
-                var w = $ct[0].$vt[0].getBoundingClientRect().width;
-                $ct.css('letter-spacing',
-                    (transferPx2EmNumeric(w, r2Const.SIMPLESPEECH_FONT_SIZE)-spaceWidth.get()+CTRL_TKN_MARGIN)+'em');
-                $ct.attr('uid', uid);
-
-                return $ct;
-            }
-        }
-
 
         /*
          * Getting space width of the empty control talken:

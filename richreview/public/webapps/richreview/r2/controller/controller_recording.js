@@ -170,10 +170,7 @@
                     NewPieceType = r2.PieceNewSpeak;
                     setPieceFunc = r2.PieceNewSpeak.prototype.SetPieceNewSpeak;
                 }
-                else if(
-                    options.ui_type === r2App.RecordingUI.SIMPLE_SPEECH ||
-                    options.ui_type === r2App.RecordingUI.WAVE_WEAVER
-                ){
+                else if(options.ui_type === r2App.RecordingUI.SIMPLE_SPEECH){
                     NewPieceType = r2.PieceSimpleSpeech;
                     setPieceFunc = r2.PieceSimpleSpeech.prototype.SetPieceSimpleSpeech;
                 }
@@ -208,8 +205,7 @@
                         piece_annot_id,
                         r2.userGroup.cur_user.name,
                         '',
-                        true, // live_recording
-                        options.ui_type
+                        true // live_recording
                     ];
                     setPieceFunc.apply(
                         piece_simple_speech, args_set_piece_func

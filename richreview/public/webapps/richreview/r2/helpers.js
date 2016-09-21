@@ -1373,8 +1373,8 @@
             var items = $menu.find('.rm_btn_raidial a');
             var l = items.length;
             items.each(function( i ){
-                $(this).first().css('left', (50 - 35*Math.cos(-0.5*Math.PI - 2*(1/l)*i*Math.PI)).toFixed(2) + "%");
-                $(this).first().css('top', (50 + 35*Math.sin(-0.5* Math.PI - 2*(1/l)*i*Math.PI)).toFixed(2) + "%");
+                $(this).first().css('left', (50 - 35*Math.cos(-1.0*Math.PI - 2*(1/l)*i*Math.PI)).toFixed(2) + "%");
+                $(this).first().css('top', (50 + 35*Math.sin(-1.0* Math.PI - 2*(1/l)*i*Math.PI)).toFixed(2) + "%");
             });
 
             $menu.on('mouseenter',function(e) {
@@ -2012,25 +2012,15 @@
         var $tooltip = $(document.createElement('div'));
         $tooltip.addClass('tooltip_audio_waveform');
 
-        //var $arrow_up = $(document.createElement('div'));
-        //$arrow_up.addClass('arrow_up');
-        //$tooltip.append($arrow_up);
-
         var canv = document.createElement('canvas');
-        //$(canv).addClass('arrow_up');
         canv.width = CONST.CANV_W;
         canv.height = CONST.CANV_H;
-        //$(canv).css('width', CONST.CANV_W_DOM);
-        //$(canv).css('height', CONST.CANV_H_DOM);
         var ctx = canv.getContext('2d');
         $tooltip.append($(canv));
 
-        pub_ta.show = function($parent, pos){
+        pub_ta.show = function(){
             is_display = true;
-            $parent = $('#recording_indicator');
-            $parent.append($tooltip);
-            //$tooltip.css('left', pos.x);
-            //$tooltip.css('top', pos.y);
+            $('#recording_indicator').append($tooltip);
             centerDiv();
         };
 

@@ -278,9 +278,10 @@
                             }
                         }
                     );
+                    /*
                     r2.radialMenu.addBtnCircular($rm, 'fa-chevron-up', 'fold layout', function(){
                         ;
-                    });
+                    });*/
                     r2.radialMenu.addBtnCircular($rm, 'fa-link', 'share', function(){
                         if(r2App.mode === r2App.AppModeEnum.RECORDING){ return; }
                         var lnk = r2App.server_url+"viewer?access_code=" + r2.ctx["pdfid"] +
@@ -289,9 +290,10 @@
                             "&comment=" +encodeURIComponent(annot_id);
                         window.prompt("Link to the Comment", lnk);
                     });
+                    /*
                     r2.radialMenu.addBtnCircular($rm, 'fa-chevron-down', 'expand layout', function(){
                         ;
-                    });
+                    });*/
                     r2.radialMenu.addBtnCircular($rm, 'fa-trash', 'erase', function(){
                         if(r2App.mode === r2App.AppModeEnum.RECORDING){ return; }
                         if(r2.userGroup.cur_user.name === user.name){
@@ -395,9 +397,10 @@
                     var $rm = r2.radialMenu.create('rm_'+pid, rm_size, 'fa-keyboard-o', 'select text comment', function(){
                         doc_model_piecekeyboard.edit();
                     });
+                    /*
                     r2.radialMenu.addBtnCircular($rm, 'fa-chevron-up', 'fold layout', function(){
                         ;
-                    });
+                    });*/
                     r2.radialMenu.addBtnCircular($rm, 'fa-link', 'share', function(){
                         if(r2App.mode === r2App.AppModeEnum.RECORDING){ return; }
                         var lnk = r2App.server_url+"viewer?access_code=" + r2.ctx["pdfid"] +
@@ -406,9 +409,10 @@
                             "&comment=" +encodeURIComponent(annot_id);
                         window.prompt("Link to the Comment", lnk);
                     });
+                    /*
                     r2.radialMenu.addBtnCircular($rm, 'fa-chevron-down', 'expand layout', function(){
                         ;
-                    });
+                    });*/
                     r2.radialMenu.addBtnCircular($rm, 'fa-trash', 'erase', function(){
                         if(r2App.mode === r2App.AppModeEnum.RECORDING){ return; }
                         if(r2.userGroup.cur_user.name === username){
@@ -536,9 +540,10 @@
                             }
                         }
                     );
+                    /*
                     r2.radialMenu.addBtnCircular($rm, 'fa-chevron-up', 'fold layout', function(){
                         ;
-                    });
+                    });*/
                     r2.radialMenu.addBtnCircular($rm, 'fa-link', 'share', function(){
                         if(r2App.mode === r2App.AppModeEnum.RECORDING){ return; }
                         var lnk = r2App.server_url+"viewer?access_code=" + r2.ctx["pdfid"] +
@@ -547,9 +552,10 @@
                             "&comment=" +encodeURIComponent(annot_id);
                         window.prompt("Link to the Comment", lnk);
                     });
+                    /*
                     r2.radialMenu.addBtnCircular($rm, 'fa-chevron-down', 'expand layout', function(){
                         ;
-                    });
+                    });*/
                     r2.radialMenu.addBtnCircular($rm, 'fa-trash', 'erase', function(){
                         if(r2App.mode === r2App.AppModeEnum.RECORDING){ return; }
                         if(r2.userGroup.cur_user.name === user.name){

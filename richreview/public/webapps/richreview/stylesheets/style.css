@@ -294,6 +294,45 @@ a:active {
   left: 0; /* will be tt_x */
   width: 1em; /* will be tt_w */
 }
+
+.r2_piece_newspeak {
+  border: 0;
+  overflow: auto;
+  padding: 0.3em;
+  font-family: 'Lucida Grande', Helvetica, Arial, sans-serif;
+  font-size: 0.8em; /* variant to FONT_SIZE_SCALE  */
+  line-height: 1.2em;
+  min-height: 1.8em; /* line-height + 2*padding */
+  text-align: left;
+  white-space: pre-wrap;
+  overflow: hidden;
+}
+.r2_piece_newspeak.editing {
+  background: rgba(255, 255, 255, 0.74902);
+}
+.r2_piece_newspeak > span{
+  word-break: break-all;
+}
+
+.r2_piece_newspeak > span.fresh-recording {
+  background-color: rgb(214, 225, 235);
+  color: black;
+}
+.r2_piece_newspeak > span.newspeak_wait{
+  background-color: rgba(205, 205, 205, 0.85);
+  color: black;
+  border: solid 0.1em rgb(105, 105, 105);
+  border-radius: 0.4em;
+  padding: 0 0.4em;
+}
+.r2_piece_newspeak > span.newspeak_speak{
+  background-color: rgba(205, 92, 92, 0.85);
+  color: black;
+  border: solid 0.1em rgb(205, 92, 92);
+  border-radius: 0.4em;
+  padding: 0 0.4em;
+}
+
 .r2_piece_simplespeech {
   border: 0;
   overflow: auto;
@@ -1125,7 +1164,7 @@ body::-webkit-scrollbar-corner {
 
 .rm_menu.open > .rm_btn_raidial {
   opacity: 1;
-  background: rgba(255,255,255, 0.4);
+  background: rgba(215,215,215, 0.4);
 
   top: -1.50em;
   left: -1.50em;

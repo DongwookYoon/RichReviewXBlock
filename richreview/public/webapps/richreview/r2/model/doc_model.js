@@ -1126,23 +1126,19 @@
 
         this.dom = null;
         this.dom_textbox = null;
-        this._temporary_n = 0;
+        this.done_recording = true;
+        this.done_captioning = true;
         this.annotids = [];
     };
     r2.PieceNewSpeak.prototype = Object.create(r2.Piece.prototype);
     r2.PieceNewSpeak.prototype.Destructor = function(){
         r2.Piece.prototype.Destructor.apply(this);
     };
-    r2.PieceNewSpeak.prototype.GetAnnotId = function(){
-        return this._annotid;
-    };
     r2.PieceNewSpeak.prototype.SetPieceNewSpeak = function(
-        anchor_pid, annotid, username, inner_html, live_recording, ui_type
+        anchor_pid, annotid, username, inner_html, live_recording
     ){
         this._annotid = annotid;
         this._username = username;
-        this._waiting_for_watson = false;
-        this.ui_type = ui_type;
 
         var dom = this.CreateDom();
 
@@ -1188,70 +1184,12 @@
         $(this.dom_tr).css('width', this.GetTtIndentedWidth()*r2Const.FONT_SIZE_SCALE+'em');
         this.dom.appendChild(this.dom_tr);
 
-        var dom_overlay = document.createElement('div');
-        dom_overlay.classList.toggle('ssui-overlay', true);
-        dom_overlay.classList.toggle('unselectable', true);
-
-        this.dom_tr.appendChild(dom_overlay);
-
         this.dom_textbox = document.createElement('div');
         this.dom_textbox.setAttribute('contenteditable', this._username === r2.userGroup.cur_user.name);
-        this.dom_textbox.classList.toggle('r2_piece_simplespeech', true);
+        this.dom_textbox.classList.toggle('r2_piece_newspeak', true);
         this.dom_textbox.classList.toggle('text_selectable', true);
         this.dom_textbox.style.color = r2.userGroup.GetUser(this._username).color_piecekeyboard_text;
         this.dom_tr.appendChild(this.dom_textbox);
-
-        // SimpleSpeech UI wrapper
-        this.simplespeech = new r2.transcriptionUI(
-            this.dom_textbox, dom_overlay, this._annotid, this.annotids, this.ui_type
-        );
-
-        /* add event handlers*/
-        this.simplespeech.on_input = function() {
-            if(this.updateSizeWithTextInput()){
-                r2App.invalidate_size = true;
-                r2App.invalidate_page_layout = true;
-                r2App.invalidate_dynamic_scene = true;
-                r2App.invalidate_static_scene = true;
-            }
-        }.bind(this);
-
-        this.simplespeech.synthesizeAndPlay = function(content_changed, time){
-            return new Promise(function(resolve, reject){
-                if(content_changed){
-                    this.simplespeech.synthesizeNewAnnot(this._annotid).then(
-                        function(){
-                            r2.rich_audio.play(this._annotid, time);
-                            resolve();
-                        }.bind(this)
-                    );
-                }
-                else{
-                    r2.rich_audio.play(this._annotid,time);
-                    resolve();
-                }
-            }.bind(this));
-        }.bind(this);
-
-        this.simplespeech.insertRecording = function(){
-            r2.recordingCtrl.set(
-                this._parent,
-                { // option
-                    ui_type: r2App.RecordingUI.SIMPLE_SPEECH,
-                    caption_major: true,
-                    piece_to_insert: this
-                }
-            );
-        }.bind(this);
-
-        this.simplespeech.bgn_streaming = function(){
-            r2.radialMenu.bgnLoading('rm_'+r2.util.escapeDomId(this._annotid));
-        }.bind(this);
-        this.simplespeech.end_streaming = function(){
-            r2.radialMenu.endLoading('rm_'+r2.util.escapeDomId(this._annotid));
-        }.bind(this);
-
-
 
         this.dom_textbox.addEventListener('focus', function(event){
             r2App.cur_focused_piece_keyboard = this;
@@ -1264,16 +1202,32 @@
 
         this.dom_textbox.addEventListener('blur', function(event){
             // remove cursor complete from the textbox,
-            // otherwise it will interfere with mouse interaction for other visaul entities
+            // otherwise it will interfere with mouse interaction for other visual entities
             window.getSelection().removeAllRanges();
 
             r2App.cur_focused_piece_keyboard = null;
             this.dom_textbox.style.boxShadow = "none";
-
-            //$(this.dom).css("pointer-events", 'none');
             $(this.dom_textbox).toggleClass('editing', false);
         }.bind(this));
-        /* add event handlers*/
+
+        this.newspeak = new r2.newspeakUI(this.dom_textbox, this._annotid, this.annotids);
+        this.newspeak.fitDomSize = function() {
+            if(this.updateSizeWithTextInput()){
+                r2App.invalidate_size = true;
+                r2App.invalidate_page_layout = true;
+                r2App.invalidate_dynamic_scene = true;
+                r2App.invalidate_static_scene = true;
+            }
+        }.bind(this);
+        this.newspeak.insertRecording = function(){
+            r2.recordingCtrl.set(
+                this._parent,
+                { // option
+                    ui_type: r2App.RecordingUI.NEW_SPEAK,
+                    piece_to_insert: this
+                }
+            );
+        }.bind(this);
 
         return this.dom;
     };
@@ -1315,7 +1269,7 @@
         if (this._annotid != cur_annot_id) {
             return;
         }
-        this.simplespeech.drawDynamic(r2App.cur_audio_time);
+        this.newspeak.drawDynamic();
     };
     r2.PieceNewSpeak.prototype.resizeDom = function(){
         if(this.updateSizeWithTextInput()){
@@ -1330,17 +1284,15 @@
         this.annotids.push(recording_annot_id);
         this.done_recording = false;
         this.done_captioning = false;
-        this.simplespeech.bgnCommenting();
+        this.newspeak.bgnCommenting();
     };
     r2.PieceNewSpeak.prototype.bgnCommentingAsync = function(recording_annot_id){
-        this.simplespeech.bgnCommentingAsync();
+        this.newspeak.bgnCommentingAsync();
     };
     r2.PieceNewSpeak.prototype.setCaptionTemporary = function(words){
-        this.simplespeech.setCaptionTemporary(words, this.annotids[this.annotids.length-1]);
-        this.resizeDom();
     };
     r2.PieceNewSpeak.prototype.setCaptionFinal = function(words){
-        this.simplespeech.setCaptionFinal(words, this.annotids[this.annotids.length-1]);
+        this.newspeak.setCaptionFinal(words, this.annotids[this.annotids.length-1]); // words and the base_annotid
         this.resizeDom();
     };
     r2.PieceNewSpeak.prototype.doneCaptioning = function(){
@@ -1351,15 +1303,14 @@
     };
     r2.PieceNewSpeak.prototype.onEndRecording = function(audioURL) {
         this.done_recording = true;
-        this.simplespeech.endCommenting();
+        this.newspeak.onEndRecording();
         r2.radialMenu.bgnLoading('rm_'+r2.util.escapeDomId(this._annotid));
         this.doneCommentingAsync();
     };
     r2.PieceNewSpeak.prototype.doneCommentingAsync = function() {
         if(this.done_captioning && this.done_recording){
             r2.radialMenu.endLoading('rm_'+r2.util.escapeDomId(this._annotid));
-            this.simplespeech.doneCommentingAsync();
-            this.simplespeech.synthesizeNewAnnot(this._annotid);
+            this.newspeak.doneCommentingAsync()
         }
     };
     r2.PieceNewSpeak.prototype.Focus = function(){
@@ -1380,7 +1331,7 @@
         }
     };
     r2.PieceNewSpeak.prototype.SetData = function(data){
-        this.simplespeech.SetData(data);
+        this.newspeak.setData(data);
     };
 
     /*
@@ -1396,22 +1347,16 @@
         this.done_recording = true;
         this.done_captioning = true;
         this.annotids = [];
-        this.ui_type = r2App.RecordingUI.SIMPLE_SPEECH;
     };
     r2.PieceSimpleSpeech.prototype = Object.create(r2.Piece.prototype);
     r2.PieceSimpleSpeech.prototype.Destructor = function(){
         r2.Piece.prototype.Destructor.apply(this);
     };
-    r2.PieceSimpleSpeech.prototype.GetAnnotId = function(){
-        return this._annotid;
-    };
     r2.PieceSimpleSpeech.prototype.SetPieceSimpleSpeech = function(
-        anchor_pid, annotid, username, inner_html, live_recording, ui_type
+        anchor_pid, annotid, username, inner_html, live_recording
     ){
         this._annotid = annotid;
         this._username = username;
-        this._waiting_for_watson = false;
-        this.ui_type = ui_type;
 
         var dom = this.CreateDom();
 
@@ -1472,7 +1417,7 @@
 
         // SimpleSpeech UI wrapper
         this.simplespeech = new r2.transcriptionUI(
-            this.dom_textbox, dom_overlay, this._annotid, this.annotids, this.ui_type
+            this.dom_textbox, dom_overlay, this._annotid, this.annotids
         );
 
         /* add event handlers*/
@@ -1507,7 +1452,6 @@
                 this._parent,
                 { // option
                     ui_type: r2App.RecordingUI.SIMPLE_SPEECH,
-                    caption_major: true,
                     piece_to_insert: this
                 }
             );
@@ -1533,7 +1477,7 @@
 
         this.dom_textbox.addEventListener('blur', function(event){
             // remove cursor complete from the textbox,
-            // otherwise it will interfere with mouse interaction for other visaul entities
+            // otherwise it will interfere with mouse interaction for other visual entities
             window.getSelection().removeAllRanges();
 
             r2App.cur_focused_piece_keyboard = null;
@@ -1595,6 +1539,7 @@
         }
     };
     r2.PieceSimpleSpeech.prototype.bgnCommenting = function(recording_annot_id){
+        console.log('bgnCommenting');
         r2App.annots[recording_annot_id].setIsBaseAnnot();
         this.annotids.push(recording_annot_id);
         this.done_recording = false;
@@ -1602,11 +1547,10 @@
         this.simplespeech.bgnCommenting();
     };
     r2.PieceSimpleSpeech.prototype.bgnCommentingAsync = function(recording_annot_id){
+        console.log('bgnCommentingAsync');
         this.simplespeech.bgnCommentingAsync();
     };
     r2.PieceSimpleSpeech.prototype.setCaptionTemporary = function(words){
-        this.simplespeech.setCaptionTemporary(words, this.annotids[this.annotids.length-1]);
-        this.resizeDom();
     };
     r2.PieceSimpleSpeech.prototype.setCaptionFinal = function(words){
         this.simplespeech.setCaptionFinal(words, this.annotids[this.annotids.length-1]);
@@ -1855,7 +1799,7 @@
 
         this.dom_textbox.addEventListener('blur', function(event){
             // remove cursor complete from the textbox,
-            // otherwise it will interfere with mouse interaction for other visaul entities
+            // otherwise it will interfere with mouse interaction for other visual entities
             window.getSelection().removeAllRanges();
 
             r2App.cur_focused_piece_keyboard = null;

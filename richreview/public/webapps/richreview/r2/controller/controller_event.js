@@ -687,8 +687,6 @@ var r2Ctrl = {};
             for(var i = 0; spotlight = spotlights[i]; ++i){
                 playback = spotlight.GetPlayback(pt);
                 if(playback){
-                    console.log(r2App.annots[playback.annot]._ui_type);
-                    console.log(r2App.annots[playback.annot]);
                     if(r2App.annots[playback.annot]._ui_type !== 'new_speak'){
                         r2.rich_audio.play(playback.annot, playback.t);
                         r2.log.Log_AudioPlay('indexing_sp', playback.annot, playback.t);
@@ -916,7 +914,7 @@ var r2Ctrl = {};
                 switch (event.which) {
                     case CONST.KEY_SPACE:
                     case CONST.KEY_ENTER:
-                        r2.recordingCtrl.stop(toupload = true);
+                        r2.recordingCtrl.stop(true);
                         r2.log.Log_Simple("Recording_Stop");
                         break;
                     default:
@@ -1005,7 +1003,7 @@ var r2Ctrl = {};
             else if(type === 'waveform'){
                 if(r2.keyboard.ctrlkey_dn){return;}
                 if(r2App.mode === r2App.AppModeEnum.RECORDING){
-                    r2.recordingCtrl.stop(toupload = true);
+                    r2.recordingCtrl.stop(true);
                     r2.log.Log_Simple("Recording_Stop_OnScrBtn");
                 }
                 else{
@@ -1342,7 +1340,7 @@ var r2Ctrl = {};
 
     var replacePieceAudioToPieceKeyboard = function(){
         var annotid = r2App.cur_recording_annot.GetId();
-        r2.recordingCtrl.stop(toupload = false);
+        r2.recordingCtrl.stop(false);
         r2.removeAnnot(annotid, askuser = false, mute = true);
         r2.log.Log_Simple("Recording_Stop_CancelForTextComment");
 

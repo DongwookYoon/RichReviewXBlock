@@ -176,7 +176,7 @@
                         success = deleteComment(doc, cmd);
                         break;
                     default:
-                        console.log('Unknown Cmd Error:', JSON.stringify(cmd));
+                        console.error('Unknown Cmd Error:', JSON.stringify(cmd));
                 }
             }
             return success;
@@ -188,11 +188,14 @@
                 case 'PieceKeyboardTextChange':
                     success = changeProperty_PieceKeyboardTextChange(doc, cmd);
                     break;
+                case 'PieceNewSpeakChange':
+                    success = changeProperty_PieceNewSpeakChange(doc, cmd);
+                    break;
                 case 'PieceKeyboardPubPrivate':
                     success = changeProperty_PieceKeyboardPubPrivate(doc, cmd);
                     break;
                 default:
-                    console.log('Unknown Cmd Error:', JSON.stringify(cmd));
+                    console.error('Unknown Cmd Error:', JSON.stringify(cmd));
             }
             return success;
         };
@@ -249,6 +252,9 @@
             else if(cmd.anchorTo.type == 'PieceTeared'){
                 return anchorpage.SearchPiece(cmd.anchorTo.id);
             }
+            else if(cmd.anchorTo.type == 'PieceNewSpeak'){
+                return anchorpage.SearchPiece(cmd.anchorTo.id);
+            }
             else if(cmd.anchorTo.type == "PieceKeyboard"){
                 return anchorpage.SearchPiece(cmd.anchorTo.id);
             }
@@ -273,6 +279,9 @@
                 case 'CommentText':
                     success = createCommentText(doc, cmd);
                     break;
+                case 'CommentNewSpeak':
+                    success = createCommentNewSpeak(doc, cmd);
+                    break;
                 case 'PrivateHighlight':
                     success = createPrivateHighlight(doc, cmd);
                     break;
@@ -280,7 +289,7 @@
                     success = createStaticInk(doc, cmd);
                     break;
                 default:
-                    console.log('Unknown Cmd Error:', JSON.stringify(cmd));
+                    console.error('Unknown Cmd Error:', JSON.stringify(cmd));
             }
             return success;
         };
@@ -344,7 +353,11 @@
 
             if(anchorpiece){
                 var annot = new r2.Annot();
-                annot.SetAnnot(cmd.data.aid, anchorpiece.GetId(), cmd.time, cmd.data.duration, cmd.data.waveform_sample, cmd.user, cmd.data.audiofileurl);
+                annot.SetAnnot(cmd.data.aid, anchorpiece.GetId(), cmd.time, cmd.data.duration, cmd.data.waveform_sample, cmd.user, cmd.data.audiofileurl,
+                    cmd.data.ui_type);
+                if(cmd.data.is_base_annot){
+                    annot.setIsBaseAnnot();
+                }
                 r2App.annots[cmd.data.aid] = annot;
                 r2.dom_model.createCommentVoice(annot, cmd.anchorTo.page, false); /* live_recording = false */
 
@@ -486,6 +499,80 @@
             return false;
         };
 
+        // fixMe move this to somewhere else
+        function registerAnnotFromData(anchor_pid, annt_data){
+            var annot = new r2.Annot();
+            annot.SetAnnot(annt_data.data.aid, anchor_pid, annt_data.data.time, annt_data.data.duration,
+                annt_data.data.waveform_sample, annt_data.user, annt_data.data.audiofileurl, annt_data.data.ui_type);
+            if(annt_data.data.is_base_annot){
+                annot.setIsBaseAnnot();
+            }
+            r2App.annots[annt_data.data.aid] = annot;
+            var cmd_spotlight;
+            for(var i = 0; cmd_spotlight = annt_data.data.Spotlights[i]; ++i){
+                var spotlight = new r2.Spotlight();
+                var spotlight_time = 0;
+                if(cmd_spotlight.time)
+                    spotlight_time = cmd_spotlight.time;
+                spotlight.SetSpotlight(
+                    annt_data.user,
+                    annt_data.data.aid,
+                    cmd_spotlight.npage,
+                    spotlight_time,
+                    cmd_spotlight.t_bgn,
+                    cmd_spotlight.t_end);
+                for(var j = 0; j < cmd_spotlight.segments.length; ++j){
+                    if(r2App.pieces_cache.hasOwnProperty(cmd_spotlight.segments[j].pid)){
+                        var segment = new r2.Spotlight.Segment();
+                        segment.SetSegment(cmd_spotlight.segments[j].pid, r2.util.numListToVec2List(cmd_spotlight.segments[j].pts));
+                        spotlight.AddSegment(segment);
+                    }
+                }
+                annot.AddSpotlight(spotlight, false); // to_upload = false
+            }
+        }
+
+        var createCommentNewSpeak = function(doc, cmd){
+            // time: 2014-12-21T13...
+            // user: 'red user'
+            // op: 'CreateComment'
+            // type: 'CommentNewSpeak'
+            // anchorTo: {type: 'PieceText or PieceTeared', id: pid, page: 2} or
+            // data: {pid:..., aid: ..., text: "this is a", isprivate:}
+            var anchorpage = doc.GetPage(cmd.anchorTo.page);
+
+            var anchorpiece = getAnchorPiece(anchorpage, cmd);
+
+            if(anchorpiece && !cmd.data.isprivate){
+                var piece = new r2.PieceNewSpeak();
+                piece.SetPiece(
+                    cmd.data.pid,
+                    (new Date(cmd.time)).getTime(),
+                    anchorpiece.GetNewPieceSize(),
+                    anchorpiece.GetTTData()
+                );
+                piece.SetPieceNewSpeak(
+                    anchorpiece.GetId(),
+                    cmd.data.aid,
+                    cmd.user,
+                    cmd.data.text,
+                    false // live_recording
+                );
+                anchorpiece.AddChildrenChronologically([piece]);
+                registerAnnotFromData(anchorpiece.GetId(), cmd.data.annot);
+                cmd.data.base_annots.forEach(function(annot_data){
+                    registerAnnotFromData(anchorpiece.GetId(), annot_data);
+                });
+
+                r2App.cur_page.refreshSpotlightPrerenderNewspeak(); // generate spotlight caches
+                r2App.invalidate_size = true;
+                r2App.invalidate_page_layout = true;
+                return true;
+            }
+
+            return false;
+        };
+
         var createPrivateHighlight = function(doc, cmd){
             // time: 2014-12-21T13...
             // user: 'red user'
@@ -551,6 +638,23 @@
             });
             r2App.invalidate_page_layout = true;
             return true;
+        };
+
+        var changeProperty_PieceNewSpeakChange = function(doc, cmd){
+            // time: 2014-12-21T13...
+            // user: 'red user'
+            // op: 'ChangeProperty'
+            // type: 'PieceNewSpeakChange'
+            // target: {type: 'PieceNewSpeak', pid: pid, page: 2}
+            // data: 'lorem ipsum ...'
+            var target = doc.GetTargetPiece(cmd.target);
+            if(target){
+                target.SetText(cmd.data);
+                r2App.invalidate_size = true;
+                r2App.invalidate_page_layout = true;
+                return true;
+            }
+            return false;
         };
 
         var changeProperty_PieceKeyboardTextChange = function(doc, cmd){

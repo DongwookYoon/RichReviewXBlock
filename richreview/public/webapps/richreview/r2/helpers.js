@@ -1643,6 +1643,12 @@
         };
 
         pub.getPosAndWidthInPage = function(dom){
+            if(dom){
+
+            }
+            else{
+                var x = 0;
+            }
             var rect = dom.getBoundingClientRect();
             var rtn = [
                 (rect.left - page_offset.x) / page_canvas.dom_width,

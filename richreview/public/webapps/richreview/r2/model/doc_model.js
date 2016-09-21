@@ -199,6 +199,8 @@
     r2.Doc.prototype.GetTargetPiece = function(target){
         if(target.type == "PieceKeyboard")
             return this._pages[target.page].SearchPiece(target.pid);
+        if(target.type == "PieceNewSpeak")
+            return this._pages[target.page].SearchPiece(target.pid);
         return null;
     };
     r2.Doc.prototype.SearchPieceByAnnotId = function(annotid){
@@ -579,9 +581,7 @@
     };
     r2.Piece.prototype.Relayout = function(){
         var dom_piece = this._dom_piece === null ? $(document.getElementById(this.GetId())).get(0) : this._dom_piece;
-        if(this._dom_piece === null){
-            console.log('x');
-        }
+
         var rect = r2.dom.getPosAndWidthInPage(dom_piece);
 
         this.pos = new Vec2(rect[0], rect[1]);
@@ -1010,7 +1010,7 @@
         for(var i = 0; i < n+1; ++i){
             var v = 0.9*this.GetAnnot().SampleAudioDbs(this._t_bgn+i*r2Const.PIECEAUDIO_STEP_T);
             if(v>0){
-                this._audio_dbs.push(v);
+                this._audio_dbs.push(v.toFixed(3));
             }
             else{
                 this._audio_dbs.push(0);
@@ -1152,7 +1152,7 @@
             r2App.cur_recording_minmax[0] = Math.min(this._audio_dbs_recording[i], r2App.cur_recording_minmax[0]);
             r2App.cur_recording_minmax[1] = Math.max(this._audio_dbs_recording[i], r2App.cur_recording_minmax[1]);
             var v = 0.9*(this._audio_dbs_recording[i]-r2App.cur_recording_minmax[0])/(r2App.cur_recording_minmax[1]-r2App.cur_recording_minmax[0]);
-            this._audio_dbs.push(v);
+            this._audio_dbs.push(v.toFixed(3));
         }
     };
     r2.PieceAudio.prototype.RefreshAudioDbs = function(){
@@ -1161,7 +1161,7 @@
             r2App.cur_recording_minmax[0] = Math.min(this._audio_dbs_recording[i], r2App.cur_recording_minmax[0]);
             r2App.cur_recording_minmax[1] = Math.max(this._audio_dbs_recording[i], r2App.cur_recording_minmax[1]);
             var v = 0.9*(this._audio_dbs_recording[i]-r2App.cur_recording_minmax[0])/(r2App.cur_recording_minmax[1]-r2App.cur_recording_minmax[0]);
-            this._audio_dbs.push(v);
+            this._audio_dbs.push(v.toFixed(3));
         }
     };
     r2.PieceAudio.prototype.NormalizePieceAudio = function(l, refresh_all){
@@ -1192,10 +1192,64 @@
         this.done_recording = true;
         this.done_captioning = true;
         this.annotids = [];
+        this.to_upload_async = false;
+        this.__contentschanged = false;
     };
     r2.PieceNewSpeak.prototype = Object.create(r2.Piece.prototype);
     r2.PieceNewSpeak.prototype.Destructor = function(){
         r2.Piece.prototype.Destructor.apply(this);
+    };
+    r2.PieceNewSpeak.prototype.ExportToCmd = function(){
+        // time: 2014-12-21T13...
+        // user: 'red user'
+        // op: 'CreateComment'
+        // type: 'CommentNewSpeak'
+        // anchorTo: {type: 'PieceText or PieceTeared', id: pid, page: 2} or
+        // data: {aid: ..., text: "this is a", isprivate:}
+        var cmd = {};
+        cmd.time = (new Date(this._creationTime)).toISOString();
+        cmd.user = this._username;
+        cmd.op = "CreateComment";
+        cmd.type = "CommentNewSpeak";
+        cmd.anchorTo = this._parent.GetAnchorTo();
+        cmd.data = {};
+        cmd.data.pid = this._id;
+        cmd.data.aid = this._annotid;
+        cmd.data.text = this.dom_textbox.innerHTML;
+        cmd.data.annot = r2App.annots[this._annotid].ExportToCmd();
+        cmd.data.base_annots = [];
+        for(var i = 0; i < this.annotids.length; ++i){
+            cmd.data.base_annots.push(
+                r2App.annots[this.annotids[i]].ExportToCmd()
+            );
+        }
+
+        return cmd;
+    };
+    r2.PieceNewSpeak.prototype.ExportToTextChange = function(){
+        // time: 2014-12-21T13...
+        // user: 'red user'
+        // op: 'ChangeProperty'
+        // type: 'PieceNewSpeakTextChange'
+        // target: {type: 'PieceNewSpeak', pid: pid, page: 2}
+        // data: 'lorem ipsum ...'
+        var cmd = {};
+        cmd.time = (new Date()).toISOString();
+        cmd.user = this._username;
+        cmd.op = "ChangeProperty";
+        cmd.type = "PieceNewSpeakChange";
+        cmd.target = this.GetTargetData();
+        cmd.data = this.dom_textbox.innerHTML;
+
+        return cmd;
+    };
+    r2.PieceNewSpeak.prototype.GetTargetData = function() {
+        return {
+            type: 'PieceNewSpeak',
+            pid: this.GetId(),
+            aid: this._annotid,
+            page: this.GetNumPage()
+        };
     };
     r2.PieceNewSpeak.prototype.SetPieceNewSpeak = function(
         anchor_pid, annotid, username, inner_html, live_recording
@@ -1215,8 +1269,7 @@
             this,
             live_recording
         );
-
-        this.resizeDom();
+        this.SetText(inner_html);
 
         return dom;
     };
@@ -1232,6 +1285,10 @@
         anchorCmd.id = this.GetId();
         anchorCmd.page = this.GetNumPage();
         return anchorCmd;
+    };
+    r2.PieceNewSpeak.prototype.SetText = function(text){
+        this.dom_textbox.innerHTML = text;
+        this.updateSizeWithTextInput();
     };
     r2.PieceNewSpeak.prototype.CreateDom = function(){
         this.dom = document.createElement('div');
@@ -1263,6 +1320,11 @@
         }.bind(this));
         r2.keyboard.pieceEventListener.setTextbox(this.dom_textbox);
 
+        this.dom_textbox.addEventListener('input', function() {
+            this.__contentschanged = true;
+            console.log('changed');
+        }.bind(this));
+
         this.dom_textbox.addEventListener('blur', function(event){
             // remove cursor complete from the textbox,
             // otherwise it will interfere with mouse interaction for other visual entities
@@ -1271,6 +1333,11 @@
             r2App.cur_focused_piece_keyboard = null;
             this.dom_textbox.style.boxShadow = "none";
             $(this.dom_textbox).toggleClass('editing', false);
+            if(this.__contentschanged){
+                console.log('upload',this.ExportToTextChange());
+                r2Sync.uploader.pushCmd(this.ExportToTextChange());
+                this.__contentschanged = false;
+            }
         }.bind(this));
 
         this.newspeak = new r2.newspeakUI(this.dom_textbox, this._annotid, this.annotids);
@@ -1373,7 +1440,10 @@
     r2.PieceNewSpeak.prototype.doneCommentingAsync = function() {
         if(this.done_captioning && this.done_recording){
             r2.radialMenu.endLoading('rm_'+r2.util.escapeDomId(this._annotid));
-            this.newspeak.doneCommentingAsync()
+            this.newspeak.doneCommentingAsync();
+            if(this.to_upload_async){
+                r2Sync.uploader.pushCmd(this.ExportToCmd());
+            }
         }
     };
     r2.PieceNewSpeak.prototype.Focus = function(){
@@ -1398,6 +1468,9 @@
     };
     r2.PieceNewSpeak.prototype.Play = function(cbLoadingBgn, cbLoadingEnd){
         this.newspeak.Play(cbLoadingBgn, cbLoadingEnd);
+    };
+    r2.PieceNewSpeak.prototype.setUploadAsync = function(to_upload_async){
+        this.to_upload_async = to_upload_async;
     };
 
     /*
@@ -2041,6 +2114,7 @@
         });
         cmd.data.audiofileurl = this._audiofileurl;
         cmd.data.ui_type = this._ui_type;
+        cmd.data.is_base_annot = this._is_base_annot;
         return cmd;
     };
     r2.Annot.prototype.setIsBaseAnnot = function(){
@@ -2153,7 +2227,7 @@
                 max = Math.max(max, v);
             });
             for(var i = 0; i < this._audio_dbs.length; ++i){
-                this._audio_dbs[i] = (this._audio_dbs[i]-min)/(max-min);
+                this._audio_dbs[i] = ((this._audio_dbs[i]-min)/(max-min)).toFixed(3);
             }
 
         }

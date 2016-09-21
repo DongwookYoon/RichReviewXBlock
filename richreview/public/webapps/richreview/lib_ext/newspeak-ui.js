@@ -32,7 +32,6 @@
                     word: data[0],
                     bgn: data[1],
                     end: data[2],
-                    conf: data[3], // confidence
                     annotid: base_annotid
                 });
             });
@@ -173,7 +172,6 @@
                     word: '\xa0',
                     bgn: prev.end,
                     end: next.bgn,
-                    conf: 0.0,
                     annotid: prev.annotid
                 };
                 if(next.bgn-prev.end > 0.8){

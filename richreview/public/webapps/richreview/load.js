@@ -75,8 +75,8 @@
 
         var run = function(){
             var scripts = [
-                ['https://code.jquery.com/ui/1.11.4/themes/ui-lightness/jquery-ui.css', 'css'],
-                ['https://code.jquery.com/ui/1.11.4/jquery-ui.js', 'js'],
+                ['https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/smoothness/jquery-ui.css', 'css'],
+                ['https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js', 'js'],
                 ['https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css', 'css'],
                 ['https://cdnjs.cloudflare.com/ajax/libs/font-awesome-animation/0.0.9/font-awesome-animation.min.css', 'css'],
                 ['https://richreview.azureedge.net/richreview/lib_ext/pdfjs/pdf.js', 'js'],

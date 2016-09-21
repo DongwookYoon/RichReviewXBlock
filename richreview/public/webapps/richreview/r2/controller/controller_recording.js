@@ -69,12 +69,12 @@
             }
         };
 
-        pub.stop = function(){
+        pub.stop = function(to_upload){
             if(options.ui_type === r2App.RecordingUI.WAVEFORM){
-                r2.recordingStop.waveform(anchor_piece);
+                r2.recordingStop.waveform(to_upload);
             }
             else{
-                r2.recordingStop.transcription(anchor_piece);
+                r2.recordingStop.transcription(to_upload);
             }
         };
 
@@ -101,7 +101,6 @@
             var annotid = new Date(r2App.cur_time).toISOString();
             var args_new_annot = [annotid, anchor_piece.GetId(), r2App.cur_time, 0, [], r2.userGroup.cur_user.name, "",
                 options.ui_type === r2App.RecordingUI.NEW_SPEAK ? 'new_speak' : null];
-            console.log(annotid, args_new_annot);
 
             r2App.cur_recording_annot = new r2.Annot();
             r2.Annot.prototype.SetAnnot.apply(r2App.cur_recording_annot, args_new_annot);
@@ -275,8 +274,19 @@
                     r2App.cur_recording_annot.SetRecordingAudioFileUrl(result.url, result.blob, result.buffer);
 
                     /* upload */
-                    if(to_upload)
-                        r2Sync.uploader.pushCmd(r2App.cur_recording_annot.ExportToCmd());
+                    if(r2App.cur_recording_annot._ui_type === 'new_speak'){
+                        if(to_upload) {
+                            r2App.cur_recording_piece.setUploadAsync(true);
+                        }
+                        else{
+                            r2App.cur_recording_piece.setUploadAsync(false);
+                        }
+                    }
+                    else{
+                        if(to_upload) {
+                            r2Sync.uploader.pushCmd(r2App.cur_recording_annot.ExportToCmd());
+                        }
+                    }
 
                     /* update dom */
                     r2.dom.disableRecordingIndicators();

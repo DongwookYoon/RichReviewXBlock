@@ -369,7 +369,12 @@
         for(var i = 0; spotlight = this._spotlight_cache_newspeak[i]; ++i){
             for(var j = 0; j < l.length; ++j){
                 if(l[j].annot === spotlight._annot){
-                    if(!(l[j].bgn > spotlight._t_end || l[j].end < spotlight._t_bgn)){
+                    var t_overlap = Math.max(l[j].end, spotlight._t_end)-Math.min(l[j].bgn, spotlight._t_bgn);
+                    if(!(l[j].bgn > spotlight._t_end || l[j].end < spotlight._t_bgn) &&
+                        (t_overlap > (spotlight._t_end-spotlight._t_bgn) > 0.5 ||
+                            t_overlap === l[j].end - l[j].bgn)
+
+                    ){
                         spotlight.drawReplayNewSpeak(canvas_ctx); // ctx
                         break;
                     }

@@ -77,6 +77,12 @@
                             bgn:1000*parseFloat($span.attr('bgn')),
                             end:1000*parseFloat($span.attr('end'))});
                     }
+                    else{
+                        console.error('invalid span annot_id: ', span_annotid);
+                    }
+                }
+                else{
+                    console.error('invalid span attr: ', $span);
                 }
             });
             r2App.cur_page.dynamicSpotlightNewspeak(canvas_ctx, l);

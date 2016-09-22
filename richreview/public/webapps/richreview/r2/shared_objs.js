@@ -179,6 +179,7 @@ var r2App = (function() {
             if(r2.mouse.mode !== r2.MouseModeEnum.HOVER){return}
             if(r2App.cur_focused_piece_keyboard){return;}
             if(r2App.mode === r2App.AppModeEnum.RECORDING){return;}
+            if((new Date().getTime())-r2App.t_last_scroll < 300){return ;}
 
             var hit_piece = r2App.cur_page.GetPieceByHitTest(r2.viewCtrl.mapScrToDoc(cur_mouse_pt));
             if(hit_piece){ // piece[0] is dy, piece[1] is the obj.

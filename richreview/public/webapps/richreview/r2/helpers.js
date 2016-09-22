@@ -1685,6 +1685,7 @@
             if(r2.scroll_wrapper == window){
                 page_offset.y -= $(window).scrollTop();
             }
+            r2App.t_last_scroll = new Date().getTime();
         }
 
         return pub;

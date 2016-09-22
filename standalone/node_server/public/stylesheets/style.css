@@ -33,6 +33,16 @@ a:active {
 .navbar{
   min-height: 41px;
 }
+.navbar.cornellx {
+  font-size: 1.8em;
+  white-space: nowrap;
+}
+.navbar.cornellx > p {
+  font: 21px "Lucida Grande", Helvetica, Arial, sans-serif;
+  font-weight: bold;
+  margin: 0.4em 0.45em;
+}
+
 .r2-topmenu > .navbar-header > a.navbar-brand{
   padding: 8px 12px;
   height: 41px

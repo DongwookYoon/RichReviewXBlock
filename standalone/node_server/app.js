@@ -339,6 +339,13 @@ function setRedirections(){
             res.redirect("/viewer?access_code=dd6372ae2e677aa6a0bb7a9ff239094fd48ac6c7");
         }
     );
+
+    app.get(
+        '/demo2',
+        function(req, res) {
+            res.redirect("/viewer?access_code=ecff389d8486935ae7f3835c8420377c015a43b8");
+        }
+    );
 }
 
 // render error logs

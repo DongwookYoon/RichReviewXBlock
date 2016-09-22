@@ -8,6 +8,13 @@ else{
 }
 console.log('App NODE_ENV:', process.env.NODE_ENV);
 
+
+{   // patching the fs module prevents the EMFILE error
+    var realFs = require('fs');
+    var gracefulFs = require('graceful-fs');
+    gracefulFs.gracefulify(realFs);
+}
+
 var run_node_server = function() {
     var app = require('../app');
     var fs = require("fs");

@@ -1291,25 +1291,32 @@ div.tooltip_audio_waveform div.arrow_up {
   position: absolute;
   width: 100%;
   text-align: left;
-  padding: 2em;
+  padding: 2.1em;
   padding-bottom: 0;
+  padding-top: 1.5em;
   -webkit-user-select: all;
   z-index: 8;
 }
 
 #cornellx_inst > h2{
   font-size: 1em;
-  padding-top: 0;
+  margin: 0;
+  margin-bottom: 0.3em;
 }
 
 #cornellx_inst > iframe{
   float: right;
-  padding-right: 0.5em;
-  padding-left: 0.3em;
-  width: 20em;
+  padding-right: 0;
+  padding-left: 0;
+  margin-left: 1em;
+  margin-top: 1.4em;
+  width: 16em;
   height: 13em;
 }
 #cornellx_inst > p{
-  font-size: 0.8em;
-  line-height: 1.4em;
+  font-size: 0.77em;
+  line-height: 1.2em;
+  margin: 0;
+  padding-bottom: 0.3em;
+  text-align: justify;
 }

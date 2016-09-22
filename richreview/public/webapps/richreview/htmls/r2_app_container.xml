@@ -156,6 +156,7 @@
         <span id="uploading_indicator_stack" class="fa-stack" >
             <i class="fa fa-cloud-upload faa-vertical animated"></i>
         </span>
+        <p>Saving your comments...</p>
     </div>
     <div id="cheatsheet"></div>
     <div id="booklet_nav"></div>

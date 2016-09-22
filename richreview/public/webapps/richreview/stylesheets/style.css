@@ -818,11 +818,12 @@ a:active {
   position: absolute;
   right: 20px;
   top: 20px;
-  width: 54px;
+  width: 235px;
   height: 54px;
   font-size: 54px;
   color: darkorchid;
   opacity: 0;
+  text-align: center;
 
   -webkit-transform: scale(0,1);
   -moz-transform: scale(0,1);
@@ -830,6 +831,16 @@ a:active {
   -webkit-transition: all 0.1s ease-out;
   -moz-transition: all 0.1s ease-out;
   transition: all 0.1s ease-out;
+}
+#uploading_indicator> p{
+  font-size: 12px;
+  background: rgba(33, 150, 243, 0.85);
+  background: #f4e0f0;
+  color: darkorchid;
+  padding:3px;
+  border-style: solid;
+  border-color: #cbb7cc;
+  border-width: 1px;
 }
 
 #uploading_indicator.show{
@@ -844,7 +855,7 @@ a:active {
 }
 #uploading_indicator_stack{
   width: 35px;
-  height: 54px;
+  height: 80px;
 }
 
 /* Gmail style scrollbar */

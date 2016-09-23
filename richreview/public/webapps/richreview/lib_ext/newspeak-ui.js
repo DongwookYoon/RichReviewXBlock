@@ -175,7 +175,7 @@
                 var prev = buf[i-1];
                 var next = buf[i];
                 var space = {
-                    word: '\xa0',
+                    word: ' ',
                     bgn: prev.end,
                     end: next.bgn,
                     annotid: prev.annotid

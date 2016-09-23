@@ -5,13 +5,10 @@
 <div class="cheatsheet-summary-title" style="font-size:15px;margin-left:20px;margin-bottom: 5px;"><b>Summary</b></div>
 <div class="cheatsheet-summary">
     <div class="desc">
-        PRESS-ENTER-Key to create comments
+        PRESS-ENTER-Key to create a voice comments.
     </div>
     <div class="desc">
-        HOLD-CTRL-Key to create private comments
-    </div>
-    <div class="desc">
-        DRAG with LEFT-Click to create Pointing Gestures or Highlights
+        While recording voice, DRAG your mouse with LEFT-click to create Gestures.
     </div>
 </div>
 <div class="cheatsheet-features-title" style="font-size:15px;margin-left:20px;margin-bottom: 5px;">

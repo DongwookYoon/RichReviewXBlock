@@ -134,17 +134,17 @@
             $cheatsheet = $("#cheatsheet");
             $btn_cheatsheet = $("#btn-cheatsheet");
 
-            pub.AddItem("Moving in Page", ": DRAG-with-RIGHT-Click", "translate");
-            pub.AddItem("Zooming In/Out", ": PRESS '+'/'-' Key or 'Magnifying Buttons'", "zooming");
-            pub.AddItem("Commenting with Voice", ": PRESS-ENTER to start recording, PRESS-ENTER again to stop", "enter_voice");
-            pub.AddItem("Commenting with Text", ": PRESS-ENTER + just TYPE", "enter_text");
+            pub.AddItem("Moving in Page", ": Use the SCROLL-BAR", "translate");
+            pub.AddItem("Zooming In/Out", ": PRESS '+'/'-' Buttons on the top menu bar'", null);//"zooming.");
+            pub.AddItem("Commenting with Voice", ": PRESS-ENTER to start recording, PRESS-ENTER again to stop", null);//"enter_voice");
+            pub.AddItem("Commenting with Text", ": Click the KEYBOARD Button", null);//"enter_text");
             pub.AddItem("Pointing while Speaking", ": Start-VOICE-Recording + DRAG-with-LEFT-Click", "spotlight");
-            pub.AddItem("Indexing Waveform", ": LEFT-Click over Waveform", "waveform_indexing");
-            pub.AddItem("Indexing Pointing Gesture", ": LEFT-Click over a Gesture's trace", "spotlight_indexing");
-            pub.AddItem("Highlighting (Private)", ": HOLD-CTRL + DRAG-with-LEFT-Click", "highlight");
-            pub.AddItem("Commenting (Private)", ": HOLD-CTRL + PRESS-ENTER", "private_note");
-            pub.AddItem("Publishing Private Comment", ": Click 'Publish Button'", "publish_private");
-            pub.AddItem("Deleting Voice Comment", ": HOLD-LEFT-Click on 'Play Button' and select 'Trash Can'", "delete_voice");
+            //pub.AddItem("Indexing Waveform", ": LEFT-Click over Waveform", "waveform_indexing");
+            //pub.AddItem("Indexing Pointing Gesture", ": LEFT-Click over a Gesture's trace", "spotlight_indexing");
+            //pub.AddItem("Highlighting (Private)", ": HOLD-CTRL + DRAG-with-LEFT-Click", "highlight");
+            //pub.AddItem("Commenting (Private)", ": HOLD-CTRL + PRESS-ENTER", "private_note");
+            //pub.AddItem("Publishing Private Comment", ": Click 'Publish Button'", "publish_private");
+            pub.AddItem("Deleting Voice Comment", ": HOVER the cursor on 'Play Button' and select 'TRASH CAN'", "delete_voice");
 
             $cheatsheet.find(".item").hover(
                 function(){
@@ -196,10 +196,12 @@
             item_description.textContent = description;
             $(item).append(item_description);
 
-            var item_gif = document.createElement("img");
-            $(item_gif).toggleClass("item-gif", true);
-            $(item_gif).attr("src", "https://richreview.blob.core.windows.net/data/gif/"+ gif +".gif");
-            $(item_description).append(item_gif);
+            if(gif){
+                var item_gif = document.createElement("img");
+                $(item_gif).toggleClass("item-gif", true);
+                $(item_gif).attr("src", "https://richreview.blob.core.windows.net/data/gif/"+ gif +".gif");
+                $(item_description).append(item_gif);
+            }
         };
 
         pub.BtnClick = function(){

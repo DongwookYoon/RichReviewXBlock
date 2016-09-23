@@ -46,6 +46,12 @@
                 else{ // if auth context not set
                     bluemix_stt.getAuthInfo().catch(
                         function(e){
+                            if(r2.ctx.pdf_url.indexOf('34811a7b62e4461316fc5aab8f655041fc3b01bc') > 0) { // edx/cornellX
+                                alert('You edX authentication session has timed out. Please go back to the course webpage at the edX.org, and retry.');
+                            }
+                            else{
+                                alert('Needs login. Your RichReview authentication session has timed out.');
+                            }
                             throw 'Invalid BlueMix authentication error: need login';
                         }
                     ).then(

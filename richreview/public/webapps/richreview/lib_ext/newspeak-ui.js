@@ -307,9 +307,9 @@
                     r2App.invalidate_dynamic_scene = true;
                     r2.speechSynth.play(getSegmentText(segments[i]), annotid, cbLoadingBgn, cbLoadingEnd)
                         .then(function(){
+                            segments[i].removeClass('replaying');
                             if(!r2.speechSynth.is_canceled){
                                 dynamic_spotlight_data = null;
-                                segments[i].removeClass('replaying');
                                 i += 1;
                                 serialPlay(i);
                             }

@@ -251,6 +251,7 @@
         this.size = new Vec2(mx, my);
 
         this.refreshSpotlightPrerender();
+        this.refreshSpotlightPrerenderNewspeak();
         this.refreshInkPrerender();
 
         r2App.invalidate_static_scene = true;
@@ -364,21 +365,36 @@
         }
 
     };
-    r2.Page.prototype.dynamicSpotlightNewspeak = function(canvas_ctx, l){
+    r2.Page.prototype.dynamicSpotlightNewspeak = function(canvas_ctx, word_gestures, first){
+
         var spotlight;
         for(var i = 0; spotlight = this._spotlight_cache_newspeak[i]; ++i){
-            for(var j = 0; j < l.length; ++j){
-                if(l[j].annot === spotlight._annot){
-                    var t_overlap = Math.max(l[j].end, spotlight._t_end)-Math.min(l[j].bgn, spotlight._t_bgn);
-                    if(!(l[j].bgn > spotlight._t_end || l[j].end < spotlight._t_bgn) &&
-                        (t_overlap > (spotlight._t_end-spotlight._t_bgn) > 0.5 ||
-                            t_overlap === l[j].end - l[j].bgn)
-
-                    ){
-                        spotlight.drawReplayNewSpeak(canvas_ctx); // ctx
-                        break;
+            var valid_word_gestures = [];
+            for(var j = 0; j < word_gestures.length; ++j){
+                var word_gesture = word_gestures[j];
+                if(word_gesture.annot === spotlight._annot){
+                    if(!(word_gesture.bgn > spotlight._t_end || word_gesture.end < spotlight._t_bgn))
+                    {
+                        //console.log('match_found',word_gesture.bgn, spotlight._t_bgn );
+                        valid_word_gestures.push(word_gesture);
                     }
                 }
+            }
+            var min_vwg = Number.MAX_VALUE;
+            var max_vwg = Number.MIN_VALUE;
+            for(var j = 0; j < valid_word_gestures.length; ++j){
+                min_vwg = Math.min(min_vwg, valid_word_gestures[j].bgn);
+                max_vwg = Math.max(max_vwg, valid_word_gestures[j].end);
+            }
+            if(valid_word_gestures.length){
+                spotlight.drawReplayNewSpeak(canvas_ctx); // ctx
+            }
+            //console.log('gesture_seg', max_vwg,min_vwg, spotlight._t_end - spotlight._t_bgn);
+            if(
+                (max_vwg-min_vwg > 0.25*(spotlight._t_end - spotlight._t_bgn)) ||
+                (min_vwg < spotlight._t_bgn && max_vwg < spotlight._t_end)
+            ){
+                spotlight.drawReplayNewSpeak(canvas_ctx); // ctx
             }
         }
     };
@@ -1222,13 +1238,28 @@
         cmd.data.aid = this._annotid;
         cmd.data.text = this.dom_textbox.innerHTML;
         cmd.data.annot = r2App.annots[this._annotid].ExportToCmd();
-        cmd.data.base_annots = [];
-        for(var i = 0; i < this.annotids.length; ++i){
-            cmd.data.base_annots.push(
-                r2App.annots[this.annotids[i]].ExportToCmd()
-            );
-        }
-
+        return cmd;
+    };
+    r2.PieceNewSpeak.prototype.ExportToNewBaseAnnot = function(){
+        // time: 2014-12-21T13...
+        // user: 'red user'
+        // op: 'CreateComment'
+        // type: 'CommentNewSpeak'
+        // anchorTo: {type: 'PieceText or PieceTeared', id: pid, page: 2} or
+        // data: {aid: ..., text: "this is a", isprivate:}
+        var cmd = {};
+        cmd.time = (new Date(new Date().getTime()+100)).toISOString();
+        cmd.user = this._username;
+        cmd.op = "ChangeProperty";
+        cmd.type = "PieceNewSpeakNewBaseAnnot";
+        cmd.anchorTo = this._parent.GetAnchorTo();
+        cmd.data = {};
+        cmd.data.pid = this._id;
+        cmd.data.aid = this._annotid;
+        cmd.data.text = this.dom_textbox.innerHTML;
+        cmd.target = this.GetTargetData();
+        cmd.data.annot = r2App.annots[this.annotids[this.annotids.length-1]].ExportToCmd();
+        console.log('Base:',cmd.data.aid, this.annotids[this.annotids.length-1]);
         return cmd;
     };
     r2.PieceNewSpeak.prototype.ExportToTextChange = function(){
@@ -1307,6 +1338,9 @@
         this.dom_textbox.innerHTML = text;
         this.updateSizeWithTextInput();
     };
+    r2.PieceNewSpeak.prototype.SetNewBaseAnnot = function(data){
+
+    };
     r2.PieceNewSpeak.prototype.CreateDom = function(){
         this.dom = document.createElement('div');
         this.dom.classList.toggle('r2_piece_editable_audio', true);
@@ -1339,7 +1373,6 @@
 
         this.dom_textbox.addEventListener('input', function() {
             this.__contentschanged = true;
-            console.log('changed');
         }.bind(this));
 
         this.dom_textbox.addEventListener('blur', function(event){
@@ -1351,7 +1384,6 @@
             this.dom_textbox.style.boxShadow = "none";
             $(this.dom_textbox).toggleClass('editing', false);
             if(this.__contentschanged){
-                console.log('upload',this.ExportToTextChange());
                 r2Sync.uploader.pushCmd(this.ExportToTextChange());
                 this.__contentschanged = false;
             }
@@ -1451,15 +1483,32 @@
     r2.PieceNewSpeak.prototype.onEndRecording = function(audioURL) {
         this.done_recording = true;
         this.newspeak.onEndRecording();
+        this.gatherSpotlights();
         r2.radialMenu.bgnLoading('rm_'+r2.util.escapeDomId(this._annotid));
         this.doneCommentingAsync();
+    };
+    r2.PieceNewSpeak.prototype.gatherSpotlights = function(){
+        var annot = r2App.annots[this._annotid];
+        annot._spotlights = [];
+        for(var i = 0; i < this.annotids.length; ++i){
+            var base_annot = r2App.annots[this.annotids[i]];
+            for(var j = 0; j < base_annot._spotlights.length; ++j){
+                annot._spotlights.push(base_annot._spotlights[j]);
+            }
+        }
     };
     r2.PieceNewSpeak.prototype.doneCommentingAsync = function() {
         if(this.done_captioning && this.done_recording){
             r2.radialMenu.endLoading('rm_'+r2.util.escapeDomId(this._annotid));
             this.newspeak.doneCommentingAsync();
             if(this.to_upload_async){
-                r2Sync.uploader.pushCmd(this.ExportToCmd());
+                if(this.annotids.length == 1){
+                    r2Sync.uploader.pushCmd(this.ExportToCmd());
+                    r2Sync.uploader.pushCmd(this.ExportToNewBaseAnnot());
+                }
+                else{
+                    r2Sync.uploader.pushCmd(this.ExportToNewBaseAnnot());
+                }
             }
         }
     };

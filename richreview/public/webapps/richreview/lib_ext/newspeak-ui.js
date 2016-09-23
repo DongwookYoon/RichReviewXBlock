@@ -12,7 +12,8 @@
         var anchor_span = null;
         var $anchor_span = null;
         var annotid = _annotid;
-        var dynamic_spotlight_data = null;
+        var cur_gesture_replay = null;
+        var first = false;
 
         pub.bgnCommenting = function(){
             r2App.is_recording_or_transcribing = true;
@@ -41,7 +42,6 @@
             r2.tooltipAudioWaveform.dismiss();
             indicators.hideSpeak();
             indicators.showTranscribing();
-            gatherSpotlights();
         };
 
         pub.doneCommentingAsync = function(){
@@ -64,40 +64,12 @@
         };
 
         pub.drawDynamic = function(canvas_ctx){
-            if(dynamic_spotlight_data === null){return;}
-            var l = [];
-            dynamic_spotlight_data.each(function(i, span){
-                var $span = $(span);
-                var span_annotid = $span.attr('annotid');
-                if(span_annotid){
-                    var annot = r2App.annots[span_annotid];
-                    if(annot){
-                        l.push({
-                            annot:r2App.annots[span_annotid],
-                            bgn:1000*parseFloat($span.attr('bgn')),
-                            end:1000*parseFloat($span.attr('end'))});
-                    }
-                    else{
-                        console.error('invalid span annot_id: ', span_annotid);
-                    }
-                }
-                else{
-                    console.error('invalid span attr: ', $span);
-                }
-            });
-            r2App.cur_page.dynamicSpotlightNewspeak(canvas_ctx, l);
-        };
-
-        function gatherSpotlights(){
-            var annot = r2App.annots[_annotid];
-            annot._spotlights = [];
-            for(var i = 0; i < _annotids.length; ++i){
-                var base_annot = r2App.annots[_annotids[i]];
-                for(var j = 0; j < base_annot._spotlights.length; ++j){
-                    annot._spotlights.push(base_annot._spotlights[j]);
-                }
+            if(cur_gesture_replay) {
+                r2App.cur_page.dynamicSpotlightNewspeak(canvas_ctx, cur_gesture_replay, first);
+                first = false;
             }
-        }
+            return;
+        };
 
         function init(){
             $tbox[0].addEventListener('focus', function(e) {
@@ -119,8 +91,13 @@
             var sel = window.getSelection();
             if(sel.anchorNode && $tbox.has($(sel.anchorNode)).length !== 0){
                 var span = sel.anchorNode;
-                while(span.parentNode !== $tbox[0]){
-                    span = span.parentNode;
+                while(span.nodeName !== 'SPAN'){
+                    if(span.parentNode === $tbox[0]){
+                        return null;
+                    }
+                    else{
+                        span = span.parentNode;
+                    }
                 }
                 return span;
             }
@@ -152,6 +129,11 @@
                     }
                 }
             }
+            normalizeSpans();
+        }
+
+        function normalizeSpans(){
+            // size
             $tbox.find('span').css('font-size', '1.0em');
         }
 
@@ -262,61 +244,111 @@
         }());
 
         pub.Play = function(cbLoadingBgn, cbLoadingEnd){
-            function getSegmentText($spans){
-                var s = '';
-                $spans.each(function(i, span){
-                    s += $(span).text();
+
+            function getFlattenTextAndSpan(d, l){
+                for(var i = 0; i < d.childNodes.length; ++i){
+                    getFlattenTextAndSpan(d.childNodes[i], l);
+                }
+                if(d.nodeName === '#text'){
+                    l[l.length-1].push({
+                        t: d,
+                        s: d.parentNode.nodeName === 'SPAN' ? d.parentNode : null
+                    });
+
+                    var txt = d.textContent.trim();
+                    if( txt.length > 0 &&
+                        (txt.charAt(txt.length-1) === '.' || txt.charAt(txt.length-1) === ',')) {
+                        l.push([]); // break the line when the word ends with '.' or ','
+                    }
+                }
+                else if(d.nodeName === 'DIV'){
+                    l.push([]); // break the line
+                }
+            }
+
+            function getSentenceText(sentence){
+                var txt = '';
+                for(var i = 0; i < sentence.length; ++i){
+                    txt += sentence[i].t.textContent;
+                }
+                return txt;
+            }
+
+            function runForEachSpan(sentence, func){
+                sentence.forEach(function(text_and_span){
+                    if(text_and_span.s){
+                        func(text_and_span.s);
+                    }
                 });
-                return s;
             }
 
-            var $spans = $tbox.children('span');
-            if($spans.length === 0){return;}
-
-            var cuts = [];
-            var anchored_idx = 0;
-            for(var i = 0; i < $spans.length; ++i){
-                var $span = $spans.eq(i);
-                if($span[0] === anchor_span){
-                    anchored_idx = i;
+            function getGestureReplay(sentence){
+                if(sentence === null){return;}
+                var l = [];
+                for(var i = 0; i < sentence.length; ++i){
+                    var span = sentence[i].s;
+                    if(span){
+                        var span_annotid = span.getAttribute('annotid');
+                        if(span_annotid){
+                            var annot = r2App.annots[span_annotid];
+                            if(annot){
+                                l.push({
+                                    annot: annot,
+                                    bgn: 1000*parseFloat(span.getAttribute('bgn')),
+                                    end: 1000*parseFloat(span.getAttribute('end'))
+                                })
+                            }
+                        }
+                    }
                 }
-                var s = $span.text().trim();
-                if(s.length > 0 && (s.charAt(s.length-1) === '.' || s.charAt(s.length-1) === ',')){
-                    cuts.push(i);
-                }
+                return l;
             }
-            if(cuts[cuts.length-1] !== $spans.length-1){
-                cuts.push($spans.length-1);
-            }
-            var segments = [];
-            var last_idx = 0;
-            cuts.forEach(function(cut){
-                segments.push($spans.slice(last_idx, cut+1));
-                last_idx = cut+1;
-            });
 
-            while(anchored_idx >= segments[0].length){
-                anchored_idx = anchored_idx - segments[0].length;
-                segments = segments.slice(1, segments.length);
+            // flatten the dom tree into a list of sentences: [ [t:texts,s:span], ...]
+            var tbox = $tbox[0];
+            var sentences = [[]];
+            for(var i = 0; i < tbox.childNodes.length; ++i){
+                getFlattenTextAndSpan(tbox.childNodes[i], sentences);
             }
+
+            // remove '[]'s
+            for(var i = sentences.length-1; i >=0; --i){
+                if(sentences[i].length === 0)
+                    sentences.splice(i, 1);
+            }
+
+            var anchor_n = 0;
+            for(var i = 0; i < sentences.length; ++i) {
+                var gotit = false;
+                runForEachSpan(sentences[i], function (s) {
+                    if (s === anchor_span) {
+                        gotit = i;
+                    }
+                });
+                if(gotit)
+                    anchor_n = i;
+            }
+
 
             var serialPlay = function(i){
-                if(i < segments.length){
-                    segments[i].addClass('replaying');
-                    dynamic_spotlight_data = segments[i];
+                if(i < sentences.length){
+                    runForEachSpan(sentences[i], function(s){$(s).addClass('replaying')});
+                    first = true;
+                    cur_gesture_replay = getGestureReplay(sentences[i]);
                     r2App.invalidate_dynamic_scene = true;
-                    r2.speechSynth.play(getSegmentText(segments[i]), annotid, cbLoadingBgn, cbLoadingEnd)
+                    r2.speechSynth.play(getSentenceText(sentences[i]), annotid, cbLoadingBgn, cbLoadingEnd)
                         .then(function(){
+                            runForEachSpan(sentences[i], function(s){$(s).removeClass('replaying')});
                             if(!r2.speechSynth.is_canceled){
-                                dynamic_spotlight_data = null;
-                                segments[i].removeClass('replaying');
+                                cur_gesture_replay = null;
                                 i += 1;
                                 serialPlay(i);
                             }
                         });
                 }
             };
-            serialPlay(0);
+            serialPlay(anchor_n);
+            return;
         };
 
         pub.Stop = function(){

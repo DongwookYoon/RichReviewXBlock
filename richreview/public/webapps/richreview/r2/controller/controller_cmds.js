@@ -191,6 +191,9 @@
                 case 'PieceNewSpeakChange':
                     success = changeProperty_PieceNewSpeakChange(doc, cmd);
                     break;
+                case 'PieceNewSpeakNewBaseAnnot':
+                    success = changeProperty_PieceNewSpeakNewBaseAnnot(doc, cmd);
+                    break;
                 case 'PieceKeyboardPubPrivate':
                     success = changeProperty_PieceKeyboardPubPrivate(doc, cmd);
                     break;
@@ -568,11 +571,7 @@
                 );
                 anchorpiece.AddChildrenChronologically([piece]);
                 registerAnnotFromData(anchorpiece.GetId(), cmd.data.annot);
-                cmd.data.base_annots.forEach(function(annot_data){
-                    registerAnnotFromData(anchorpiece.GetId(), annot_data);
-                });
 
-                r2App.cur_page.refreshSpotlightPrerenderNewspeak(); // generate spotlight caches
                 r2App.invalidate_size = true;
                 r2App.invalidate_page_layout = true;
                 return true;
@@ -658,6 +657,27 @@
             var target = doc.GetTargetPiece(cmd.target);
             if(target){
                 target.SetText(cmd.data);
+                r2App.invalidate_size = true;
+                r2App.invalidate_page_layout = true;
+                return true;
+            }
+            return false;
+        };
+
+        var changeProperty_PieceNewSpeakNewBaseAnnot = function(doc, cmd){
+            // time: 2014-12-21T13...
+            // user: 'red user'
+            // op: 'ChangeProperty'
+            // type: 'PieceNewSpeakChange'
+            // target: {type: 'PieceNewSpeak', pid: pid, page: 2}
+            // data: 'lorem ipsum ...'
+            var target = doc.GetTargetPiece(cmd.target);
+            if(target){
+                registerAnnotFromData(cmd.data.pid, cmd.data.annot);
+                target.SetText(cmd.data.text);
+                target.annotids.push(cmd.data.annot.data.aid);
+                target.gatherSpotlights();
+                r2App.doc.GetPage(cmd.target.page).refreshSpotlightPrerenderNewspeak(); // generate spotlight caches
                 r2App.invalidate_size = true;
                 r2App.invalidate_page_layout = true;
                 return true;

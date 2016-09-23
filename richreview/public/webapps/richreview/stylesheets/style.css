@@ -314,18 +314,18 @@ a:active {
   word-break: break-all;
 }
 
-.r2_piece_newspeak > span.replaying{
+.r2_piece_newspeak span.replaying{
   background-color: rgb(214, 225, 235);
   color: black;
 }
-.r2_piece_newspeak > span.newspeak_wait{
+.r2_piece_newspeak span.newspeak_wait{
   background-color: rgba(205, 205, 205, 0.85);
   color: black;
   border: solid 0.1em rgb(105, 105, 105);
   border-radius: 0.4em;
   padding: 0 0.4em;
 }
-.r2_piece_newspeak > span.newspeak_speak{
+.r2_piece_newspeak span.newspeak_speak{
   background-color: rgba(205, 92, 92, 0.85);
   color: black;
   border: solid 0.1em rgb(205, 92, 92);

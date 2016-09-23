@@ -1259,8 +1259,8 @@ var r2Ctrl = {};
                     target_annot.GetId(),
                     r2App.cur_pdf_pagen,
                     r2App.cur_time,
-                    r2App.cur_time-target_annot.GetBgnTime(),
-                    r2App.cur_time-target_annot.GetBgnTime());
+                    r2App.cur_time-target_annot.GetBgnTime()-r2App.cur_recording_asyn_delta_t,
+                    r2App.cur_time-target_annot.GetBgnTime()-r2App.cur_recording_asyn_delta_t);
 
                 var segment  = new r2.Spotlight.Segment();
                 segment.SetSegment(piece.GetId(), [pt.subtract(piece.pos, true)]);
@@ -1281,7 +1281,7 @@ var r2Ctrl = {};
                     if(piece){
                         // add point
                         cur_recording_spotlight_segment.AddPt(pt.subtract(piece.pos, true));
-                        cur_recording_spotlight.t_end = r2App.cur_time-target_annot.GetBgnTime();
+                        cur_recording_spotlight.t_end = r2App.cur_time-target_annot.GetBgnTime()-r2App.cur_recording_asyn_delta_t;
                     }
                     else{
                         // cut segment

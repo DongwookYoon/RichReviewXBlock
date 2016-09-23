@@ -110,6 +110,7 @@
             r2App.cur_recording_anchor_piece = anchor_piece;
             r2App.cur_recording_pieceaudios = [];
             r2App.cur_recording_piece = null;
+            r2App.cur_recording_asyn_delta_t = r2App.cur_time;
 
             /* create piece */
             funcCreatePiece(anchor_piece, annotid, options).then(
@@ -118,6 +119,7 @@
                     r2.audioRecorder.BgnRecording();
 
                     /* update system variables */
+                    r2App.cur_recording_asyn_delta_t = r2App.cur_time-r2App.cur_recording_asyn_delta_t;
                     if(r2App.cur_recording_piece.bgnCommentingAsync)
                         r2App.cur_recording_piece.bgnCommentingAsync();
                     if(options.piece_to_insert){

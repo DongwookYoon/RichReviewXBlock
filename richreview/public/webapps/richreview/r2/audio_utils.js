@@ -270,6 +270,9 @@
         };
 
         pub.play = function(s, _annot_id, cbLoadingBgn, cbLoadingEnd){
+            if(typeof synth === 'undefined'){
+                alert('Some Firefox Browser might encounter issue replaying audio comments. We recommend using the latest Chrome browser.');
+            }
             if(synth.pending || synth.speaking){
                 return Promise.reject('Now speaking');
             }

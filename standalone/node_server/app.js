@@ -244,74 +244,7 @@ function passportSetup(){
                 // nonceStore: new RedisNonceStore('testconsumerkey', redisClient)
             },
             function(lti, done) {
-                console.log('LTI response:', lti);
-                {
-                    var OAuth = require('oauth-1.0a');
-                    var crypto = require('crypto');
-                    var oauth = OAuth({
-                        consumer: {
-                            key: 'xh0rSz5O03-richreview.cornellx.edu',
-                            secret: 'sel0Luv73Q'
-                        },
-                        signature_method: 'HMAC-SHA1',
-                        hash_function: function(base_string, key) {
-                            return crypto.createHmac('sha1', key).update(base_string).digest('base64');
-                        }
-                    });
-                    xml = '<?xml version = "1.0" encoding = "UTF-8"?><imsx_POXEnvelopeRequest xmlns = "http://www.imsglobal.org/services/ltiv1p1/xsd/imsoms_v1p0"><imsx_POXHeader><imsx_POXRequestHeaderInfo><imsx_version>V1.0</imsx_version><imsx_messageIdentifier>'+
-                        'update_richreview_grade'+
-                        '</imsx_messageIdentifier></imsx_POXRequestHeaderInfo></imsx_POXHeader><imsx_POXBody><replaceResultRequest><resultRecord><sourcedGUID><sourcedId>'+
-                        lti.lis_result_sourcedid+
-                    '</sourcedId></sourcedGUID><result><resultScore><language>en-us</language><textString>'+
-                    '1'+
-                    '</textString></resultScore></result></resultRecord></replaceResultRequest></imsx_POXBody></imsx_POXEnvelopeRequest>';
 
-
-                    /*
-                    xml = '<?xml version = "1.0" encoding = "UTF-8"?><imsx_POXEnvelopeRequest xmlns = "http://www.imsglobal.org/services/ltiv1p1/xsd/imsoms_v1p0"><imsx_POXHeader><imsx_POXRequestHeaderInfo><imsx_version>V1.0</imsx_version><imsx_messageIdentifier>'+
-                '999999125'+
-                '</imsx_messageIdentifier></imsx_POXRequestHeaderInfo></imsx_POXHeader><imsx_POXBody><readResultRequest><resultRecord><sourcedGUID><sourcedId>'+
-                lti.lis_person_sourcedid+
-                '</sourcedId></sourcedGUID></resultRecord></readResultRequest></imsx_POXBody></imsx_POXEnvelopeRequest>'
-                */
-
-
-
-                    var shasum = crypto.createHash('sha1');
-                    shasum.update(xml);
-                    var sha1 = shasum.digest();
-                    var body_hash = new Buffer(sha1).toString('base64');
-
-                    var http_url = lti.lis_outcome_service_url.replace('https', 'http');
-                    var request_data = { url: lti.lis_outcome_service_url,
-                        method: 'POST',
-                        data: xml
-                    };
-                    var token = {
-                        key: 'xh0rSz5O03-richreview.cornellx.edu',
-                        secret: 'sel0Luv73Q'
-                    };
-                    var request = require("request");
-                    var header = oauth.toHeader(oauth.authorize(request_data, token));
-                    header.Authorization += ", oauth_body_hash=\""+body_hash+"\"";
-                    header['Content-Type'] = "application/xml";
-                    request({
-                        url: lti.lis_outcome_service_url,
-                        method: request_data.method,
-                        body: xml.toString('base64'),
-                        headers: header
-                    }, function(error, response, body) {
-                        if(error){
-                            console.error(lti.lis_outcome_service_url);
-                            console.error(error);
-                            console.error(response);
-                        }
-                        else{
-                            console.log(body);
-                        }
-                        //process your data here
-                    });
-                }
 
                 LtiEngine.UserMgr.logIn(lti).then(
                     function(user){

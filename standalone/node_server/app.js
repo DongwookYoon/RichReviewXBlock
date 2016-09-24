@@ -232,20 +232,77 @@ function passportSetup(){
         }
     );
 
+
+    var EDX_LTI_CONSUMER_OAUTH = {
+        key: 'xh0rSz5O03-richreview.cornellx.edu',
+        secret: 'sel0Luv73Q'
+    };
+
+    function LtiRecordScore(lti){
+        "use strict";
+
+        {
+            var request = require("request");
+            var OAuth = require('oauth-1.0a');
+            var crypto = require('crypto');
+
+            var oauth = OAuth({
+                consumer: {
+                    key: EDX_LTI_CONSUMER_OAUTH.key,
+                    secret: EDX_LTI_CONSUMER_OAUTH.secret
+                },
+                signature_method: 'HMAC-SHA1',
+                hash_function: function(base_string, key) {
+                    return crypto.createHmac('sha1', key).update(base_string).digest('base64');
+                }
+            });
+
+            var xml = '<?xml version = "1.0" encoding = "UTF-8"?><imsx_POXEnvelopeRequest xmlns = "http://www.imsglobal.org/services/ltiv1p1/xsd/imsoms_v1p0"><imsx_POXHeader><imsx_POXRequestHeaderInfo><imsx_version>V1.0</imsx_version><imsx_messageIdentifier>'+
+                'update_richreview_grade'+ // nonce
+                '</imsx_messageIdentifier></imsx_POXRequestHeaderInfo></imsx_POXHeader><imsx_POXBody><replaceResultRequest><resultRecord><sourcedGUID><sourcedId>'+
+                lti.lis_result_sourcedid+
+                '</sourcedId></sourcedGUID><result><resultScore><language>en-us</language><textString>'+
+                '1'+
+                '</textString></resultScore></result></resultRecord></replaceResultRequest></imsx_POXBody></imsx_POXEnvelopeRequest>';
+
+
+            var request_data = {
+                url: lti.lis_outcome_service_url,//.replace('https', 'http'),
+                method: 'POST',
+                data: xml
+            };
+            var header = oauth.toHeader(oauth.authorize(request_data));
+
+            request({
+                url: lti.lis_outcome_service_url,
+                method: request_data.method,
+                form: xml,
+                headers: header
+            }, function(error, response, body) {
+                if(error){
+                    console.error(error);
+                }
+                else{
+                    console.log(body);
+                }
+            });
+        }
+
+    }
+
     // LTI ID
     passport.use(
         new LtiStrategy(
             {
-                consumerKey: 'xh0rSz5O03-richreview.cornellx.edu',
-                consumerSecret: 'sel0Luv73Q'
+                consumerKey: EDX_LTI_CONSUMER_OAUTH.key,
+                consumerSecret: EDX_LTI_CONSUMER_OAUTH.secret
                 // pass the req object to callback
                 // passReqToCallback: true,
                 // https://github.com/omsmith/ims-lti#nonce-stores
                 // nonceStore: new RedisNonceStore('testconsumerkey', redisClient)
             },
             function(lti, done) {
-
-
+                LtiRecordScore(lti);
                 LtiEngine.UserMgr.logIn(lti).then(
                     function(user){
                         return done(null, user);

@@ -53,7 +53,7 @@ User.prototype.cache = (function(){
             }
         ).then(
             function(users){
-                console.log('User populated: ' + Object.keys(cache).length + ' users');
+                console.log('ConellID: users populated: ' + Object.keys(cache).length + ' users');
                 return users;
             }
         ).catch(

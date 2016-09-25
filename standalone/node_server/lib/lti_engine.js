@@ -4,16 +4,30 @@
 
 var Promise = require("promise");
 var js_utils = require('../lib/js_utils.js');
+var request = require("request"); // for LTI grading passback
+var OAuth = require('oauth-1.0a'); // for LTI grading passback
+var crypto = require('crypto'); // for LTI grading passback
 var RedisClient = require('../lib/redis_client').RedisClient;
 var AsyncLock = require('async-lock');
 var lock = new AsyncLock();
 
+var Status = (function(){
+    var pub = {};
+    pub.populated = {user: false, group: false};
+    pub.ready = function(){
+        "use strict";
+        return pub.populated.user && pub.populated.group;
+    };
+    return pub;
+}());
+
 var User = function(id, data){
     this.id = id;
-    if(data)
-        for(var k in data){
+    if(data) {
+        for (var k in data) {
             this[k] = data[k];
         }
+    }
 };
 
 var UserMgr = (function(){
@@ -39,7 +53,7 @@ var UserMgr = (function(){
     };
 
     pub.setAttr = function(id, name, val, json_type){
-        return lock.acquire('setAttr', function() { // lock
+        return lock.acquire('setUserAttr', function() { // lock
             return RedisClient.HSET(
                 'ltiusr:'+id,
                 name,
@@ -66,14 +80,13 @@ var UserMgr = (function(){
         )
     };
 
-    pub.logIn = function(lti){
-        if(typeof lti === 'object' && typeof lti.user_id === 'string'){
-            if(lti.user_id in cache){
-                return Promise.resolve(cache[lti.user_id]);
-            }
-            else{
-                return createNew(lti);
-            }
+    pub.logIn = function(profile){
+        if(!Status.ready()){ return Promise.reject(new Error('System is booting up. Retry in 1 min.'));}
+        if(typeof profile === 'object' && typeof profile.user_id === 'string'){
+            return (profile.user_id in cache ? Promise.resolve(cache[profile.user_id]) : createNew(profile))
+                .then(function(user){
+                    return updateProfile(user, profile);
+                });
         }
         else{
             return new Promise.reject(new Error('Invalid LTI authentication profile'));
@@ -85,7 +98,7 @@ var UserMgr = (function(){
             return Promise.resolve(cache[id]);
         }
         else{
-            return Promise.reject(new Error('Invalid Id'));
+            return Promise.reject(new Error('Invalid User Id'));
         }
     }
 
@@ -118,13 +131,33 @@ var UserMgr = (function(){
     function populateCache(){
         return pub.loadAllFromDb().then(
             function(users){
-                console.log('Lti users populated : ' + Object.keys(cache).length + '');
+                console.log('LTI_ENGINE: users populated : ' + Object.keys(cache).length + '');
                 return users;
             }
         );
     }
 
-    populateCache();
+    function updateProfile(user, profile){
+        var complete_profile = user.hasOwnProperty('lis_result_sourcedid') && user.hasOwnProperty('lis_outcome_service_url');
+        if(!complete_profile || user.lis_result_sourcedid !== profile.lis_result_sourcedid){
+            user.lis_result_sourcedid = profile.lis_result_sourcedid;
+            user.lis_outcome_service_url = profile.lis_outcome_service_url;
+            return RedisClient.HMSET(
+                'ltiusr:'+user.id,
+                'lis_result_sourcedid', profile.lis_result_sourcedid,
+                'lis_outcome_service_url', profile.lis_outcome_service_url
+            ).then(done);
+        }
+        return done();
+
+        function done(){
+            return Promise.resolve(user);
+        }
+    }
+
+    populateCache().then(function(){
+        Status.populated.user = true;
+    });
 
     return pub;
 })();
@@ -137,7 +170,7 @@ var Group = function(id, data){
         }
 };
 
-const GRP_SIZE = 10;
+const GRP_SIZE = 8;
 
 var GroupMgr = function(prefix){
     var prefix = prefix;
@@ -158,6 +191,13 @@ var GroupMgr = function(prefix){
         }
     };
 
+    this.getByIdSync = function(id){
+        if(cache.hasOwnProperty(id)){
+            return cache[id];
+        }
+        throw new Error('Invalid Group Id');
+    };
+
     this.delById = function(id){
         if(next_grp_id === id){
             next_grp_id = null;
@@ -166,8 +206,14 @@ var GroupMgr = function(prefix){
         return RedisClient.DEL(prefix+id);
     };
 
+    this.delUserById = function(user_id, group_id){
+        var group = this.getByIdSync(group_id);
+        group.users.splice(group.users.indexOf(user_id), 1);
+        return this.setAttr(group_id, 'users', group.users, true);
+    };
+
     this.setAttr = function(id, name, val, json_type){
-        return lock.acquire('setAttr'+prefix, function() { // lock
+        return lock.acquire('setGroupAttr'+prefix, function() { // lock
             return RedisClient.HSET(
                 prefix+id,
                 name,
@@ -203,7 +249,7 @@ var GroupMgr = function(prefix){
         for(var key in cache){
             if(cache[key].users.length < GRP_SIZE){
                 next_grp_id = key;
-                console.log('next group id:', key);
+                console.log('LTI_ENGINE: next group id:', key);
                 break;
             }
         }
@@ -262,16 +308,16 @@ var GroupMgr = function(prefix){
     var populateCache = function(){
         return this.loadAllFromDb().then(
             function(grps){
-                console.log('Lti groups populated, '+prefix + ' ' + Object.keys(cache).length + '');
+                console.log('LTI_ENGINE: groups populated: '+prefix + ' ' + Object.keys(cache).length + '');
                 return grps;
             }
         );
     }.bind(this);
 
-    populateCache()
-        .then(function(){
-            return setNextGrpId();
-        });
+    populateCache().then(function(){
+        setNextGrpId();
+        Status.populated.group = true;
+    });
 };
 
 var ListDb = function(_prefix){
@@ -293,6 +339,70 @@ var logs = function(group_n, logs){
     return Promise.all(promises);
 };
 
+var Grade = (function(){
+    var pub = {};
+
+    pub.giveCredit = function(user){
+        return LtiRecordScore(user.lis_outcome_service_url, user.lis_result_sourcedid);
+    };
+
+
+    function LtiRecordScore(lis_outcome_service_url, lis_result_sourcedid){
+        var EDX_LTI_CONSUMER_OAUTH = {
+            key: 'xh0rSz5O03-richreview.cornellx.edu',
+            secret: 'sel0Luv73Q'
+        };
+        var oauth = OAuth({
+            consumer: {
+                key: EDX_LTI_CONSUMER_OAUTH.key,
+                secret: EDX_LTI_CONSUMER_OAUTH.secret
+            },
+            signature_method: 'HMAC-SHA1',
+            hash_function: function(base_string, key) {
+                return crypto.createHmac('sha1', key).update(base_string).digest('base64');
+            }
+        });
+
+        var xml = '<?xml version = "1.0" encoding = "UTF-8"?><imsx_POXEnvelopeRequest xmlns = "http://www.imsglobal.org/services/ltiv1p1/xsd/imsoms_v1p0"><imsx_POXHeader><imsx_POXRequestHeaderInfo><imsx_version>V1.0</imsx_version><imsx_messageIdentifier>'+
+            'update_richreview_grade'+ // nonce
+            '</imsx_messageIdentifier></imsx_POXRequestHeaderInfo></imsx_POXHeader><imsx_POXBody><replaceResultRequest><resultRecord><sourcedGUID><sourcedId>'+
+            lis_result_sourcedid+
+            '</sourcedId></sourcedGUID><result><resultScore><language>en-us</language><textString>'+
+            '1'+
+            '</textString></resultScore></result></resultRecord></replaceResultRequest></imsx_POXBody></imsx_POXEnvelopeRequest>';
+
+        var request_data = {
+            url: lis_outcome_service_url,//.replace('https', 'http'),
+            method: 'POST',
+            data: xml
+        };
+        var header = oauth.toHeader(oauth.authorize(request_data));
+
+        return new Promise(function(resolve, reject){
+            request({
+                url: lis_outcome_service_url,
+                method: request_data.method,
+                form: xml,
+                headers: header
+            }, function(error, response, body) {
+                if(error){
+                    reject(error);
+                }
+                else{
+                    if(body.indexOf('is now 1.0') >= 0){
+                        resolve(body);
+                    }
+                    else{
+                        reject(body);
+                    }
+                }
+            });
+        });
+    }
+
+    return pub;
+}());
+
 exports.logs = logs;
 exports.CmdRR = new ListDb('lticmd_rr:');
 exports.CmdBB = new ListDb('lticmd_bb:');
@@ -300,4 +410,4 @@ exports.GroupMgrRR = new GroupMgr('ltigrp_rr:');
 exports.GroupMgrBB = new GroupMgr('ltigrp_bb:');
 exports.User = User;
 exports.UserMgr = UserMgr;
-
+exports.Grade = Grade;

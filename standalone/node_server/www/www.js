@@ -30,16 +30,18 @@ var run_node_server = function() {
     }
 
     process.setMaxListeners(0);
+
     app.https.set('port', process.env.PORT || httpsPort);
     app.http.set('port', process.env.PORT || httpPort);
-    var http_server = require('http').createServer(app.http).listen(
+
+    require('http').createServer(app.http).listen(
         app.http.get('port'),
         function () {
-            console.log('Express HTTP server listening on port ' + app.http.get('port'));
+            console.log('Express server listening on HTTP port:', app.http.get('port'));
         }
     );
 
-    var https_server = require('https').createServer(
+    require('https').createServer(
         {
             key: fs.readFileSync('../ssl/richreview_net.key'),
             cert: fs.readFileSync('../ssl/richreview_net.crt'),
@@ -49,7 +51,7 @@ var run_node_server = function() {
     ).listen(
         app.https.get('port'),
         function () {
-            console.log('Express HTTPS server listening on port ' + app.https.get('port'));
+            console.log('Express server listening on HTTPS port:', app.https.get('port'));
         }
     );
 };

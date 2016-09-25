@@ -1,3 +1,5 @@
+process.stdout.write('Starting app.js');
+
 var express = require('express');
 var expressSession = require('express-session');
 var http = require('http');
@@ -5,22 +7,26 @@ var bodyParser = require('body-parser');
 var logger = require('morgan');
 var compression = require('compression');
 
+process.stdout.write('.');
 var path = require('path');
 var mkdirp = require('mkdirp');
 var fs = require('fs');
 var env = require('./lib/env.js');
 
+process.stdout.write('.');
 var passport = require('passport');
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 var wsfedsaml2 = require('passport-azure-ad').WsfedStrategy;
 var LtiStrategy = require('passport-lti');
 
+process.stdout.write('.');
 var js_utils = require('./lib/js_utils.js');
 var R2D = require('./lib/r2d.js');
 var LtiEngine = require('./lib/lti_engine.js');
 var redis_client = require('./lib/redis_client.js');
 var RedisStore = require('connect-redis')(expressSession);
 
+process.stdout.write('.');
 var _downloader = require('./routes/_downloader');
 var _pages = require('./routes/_pages');
 var support = require('./routes/support');
@@ -35,6 +41,8 @@ var resources = require('./routes/resources');
 var course = require('./routes/course');
 var bluemix_stt_auth = require('./routes/bluemix_stt_auth');
 var lti = require('./routes/lti');
+
+process.stdout.write('\n');
 
 mkdirp('../_temp');
 mkdirp('../cache');
@@ -238,58 +246,6 @@ function passportSetup(){
         secret: 'sel0Luv73Q'
     };
 
-    function LtiRecordScore(lti){
-        "use strict";
-
-        {
-            var request = require("request");
-            var OAuth = require('oauth-1.0a');
-            var crypto = require('crypto');
-
-            var oauth = OAuth({
-                consumer: {
-                    key: EDX_LTI_CONSUMER_OAUTH.key,
-                    secret: EDX_LTI_CONSUMER_OAUTH.secret
-                },
-                signature_method: 'HMAC-SHA1',
-                hash_function: function(base_string, key) {
-                    return crypto.createHmac('sha1', key).update(base_string).digest('base64');
-                }
-            });
-
-            var xml = '<?xml version = "1.0" encoding = "UTF-8"?><imsx_POXEnvelopeRequest xmlns = "http://www.imsglobal.org/services/ltiv1p1/xsd/imsoms_v1p0"><imsx_POXHeader><imsx_POXRequestHeaderInfo><imsx_version>V1.0</imsx_version><imsx_messageIdentifier>'+
-                'update_richreview_grade'+ // nonce
-                '</imsx_messageIdentifier></imsx_POXRequestHeaderInfo></imsx_POXHeader><imsx_POXBody><replaceResultRequest><resultRecord><sourcedGUID><sourcedId>'+
-                lti.lis_result_sourcedid+
-                '</sourcedId></sourcedGUID><result><resultScore><language>en-us</language><textString>'+
-                '1'+
-                '</textString></resultScore></result></resultRecord></replaceResultRequest></imsx_POXBody></imsx_POXEnvelopeRequest>';
-
-
-            var request_data = {
-                url: lti.lis_outcome_service_url,//.replace('https', 'http'),
-                method: 'POST',
-                data: xml
-            };
-            var header = oauth.toHeader(oauth.authorize(request_data));
-
-            request({
-                url: lti.lis_outcome_service_url,
-                method: request_data.method,
-                form: xml,
-                headers: header
-            }, function(error, response, body) {
-                if(error){
-                    console.error(error);
-                }
-                else{
-                    console.log(body);
-                }
-            });
-        }
-
-    }
-
     // LTI ID
     passport.use(
         new LtiStrategy(
@@ -301,15 +257,16 @@ function passportSetup(){
                 // https://github.com/omsmith/ims-lti#nonce-stores
                 // nonceStore: new RedisNonceStore('testconsumerkey', redisClient)
             },
-            function(lti, done) {
-                LtiRecordScore(lti);
-                LtiEngine.UserMgr.logIn(lti).then(
+            function(profile, done) {
+                //LtiRecordScore(profile);
+                LtiEngine.UserMgr.logIn(profile).then(
                     function(user){
+                        console.log('LTI_LOGIN:', user);
                         return done(null, user);
                     }
                 ).catch(
                     function(err){
-                        console.error(err);
+                        console.error('LtiStrategy:', err);
                         return done(err, null);
                     }
                 );
@@ -323,7 +280,8 @@ function passportSetup(){
             {
                 scope:['email'],
                 successRedirect: '/lti_entry',
-                failureRedirect: '/login_lti_failure'
+                failureRedirect: '/lti_failure',
+                failureFlash: true
             }
         )
     );
@@ -350,6 +308,7 @@ function setupServices(){
     app.get('/math2220_sp2016',    course.get);
     app.get('/bluemix_stt_auth', bluemix_stt_auth.get);
     app.get('/lti_entry',   lti.get_entry);
+    app.get('/lti_failure',   lti.get_failure);
     app.get('/lti_admin',   lti.get_admin);
     app.get('/lti_survey', lti.get_survey);
     app.get('/lti_discuss_rr', lti.get_discuss_rr);
@@ -411,13 +370,18 @@ function setRedirections(){
 function setErrLog(){
     if (app.get('env') === 'development') {
         app.use(function(err, req, res, next) {
-            console.log(err);
-            console.log(err.stack);
+            console.error('setErrLog:', err);
+            console.error(err.stack);
             res.status(err.status || 500);
-            res.render('_error', {
-                msg: err.name,
-                error: err
-            });
+            if(req.method === 'POST'){
+                res.redirect('/lti_failure');
+            }
+            else if(req.method === 'GET'){
+                res.render('_error', {
+                    msg: err.name,
+                    error: err
+                });
+            }
             next();
         });
     }

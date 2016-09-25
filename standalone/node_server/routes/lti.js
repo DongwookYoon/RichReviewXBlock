@@ -78,6 +78,10 @@ exports.get_entry = function(req, res){
     }
 };
 
+exports.get_failure = function(req, res){
+    handleLtiError(req, res, 'Unauthorized access. Please go back to the edX.org and retry.');
+};
+
 exports.get_admin = function(req, res){
     req.session.latestUrl = req.originalUrl;
     if(req.user instanceof LtiEngine.User){
@@ -246,7 +250,34 @@ function delUser(req, res){
         )
     }
 }
-
+function delUserAndGroupData(req, res){
+    if(assertManager(req, res)){
+        var LtiGroupMgr;
+        LtiEngine.UserMgr.getById(req.body.user_id)
+            .then(function(user){
+                if(user.status === 'rr'){
+                    LtiGroupMgr = LtiEngine.GroupMgrRR;
+                }
+                else if(user.status === 'bb'){
+                    LtiGroupMgr = LtiEngine.GroupMgrBB;
+                }
+                else{
+                    throw new Error('The user hasn\'t assigned to a group.');
+                }
+                return LtiGroupMgr.delUserById(req.body.user_id, user.group); // delete from the group
+            })
+            .then(function(user){
+                return LtiEngine.UserMgr.delById(req.body.user_id).then( // delete the user
+                    function(resp){
+                        js_utils.PostResp(res, req, 200);
+                    }
+                )
+            })
+            .catch(function(err){
+                handleLtiError(req, res, err);
+            });
+    }
+}
 function delGrp(req, res){
     if(assertManager(req, res)){
         var GrpEngine;
@@ -265,6 +296,21 @@ function delGrp(req, res){
                 handleLtiError(req, res, err);
             }
         )
+    }
+}
+
+function giveCredit(req, res){
+    if(assertManager(req, res)){
+        LtiEngine.UserMgr.getById(req.body.user_id)
+            .then(function(user) {
+                return LtiEngine.Grade.giveCredit(user);
+            })
+            .then(function(resp){
+                js_utils.PostResp(res, req, 200);
+            })
+            .catch(function(err){
+                handleLtiError(req, res, err);
+            })
     }
 }
 
@@ -317,8 +363,14 @@ exports.post_dbs = function(req, res){
         case 'del_user':
             delUser(req, res);
             break;
+        case 'del_user_and_group_data':
+            delUserAndGroupData(req, res);
+            break;
         case 'del_grp':
             delGrp(req, res);
+            break;
+        case 'give_credit':
+            giveCredit(req, res);
             break;
         case 'WebAppLogs':
             WebAppLogs(req, res);

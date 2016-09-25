@@ -116,7 +116,7 @@
 
             r2.runSerialPromises(promises)
                 .then(function(){
-                    return r2.makeLocalJs('https://richreview.azureedge.net/richreview/lib_ext/pdfjs/pdf.worker.js') // prevent CORS issue
+                    return r2.makeLocalJs('https://richreview.azureedge.net/lib/pdfjs/pdf.worker.js') // prevent CORS issue
                         .then(function(local_url){
                             PDFJS.workerSrc = local_url;
                         });

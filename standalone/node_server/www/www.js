@@ -9,13 +9,14 @@ else{
 console.log('App NODE_ENV:', process.env.NODE_ENV);
 
 
-{   // patching the fs module prevents the EMFILE error
-    var realFs = require('fs');
-    var gracefulFs = require('graceful-fs');
-    gracefulFs.gracefulify(realFs);
-}
+var env = require('../lib/env.js');
+// patching the fs module prevents the EMFILE error
+var realFs = require('fs');
+var gracefulFs = require('graceful-fs');
+gracefulFs.gracefulify(realFs);
 
-var run_node_server = function() {
+
+var run = function() {
     var app = require('../app');
     var fs = require("fs");
     var os = require("os");
@@ -56,6 +57,22 @@ var run_node_server = function() {
     );
 };
 
+var packingRichReviewJsFiles = function(){
+    "use strict";
+    console.log(env.path.webapp_richreview);
+    /*
+    return new Promise(function (resolve, reject) {
+        azure.svc.createBlockBlobFromText(_ctx.pdf_hash, "doc.vs_doc", JSON.stringify(_ctx.doclayout), function(err, resp){
+            if(err){
+                reject(err);
+            }
+            else{
+                resolve(_ctx);
+            }
+        });
+    });*/
+};
+
 if(process.argv[2]){
     var process_course_submission = function(course_id, submission_id){
         var pcs = require('../process_course_submission');
@@ -64,5 +81,6 @@ if(process.argv[2]){
     process_course_submission(process.argv[2], process.argv[3]);
 }
 else{
-    run_node_server();
+    //packingRichReviewJsFiles();
+    run();
 }

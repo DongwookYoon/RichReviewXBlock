@@ -1347,7 +1347,6 @@ div.tooltip_audio_waveform div.arrow_up {
 #cornellx_inst > h2{
   font-size: 1em;
   margin: 0;
-  margin-bottom: 0.3em;
 }
 
 #cornellx_inst > iframe{
@@ -1356,13 +1355,14 @@ div.tooltip_audio_waveform div.arrow_up {
   padding-left: 0;
   margin-left: 1em;
   margin-top: 1.4em;
-  width: 16em;
+  width: 15em;
   height: 13em;
 }
 #cornellx_inst > p{
-  font-size: 0.77em;
+  font-size: 0.73em;
   line-height: 1.2em;
   margin: 0;
-  padding-bottom: 0.3em;
+  padding-bottom: 0;
+  padding-top: 0.6em;
   text-align: justify;
 }

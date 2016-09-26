@@ -142,6 +142,18 @@ function setGroups(user_map, grps, $thead_tr, $tbody, type_str){
     var i, j, $row, $td, grp;
     var row_items = ['id', 'N', 'users', 'creationTime'];
 
+    var n_total_users = 0;
+    for(i = 0, grp = null; i < grps.length; i++) {
+        n_total_users += grps[i].users.length;
+    }
+    $('#'+type_str+'_groups_text').text(grps.length + ' group(s) / ' + n_total_users + ' user(s)');
+
+    grps.sort(function(a, b) {
+        if(a.creationTime !== b.creationTime)
+            return a.creationTime > b.creationTime ? 1 : -1;
+        return 0;
+    });
+
     for(i = 0, row_item = null; i < row_items.length; i++){
         row_item = row_items[i];
         $td = $('<td>');

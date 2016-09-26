@@ -170,7 +170,7 @@ var Group = function(id, data){
         }
 };
 
-const GRP_SIZE = 8;
+const GRP_SIZE = 10;
 
 var GroupMgr = function(prefix){
     var prefix = prefix;
@@ -208,7 +208,9 @@ var GroupMgr = function(prefix){
 
     this.delUserById = function(user_id, group_id){
         var group = this.getByIdSync(group_id);
-        group.users.splice(group.users.indexOf(user_id), 1);
+        var idx = group.users.indexOf(user_id);
+        if(idx >= 0)
+            group.users.splice(group.users.indexOf(user_id), 1);
         return this.setAttr(group_id, 'users', group.users, true);
     };
 
@@ -226,6 +228,21 @@ var GroupMgr = function(prefix){
                     }
                 );
         }, {Promise:Promise});
+    };
+
+    this.clearEmptyGroups = function(){
+        var keys = Object.keys(cache);
+        keys.sort(function(a,b){
+            var na = parseInt(a.slice(0, a.indexOf('_')));
+            var nb = parseInt(b.slice(0, b.indexOf('_')));
+            if(na !== nb){return na > nb ? 1 : -1;}
+        });
+        for(var i = 0; i < keys.length; ++i){
+            if(cache[keys[i]].users.length === 0 ){
+                this.delById(keys[i]);
+                console.log('DeleteGrp', prefix, keys[i]);
+            }
+        }
     };
 
     function getAvailableGroup(user){
@@ -246,10 +263,17 @@ var GroupMgr = function(prefix){
     }
 
     function setNextGrpId(){
-        for(var key in cache){
+        var keys = Object.keys(cache);
+        keys.sort(function(a,b){
+            var na = parseInt(a.slice(0, a.indexOf('_')));
+            var nb = parseInt(b.slice(0, b.indexOf('_')));
+            if(na !== nb){return na > nb ? 1 : -1;}
+        });
+        for(var i = 0; i < keys.length; ++i){
+            var key = keys[i];
             if(cache[key].users.length < GRP_SIZE){
                 next_grp_id = key;
-                console.log('LTI_ENGINE: next group id:', key);
+                console.log('LTI_ENGINE: next group id:', prefix,':', key);
                 break;
             }
         }
@@ -403,10 +427,21 @@ var Grade = (function(){
     return pub;
 }());
 
+exports.logs = logs;
+exports.CmdRR = new ListDb('lticmd_rr:');
+exports.CmdBB = new ListDb('lticmd_bb:');
+exports.GroupMgrRR = new GroupMgr('ltigrp_rr:');
+exports.GroupMgrBB = new GroupMgr('ltigrp_bb:');
+exports.User = User;
+exports.UserMgr = UserMgr;
+exports.Grade = Grade;
+
+
 var Test = (function(){
-    "use strict";
     var pub = {};
-    var profile_template = { launch_presentation_return_url: '',
+
+    var N = 1000;
+    var PROFILE_TEMPLATE= { launch_presentation_return_url: '',
         user_id: '9dafe2ee1fee76ddff38245607cf75d9',
         lis_person_sourcedid: 'Dongwook',
         lis_person_contact_email_primary: 'dy252@cornell.edu',
@@ -420,33 +455,120 @@ var Test = (function(){
         lti_message_type: 'basic-lti-launch-request',
         custom_component_display_name: 'Debug' };
 
-    var getDummyProfile = function(i){
-        var user_id = 'dummyid'+i;
+    pub.runDummyUsers = function(){
+        for(var i = 0; i < N; ++i){
+            (function(_i){
+                setTimeout(function(){
+                    runDummyUser(_i)
+                }, Math.random()*2*1000);
+            }(i));
+        }
+    };
+
+    var dummy_login = 0;
+    var dummy_assigned = 0;
+     function runDummyUser(i){
+        UserMgr.logIn(getDummyProfile(i))
+            .then(function(user){
+                ++dummy_login;
+                console.log('Dummy: Login', dummy_login, 'th :', user.id);
+                setTimeout(function(){
+                    if(Math.random() > 0.5){
+                        UserMgr.setAttr( user.id, 'status', 'rr' )
+                            .then(function(){
+                                return exports.GroupMgrRR.assignUserIfNotSet(user);
+                            })
+                            .then(function(){
+                                ++dummy_assigned;
+                                console.log('Dummy: assigned', dummy_assigned, 'th :', user.id);
+                            });
+                    }
+                    else{
+                        UserMgr.setAttr( user.id, 'status', 'bb' )
+                            .then(function() {
+                                return exports.GroupMgrBB.assignUserIfNotSet(user);
+                            })
+                            .then(function(){
+                                ++dummy_assigned;
+                                console.log('Dummy: assigned', dummy_assigned, 'th :', user.id);
+                            });
+                    }
+                }, Math.random()*2*1000);
+            })
+            .then(function(){
+            })
+            .catch(function(err){
+                console.error('runDummyUser:', err);
+            });
+    }
+
+    pub.clearDummyUsers = function(){
+        var run = function(i){
+            return clearDummyUser(i)
+                .then(function(){
+                    if(i === N-1){
+                        return Promise.resolve();
+                    }
+                    else{
+                        return run(i+1);
+                    }
+                });
+
+        };
+        run(0).catch(function(err){
+            console.error('Deleting dummy users failed:', err);
+        }).then(function(){
+            exports.GroupMgrRR.clearEmptyGroups();
+            exports.GroupMgrBB.clearEmptyGroups();
+        }).catch(function(err){
+            console.error('Deleting empty groups failed:', err);
+        });
+    };
+
+    function clearDummyUser(i){
+        var user_id = getDummyId(i);
+        var LtiGroupMgr;
+        return UserMgr.getById(user_id)
+            .then(function(user){
+                if(user.status === 'rr'){
+                    LtiGroupMgr = exports.GroupMgrRR;
+                    return LtiGroupMgr.delUserById(user_id, user.group); // delete from the group
+                }
+                else if(user.status === 'bb'){
+                    LtiGroupMgr = exports.GroupMgrBB;
+                    return LtiGroupMgr.delUserById(user_id, user.group); // delete from the group
+                }
+                else{
+                    console.log('No assigned group:', i);
+                    return Promise.resolve(user);
+                }
+            })
+            .then(function(user){
+                return UserMgr.delById(user_id); // delete the user
+            })
+            .catch(function(err){
+                console.error('clearDummyUser:', user_id, err);
+            });
+    }
+
+    function getDummyId(i){return 'dummy'+i;}
+
+    function getDummyProfile(i){
+        var user_id = getDummyId(i);
         var name = 'name_'+i;
         var email = 'email'+i+'@mail.com';
 
         var d = {};
-        for(var key in profile_template){
-            d[key] = profile_template[key];
+        for(var key in PROFILE_TEMPLATE){
+            d[key] = PROFILE_TEMPLATE[key];
         }
         d.user_id = user_id;
         d.lis_person_sourcedid = name;
         d.lis_person_contact_email_primary = email;
         return d;
-    };
+    }
 
-    pub.runDummyUsers = function(n){
-
-    };
 
     return pub;
 }());
-
-exports.logs = logs;
-exports.CmdRR = new ListDb('lticmd_rr:');
-exports.CmdBB = new ListDb('lticmd_bb:');
-exports.GroupMgrRR = new GroupMgr('ltigrp_rr:');
-exports.GroupMgrBB = new GroupMgr('ltigrp_bb:');
-exports.User = User;
-exports.UserMgr = UserMgr;
-exports.Grade = Grade;
+exports.Test = Test;

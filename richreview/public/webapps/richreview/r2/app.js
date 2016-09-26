@@ -504,6 +504,7 @@
             });
             $('.r2-tooltip').tooltip();
             $('#r2_view').css('background', 'dimgray');
+            r2.coverMsg.done();
 
             r2.dom.setContextMenuEvent(
                 function(){

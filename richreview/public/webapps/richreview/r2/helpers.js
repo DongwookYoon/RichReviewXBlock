@@ -129,11 +129,8 @@
             hideBrowserTemplateName('micsetup');
         };
 
-        pub.hideAll = function(){
+        pub.done = function(){
             $('#r2_app_container').css('overflow', 'hidden');
-            for(var key in $panels){
-                $panels[key].remove();
-            }
         };
 
         pub.hide = function(template_name){

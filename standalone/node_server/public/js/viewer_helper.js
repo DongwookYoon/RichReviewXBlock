@@ -7,7 +7,7 @@ function loadRichReview(r2_ctx) {
         r2.platform = 'Azure';
         r2.scroll_wrapper = document.getElementById('r2_app_page');
         r2.ctx = JSON.parse(decodeURIComponent(r2_ctx));
-        //warnIE();
+        warnIE();
         loadJsScript("/static_viewer/load.js", "js").then(
             function(){
                 r2.loadApp(null);

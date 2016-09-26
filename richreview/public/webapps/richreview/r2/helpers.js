@@ -14,11 +14,14 @@
 
         pub.initHT = function(){
             var p = Promise.resolve();
-            l.forEach(
-                function(template){
-                    p = p.then(function(){return loadOnce(template)})
-                }
-            );
+            l.forEach(function(template){
+                p = p.then(function(){
+                    return pub.loadOnce(template)
+                        .then(function(resp){
+                            return $('#' + template).html(resp);
+                        });
+                })
+            });
             return p;
         };
 
@@ -26,16 +29,9 @@
             l.push(name);
         };
 
-        pub.loadDataFromUrl = function(name){
-            return r2.util.getUrlData(r2.webappUrlMaps.get('htmls/' + name + '.xml'), '');
+        pub.loadOnce = function(name){
+            return r2.util.getUrlData(r2.webappUrlMaps.get('html_templates/' + name + '.html'), '');
         };
-
-        function loadOnce(name){
-            return pub.loadDataFromUrl(name)
-                .then(function(resp){
-                    return $('#' + name).html(resp);
-                });
-        }
 
         return pub;
     }());
@@ -92,30 +88,109 @@
         var pub = {};
 
         var dom = null;
-        var dom_text = null;
+        var $dom = null;
+        var $panels = {};
 
-        var SetDoms = function(){
-            if(dom == null)
+        var setDoms = function(){
+            if(dom == null){
                 dom = document.getElementById("cover_msg");
-            if(dom_text == null)
-                dom_text = document.getElementById("cover_msg_text");
-        };
-        pub.Show = function(msgList){
-            SetDoms();
-            dom.style.display = "table";
-            while (dom_text.firstChild) {
-                dom_text.removeChild(dom_text.firstChild);
+                $dom = $(dom);
             }
-            msgList.forEach(function(msg){
-                var p = document.createElement("p");
-                p.textContent = msg;
-                dom_text.appendChild(p);
-            });
         };
-        pub.Hide = function(){
-            SetDoms();
-            dom.style.display = 'none';
+
+        /* z-idx
+            10 - fatal error
+            9 - mobile warning (dismissable)
+            8 - errors blocking the progress
+            7 - white page
+        */
+
+        pub.showUnsupportedBrowser = function(){
+            show(10, 'browser_unsupported');
         };
+
+        pub.showMobileWarning = function(){
+            show(9, 'mobile_warning');
+        };
+
+        pub.showSpeechSynthFailed = function(){
+            return showBrowserTemplateName('speechsynthfailed');
+        };
+
+        pub.showMicSetup = function(){
+            return showBrowserTemplateName('micsetup');
+        };
+
+        pub.showMicFailed = function(){
+            return showBrowserTemplateName('micfailed');
+        };
+
+        pub.hideMicSetup = function(){
+            hideBrowserTemplateName('micsetup');
+        };
+
+        pub.hideAll = function(){
+            for(var key in $panels){
+                $panels[key].remove();
+            }
+        };
+
+        pub.hide = function(template_name){
+            $dom.find('#'+template_name).remove();
+            if($dom.children().length === 0){
+                $dom.css('display', 'none');
+            }
+        };
+
+        function showBrowserTemplateName(template_name){
+            if(r2.EnvironmentDetector.browser.chrome){
+                return show(8, 'chrome_'+template_name);
+            }
+            else if(r2.EnvironmentDetector.browser.firefox){
+                return show(8, 'firefox_'+template_name);
+            }
+            else if(r2.EnvironmentDetector.browser.msedge){
+                return show(8, 'msedge_'+template_name);
+            }
+            return Promise.resolve();
+
+        }
+
+        function hideBrowserTemplateName(template_name){
+            if(r2.EnvironmentDetector.browser.chrome){
+                pub.hide('chrome_'+template_name);
+            }
+            else if(r2.EnvironmentDetector.browser.firefox){
+                pub.hide('firefox_'+template_name);
+            }
+            else if(r2.EnvironmentDetector.browser.msedge){
+                pub.hide('msedge_'+template_name);
+            }
+        }
+
+        function show(z_idx, template_name){
+            setDoms();
+            if($panels.hasOwnProperty(z_idx)){
+                $panels[z_idx].remove();
+                delete $panels[z_idx];
+            }
+            return r2.HtmlTemplate.loadOnce('cover_msg/'+template_name)
+                .then(function(html){
+                    var $d = $('<div>');
+                    $d.html(html);
+                    $d.addClass('cover_msg_text');
+                    $d.css('z-index', z_idx.toString());
+                    $d.attr('id', template_name);
+                    $dom.append($d);
+                    { // refresh Safari rendering
+                        $dom.css('display', 'none');
+                        $dom.outerHeight();
+                    }
+                    $dom.css('display', 'table');
+                    $panels[z_idx] = $d;
+                })
+                .catch(r2.util.handleError);
+        }
 
         return pub;
     })();
@@ -1651,12 +1726,6 @@
         };
 
         pub.getPosAndWidthInPage = function(dom){
-            if(dom){
-
-            }
-            else{
-                var x = 0;
-            }
             var rect = dom.getBoundingClientRect();
             var rtn = [
                 (rect.left - page_offset.x) / page_canvas.dom_width,
@@ -1747,42 +1816,33 @@
         return pub;
     }());
 
-    r2.environment_detector = (function(){
+    r2.EnvironmentDetector = (function(){
         var pub = {};
 
         pub.is_mobile = false;
-        pub.is_msedge = false;
-        pub.is_supported_browser = false;
         pub.is_mac = navigator.platform.indexOf('Mac') > -1;
+
+        pub.browser = {chrome: false, firefox:false, msedge: false, etc: false};
 
         pub.init = function(){
             return new Promise(function(resolve, reject){
+                pub.browser.chrome = bowser.chrome ? true : false;
+                pub.browser.firefox = bowser.firefox ? true : false;
+                pub.browser.msedge = bowser.msedge ? true : false;
+                pub.browser.etc = bowser.chrome || bowser.firefox || bowser.msedge ? false : true;
+
                 pub.is_mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                pub.is_supported_browser = bowser.chrome || bowser.firefox || bowser.safari || bowser.msedge;
-                pub.is_msedge = bowser.msedge;
-                r2.log.Log_Simple('openbrowser_'+bowser.name+'_'+bowser.version);
-                if(pub.is_mobile) {
-                    alert('Mobile data warning: listening voice comments can consume your mobile data very quickly.');
-                    /*
-                    r2.coverMsg.Show([
-                        'Sorry! RichReview does not support mobile platform yet.',
-                        'Please try again on your laptop or desktop.'
-                    ]);
-                    var err = new Error('unsupported mobile access');
-                    err.silent = true;
-                    reject(err);*/
+
+                r2.log.Log_Simple('OpenBrowser:'+bowser.name+'_'+bowser.version+'_'+pub.is_mobile);
+                if(pub.browser.etc){
+                    r2.coverMsg.showUnsupportedBrowser();
+                    console.error('Unsupported browser.');
                     resolve();
                 }
-                else if(!pub.is_supported_browser){
-                    r2.coverMsg.Show([
-                        'Sorry! RichReview only supports Chrome, Firefox, Safari, or MS Edge browsers.',
-                        "But you are using something else..."
-                    ]);
-                    var err = new Error('unsupported browser');
-                    err.silent = true;
-                    reject(err);
-                }
                 else{
+                    if(pub.is_mobile) {
+                        r2.coverMsg.showMobileWarning();
+                    }
                     resolve();
                 }
             });

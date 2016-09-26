@@ -66,7 +66,7 @@
         function play(){
             var msg = 'Hello Treehouse! Hi';
             //msg = 'it is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using Content here, content here, making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for lorem ipsum will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).'
-            r2.speechSynth.play(msg)
+            r2.speechSynthTest.play(msg)
                     .then(function(){
                         console.log('ended');
                     })
@@ -75,7 +75,7 @@
                     });
         }
         function cancel(){
-            r2.speechSynth.cancel()
+            r2.speechSynthTest.cancel()
                     .then(function(){
                             console.log('canceled');
                         })
@@ -84,7 +84,7 @@
                     });
         }
 
-        r2.speechSynth = (function(){
+        r2.speechSynthTest = (function(){
             var pub = {};
 
             var synth;
@@ -95,9 +95,11 @@
 
             pub.init = function(){
                 if(typeof SpeechSynthesisUtterance === 'undefined'){
-                    throw 'SpeechSyntehsis engine not supported';
+                    console.error('SpeechSyntehsis not supported in this browser.');
+                    return false;
                 }
-                synth = window.speechSynthesis;
+                synth = window.speechSynthTestesis;
+                return true;
             };
 
             pub.play = function(s){
@@ -144,7 +146,7 @@
             return pub;
         }());
 
-        r2.speechSynth.init();
+        r2.speechSynthTest.init();
     </script>
 </body>
 </html>

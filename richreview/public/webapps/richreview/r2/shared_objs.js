@@ -93,6 +93,11 @@ var r2App = (function() {
         NEW_SPEAK: 2
     };
 
+    pub.browser_support = {
+        audio_recording: false,
+        speech_synthesis: false
+    };
+
     r2.util.setAjaxCsrfToken();
 
     pub.file_storage_url = "https://richreview.blob.core.windows.net/";

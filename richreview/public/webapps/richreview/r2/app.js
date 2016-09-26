@@ -197,7 +197,7 @@
         pub.Run = function() {
             r2.HtmlTemplate.initHT().then(
                 function(){
-                    return r2.environment_detector.init();
+                    return r2.EnvironmentDetector.init();
                 }
             ).then(
                 function(){
@@ -209,20 +209,20 @@
                 }
             ).then(
                 function(){
+                    return initSpeechSynthesizer();
+                }
+            ).then(
+                function(){
                     r2.dom.initDom();
                     r2.canv_ctx = r2.dom.getPageCanvCtx();
                     r2.annot_canv_ctx = r2.dom.getAnnotCanvCtx();
 
                     r2.resizeWindow();
 
-                    r2.onScreenButtons.Init();
+                    r2.onScreenButtons.Init()
+                        .catch(r2.util.handleError);
 
-                    if(r2.environment_detector.is_msedge){
-                        r2.input.setModeTablet();
-                    }
-                    else{
-                        r2.input.setModeDesktop();
-                    }
+                    r2.input.setModeDesktop();
                     r2.tabletInput.setEventHandlers();
                     return null;
                 }
@@ -268,27 +268,32 @@
         }
 
         function initAudioRecorder(){
-            if(r2.environment_detector.is_mobile) { // pass mobile
-                alert('The latest Chrome Desktop browser is recommended. In mobile browsers, voice recording feature is not supported, and some audio comments may not be replayed properly.');
-                return;
+            return r2.coverMsg.showMicSetup()
+                .then(r2.audioRecorder.Init)
+                .then(function(){
+                    r2App.browser_support.audio_recording = true;
+                    r2.coverMsg.hideMicSetup();
+                })
+                .catch(
+                    function (err){
+                        r2App.browser_support.audio_recording = false;
+                        r2.coverMsg.hideMicSetup();
+                        console.error('AudioInitFailed');
+                        console.error(err);
+                        r2.coverMsg.showMicFailed();
+                    }
+                );
+        }
+
+        function initSpeechSynthesizer(){
+            if(r2.speechSynth.init()){
+                r2App.browser_support.speech_synthesis = true;
             }
-            return r2.audioRecorder.Init().then(
-                function(){
-                    r2.coverMsg.Show([""]);
-                    r2.speechSynth.init();
-                }
-            ).catch(
-                function (err){
-                    r2.coverMsg.Show([
-                        "Failed to set up your mic. Please check the following:",
-                        "1. Your machine's mic is working.",
-                        "2. Your browser was updated to the latest version.",
-                        "3. Go to the Browser setting by copy and paste  chrome://settings/content  to the address bar,",
-                        "And, in the Media -> Manage exceptions..., remove blocks of microphone resources to our website.",
-                        "If nothing helps, please report this to the manager (dy252@cornell.edu). Thank you."
-                    ]);
-                }
-            );
+            else{
+                r2App.browser_support.speech_synthesis = false;
+                r2.coverMsg.showSpeechSynthFailed();
+            }
+            return Promise.resolve();
         }
 
         function initUserSet(){
@@ -444,7 +449,6 @@
                 r2.turnPageAndSetFocus(searchresult, r2.ctx["comment"]);
             }
 
-            r2.coverMsg.Hide();
             r2.modalWindowLoading.hideModalWindow();
             r2.modalWindowIntro.Init();
             r2.log.Log_Simple('DoneLoading');
@@ -499,6 +503,7 @@
                 $('[data-toggle="tooltip"]').tooltip()
             });
             $('.r2-tooltip').tooltip();
+            $('#r2_view').css('background', 'dimgray');
 
             r2.dom.setContextMenuEvent(
                 function(){

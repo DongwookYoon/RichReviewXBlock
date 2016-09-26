@@ -952,14 +952,14 @@ var r2Ctrl = {};
             var is_dn = false;
 
             pub_mk.dn = function(which){
-                if(which === r2.environment_detector.is_mac ? CONST.KEY_CMD : CONST.KEY_CTRL){
+                if(which === r2.EnvironmentDetector.is_mac ? CONST.KEY_CMD : CONST.KEY_CTRL){
                     is_dn = true;
                 }
                 return is_dn;
             };
 
             pub_mk.up = function(which){
-                if(which === r2.environment_detector.is_mac ? CONST.KEY_CMD : CONST.KEY_CTRL){
+                if(which === r2.EnvironmentDetector.is_mac ? CONST.KEY_CMD : CONST.KEY_CTRL){
                     is_dn = false;
                 }
                 return is_dn;
@@ -981,10 +981,10 @@ var r2Ctrl = {};
         var $dom = $('<div id="onscrbtns_static"></div>');
 
         pub.Init = function(){
-            r2.HtmlTemplate.loadDataFromUrl('onscrbtns')
+            return r2.HtmlTemplate.loadOnce('onscrbtns')
                 .then(function(resp){
                     $dom.html(resp);
-                });
+                })
         };
 
         pub.setOnPiece = function($piece){

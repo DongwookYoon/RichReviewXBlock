@@ -18,7 +18,7 @@ body{
 
   overflow: auto;
   text-align: center;
-  background: dimgray;
+  background: white;
 }
 
 #r2_view.recording {
@@ -66,7 +66,7 @@ body{
 
 
 #cover_msg {
-  display:table;
+  display: table;
   position: absolute;
   left: 0;
   top: 0;
@@ -74,16 +74,53 @@ body{
   height: 100%;
   background: white;
   text-align: center;
-  z-index: 10;
+  z-index: 2000;
 }
-#cover_msg_text{
+
+#cover_msg > .cover_msg_text{
   display: table-cell;
   vertical-align: middle;
 }
+#cover_msg > .cover_msg_text > .floating_box {
+  max-width: 520px;
+  padding : 20px;
+  text-align: justify;
+  margin: auto;
+}
 
-#cover_msg_text > p{
-  text-align: center;
-  margin-bottom: 8px;
+#cover_msg > .cover_msg_text > .floating_box a {
+}
+#cover_msg > .cover_msg_text > .floating_box a:hover {
+  color: rgba(33, 150, 243,0.97);
+}
+#cover_msg > .cover_msg_text > .floating_box > button {
+  float: right;
+  margin-top: 6px;
+}
+#cover_msg .cover_msg_header {
+  font-weight: bold;
+}
+#cover_msg img {
+  width: 400px;
+  border: dashed 1px black;
+}
+#cover_msg .cover_msg_img{
+  margin: 0;
+  margin-top: 4px;
+}
+#cover_msg li p{
+  margin: 0;
+  margin-top: 10px;
+}
+#cover_msg  p{
+  margin: 0;
+  margin-top: 12px;
+}
+#cover_msg ul,
+#cover_msg ol {
+  margin: 0;
+  margin-top: 12px;
+  margin-bottom: 0;
 }
 
 .unselectable {
@@ -106,6 +143,10 @@ body{
 }
 .clear-both{
   clear: both;
+}
+
+.textalign_center {
+  text-align: center;
 }
 
 a,
@@ -963,6 +1004,10 @@ body::-webkit-scrollbar-corner {
   border: solid #fff;
   border-width: 3px 0 0 3px;
   box-shadow: inset 1px 1px 0 rgba(220, 172, 0, .14);
+}
+
+#modal-window-loading{
+  display: none;
 }
 
 .modal-dialog {

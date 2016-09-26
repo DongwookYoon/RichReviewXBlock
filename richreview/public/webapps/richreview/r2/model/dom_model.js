@@ -137,7 +137,7 @@
 
             var insertCornellXinstruction = function($tc_page0){
                 if(r2.ctx.pdf_url.indexOf('34811a7b62e4461316fc5aab8f655041fc3b01bc/doc.pdf') > 0){
-                    r2.util.getUrlData(r2.webappUrlMaps.get('htmls/cornellx_intro.xml'), '')
+                    r2.HtmlTemplate.loadOnce('cornellx_intro')
                         .then(function(resp) {
                             var $div = $('<div></div>');
                             $div.attr('id', 'cornellx_inst');

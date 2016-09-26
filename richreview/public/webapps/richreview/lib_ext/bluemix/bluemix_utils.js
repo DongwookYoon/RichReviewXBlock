@@ -73,59 +73,10 @@ var bluemix_stt = (function(bluemix_stt) {
             xhr.send();
         });
     };
-    var getUrlData = function(path, resp_type, progress_cb){
-        return new Promise(function(resolve, reject){
-            var xhr = new XMLHttpRequest();
-            if ("withCredentials" in xhr) { // "withCredentials" only exists on XMLHTTPRequest2 objects.
-                xhr.open('GET', path, true);
-                xhr.withCredentials = true;
-                xhr.responseType = resp_type;
-            }
-            else if (typeof XDomainRequest != "undefined") { // Otherwise, XDomainRequest only exists in IE, and is IE's way of making CORS requests.
-                xhr = new XDomainRequest();
-                xhr.open(method, path);
-            }
-            else {
-                reject(new Error('Error from GetUrlData: CORS is not supported by the browser.'));
-            }
-
-            if (!xhr) {
-                reject(new Error('Error from GetUrlData: CORS is not supported by the browser.'));
-            }
-            xhr.onerror = reject;
-
-            xhr.addEventListener('progress', function(event) {
-                if(event.lengthComputable) {
-                    var progress = (event.loaded / event.total) * 100;
-                    if(progress_cb)
-                        progress_cb(progress);
-                }
-            });
-
-            xhr.onreadystatechange = function(){
-                if (xhr.readyState === 4){   //if complete
-                    if(xhr.status === 200){  //check if "OK" (200)
-                        resolve(xhr.response);
-                    } else {
-                        reject(new Error("XMLHttpRequest Error, Status code:" + xhr.status));
-                    }
-                }
-            };
-
-            xhr.send();
-        });
-    };
 
     /**
      * Performs setup to coordinate the microphone (represented by an AudioRecorder) and the socket communicating with the backend.
      * This method also sets up the options that determine what results Bluemix will provide.
-     * @param token - An authentication token to initialize the socket
-     * @param model - A language model to configure Bluemix's output
-     * @param mic - A microphone object which can call an `onAudio` method upon loading a chunk of audio
-     * @param callback - A function to call when the socket opens.
-     * @param transcriptionCallback - A function to call when the transcript is updated.
-     * @param closedCallback - A function to call when the socket closes.
-     * @optional insertion - Whether or not the new recording is to be inserted mid-sentence.
      */
     bluemix_stt.handleMicrophone = function (options, mic, callback, transcriptionCallback, closedCallback) {
 

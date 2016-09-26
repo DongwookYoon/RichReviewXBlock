@@ -247,10 +247,12 @@
 
         pub.init = function(){
             if(typeof SpeechSynthesisUtterance === 'undefined'){
-                throw 'SpeechSyntehsis engine not supported';
+                console.error('SpeechSyntehsis not supported in this browser.');
+                return false;
             }
             synth = window.speechSynthesis;
             mode = pub.Status.STOPPED;
+            return true;
         };
 
         pub.getStatusChange = function(){
@@ -382,8 +384,10 @@
                             });
                     },
                     function(err){
-                        console.log(err);
-                        reject(new Error("Failed to initialize the microphone"));
+                        var err = new Error('Failed to initialize the microphone');
+                        console.error(err);
+                        err.silent = true;
+                        reject(err);
                     }
                 );
             });

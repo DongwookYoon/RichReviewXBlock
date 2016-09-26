@@ -3,7 +3,7 @@ body{
 }
 
 #r2_app_container{
-  overflow: hidden;
+  overflow: scroll;
   #position: absolute;
 }
 

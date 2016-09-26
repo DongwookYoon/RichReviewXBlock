@@ -87,15 +87,11 @@
     r2.coverMsg = (function(){
         var pub = {};
 
-        var dom = null;
         var $dom = null;
         var $panels = {};
 
         var setDoms = function(){
-            if(dom == null){
-                dom = document.getElementById("cover_msg");
-                $dom = $(dom);
-            }
+            $dom = $('#cover_msg');
         };
 
         /* z-idx
@@ -130,13 +126,14 @@
         };
 
         pub.done = function(){
-            if(r2.EnvironmentDetector.is_mobile)
-                $('#r2_app_container').css('overflow', 'scroll');
         };
 
         pub.hide = function(template_name){
-            $dom.find('#'+template_name).remove();
+            var x = $dom.children();
+            $dom.children('#'+template_name).remove();
+            var x = $dom.children();
             if($dom.children().length === 0){
+                $('#r2_app_container').css('overflow', 'hidden');
                 $dom.css('display', 'none');
             }
         };
@@ -175,6 +172,9 @@
             }
             return r2.HtmlTemplate.loadOnce('cover_msg/'+template_name)
                 .then(function(html){
+                    if(!r2.ctx.lti){
+                        html = html.replace('from the edx.org', 'by refreshing the page')
+                    }
                     var $d = $('<div>');
                     $d.html(html);
                     $d.addClass('cover_msg_text');
@@ -187,6 +187,7 @@
                     }
                     $dom.css('display', 'table');
                     $panels[z_idx] = $d;
+                    $('#r2_app_container').css('overflow', 'scroll');
                 })
                 .catch(r2.util.handleError);
         }

@@ -83,6 +83,7 @@ body{
 }
 #cover_msg > .cover_msg_text > .floating_box {
   max-width: 520px;
+  min-width: 300px;
   padding : 20px;
   text-align: justify;
   margin: auto;

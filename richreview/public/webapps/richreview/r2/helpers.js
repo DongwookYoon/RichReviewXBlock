@@ -100,7 +100,7 @@
 
         /* z-idx
             10 - fatal error
-            9 - mobile warning (dismissable)
+            9 - mobile warning
             8 - errors blocking the progress
             7 - white page
         */

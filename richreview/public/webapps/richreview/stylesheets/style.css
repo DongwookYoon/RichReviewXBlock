@@ -96,7 +96,8 @@ body{
 }
 #cover_msg > .cover_msg_text > .floating_box > button {
   float: right;
-  margin-top: 6px;
+  margin-top: 12px;
+  width: 350px;
 }
 #cover_msg .cover_msg_header {
   font-weight: bold;

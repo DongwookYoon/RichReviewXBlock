@@ -82,7 +82,7 @@
                 ['https://richreview.azureedge.net/lib/pdfjs/pdf.js', 'js'],
                 ['https://richreview.azureedge.net/lib/sha1.js', 'js'],
                 ['https://richreview.azureedge.net/lib/vec2.min.js', 'js'],
-                ['https://richreview.azureedge.net/lib/bowser.min.js', 'js'],
+                ['https://richreview.azureedge.net/lib/bowser.js', 'js'],
                 ['stylesheets/style.css', 'css'],
                 ['lib_ext/recorder/recorder.js', 'js'],
                 ['lib_ext/bluemix/bluemix_socket.js', 'js'],

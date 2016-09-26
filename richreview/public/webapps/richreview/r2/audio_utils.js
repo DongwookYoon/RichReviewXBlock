@@ -273,10 +273,11 @@
 
         pub.play = function(s, _annot_id, cbLoadingBgn, cbLoadingEnd){
             if(typeof synth === 'undefined'){
-                alert('Some Firefox Browser might encounter issue replaying audio comments. We recommend using the latest Chrome browser.');
+                alert('We cannot replay this audio comment, since teh Speech Synthesis Engine is disabled in your browser. We recommend using the latest Chrome browser.');
+                return Promise.resolve();
             }
             if(synth.pending || synth.speaking){
-                return Promise.reject('Now speaking');
+                return Promise.reject('Hey, take your time. I am speaking!');
             }
             else{
                 pub.is_canceled = false;

@@ -130,6 +130,7 @@
         };
 
         pub.hideAll = function(){
+            $('#r2_app_container').css('overflow', 'hidden');
             for(var key in $panels){
                 $panels[key].remove();
             }
@@ -169,6 +170,7 @@
         }
 
         function show(z_idx, template_name){
+            $('#r2_app_container').css('overflow', 'scroll');
             setDoms();
             if($panels.hasOwnProperty(z_idx)){
                 $panels[z_idx].remove();

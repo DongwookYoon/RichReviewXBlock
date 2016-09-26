@@ -130,7 +130,8 @@
         };
 
         pub.done = function(){
-            $('#r2_app_container').css('overflow', 'hidden');
+            if(r2.EnvironmentDetector.is_mobile)
+                $('#r2_app_container').css('overflow', 'scroll');
         };
 
         pub.hide = function(template_name){
@@ -167,7 +168,6 @@
         }
 
         function show(z_idx, template_name){
-            $('#r2_app_container').css('overflow', 'scroll');
             setDoms();
             if($panels.hasOwnProperty(z_idx)){
                 $panels[z_idx].remove();
@@ -1831,7 +1831,7 @@
                 pub.browser.msedge = bowser.msedge ? true : false;
                 pub.browser.etc = bowser.chrome || bowser.firefox || bowser.msedge ? false : true;
 
-                pub.is_mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                pub.is_mobile = bowser.mobile === true ? true : false;
 
                 r2.log.Log_Simple('OpenBrowser:'+bowser.name+'_'+bowser.version+'_'+pub.is_mobile);
                 if(pub.browser.etc){

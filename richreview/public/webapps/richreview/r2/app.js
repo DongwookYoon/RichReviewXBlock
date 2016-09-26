@@ -222,7 +222,12 @@
                     r2.onScreenButtons.Init()
                         .catch(r2.util.handleError);
 
-                    r2.input.setModeDesktop();
+                    if(r2.EnvironmentDetector.is_mobile){
+                        r2.input.setModeTabletTouch();
+                    }
+                    else{
+                        r2.input.setModeDesktop();
+                    }
                     r2.tabletInput.setEventHandlers();
                     return null;
                 }

@@ -25,11 +25,21 @@
                 else{ // javascript error
                     detail = 'System ';
                     if(typeof msg === 'undefined') {
-                        msg = 'The system caught an error.';
+                        msg = 'Interesting... The system caught an unexpected error. Please wait for a couple of minutes,';
+                        if(r2.ctx.lti){
+                            msg += ' go back to the edX course page, and retry accessing this tool.'
+                        }
+                        else{
+                            msg += ' and refresh the page. '
+                        }
+                        msg +=  ' If it\'s the same, please copy-and-paste this error message and report this to the manager (dy252@cornell.edu).'
                     }
                     detail += err.message + ', ' + err.stack + ', ';
                 }
                 detail += window.location.href;
+                if(bowser){
+                    detail += ' [' + bowser.name + '/' + bowser.version + '/' + bowser.mac + '/' + bowser.windows + '/' + bowser.ios + ']';
+                }
                 detail = detail.replace(/(\r\n|\n|\r)/gm,"<n>");
 
                 console.error(msg + '\n' + detail);

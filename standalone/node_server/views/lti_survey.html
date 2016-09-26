@@ -192,7 +192,8 @@
                                 );
                             })
                             .fail(function() {
-                                alert("Oops. Server error. Please get back to the edX.org and retry. If it\'s the same after 10 min, please report this to dy252@cornell.edu.\n\n");
+                                var msg = 'Interesting... The system caught an unexpected error.';
+                                alert("Oops. Server error. If it\'s the same after waiting for 5 min, Please get back to the edX.org and retry. please report this to dy252@cornell.edu.\n\n");
                             });
                     }
                     return true;

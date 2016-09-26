@@ -273,8 +273,10 @@
 
         pub.play = function(s, _annot_id, cbLoadingBgn, cbLoadingEnd){
             if(typeof synth === 'undefined'){
-                alert('We cannot replay this audio comment, since teh Speech Synthesis Engine is disabled in your browser. We recommend using the latest Chrome browser.');
-                return Promise.resolve();
+                alert('We cannot replay this audio comment, since the Speech Synthesis Engine is disabled in your browser. We recommend using the latest Chrome browser.');
+                var err = new Error('Speech Synthesis disabled');
+                err.silent = true;
+                return Promise.reject(err);
             }
             if(synth.pending || synth.speaking){
                 return Promise.reject('Hey, take your time. I am speaking!');

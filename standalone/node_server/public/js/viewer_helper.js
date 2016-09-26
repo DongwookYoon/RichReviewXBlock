@@ -7,7 +7,7 @@ function loadRichReview(r2_ctx) {
         r2.platform = 'Azure';
         r2.scroll_wrapper = document.getElementById('r2_app_page');
         r2.ctx = JSON.parse(decodeURIComponent(r2_ctx));
-        warnIE();
+        //warnIE();
         loadJsScript("/static_viewer/load.js", "js").then(
             function(){
                 r2.loadApp(null);
@@ -27,7 +27,7 @@ function warnIE(){
     }
     var ie11 = /rv:11.0/i.test(navigator.userAgent);
     if(old_ie != -1 || ie11 ){ // detect ie
-        alert('RichReview works best with Chrome, Firefox, Safari, or MS Edge browsers! Sorry, but there might be some glitches with the browser you are using now.');
+        alert('Internet Explore is not supported. If you encounter any issue while using this tool, please consider using other browsers, such as Google Chrome, Mozilla Firefox, or Microsoft Edge.');
     }
 }
 

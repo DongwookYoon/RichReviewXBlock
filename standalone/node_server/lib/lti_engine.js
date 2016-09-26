@@ -403,6 +403,45 @@ var Grade = (function(){
     return pub;
 }());
 
+var Test = (function(){
+    "use strict";
+    var pub = {};
+    var profile_template = { launch_presentation_return_url: '',
+        user_id: '9dafe2ee1fee76ddff38245607cf75d9',
+        lis_person_sourcedid: 'Dongwook',
+        lis_person_contact_email_primary: 'dy252@cornell.edu',
+        lti_version: 'LTI-1p0',
+        roles: [ 'Student' ],
+        resource_link_id: 'edge.edx.org-4e59e270ddbd4417ba8dcd9b635345ee',
+        context_id: 'course-v1:CornellX+RR0001+2016_T3',
+        lis_result_sourcedid: 'course-v1%3ACornellX%2BRR0001%2B2016_T3:edge.edx.org-4e59e270ddbd4417ba8dcd9b635345ee:9dafe2ee1fee76ddff38245607cf75d9',
+        launch_presentation_locale: 'en',
+        lis_outcome_service_url: 'https://edge.edx.org/courses/course-v1:CornellX+RR0001+2016_T3/xblock/block-v1:CornellX+RR0001+2016_T3+type@lti_consumer+block@4e59e270ddbd4417ba8dcd9b635345ee/handler_noauth/outcome_service_handler',
+        lti_message_type: 'basic-lti-launch-request',
+        custom_component_display_name: 'Debug' };
+
+    var getDummyProfile = function(i){
+        var user_id = 'dummyid'+i;
+        var name = 'name_'+i;
+        var email = 'email'+i+'@mail.com';
+
+        var d = {};
+        for(var key in profile_template){
+            d[key] = profile_template[key];
+        }
+        d.user_id = user_id;
+        d.lis_person_sourcedid = name;
+        d.lis_person_contact_email_primary = email;
+        return d;
+    };
+
+    pub.runDummyUsers = function(n){
+
+    };
+
+    return pub;
+}());
+
 exports.logs = logs;
 exports.CmdRR = new ListDb('lticmd_rr:');
 exports.CmdBB = new ListDb('lticmd_bb:');

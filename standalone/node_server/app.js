@@ -258,7 +258,6 @@ function passportSetup(){
                 // nonceStore: new RedisNonceStore('testconsumerkey', redisClient)
             },
             function(profile, done) {
-                //LtiRecordScore(profile);
                 LtiEngine.UserMgr.logIn(profile).then(
                     function(user){
                         console.log('LTI_LOGIN:', user);

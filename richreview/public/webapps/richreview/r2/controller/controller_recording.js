@@ -46,7 +46,7 @@
                 else{ // if auth context not set
                     bluemix_stt.getAuthInfo().catch(
                         function(e){
-                            if(r2.ctx.lti) { // edx/cornellX
+                            if(r2.ctx.lti) { // edX/cornellX
                                 alert('You edX authentication session has timed out. Please go back to the course webpage at the edX.org, and retry.');
                             }
                             else{

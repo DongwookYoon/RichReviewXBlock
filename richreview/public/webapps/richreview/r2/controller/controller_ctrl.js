@@ -253,7 +253,7 @@
             }
             pub.set('newspeak'); // default newspeak
 
-            if(r2.ctx.lti){ // edx/cornellX
+            if(r2.ctx.lti){ // edX/cornellX
                 pub.set('newspeak');
             }
             if(r2.ctx.pdf_url.indexOf('7bf0f0add24f13dda0c0a64da0f45a0a6909809e') > 0){ // demo

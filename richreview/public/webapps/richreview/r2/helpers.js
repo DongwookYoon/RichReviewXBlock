@@ -173,7 +173,7 @@
             return r2.HtmlTemplate.loadOnce('cover_msg/'+template_name)
                 .then(function(html){
                     if(!r2.ctx.lti){
-                        html = html.replace('from the edx.org', 'by refreshing the page')
+                        html = html.replace('from the edX.org', 'by refreshing the page')
                     }
                     var $d = $('<div>');
                     $d.html(html);

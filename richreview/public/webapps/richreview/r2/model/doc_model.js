@@ -2169,7 +2169,7 @@
         cmd.data = {};
         cmd.data.aid = this._id;
         cmd.data.duration = this._duration;
-        cmd.data.waveform_sample = this._audio_dbs;
+        cmd.data.waveform_sample = this._ui_type === 'new_speak' ? [] : this._audio_dbs;
         cmd.data.Spotlights = [];
         this._spotlights.forEach(function(splght){
             cmd.data.Spotlights.push(splght.ExportToCmd());

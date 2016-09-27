@@ -547,15 +547,14 @@
                     upload_q.push(log_q.shift());
                 }
 
-                r2.util.retryPromise(upload(upload_q), r2Const.INTERVAL_LOGRETRY, r2Const.N_LOGRETRY)
+                    r2.util.retryPromise(upload(upload_q), r2Const.INTERVAL_LOGRETRY, r2Const.N_LOGRETRY)
                     .then(function(){
                         upload_q = [];
                     })
                     .catch(function(err){
                         console.error(err, err.stack);
-                        r2.notify(
-                            'Failed to sync your data to the server. Please check your internet connection and retry.'
-                        );
+                        err.custom_msg = 'We failed to sync data with server. Please check your internet connection and retry, otherwise you may lose your comments.';
+                        r2App.asyncErr.throw(err);
                     });
             }
         };

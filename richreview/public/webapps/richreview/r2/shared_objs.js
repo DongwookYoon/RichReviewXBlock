@@ -64,7 +64,9 @@ var r2Const = (function () {
     pub.INTERVAL_LOGPOST = 10*1000;
     pub.INTERVAL_LOGRETRY = 3*1000;
     pub.N_LOGRETRY = 3;
-    pub.DB_SYNC_POLLING_INTERVAL = 30*1000; // 30 secs
+    pub.INTERVAL_CMD_UPLOAD_RETRY = 3*1000;
+    pub.N_CMD_UPLOAD_RETRY = 3;
+    pub.DB_SYNC_POLLING_INTERVAL = 3*60*1000; // 3 mins
 
     // error message
     pub.ERROR_MSG =

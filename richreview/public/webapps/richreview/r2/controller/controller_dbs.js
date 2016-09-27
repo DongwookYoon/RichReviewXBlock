@@ -48,16 +48,14 @@ var r2Sync = (function(){
                     }
                     return Promise.resolve(null);
                 })
+                .catch(function(err){
+                    console.error(err, err.stack);
+                    err.custom_msg = 'We failed to download data from server. Please check your internet connection and retry.';
+                    r2App.asyncErr.throw(err);
+                })
                 .then(function(){
                     busy = false;
                 })
-                .catch(function(err){
-                    busy = false;
-                    r2.notify(
-                        'Failed to sync your data to the server. Please check your internet connection and retry.'
-                    );
-                    r2App.asyncErr.throw(err);
-                });
         };
 
         var processDownloadedCmds = function(cmd_strs){
@@ -101,7 +99,6 @@ var r2Sync = (function(){
         var pub_up = {};
         var q = [];
         var busy = false;
-        var cmd_to_upload = null;
 
         pub_up.loop = function(){
             if(q.length > 0 && !busy){
@@ -119,76 +116,69 @@ var r2Sync = (function(){
         };
 
         pub_up.pushCmd = function(cmd){
+            if(cmd.op === 'CreateComment' && cmd.type === "CommentAudio"){
+                var upload_audio_cmd = {};
+                upload_audio_cmd.op = 'UploadAudio';
+                upload_audio_cmd.p_original_cmd = cmd;
+                q.push(upload_audio_cmd);
+            }
             q.push(cmd);
             r2.commentHistory.consumeCmd(cmd);
         };
 
-        var uploadCmd = function(cmdObj){
-            return r2.util.postToDbsServer(
-                "UploadCmd",
-                {
-                    groupid_n: r2.ctx["groupid"],
-                    cmd: JSON.stringify(cmdObj)
-                }
-            );
-        };
-
-        var uploadAudioBlob = function(annot){
-            return r2.util.postToDbsServer('GetUploadSas', {fname:annot.GetUsername()+"_"+annot.GetId()})
-                .then(function(resp){
-                    return r2.util.putBlobWithSas(resp.url, resp.sas, annot.GetRecordingAudioBlob());
+        var uploadCmd = function(cmd){
+            if(cmd.op === 'UploadAudio'){
+                return uploadAudioBlob(cmd.p_original_cmd);
+            }
+            else{
+                return r2.util.postToDbsServer(
+                    "UploadCmd",
+                    {
+                        groupid_n: r2.ctx["groupid"],
+                        cmd: JSON.stringify(cmd)
+                    }
+                ).then(function(){
+                    my_cmds[cmd.user+"_"+cmd.time] = true;
+                    return null;
                 })
-
-        };
-
-        var uploadAudioBlobIfNeeded = function(){
-            return new Promise(function(resolve, reject){
-                if(cmd_to_upload.op === 'CreateComment' && cmd_to_upload.type === "CommentAudio"){
-                    uploadAudioBlob(r2App.annots[cmd_to_upload.data.aid]).then(
-                        function(url){
-                            cmd_to_upload.data.audiofileurl = url;
-                            resolve();
-                        }
-                    ).catch(
-                        function(err){
-                            reject(err);
-                        }
-                    );
-                }
-                else{
-                    resolve();
-                }
-            });
+            }
         };
 
         var uploadAndConsumeCmds = function(){
             $("#uploading_indicator").toggleClass("show", true);
             busy = true;
-            cmd_to_upload = q.shift();
+            var cmd_to_upload = q.shift();
 
-            uploadAudioBlobIfNeeded(cmd_to_upload).then(
-                function(){
-                    return uploadCmd(cmd_to_upload);
-                }
-            ).then(
-                function(){
-                    my_cmds[cmd_to_upload.user+"_"+cmd_to_upload.time] = true;
-                    $("#uploading_indicator").toggleClass("show", false);
+
+            r2.util.retryPromise(uploadCmd(cmd_to_upload), r2Const.INTERVAL_CMD_UPLOAD_RETRY, r2Const.N_CMD_UPLOAD_RETRY)
+                .then(function(){
                     busy = false;
-                    cmd_to_upload = null;
-                }
-            ).catch(
-                function(){
-                    window.setTimeout(
-                        function(){
-                            q.unshift(cmd_to_upload);
-                            busy = false;
-                            cmd_to_upload = null;
-                        },
-                        r2Const.DELAY_UPLOADCMDS_RETRY
-                    );
-                }
-            );
+                    setTimeout(function(){
+                        if(!busy){
+                            $("#uploading_indicator").toggleClass("show", false);
+                        }
+                    }, 500); // show the indicator for minimum 0.5 sec
+                })
+                .catch(function(_err){
+                    q.unshift(cmd_to_upload);
+                    console.error(_err, _err.stack);
+                    var err = new Error('');
+                    err.custom_msg = 'We failed to sync data with server. Please check your internet connection and retry, otherwise you may lose your comments.';
+                    r2App.asyncErr.throw(err);
+                });
+        };
+
+        var uploadAudioBlob = function(cmd){
+            var annot = r2App.annots[cmd.data.aid];
+            return r2.util.postToDbsServer('GetUploadSas', {fname:annot.GetUsername()+"_"+annot.GetId()})
+                .then(function(resp){
+                    return r2.util.putBlobWithSas(resp.url, resp.sas, annot.GetRecordingAudioBlob());
+                })
+                .then(function(url){
+                    cmd.data.audiofileurl = url;
+                    return null;
+                });
+
         };
 
         return pub_up;

@@ -864,7 +864,7 @@ a:active {
   width: 235px;
   height: 54px;
   font-size: 54px;
-  color: darkorchid;
+  color: rgba(121, 0, 180, 0.85);
   opacity: 0;
   text-align: center;
 
@@ -877,9 +877,8 @@ a:active {
 }
 #uploading_indicator> p{
   font-size: 12px;
-  background: rgba(33, 150, 243, 0.85);
-  background: #f4e0f0;
-  color: darkorchid;
+  background: rgba(121, 0, 180, 0.85);
+  color: rgba(255, 255, 255, 0.85);
   padding:3px;
   border-style: solid;
   border-color: #cbb7cc;

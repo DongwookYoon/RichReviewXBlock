@@ -1,5 +1,17 @@
 (function(r2) {
     "use strict";
+    r2.constructErrorMsg = function(is_lti){
+        var msg = 'Interesting... The system caught an unexpected error. Please wait for a couple of minutes,';
+        if(is_lti){
+            msg += ' go back to the edX course page, and retry accessing this tool.'
+        }
+        else{
+            msg += ' and refresh the page. '
+        }
+        msg +=  ' If it\'s the same, please copy-and-paste this error message and report this to the manager (dy252@cornell.edu).'
+        return msg;
+    };
+
     r2.runSerialPromises = (function(){
         var runSerialPromises = function(promiseFuncs, rtns){
             if(typeof rtns === 'undefined'){
@@ -115,7 +127,12 @@
             });
 
             r2.runSerialPromises(promises)
-                .then(function(){
+                .then(function(rtns){
+                    for(var i = 0; i < rtns.length; ++i){
+                        if(rtns[i].type === 'error'){
+                            throw new Error('Cannot load a resource file: '+rtns[i].target.src)
+                        }
+                    }
                     return r2.makeLocalJs('https://richreview.azureedge.net/lib/pdfjs/pdf.worker.js') // prevent CORS issue
                         .then(function(local_url){
                             PDFJS.workerSrc = local_url;
@@ -125,9 +142,8 @@
                     return r2.main.Run();
                 })
                 .catch(function(err){
-                    //ToDo redirect back to the webpage when failed to load a resource.
-                    console.log(err);
-                    alert(err);
+                    console.error(err);
+                    prompt(r2.constructErrorMsg(r2.ctx.lti), err);
                 });
         };
 
@@ -147,13 +163,13 @@
                 }
                 if(elem){
                     elem.onload = resolve;
-                    elem.onerror = function(){reject()};
+                    elem.onerror = function(err){reject(err);};
                     document.getElementsByTagName('head')[0].appendChild(elem);
                     $('#r2_app_container').append('.');
                     console.log('Loaded:', url);
                 }
                 else{
-                    reject(new Error("    Cannot load a resource file:" + url));
+                    reject(new Error("Cannot load a resource file:" + url));
                 }
             });
         }

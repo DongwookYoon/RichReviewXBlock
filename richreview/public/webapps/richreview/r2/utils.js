@@ -8,32 +8,22 @@
 
     r2.util = (function(){
         var pub = {};
-        pub.handleError = function(err, msg){
+        pub.handleError = function(err){
             if(r2App.is_first_error && !err.silent){
                 r2App.is_first_error = false; // do not prompt error msgs for the subsequent errors
+                var msg = '';
                 var detail;
 
                 if(typeof err.status === 'number' && typeof err.statusText === 'string'){ // http error
                     detail = 'HTTP ';
-                    if(typeof msg === 'undefined') {
-                        msg = 'The server responded with an error.';
-                    }
+                    msg = 'The server responded with an error.';
                     console.error(err);
                     console.error(err.stack);
                     detail += err.status + ':' + err.statusText+ ', ' + (err.responseText || 'no reponse text') + ', ';
                 }
                 else{ // javascript error
                     detail = 'System ';
-                    if(typeof msg === 'undefined') {
-                        msg = 'Interesting... The system caught an unexpected error. Please wait for a couple of minutes,';
-                        if(r2.ctx.lti){
-                            msg += ' go back to the edX course page, and retry accessing this tool.'
-                        }
-                        else{
-                            msg += ' and refresh the page. '
-                        }
-                        msg +=  ' If it\'s the same, please copy-and-paste this error message and report this to the manager (dy252@cornell.edu).'
-                    }
+                    msg = r2.constructErrorMsg(r2.ctx.lti);
                     detail += err.message + ', ' + err.stack + ', ';
                 }
                 detail += window.location.href;
@@ -42,8 +32,14 @@
                 }
                 detail = detail.replace(/(\r\n|\n|\r)/gm,"<n>");
 
-                console.error(msg + '\n' + detail);
-                prompt(msg, detail);
+                if(err.custom_msg){
+                    console.error(err.custom_msg + '\n' + detail);
+                    alert(err.custom_msg);
+                }
+                else{
+                    console.error(msg + '\n' + detail);
+                    prompt(msg, detail);
+                }
             }
         };
 
@@ -273,12 +269,17 @@
         pub.postToDbsServer = function(op, msg){
             return new Promise(function(resolve, reject){
                 var url = r2.ctx.serve_dbs_url + 'op=' + op;
-                var posting = $.post(url, msg);
-                posting.success(function(resp){
-                    resolve(resp);
-                });
-                posting.fail(function(err){
-                    reject(err)
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: msg,
+                    timeout: 3000, // in milliseconds
+                    success: function(data) {
+                        resolve(data);
+                    },
+                    error: function(err) {
+                        reject(err)
+                    }
                 });
             });
         };
@@ -318,7 +319,10 @@
 
 
         pub.escapeDomId = function(s){
-            return s.replace(/\.|\-|T|\:/g, '_');
+            if(s){
+                return s.replace(/\.|\-|T|\:/g, '_');
+            }
+            return '';
         };
 
         pub.SimplifyStrokeDouglasPuecker = function(pts, begin, end, _eps){

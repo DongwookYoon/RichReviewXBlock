@@ -114,8 +114,6 @@ var r2App = (function() {
     pub.mode = pub.AppModeEnum.IDLE;
     pub.disable_comment_production = false;
 
-    pub.is_first_error = true;
-
     pub.cur_time = 0;
 
     pub.cur_mouse_pt = new Vec2(-1, -1);
@@ -189,9 +187,11 @@ var r2App = (function() {
             if(r2App.mode === r2App.AppModeEnum.RECORDING){return;}
             if((new Date().getTime())-r2App.t_last_scroll < 300){return ;}
 
-            var hit_piece = r2App.cur_page.GetPieceByHitTest(r2.viewCtrl.mapScrToDoc(cur_mouse_pt));
-            if(hit_piece){ // piece[0] is dy, piece[1] is the obj.
-                pub_ps.set(hit_piece);
+            if(r2App.cur_page){
+                var hit_piece = r2App.cur_page.GetPieceByHitTest(r2.viewCtrl.mapScrToDoc(cur_mouse_pt));
+                if(hit_piece){ // piece[0] is dy, piece[1] is the obj.
+                    pub_ps.set(hit_piece);
+                }
             }
         };
 

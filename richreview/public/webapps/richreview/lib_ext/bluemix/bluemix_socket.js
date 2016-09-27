@@ -79,12 +79,10 @@ var bluemix_stt = (function(bluemix_stt) {
         };
 
         sock.onerror = function(evt) {
-            console.log('WS onerror: ', evt);
             onerror(evt);
         };
 
         sock.onclose = function(evt) {
-            console.log('WS onclose: ', evt);
             if (evt.code === 1006) {
                 // Authentication error
                 $.publish('hardsocketstop');

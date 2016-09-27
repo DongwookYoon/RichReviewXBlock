@@ -45,14 +45,14 @@
                 }
                 else{ // if auth context not set
                     bluemix_stt.getAuthInfo().catch(
-                        function(e){
+                        function(err){
                             if(r2.ctx.lti) { // edX/cornellX
-                                alert('You edX authentication session has timed out. Please go back to the course webpage at the edX.org, and retry.');
+                                err.custom_msg = 'You edX authentication session has timed out. Please go back to the course webpage at the edX.org, and retry.';
                             }
                             else{
-                                alert('Needs login. Your RichReview authentication session has timed out.');
+                                err.custom_msg = 'Needs login. Your RichReview authentication session has timed out.';
                             }
-                            throw 'Invalid BlueMix authentication error: need login';
+                            throw err;
                         }
                     ).then(
                         function(authToken) {
@@ -66,11 +66,18 @@
                                 return done();
                             }
                             else{ // auth failed
-                                console.log('Getting Bluemix auth failed:', authToken);
-                                throw 'Invalid BlueMix authentication error: invalid user';
+                                if(r2.ctx.lti) { // edX/cornellX
+                                    err.custom_msg = 'You edX authentication session has timed out. Please go back to the course webpage at the edX.org, and retry.';
+                                }
+                                else{
+                                    err.custom_msg = 'Needs login. Your RichReview authentication session has timed out.';
+                                }
+                                throw err;
                             }
                         }
-                    );
+                    ).catch(function(err){
+                        r2.util.handleError(err);
+                    });
                 }
             }
         };
@@ -251,6 +258,18 @@
                     },
                     function() { // closed
                         piece_simple_speech.doneCaptioning();
+                    },
+                    function(err){ // on error
+                        if(r2.ctx.lti) { // edX/cornellX
+                            err.custom_msg = 'You edX authentication session has timed out. Please go back to the course webpage at the edX.org, and retry.';
+                        }
+                        else{
+                            err.custom_msg = 'Needs login. Your RichReview authentication session has timed out.';
+                        }
+                        r2.util.handleError(err);
+                        r2.recordingCtrl.stop();
+                        piece_simple_speech.doneCaptioning();
+                        console.log('doneCaptioning');
                     }
                 );
             });

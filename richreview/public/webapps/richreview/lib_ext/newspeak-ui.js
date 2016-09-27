@@ -45,6 +45,7 @@
         };
 
         pub.doneCommentingAsync = function(){
+            indicators.hideWait(); // in case when bluemix failed.
             digestTokenBuffer(token_buffer);
             token_buffer = [];
             r2App.is_recording_or_transcribing = false;

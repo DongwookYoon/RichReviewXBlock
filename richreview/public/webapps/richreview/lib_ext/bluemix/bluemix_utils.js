@@ -78,7 +78,7 @@ var bluemix_stt = (function(bluemix_stt) {
      * Performs setup to coordinate the microphone (represented by an AudioRecorder) and the socket communicating with the backend.
      * This method also sets up the options that determine what results Bluemix will provide.
      */
-    bluemix_stt.handleMicrophone = function (options, mic, callback, transcriptionCallback, closedCallback) {
+    bluemix_stt.handleMicrophone = function (options, mic, callback, transcriptionCallback, closedCallback, errCallback) {
 
         options.message = {
             'action': 'start',
@@ -118,12 +118,11 @@ var bluemix_stt = (function(bluemix_stt) {
              */
         }
 
-        function onError(r, socket) {
-            console.log('Mic socket err: ', err);
+        function onError(err, socket) {
+            errCallback(err);
         }
 
         function onClose(evt) {
-            console.log('Mic socket close: ', evt);
             closedCallback();
         }
 

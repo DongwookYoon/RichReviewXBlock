@@ -613,7 +613,7 @@
             this.color_dark_html = this.GetHtmlColor(this.color_dark, 1.0);
             this.color_transparent_normal_html = this.GetHtmlColor(this.color_normal, 0.5);
             this.color_transparent_dark_html = this.GetHtmlColor(this.color_dark, 0.5);
-            this.color_splight_static = this.GetHtmlColor(this.color_light, 0.15);
+            this.color_splight_static = this.GetHtmlColor(this.color_light, 0.25);
             this.color_splight_dynamic = this.GetHtmlColor(this.color_normal, 0.6);
             this.color_splight_dynamic_newspeak = this.GetHtmlColor(this.color_normal, 0.4);
             this.color_splight_private = this.GetHtmlColor(this.color_normal, 0.2);

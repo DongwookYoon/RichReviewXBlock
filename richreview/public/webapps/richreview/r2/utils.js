@@ -9,8 +9,7 @@
     r2.util = (function(){
         var pub = {};
         pub.handleError = function(err){
-            if(r2App.is_first_error && !err.silent){
-                r2App.is_first_error = false; // do not prompt error msgs for the subsequent errors
+            if(!err.silent){
                 var msg = '';
                 var detail;
 

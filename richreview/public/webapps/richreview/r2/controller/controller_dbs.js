@@ -119,7 +119,15 @@ var r2Sync = (function(){
             if(cmd.op === 'CreateComment' && cmd.type === "CommentAudio"){
                 var upload_audio_cmd = {};
                 upload_audio_cmd.op = 'UploadAudio';
-                upload_audio_cmd.p_original_cmd = cmd;
+                upload_audio_cmd.aid = cmd.data.aid;
+                upload_audio_cmd.cmd_to_update = cmd;
+                q.push(upload_audio_cmd);
+            }
+            else if(cmd.op === 'ChangeProperty' && cmd.type === 'PieceNewSpeakNewBaseAnnot'){
+                var upload_audio_cmd = {};
+                upload_audio_cmd.op = 'UploadAudio';
+                upload_audio_cmd.aid = cmd.data.annot.data.aid;
+                upload_audio_cmd.cmd_to_update = cmd.data.annot;
                 q.push(upload_audio_cmd);
             }
             q.push(cmd);
@@ -128,9 +136,10 @@ var r2Sync = (function(){
 
         var uploadCmd = function(cmd){
             if(cmd.op === 'UploadAudio'){
-                return uploadAudioBlob(cmd.p_original_cmd);
+                return uploadAudioBlob(cmd.aid, cmd.cmd_to_update);
             }
             else{
+                console.log('cmd:',cmd);
                 return r2.util.postToDbsServer(
                     "UploadCmd",
                     {
@@ -168,14 +177,16 @@ var r2Sync = (function(){
                 });
         };
 
-        var uploadAudioBlob = function(cmd){
-            var annot = r2App.annots[cmd.data.aid];
+        var uploadAudioBlob = function(aid, cmd_to_update){
+            var annot = r2App.annots[aid];
+            console.log(annot, annot.GetRecordingAudioBlob());
             return r2.util.postToDbsServer('GetUploadSas', {fname:annot.GetUsername()+"_"+annot.GetId()})
                 .then(function(resp){
                     return r2.util.putBlobWithSas(resp.url, resp.sas, annot.GetRecordingAudioBlob());
                 })
                 .then(function(url){
-                    cmd.data.audiofileurl = url;
+                    console.log('uploadAudioBlob:'+url);
+                    cmd_to_update.data.audiofileurl = url;
                     return null;
                 });
 

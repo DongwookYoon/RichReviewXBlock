@@ -13,8 +13,7 @@
     };
 
     r2.CDN_URL = 'https://richreview.azureedge.net';
-    r2.CDN_SUBURL = r2.CDN_URL+'/'+(window.location.hostname==='richreview'?'richreview':'localhost');
-    console.log(window.location.hostname);
+    r2.CDN_SUBURL = r2.CDN_URL+'/'+(window.location.hostname==='richreview.net'?'richreview':'localhost');
 
     r2.runSerialPromises = (function(){
         var runSerialPromises = function(promiseFuncs, rtns){

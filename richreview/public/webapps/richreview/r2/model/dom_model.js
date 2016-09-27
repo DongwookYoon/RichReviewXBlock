@@ -685,6 +685,7 @@
                 else{
                     console.error('focusCtrl.focusAnnot', $dom)
                 }
+                return $dom;
             };
 
             pub_fc.focusPiece = function(piece_id){

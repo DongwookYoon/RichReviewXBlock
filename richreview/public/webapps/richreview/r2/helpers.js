@@ -364,8 +364,9 @@
                 $a.click(function(){
                     var searchresult = r2App.doc.SearchPieceByAnnotId(annotid);
                     if(searchresult){
-                        r2.turnPageAndSetFocus(searchresult, annotid);
+                        var $piece_group = r2.turnPageAndSetFocus(searchresult, annotid);
                         r2.log.Log_CommentHistory("audio", annotid);
+                        highlight($a, $piece_group);
                     }
                 });
             }
@@ -376,8 +377,9 @@
                 $a.click(function(){
                     var searchresult = r2App.doc.SearchPieceByAnnotId(annotid);
                     if(searchresult){
-                        r2.turnPageAndSetFocus(searchresult, annotid);
+                        var $piece_group = r2.turnPageAndSetFocus(searchresult, annotid);
                         r2.log.Log_CommentHistory('text', annotid);
+                        highlight($a, $piece_group);
                     }
                 });
             }
@@ -392,6 +394,20 @@
                     return;
                 }
             }
+        }
+
+        var $highlight_a = null;
+        var $highlight_piecegroup = null;
+        function highlight($a, $piece_group){
+            if($highlight_a)
+                $highlight_a.removeClass('highlight');
+            $a.addClass('highlight');
+            $highlight_a = $a;
+
+            if($highlight_piecegroup)
+                $highlight_piecegroup.removeClass('highlight');
+            $piece_group.addClass('highlight');
+            $highlight_piecegroup= $piece_group;
         }
 
         pub.consumeCmd = function(cmd){

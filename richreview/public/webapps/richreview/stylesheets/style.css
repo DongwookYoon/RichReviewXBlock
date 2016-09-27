@@ -770,6 +770,10 @@ a:active {
   margin-top: 4px;
   padding:4px 2px;
 }
+.dashboard-comments-icon.highlight{
+  background: lightgray;
+  border-radius: 8px;
+}
 
 #btn-group-speech-ui-select .dropdown-menu {
   padding: 5px;
@@ -1111,6 +1115,9 @@ body::-webkit-scrollbar-corner {
 
 .tc_page .tc_piecegroup:focus {
   background: rgba(0,0,255,0.03);
+}
+.tc_page .tc_piecegroup.highlight{
+  background: rgba(0,0,0,0.15);
 }
 .tc_page .tc_piece:focus {
   /*background: rgba(255,0,0,0.1);*/

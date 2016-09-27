@@ -9,12 +9,13 @@
             border: solid 1px lightblue;
             width: 400px;
             height: 300px;
+            pointer-events: all;
         }
     </style>
 
 </head>
 <body>
-    <div id="textbox" contenteditable="true"></div>
+    <div id="textbox"></div>
 
     <button onclick='play()'>
         play
@@ -56,6 +57,9 @@
                     cuts.push(i);
                 }
             }
+            $tbox.children('span').mouseup(function(e){
+                console.log(e.target);
+            })
             if(cuts[cuts.length-1] !== $spans.length-1){
                 cuts.push($spans.length-1);
             }

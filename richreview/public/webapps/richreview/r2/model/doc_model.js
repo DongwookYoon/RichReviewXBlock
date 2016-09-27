@@ -1336,6 +1336,7 @@
     r2.PieceNewSpeak.prototype.SetText = function(text){
         this.dom_textbox.innerHTML = text;
         this.updateSizeWithTextInput();
+        this.newspeak.updateText();
     };
     r2.PieceNewSpeak.prototype.SetNewBaseAnnot = function(data){
 

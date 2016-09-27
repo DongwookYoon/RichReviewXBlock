@@ -77,6 +77,51 @@
             return;
         };
 
+        pub.updateText = function(){
+            if(!mycomment){
+                $tbox.css('pointer-events', 'all');
+                $tbox.children('span').mouseup(function(e){
+                    anchor_span = e.target;
+                    if(anchor_span){
+                        $anchor_span = $(anchor_span);
+                    }
+
+                    if (r2App.mode === r2App.AppModeEnum.IDLE) {
+                        r2.log.Log_Simple('NewSpeak_Play_NEWSPEAKIDX');
+                        pub.Play(
+                            function() {
+                                r2.radialMenu.bgnLoading('rm_' + r2.util.escapeDomId(annotid));
+                            },
+                            function() {
+                                r2.radialMenu.endLoading('rm_' + r2.util.escapeDomId(annotid));
+                            }
+                        );
+                    }
+                    else if (r2App.mode === r2App.AppModeEnum.REPLAYING) {
+                        if (r2App.cur_annot_id === annotid) {
+                            r2.speechSynth.cancel();
+                            r2.log.Log_Simple('NewSpeak_Stop_BUTTON');
+                        }
+                        else {
+                            r2.speechSynth.cancel()
+                                .then(function(){
+                                    r2.log.Log_Simple('NewSpeak_Play_ANOTHERNEWSPEAKINDX');
+                                    pub.Play(
+                                        function() {
+                                            r2.radialMenu.bgnLoading('rm_' + r2.util.escapeDomId(annotid));
+                                        },
+                                        function() {
+                                            r2.radialMenu.endLoading('rm_' + r2.util.escapeDomId(annotid));
+                                        }
+                                    );
+                                });
+                            r2.log.Log_Simple('NewSpeak_Stop_ANOTHERNEWSPEAKIDX');
+                        }
+                    }
+                })
+            }
+        };
+
         function init(){
             $tbox[0].addEventListener('focus', function(e) {
                 document.addEventListener('selectionchange', selectionCb);
@@ -94,12 +139,6 @@
             function selectionCb(e){
                 pub.saveAnchorSpan();
             }
-            /*
-            if(!mycomment){
-                $tbox.children('span').mouseup(function(e){
-                    console.log(e.target);
-                })
-            }*/
         }
 
         function getAnchoredSpan(){

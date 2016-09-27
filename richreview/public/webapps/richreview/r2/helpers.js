@@ -217,19 +217,16 @@
             $cheatsheet = $("#cheatsheet");
             $btn_cheatsheet = $("#btn-cheatsheet");
 
-            pub.AddItem("Moving in Page", ": Use the SCROLL-BAR", "translate");
-            pub.AddItem("Zooming In/Out", ": PRESS '+'/'-' Buttons on the top menu bar'", null);//"zooming.");
-            if(!r2.ctx.text_only)
-                pub.AddItem("Commenting with Voice", ": PRESS-ENTER to start recording, PRESS-ENTER again to stop", null);//"enter_voice");
-            pub.AddItem("Commenting with Text", ": Click the KEYBOARD Button", null);//"enter_text");
-            if(!r2.ctx.text_only)
-                pub.AddItem("Pointing while Speaking", ": Start-VOICE-Recording + DRAG-with-LEFT-Click", "spotlight");
-            //pub.AddItem("Indexing Waveform", ": LEFT-Click over Waveform", "waveform_indexing");
-            //pub.AddItem("Indexing Pointing Gesture", ": LEFT-Click over a Gesture's trace", "spotlight_indexing");
-            //pub.AddItem("Highlighting (Private)", ": HOLD-CTRL + DRAG-with-LEFT-Click", "highlight");
-            //pub.AddItem("Commenting (Private)", ": HOLD-CTRL + PRESS-ENTER", "private_note");
-            //pub.AddItem("Publishing Private Comment", ": Click 'Publish Button'", "publish_private");
-            pub.AddItem("Deleting a Comment", ": HOVER the cursor on 'Play Button' and select 'TRASH CAN'", "delete_voice");
+            pub.AddItem("Turning pages", ": Press '<'/'>' button on the top menu.", "nav_pageturn");
+            pub.AddItem("Zooming in/out", ": Press '+'/'-' Buttons on the top menu.", "nav_zooming");
+            if(!r2.ctx.text_only){
+                pub.AddItem("Voice recording", ": Press ENTER-KEY to start recording, and ENTER-KEY once again to stop.", "voice_recording");
+                pub.AddItem("Voice gesturing", ": Start voice recording, and then DRAG-with-LEFT-CLICK your cursor.", "voice_gesture");
+                pub.AddItem("Voice re-recording", ": Press SHIFT+ENTER-KEYS to record voice in addtion to the existing voice.", "voice_adding");
+                pub.AddItem("Voice indexing", ": Click the PLAY-BUTTON to listen to the voice from the CURSOR-POSITION.", "voice_indexing");
+            }
+            pub.AddItem("Text commenting", ": Click the KEYBOARD Button.", "text");
+            pub.AddItem("Deleting a commment", ": HOVER the cursor on the play button and select TRASH-CAN.", "deleting");
 
             $cheatsheet.find(".item").hover(
                 function(){
@@ -284,7 +281,7 @@
             if(gif){
                 var item_gif = document.createElement("img");
                 $(item_gif).toggleClass("item-gif", true);
-                $(item_gif).attr("src", "https://richreview.blob.core.windows.net/data/gif/"+ gif +".gif");
+                $(item_gif).attr("src", r2.CDN_URL+"/gifs/"+ gif +".gif");
                 $(item_description).append(item_gif);
             }
         };

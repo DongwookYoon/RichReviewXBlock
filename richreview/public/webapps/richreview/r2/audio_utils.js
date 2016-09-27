@@ -374,7 +374,7 @@
                 navigator.getUserMedia(
                     {audio: true},
                     function(stream){
-                        r2.makeLocalJs(r2.webappUrlMaps.get('lib_ext/recorder/recorderWorker.js'))
+                        r2.makeLocalJs(r2.CDN_SUBURL + '/lib_ext/recorder/recorderWorker.js')
                             .then(function(local_url){
                                 var src = audio_context.createMediaStreamSource(stream);
                                 window.leakMyAudioNodes = [src];

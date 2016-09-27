@@ -2122,6 +2122,11 @@
         var $tooltip = $(document.createElement('div'));
         $tooltip.addClass('tooltip_audio_waveform');
 
+        var $timer_text = $('<p>0:00</p>');
+        $tooltip.append($timer_text);
+        var t_timer_bgn = 0;
+        var t_str_displayed = '';
+
         var canv = document.createElement('canvas');
         canv.width = CONST.CANV_W;
         canv.height = CONST.CANV_H;
@@ -2130,13 +2135,28 @@
 
         pub_ta.show = function(){
             is_display = true;
+            $timer_text.text('0:00');
+            t_timer_bgn = (new Date()).getTime();
             $('#recording_indicator').append($tooltip);
-            centerDiv();
         };
 
         pub_ta.dismiss = function(){
             is_display = false;
             $tooltip.remove();
+        };
+
+        pub_ta.updateTimerStr = function(){
+            if(!is_display){return;}
+
+            var sec = ((new Date()).getTime() - t_timer_bgn)/1000.;
+            sec = Math.floor(sec);
+            var min = Math.floor(sec/60);
+            sec = Math.floor(sec%60);
+            var to_disp = min + ':' + (sec<10?'0':'') + sec;
+            if(to_disp != t_str_displayed){
+                $timer_text.text(to_disp);
+                t_str_displayed = to_disp;
+            }
         };
 
         pub_ta.drawDynamic = function(){
@@ -2180,10 +2200,6 @@
                 ctx.fill();
             }
         };
-
-        function centerDiv(){
-            $tooltip.css('margin-left', -$tooltip[0].getBoundingClientRect().width/2+'px');
-        }
 
         return pub_ta;
 

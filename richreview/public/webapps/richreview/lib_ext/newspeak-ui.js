@@ -187,7 +187,7 @@
                     end: next.bgn,
                     annotid: prev.annotid
                 };
-                if(next.bgn-prev.end > 0.8){
+                if(next.bgn-prev.end > 0.5){
                     punctuate(prev);
                     capitalize(next);
                 }

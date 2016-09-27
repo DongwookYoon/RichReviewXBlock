@@ -112,18 +112,23 @@ function mergeBuffers(bufs){
 }
 
 function downsample(src, ratio){
-    var length = src.length/ratio;
-    var dst = new Float32Array(length);
-    var idx_dst = 0, idx_src = 0;
-    while (idx_dst < length){
-        var avg = 0;
-        for(var i = 0; i < ratio; ++i){
-            avg += src[idx_src+i];
+    try{
+        var length = src.length/ratio;
+        var dst = new Float32Array(length);
+        var idx_dst = 0, idx_src = 0;
+        while (idx_dst < length){
+            var avg = 0;
+            for(var i = 0; i < ratio; ++i){
+                avg += src[idx_src+i];
+            }
+            dst[idx_dst++] = avg/ratio;
+            idx_src+=ratio;
         }
-        dst[idx_dst++] = avg/ratio;
-        idx_src+=ratio;
+        return dst;
     }
-    return dst;
+    catch(err){
+        return new Float32Array(0);
+    }
 }
 
 function floatTo16BitPCM(output, offset, input, normalize){

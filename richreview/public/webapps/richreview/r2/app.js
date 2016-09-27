@@ -93,6 +93,9 @@
         }
 
         var updateFromAudioStatus = function(){
+            r2.tooltipAudioWaveform.updateTimerStr();
+            r2.recordingTimeOut.checkTimeout();
+
             r2App.cur_audio_time = r2.audioPlayer.getPlaybackTime();
             r2App.cur_annot_id = r2.audioPlayer.getCurAudioFileId();
 

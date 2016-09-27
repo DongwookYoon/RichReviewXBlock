@@ -81,12 +81,12 @@
             }
         };
 
-        pub.stop = function(to_upload){
+        pub.stop = function(to_upload, timed_out){
             if(options.ui_type === r2App.RecordingUI.WAVEFORM){
                 r2.recordingStop.waveform(to_upload);
             }
             else{
-                r2.recordingStop.transcription(to_upload);
+                r2.recordingStop.transcription(to_upload, timed_out);
             }
         };
 
@@ -129,6 +129,7 @@
                 function(){
                     /* begin audio recording */
                     r2.audioRecorder.BgnRecording();
+                    r2.recordingTimeOut.bgnRecording();
 
                     /* update system variables */
                     r2App.cur_recording_asyn_delta_t = r2App.cur_time-r2App.cur_recording_asyn_delta_t;
@@ -283,13 +284,14 @@
         pub.waveform = function(to_upload){
             run(to_upload, onPieceAudio);
         };
-        pub.transcription = function(to_upload){
-            run(to_upload, onPieceTranscription);
+        pub.transcription = function(to_upload, timed_out){
+            run(to_upload, onPieceTranscription, timed_out);
         };
 
-        var run = function(to_upload, funcOn){
+        var run = function(to_upload, funcOn, timed_out){
             // stop recording mode
             r2App.mode = r2App.AppModeEnum.IDLE;
+            r2.recordingTimeOut.endRecording();
 
             /* end audio recording */
             r2.audioRecorder.EndRecording().then(
@@ -331,6 +333,10 @@
                     r2App.invalidate_page_layout = true;
                     r2App.invalidate_dynamic_scene = true;
                     r2App.invalidate_static_scene = true;
+                    if(timed_out){
+                        alert('You can record voice up to '+Math.floor(r2Const.TIMEOUT_VOICE_COMMENTING/1000)+
+                            ' sec long');
+                    }
 
                     funcOn();
                 }
@@ -350,7 +356,6 @@
     r2.recordingUpdate = function(){
         var l = r2.audioRecorder.getRecorder().getPower();
         var dbs = l[l.length-1];
-        //console.log(dbs, l.length);
         {
             r2App.cur_recording_annot.UpdateDbs(dbs);
             r2.util.lastOf(r2App.cur_recording_pieceaudios).UpdateAudioDbsRecording(r2App.cur_time-r2App.cur_recording_annot.GetBgnTime());
@@ -389,4 +394,31 @@
             r2.PieceAudio.prototype.NormalizePieceAudio(r2App.cur_recording_pieceaudios, refresh_all = false);
         }
     };
+
+    r2.recordingTimeOut = (function(){
+        var pub = {};
+
+        var t = 0;
+        var now_rec = false;
+
+        pub.bgnRecording = function(){
+            now_rec = true;
+            t = (new Date()).getTime();
+        };
+
+        pub.endRecording= function(){
+            now_rec = false;
+        };
+
+        pub.checkTimeout = function(){
+            if(now_rec){
+                if( (new Date()).getTime() - t > r2Const.TIMEOUT_VOICE_COMMENTING){
+                    r2.recordingCtrl.stop(true, true); /* to upload, timed out */
+                    r2.log.Log_Simple("Recording_Stop_TimeOut");
+                }
+            }
+        };
+
+        return pub;
+    }())
 }(window.r2 = window.r2 || {}));

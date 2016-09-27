@@ -1327,6 +1327,14 @@ div.simplespeech_tooltip > div.arrow_up {
 
 div.tooltip_audio_waveform {
   display: inline-block;
+  margin-left:0;
+}
+
+div.tooltip_audio_waveform > p {
+  position: absolute;
+  right: 0;
+  font-size: 20px;
+  padding: 4px;
 }
 
 div.tooltip_audio_waveform canvas{

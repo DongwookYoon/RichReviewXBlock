@@ -135,6 +135,34 @@ exports.DoesBlobExist = function(ctx){
     });
 };
 
+exports.GetBlobToText = function(ctx){
+    return new Promise(function(resolve, reject){
+        blob_svc.getBlobToText(ctx.container, ctx.blob, function(err, resp){
+            if(err){
+                reject(err)
+            }
+            else{
+                ctx.text = resp;
+                resolve(ctx);
+            }
+        });
+    });
+};
+
+exports.SetBlobFromText = function(ctx){
+    return new Promise(function(resolve, reject){
+        blob_svc.createBlockBlobFromText(ctx.container, ctx.blob, ctx.text, function(err, resp){
+            if(err){
+                reject(err)
+            }
+            else{
+                ctx.resp = resp;
+                resolve(ctx);
+            }
+        });
+    });
+};
+
 exports.CreateBlobFromLocalFile = function(ctx){
     return new Promise(function(resolve, reject){
         if(ctx.is_blob_exist){

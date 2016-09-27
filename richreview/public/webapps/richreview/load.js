@@ -12,6 +12,8 @@
         return msg;
     };
 
+    r2.CDN_URL = 'https://richreview.azureedge.net';
+
     r2.runSerialPromises = (function(){
         var runSerialPromises = function(promiseFuncs, rtns){
             if(typeof rtns === 'undefined'){
@@ -89,31 +91,31 @@
             var scripts = [
                 ['https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/smoothness/jquery-ui.css', 'css'],
                 ['https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js', 'js'],
-                ['https://richreview.azureedge.net/lib/font-awesome-4.6.3/css/font-awesome.min.css', 'css'],
-                ['https://richreview.azureedge.net/lib/font-awesome-animation.min.css', 'css'],
-                ['https://richreview.azureedge.net/lib/pdfjs/pdf.js', 'js'],
-                ['https://richreview.azureedge.net/lib/sha1.js', 'js'],
-                ['https://richreview.azureedge.net/lib/vec2.min.js', 'js'],
-                ['https://richreview.azureedge.net/lib/bowser.js', 'js'],
-                ['stylesheets/style.css', 'css'],
-                ['lib_ext/recorder/recorder.js', 'js'],
-                ['lib_ext/bluemix/bluemix_socket.js', 'js'],
-                ['lib_ext/bluemix/bluemix_utils.js', 'js'],
-                ['r2/audio_utils.js', 'js'],
-                ['lib_ext/newspeak-ui.js', 'js'],
-                ['lib_ext/transcription-ui.js', 'js'],
-                ['r2/utils.js', 'js'],
-                ['r2/helpers.js', 'js'],
-                ['r2/shared_objs.js', 'js'],
-                ['r2/model/dom_model.js', 'js'],
-                ['r2/model/doc_model_legacy.js', 'js'],
-                ['r2/model/doc_model.js', 'js'],
-                ['r2/controller/controller_cmds.js', 'js'],
-                ['r2/controller/controller_dbs.js', 'js'],
-                ['r2/controller/controller_event.js', 'js'],
-                ['r2/controller/controller_ctrl.js', 'js'],
-                ['r2/controller/controller_recording.js', 'js'],
-                ['r2/app.js', 'js']
+                [r2.CDN_URL + '/lib/font-awesome-4.6.3/css/font-awesome.min.css', 'css'],
+                [r2.CDN_URL + '/lib/font-awesome-animation.min.css', 'css'],
+                [r2.CDN_URL + '/lib/pdfjs/pdf.js', 'js'],
+                [r2.CDN_URL + '/lib/sha1.js', 'js'],
+                [r2.CDN_URL + '/lib/vec2.min.js', 'js'],
+                [r2.CDN_URL + '/lib/bowser.js', 'js'],
+                [r2.CDN_URL + '/richreview/stylesheets/style.css', 'css'],
+                [r2.CDN_URL + '/richreview/lib_ext/recorder/recorder.js', 'js'],
+                [r2.CDN_URL + '/richreview/lib_ext/bluemix/bluemix_socket.js', 'js'],
+                [r2.CDN_URL + '/richreview/lib_ext/bluemix/bluemix_utils.js', 'js'],
+                [r2.CDN_URL + '/richreview/r2/audio_utils.js', 'js'],
+                [r2.CDN_URL + '/richreview/lib_ext/newspeak-ui.js', 'js'],
+                [r2.CDN_URL + '/richreview/lib_ext/transcription-ui.js', 'js'],
+                [r2.CDN_URL + '/richreview/r2/utils.js', 'js'],
+                [r2.CDN_URL + '/richreview/r2/helpers.js', 'js'],
+                [r2.CDN_URL + '/richreview/r2/shared_objs.js', 'js'],
+                [r2.CDN_URL + '/richreview/r2/model/dom_model.js', 'js'],
+                [r2.CDN_URL + '/richreview/r2/model/doc_model_legacy.js', 'js'],
+                [r2.CDN_URL + '/richreview/r2/model/doc_model.js', 'js'],
+                [r2.CDN_URL + '/richreview/r2/controller/controller_cmds.js', 'js'],
+                [r2.CDN_URL + '/richreview/r2/controller/controller_dbs.js', 'js'],
+                [r2.CDN_URL + '/richreview/r2/controller/controller_event.js', 'js'],
+                [r2.CDN_URL + '/richreview/r2/controller/controller_ctrl.js', 'js'],
+                [r2.CDN_URL + '/richreview/r2/controller/controller_recording.js', 'js'],
+                [r2.CDN_URL + '/richreview/r2/app.js', 'js']
             ];
 
             var promises = scripts.map(function(script){

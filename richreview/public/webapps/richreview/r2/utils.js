@@ -273,7 +273,7 @@
                     type: "POST",
                     url: url,
                     data: msg,
-                    timeout: 3000, // in milliseconds
+                    timeout: 5000, // in milliseconds
                     success: function(data) {
                         resolve(data);
                     },

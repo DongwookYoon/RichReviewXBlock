@@ -1388,7 +1388,7 @@
             }
         }.bind(this));
 
-        this.newspeak = new r2.newspeakUI(this.dom_textbox, this._annotid, this.annotids);
+        this.newspeak = new r2.newspeakUI(this.dom_textbox, this._annotid, this.annotids, this._username === r2.userGroup.cur_user.name);
         this.newspeak.fitDomSize = function() {
             if(this.updateSizeWithTextInput()){
                 r2App.invalidate_size = true;

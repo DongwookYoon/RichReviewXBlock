@@ -5,7 +5,7 @@
 (function(r2) {
     'use strict';
 
-    r2.newspeakUI = function (_textbox, _annotid, _annotids) {
+    r2.newspeakUI = function (_textbox, _annotid, _annotids, _mycomment) {
         var pub = {};
         var $tbox = $(_textbox);
         var token_buffer = [];
@@ -14,6 +14,7 @@
         var annotid = _annotid;
         var cur_gesture_replay = null;
         var first = false;
+        var mycomment = _mycomment;
 
         pub.bgnCommenting = function(){
             r2App.is_recording_or_transcribing = true;
@@ -93,6 +94,12 @@
             function selectionCb(e){
                 pub.saveAnchorSpan();
             }
+            /*
+            if(!mycomment){
+                $tbox.children('span').mouseup(function(e){
+                    console.log(e.target);
+                })
+            }*/
         }
 
         function getAnchoredSpan(){

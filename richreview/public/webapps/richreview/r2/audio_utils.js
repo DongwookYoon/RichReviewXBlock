@@ -272,6 +272,9 @@
         };
 
         pub.play = function(s, _annot_id, cbLoadingBgn, cbLoadingEnd){
+
+            r2.log.Log_SpeechSynth(s);
+
             if(typeof synth === 'undefined'){
                 alert('We cannot replay this audio comment, since the Speech Synthesis Engine is disabled in your browser. We recommend using the latest Chrome browser.');
                 var err = new Error('Speech Synthesis disabled');

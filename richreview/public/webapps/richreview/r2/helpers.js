@@ -12,6 +12,8 @@
 
         var l = [];
 
+        var TEXTONLY_TEMPLATE = ['cheatsheet', 'cornellx_intro', 'modal-window-intro-video', 'onscrbtns'];
+
         pub.initHT = function(){
             var p = Promise.resolve();
             l.forEach(function(template){
@@ -30,7 +32,12 @@
         };
 
         pub.loadOnce = function(name){
-            return r2.util.getUrlData(r2.CDN_SUBURL+'/html_templates/' + name + '.html', '');
+            if(!r2.ctx.text_only || TEXTONLY_TEMPLATE.indexOf(name)<0){
+                return r2.util.getUrlData(r2.CDN_SUBURL+'/html_templates/' + name + '.html', '');
+            }
+            else{
+                return r2.util.getUrlData(r2.CDN_SUBURL+'/html_templates/' + name + '_textonly.html', '');
+            }
         };
 
         return pub;
@@ -129,9 +136,10 @@
         };
 
         pub.hide = function(template_name){
-            var x = $dom.children();
+            if($dom === null){
+                setDoms();
+            }
             $dom.children('#'+template_name).remove();
-            var x = $dom.children();
             if($dom.children().length === 0){
                 $('#r2_app_container').css('overflow', 'hidden');
                 $dom.css('display', 'none');
@@ -211,15 +219,17 @@
 
             pub.AddItem("Moving in Page", ": Use the SCROLL-BAR", "translate");
             pub.AddItem("Zooming In/Out", ": PRESS '+'/'-' Buttons on the top menu bar'", null);//"zooming.");
-            pub.AddItem("Commenting with Voice", ": PRESS-ENTER to start recording, PRESS-ENTER again to stop", null);//"enter_voice");
+            if(!r2.ctx.text_only)
+                pub.AddItem("Commenting with Voice", ": PRESS-ENTER to start recording, PRESS-ENTER again to stop", null);//"enter_voice");
             pub.AddItem("Commenting with Text", ": Click the KEYBOARD Button", null);//"enter_text");
-            pub.AddItem("Pointing while Speaking", ": Start-VOICE-Recording + DRAG-with-LEFT-Click", "spotlight");
+            if(!r2.ctx.text_only)
+                pub.AddItem("Pointing while Speaking", ": Start-VOICE-Recording + DRAG-with-LEFT-Click", "spotlight");
             //pub.AddItem("Indexing Waveform", ": LEFT-Click over Waveform", "waveform_indexing");
             //pub.AddItem("Indexing Pointing Gesture", ": LEFT-Click over a Gesture's trace", "spotlight_indexing");
             //pub.AddItem("Highlighting (Private)", ": HOLD-CTRL + DRAG-with-LEFT-Click", "highlight");
             //pub.AddItem("Commenting (Private)", ": HOLD-CTRL + PRESS-ENTER", "private_note");
             //pub.AddItem("Publishing Private Comment", ": Click 'Publish Button'", "publish_private");
-            pub.AddItem("Deleting Voice Comment", ": HOVER the cursor on 'Play Button' and select 'TRASH CAN'", "delete_voice");
+            pub.AddItem("Deleting a Comment", ": HOVER the cursor on 'Play Button' and select 'TRASH CAN'", "delete_voice");
 
             $cheatsheet.find(".item").hover(
                 function(){
@@ -324,6 +334,7 @@
             $('#modal-window-intro-video').modal('hide');
         };
         pub.show = function(){
+            r2.log.Log_Simple('TutorialVideo');
             $('#modal-window-intro-video').modal('show');
             r2.util.resetCookie("r2_intro_video_never_show_again");
         };
@@ -459,6 +470,12 @@
 
         pub.Log_Simple = function(op) {
             log_q.push(getLogTemplate(op));
+        };
+
+        pub.Log_SpeechSynth= function(s) {
+            var log = getLogTemplate('SpeechSynth');
+            log.s = s;
+            log_q.push(log);
         };
 
         pub.Log_Nav = function(input){
@@ -1849,7 +1866,8 @@
 
                 pub.is_mobile = bowser.mobile === true ? true : false;
 
-                r2.log.Log_Simple('OpenBrowser:'+bowser.name+'_'+bowser.version+'_'+pub.is_mobile);
+                r2App.cur_time = (new Date()).getTime();
+                r2.log.Log_Simple('OpenBrowser:'+bowser.name+'/'+bowser.version+'/'+bowser.mac+'/'+bowser.windows+'/'+bowser.ios+'/'+pub.is_mobile);
                 if(pub.browser.etc){
                     r2.coverMsg.showUnsupportedBrowser();
                     console.error('Unsupported browser.');

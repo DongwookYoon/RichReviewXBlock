@@ -273,30 +273,42 @@
         }
 
         function initAudioRecorder(){
-            return r2.coverMsg.showMicSetup()
-                .then(r2.audioRecorder.Init)
-                .then(function(){
-                    r2App.browser_support.audio_recording = true;
-                    r2.coverMsg.hideMicSetup();
-                })
-                .catch(
-                    function (err){
-                        r2App.browser_support.audio_recording = false;
+            if(r2.ctx.text_only){
+                r2.coverMsg.hideMicSetup();
+                return Promise.resolve();
+            }
+            else{
+                return r2.coverMsg.showMicSetup()
+                    .then(r2.audioRecorder.Init)
+                    .then(function(){
+                        r2App.browser_support.audio_recording = true;
                         r2.coverMsg.hideMicSetup();
-                        console.error('AudioInitFailed');
-                        console.error(err);
-                        r2.coverMsg.showMicFailed();
-                    }
-                );
+                    })
+                    .catch(
+                        function (err){
+                            r2App.browser_support.audio_recording = false;
+                            r2.coverMsg.hideMicSetup();
+                            console.error('AudioInitFailed');
+                            console.error(err);
+                            r2.coverMsg.showMicFailed();
+                        }
+                    );
+            }
         }
 
         function initSpeechSynthesizer(){
-            if(r2.speechSynth.init()){
-                r2App.browser_support.speech_synthesis = true;
+            if(r2.ctx.text_only){
+                r2App.browser_support.speech_synthesis = false;
+                return Promise.resolve();
             }
             else{
-                r2App.browser_support.speech_synthesis = false;
-                r2.coverMsg.showSpeechSynthFailed();
+                if(r2.speechSynth.init()){
+                    r2App.browser_support.speech_synthesis = true;
+                }
+                else{
+                    r2App.browser_support.speech_synthesis = false;
+                    r2.coverMsg.showSpeechSynthFailed();
+                }
             }
             return Promise.resolve();
         }
@@ -490,7 +502,7 @@
             // prevent data loss
             window.onbeforeunload = function () {
                 localStorage.clear();
-                //r2.log.SyncLog('WebAppEnd');
+                r2.log.Log_Simple('CloseBrowser');
                 r2.log.Consume(false); // delayed
                 var now_typing = r2.keyboard.getMode() === r2.KeyboardModeEnum.TEXTBOX &&
                         r2App.cur_focused_piece_keyboard != null &&

@@ -142,7 +142,7 @@
                 }
                 else if (r2App.mode === r2App.AppModeEnum.REPLAYING) {
                     r2.speechSynth.cancel();
-                    r2.log.Log_AudioStop('stop_btn', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
+                    r2.log.Log_Simple('NewSpeak_Stop_SPACE');
                     e.preventDefault();
                 }
             }
@@ -354,6 +354,7 @@
                     anchor_n = i;
             }
 
+            r2.log.Log_Simple('NewSpeak_PlayInside_'+anchor_n+'_'+sentences.length);
 
             var serialPlay = function(i){
                 if(i < sentences.length){
@@ -373,11 +374,13 @@
                 }
             };
             serialPlay(anchor_n);
+
             return;
         };
 
         pub.Stop = function(){
             r2.speechSynth.cancel();
+            r2.log.Log_Simple('NewSpeak_Stop_PIECE');
         };
 
         init();

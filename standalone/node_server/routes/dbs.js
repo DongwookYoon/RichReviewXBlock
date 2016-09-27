@@ -447,6 +447,7 @@ var GetDocGroups = function(req, res){
 };
 
 var WebAppLogs = function(req, res){
+    console.log(req.body.logs);
     R2D.Logs(req.body.group_n, req.body.logs)
         .then(function() {
             js_utils.PostResp(res, req, 200);

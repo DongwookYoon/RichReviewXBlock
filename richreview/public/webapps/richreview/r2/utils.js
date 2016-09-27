@@ -27,7 +27,7 @@
                 }
                 detail += window.location.href;
                 if(bowser){
-                    detail += ' [' + bowser.name + '/' + bowser.version + '/' + bowser.mac + '/' + bowser.windows + '/' + bowser.ios + ']';
+                    detail += ' ['+bowser.name+'/'+bowser.version+'/'+bowser.mac+'/'+bowser.windows+'/'+bowser.ios+'/'+pub.is_mobile+']';
                 }
                 detail = detail.replace(/(\r\n|\n|\r)/gm,"<n>");
 

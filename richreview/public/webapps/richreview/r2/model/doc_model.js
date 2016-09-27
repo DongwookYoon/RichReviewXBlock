@@ -1259,7 +1259,6 @@
         cmd.data.text = this.dom_textbox.innerHTML;
         cmd.target = this.GetTargetData();
         cmd.data.annot = r2App.annots[this.annotids[this.annotids.length-1]].ExportToCmd();
-        console.log('Base:',cmd.data.aid, this.annotids[this.annotids.length-1]);
         return cmd;
     };
     r2.PieceNewSpeak.prototype.ExportToTextChange = function(){

@@ -518,6 +518,7 @@
                                         }
                                     }
                                     else if(piece.newspeak){
+                                        r2.log.Log_Simple('NewSpeak_Play_BUTTON');
                                         piece.Play(
                                             function() {
                                                 r2.radialMenu.bgnLoading('rm_' + r2.util.escapeDomId(annot_id));
@@ -526,10 +527,7 @@
                                                 r2.radialMenu.endLoading('rm_' + r2.util.escapeDomId(annot_id));
                                             }
                                         );
-                                        r2.log.Log_AudioPlay('play_btn', annot_id, null);
                                     }
-
-                                    r2.log.Log_AudioPlay('play_btn', annot_id, r2.audioPlayer.getPlaybackTime());
                                 }
                                 else if (r2App.mode === r2App.AppModeEnum.REPLAYING) {
                                     var piece = r2App.pieces_cache[pid];
@@ -555,11 +553,12 @@
                                     else if(piece.newspeak){
                                         if (r2App.cur_annot_id === annot_id) {
                                             r2.speechSynth.cancel();
-                                            r2.log.Log_AudioStop('stop_btn', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
+                                            r2.log.Log_Simple('NewSpeak_Stop_BUTTON');
                                         }
                                         else {
                                             r2.speechSynth.cancel()
                                                 .then(function(){
+                                                    r2.log.Log_Simple('NewSpeak_Play_ANOTHERBUTTONPLAY');
                                                     piece.Play(
                                                         function() {
                                                             r2.radialMenu.bgnLoading('rm_' + r2.util.escapeDomId(annot_id));
@@ -568,8 +567,8 @@
                                                             r2.radialMenu.endLoading('rm_' + r2.util.escapeDomId(annot_id));
                                                         }
                                                     );
-                                                    r2.log.Log_AudioPlay('play_btn', annot_id, null);
                                                 });
+                                            r2.log.Log_Simple('NewSpeak_Stop_ANOTHERBUTTONPLAY');
                                         }
                                     }
                                 }

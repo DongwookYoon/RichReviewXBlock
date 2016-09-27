@@ -178,6 +178,7 @@ exports.get_discuss_rr = function(req, res){
                     r2_ctx.lti_data.user = req.user;
                     r2_ctx.lti_data.group = grp_data;
                     r2_ctx.groupid = grp_data.id;
+                    r2_ctx.text_only = parseInt(grp_data.id.slice(0, grp_data.id.indexOf('_')))%2 === 0 ? false : true;
                     var promises = r2_ctx.lti_data.group.users.map(function (user_id) {
                         return LtiEngine.UserMgr.getById(user_id);
                     });
@@ -358,6 +359,19 @@ var WebAppLogs = function(req, res){
     }
 };
 
+var GetUploadSas = function(req, res){
+    if(req.user){
+        var filename = "audio/"+req.body.fname+".wav";
+        filename = filename.replace(":", "_");
+        var sas = azure.getSas('data', filename, 300);// 5 minutes
+        js_utils.PostResp(res, req, 200, {sas: sas, url: azure.BLOB_HOST+'data/'+filename});
+        return null;
+    }
+    else{
+        js_utils.PostResp(res, req, 400, 'Invalid user identity');
+    }
+};
+
 exports.post_dbs = function(req, res){
     switch(req.query['op']){
         case 'del_user':
@@ -380,6 +394,9 @@ exports.post_dbs = function(req, res){
             break;
         case 'UploadCmd':
             uploadCmd(req, res);
+            break;
+        case "GetUploadSas":
+            GetUploadSas(req, res);
             break;
         default:
             handleLtiError(req, res, 'Invalid post operation : '+ req.query['op']);

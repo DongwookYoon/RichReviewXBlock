@@ -40,7 +40,13 @@
             $tbox.append($('<span id="test">fox</span>'));
             $tbox.append($('<span> </span>'));
             $tbox.append($('<span> jumps.</span>'));
-            
+
+            $g = $('<div>');
+            $p = $('<div>');
+            $c = $('<div>');
+            $g.append($p);
+            $p.append($c);
+
             var $spans = $tbox.children('span');
             var cuts = [];
             for(var i = 0; i < $spans.length; ++i){

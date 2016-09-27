@@ -83,6 +83,9 @@
             $tbox[0].addEventListener('blur', function(e) {
                 document.removeEventListener('selectionchange', selectionCb);
             });
+            $tbox[0].addEventListener('keyup', selectionCb);
+            $tbox[0].addEventListener('mouseup', selectionCb);
+
             $tbox[0].addEventListener('keydown', onKeyDown);
             $tbox[0].addEventListener('keyup', function(){
                 pub.fitDomSize();

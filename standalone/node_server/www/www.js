@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+var fs = require("fs");
+var os = require("os");
 
 if(typeof v8debug === 'object'){
     process.env.NODE_ENV = 'development';
@@ -16,12 +18,12 @@ var gracefulFs = require('graceful-fs');
 gracefulFs.gracefulify(realFs);
 
 var webAppSync = (function(){
-    var HASHFILE = 'richreview_webapp_hash.txt';
+    var HOSTNAME = os.hostname() === 'richreview' ? 'richreview' : 'localhost';
+    var HASHFILE = HOSTNAME+'/richreview_webapp_hash.txt';
     var WEBAPP_PATH = './../../../richreview/public/webapps/richreview/';
 
     var Promise = require("promise");
     var crypto = require('crypto');
-    var fs = require('fs');
     var azure = require('../lib/azure');
     var js_utils = require("../lib/js_utils");
 
@@ -106,7 +108,7 @@ var webAppSync = (function(){
         var promises = files.map(function(file){
             return azure.CreateBlobFromLocalFile({
                 container: 'cdn',
-                blob: 'richreview/'+file.slice(WEBAPP_PATH.length, file.length),
+                blob: HOSTNAME+'/'+file.slice(WEBAPP_PATH.length, file.length),
                 blob_localfile_path: file
             })
         });
@@ -119,8 +121,6 @@ var webAppSync = (function(){
 
 var runServer = function() {
     var app = require('../app');
-    var fs = require("fs");
-    var os = require("os");
     var hostname = os.hostname();
     if (hostname == 'richreview') { // on richreview.net
         httpsPort = 443;

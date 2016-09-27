@@ -1011,6 +1011,13 @@ body::-webkit-scrollbar-corner {
   display: none;
 }
 
+#modal-window-intro-video p {
+  margin: 1em 0 0.2em 0;
+}
+#modal-window-intro-video ul {
+  margin: 0;
+}
+
 .modal-dialog {
   margin: 200px auto;
 }

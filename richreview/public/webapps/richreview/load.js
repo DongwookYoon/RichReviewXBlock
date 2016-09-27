@@ -13,6 +13,7 @@
     };
 
     r2.CDN_URL = 'https://richreview.azureedge.net';
+    r2.CDN_SUBURL = r2.CDN_URL+'/'+(window.location.hostname==='richreview'?'richreview':'localhost');
 
     r2.runSerialPromises = (function(){
         var runSerialPromises = function(promiseFuncs, rtns){
@@ -97,25 +98,25 @@
                 [r2.CDN_URL + '/lib/sha1.js', 'js'],
                 [r2.CDN_URL + '/lib/vec2.min.js', 'js'],
                 [r2.CDN_URL + '/lib/bowser.js', 'js'],
-                [r2.CDN_URL + '/richreview/stylesheets/style.css', 'css'],
-                [r2.CDN_URL + '/richreview/lib_ext/recorder/recorder.js', 'js'],
-                [r2.CDN_URL + '/richreview/lib_ext/bluemix/bluemix_socket.js', 'js'],
-                [r2.CDN_URL + '/richreview/lib_ext/bluemix/bluemix_utils.js', 'js'],
-                [r2.CDN_URL + '/richreview/r2/audio_utils.js', 'js'],
-                [r2.CDN_URL + '/richreview/lib_ext/newspeak-ui.js', 'js'],
-                [r2.CDN_URL + '/richreview/lib_ext/transcription-ui.js', 'js'],
-                [r2.CDN_URL + '/richreview/r2/utils.js', 'js'],
-                [r2.CDN_URL + '/richreview/r2/helpers.js', 'js'],
-                [r2.CDN_URL + '/richreview/r2/shared_objs.js', 'js'],
-                [r2.CDN_URL + '/richreview/r2/model/dom_model.js', 'js'],
-                [r2.CDN_URL + '/richreview/r2/model/doc_model_legacy.js', 'js'],
-                [r2.CDN_URL + '/richreview/r2/model/doc_model.js', 'js'],
-                [r2.CDN_URL + '/richreview/r2/controller/controller_cmds.js', 'js'],
-                [r2.CDN_URL + '/richreview/r2/controller/controller_dbs.js', 'js'],
-                [r2.CDN_URL + '/richreview/r2/controller/controller_event.js', 'js'],
-                [r2.CDN_URL + '/richreview/r2/controller/controller_ctrl.js', 'js'],
-                [r2.CDN_URL + '/richreview/r2/controller/controller_recording.js', 'js'],
-                [r2.CDN_URL + '/richreview/r2/app.js', 'js']
+                [r2.CDN_SUBURL + '/stylesheets/style.css', 'css'],
+                [r2.CDN_SUBURL + '/lib_ext/recorder/recorder.js', 'js'],
+                [r2.CDN_SUBURL + '/lib_ext/bluemix/bluemix_socket.js', 'js'],
+                [r2.CDN_SUBURL + '/lib_ext/bluemix/bluemix_utils.js', 'js'],
+                [r2.CDN_SUBURL + '/r2/audio_utils.js', 'js'],
+                [r2.CDN_SUBURL + '/lib_ext/newspeak-ui.js', 'js'],
+                [r2.CDN_SUBURL + '/lib_ext/transcription-ui.js', 'js'],
+                [r2.CDN_SUBURL + '/r2/utils.js', 'js'],
+                [r2.CDN_SUBURL + '/r2/helpers.js', 'js'],
+                [r2.CDN_SUBURL + '/r2/shared_objs.js', 'js'],
+                [r2.CDN_SUBURL + '/r2/model/dom_model.js', 'js'],
+                [r2.CDN_SUBURL + '/r2/model/doc_model_legacy.js', 'js'],
+                [r2.CDN_SUBURL + '/r2/model/doc_model.js', 'js'],
+                [r2.CDN_SUBURL + '/r2/controller/controller_cmds.js', 'js'],
+                [r2.CDN_SUBURL + '/r2/controller/controller_dbs.js', 'js'],
+                [r2.CDN_SUBURL + '/r2/controller/controller_event.js', 'js'],
+                [r2.CDN_SUBURL + '/r2/controller/controller_ctrl.js', 'js'],
+                [r2.CDN_SUBURL + '/r2/controller/controller_recording.js', 'js'],
+                [r2.CDN_SUBURL + '/r2/app.js', 'js']
             ];
 
             var promises = scripts.map(function(script){

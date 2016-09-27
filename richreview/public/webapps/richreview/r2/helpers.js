@@ -30,7 +30,7 @@
         };
 
         pub.loadOnce = function(name){
-            return r2.util.getUrlData(r2.CDN_URL+'/richreview/html_templates/' + name + '.html', '');
+            return r2.util.getUrlData(r2.CDN_SUBURL+'/html_templates/' + name + '.html', '');
         };
 
         return pub;

@@ -553,8 +553,7 @@ var r2Ctrl = {};
                         pub.mode = r2.MouseModeEnum.LDN;
                         pos_dn = new_mouse_pt;
                         if(r2App.mode == r2App.AppModeEnum.IDLE || r2App.mode == r2App.AppModeEnum.REPLAYING){
-                            /*if(r2.keyboard.ctrlkey_dn)
-                                r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.annot_private_spotlight);// no private spotlight */
+                            ;
                         }
                         else if(r2App.mode == r2App.AppModeEnum.RECORDING){
                             r2.spotlightCtrl.recordingSpotlightDn(r2.viewCtrl.mapScrToDoc(new_mouse_pt), r2App.cur_recording_annot);

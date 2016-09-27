@@ -59,8 +59,12 @@
         };
 
         pub.saveAnchorSpan = function(){
-            anchor_span = getAnchoredSpan();
-            if(anchor_span){$anchor_span = $(anchor_span);}
+            if(r2App.mode !== r2App.AppModeEnum.RECORDING) {
+                anchor_span = getAnchoredSpan();
+                if (anchor_span) {
+                    $anchor_span = $(anchor_span);
+                }
+            }
         };
 
         pub.drawDynamic = function(canvas_ctx){
@@ -124,10 +128,30 @@
                 else{
                     if(r2App.mode === r2App.AppModeEnum.RECORDING){
                         r2.recordingCtrl.stop(true); // to_upload
-                        r2.log.Log_Simple("Recording_Stop");
+                        r2.log.Log_Simple("Recording_Stop_ENTER");
                         e.preventDefault();
                     }
                 }
+            }
+            if(e.keyCode === r2.keyboard.CONST.KEY_SPACE){
+                if(r2App.mode === r2App.AppModeEnum.RECORDING) {
+                    r2.recordingCtrl.stop(true); // to_upload
+                    r2.log.Log_Simple("Recording_Stop_SPACE");
+                    e.preventDefault();
+                }
+                else if (r2App.mode === r2App.AppModeEnum.REPLAYING) {
+                    r2.speechSynth.cancel();
+                    r2.log.Log_AudioStop('stop_btn', r2.audioPlayer.getCurAudioFileId(), r2.audioPlayer.getPlaybackTime());
+                    e.preventDefault();
+                }
+            }
+            if(e.keyCode === r2.keyboard.CONST.KEY_ESC){
+                r2.recordingCtrl.stop(true); // to_upload
+                r2.log.Log_Simple("Recording_Stop_ESC");
+                e.preventDefault();
+            }
+            if(r2App.mode === r2App.AppModeEnum.RECORDING) {
+                e.preventDefault();
             }
             normalizeSpans();
         }

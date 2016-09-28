@@ -2265,6 +2265,7 @@
 
             status.ncomments = mycomments.length;
             status.nreplies = Object.keys(replied_users).length;
+            status.ncomments = Math.max(0, status.ncomments-status.nreplies);
 
             return status;
         }

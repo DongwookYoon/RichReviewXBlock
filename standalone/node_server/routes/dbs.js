@@ -520,6 +520,27 @@ var GetRrrDatabase = function(req, res){
         })
 };
 
+var UploadRrrJson = function(req, res){
+    RedisClient.RPUSH('rrr_json', typeof req.body.json === 'string' ? req.body.json : JSON.stringify(req.body.json))
+        .then(function(){
+            js_utils.PostResp(res, req, 200);
+        })
+        .catch(function(err){
+            js_utils.PostResp(res.req, 400, err);
+        })
+};
+
+var GetRrrJson = function(req, res){
+    "use strict";
+    RedisClient.LRANGE('rrr_json', 0, -1)
+        .then(function(resp){
+            js_utils.PostResp(res, req, 200, resp);
+        })
+        .catch(function(err){
+            js_utils.PostResp(res.req, 400, err);
+        });
+};
+
 exports.post = function(req, res){
     switch(req.query['op']){
         case "GetMyself":
@@ -593,6 +614,12 @@ exports.post = function(req, res){
             break;
         case "GetRrrDatabase":
             GetRrrDatabase(req, res);
+            break;
+        case "UploadRrrJson":
+            UploadRrrJson(req, res);
+            break;
+        case "GetRrrJson":
+            GetRrrJson(req, res);
             break;
         default:
             js_utils.PostResp(res, req, 500, "Unidentified request: "+req.query['op']);

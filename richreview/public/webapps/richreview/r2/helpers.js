@@ -2245,12 +2245,16 @@
                 }
                 return false;
             }
+            function isReply(obj){
+                var parent = obj.GetParent();
+                return parent && parent.getUsername;
+            }
 
             var status = {ncomments: 0, nreplies:0};
             var mycomments = [];
             for(var pid in r2App.pieces_cache){
                 var piece = r2App.pieces_cache[pid];
-                if(isMine(piece)){
+                if(!isReply(piece) && isMine(piece)){
                     mycomments.push(piece);
                 }
             }
@@ -2258,14 +2262,14 @@
             var replied_users = {};
             for(var i = 0; i < mycomments.length; ++i){
                 var parent = mycomments[i].GetParent();
-                if(parent && parent.getUsername && !isMine(parent)){
+                if(isReply(mycomments[i]) && !isMine(parent)){
                     replied_users[parent.getUsername()] = true;
                 }
             }
 
             status.ncomments = mycomments.length;
             status.nreplies = Object.keys(replied_users).length;
-            status.ncomments = Math.max(0, status.ncomments-status.nreplies);
+            status.ncomments = status.ncomments;
 
             return status;
         }

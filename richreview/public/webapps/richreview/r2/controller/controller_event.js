@@ -1408,6 +1408,7 @@ var r2Ctrl = {};
 
             r2App.invalidate_size = true;
             r2App.invalidate_page_layout = true;
+            r2.scoreIndicator.show();
         }
     };
 

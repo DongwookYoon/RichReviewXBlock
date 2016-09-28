@@ -420,7 +420,6 @@
 
         pub.consumeCmd = function(cmd){
             if(cmd.op == "CreateComment"){
-                //console.log(JSON.stringify(cmd));
                 if(cmd.type == "CommentAudio"){
                     addItem(cmd.user, "audio", cmd.data.aid);
                 }
@@ -2200,6 +2199,109 @@
 
         return pub_ta;
 
+    }());
+
+    r2.scoreIndicator = (function(){
+        var pub = {};
+
+        var $div = null;
+
+        pub.init = function(){
+            $div = $('#score_indicator');
+            if(r2.ctx.lti){
+                $div.css('display', 'block');
+            }
+        };
+
+        pub.show = function(){
+            if(!r2.ctx.lti){return;}
+
+            var status = getStatus();
+            var str = constructStr(status.ncomments, status.nreplies);
+
+            $div.children('#score').text(str.score);
+            if(status.ncomments < 3 || status.nreplies < 3){
+                $div.children('#goal').css('display', 'block');
+                $div.children('#goal').text(str.goal);
+            }
+            else{
+                $div.children('#goal').css('display', 'none');
+            }
+
+            $div.toggleClass('show', true);
+            setTimeout(pub.hide, 5000);
+        };
+
+        pub.hide = function(){
+            $div.toggleClass('show', false);
+        };
+
+        function getStatus(){
+            function isMine(obj){
+                if(obj.getUsername){
+                    if(obj.getUsername() === r2.userGroup.cur_user.name){
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            var status = {ncomments: 0, nreplies:0};
+            var mycomments = [];
+            for(var pid in r2App.pieces_cache){
+                var piece = r2App.pieces_cache[pid];
+                if(isMine(piece)){
+                    mycomments.push(piece);
+                }
+            }
+
+            var replied_users = {};
+            for(var i = 0; i < mycomments.length; ++i){
+                var parent = mycomments[i].GetParent();
+                if(parent && parent.getUsername && !isMine(parent)){
+                    replied_users[parent.getUsername()] = true;
+                }
+            }
+
+            status.ncomments = mycomments.length;
+            status.nreplies = Object.keys(replied_users).length;
+
+            return status;
+        }
+
+        function constructStr(ncomments, nreplies){
+            var s = {
+                score: 'Current score: ',
+                goal: 'To earn the full score, '
+            };
+
+            var score = (ncomments >= 3 ? 1 : 0) + (nreplies >=3 ? 1 : 0);
+
+            function getStrDetailComment(){
+                return 'make ' + (3-ncomments) + ' more comment' + (ncomments<=1 ? 's' : '');
+            }
+            function getStrDetailReply(){
+                return 'reply to ' + (3-nreplies) + ' other colleague' + (nreplies<=1 ? 's' : '');
+            }
+
+            if(ncomments < 3 || nreplies < 3){
+                if(ncomments<3 && nreplies<3){
+                    s.goal += getStrDetailComment()+' and '+getStrDetailReply()+'.'
+                }
+                else if(ncomments<3){
+                    s.goal += getStrDetailComment()+'.'
+                }
+                else{ // nreplies<3
+                    var sd = getStrDetailReply();
+                    s.goal += sd +'.'
+                }
+            }
+
+            s.score += Math.floor(score) + '.0/2.0';
+            return s;
+        }
+
+        return pub;
     }());
 
 }(window.r2 = window.r2 || {}));

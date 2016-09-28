@@ -37,7 +37,6 @@
                 r2.dom_model.remove(annotid);
                 r2App.doc.RunRecursive("RemoveAnnot", [annotid]);
                 if(r2App.annots[annotid]){ /* when a voice comment */
-                    console.log('>>>>delete:', annotid, r2App.annots[annotid]);
                     delete r2App.annots[annotid];
                 }
                 else{ /* when a typewritten comment*/
@@ -45,6 +44,7 @@
                 }
                 r2App.invalidate_size = true;
                 r2App.invalidate_page_layout = true;
+                r2.scoreIndicator.show();
                 return true;
             }
         }

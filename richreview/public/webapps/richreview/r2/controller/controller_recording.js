@@ -318,8 +318,8 @@
 
                     /* update dom */
                     r2.dom.disableRecordingIndicators();
-
                     r2.dom_model.cbRecordingStop(r2App.cur_recording_piece.GetAnnotId());
+                    r2.scoreIndicator.show();
 
                     if(r2App.cur_recording_piece.onEndRecording)
                         r2App.cur_recording_piece.onEndRecording(result.url);

@@ -472,8 +472,8 @@
             r2.modalWindowLoading.hideModalWindow();
             r2.modalWindowIntro.Init();
             r2.log.Log_Simple('DoneLoading');
-            //r2.log.SyncLog('WebAppBgn');
 
+            r2.scoreIndicator.init();
             r2.pageNumBox.init();
         }
 

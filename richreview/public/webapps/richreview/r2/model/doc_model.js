@@ -1290,6 +1290,9 @@
         cmd.target = this.GetTargetData();
         return cmd;
     };
+    r2.PieceNewSpeak.prototype.getUsername = function(){
+        return this._username;
+    };
     r2.PieceNewSpeak.prototype.GetTargetData = function() {
         return {
             type: 'PieceNewSpeak',
@@ -1821,6 +1824,9 @@
 
     r2.PieceKeyboard.prototype.Destructor = function(){
         r2.Piece.prototype.Destructor.apply(this);
+    };
+    r2.PieceKeyboard.prototype.getUsername = function(){
+        return this._username;
     };
     r2.PieceKeyboard.prototype.GetAnchorTo = function(){
         // anchorTo: {type: 'PieceText', id: pid, page: 2} or

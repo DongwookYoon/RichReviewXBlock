@@ -2251,23 +2251,27 @@
             }
 
             var status = {ncomments: 0, nreplies:0};
-            var mycomments = [];
+            var my_original_comments = [];
+            var my_comments = [];
             for(var pid in r2App.pieces_cache){
                 var piece = r2App.pieces_cache[pid];
                 if(!isReply(piece) && isMine(piece)){
-                    mycomments.push(piece);
+                    my_original_comments.push(piece);
+                }
+                if(isMine(piece)){
+                    my_comments.push(piece);
                 }
             }
 
             var replied_users = {};
-            for(var i = 0; i < mycomments.length; ++i){
-                var parent = mycomments[i].GetParent();
-                if(isReply(mycomments[i]) && !isMine(parent)){
+            for(var i = 0; i < my_comments.length; ++i){
+                var parent = my_comments[i].GetParent();
+                if(isReply(my_comments[i]) && !isMine(parent)){
                     replied_users[parent.getUsername()] = true;
                 }
             }
 
-            status.ncomments = mycomments.length;
+            status.ncomments = my_original_comments.length;
             status.nreplies = Object.keys(replied_users).length;
             status.ncomments = status.ncomments;
 
@@ -2283,7 +2287,7 @@
             var score = (ncomments >= 3 ? 1 : 0) + (nreplies >=3 ? 1 : 0);
 
             function getStrDetailComment(){
-                return 'make ' + (3-ncomments) + ' more comment' + (ncomments<=1 ? 's' : '');
+                return 'make ' + (3-ncomments) + ' more new comment' + (ncomments<=1 ? 's' : '');
             }
             function getStrDetailReply(){
                 return 'reply to ' + (3-nreplies) + ' other colleague' + (nreplies<=1 ? 's' : '');

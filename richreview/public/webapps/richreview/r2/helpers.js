@@ -680,6 +680,7 @@
             pub.Clear();
             pub.AddUser( r2Const.LEGACY_USERNAME, "Legacy User", "legacy@email.com", type = "legacy");
             pub.AddUser( "anonymous", "Anonymous", "anonymous@email.com", type = "guest");
+            pub.AddUser( "prerecorded", "Prerecorded", "prerecorded@email.com", type = "legacy");
 
             if(groupdata.users){
                 groupdata.users.forEach(function(user){
@@ -700,7 +701,7 @@
             $('#observer_indicator').css("display", pub.cur_user.isguest ? "block" : "none");
             r2.onScreenButtons.SetUserColor(r2.userGroup.cur_user);
             r2App.invalidate_size = true;
-            return null;
+            return Promise.resolve();
         };
 
         pub.GetUser = function(name){
@@ -711,7 +712,7 @@
          * @returns {boolean}
          */
         pub.IsValidMember = function(name){
-            return users.hasOwnProperty(name) && (!users[name].isguest || name == r2Const.LEGACY_USERNAME);
+            return users.hasOwnProperty(name) && (!users[name].isguest || (name === r2Const.LEGACY_USERNAME || name === 'prerecorded'));
         };
 
         pub.AddUser = function(name, nick, email, type){
@@ -2308,6 +2309,35 @@
 
             s.score += Math.floor(score) + '.0/2.0';
             return s;
+        }
+
+        return pub;
+    }());
+
+    r2.prerecordedComments = (function(){
+        var pub = {};
+
+        pub.init = function(){
+            return getCmds()
+                .then(function(data_str){
+                    var objs = JSON.parse(data_str);
+                    var cmds = [];
+                    for(var i = 0; i < objs.length; ++i){
+                        cmds.push(JSON.stringify(objs[i]));
+                    }
+                    return r2Sync.downloader.processPrerecordedCommands(cmds)
+                        .catch(function(err){
+                            console.error("prerecordedComments");
+                            console.error(err);
+                        });
+                })
+                .catch(function(err){
+                    console.log('no prerecorded comments');
+                })
+        };
+
+        function getCmds(){
+            return r2.util.getUrlData(r2.CDN_URL+'/prerecorded_comments/'+r2.ctx.docid+'.json')
         }
 
         return pub;

@@ -1408,6 +1408,7 @@ div.tooltip_audio_waveform div.arrow_up {
   padding-top: 1.5em;
   -webkit-user-select: all;
   z-index: 8;
+  pointer-events: none;
 }
 
 #cornellx_inst > h2{

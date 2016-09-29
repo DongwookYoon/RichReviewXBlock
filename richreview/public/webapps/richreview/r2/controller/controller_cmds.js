@@ -550,6 +550,7 @@
             // type: 'CommentNewSpeak'
             // anchorTo: {type: 'PieceText or PieceTeared', id: pid, page: 2} or
             // data: {pid:..., aid: ..., text: "this is a", isprivate:}
+            if(r2.ctx.text_only){return true;}
             var anchorpage = doc.GetPage(cmd.anchorTo.page);
 
             var anchorpiece = getAnchorPiece(anchorpage, cmd);

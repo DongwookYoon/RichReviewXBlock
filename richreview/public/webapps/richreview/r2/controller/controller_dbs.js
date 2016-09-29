@@ -58,6 +58,19 @@ var r2Sync = (function(){
                 })
         };
 
+        pub_dn.processPrerecordedCommands = function(cmds){
+            busy = true;
+            return processDownloadedCmds(cmds)
+                .catch(function(err){
+                    console.error(err, err.stack);
+                    err.custom_msg = 'We failed to download data from server. Please check your internet connection and retry.';
+                    r2App.asyncErr.throw(err);
+                })
+                .then(function(){
+                    busy = false;
+                })
+        };
+
         var processDownloadedCmds = function(cmd_strs){
             return new Promise(function(resolve, reject){
                 n_cmds += cmd_strs.length;

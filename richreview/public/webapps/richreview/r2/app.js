@@ -252,6 +252,8 @@
             ).then(
                 r2.pdfRenderer.initPdfRenderer
             ).then(
+                r2.prerecordedComments.init
+            ).then(
                 function(){
                     initR2();
                     initSystem();

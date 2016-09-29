@@ -306,12 +306,13 @@ function setupServices(){
     app.get('/resources',   resources.get);
     app.get('/math2220_sp2016',    course.get);
     app.get('/bluemix_stt_auth', bluemix_stt_auth.get);
-    app.get('/lti_entry',   lti.get_entry);
-    app.get('/lti_failure',   lti.get_failure);
-    app.get('/lti_admin',   lti.get_admin);
-    app.get('/lti_survey', lti.get_survey);
-    app.get('/lti_discuss_rr', lti.get_discuss_rr);
-    app.get('/lti_discuss_bb', lti.get_discuss_bb);
+    app.get('/lti_entry',       lti.get_entry);
+    app.get('/lti_failure',     lti.get_failure);
+    app.get('/lti_admin',       lti.get_admin);
+    app.get('/lti_survey',      lti.get_survey);
+    app.get('/lti_observe',     lti.get_observe);
+    app.get('/lti_discuss_rr',  lti.get_discuss_rr);
+    app.get('/lti_discuss_bb',  lti.get_discuss_bb);
     app.get('/synclog',     _pages.getSyncLog);
 
     // post requests

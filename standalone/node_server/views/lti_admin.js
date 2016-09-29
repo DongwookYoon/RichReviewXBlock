@@ -2,6 +2,9 @@
  * Created by yoon on 8/11/16.
  */
 
+const DISCUSS_DOC_ID = '116730002901619859123_1470324240262';
+const DISCUSS_PDF_ID = '34811a7b62e4461316fc5aab8f655041fc3b01bc';
+
 function createLiButton(text, func){
     var $li = $('<li>');
     var $button = $('<button>');
@@ -169,6 +172,15 @@ function setGroups(user_map, grps, $thead_tr, $tbody, type_str){
             {// id and buttons
                 var $td = $('<td>');
                 var $btn = createDropdownBtn(grp.id);
+                $btn.find('ul').append(
+                    createLiButton(
+                        'observe',
+                        function(){
+                            var queries = '?docid='+DISCUSS_DOC_ID+'&pdfid='+DISCUSS_PDF_ID+'&grpid='+grp.id;
+                            window.open('https://' + window.location.host + '/lti_observe' + queries, '_blank');
+                        }
+                    )
+                );
                 $btn.find('ul').append(
                     createLiButton(
                         'show object',

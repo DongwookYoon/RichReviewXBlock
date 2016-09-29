@@ -198,6 +198,17 @@ var GroupMgr = function(prefix){
         throw new Error('Invalid Group Id');
     };
 
+    this.getById = function(id){
+        return new Promise(function(resolve, reject){
+            if(cache.hasOwnProperty(id)){
+                resolve(cache[id]);
+            }
+            else{
+                reject(new Error('Invalid Group Id'));
+            }
+        });
+    };
+
     this.delById = function(id){
         if(next_grp_id === id){
             next_grp_id = null;

@@ -39,6 +39,10 @@ function setUsers(users){
     var $thead_tr = $('#thead_tr_users');
     var $tbody = $('#tbody_users');
 
+    var hide_email = true;
+    if(hide_email)
+        row_items = ['id', 'nick', 'group', 'status'];
+
     for(i = 0, row_item = null; i < row_items.length; i++){
         row_item = row_items[i];
         $td = $('<td>');

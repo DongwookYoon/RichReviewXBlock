@@ -35,14 +35,74 @@ function getPosts(){
                     return 0;
                 });
                 for(var i = 0; i < cmds.length; i++){
-                    runCmd(cmds[i])
+                    runCmd(cmds[i]);
                 }
             }
+            updateGoal();
         })
         .fail(function(err) {
             $('#spinner').css('display', 'none');
             postFail(err);
         });
+}
+
+function updateGoal(){
+
+    function constructStr(ncomments, nreplies){
+        var s = {
+            score: 'Current score: ',
+            goal: 'To earn the full score, '
+        };
+
+        var score = (ncomments >= 3 ? 1 : 0) + (nreplies >=3 ? 1 : 0);
+
+        function getStrDetailComment(){
+            return 'make ' + (3-ncomments) + ' more new comment' + (ncomments<=1 ? 's' : '');
+        }
+        function getStrDetailReply(){
+            return 'reply to ' + (3-nreplies) + ' other colleague' + (nreplies<=1 ? 's' : '');
+        }
+
+        if(ncomments < 3 || nreplies < 3){
+            if(ncomments<3 && nreplies<3){
+                s.goal += getStrDetailComment()+' and '+getStrDetailReply()+'.'
+            }
+            else if(ncomments<3){
+                s.goal += getStrDetailComment()+'.'
+            }
+            else{ // nreplies<3
+                var sd = getStrDetailReply();
+                s.goal += sd +'.'
+            }
+        }
+
+        s.score += Math.floor(score) + '.0/2.0';
+        return s;
+    }
+
+    function getNumComments(){
+        var status = {};
+
+        status.ncomments = $('#posts_ul').children('[user='+userid+']').length;
+
+        var replied_users = {};
+        var myposts = $('#posts_ul').find('[user='+userid+']');
+        myposts.each(function(i, mypost){
+            var parentid = $(mypost).parent().parent().attr('user');
+            if(parentid)
+                if(parentid !== userid)
+                    replied_users[parentid] = true;
+        });
+        status.nreplies = Object.keys(replied_users).length;
+
+        return status;
+    }
+
+    var status = getNumComments();
+    var str = constructStr(status.ncomments, status.nreplies);
+
+    $('#score_str').text(str.score);
+    $('#goal_str').text(str.goal);
 }
 
 function createDeleteBtn(){

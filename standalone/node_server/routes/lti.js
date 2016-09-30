@@ -160,54 +160,82 @@ exports.post_survey = function(req, res){
 };
 
 exports.get_observe = function(req, res){
-    var pdfid = null;
-    var docid = null;
-    var grpid = null;
-    if(req.query){
-        pdfid = req.query.pdfid;
-        docid = req.query.docid;
-        grpid = req.query.grpid;
-    }
-    if(pdfid && docid && grpid){
-        var r2_ctx = {
-            pdfid: pdfid,
-            docid: docid,
-            groupid: "",
-            pdf_url: azure.BLOB_HOST + pdfid+ "/doc.pdf",
-            pdfjs_url: azure.BLOB_HOST + pdfid + "/doc.vs_doc",
-            serve_dbs_url: js_utils.getHostname() + '/lti_dbs?',
-            lti: true,
-            lti_data: {}
-        };
-        return LtiEngine.GroupMgrRR.getById(grpid)
-            .then(function(grp_data) {
-                r2_ctx.lti_data.user = '';
-                r2_ctx.lti_data.group = grp_data;
-                r2_ctx.groupid = grp_data.id;
-                r2_ctx.text_only = parseInt(grp_data.id.slice(0, grp_data.id.indexOf('_')))%2 === 0 ? false : true;
-                var promises = r2_ctx.lti_data.group.users.map(function (user_id) {
-                    return LtiEngine.UserMgr.getById(user_id);
-                });
-                return Promise.all(promises);
-            })
-            .then(function(grp_users){
-                r2_ctx.lti_data.grp_users = grp_users;
-                res.render(
-                    'lti_discuss_rr',
-                    {
-                        user: req.user,
-                        r2_ctx: encodeURIComponent(JSON.stringify(r2_ctx))
+    if(req.query && req.query.status){
+        if(req.query.status === 'rr'){
+            var pdfid = req.query.pdfid;
+            var docid = req.query.docid;
+            var grpid = req.query.grpid;
+            if(pdfid && docid && grpid){
+                var r2_ctx = {
+                    pdfid: pdfid,
+                    docid: docid,
+                    groupid: "",
+                    pdf_url: azure.BLOB_HOST + pdfid+ "/doc.pdf",
+                    pdfjs_url: azure.BLOB_HOST + pdfid + "/doc.vs_doc",
+                    serve_dbs_url: js_utils.getHostname() + '/lti_dbs?',
+                    lti: true,
+                    lti_data: {}
+                };
+                return LtiEngine.GroupMgrRR.getById(grpid)
+                    .then(function(grp_data) {
+                        r2_ctx.lti_data.user = '';
+                        r2_ctx.lti_data.group = grp_data;
+                        r2_ctx.groupid = grp_data.id;
+                        r2_ctx.text_only = parseInt(grp_data.id.slice(0, grp_data.id.indexOf('_')))%2 === 0 ? false : true;
+                        var promises = r2_ctx.lti_data.group.users.map(function (user_id) {
+                            return LtiEngine.UserMgr.getById(user_id);
+                        });
+                        return Promise.all(promises);
+                    })
+                    .then(function(grp_users){
+                        r2_ctx.lti_data.grp_users = grp_users;
+                        res.render(
+                            'lti_discuss_rr',
+                            {
+                                user: req.user,
+                                r2_ctx: encodeURIComponent(JSON.stringify(r2_ctx))
+                            }
+                        );
+                        return null;
+                    })
+                    .catch(function(err){
+                        handleLtiError(req, res, err);
+                    });
+            }
+            else{
+                handleLtiError(req, res, 'Invalid RichReview observe query');
+            }
+        }
+        else if(req.query.status === 'bb'){
+            return LtiEngine.GroupMgrBB.getById(req.query.grpid)
+                .then(function(grp_data){
+                    var users = [];
+                    for(var i = 0; i < grp_data.users.length; i++){
+                        users.push(LtiEngine.UserMgr.getByIdSync(grp_data.users[i]));
                     }
-                );
-                return null;
-            })
-            .catch(function(err){
-                handleLtiError(req, res, err);
-            });
-
+                    var bb_ctx = {
+                        user: '',
+                        users: users,
+                        group: grp_data
+                    };
+                    res.render(
+                        'lti_discuss_bb',
+                        {
+                            bb_ctx: encodeURIComponent(JSON.stringify(bb_ctx))
+                        }
+                    );
+                    return null;
+                })
+                .catch(function(err){
+                    handleLtiError(req, res, err);
+                });
+        }
+        else{
+            handleLtiError(req, res, 'Invalid status :' + req.user.status);
+        }
     }
     else{
-        handleLtiError(req, res, 'Invalid status :' + req.user.status);
+        handleLtiError(req, res, 'Invalid query');
     }
 };
 
@@ -452,18 +480,15 @@ exports.post_dbs = function(req, res){
 };
 
 function postBbGet(req, res){
-    if(assertLtiUser(req, res)) {
-        var resp = {};
-        LtiEngine.CmdBB.getAfter(
-            req.body.groupid_n,
-            0) // get all
-            .then(function(cmds) {
-                return js_utils.PostResp(res, req, 200, cmds);
-            })
-            .catch(function(err){
-                js_utils.PostResp(res, req, 400, err);
-            });
-    }
+    LtiEngine.CmdBB.getAfter(
+        req.body.groupid_n,
+        0) // get all
+        .then(function(cmds) {
+            return js_utils.PostResp(res, req, 200, cmds);
+        })
+        .catch(function(err){
+            js_utils.PostResp(res, req, 400, err);
+        });
 }
 
 function postBbCmd(req, res){

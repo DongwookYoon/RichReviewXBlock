@@ -180,7 +180,7 @@ function setGroups(user_map, grps, $thead_tr, $tbody, type_str){
                     createLiButton(
                         'observe',
                         function(){
-                            var queries = '?docid='+DISCUSS_DOC_ID+'&pdfid='+DISCUSS_PDF_ID+'&grpid='+grp.id;
+                            var queries = '?docid='+DISCUSS_DOC_ID+'&pdfid='+DISCUSS_PDF_ID+'&grpid='+grp.id+'&status='+type_str;
                             window.open('https://' + window.location.host + '/lti_observe' + queries, '_blank');
                         }
                     )

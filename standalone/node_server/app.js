@@ -385,6 +385,17 @@ function setErrLog(){
             next();
         });
     }
+    else{
+        app.use(function(err, req, res, next) {
+            console.error('setErrLog:', err);
+            if(err.stack){
+                console.error(err.stack);
+            }
+            if(next){
+                next();
+            }
+        });
+    }
 }
 
 // all http request will be redirected to https

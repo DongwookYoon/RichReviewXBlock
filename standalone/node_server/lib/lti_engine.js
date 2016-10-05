@@ -377,12 +377,12 @@ var logs = function(group_n, logs){
 var Grade = (function(){
     var pub = {};
 
-    pub.giveCredit = function(user){
-        return LtiRecordScore(user.lis_outcome_service_url, user.lis_result_sourcedid);
+    pub.giveCredit = function(user, score){
+        return LtiRecordScore(user.lis_outcome_service_url, user.lis_result_sourcedid, score);
     };
 
 
-    function LtiRecordScore(lis_outcome_service_url, lis_result_sourcedid){
+    function LtiRecordScore(lis_outcome_service_url, lis_result_sourcedid, score){
         var EDX_LTI_CONSUMER_OAUTH = {
             key: 'xh0rSz5O03-richreview.cornellx.edu',
             secret: 'sel0Luv73Q'
@@ -403,7 +403,7 @@ var Grade = (function(){
             '</imsx_messageIdentifier></imsx_POXRequestHeaderInfo></imsx_POXHeader><imsx_POXBody><replaceResultRequest><resultRecord><sourcedGUID><sourcedId>'+
             lis_result_sourcedid+
             '</sourcedId></sourcedGUID><result><resultScore><language>en-us</language><textString>'+
-            '1'+
+            (typeof score === 'undefined' ? '2' : score.toString()) +
             '</textString></resultScore></result></resultRecord></replaceResultRequest></imsx_POXBody></imsx_POXEnvelopeRequest>';
 
         var request_data = {
@@ -424,7 +424,7 @@ var Grade = (function(){
                     reject(error);
                 }
                 else{
-                    if(body.indexOf('is now 1.0') >= 0){
+                    if(body.indexOf(' is now ') >= 0){
                         resolve(body);
                     }
                     else{

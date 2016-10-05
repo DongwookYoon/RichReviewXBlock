@@ -447,6 +447,31 @@ var GetUploadSas = function(req, res){
     }
 };
 
+var Grading = function(req, res){
+    if(req.user){
+        var data = JSON.parse(req.body.cmd);
+        var keys = Object.keys(data);
+        var promises = keys.map(function(key){
+            return LtiEngine.UserMgr.getById(key)
+                 .then(function(user) {
+                     console.log(user);
+                    return LtiEngine.Grade.giveCredit(user, data[key]*0.5);
+                 });
+        });
+
+        Promise.all(promises)
+            .then(function(resp){
+                js_utils.PostResp(res, req, 200);
+            })
+            .catch(function(err){
+                js_utils.PostResp(res, req, 400, err);
+            })
+    }
+    else{
+        js_utils.PostResp(res, req, 400);
+    }
+};
+
 exports.post_dbs = function(req, res){
     switch(req.query['op']){
         case 'del_user':
@@ -472,6 +497,9 @@ exports.post_dbs = function(req, res){
             break;
         case "GetUploadSas":
             GetUploadSas(req, res);
+            break;
+        case "Grading":
+            Grading(req, res);
             break;
         default:
             handleLtiError(req, res, 'Invalid post operation : '+ req.query['op']);

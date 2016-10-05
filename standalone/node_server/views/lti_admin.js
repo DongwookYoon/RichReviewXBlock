@@ -242,6 +242,36 @@ function setGroups(user_map, grps, $thead_tr, $tbody, type_str){
     }
 }
 
+function setGradingBtn(){
+    var $grading_submit_btn = $('#grading_form_btn');
+    $grading_submit_btn.on(
+        'click',
+        function(e){
+            $.post('/lti_dbs?op=Grading', {cmd: $('#grading_form_textarea')[0].value})
+                .done(function(){
+                    alert('Grading successful.')
+                })
+                .fail(function(err){
+                    alert('Grading failed:', JSON.stringify(err));
+                });
+            /*
+            var form_data = getFormData($form);
+            var cmd =  {
+                op: 'createReply',
+                groupid_n: groupid,
+                texts: form_data.texts,
+                anchor: $li_parent.attr('id'),
+                id: userid,
+                name: username
+            };
+            $.post('/lti_discuss_bb?op=cmd', {groupid_n: groupid, cmd: cmd})
+                .done(refreshPage)
+                .fail(postFail);*/
+            return false;
+        }
+    );
+}
+
 function run(data_str){
     var data = JSON.parse(decodeURIComponent(data_str));
     var user_map = {};
@@ -251,6 +281,7 @@ function run(data_str){
     setUsers(data.users);
     setGroups(user_map, data.grps_rr, $('#thead_tr_rr'), $('#tbody_rr'), 'rr');
     setGroups(user_map, data.grps_bb, $('#thead_tr_bb'), $('#tbody_bb'), 'bb');
+    setGradingBtn();
 
     var $table = $('.table');
     $table.css('font-size', 'small');

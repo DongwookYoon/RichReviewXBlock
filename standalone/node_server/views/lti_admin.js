@@ -4,6 +4,7 @@
 
 const DISCUSS_DOC_ID = '116730002901619859123_1470324240262';
 const DISCUSS_PDF_ID = '34811a7b62e4461316fc5aab8f655041fc3b01bc';
+var is_manager = false;
 
 function createLiButton(text, func){
     var $li = $('<li>');
@@ -71,61 +72,63 @@ function setUsers(users){
             $tr.children().eq(0).text('');
             var $div_btn = createDropdownBtn(user.id);
             {
-                $div_btn.find('ul').append(
-                    createLiButton(
-                        'Show object',
-                        function(){
-                            alert(JSON.stringify(user));
-                        }
-                    )
-                );
-                $div_btn.find('ul').append(
-                    createLiButton(
-                        'Delete user',
-                        function(){
-                            if(confirm('Delete a user?')){
-                                $.post("/lti_dbs?op=del_user", {user_id:user.id})
-                                    .done(function() {
-                                        window.location.reload();
+                if(is_manager){
+                    $div_btn.find('ul').append(
+                        createLiButton(
+                            'Show data',
+                            function(){
+                                alert(JSON.stringify(user));
+                            }
+                        )
+                    );
+                    $div_btn.find('ul').append(
+                        createLiButton(
+                            'Delete user',
+                            function(){
+                                if(confirm('Delete a user?')){
+                                    $.post("/lti_dbs?op=del_user", {user_id:user.id})
+                                        .done(function() {
+                                            window.location.reload();
+                                        })
+                                        .fail(function() {
+                                            alert("Oops. Server error.");
+                                        });
+                                }
+                            }
+                        )
+                    );
+                    $div_btn.find('ul').append(
+                        createLiButton(
+                            'Delete user and group data',
+                            function(){
+                                if(confirm('Delete a user and group data?')){
+                                    $.post("/lti_dbs?op=del_user_and_group_data", {user_id:user.id})
+                                        .done(function() {
+                                            window.location.reload();
+                                        })
+                                        .fail(function() {
+                                            alert("Oops. Server error.");
+                                        });
+                                }
+                            }
+                        )
+                    );
+                    $div_btn.find('ul').append(
+                        createLiButton(
+                            'Give credit',
+                            function(){
+                                $.post("/lti_dbs?op=give_credit", {user_id:user.id})
+                                    .done(function(resp) {
+                                        console.log('Give credit resp: resp');
+                                        alert('Credit updated.');
                                     })
                                     .fail(function() {
                                         alert("Oops. Server error.");
                                     });
                             }
-                        }
-                    )
-                );
-                $div_btn.find('ul').append(
-                    createLiButton(
-                        'Delete user and group data',
-                        function(){
-                            if(confirm('Delete a user and group data?')){
-                                $.post("/lti_dbs?op=del_user_and_group_data", {user_id:user.id})
-                                    .done(function() {
-                                        window.location.reload();
-                                    })
-                                    .fail(function() {
-                                        alert("Oops. Server error.");
-                                    });
-                            }
-                        }
-                    )
-                );
-                $div_btn.find('ul').append(
-                    createLiButton(
-                        'Give credit',
-                        function(){
-                            $.post("/lti_dbs?op=give_credit", {user_id:user.id})
-                                .done(function(resp) {
-                                    console.log('Give credit resp: resp');
-                                    alert('Credit updated.');
-                                })
-                                .fail(function() {
-                                    alert("Oops. Server error.");
-                                });
-                        }
-                    )
-                );
+                        )
+                    );
+                }
             }
             $tr.children().eq(0).append($div_btn);
             $tbody.append($tr);
@@ -185,30 +188,32 @@ function setGroups(user_map, grps, $thead_tr, $tbody, type_str){
                         }
                     )
                 );
-                $btn.find('ul').append(
-                    createLiButton(
-                        'show object',
-                        function(){
-                            alert(JSON.stringify(grp));
-                        }
-                    )
-                );
-                $btn.find('ul').append(
-                    createLiButton(
-                        'delete',
-                        function(){
-                            if(confirm('Delete a group?')){
-                                $.post("/lti_dbs?op=del_grp", {type: type_str, grp_id: grp.id})
-                                    .done(function() {
-                                        window.location.reload();
-                                    })
-                                    .fail(function() {
-                                        alert("Oops. Server error.");
-                                    });
+                if(is_manager){
+                    $btn.find('ul').append(
+                        createLiButton(
+                            'show object',
+                            function(){
+                                alert(JSON.stringify(grp));
                             }
-                        }
-                    )
-                );
+                        )
+                    );
+                    $btn.find('ul').append(
+                        createLiButton(
+                            'delete',
+                            function(){
+                                if(confirm('Delete a group?')){
+                                    $.post("/lti_dbs?op=del_grp", {type: type_str, grp_id: grp.id})
+                                        .done(function() {
+                                            window.location.reload();
+                                        })
+                                        .fail(function() {
+                                            alert("Oops. Server error.");
+                                        });
+                                }
+                            }
+                        )
+                    );
+                }
                 $td.append($btn);
                 $row.append($td);
             }
@@ -254,25 +259,14 @@ function setGradingBtn(){
                 .fail(function(err){
                     alert('Grading failed:', JSON.stringify(err));
                 });
-            /*
-            var form_data = getFormData($form);
-            var cmd =  {
-                op: 'createReply',
-                groupid_n: groupid,
-                texts: form_data.texts,
-                anchor: $li_parent.attr('id'),
-                id: userid,
-                name: username
-            };
-            $.post('/lti_discuss_bb?op=cmd', {groupid_n: groupid, cmd: cmd})
-                .done(refreshPage)
-                .fail(postFail);*/
             return false;
         }
     );
 }
 
-function run(data_str){
+function run(data_str, _is_manager){
+    is_manager = _is_manager;
+
     var data = JSON.parse(decodeURIComponent(data_str));
     var user_map = {};
     for(var i = 0; i < data.users.length; ++i){

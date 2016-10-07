@@ -37,13 +37,14 @@ body
             thead
                 tr#thead_tr_bb
             tbody#tbody_bb
-    .well
-        h1 Grading
-        form#grading_form
-            textarea#grading_form_textarea(class='form-control' rows='5' name='texts')
-            button.btn.btn-sm.btn-default#grading_form_btn Submit
+    if is_manager
+        .well
+            h1 Grading
+            form#grading_form
+                textarea#grading_form_textarea(class='form-control' rows='5' name='texts')
+                button.btn.btn-sm.btn-default#grading_form_btn Submit
 
     script
         include ./lti_admin.js
-        |run('#{data_str}');
+        |run('#{data_str}', #{is_manager});
 

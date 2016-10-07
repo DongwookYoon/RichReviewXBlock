@@ -50,6 +50,15 @@ function assertManager(req, res){
     }
 }
 
+function assertCornellUser(req, res){
+    if(req.user instanceof R2D.User){
+        return true;
+    }
+    else {
+        handleLtiError(req, res, 'Unauthorized access. This page is available only to the system manager.');
+    }
+}
+
 function assertLtiUser(req, res){
     if(req.user instanceof LtiEngine.User){
         return true;
@@ -86,7 +95,7 @@ exports.get_admin = function(req, res){
     if(req.user instanceof LtiEngine.User){
         req.logout();
     }
-    if(js_utils.redirectUnknownUser(req, res) && assertManager(req, res)){
+    if(js_utils.redirectUnknownUser(req, res) && assertCornellUser(req, res)){
         var data = {};
         LtiEngine.UserMgr.loadAllFromDb()
             .then(function(users) {
@@ -105,7 +114,8 @@ exports.get_admin = function(req, res){
                 res.render(
                     'lti_admin',
                     {
-                        data_str: encodeURIComponent(JSON.stringify(data))
+                        data_str: encodeURIComponent(JSON.stringify(data)),
+                        is_manager: req.user.email === 'dy252@cornell.edu'
                     }
                 )
             })

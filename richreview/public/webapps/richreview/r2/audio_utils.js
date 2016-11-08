@@ -290,6 +290,10 @@
                 mode = pub.Status.LOADING;
                 cbLoadingBgn();
                 utterance = new SpeechSynthesisUtterance(s);
+                if(r2.EnvironmentDetector.browser.ms_edge){
+                    utterance.voice = window.speechSynthesis.getVoices().filter(function(voice){
+                        return voice.name == 'Microsoft Zira Mobile - English (United States)'; })[0];
+                }
                 synth.speak(utterance);
                 utterance.onstart = function(event){
                     mode = pub.Status.PLAYING;

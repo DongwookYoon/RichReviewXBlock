@@ -2318,22 +2318,27 @@
         var pub = {};
 
         pub.init = function(){
-            return getCmds()
-                .then(function(data_str){
-                    var objs = JSON.parse(data_str);
-                    var cmds = [];
-                    for(var i = 0; i < objs.length; ++i){
-                        cmds.push(JSON.stringify(objs[i]));
-                    }
-                    return r2Sync.downloader.processPrerecordedCommands(cmds)
-                        .catch(function(err){
-                            console.error("prerecordedComments");
-                            console.error(err);
-                        });
-                })
-                .catch(function(err){
-                    console.log('no prerecorded comments');
-                })
+            if(r2.ctx.lti){
+                return getCmds()
+                    .then(function(data_str){
+                        var objs = JSON.parse(data_str);
+                        var cmds = [];
+                        for(var i = 0; i < objs.length; ++i){
+                            cmds.push(JSON.stringify(objs[i]));
+                        }
+                        return r2Sync.downloader.processPrerecordedCommands(cmds)
+                            .catch(function(err){
+                                console.error("prerecordedComments");
+                                console.error(err);
+                            });
+                    })
+                    .catch(function(err){
+                        console.log('no prerecorded comments');
+                    })
+            }
+            else{
+                return Promise.resolve();
+            }
         };
 
         function getCmds(){

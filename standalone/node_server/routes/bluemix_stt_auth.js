@@ -21,7 +21,7 @@ exports.get = function(req, res) {
                 }
             },
             function (error, response, body) {
-                res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+                res.setHeader('Access-Control-Allow-Origin', 'https://'+req.headers.host);
                 res.setHeader('Access-Control-Allow-Credentials', 'true');
                 res.send(body);
             }

@@ -171,7 +171,7 @@ var FileList = (function(){
                 }
                 if(file_list.length != idx){
                     $(file_list[idx].li).toggleClass('inprogress', true);
-                    if(file_list[idx].size > 7500000){
+                    if(file_list[idx].size > 8700000){
                         var f = file_list[idx];
                         $(f.li).toggleClass('failed', true);
                         $(f.btn).text("File is too big");

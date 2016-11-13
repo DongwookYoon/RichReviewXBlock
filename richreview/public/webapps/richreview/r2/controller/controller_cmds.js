@@ -541,6 +541,30 @@
                 }
                 annot.AddSpotlight(spotlight, false); // to_upload = false
             }
+            var cmd_ink;
+            for(i = 0; cmd_ink = annt_data.data.Inks[i]; ++i) {
+                if(cmd_ink.pid) { // filters out the old inking that is using .anchorpid
+                    var ink = new r2.Ink();
+                    ink.SetInk(
+                        cmd_ink.pid,
+                        cmd_ink.username,
+                        cmd_ink.annotid,
+                        [cmd_ink.t_bgn, cmd_ink.t_end],
+                        cmd_ink.npage
+                    );
+                    for (j = 0; j < cmd_ink.segments.length; ++j) {
+                        if (r2App.pieces_cache.hasOwnProperty(cmd_ink.segments[j].pid)) {
+                            var segment = new r2.Ink.Segment();
+                            segment.SetSegment(cmd_ink.segments[j].pid, r2.util.numListToVec2List(cmd_ink.segments[j].pts));
+                            ink.AddSegment(segment);
+                        }
+                    }
+                    if(r2App.pieces_cache[cmd_ink.pid]){
+                        r2App.pieces_cache[cmd_ink.pid].addInk(cmd_ink.annotid, ink);
+                    }
+                    annot.addInk(ink);
+                }
+            }
         }
 
         var createCommentNewSpeak = function(doc, cmd){

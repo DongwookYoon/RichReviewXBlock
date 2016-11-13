@@ -327,8 +327,8 @@ var r2Ctrl = {};
 
         var PenEventType = {
             NORMAL: 1,
-            FIRST_BTN:6,
-            SECOND_BTN:3
+            FIRST_BTN:3,
+            SECOND_BTN:6
         };
 
         var PenMode = {

@@ -8,6 +8,10 @@
     r2.rich_audio = (function(){
         var pub = {};
         pub.play = function(annot_id, time) {
+            if(r2.speechUi.mode === r2App.RecordingUI.NEW_SPEAK){ //fixMe: heuristic
+                r2.speechSynth.cancel();
+                r2.speechUi.set('waveform');
+            }
             r2.audioPlayer.play(
                 annot_id, r2App.annots[annot_id].GetAudioFileUrl(), time,
                 function(){
@@ -251,15 +255,10 @@
             else{
                 pub.set('newspeak');
             }
-            pub.set('newspeak'); // default newspeak
 
             if(r2.ctx.lti){ // edX/cornellX
                 pub.set('newspeak');
             }
-            if(r2.ctx.pdf_url.indexOf('7bf0f0add24f13dda0c0a64da0f45a0a6909809e') > 0){ // demo
-                pub.set('waveform');
-            }
-
         };
 
         pub.set = function(type_str){

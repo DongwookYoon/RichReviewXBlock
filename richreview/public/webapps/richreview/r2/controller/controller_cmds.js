@@ -663,9 +663,11 @@
                     }
 
                     var piece = r2App.pieces_cache[cmd_ink.pid];
-                    piece.addInk(cmd_ink.annotid, ink);
-                    var annot = r2App.annots[r2.userGroup.GetUser(cmd_ink.username).GetAnnotStaticInkId()];
-                    annot.addInk(ink);
+                    if(piece){
+                        piece.addInk(cmd_ink.annotid, ink);
+                        var annot = r2App.annots[r2.userGroup.GetUser(cmd_ink.username).GetAnnotStaticInkId()];
+                        annot.addInk(ink);
+                    }
                 }
             });
             r2App.invalidate_page_layout = true;

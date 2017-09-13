@@ -967,7 +967,10 @@
                 return {idx_anchor:0};
             }
             var sel = window.getSelection();
-            if(sel.anchorNode === null || sel.anchorNode.parentNode.parentNode !== $textbox[0]){ // when focused to textbox
+            if(sel.anchorNode === null || 
+                (sel.anchorNode.parentNode.parentNode !== $textbox[0] &&
+                sel.anchorNode.parentNode.parentNode.classList.contains('r2_piece_simplespeech'))
+            ){ // when focused to textbox
                 sel = setCarret(sel.anchorOffset);
             }
             carret.idx_anchor = sel.anchorOffset + $textbox.children().index($(sel.anchorNode.parentNode));

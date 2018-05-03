@@ -786,6 +786,7 @@ var Logs = function(group_n, logs){
             }
         ).then(
             function(){
+                console.log("DEBUG: calling redis HGETALL email_user_lookup");
                 return RedisClient.HGETALL('email_user_lookup').then(
                     function(_email_user_lookup){
                         email_user_lookup = _email_user_lookup;

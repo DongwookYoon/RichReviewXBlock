@@ -68,6 +68,7 @@ cmsUtil.catchErr = function(foo){
 };
 
 cmsUtil.isInstructor = function(course_id, email){
+    console.log("DEBUG: calling redis HGET crs:"+course_id+" instructors");
     return RedisClient.HGET('crs:'+course_id, 'instructors').then(
         function(instructors){
             return JSON.parse(instructors).indexOf(email) !== -1;
@@ -76,6 +77,7 @@ cmsUtil.isInstructor = function(course_id, email){
 };
 
 cmsUtil.isStudent = function(course_id, email){
+    console.log("DEBUG: calling redis HGET crs:"+course_id+" students");
     return RedisClient.HGET('crs:'+course_id, 'students').then(
         function(students){
             return JSON.parse(students).indexOf(email) !== -1;
@@ -451,11 +453,13 @@ postCms.student.doneUpload = function(course_id, netid, submission, path){
     var stus = null;
     var existing_students = [];
     var subs = null;
+    console.log("DEBUG: calling redis HGET crs:"+MATH_COURSE_ID+" students");
     RedisClient.HGET('crs:'+MATH_COURSE_ID, 'students').then(
         function(stu_str){
             stus = JSON.parse(stu_str);
             var promises = stus.map(
                 function(email){
+                    console.log("DEBUG: calling redis HGET crs:"+MATH_COURSE_ID+" students");
                     return RedisClient.EXISTS('stu:'+MATH_COURSE_ID+'_'+email);
                 }
             );

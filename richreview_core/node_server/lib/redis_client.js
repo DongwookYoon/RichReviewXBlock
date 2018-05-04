@@ -2,22 +2,23 @@ var Promise = require("promise");
 var redis = require('redis');
 var env = require('../lib/env');
 
-/* CHANGES: 20180530
+/**
+ *  CHANGES: 20180503
+ *
+ * If os hostname is spire then use the local redis server, otherwise use production server.
+ */
 
-TODO: changes will involve:
+/**
+ * If os hostname is spire then use the local redis server, otherwise use production server.
+ */
+console.log("Hostname is " + os.hostname());
+if(os.hostname() === spire) {
+    var redisClient = redis.createClient(6379);
+} else {
+    var redisClient = redis.createClient(6379, "richreview.net");
+    redisClient.auth(env.redis_config.auth);
+}
 
-lib/redis_client.js
-lib/env.js
-ssl/redis_config.json
-
-TODO: may need to change the line
-
-var redisClient = redis.createClient(6379, "richreview.net");
-*/
-
-// var redisClient = redis.createClient(6379, "richreview.net");
-var redisClient = redis.createClient(6379);
-// redisClient.auth(env.redis_config.auth);
 redisClient.on('error', function(err) {
     // "Redis connection to <hostname>:6379 failed - read ETIMEDOUT";
     console.log('Redis error: ' + err);

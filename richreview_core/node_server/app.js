@@ -19,11 +19,16 @@ var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 var wsfedsaml2 = require('passport-azure-ad').WsfedStrategy;
 var LtiStrategy = require('passport-lti');
 
-process.stdout.write('.');
+process.stdout.write('.\n');
+console.log("DEBUG: load js_utils.js");
 var js_utils = require('./lib/js_utils.js');
+console.log("DEBUG: load r2d.js");
 var R2D = require('./lib/r2d.js');
+console.log("DEBUG: load lti engine");
 var LtiEngine = require('./lib/lti_engine.js');
+console.log("DEBUG: load redis client");
 var redis_client = require('./lib/redis_client.js');
+console.log("DEBUG: connect-redis");
 var RedisStore = require('connect-redis')(expressSession);
 
 process.stdout.write('.');

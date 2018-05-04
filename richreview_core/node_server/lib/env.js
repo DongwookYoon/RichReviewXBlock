@@ -9,12 +9,31 @@ exports.admin_list = [
     '116730002901619859123'
 ];
 
+/**
+ * CHANGES: 20180504
+ *
+ * change the path of the webapps
+ */
+/*
+// TODO: confirm this is OK and delete
 exports.path = {
     'temp_pdfs': '/tmp/richreview/pdfs',
     'webapp_richreview': '../../richreview/public/webapps/richreview',
     'webapp_multicolumn': '../../richreview/public/webapps/multicolumn'
+};*/
+exports.path = {
+    'temp_pdfs': '/tmp/richreview/pdfs',
+    'webapp_richreview': '../public/webapps/richreview',
+    'webapp_multicolumn': '../public/webapps/multicolumn'
 };
 
+/**
+ * CHANGES: 20180504
+ *
+ * change the path of the webapps
+ */
+/*
+// TODO: confirm this is OK and delete
 exports.webapp_urls = {
     'multicolumn': js_utils.getWebAppUrls(
         '../../../richreview/public/webapps/multicolumn',
@@ -23,6 +42,19 @@ exports.webapp_urls = {
     ),
     'richreview': js_utils.getWebAppUrls(
         '../../../richreview/public/webapps/richreview',
+        '/static_viewer/',
+        /((\/|^)\..*)|(^test\/.*)/
+    )
+};
+*/
+exports.webapp_urls = {
+    'multicolumn': js_utils.getWebAppUrls(
+        '../public/webapps/multicolumn',
+        '/static_multicolumn/',
+        /((\/|^)\..*)/
+    ),
+    'richreview': js_utils.getWebAppUrls(
+        '../public/webapps/richreview',
         '/static_viewer/',
         /((\/|^)\..*)|(^test\/.*)/
     )

@@ -28,7 +28,7 @@ console.log("this dir is " + __dirname);
 var webAppSync = (function(){
     var HOSTNAME = os.hostname() === 'richreview' ? 'richreview' : 'localhost';
     var HASHFILE = HOSTNAME+'/richreview_webapp_hash.txt';
-    var WEBAPP_PATH = './../../../richreview/public/webapps/richreview/';
+    var WEBAPP_PATH = './../public/webapps/richreview/';
 
     var Promise = require("promise");
     var crypto = require('crypto');

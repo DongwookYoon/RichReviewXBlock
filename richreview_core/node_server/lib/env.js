@@ -23,8 +23,8 @@ exports.path = {
 };*/
 exports.path = {
     'temp_pdfs': '/tmp/richreview/pdfs',
-    'webapp_richreview': '../public/webapps/richreview',
-    'webapp_multicolumn': '../public/webapps/multicolumn'
+    'webapp_richreview': '../webapps/richreview',
+    'webapp_multicolumn': '../webapps/multicolumn'
 };
 
 /**
@@ -49,12 +49,12 @@ exports.webapp_urls = {
 */
 exports.webapp_urls = {
     'multicolumn': js_utils.getWebAppUrls(
-        '../public/webapps/multicolumn',
+        '../../webapps/multicolumn',
         '/static_multicolumn/',
         /((\/|^)\..*)/
     ),
     'richreview': js_utils.getWebAppUrls(
-        '../public/webapps/richreview',
+        '../../webapps/richreview',
         '/static_viewer/',
         /((\/|^)\..*)|(^test\/.*)/
     )

@@ -1,0 +1,34 @@
+<div class="richreview_block">
+    <div class="r2_app">
+        {% if is_pdf_ready %}
+            <div id="r2_app_container"></div>
+        {% else %}
+            <h1>The discussion topic is coming soon. Please wait.</h1>
+        {% endif %}
+    </div>
+
+
+    {% if is_debug %}
+    <div class="r2_dashboard">
+        <h1>RichReview Student</h1>
+        <p>
+            xblock_id: {{ xblock_id }}
+        </p>
+        <p>
+            student_id: {{ student_id }}
+        </p>
+        <p>
+            user_is_staff: {{ user_is_staff }}
+        </p>
+        <p>
+            discussion_docid: {{ discussion_docid }}
+        </p>
+        <p>
+            students_of_group: {{ students_of_group }}
+        </p>
+        <p>
+            group_of_student: {{ group_of_student }}
+        </p>
+    </div>
+    {% endif %}
+</div>

@@ -20,11 +20,8 @@ gracefulFs.gracefulify(realFs);
 /**
  * Sync the richreview web app
  *
- * TODO: change directory WEBAPP_PATH from './../../../richreview/public/webapps/richreview/'
- * TODO: to directory node_server/public
- *
+ * comment made on 20180504
  */
-console.log("this dir is " + __dirname);
 var webAppSync = (function(){
     var HOSTNAME = os.hostname() === 'richreview' ? 'richreview' : 'localhost';
     var HASHFILE = HOSTNAME+'/richreview_webapp_hash.txt';

@@ -13,7 +13,20 @@ var crypto = require('crypto');
 var fs = require('fs');
 var R2D = require("../lib/r2d.js");
 
-var MUPLA_SERVER_LOCAL_URL = "http://127.0.0.1:5000/mupla_serve/";
+/**
+ * CHANGES: 20180505
+ * 
+ * If os hostname is spire then use own django server (localhost)
+ */
+const os = require("os");
+if(os.hostname() === "spire") {
+    var MUPLA_SERVER_LOCAL_URL = "http://localhost:5000/mupla_serve/";
+} else {
+    var MUPLA_SERVER_LOCAL_URL = "http://127.0.0.1:5000/mupla_serve/";
+}
+
+// TODO: test and delete comments
+// var MUPLA_SERVER_LOCAL_URL = "http://127.0.0.1:5000/mupla_serve/";
 
 /**
  * Response to GET upload page. renders upload.jade.

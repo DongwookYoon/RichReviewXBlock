@@ -1,8 +1,28 @@
 var Promise = require("promise");
 var redis = require('redis');
 var env = require('../lib/env');
-var redisClient = redis.createClient(6379, "richreview.net");
-redisClient.auth(env.redis_config.auth);
+const os = require("os");
+
+/**
+ *  CHANGES: 20180503
+ *
+ * If os hostname is spire then use the local redis server, otherwise use the server on richreview.net
+ */
+
+/**
+ * If os hostname is spire then use the local redis server, otherwise use the server on richreview.net
+ */
+if(os.hostname() === "spire") {
+    var redisClient = redis.createClient(6379);
+} else {
+    var redisClient = redis.createClient(6379, "richreview.net");
+    redisClient.auth(env.redis_config.auth);
+}
+
+// TODO: test and delete comments
+// var redisClient = redis.createClient(6379, "richreview.net");
+// redisClient.auth(env.redis_config.auth);
+
 redisClient.on('error', function(err) {
     // "Redis connection to <hostname>:6379 failed - read ETIMEDOUT";
     console.log('Redis error: ' + err);

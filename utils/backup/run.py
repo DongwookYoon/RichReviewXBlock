@@ -8,7 +8,10 @@ import traceback
 from azure.storage.blob import BlockBlobService
 
 class CONST():
-    AZURE_KEY_PATH = '../../standalone/node_server/ssl/azure_keys.json'
+    # CHANGES: 20180505 
+    # TODO: test and delete
+    # AZURE_KEY_PATH = '../../standalone/node_server/ssl/azure_keys.json'
+    AZURE_KEY_PATH = '../../richreview_core/node_server/ssl/azure_keys.json'
     DOWN_FOLDER = 'down'
 
 def loadAzureKeys():

@@ -35,13 +35,14 @@ pip-delete-this-directory.txt
 
 #mupla C builds
 */.*
-mupla/mupdf-1.6-source/
-mupla/mupla/mupla.o
+mupla_core/mupla/mupdf-1.6-source/
+mupla_core/mupla/mupla/mupla.o
+mupla_core/mupla/._mupdf-1.6-source
 
-#standlone
-standalone/node_server/ssl/
-standalone/node_server/cache/
-standalone/node_server/_temp/
+#richreview_core
+richreview_core/node_server/ssl/
+richreview_core/node_server/cache/
+richreview_core/node_server/_temp/
 
 #pdf_batch data
 utils/pdf_batch/data/

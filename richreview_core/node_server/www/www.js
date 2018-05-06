@@ -17,10 +17,15 @@ var realFs = require('fs');
 var gracefulFs = require('graceful-fs');
 gracefulFs.gracefulify(realFs);
 
+/**
+ * Sync the richreview web app
+ *
+ * comment made on 20180504
+ */
 var webAppSync = (function(){
     var HOSTNAME = os.hostname() === 'richreview' ? 'richreview' : 'localhost';
     var HASHFILE = HOSTNAME+'/richreview_webapp_hash.txt';
-    var WEBAPP_PATH = './../../../richreview/public/webapps/richreview/';
+    var WEBAPP_PATH = './../../webapps/richreview/';
 
     var Promise = require("promise");
     var crypto = require('crypto');

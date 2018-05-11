@@ -27,12 +27,10 @@ console.log("START: importing passport");
 var passport = require('passport');
 
 console.log("       importing passport-google-oauth");
-var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+var GoogleStrategy = require('passport-google-oauth2').Strategy;
 
 console.log("       importing passport-azure-ad");
-const passport_azure_ad = require('passport-azure-ad');
-//const wsfedsaml2 = passport_azure_ad.WsfedStrategy
-const wsfedsaml2 = require('passport-wsfed-saml2');
+const wsfedsaml2 = require('./passport-azure-ad').WsfedStrategy;
 
 console.log("       importing passport-lti");
 var LtiStrategy = require('passport-lti');
@@ -180,8 +178,6 @@ function passportSetup(){
     });
 
     // Cornell NetID
-    /*
-    // Temporarily disabling cornell login
     // TODO: make passport work with wsfedsaml2
     console.log("PASSPORT: use wsfedsaml2 auth with cornell wsfed");
     passport.use(
@@ -209,10 +205,8 @@ function passportSetup(){
                 ).catch(done);
             }
         )
-    );*/
+    );
 
-    /*
-    // Temporarily disabling cornell login
     // TODO: make passport work with wsfedsaml2
     console.log("PASSPORT: set up login_cornell routing");
     app.get(
@@ -228,8 +222,9 @@ function passportSetup(){
             js_utils.logTimeAndUser(req, 'Login');
             res.redirect(req.session.latestUrl || '/');
         }
-    );*/
+    );
 
+    // TODO: make passport work with GoogleStrategy
     console.log("PASSPORT: set up Google auth");
     // Google ID
     var google_oauth = JSON.parse(fs.readFileSync(env.config_files.google_open_id, 'utf-8'));
@@ -238,7 +233,8 @@ function passportSetup(){
             {
                 clientID: google_oauth.web.client_id,
                 clientSecret: google_oauth.web.client_secret,
-                callbackURL: google_oauth.web.redirect_uris[0]
+                callbackURL: google_oauth.web.redirect_uris[0],
+                passReqToCallback: false
             },
             function (accessToken, refreshToken, profile, done){
                 var email = profile.emails.length !== 0 ? profile.emails[0].value : '';

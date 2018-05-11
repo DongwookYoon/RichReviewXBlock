@@ -106,11 +106,11 @@ function setupStaticPages(){
     );
     app.use(
         '/static_viewer',
-        express.static(path.resolve(__dirname, env.path.webapp_richreview), { maxAge: 30*1000 })
+        express.static(path.resolve(__dirname, '..', env.path.webapp_richreview), { maxAge: 30*1000 })
     );
     app.use(
         '/static_multicolumn',
-        express.static(path.resolve(__dirname, env.path.webapp_multicolumn), { maxAge: 30*1000 })
+        express.static(path.resolve(__dirname, '..', env.path.webapp_multicolumn), { maxAge: 30*1000 })
     );
     app.use(
         '/mupla_pdfs',

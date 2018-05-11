@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 var fs = require("fs");
 var os = require("os");
+const path = require("path");
 
 if(typeof v8debug === 'object'){
     process.env.NODE_ENV = 'development';
@@ -25,7 +26,8 @@ gracefulFs.gracefulify(realFs);
 var webAppSync = (function(){
     var HOSTNAME = os.hostname() === 'richreview' ? 'richreview' : 'localhost';
     var HASHFILE = HOSTNAME+'/richreview_webapp_hash.txt';
-    var WEBAPP_PATH = './../../webapps/richreview/';
+    // var WEBAPP_PATH = './../../webapps/richreview/'; // TODO: test and delete
+    var WEBAPP_PATH = path.resolve(__dirname, '../../webapps/richreview/');
 
     var Promise = require("promise");
     var crypto = require('crypto');
@@ -148,11 +150,24 @@ var runServer = function() {
         }
     );
 
-    require('https').createServer(
+    /*require('https').createServer(
         {
             key: fs.readFileSync('../ssl/richreview_net.key'),
             cert: fs.readFileSync('../ssl/richreview_net.crt'),
             ca: [fs.readFileSync('../ssl/root.crt')]
+        },
+        app.https
+    ).listen(
+        app.https.get('port'),
+        function () {
+            console.log('Express server listening on HTTPS port:', app.https.get('port'));
+        }
+    );*/
+    require('https').createServer(
+        {
+            key: fs.readFileSync(path.join(__dirname, '..', 'ssl/richreview_net.key')),
+            cert: fs.readFileSync(path.join(__dirname, '..', 'ssl/richreview_net.crt')),
+            ca: [fs.readFileSync(path.join(__dirname, '..', 'ssl/root.crt'))]
         },
         app.https
     ).listen(

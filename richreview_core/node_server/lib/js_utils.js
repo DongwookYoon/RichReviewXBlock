@@ -2,6 +2,7 @@
  * Created by ukka123 on 11/16/14.
  */
 
+const path = require('path');
 var request = require('request');
 var mkdirp = require('mkdirp');
 var unzip = require('unzip');
@@ -359,12 +360,19 @@ exports.getHostname = (function(){
     };
 }());
 
+/**
+ * CHANGES 20180510
+ * added path resolution to walkSync
+ */
+/*
+// TODO: test and delete commented code
 exports.walkSync = function(dir, filelist) {
+    console.log()
   var fs = fs || require('fs'),
       files = fs.readdirSync(dir);
   filelist = filelist || [];
   files.forEach(function(item) {
-    if (fs.statSync(dir + item).isDirectory()) {
+      if (fs.statSync(dir + item).isDirectory()) {
       filelist = exports.walkSync(dir + item + '/', filelist);
     }
     else {
@@ -372,11 +380,32 @@ exports.walkSync = function(dir, filelist) {
     }
   });
   return filelist;
+};*/
+exports.walkSync = function(dir, filelist) {
+    var fs = fs || require('fs'),
+        files = fs.readdirSync(dir);
+    filelist = filelist || [];
+    files.forEach(function(item) {
+        var item_path = path.join(dir, item);
+        if (fs.statSync(item_path).isDirectory()) {
+            filelist = exports.walkSync(item_path, filelist);
+        }
+        else {
+            filelist.push(item_path);
+        }
+    });
+    return filelist;
 };
 
+/**
+ * CHANGES 20180510
+ * made getWebAppUrls work when node is launched from diff directory
+ */
+/*
+// TODO: test and delete commented code
 exports.getWebAppUrls = function(path, prefix, exclude){
     var filelist = [];
-    exports.walkSync(path+'/', filelist);
+    exports.walkSync(path + '/', filelist);
     filelist.forEach(function(file, i){
         filelist[i] = file.substring(path.length+1);
     });
@@ -386,6 +415,22 @@ exports.getWebAppUrls = function(path, prefix, exclude){
             urls[file] = prefix + file;
         }
     });
+    return urls;
+};*/
+exports.getWebAppUrls = function(start_path, prefix, exclude){
+    var filelist = [];
+    const full_start_path = path.join(__dirname, "../..", start_path);
+    exports.walkSync(full_start_path, filelist);
+    filelist.forEach(function(file, i){
+        filelist[i] = file.substring(full_start_path.length + 1);
+    });
+    var urls = {};
+    filelist.forEach(function(file, i) {
+        if(file.match(exclude)===null){
+            urls[file] = prefix + file;
+        }
+    });
+    // for(var key in urls) { console.log(key + " : " + urls[key]); }
     return urls;
 };
 

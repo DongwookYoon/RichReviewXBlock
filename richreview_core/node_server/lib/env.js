@@ -2,8 +2,11 @@
  * Created by dongwookyoon on 6/16/15.
  */
 
+// import built-in modules
 const fs = require('fs');
 const path = require('path');
+
+// import libraries
 const js_utils = require('../lib/js_utils.js');
 
 exports.admin_list = [

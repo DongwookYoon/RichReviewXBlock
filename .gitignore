@@ -33,7 +33,7 @@ pip-delete-this-directory.txt
 *.log
 *.pot
 
-#mupla C builds
+# mupla C builds
 */.*
 mupla_core/mupla/mupdf-1.6-source/
 mupla_core/mupla/mupla/mupla.o
@@ -41,6 +41,7 @@ mupla_core/mupla/._mupdf-1.6-source
 
 #richreview_core
 richreview_core/node_server/ssl/
+richreview_core/node_server/node_modules/
 richreview_core/node_server/cache/
 richreview_core/node_server/_temp/
 

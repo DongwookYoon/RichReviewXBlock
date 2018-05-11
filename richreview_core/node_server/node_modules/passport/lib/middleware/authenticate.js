@@ -2,6 +2,7 @@
  * Module dependencies.
  */
 var http = require('http')
+  , IncomingMessageExt = require('../http/request')
   , AuthenticationError = require('../errors/authenticationerror');
 
 
@@ -17,18 +18,31 @@ var http = require('http')
  * Options:
  *   - `session`          Save login state in session, defaults to _true_
  *   - `successRedirect`  After successful login, redirect to given URL
+ *   - `successMessage`   True to store success message in
+ *                        req.session.messages, or a string to use as override
+ *                        message for success.
+ *   - `successFlash`     True to flash success messages or a string to use as a flash
+ *                        message for success (overrides any from the strategy itself).
  *   - `failureRedirect`  After failed login, redirect to given URL
+ *   - `failureMessage`   True to store failure message in
+ *                        req.session.messages, or a string to use as override
+ *                        message for failure.
+ *   - `failureFlash`     True to flash failure messages or a string to use as a flash
+ *                        message for failures (overrides any from the strategy itself).
  *   - `assignProperty`   Assign the object provided by the verify callback to given property
  *
- * An optional `callback` can be supplied to allow the application to overrride
+ * An optional `callback` can be supplied to allow the application to override
  * the default manner in which authentication attempts are handled.  The
  * callback has the following signature, where `user` will be set to the
  * authenticated user on a successful authentication attempt, or `false`
  * otherwise.  An optional `info` argument will be passed, containing additional
- * details provided by the strategy's verify callback.
+ * details provided by the strategy's verify callback - this could be information about
+ * a successful authentication or a challenge message for a failed authentication.
+ * An optional `status` argument will be passed when authentication fails - this could
+ * be a HTTP response code for a remote authentication failure or similar.
  *
  *     app.get('/protected', function(req, res, next) {
- *       passport.authenticate('local', function(err, user, info) {
+ *       passport.authenticate('local', function(err, user, info, status) {
  *         if (err) { return next(err) }
  *         if (!user) { return res.redirect('/signin') }
  *         res.redirect('/account');
@@ -78,6 +92,12 @@ module.exports = function authenticate(passport, name, options, callback) {
   }
   
   return function authenticate(req, res, next) {
+    if (http.IncomingMessage.prototype.logIn
+        && http.IncomingMessage.prototype.logIn !== IncomingMessageExt.logIn) {
+      require('../framework/connect').__monkeypatchNode();
+    }
+    
+    
     // accumulator for failures from each strategy in the chain
     var failures = [];
     

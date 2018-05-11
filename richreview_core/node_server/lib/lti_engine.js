@@ -2,14 +2,20 @@
  * Created by yoon on 8/12/16.
  */
 
-var Promise = require("promise");
-var js_utils = require('../lib/js_utils.js');
-var request = require("request"); // for LTI grading passback
-var OAuth = require('oauth-1.0a'); // for LTI grading passback
-var crypto = require('crypto'); // for LTI grading passback
-var RedisClient = require('../lib/redis_client').RedisClient;
+// import built-in modules
+const crypto = require('crypto'); // for LTI grading passback
+
+// import npm modules
+const Promise = require("promise");
+const request = require("request"); // for LTI grading passback
+const OAuth = require('oauth-1.0a'); // for LTI grading passback
 var AsyncLock = require('async-lock');
+
 var lock = new AsyncLock();
+
+// import libraries
+const js_utils = require('../lib/js_utils.js');
+const RedisClient = require('../lib/redis_client').RedisClient;
 
 var Status = (function(){
     var pub = {};

@@ -1,22 +1,36 @@
 #!/usr/bin/env node
-var fs = require("fs");
-var os = require("os");
-const path = require("path");
 
-if(typeof v8debug === 'object'){
+// import built-in modules
+const fs = require("fs");
+const os = require("os");
+const path = require("path");
+const crypto = require('crypto');
+
+// import npm modules
+const Promise = require("promise");
+
+process.env.NODE_ENV = 'development';
+/*if(typeof v8debug === 'object'){
     process.env.NODE_ENV = 'development';
 }
 else{
     process.env.NODE_ENV = 'production'; // should be placed before require(app)
-}
+}*/
 console.log('App NODE_ENV:', process.env.NODE_ENV);
 
+console.log("DEBUG: env.js");
 
+// import libraries
 var env = require('../lib/env.js');
+
 // patching the fs module prevents the EMFILE error
-var realFs = require('fs');
-var gracefulFs = require('graceful-fs');
-gracefulFs.gracefulify(realFs);
+
+console.log("DEBUG: setting fs");
+// var realFs = require('fs');
+//var gracefulFs = require('graceful-fs');
+// gracefulFs.gracefulify(realFs);
+
+console.log("DEBUG: after setting fs");
 
 /**
  * Sync the richreview web app
@@ -29,8 +43,8 @@ var webAppSync = (function(){
     // var WEBAPP_PATH = './../../webapps/richreview/'; // TODO: test and delete
     var WEBAPP_PATH = path.resolve(__dirname, '../../webapps/richreview/');
 
-    var Promise = require("promise");
-    var crypto = require('crypto');
+    // var Promise = require("promise");
+    // var crypto = require('crypto');
     var azure = require('../lib/azure');
     var js_utils = require("../lib/js_utils");
 
@@ -178,9 +192,8 @@ var runServer = function() {
     );
 };
 
-
 if(process.argv[2]){
-    var process_course_submission = function(course_id, submission_id){
+    var process_course_submission = function(course_id, submission_id) {
         var pcs = require('../process_course_submission');
         pcs.run(course_id, submission_id);
     };

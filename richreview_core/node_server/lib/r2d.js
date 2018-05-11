@@ -1,12 +1,13 @@
 /**
+ * R2D
+ *
  * Created by Dongwook on 1/31/2015.
  */
 
-/*
-* R2D
-*/
-
+// import npm modules
 var Promise = require("promise");
+
+// import libraries
 var js_utils = require('../lib/js_utils.js');
 var redisClient = require('../lib/redis_client').redisClient;
 var RedisClient = require('../lib/redis_client').RedisClient;

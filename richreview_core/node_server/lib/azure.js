@@ -1,10 +1,22 @@
-// set azure storage setting
+/**
+ * Set azure storage setting
+ *
+ */
 
+// import built-in modules
+const fs = require('fs');
 
-var Promise = require("promise");
-var nconf = require('nconf');
+// import npm modules
+const Promise = require("promise");
+const nconf = require('nconf');
+const storage = require('azure-storage');
+const request = require('request');
+const tedious = require('tedious');
+
+// import libraries
 var env = require('../lib/env');
 
+// set module variables
 var BLOB_HOST = 'https://richreview.blob.core.windows.net/';
 var ACCOUNT = 'richreview';
 
@@ -12,17 +24,15 @@ nconf.env().file({ file: env.config_files.azure_keys });
 
 var sql_key_tedious = nconf.get("sql_key_tedious");
 var blob_storage_key = nconf.get("blob_storage_key");
+
 if( typeof sql_key_tedious === 'undefined' ||  typeof blob_storage_key === 'undefined' ){
     throw new Error('auth configuration file not found : ' + env.config_files.azure_keys);
 }
 
-var storage = require('azure-storage');
 var blob_svc = storage.createBlobService(ACCOUNT, blob_storage_key, BLOB_HOST).withFilter(new storage.ExponentialRetryPolicyFilter());
-var fs = require('fs');
-var request = require('request');
 
-var ConnectionTD = require('tedious').Connection;
-var RequestTD = require('tedious').Request;
+var ConnectionTD = tedious.Connection;
+var RequestTD = tedious.Request;
 
 exports.getSas = function(container, blob, expiry){ // expires in seconds
     // helpful links:

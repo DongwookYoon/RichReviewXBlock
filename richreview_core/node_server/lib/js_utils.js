@@ -2,16 +2,23 @@
  * Created by ukka123 on 11/16/14.
  */
 
+console.log("DEBUG: before importing modules");
+
+// import built-in modules
 const path = require('path');
+const fs = require('fs');
+var os = require("os");
+var crypto = require('crypto');
+
+// import npm modules
 var request = require('request');
 var mkdirp = require('mkdirp');
 var unzip = require('unzip');
-var fs = require('fs');
 var moment = require('moment');
 var Promise = require("promise");
 var nodemailer = require('nodemailer');
-var os = require("os");
-var crypto = require('crypto');
+
+console.log("DEBUG: after importing modules");
 
 exports.generateSaltedSha1 = function(raw_key, salt){
     var shasum = crypto.createHash('sha1');

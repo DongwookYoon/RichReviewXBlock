@@ -1,32 +1,52 @@
-process.stdout.write('Starting app.js');
+/**
+ *
+ * The App
+ */
 
+console.log("START: Starting app.js");
+
+console.log("START: importing built-in modules");
+var http = require('http');
+var path = require('path');
+var fs = require('fs');
+
+console.log("START: importing express");
 var express = require('express');
 var expressSession = require('express-session');
-var http = require('http');
+
+console.log("START: importing npm modules");
 var bodyParser = require('body-parser');
 var logger = require('morgan');
+var mkdirp = require('mkdirp');
 var compression = require('compression');
 
-process.stdout.write('.');
-var path = require('path');
-var mkdirp = require('mkdirp');
-var fs = require('fs');
+console.log("START: importing env.js");
 var env = require('./lib/env.js');
 
-process.stdout.write('.');
+console.log("START: importing passport");
 var passport = require('passport');
+
+console.log("       importing passport-google-oauth");
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
-var wsfedsaml2 = require('passport-azure-ad').WsfedStrategy;
+
+console.log("       importing passport-azure-ad");
+const passport_azure_ad = require('passport-azure-ad');
+//const wsfedsaml2 = passport_azure_ad.WsfedStrategy
+const wsfedsaml2 = require('passport-wsfed-saml2');
+
+console.log("       importing passport-lti");
 var LtiStrategy = require('passport-lti');
 
-process.stdout.write('.');
+console.log("START: importing libraries");
 var js_utils = require('./lib/js_utils.js');
 var R2D = require('./lib/r2d.js');
 var LtiEngine = require('./lib/lti_engine.js');
 var redis_client = require('./lib/redis_client.js');
+
+console.log("START: connecting to redis");
 var RedisStore = require('connect-redis')(expressSession);
 
-process.stdout.write('.');
+console.log("START: importing routes");
 var _downloader = require('./routes/_downloader');
 var _pages = require('./routes/_pages');
 var support = require('./routes/support');
@@ -42,18 +62,19 @@ var course = require('./routes/course');
 var bluemix_stt_auth = require('./routes/bluemix_stt_auth');
 var lti = require('./routes/lti');
 
-process.stdout.write('\n');
-
 mkdirp('../_temp');
 mkdirp('../cache');
 mkdirp('../cache/audio');
 mkdirp(env.path.temp_pdfs);
 
-var app = express();
+const app = express();
 
+console.log("START: setup view engine");
+// todo: convert to pug
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
+console.log("START: use middleware");
 app.use(compression());
 app.use(logger('tiny'));
 app.use(bodyParser.json({limit: '50mb'}));
@@ -74,11 +95,13 @@ app.use(
     )
 );
 
-
+console.log("START: set up passport");
 passportSetup();
 
+console.log("START: set static pages");
 setupStaticPages();
 
+console.log("START: not sure what this is");
 app.use(function(req, res, next){
     if(req.user instanceof LtiEngine.User){
         if( (req.url !== '/bluemix_stt_auth' && req.url.substring(0, 5) !== '/lti_') && req.method !== 'POST'){
@@ -125,11 +148,15 @@ function setupStaticPages(){
 // passport-based login layer
 function passportSetup(){
     // passport
+
+    console.log("PASSPORT: use initialize and session");
     app.use(passport.initialize());
     app.use(passport.session());
+
     passport.serializeUser(function(user, done){
         done(null, user.id);
     });
+
     passport.deserializeUser(function(id, done){
         LtiEngine.UserMgr.getById(id).catch(
             function(err){
@@ -152,7 +179,11 @@ function passportSetup(){
         );
     });
 
-   // Cornell NetID
+    // Cornell NetID
+    /*
+    // Temporarily disabling cornell login
+    // TODO: make passport work with wsfedsaml2
+    console.log("PASSPORT: use wsfedsaml2 auth with cornell wsfed");
     passport.use(
         new wsfedsaml2(
             env.cornell_wsfed,
@@ -178,7 +209,12 @@ function passportSetup(){
                 ).catch(done);
             }
         )
-    );
+    );*/
+
+    /*
+    // Temporarily disabling cornell login
+    // TODO: make passport work with wsfedsaml2
+    console.log("PASSPORT: set up login_cornell routing");
     app.get(
         '/login_cornell',
         passport.authenticate('wsfed-saml2', { failureRedirect: '/login_cornell', failureFlash: true }),
@@ -192,8 +228,9 @@ function passportSetup(){
             js_utils.logTimeAndUser(req, 'Login');
             res.redirect(req.session.latestUrl || '/');
         }
-    );
+    );*/
 
+    console.log("PASSPORT: set up Google auth");
     // Google ID
     var google_oauth = JSON.parse(fs.readFileSync(env.config_files.google_open_id, 'utf-8'));
     passport.use(

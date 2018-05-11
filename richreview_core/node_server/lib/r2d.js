@@ -20,6 +20,12 @@ var User = function(id, nickname, email){
     this.email = email;
 };
 
+/**
+ * get an array of all the users that signed up in the redis server
+ * usrs is Array<usr>
+ * usr is of form { email, groupNs, nick, id }
+ * return usrs
+ */
 User.prototype.getSignedUp = function(){
     return RedisClient.KEYS('usr:*').then(
         function(keys){
@@ -39,16 +45,26 @@ User.prototype.getSignedUp = function(){
     )
 };
 
+/**
+ * create a cache in the User. Say if we had `var sally = new User(...)` then `sally.cache.get(some_id)` gives us Promise<User> corr to some_id
+ * TODO: see if doc is valid
+ */
 User.prototype.cache = (function(){
     var pub = {};
 
     var cache = {}; // for Google ID and Cornell NetID users
 
+    /**
+     * create an array of User from the users in the redis server
+     * @return Array<User>
+     */
     pub.populate = function(){
         return RedisClient.KEYS("usr:*").then(
             function(userids){
                 return Promise.all(
-                    userids.map(function(userid){return pub.loadFromDb(userid.substring(4));})
+                    userids.map(function(userid) { 
+                        return pub.loadFromDb(userid.substring(4));
+                    })
                 );
             }
         ).then(
@@ -63,6 +79,11 @@ User.prototype.cache = (function(){
         )
     };
 
+    /**
+     * create a User from redis server's user with the same id, and save it in the cache as value with id as the key
+     * @arg    id - the user's id on redis
+     * @return User
+     */
     pub.loadFromDb = function(id){
         return RedisClient.HGETALL("usr:"+id).then(
             function(result){
@@ -77,6 +98,11 @@ User.prototype.cache = (function(){
         )
     };
 
+    /**
+     * return a promise to a User in the cache
+     * @arg    id
+     * @return Promise<User>
+     */
     pub.get = function(id){
         return new Promise(function(resolve, reject) {
             if(cache.hasOwnProperty(id)){
@@ -101,6 +127,11 @@ User.prototype.findById = function(id){
     return User.prototype.cache.get(id);
 };
 
+/**
+ * Get a promise to the user_id from given email
+ * @arg    email   - string of email
+ * @return user_id - string of form 'usr':'id'
+ */
 User.prototype.findByEmail = function(email){
     if(js_utils.validateEmail(email)){
         return RedisClient.HGET('email_user_lookup', email).then(
@@ -328,6 +359,14 @@ var Group = (function(manager, name, creationDate){
         );
     };
 
+    /**
+     * get all groups in redis server array of JS objects with group information
+     * grps - Array<grp>
+     * grp is of form { users, docid, userid_n, creationTime, name }
+     * users is of form { invited, participating }
+     * invited, participating are ids of users
+     * @return grps
+     */
     pub_grp.getAll = function(){
         return RedisClient.KEYS('grp:*').then(
             function(keys){
@@ -348,6 +387,7 @@ var Group = (function(manager, name, creationDate){
     };
 
     pub_grp.InviteUser = function(groupid_n, email){
+        console.log("DEBUG: inviting " + email + " to " + groupid_n);
         return RedisClient.HEXISTS('email_user_lookup', email).then(
             function(is_exist){
                 if(is_exist){ // when the user already signed up and can be found on the system
@@ -361,6 +401,7 @@ var Group = (function(manager, name, creationDate){
                 else{ // when the user is not on the system yet
                     return pub_grp.AddEmailToInvited(groupid_n, email).then(
                         function(){
+                            console.log("DEBUG: adding " + email + " to invited");
                             return RedisClient.RPUSH('inv:'+email, 'grp:'+groupid_n);
                         }
                     );
@@ -404,29 +445,70 @@ var Group = (function(manager, name, creationDate){
         );
     };
 
+    /**
+     * delete the group
+     *
+     * this method will detach mutual reference between user and group for deleted group, and remove group from inv:[email] object in redis server. It will the delete grp:[groupid_n] from doc:[docid_n].
+     * @param groupid_n - the id of the group to delete
+     * @param docid_n   - the id of the document containing the group
+     */
     pub_grp.DeleteGroup = function(groupid_n, docid_n){
-        function job(userid_n){
-            return User.prototype.RemoveGroupFromUser(userid_n, groupid_n).then(
-                function(){
+
+        /**
+         * remove user from group and group from user
+         */
+        function detachUserAndGroup(userid_n) {
+            return User.prototype.RemoveGroupFromUser(userid_n, groupid_n)
+                .then(function() {
                     return Group.RemoveUserFromGroup(groupid_n, userid_n);
-                }
-            )
+                });
         }
 
-        return Group.GetUsersFromGroup(groupid_n).then(
-            function(users){
-                return js_utils.PromiseLoop(job, users.participating.map(function(userid_n){return [userid_n];}));
-            }
-        ).then(
-            function(){
+        /**
+         * remove group from inv:[email] object
+         */
+        function removeGroupFromInvitee(email) {
+            console.log("DEBUG: LREM inv:"+ email + " 0 grp:" + groupid_n);
+            return RedisClient.LREM("inv:"+email, 0, "grp:"+groupid_n);
+        }
+
+        console.log("DEBUG: starting method Group.DeleteGroup("+ groupid_n + ", " + docid_n+")");
+        console.log("DEBUG: starting promiseToRemoveGroupFromInvitee");
+        const promiseToRemoveGroupFromInvitee = Group.GetUsersFromGroup(groupid_n)
+            .then(function(users) {
+                return js_utils.PromiseLoop(
+                    removeGroupFromInvitee,
+                    users.invited.map(function(email) {
+                            return [email];
+                        }
+                    )
+                );
+            });
+
+        console.log("DEBUG: starting promiseToDetachUserAndGroup");
+        const promiseToDetachUserAndGroup = Group.GetUsersFromGroup(groupid_n)
+            .then(function(users) {
+                return js_utils.PromiseLoop(
+                    detachUserAndGroup,
+                    users.participating.map(function(userid_n) {
+                            return [userid_n];
+                        }
+                    )
+                );
+            });
+
+        return Promise.all([
+                promiseToRemoveGroupFromInvitee,
+                promiseToDetachUserAndGroup
+            ]).then(function() {
+                console.log("DEBUG: finished removing from invitee and detach");
                 return Group.DeleteGroupFromDoc(groupid_n, docid_n);
-            }
-        )
+            });
     };
 
     pub_grp.DeleteGroupFromDoc = function(groupid_n, docid_n){
         return RedisClient.HGET("doc:"+docid_n, 'groups').then( // get group list of doc
-            function(groupsStr){
+            function(groupsStr) {
                 var groupsObj = JSON.parse(groupsStr);
                 var idx = groupsObj.indexOf("grp:"+groupid_n);
                 if (idx < 0) {
@@ -434,13 +516,13 @@ var Group = (function(manager, name, creationDate){
                     err.push_msg = true;
                     throw err;
                 }
-                else{
+                else {
                     groupsObj.splice(idx, 1);
                     return RedisClient.HSET("doc:"+docid_n, "groups", JSON.stringify(groupsObj));  // save modified group list of doc
                 }
             }
         ).then(
-            function(){
+            function() {
                 return RedisClient.DEL("grp:"+groupid_n);  // delete group
             }
         )
@@ -729,8 +811,8 @@ var Logs = function(group_n, logs){
     });
     return Promise.all(promises);
 };
-/* data sanity check-up*/
 
+/* data sanity check-up*/
 (function dataSanityCheckup(){
 
     (function checkInvited(){
@@ -767,13 +849,16 @@ var Logs = function(group_n, logs){
                 );
             }
         ).then(
-            function(){
+            // populate inv_hash by setting each inv:[email] to grp:
+            function() {
                 return RedisClient.KEYS('inv:*').then(
                     function(_invs){
+                        // get list of groups to each inv:[email] i.e. the groups this email is invited to
                         var promises =_invs.map(function(inv){
                             return RedisClient.LRANGE(inv, 0, -1);
                         });
 
+                        // Promise.all() fulfills a list of lists
                         return Promise.all(promises).then(
                             function(_inv_groups){
                                 for(var i = 0, l = _invs.length; i < l; ++i){
@@ -851,6 +936,11 @@ var Logs = function(group_n, logs){
                         var groups = inv_hash[email];
                         groups.forEach(function(group){
                             if(!group_hash.hasOwnProperty(group) || group_hash[group].users.invited.indexOf(email.substring(4)) === -1){
+                                if(!group_hash.hasOwnProperty(group)) { 
+                                    console.log("ERR: group does not exist!"); 
+                                } else { 
+                                    console.log("ERR: group does not contain the invitation!"); 
+                                }
                                 console.log('# dangled invitation in inv:<email>: ' + group + ' in ' + email);
                             }
                         });

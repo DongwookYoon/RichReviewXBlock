@@ -1,17 +1,23 @@
 /**
  * Created by Dongwook on 12/13/2014.
  */
-var formidable = require('formidable');
-var uuid = require('node-uuid');
-var mkdirp = require('mkdirp');
-var Promise = require("promise");
-var js_utils = require('../lib/js_utils');
-var env = require('../lib/env.js');
-var azure = require("../lib/azure");
-var request = require("request");
-var crypto = require('crypto');
-var fs = require('fs');
-var R2D = require("../lib/r2d.js");
+
+// import built-in modules
+const crypto = require('crypto');
+const fs = require('fs');
+
+// import npm modules
+const formidable = require('formidable');
+const uuid = require('node-uuid');
+const mkdirp = require('mkdirp');
+const Promise = require("promise");
+const request = require("request");
+
+// import libraries
+const js_utils = require('../lib/js_utils');
+const env = require('../lib/env.js');
+const azure = require("../lib/azure");
+const R2D = require("../lib/r2d.js");
 
 /**
  * CHANGES: 20180505
@@ -78,7 +84,8 @@ exports.post = function (req, res) {
  upload intro.mp4 video
  */
 
-exports.upload_intro_video = function(){
+exports.upload_intro_video = function() {
+    console.log("DEBUG: upload intro video");
     return new Promise(
         function(resolve, reject){
             azure.svc.createBlockBlobFromLocalFile(
@@ -104,7 +111,9 @@ exports.upload_intro_video = function(){
  * @param res
  */
 function postRespServeUuid(req, res) {
+    console.log("DEBUG: upload.js postRespServeUuid");
     var myuuid = uuid.v1();
+    console.log("DEBUG: myuuid="+myuuid);
     Promise.denodeify(mkdirp)(env.path.temp_pdfs + '/' + myuuid).then(
         function(){
             js_utils.PostResp(res, req, 200, myuuid);
@@ -156,6 +165,8 @@ function postRespUploadFile(req, res, myuuid, fileidx) {
     }).then(
         function (files) {
             var filepath = myuuid + '/' + fileidx+".pdf";
+            console.log("DEBUG: upload.js postRespUploadFile");
+            console.log("DEBUG: filepath="+filepath);
             return Promise.denodeify(js_utils.CopyFile)(files.file.path, env.path.temp_pdfs + '/' + filepath).then(
                 function(){
                     return filepath;
@@ -236,6 +247,8 @@ var muPlaServerDownEmailAlert = function(myuuid){
  * @param req
  * @param res
  * @param myuuid
+ *
+ * TODO: new uploads are not being uploaded to Azure Blob storage
  */
 function postRespUploadDocLayout(req, res, myuuid) {
 
@@ -243,34 +256,27 @@ function postRespUploadDocLayout(req, res, myuuid) {
         myuuid: myuuid,
         user: req.user
     };
-    return Post_UploadDocLayout_ReceiveVsDoc(req, ctx).then(
-        Post_UploadDocLayout_CreateAzureBlob_PDF
-    ).then(
-        Post_UploadDocLayout_CreateAzureBlob_VsDoc
-    ).then(
-        Post_UploadDocLayout_CreateDocAndGroupDb
-    ).then(
-        function(_ctx){
-            return R2D.Group.connectUserAndGroup(_ctx.groupid.substring(4), _ctx.user.id).then(
-                function(){return _ctx;}
-            );
-        }
-    ).then(
-        function(_ctx){
+    return Post_UploadDocLayout_ReceiveVsDoc(req, ctx)
+        .then(Post_UploadDocLayout_CreateAzureBlob_PDF)
+        .then(Post_UploadDocLayout_CreateAzureBlob_VsDoc)
+        .then(Post_UploadDocLayout_CreateDocAndGroupDb)
+        .then(function(_ctx) {
+            return R2D.Group.connectUserAndGroup(_ctx.groupid.substring(4), _ctx.user.id)
+                    .then(function() { return _ctx; }
+                );
+        }).then(function(_ctx) {
             var redirect_url = js_utils.getHostname() +
                 "/viewer?access_code="+_ctx.pdf_hash +
                 "&docid=" + _ctx.docid.substring(4) +
-                "&groupid=" + _ctx.groupid.substring(4) ;
+                "&groupid=" + _ctx.groupid.substring(4);
             js_utils.PostResp(res, req, 200, redirect_url);
-        }
-    ).catch(
-        function(err){
+        }).catch(function(err) {
             js_utils.PostResp(res, req, 500, err);
-        }
-    );
+        });
 }
 
 function Post_UploadDocLayout_ReceiveVsDoc(req, ctx){
+    console.log("DEBUG: upload.js Post_UploadDocLayout_ReceiveVsDoc");
     return new Promise(function (resolve, reject) {
         var buf = '';
         req.on('data', function (data) {
@@ -291,8 +297,15 @@ function Post_UploadDocLayout_ReceiveVsDoc(req, ctx){
 
 function Post_UploadDocLayout_CreateAzureBlob_PDF(_ctx){
     var pdf_path = env.path.temp_pdfs + "/"+_ctx.myuuid+"/merged.pdf";
-    return Promise.denodeify(fs.readFile)(pdf_path, "binary").then(
-        function(pdf_str){
+    console.log("DEBUG: upload.js Post_UploadDocLayout_CreateAzureBlob_PDF");
+    console.log("DEBUG: pdf_path="+pdf_path);
+    /*
+    // TODO: test and delete commented code
+    return Promise.denodeify(fs.readFile)(pdf_path, "binary")
+        .then(function(pdf_str){
+
+            console.log("DEBUG: upload.js Post_UploadDocLayout_CreateAzureBlob_PDF CHECKPOINT");
+
             var shasum = crypto.createHash('sha1');
             shasum.update(pdf_str);
             _ctx.pdf_hash = shasum.digest('hex').toLowerCase();
@@ -302,6 +315,8 @@ function Post_UploadDocLayout_CreateAzureBlob_PDF(_ctx){
                 blob: "doc.pdf",
                 blob_localfile_path:pdf_path
             };
+
+            console.log("DEBUG: "+ JSON.stringify(ctx));
 
             return azure.CreateContainerIfNotExist(ctx).then(
                 azure.DoesBlobExist
@@ -314,9 +329,39 @@ function Post_UploadDocLayout_CreateAzureBlob_PDF(_ctx){
             );
         }
     );
+    */
+    return Promise.denodeify(fs.readFile)(pdf_path, "binary")
+        .then(function(pdf_str) {
+
+            console.log("DEBUG: upload.js Post_UploadDocLayout_CreateAzureBlob_PDF CHECKPOINT");
+
+            var shasum = crypto.createHash('sha1');
+            shasum.update(pdf_str);
+            _ctx.pdf_hash = shasum.digest('hex').toLowerCase();
+
+            var ctx = {
+                container: _ctx.pdf_hash,
+                blob: "doc.pdf",
+                blob_localfile_path: pdf_path
+            };
+
+            console.log("DEBUG: " + JSON.stringify(ctx));
+            return ctx;
+        }).then(azure.CreateContainerIfNotExist)
+        .then(azure.DoesBlobExist)
+        .then(azure.CreateBlobFromLocalFile)
+        .then(function(ctx) {
+            return _ctx; //
+        }).catch(function(err) {
+            console.log("ERR: in upload Post_UploadDocLayout_CreateAzureBlob_PDF");
+            console.log("ERR: "+err);
+            return Promise.reject(err);
+        });
 }
 
 function Post_UploadDocLayout_CreateAzureBlob_VsDoc(_ctx){
+    console.log("DEBUG: upload.js Post_UploadDocLayout_CreateAzureBlob_VsDoc");
+    // console.log("DEBUG: " + JSON.stringify(_ctx));
     return new Promise(function (resolve, reject) {
         azure.svc.createBlockBlobFromText(_ctx.pdf_hash, "doc.vs_doc", JSON.stringify(_ctx.doclayout), function(err, resp){
             if(err){
@@ -330,6 +375,7 @@ function Post_UploadDocLayout_CreateAzureBlob_VsDoc(_ctx){
 }
 
 function Post_UploadDocLayout_CreateDocAndGroupDb(_ctx){
+    console.log("DEBUG: upload.js Post_UploadDocLayout_CreateDocAndGroupDb");
     return new Promise(function (resolve, reject) {
         R2D.Doc.CreateNew(
             _ctx.user.id,

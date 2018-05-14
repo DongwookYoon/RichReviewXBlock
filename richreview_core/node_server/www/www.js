@@ -9,13 +9,17 @@ const crypto = require('crypto');
 // import npm modules
 const Promise = require("promise");
 
-process.env.NODE_ENV = 'development';
-/*if(typeof v8debug === 'object'){
+/**
+ * Set the environment to development
+ *
+ * should be placed before require(app)
+ */
+if(typeof v8debug === 'object' || os.hostname() === "spire"){
     process.env.NODE_ENV = 'development';
 }
 else{
-    process.env.NODE_ENV = 'production'; // should be placed before require(app)
-}*/
+    process.env.NODE_ENV = 'production';
+}
 console.log('App NODE_ENV:', process.env.NODE_ENV);
 
 console.log("DEBUG: env.js");

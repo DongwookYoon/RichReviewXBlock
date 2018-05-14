@@ -14,9 +14,7 @@ exports.admin_list = [
 ];
 
 /**
- * CHANGES: 20180504
- *
- * change the path of the webapps
+ * path of the webapps
  */
 /*
 // TODO: confirm this is OK and delete
@@ -39,7 +37,7 @@ exports.path = {
 /**
  * CHANGES: 20180504
  *
- * change the path of the webapps
+ * make webapp urls
  */
 /*
 // TODO: confirm this is OK and delete
@@ -68,6 +66,7 @@ exports.webapp_urls = {
         /((\/|^)\..*)|(^test\/.*)/
     )
 };
+
 /*
 exports.config_files = {
     azure_keys:     '../ssl/azure_keys.json',
@@ -79,13 +78,17 @@ exports.config_files = {
 };*/
 exports.config_files = {
     azure_keys:       path.join(__dirname, '..', 'ssl/azure_keys.json'),
-    bluemix_stt_auth: path.join(__dirname, '..', 'ssl/bluemix_stt_auth.json'),
-    google_open_id:   path.join(__dirname, '..', 'ssl/google_open_id.json') //,
+    bluemix_stt_auth: path.join(__dirname, '..', 'ssl/bluemix_stt_auth.json')//,
     // TODO: these are not being used(?) test and delete commented
+    // google_open_id:   path.join(__dirname, '..', 'ssl/google_open_id.json'),
     //ssl_key:          path.join(__dirname, '..', 'ssl/richreview_net.key'),
     //ssl_cert:         path.join(__dirname, '..', 'ssl/richreview_net.crt'),
     //ssl_ca:           path.join(__dirname, '..', 'ssl/root.crt')
 };
+
+exports.google_oauth = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '..', 'ssl/google_open_id.json'), 'utf-8')
+)["web"];
 
 exports.cornell_wsfed = JSON.parse(
     fs.readFileSync(path.join(__dirname, '..', 'ssl/cornell_wsfed.json'), 'utf-8')

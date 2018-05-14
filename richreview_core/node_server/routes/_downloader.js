@@ -24,9 +24,13 @@ function Downloader_SendZip(res, c_id){
     });
 
     archive.pipe(zipfile);
+
+    // bulk method has been deprecated and removed!
+    // TODO: change the implementation!
     archive.bulk([
-        { expand: true, cwd: '../_temp', src: [c_id, c_id+'/*']}
+        { expand: true, cwd: '../_temp', src: [c_id, c_id+'/!*']}
     ]);
+
     archive.finalize();
 }
 

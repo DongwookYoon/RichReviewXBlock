@@ -26,8 +26,8 @@ var env = require('./lib/env.js');
 console.log("START: importing passport");
 var passport = require('passport');
 
-console.log("       importing passport-google-oauth");
-var GoogleStrategy = require('passport-google-oauth2').Strategy;
+console.log("       importing passport-google-oauth20");
+var GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 console.log("       importing passport-azure-ad");
 const wsfedsaml2 = require('./passport-azure-ad').WsfedStrategy;
@@ -99,7 +99,7 @@ passportSetup();
 console.log("START: set static pages");
 setupStaticPages();
 
-console.log("START: not sure what this is");
+console.log("START: switch lti for user if needed");
 app.use(function(req, res, next){
     if(req.user instanceof LtiEngine.User){
         if( (req.url !== '/bluemix_stt_auth' && req.url.substring(0, 5) !== '/lti_') && req.method !== 'POST'){
@@ -207,7 +207,6 @@ function passportSetup(){
         )
     );
 
-    // TODO: make passport work with wsfedsaml2
     console.log("PASSPORT: set up login_cornell routing");
     app.get(
         '/login_cornell',
@@ -224,17 +223,21 @@ function passportSetup(){
         }
     );
 
-    // TODO: make passport work with GoogleStrategy
+    /**
+     * use strategy OAuth2.0 with Google ID
+     *
+     * TODO: test strategy
+     */
+    //
     console.log("PASSPORT: set up Google auth");
-    // Google ID
-    var google_oauth = JSON.parse(fs.readFileSync(env.config_files.google_open_id, 'utf-8'));
+    const redirect_uri = process.env.NODE_ENV === "development" ?
+        env.google_oauth.redirect_uris[1] : env.google_oauth.redirect_uris[0];
     passport.use(
         new GoogleStrategy(
             {
-                clientID: google_oauth.web.client_id,
-                clientSecret: google_oauth.web.client_secret,
-                callbackURL: google_oauth.web.redirect_uris[0],
-                passReqToCallback: false
+                clientID: env.google_oauth.client_id,
+                clientSecret: env.google_oauth.client_secret,
+                callbackURL: redirect_uri,
             },
             function (accessToken, refreshToken, profile, done){
                 var email = profile.emails.length !== 0 ? profile.emails[0].value : '';
@@ -261,18 +264,13 @@ function passportSetup(){
     );
     app.get(
         '/login_google',
-        passport.authenticate(
-            'google', {scope:['email']}
-        )
+        passport.authenticate( 'google', { scope:['email'] } )
     );
     app.get(
         '/login-oauth2-return',
-        passport.authenticate('google', { failureRedirect: '/login_google' }),
-        function(req, res) {
-            res.redirect(req.session.latestUrl || '/');
-        }
+        passport.authenticate( 'google', { failureRedirect: '/login_google' } ),
+        function(req, res) { res.redirect(req.session.latestUrl || '/'); }
     );
-
 
     var EDX_LTI_CONSUMER_OAUTH = {
         key: 'xh0rSz5O03-richreview.cornellx.edu',

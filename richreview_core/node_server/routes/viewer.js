@@ -21,6 +21,7 @@ exports.page = function (req, res) {
         }
         urlqueries = querystring.parse(urlqueries);
 
+        // console.log("DEBUG: " + js_utils.getHostname());
         var r2_ctx = {
             pdfid: urlqueries["access_code"] || "",
             docid: urlqueries["docid"] || "",
@@ -31,6 +32,10 @@ exports.page = function (req, res) {
             pmo: urlqueries["pmo"] || "",
             comment: urlqueries["comment"] || ""
         };
+
+        /*for(var k in r2_ctx) {
+            console.log("DEBUG: "+k+": "+r2_ctx[k]);
+        }*/
 
         res.render(
             'viewer_webapp',

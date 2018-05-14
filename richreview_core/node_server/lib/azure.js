@@ -115,6 +115,7 @@ exports.sqlQuery = function(cmd, callback){
 };
 
 exports.CreateContainerIfNotExist = function(ctx){
+    console.log("DEBUG azure.js CreateContainerIfNotExist");
     return new Promise(function(resolve, reject){
         blob_svc.createContainerIfNotExists(
             ctx.container,
@@ -132,6 +133,7 @@ exports.CreateContainerIfNotExist = function(ctx){
 };
 
 exports.DoesBlobExist = function(ctx){
+    console.log("DEBUG azure.js DoesBlobExist");
     return new Promise(function(resolve, reject){
         blob_svc.doesBlobExist(ctx.container, ctx.blob, function(err, resp){
             if(err){
@@ -173,7 +175,13 @@ exports.SetBlobFromText = function(ctx){
     });
 };
 
+/**
+ *
+ *
+ * TODO: does not seem to create blob from pdf file!
+ */
 exports.CreateBlobFromLocalFile = function(ctx){
+    console.log("DEBUG: azure.js CreateBlobFromLocalFile");
     return new Promise(function(resolve, reject){
         if(ctx.is_blob_exist){
             resolve(ctx);

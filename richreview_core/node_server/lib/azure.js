@@ -178,28 +178,49 @@ exports.SetBlobFromText = function(ctx){
 /**
  *
  *
- * TODO: does not seem to create blob from pdf file!
+ * TODO: promisify blob_svc.createBlockBlobFromLocalFile
  */
-exports.CreateBlobFromLocalFile = function(ctx){
-    console.log("DEBUG: azure.js CreateBlobFromLocalFile");
+exports.CreateBlobFromLocalFile = function(ctx) {
+    /*
+    // TODO: test and remove commented code
     return new Promise(function(resolve, reject){
         if(ctx.is_blob_exist){
+            console.log("DEBUG: CRITICAL ctx.is_blob_exist=true");
             resolve(ctx);
         }
         else{
-            blob_svc.createBlockBlobFromLocalFile(ctx.container, ctx.blob, ctx.blob_localfile_path,
+            console.log("DEBUG: CRITICAL ctx.is_blob_exist=false");
+            blob_svc.createBlockBlobFromLocalFile(
+                ctx.container,
+                ctx.blob,
+                ctx.blob_localfile_path,
                 function(err){
-                    if(err){
-                        reject(err);
-                    }
-                    else{
-                        resolve(ctx);
-                    }
+                    if(err) { reject(err); }
+                    else { resolve(ctx); }
                 }
             );
         }
     });
+    */
+    console.log("DEBUG: azure.js CreateBlobFromLocalFile");
+    return new Promise(function(resolve, reject) {
+            console.log("DEBUG: svc.CreateBlobFromLocalFile");
+            blob_svc.createBlockBlobFromLocalFile(
+                ctx.container,
+                ctx.blob,
+                ctx.blob_localfile_path,
+                function (err) {
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        resolve(ctx);
+                    }
+                }
+            );
+        })
 };
+
 
 exports.ListBlobsWithPrefix = function(container, prefix){
     return new Promise(function(resolve, reject){

@@ -348,7 +348,6 @@ function Post_UploadDocLayout_CreateAzureBlob_PDF(_ctx){
             console.log("DEBUG: " + JSON.stringify(ctx));
             return ctx;
         }).then(azure.CreateContainerIfNotExist)
-        .then(azure.DoesBlobExist)
         .then(azure.CreateBlobFromLocalFile)
         .then(function(ctx) {
             return _ctx; //

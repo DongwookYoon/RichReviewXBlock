@@ -36,6 +36,7 @@ exports.page = function (req, res) {
         /*for(var k in r2_ctx) {
             console.log("DEBUG: "+k+": "+r2_ctx[k]);
         }*/
+        console.log("DEBUG: " + r2_ctx.pdfid);
 
         res.render(
             'viewer_webapp',

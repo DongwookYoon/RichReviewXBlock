@@ -142,7 +142,8 @@ Strategy.prototype.authenticate = function(req) {
             } else {
                 wsfed = self.metadata.wsfed;
                 self._saml.certs = wsfed.certs;
-                // self._wsfed.identityProviderUrl = wsfed.loginEndpoint;
+                // Does not overwrite the url given from Cornell ADFS
+                //self._wsfed.identityProviderUrl = wsfed.loginEndpoint;
                 self._doAuthenticate(req);
             }
         });

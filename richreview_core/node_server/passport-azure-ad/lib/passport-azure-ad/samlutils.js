@@ -109,23 +109,12 @@ exports.getProfile = function(assertion) {
 
   var attributes = aadutils.getElement(attributeStatement, 'Attribute');
 
+  // Cornell Profile
   if (attributes) {
     attributes.forEach(function(attribute) {
-      /*
-      if (attribute.AttributeValue && attribute.AttributeValue.length > 1) {
-        profile[attribute.$.Name] = attribute.AttributeValue;
-      } else {
-        var value = aadutils.getFirstElement(attribute, 'AttributeValue');
-        if (typeof value === 'string') {
-          profile[attribute.$.Name] = value;
-        } else {
-          profile[attribute.$.Name] = value._;
-        }
+      if (attribute['saml:AttributeValue']) {
+        profile[attribute.$.AttributeName] = attribute['saml:AttributeValue'];
       }
-      */
-        if (attribute['saml:AttributeValue']) {
-          profile[attribute.$.AttributeName] = attribute['saml:AttributeValue'];
-        }
     });
   }
 

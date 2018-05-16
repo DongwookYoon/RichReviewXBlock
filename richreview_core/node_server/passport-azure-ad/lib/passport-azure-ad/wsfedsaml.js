@@ -131,8 +131,7 @@ SAML.prototype.validateResponse = function (samlAssertionString, callback) {
     else {
       return callback(new Error('SAML Assertion version not supported'), null);
     }
-
-    // /*
+    /* bears an old version for Cornell ADFS
     if (!samlutils.validateExpiration(samlAssertion, version)) {
       return callback(new Error('Token has expired.'), null);
     }
@@ -140,19 +139,10 @@ SAML.prototype.validateResponse = function (samlAssertionString, callback) {
     if (!samlutils.validateAudience(samlAssertion, self.options.realm, version)) {
       return callback(new Error('Audience is invalid. Expected: ' + self.options.realm), null);
     }
-    // */
+    */
 
     try {
       var profile = samlutils.getProfile(samlAssertion);
-      if (!profile.issuer)
-        return callback(new Error(`Issuer is was not found in token.`));
-
-      if (!self.options.metadata.metatdata.EntityDescriptor['$'].entityID)
-        return callback(new Error(`Issuer was not found in metadata obtained from: ${self.options.identityMetadata}`));
-
-      if (!(self.options.metadata.metatdata.EntityDescriptor['$'].entityID === profile.issuer))
-        return callback(new Error(`Issuer is invalid. Expected: ${self.options.metadata.metatdata.EntityDescriptor['$'].entityID}, Received in token: ${profile.issuer}`));
-
       return callback(null, profile);
     } catch(e) {
       return callback(new Error("getProfile error:" + e.message));

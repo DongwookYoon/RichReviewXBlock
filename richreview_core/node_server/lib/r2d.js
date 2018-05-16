@@ -683,7 +683,7 @@ var Doc = (function(){
     /**
      *
      *
-     * getting error ode_redis: Deprecated: The HMSET command contains a "undefined" argument.
+     * getting error node_redis: Deprecated: The HMSET command contains a "undefined" argument.
      This is converted to a "undefined" string now and will return an error from v.3.0 on.
      Please handle this in your code to make sure everything works as you intended it to.
      * TODO: change crs_submission variable

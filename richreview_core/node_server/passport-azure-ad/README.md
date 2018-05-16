@@ -12,14 +12,6 @@ issuance and validation.
 _passport-azure-ad_ has been tested to work with both [Microsoft Azure Active Directory](https://azure.microsoft.com/en-us/services/active-directory/) 
 and with [Microsoft Active Directory Federation Services](http://en.wikipedia.org/wiki/Active_Directory_Federation_Services).
 
-## Security Vulnerability in Versions < 1.4.6 and 2.0.0
-_passport-azure-ad_ has a known security vulnerability affecting versions <1.4.6 and 2.0.0. Please update to >=1.4.6 or >=2.0.1 immediately. For more details, see the [security notice](https://github.com/AzureAD/passport-azure-ad/blob/master/SECURITY-NOTICE.MD).
-
-## Versions
-Current version - 2.0.3  
-Minimum  recommended version - 1.4.6  
-You can find the changes for each version in the [change log](https://github.com/AzureAD/passport-azure-ad/blob/master/CHANGELOG.md).
-
 ## Contribution History
 
 [![Stories in Ready](https://badge.waffle.io/AzureAD/passport-azure-ad.png?label=ready&title=Ready)](https://waffle.io/AzureAD/passport-azure-ad)
@@ -28,7 +20,7 @@ You can find the changes for each version in the [change log](https://github.com
 
 ## Installation
 
-    $ npm install passport-azure-ad@1.4.6
+    $ npm install passport-azure-ad
 
 ## Usage
 
@@ -138,22 +130,6 @@ app.post('/auth/openid/return',
 
 ```
 
-## Test
-
-In the library root folder, type the following command to install the dependency packages:
-
-```
-    $ npm install
-```
-
-Then type the following command to run tests:
-
-```
-    $ npm test
-```
-
-Tests will run automatically and in the terminal you can see how many tests are passing/failing. More details can be found [here](https://github.com/AzureAD/passport-azure-ad/blob/master/contributing.md).
-
 ## Samples and Documentation
 
 [We provide a full suite of sample applications and documentation on GitHub](https://azure.microsoft.com/en-us/documentation/samples/?service=active-directory) 
@@ -171,10 +147,6 @@ We leverage [Stack Overflow](http://stackoverflow.com/) to work with the communi
 
 We recommend you use the "adal" tag so we can see it! Here is the latest Q&A on Stack Overflow for ADAL: [http://stackoverflow.com/questions/tagged/adal](http://stackoverflow.com/questions/tagged/adal)
 
-## Security Reporting
-
-If you find a security issue with our libraries or services please report it to [secure@microsoft.com](mailto:secure@microsoft.com) with as much detail as possible. Your submission may be eligible for a bounty through the [Microsoft Bounty](http://aka.ms/bugbounty) program. Please do not post security issues to GitHub Issues or any other public site. We will contact you shortly upon receiving the information. We encourage you to get notifications of when security incidents occur by visiting [this page](https://technet.microsoft.com/en-us/security/dd252948) and subscribing to Security Advisory Alerts.
-
 ## Contributing
 
 All code is licensed under the MIT license and we triage actively on GitHub. We enthusiastically welcome contributions and feedback. You can clone the repo and start contributing now. 
@@ -190,7 +162,3 @@ The code is based on Henri Bergius's [passport-saml](https://github.com/bergie/p
 
 ## License
 Copyright (c) Microsoft Corp.  All rights reserved. Licensed under the MIT License;
-
-## We Value and Adhere to the Microsoft Open Source Code of Conduct
-
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.

@@ -23,7 +23,6 @@
 
 'use strict';
 
-var UrlValidator = require('valid-url');
 var types = {};
 
 var Validator = function (config) {
@@ -61,6 +60,8 @@ Validator.prototype.validate = function (options) {
   }
 };
 
+
+
 Validator.isNonEmpty = 'isNonEmpty';
 types.isNonEmpty = {
   validate: function (value) {
@@ -72,9 +73,9 @@ types.isNonEmpty = {
 Validator.isTypeLegal = 'isTypeLegal';
 types.isTypeLegal = {
   validate: function (value) {
-    return value === 'id_token' || value === 'id_token code' || value === 'code' || value === 'code id_token';
+    return value === 'id_token' || value === 'id_token code' || value === 'code';
   },
-  error: 'The responseType: must be either id_token, id_token code, code id_token, or code.'
+  error: 'The responseType: must be either id_token, id_token code, or code.'
 };
 
 Validator.isModeLegal = 'isModeLegal';
@@ -87,26 +88,21 @@ types.isModeLegal = {
 
 Validator.isURL = 'isURL';
 types.isURL = {
-    validate: function (value) {
-        return UrlValidator.isHttpUri(value) || UrlValidator.isHttpsUri(value);
-    },
-    error: 'The URL must be valid and be https:// or http://',
-};
 
-Validator.isHttpURL = 'isHttpURL';
-types.isHttpURL = {
-    validate: function (value) {
-        return UrlValidator.isHttpUri(value);
-    },
-    error: 'The URL must be valid and be http://',
-};
-
-Validator.isHttpsURL = 'isHttpsURL';
-types.isHttpsURL = {
-    validate: function (value) {
-        return UrlValidator.isHttpsUri(value);
-    },
-    error: 'The URL must be valid and be https://',
+  validate: function (value) {
+    var pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
+      '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+      '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+      '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+      '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+      '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+    if (!pattern.test(value)) {
+      return false;
+    } else {
+      return true;
+    }
+  },
+  error: 'The URL must be valid and be https://'
 };
 
 exports.Validator = Validator;

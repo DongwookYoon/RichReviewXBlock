@@ -22,19 +22,8 @@ else{
 }
 console.log('App NODE_ENV:', process.env.NODE_ENV);
 
-console.log("DEBUG: env.js");
-
 // import libraries
 var env = require('../lib/env.js');
-
-// patching the fs module prevents the EMFILE error
-
-console.log("DEBUG: setting fs");
-// var realFs = require('fs');
-//var gracefulFs = require('graceful-fs');
-// gracefulFs.gracefulify(realFs);
-
-console.log("DEBUG: after setting fs");
 
 /**
  * Sync the richreview web app
@@ -147,7 +136,7 @@ var webAppSync = (function(){
 var runServer = function() {
     var app = require('../app');
     var hostname = os.hostname();
-    if (hostname == 'richreview') { // on richreview.net
+    if (hostname === 'richreview') { // on richreview.net
         httpsPort = 443;
         httpPort = 80;
     }

@@ -90,9 +90,19 @@ exports.google_oauth = JSON.parse(
     fs.readFileSync(path.join(__dirname, '..', 'ssl/google_open_id.json'), 'utf-8')
 )["web"];
 
-exports.cornell_wsfed = JSON.parse(
-    fs.readFileSync(path.join(__dirname, '..', 'ssl/cornell_wsfed.json'), 'utf-8')
-);
+exports.cornell_wsfed = (function() {
+    var cornel_wsfed_text = null;
+    if(process.env.NODE_ENV = 'development') {
+        cornel_wsfed_text = fs.readFileSync(
+            path.join(__dirname, '..', 'ssl/cornell_wsfed_development.json')
+        );
+    } else {
+        cornel_wsfed_text = fs.readFileSync(
+            path.join(__dirname, '..', 'ssl/cornell_wsfed.json')
+        );
+    }
+    return JSON.parse(cornel_wsfed_text, 'utf-8');
+})();
 
 exports.sha1_salt = JSON.parse(
     fs.readFileSync(path.join(__dirname, '..', 'ssl/sha1_salt.json'), 'utf-8')

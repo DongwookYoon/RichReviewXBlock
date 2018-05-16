@@ -1,6 +1,8 @@
-
-
-console.log("DEBUG: in lib/redis_client.js");
+/**
+ * Initialize the redis client
+ *
+ *
+ */
 
 // import built-in modules
 const os = require("os");

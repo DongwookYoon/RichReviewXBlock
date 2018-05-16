@@ -59,6 +59,7 @@ var resources = require('./routes/resources');
 var course = require('./routes/course');
 var bluemix_stt_auth = require('./routes/bluemix_stt_auth');
 var lti = require('./routes/lti');
+const login = require('./routes/login');
 
 mkdirp('../_temp');
 mkdirp('../cache');
@@ -178,7 +179,12 @@ function passportSetup(){
     });
 
     // Cornell NetID
-    // TODO: make passport work with wsfedsaml2
+    /**
+     * Use wsfed SAML 2.0 to login with Cornell ID
+     *
+     * TODO: make passport work with wsfedsaml2
+     *
+     */
     console.log("PASSPORT: use wsfedsaml2 auth with cornell wsfed");
     passport.use(
         new wsfedsaml2(
@@ -226,9 +232,10 @@ function passportSetup(){
     /**
      * use strategy OAuth2.0 with Google ID
      *
+     * TODO: refactor so we have separate init for env
+     * TODO: remove ternary operator
      * TODO: test strategy
      */
-    //
     console.log("PASSPORT: set up Google auth");
     const redirect_uri = process.env.NODE_ENV === "development" ?
         env.google_oauth.redirect_uris[1] : env.google_oauth.redirect_uris[0];
@@ -345,6 +352,13 @@ function setupServices(){
     app.get('/lti_discuss_rr',  lti.get_discuss_rr);
     app.get('/lti_discuss_bb',  lti.get_discuss_bb);
     app.get('/synclog',     _pages.getSyncLog);
+
+    /**
+     * CHANGES 20180516
+     *
+     * make customary login for pilot study
+     */
+    app.get('/login_pilot_study', login.login_pilot_study);
 
     // post requests
     app.post('/dbs',        dbs.post);

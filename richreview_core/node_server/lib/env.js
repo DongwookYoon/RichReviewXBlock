@@ -92,7 +92,7 @@ exports.google_oauth = JSON.parse(
 
 exports.cornell_wsfed = (function() {
     var cornel_wsfed_text = null;
-    if(process.env.NODE_ENV = 'development') {
+    if(process.env.NODE_ENV === 'development') {
         cornel_wsfed_text = fs.readFileSync(
             path.join(__dirname, '..', 'ssl/cornell_wsfed_development.json')
         );

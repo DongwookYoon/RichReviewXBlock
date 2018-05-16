@@ -33,7 +33,7 @@ if(os.hostname() === "spire") {
 }
 
 /**
- * Response to GET upload page. renders upload.jade.
+ * Response to GET upload page. renders upload.pug
  * @param req
  * @param res
  */

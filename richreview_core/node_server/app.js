@@ -71,7 +71,7 @@ const app = express();
 console.log("START: setup view engine");
 // todo: convert to pug
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.set('view engine', 'pug');
 
 console.log("START: use middleware");
 app.use(compression());
@@ -102,7 +102,7 @@ setupStaticPages();
 
 console.log("START: switch lti for user if needed");
 app.use(function(req, res, next){
-    if(req.user instanceof LtiEngine.User){
+    if(req.user instanceof LtiEngine.User) {
         if( (req.url !== '/bluemix_stt_auth' && req.url.substring(0, 5) !== '/lti_') && req.method !== 'POST'){
             req.logout();
         }
@@ -110,9 +110,10 @@ app.use(function(req, res, next){
     next();
 });
 
-
+console.log("START: set up routes");
 setupServices();
 
+console.log("START: set up redirects");
 setRedirections();
 
 setErrLog();
@@ -279,6 +280,9 @@ function passportSetup(){
         function(req, res) { res.redirect(req.session.latestUrl || '/'); }
     );
 
+    // 1) use Bearer Authentication as a passport strategy in app.js
+    // https://swagger.io/docs/specification/authentication/bearer-authentication/
+
     var EDX_LTI_CONSUMER_OAUTH = {
         key: 'xh0rSz5O03-richreview.cornellx.edu',
         secret: 'sel0Luv73Q'
@@ -358,7 +362,9 @@ function setupServices(){
      *
      * make customary login for pilot study
      */
-    app.get('/login_pilot_study', login.login_pilot_study);
+    app.get('/login_pilot_study', login.pilot_login_page);
+    app.post('/login_pilot_study', login.login_pilot_study);
+
 
     // post requests
     app.post('/dbs',        dbs.post);

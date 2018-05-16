@@ -22,7 +22,7 @@ else{
 }
 console.log('App NODE_ENV:', process.env.NODE_ENV);
 
-// import libraries
+// import libraries (depends on Node environment)
 var env = require('../lib/env.js');
 
 /**

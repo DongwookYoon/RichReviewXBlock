@@ -5,6 +5,7 @@
 // import built-in modules
 const crypto = require('crypto');
 const fs = require('fs');
+const path = require('path');
 
 // import npm modules
 const formidable = require('formidable');
@@ -30,9 +31,6 @@ if(os.hostname() === "spire") {
 } else {
     var MUPLA_SERVER_LOCAL_URL = "http://127.0.0.1:5000/mupla_serve/";
 }
-
-// TODO: test and delete comments
-// var MUPLA_SERVER_LOCAL_URL = "http://127.0.0.1:5000/mupla_serve/";
 
 /**
  * Response to GET upload page. renders upload.jade.
@@ -80,10 +78,11 @@ exports.post = function (req, res) {
     }
 };
 
-/*
- upload intro.mp4 video
+/**
+ * upload intro.mp4 video
+ *
+ * TODO: update directory to intro.mp4; test and refactor
  */
-
 exports.upload_intro_video = function() {
     console.log("DEBUG: upload intro video");
     return new Promise(
@@ -91,7 +90,7 @@ exports.upload_intro_video = function() {
             azure.svc.createBlockBlobFromLocalFile(
                 'data',
                 'video/intro.mp4',
-                '../cache/intro.mp4',
+                path.join(__dirname, 'cache') + '/intro.mp4',
                 function(err, result){
                     if(err){
                         reject(err);

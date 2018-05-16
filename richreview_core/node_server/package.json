@@ -3,12 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node www/www"
+    "start": "node www/www",
+    "test": "mocha -R list"
   },
   "dependencies": {
     "archiver": "^2.1.1",
     "async-lock": "^1.1.2",
     "azure-storage": "^2.8.2",
+    "chai": "^4.1.2",
     "compression": "^1.7.2",
     "connect-redis": "^3.3.3",
     "express": "^4.16.3",
@@ -17,6 +19,7 @@
     "ims-lti": "^3.0.2",
     "jade": "^1.11.0",
     "mkdirp": "^0.5.1",
+    "mocha": "^5.1.1",
     "moment": "^2.22.1",
     "morgan": "^1.9.0",
     "nconf": "^0.10.0",

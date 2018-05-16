@@ -1,21 +1,40 @@
 #!/usr/bin/env node
-var fs = require("fs");
-var os = require("os");
 
-if(typeof v8debug === 'object'){
+// import built-in modules
+const fs = require("fs");
+const os = require("os");
+const path = require("path");
+const crypto = require('crypto');
+
+// import npm modules
+const Promise = require("promise");
+
+/**
+ * Set the environment to development
+ *
+ * should be placed before require(app)
+ */
+if(typeof v8debug === 'object' || os.hostname() === "spire"){
     process.env.NODE_ENV = 'development';
 }
 else{
-    process.env.NODE_ENV = 'production'; // should be placed before require(app)
+    process.env.NODE_ENV = 'production';
 }
 console.log('App NODE_ENV:', process.env.NODE_ENV);
 
+console.log("DEBUG: env.js");
 
+// import libraries
 var env = require('../lib/env.js');
+
 // patching the fs module prevents the EMFILE error
-var realFs = require('fs');
-var gracefulFs = require('graceful-fs');
-gracefulFs.gracefulify(realFs);
+
+console.log("DEBUG: setting fs");
+// var realFs = require('fs');
+//var gracefulFs = require('graceful-fs');
+// gracefulFs.gracefulify(realFs);
+
+console.log("DEBUG: after setting fs");
 
 /**
  * Sync the richreview web app
@@ -25,10 +44,11 @@ gracefulFs.gracefulify(realFs);
 var webAppSync = (function(){
     var HOSTNAME = os.hostname() === 'richreview' ? 'richreview' : 'localhost';
     var HASHFILE = HOSTNAME+'/richreview_webapp_hash.txt';
-    var WEBAPP_PATH = './../../webapps/richreview/';
+    // var WEBAPP_PATH = './../../webapps/richreview/'; // TODO: test and delete
+    var WEBAPP_PATH = path.resolve(__dirname, '../../webapps/richreview/');
 
-    var Promise = require("promise");
-    var crypto = require('crypto');
+    // var Promise = require("promise");
+    // var crypto = require('crypto');
     var azure = require('../lib/azure');
     var js_utils = require("../lib/js_utils");
 
@@ -148,7 +168,7 @@ var runServer = function() {
         }
     );
 
-    require('https').createServer(
+    /*require('https').createServer(
         {
             key: fs.readFileSync('../ssl/richreview_net.key'),
             cert: fs.readFileSync('../ssl/richreview_net.crt'),
@@ -160,12 +180,24 @@ var runServer = function() {
         function () {
             console.log('Express server listening on HTTPS port:', app.https.get('port'));
         }
+    );*/
+    require('https').createServer(
+        {
+            key: fs.readFileSync(path.join(__dirname, '..', 'ssl/richreview_net.key')),
+            cert: fs.readFileSync(path.join(__dirname, '..', 'ssl/richreview_net.crt')),
+            ca: [fs.readFileSync(path.join(__dirname, '..', 'ssl/root.crt'))]
+        },
+        app.https
+    ).listen(
+        app.https.get('port'),
+        function () {
+            console.log('Express server listening on HTTPS port:', app.https.get('port'));
+        }
     );
 };
 
-
 if(process.argv[2]){
-    var process_course_submission = function(course_id, submission_id){
+    var process_course_submission = function(course_id, submission_id) {
         var pcs = require('../process_course_submission');
         pcs.run(course_id, submission_id);
     };

@@ -1,12 +1,13 @@
 /**
+ * R2D
+ *
  * Created by Dongwook on 1/31/2015.
  */
 
-/*
-* R2D
-*/
-
+// import npm modules
 var Promise = require("promise");
+
+// import libraries
 var js_utils = require('../lib/js_utils.js');
 var redisClient = require('../lib/redis_client').redisClient;
 var RedisClient = require('../lib/redis_client').RedisClient;
@@ -679,6 +680,14 @@ var Doc = (function(){
     //redis doc hash structure
     // userid, creationDate, pdfid, name, groups(list)
 
+    /**
+     *
+     *
+     * getting error ode_redis: Deprecated: The HMSET command contains a "undefined" argument.
+     This is converted to a "undefined" string now and will return an error from v.3.0 on.
+     Please handle this in your code to make sure everything works as you intended it to.
+     * TODO: change crs_submission variable
+     */
     pub_doc.CreateNew = function(userid_n, creationTime, pdfid, crs_submission){
         var docid = "doc:"+userid_n+"_"+creationTime;
         return RedisClient.EXISTS(docid).then(

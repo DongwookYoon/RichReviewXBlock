@@ -1,18 +1,28 @@
 /**
  * Created by Dongwook on 11/18/2014.
  */
-var js_error = require('../lib/js_error');
+
+// import built-in modules
+const fs = require('fs');
+const path = require('path');
+
+// import npm modules
 var azure = require('../lib/azure');
-var js_utils = require('../lib/js_utils');
 var request = require('request');
 var archiver = require('archiver');
-var fs = require('fs');
+
+var js_error = require('../lib/js_error');
+var js_utils = require('../lib/js_utils');
+
+const temp_folder = path.join(__dirname, '..' , '_temp');
 
 function Downloader_SendZip(res, c_id){
     archive = archiver('zip');
-    var zipfile = fs.createWriteStream('../_temp/'+c_id+'.zip');
+
+    const zipfile = fs.createWriteStream(temp_folder + '/' + c_id + '.zip');
+
     zipfile.on('close', function(){
-        res.download('../_temp/'+c_id+'.zip', 'richreview_data.zip', function(error){
+        res.download(temp_folder + '/' + c_id + '.zip', 'richreview_data.zip', function(error){
             if (error) {
                 js_error.HandleError('Internal Server-side Error', error, res);
             }
@@ -24,31 +34,37 @@ function Downloader_SendZip(res, c_id){
     });
 
     archive.pipe(zipfile);
-    archive.bulk([
-        { expand: true, cwd: '../_temp', src: [c_id, c_id+'/*']}
-    ]);
+
+    archive.directory(temp_folder + '/' + c_id, c_id, { date: new Date() });
+
     archive.finalize();
 }
 
+/**
+ * Function unclear???
+ *
+ * TODO: write a method to empty _temp contents after sending zip file
+ */
 function Downloader_DownloadFiles(res, c_id, blobs){
     var error_result = null;
     var done = 0;
+
     function AfterDownload(){
         ++done;
-        if(done == blobs.entries.length){
+        if(done === blobs.entries.length) {
             if(error_result){
                 js_error.HandleError('Internal Server-side Error', error_result, res);
-            }
-            else{
+            } else{
                 Downloader_SendZip(res, c_id);
             }
         }
     }
+
     for (var i = 0; i < blobs.entries.length; ++i) {
-        (function(){
+        (function() {
             var blob_path = c_id + '/' + blobs.entries[i].name;
             var blob_url = azure.BLOB_HOST + blob_path;
-            var fs_path = '../_temp/' + blob_path;
+            var fs_path = temp_folder + '/' + blob_path;
             var file = fs.createWriteStream(fs_path);
             file.on('finish', function(error){
                 if(error){error_result = error;}
@@ -76,27 +92,23 @@ function Downloader_DownloadFiles(res, c_id, blobs){
 function Downloader_SetDownloadFolder(res, c_id){
     azure.svc.listBlobsSegmented(c_id, null, function (error, blobs) {
         if (error) {
-            if(error.code == 'ContainerNotFound'){
+            if(error.code === 'ContainerNotFound'){
                 js_error.HandleError('Invalid Access to Downloader', 'ContainerNotFound', res);
             }
             else{
                 js_error.HandleError('Invalid Access to Downloader', 'No Query Data', res);
             }
-        }
-        else {
-            try{
-                fs.unlinkSync('../_temp/'+c_id+'.zip');
-            }
-            catch(error){
-                x=0
+        } else {
+            try {
+                fs.unlinkSync(temp_folder + '/' + c_id + '.zip');
+            } catch(error) {
+                // x=0
             }
 
-            js_utils.CreateCleanFolderAsync('../_temp/'+c_id, function(error){
-                if(error){
+            js_utils.CreateCleanFolderAsync(temp_folder + '/' + c_id, function(error) {
+                if(error) {
                     js_error.HandleError('Internal Server-side Error', error, res);
-                }
-                else{
-
+                } else {
                     Downloader_DownloadFiles(res, c_id, blobs);
                 }
             });

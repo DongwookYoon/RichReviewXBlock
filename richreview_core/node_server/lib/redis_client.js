@@ -1,15 +1,20 @@
-var Promise = require("promise");
-var redis = require('redis');
-var env = require('../lib/env');
+
+
+console.log("DEBUG: in lib/redis_client.js");
+
+// import built-in modules
 const os = require("os");
+
+// import npm modules
+const Promise = require("promise");
+const redis = require('redis');
+
+// import libraries
+const env = require('../lib/env');
 
 /**
  *  CHANGES: 20180503
  *
- * If os hostname is spire then use the local redis server, otherwise use the server on richreview.net
- */
-
-/**
  * If os hostname is spire then use the local redis server, otherwise use the server on richreview.net
  */
 if(os.hostname() === "spire") {

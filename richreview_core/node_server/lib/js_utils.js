@@ -7,16 +7,16 @@ console.log("DEBUG: before importing modules");
 // import built-in modules
 const path = require('path');
 const fs = require('fs');
-var os = require("os");
-var crypto = require('crypto');
+const os = require("os");
+const crypto = require('crypto');
 
 // import npm modules
-var request = require('request');
-var mkdirp = require('mkdirp');
-var unzip = require('unzip');
-var moment = require('moment');
-var Promise = require("promise");
-var nodemailer = require('nodemailer');
+const request = require('request');
+const mkdirp = require('mkdirp');
+const unzip = require('unzip');
+const moment = require('moment');
+const Promise = require("promise"); // jshint ignore:line
+const nodemailer = require('nodemailer');
 
 console.log("DEBUG: after importing modules");
 
@@ -51,7 +51,7 @@ exports.CreateCleanFolderAsync = function(_path, callback){
 
 exports.LoadFileAsync = function (path, callback){
     request.get(path, function (error, response, body) {
-        if (!error && response.statusCode == 200) {
+        if (!error && response.statusCode === 200) {
             callback(null, body);
         }
         else{
@@ -99,7 +99,7 @@ exports.PostResp = function(res, req, code, err){
     }
 
     res.statusCode = code;
-    if(req.headers.origin == 'https://localhost:8000' || req.headers.origin == 'https://localhost:8001' ){
+    if(req.headers.origin === 'https://localhost:8000' || req.headers.origin == 'https://localhost:8001' ){
         res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     }
     res.send(s);
@@ -300,7 +300,7 @@ exports.PromiseLoop = function(func, argl){
     var rtnl = new Array(argl.length);
     return new Promise(function(resolve, reject){
         function job(n){
-            if(n != argl.length){
+            if(n !== argl.length){
                 func.apply(this, argl[n]).then(
                     function(rtn){
                         try{
@@ -313,7 +313,7 @@ exports.PromiseLoop = function(func, argl){
                     }
                 ).catch(
                     reject
-                )
+                );
             }
             else{
                 resolve(rtnl);
@@ -357,7 +357,7 @@ exports.getHostname = (function(){
     return function(){
         if(url === ""){
             url = 'localhost:8001';
-            if(os.hostname() == 'richreview'){
+            if(os.hostname() === 'richreview'){
                 url = 'richreview.net';
             }
             url = 'https://'+url;
@@ -464,9 +464,10 @@ exports.redirectUnknownUser = function(req, res){
 exports.validateEmail = function(email){
     var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     if(re.test(email)){
-        if(email.substring(email.length-12).toLowerCase() == "@cornell.edu" ||
-            email.substring(email.length-10).toLowerCase() == "@gmail.com" ||
-            email.substring(email.length-8).toLowerCase() == "@edx.org"){
+        if( email.substring(email.length-12).toLowerCase() === "@cornell.edu" ||
+            email.substring(email.length-10).toLowerCase() === "@gmail.com" ||
+            email.substring(email.length-8).toLowerCase() === "@edx.org" ||
+            email.substring(email.length-12).toLowerCase() === "@pilot.study"){
             return true;
         }
         else{

@@ -24,13 +24,16 @@ console.log("START: importing env.js");
 var env = require('./lib/env.js');
 
 console.log("START: importing passport");
-var passport = require('passport');
+const passport = require('passport');
 
-console.log("       importing passport-google-oauth20");
-var GoogleStrategy = require('passport-google-oauth20').Strategy;
+console.log("       importing google oauth 2.0 strategy");
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 console.log("       importing passport-azure-ad");
 const wsfedsaml2 = require('./passport-azure-ad').WsfedStrategy;
+
+console.log("       importing passport-local strategy");
+const LocalStrategy = require('passport-local').Strategy;
 
 console.log("       importing passport-lti");
 var LtiStrategy = require('passport-lti');
@@ -40,6 +43,7 @@ var js_utils = require('./lib/js_utils.js');
 var R2D = require('./lib/r2d.js');
 var LtiEngine = require('./lib/lti_engine.js');
 var redis_client = require('./lib/redis_client.js');
+const pilotStudy = require('./lib/pilot_study.js');
 
 console.log("START: connecting to redis");
 var RedisStore = require('connect-redis')(expressSession);
@@ -69,7 +73,6 @@ mkdirp(env.path.temp_pdfs);
 const app = express();
 
 console.log("START: setup view engine");
-// todo: convert to pug
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
@@ -118,7 +121,7 @@ setRedirections();
 
 setErrLog();
 
-app_http = redirectHttp();
+let app_http = redirectHttp();
 
 
 
@@ -233,8 +236,6 @@ function passportSetup(){
     /**
      * use strategy OAuth2.0 with Google ID
      *
-     * TODO: refactor so we have separate init for env
-     * TODO: remove ternary operator
      * TODO: test strategy
      */
     console.log("PASSPORT: set up Google auth");
@@ -247,7 +248,7 @@ function passportSetup(){
                 clientSecret: env.google_oauth.client_secret,
                 callbackURL: redirect_uri,
             },
-            function (accessToken, refreshToken, profile, done){
+            function (accessToken, refreshToken, profile, done) {
                 var email = profile.emails.length !== 0 ? profile.emails[0].value : '';
                 R2D.User.prototype.isExist(profile.id).then(
                     function(is_exist){
@@ -270,20 +271,35 @@ function passportSetup(){
             }
         )
     );
+
     app.get(
         '/login_google',
         passport.authenticate( 'google', { scope:['email'] } )
     );
+
     app.get(
         '/login-oauth2-return',
         passport.authenticate( 'google', { failureRedirect: '/login_google' } ),
         function(req, res) { res.redirect(req.session.latestUrl || '/'); }
     );
 
-    // 1) use Bearer Authentication as a passport strategy in app.js
-    // https://swagger.io/docs/specification/authentication/bearer-authentication/
+    // use Local Strategy as a passport strategy in app.js
+    console.log("PASSPORT: use Local Strategy");
+    passport.use(new LocalStrategy(
+        {
+            usernameField: 'id_str',
+            passwordField: 'password'
+        },
+        pilotStudy.localStrategyCB
+    ));
 
-    var EDX_LTI_CONSUMER_OAUTH = {
+    app.post('/login_pilot',
+        passport.authenticate('local', { failureRedirect: '/login_pilot' }),
+        function(req, res) {
+            res.redirect('/');
+        });
+
+    const EDX_LTI_CONSUMER_OAUTH = {
         key: 'xh0rSz5O03-richreview.cornellx.edu',
         secret: 'sel0Luv73Q'
     };
@@ -362,9 +378,7 @@ function setupServices(){
      *
      * make customary login for pilot study
      */
-    app.get('/login_pilot_study', login.pilot_login_page);
-    app.post('/login_pilot_study', login.login_pilot_study);
-
+    app.get('/login_pilot', login.pilot_login_page);
 
     // post requests
     app.post('/dbs',        dbs.post);
@@ -452,7 +466,7 @@ function setErrLog(){
 // all http request will be redirected to https
 function redirectHttp(){
     /** redirect all http requests to https */
-    var app_http = express();
+    let app_http = express();
     app_http.get("*", function (req, res) {
         res.redirect("https://" + req.headers.host + req.path);
     });

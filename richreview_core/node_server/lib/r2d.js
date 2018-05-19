@@ -5,17 +5,17 @@
  */
 
 // import npm modules
-var Promise = require("promise");
+const Promise = require("promise"); // jshint ignore:line
 
 // import libraries
-var js_utils = require('../lib/js_utils.js');
-var redisClient = require('../lib/redis_client').redisClient;
-var RedisClient = require('../lib/redis_client').RedisClient;
+const js_utils = require('../lib/js_utils.js');
+const redisClient = require('../lib/redis_client').redisClient;
+const RedisClient = require('../lib/redis_client').RedisClient;
 
 /*
  * User
  */
-var User = function(id, nickname, email){
+const User = function(id, nickname, email){
     this.id = id;
     this.nick = nickname;
     this.email = email;
@@ -43,7 +43,7 @@ User.prototype.getSignedUp = function(){
                 }
             );
         }
-    )
+    );
 };
 
 /**
@@ -77,7 +77,7 @@ User.prototype.cache = (function(){
             function(err){
                 console.error(err);
             }
-        )
+        );
     };
 
     /**
@@ -96,7 +96,7 @@ User.prototype.cache = (function(){
                 cache[id] = new_user;
                 return new_user;
             }
-        )
+        );
     };
 
     /**
@@ -166,7 +166,7 @@ User.prototype.create = function(id, email){
                 'email_user_lookup',
                 email,
                 'usr:'+id
-            )
+            );
         }
     ).then(
         function(){
@@ -239,14 +239,14 @@ User.prototype.syncEmail = function(user, newemail){
                         'email_user_lookup',
                         newemail,
                         'usr:'+user.id
-                    )
+                    );
                 }
             ).then(
                 function(){
                     return RedisClient.HDEL(
                         'email_user_lookup',
                         user.email
-                    )
+                    );
                 }
             ).then(
                 function(){

@@ -15,8 +15,6 @@ const redis = require('redis');
 const env = require('../lib/env');
 
 /**
- *  CHANGES: 20180503
- *
  * If os hostname is spire then use the local redis server, otherwise use the server on richreview.net
  */
 if(os.hostname() === "spire") {
@@ -55,6 +53,7 @@ var RedisClient = (function(){
         'HDEL',
         'HGETALL',
         'HEXISTS',
+        'HKEYS', // added by Colin
         'HMSET',
         'HSET',
         'LPUSH',

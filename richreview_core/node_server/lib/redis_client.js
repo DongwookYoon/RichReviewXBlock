@@ -17,7 +17,7 @@ const env = require('../lib/env');
 /**
  * If os hostname is spire then use the local redis server, otherwise use the server on richreview.net
  */
-if(os.hostname() === "spire") {
+if(os.hostname() !== "richreview") {
     var redisClient = redis.createClient(6379);
 } else {
     var redisClient = redis.createClient(6379, "richreview.net");

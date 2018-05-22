@@ -48,6 +48,9 @@ const pilotStudy = require('./lib/pilot_study.js');
 console.log("START: connecting to redis");
 var RedisStore = require('connect-redis')(expressSession);
 
+console.log("START: importing test userids");
+require('./data/import_pilot_study_users');
+
 console.log("START: importing routes");
 var _downloader = require('./routes/_downloader');
 var _pages = require('./routes/_pages');

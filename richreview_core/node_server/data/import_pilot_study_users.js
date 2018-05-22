@@ -16,18 +16,23 @@ const Promise = require("promise"); // jshint ignore:line
         {id: "test02", pass: "wind" },
         {id: "test03", pass: "earth"},
         {id: "test04", pass: "water"},
-        {id: "test05", pass: "sun"  }
+        {id: "test05", pass: "sun"  },
+        /*{id: "korn102.01@pilot.study", pass: "korn102.01" }*/
     ];
 
-    const promises = list.forEach(function(entry) {
-        console.log("DEBUG: creating id " + entry.id);
+    const promises = list.map(function(entry) {
+        console.log("IMPORT_PILOT_STUDY: creating id " + entry.id);
         return pilotStudy.PilotUser.prototype.create(entry.id, entry.pass);
     });
 
     Promise.all(promises)
         .then(function(list) {
-            console.log("DEBUG: list has been uploaded");
+            list.forEach(function(entry) {
+                console.log("IMPORT_PILOT_STUDY: " + entry);
+            });
+
         }).catch(function(err) {
         console.log("ERR: "+err);
+        // console.log("IMPORT_PILOT_STUDY: has the list already been uploaded?");
         });
 })();

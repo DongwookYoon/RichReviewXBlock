@@ -14,33 +14,29 @@ const Promise = require("promise");
  *
  * should be placed before require(app)
  */
-if(typeof v8debug === 'object' || os.hostname() === "spire"){
+if(typeof v8debug === 'object' || os.hostname() !== "richreview"){
     process.env.NODE_ENV = 'development';
 }
 else{
     process.env.NODE_ENV = 'production';
 }
+
+const HOSTNAME = os.hostname() === 'richreview' ? 'richreview' : 'localhost';
+const HASHFILE = HOSTNAME+'/richreview_webapp_hash.txt';
+// var WEBAPP_PATH = './../../webapps/richreview/'; // TODO: test and delete
+const WEBAPP_PATH = path.resolve(__dirname, '../../webapps/richreview/');
+
 console.log('App NODE_ENV:', process.env.NODE_ENV);
 
 // import libraries (depends on Node environment)
-var env = require('../lib/env.js');
+const env = require('../lib/env');
+const azure = require('../lib/azure');
+const js_utils = require("../lib/js_utils");
 
 /**
  * Sync the richreview web app
- *
- * comment made on 20180504
  */
 var webAppSync = (function(){
-    var HOSTNAME = os.hostname() === 'richreview' ? 'richreview' : 'localhost';
-    var HASHFILE = HOSTNAME+'/richreview_webapp_hash.txt';
-    // var WEBAPP_PATH = './../../webapps/richreview/'; // TODO: test and delete
-    var WEBAPP_PATH = path.resolve(__dirname, '../../webapps/richreview/');
-
-    // var Promise = require("promise");
-    // var crypto = require('crypto');
-    var azure = require('../lib/azure');
-    var js_utils = require("../lib/js_utils");
-
     var files = null;
 
     var pub = {};
@@ -124,9 +120,9 @@ var webAppSync = (function(){
                 container: 'cdn',
                 blob: HOSTNAME+'/'+file.slice(WEBAPP_PATH.length, file.length),
                 blob_localfile_path: file
-            })
+            });
         });
-        return Promise.all(promises)
+        return Promise.all(promises);
     }
 
     return pub;
@@ -135,8 +131,11 @@ var webAppSync = (function(){
 
 var runServer = function() {
     var app = require('../app');
-    var hostname = os.hostname();
-    if (hostname === 'richreview') { // on richreview.net
+
+    let httpsPort = null;
+    let httpPort = null;
+
+    if (HOSTNAME === 'richreview') { // on richreview.net
         httpsPort = 443;
         httpPort = 80;
     }
@@ -157,24 +156,11 @@ var runServer = function() {
         }
     );
 
-    /*require('https').createServer(
-        {
-            key: fs.readFileSync('../ssl/richreview_net.key'),
-            cert: fs.readFileSync('../ssl/richreview_net.crt'),
-            ca: [fs.readFileSync('../ssl/root.crt')]
-        },
-        app.https
-    ).listen(
-        app.https.get('port'),
-        function () {
-            console.log('Express server listening on HTTPS port:', app.https.get('port'));
-        }
-    );*/
     require('https').createServer(
         {
-            key: fs.readFileSync(path.join(__dirname, '..', 'ssl/richreview_net.key')),
-            cert: fs.readFileSync(path.join(__dirname, '..', 'ssl/richreview_net.crt')),
-            ca: [fs.readFileSync(path.join(__dirname, '..', 'ssl/root.crt'))]
+            key: env.ssl_key,
+            cert: env.ssl_cert,
+            ca: [env.ssl_ca]
         },
         app.https
     ).listen(

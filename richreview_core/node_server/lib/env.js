@@ -16,18 +16,6 @@ exports.admin_list = [
 /**
  * path of the webapps
  */
-/*
-// TODO: confirm this is OK and delete
-exports.path = {
-    'temp_pdfs': '/tmp/richreview/pdfs',
-    'webapp_richreview': '../../richreview/public/webapps/richreview',
-    'webapp_multicolumn': '../../richreview/public/webapps/multicolumn'
-};*/
-/*exports.path = {
-    'temp_pdfs': '/tmp/richreview/pdfs',
-    'webapp_richreview': '../webapps/richreview',
-    'webapp_multicolumn': '../webapps/multicolumn'
-};*/
 exports.path = {
     'temp_pdfs': '/tmp/richreview/pdfs',
     'webapp_richreview': 'webapps/richreview',
@@ -35,25 +23,8 @@ exports.path = {
 };
 
 /**
- * CHANGES: 20180504
- *
  * make webapp urls
  */
-/*
-// TODO: confirm this is OK and delete
-exports.webapp_urls = {
-    'multicolumn': js_utils.getWebAppUrls(
-        '../../../richreview/public/webapps/multicolumn',
-        '/static_multicolumn/',
-        /((\/|^)\..*)/
-    ),
-    'richreview': js_utils.getWebAppUrls(
-        '../../../richreview/public/webapps/richreview',
-        '/static_viewer/',
-        /((\/|^)\..*)|(^test\/.*)/
-    )
-};
-*/
 exports.webapp_urls = {
     'multicolumn': js_utils.getWebAppUrls(
         'webapps/multicolumn',
@@ -67,15 +38,6 @@ exports.webapp_urls = {
     )
 };
 
-/*
-exports.config_files = {
-    azure_keys:     '../ssl/azure_keys.json',
-    bluemix_stt_auth: '../ssl/bluemix_stt_auth.json',
-    google_open_id: '../ssl/google_open_id.json',
-    ssl_key:        '../ssl/richreview_net.key',
-    ssl_cert:       '../ssl/richreview_net.crt',
-    ssl_ca:         '../ssl/root.crt'
-};*/
 exports.config_files = {
     azure_keys:       path.join(__dirname, '..', 'ssl/azure_keys.json'),
     bluemix_stt_auth: path.join(__dirname, '..', 'ssl/bluemix_stt_auth.json')//,
@@ -111,3 +73,7 @@ exports.sha1_salt = JSON.parse(
 exports.redis_config = JSON.parse(
     fs.readFileSync(path.join(__dirname, '..', 'ssl/redis_config.json'), 'utf-8')
 );
+
+exports.ssl_key = fs.readFileSync(path.join(__dirname, '..', 'ssl/richreview_net.key'));
+exports.ssl_cert = fs.readFileSync(path.join(__dirname, '..', 'ssl/richreview_net.crt'));
+exports.ssl_ca = fs.readFileSync(path.join(__dirname, '..', 'ssl/root.crt'));

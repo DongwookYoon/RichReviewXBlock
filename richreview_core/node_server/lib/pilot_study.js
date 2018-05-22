@@ -58,7 +58,6 @@ PilotUser.prototype.makeUserID = function(id_str) {
  * @return promise to true if user exists, false otherwise
  */
 PilotUser.prototype.userExists = function(userid) {
-    console.log("DEBUG: PilotUser.prototype.userExists");
     return RedisClient.HEXISTS("pilot_study_lookup", userid);
 };
 
@@ -66,28 +65,32 @@ PilotUser.prototype.userExists = function(userid) {
  * creates a PilotUser
  * PilotUser.create should only be admissible by admin; create script an run with node
  * @return Promise resolves with nothing or rejects with error
+ *
+ * TODO: still does not fulfill completely, check code
  */
 PilotUser.prototype.create = function(id_str, password) {
     const userid = PilotUser.prototype.makeUserID(id_str);
 
     // 1) checks if user already exists
-    console.log("DEBUG: check if user already exists");
+    console.log("IMPORT_PILOT_STUDY: check if user already exists");
     PilotUser.prototype.userExists(userid)
         .then(function(user_exists) {
-            if(user_exists) {
-                throw "user "+userid+" already exists!";
-            } else {
-                // 2) create a new R2D.User
-                console.log("DEBUG: create a new R2D.User");
-                const hashed_userid =js_utils.generateSaltedSha1(userid, env.sha1_salt.netid).substring(0, 21);
-                return R2D.User.prototype.create(hashed_userid, userid);
-            }
-
-        }).then(function(user) {
-            // 3) set pilot_study_lookup
-            console.log("DEBUG: set pilot_study_lookup");
-            return RedisClient.HSET("pilot_study_lookup", userid, password);
-
+          if (user_exists) {
+            // throw "user "+userid+" already exists!";
+            return userid + " already exists";
+          } else {
+            // 2) create a new R2D.User
+            console.log("IMPORT_PILOT_STUDY: create a new R2D.User");
+            const hashed_userid = js_utils.generateSaltedSha1(userid, env.sha1_salt.netid).substring(0, 21);
+            return R2D.User.prototype.create(hashed_userid, userid)
+              .then(function (user) {
+                // 3) set pilot_study_lookup
+                console.log("IMPORT_PILOT_STUDY: set pilot_study_lookup");
+                return RedisClient.HSET("pilot_study_lookup", userid, password);
+              }).then(function (b) {
+                return userid + " added";
+              });
+          }
         });
 };
 

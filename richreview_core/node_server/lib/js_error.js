@@ -13,7 +13,7 @@ var StringifyError = function(err, filter, space) {
 exports.HandleError = function (msg, error, res){
     var err_string;
     var type = Object.prototype.toString.call(error);
-    if(type == '[object Error]'){
+    if(type === '[object Error]'){
         err_string = StringifyError(error);
     }
     else{

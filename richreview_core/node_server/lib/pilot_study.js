@@ -13,6 +13,7 @@ const env         = require('./env');
 const R2D         = require('./r2d');
 // const redisClient = require('./redis_client').redisClient;
 const RedisClient = require('./redis_client').RedisClient;
+const util = require('../util');
 
 /*
 For the pilot study we have
@@ -66,31 +67,31 @@ PilotUser.prototype.userExists = function(userid) {
  * PilotUser.create should only be admissible by admin; create script an run with node
  * @return Promise resolves with nothing or rejects with error
  *
- * TODO: still does not fulfill completely, check code
+ * TODO: still does not fulfill completely(?)
  */
 PilotUser.prototype.create = function(id_str, password) {
     const userid = PilotUser.prototype.makeUserID(id_str);
 
     // 1) checks if user already exists
-    console.log("IMPORT_PILOT_STUDY: check if user already exists");
-    PilotUser.prototype.userExists(userid)
+    util.logger("IMPORT_PILOT_STUDY","check if user already exists");
+    return PilotUser.prototype.userExists(userid)
         .then(function(user_exists) {
-          if (user_exists) {
-            // throw "user "+userid+" already exists!";
-            return userid + " already exists";
-          } else {
-            // 2) create a new R2D.User
-            console.log("IMPORT_PILOT_STUDY: create a new R2D.User");
-            const hashed_userid = js_utils.generateSaltedSha1(userid, env.sha1_salt.netid).substring(0, 21);
-            return R2D.User.prototype.create(hashed_userid, userid)
-              .then(function (user) {
-                // 3) set pilot_study_lookup
-                console.log("IMPORT_PILOT_STUDY: set pilot_study_lookup");
-                return RedisClient.HSET("pilot_study_lookup", userid, password);
-              }).then(function (b) {
-                return userid + " added";
-              });
-          }
+            if (user_exists) {
+                // throw "user "+userid+" already exists!";
+                return userid + " already exists";
+            } else {
+                // 2) create a new R2D.User
+                util.logger("IMPORT_PILOT_STUDY", "create a new R2D.User");
+                const hashed_userid = js_utils.generateSaltedSha1(userid, env.sha1_salt.netid).substring(0, 21);
+                return R2D.User.prototype.create(hashed_userid, userid)
+                    .then(function (user) {
+                        // 3) set pilot_study_lookup
+                        // util.logger("IMPORT_PILOT_STUDY","set pilot_study_lookup");
+                        return RedisClient.HSET("pilot_study_lookup", userid, password);
+                    }).then(function (b) {
+                        return userid + " added";
+                    });
+            }
         });
 };
 
@@ -117,25 +118,24 @@ PilotUser.prototype.getUserPassword = function(userid) {
 const localStrategyCB = function(id_str, password, done) {
     let userid = PilotUser.prototype.makeUserID(id_str);
 
-    console.log("DEBUG: logging in...");
+    util.debug("logging in...");
 
-    console.log("DEBUG: get user Password");
+    util.debug("get user Password");
     PilotUser.prototype.getUserPassword(userid)
         .then(function(user_password) {
             if(password === user_password) {
-                console.log("DEBUG: find by email");
+                util.debug("find by email");
                 return R2D.User.prototype.findByEmail(userid);
             } else {
                 throw "password does not match";
             }
 
         }).then(function(user) {
-            console.log("DEBUG: login success");
-            console.log(JSON.stringify(user));
+            util.debug("login success");
             done(null, user);
 
         }).catch(function(err) {
-        console.log("ERR: "+ err);
+        util.error(err);
             done(null, false);
 
         });

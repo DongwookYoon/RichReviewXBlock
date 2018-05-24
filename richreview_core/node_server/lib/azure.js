@@ -7,23 +7,23 @@
 const fs = require('fs');
 
 // import npm modules
-const Promise = require("promise");
+const Promise = require("promise"); // jshint ignore:line
 const nconf = require('nconf');
 const storage = require('azure-storage');
 const request = require('request');
 const tedious = require('tedious');
 
 // import libraries
-var env = require('../lib/env');
+const env = require('../lib/env');
 
 // set module variables
-var BLOB_HOST = 'https://richreview.blob.core.windows.net/';
-var ACCOUNT = 'richreview';
+const BLOB_HOST = 'https://richreview.blob.core.windows.net/';
+const ACCOUNT = 'richreview';
 
 nconf.env().file({ file: env.config_files.azure_keys });
 
-var sql_key_tedious = nconf.get("sql_key_tedious");
-var blob_storage_key = nconf.get("blob_storage_key");
+const sql_key_tedious = nconf.get("sql_key_tedious");
+const blob_storage_key = nconf.get("blob_storage_key");
 
 if( typeof sql_key_tedious === 'undefined' ||  typeof blob_storage_key === 'undefined' ){
     throw new Error('auth configuration file not found : ' + env.config_files.azure_keys);
@@ -115,7 +115,6 @@ exports.sqlQuery = function(cmd, callback){
 };
 
 exports.CreateContainerIfNotExist = function(ctx){
-    console.log("DEBUG azure.js CreateContainerIfNotExist");
     return new Promise(function(resolve, reject){
         blob_svc.createContainerIfNotExists(
             ctx.container,
@@ -133,7 +132,6 @@ exports.CreateContainerIfNotExist = function(ctx){
 };
 
 exports.DoesBlobExist = function(ctx){
-    console.log("DEBUG azure.js DoesBlobExist");
     return new Promise(function(resolve, reject){
         blob_svc.doesBlobExist(ctx.container, ctx.blob, function(err, resp){
             if(err){
@@ -151,7 +149,7 @@ exports.GetBlobToText = function(ctx){
     return new Promise(function(resolve, reject){
         blob_svc.getBlobToText(ctx.container, ctx.blob, function(err, resp){
             if(err){
-                reject(err)
+                reject(err);
             }
             else{
                 ctx.text = resp;
@@ -175,36 +173,8 @@ exports.SetBlobFromText = function(ctx){
     });
 };
 
-/**
- *
- *
- * TODO: promisify blob_svc.createBlockBlobFromLocalFile
- */
 exports.CreateBlobFromLocalFile = function(ctx) {
-    /*
-    // TODO: test and remove commented code
-    return new Promise(function(resolve, reject){
-        if(ctx.is_blob_exist){
-            console.log("DEBUG: CRITICAL ctx.is_blob_exist=true");
-            resolve(ctx);
-        }
-        else{
-            console.log("DEBUG: CRITICAL ctx.is_blob_exist=false");
-            blob_svc.createBlockBlobFromLocalFile(
-                ctx.container,
-                ctx.blob,
-                ctx.blob_localfile_path,
-                function(err){
-                    if(err) { reject(err); }
-                    else { resolve(ctx); }
-                }
-            );
-        }
-    });
-    */
-    console.log("DEBUG: azure.js CreateBlobFromLocalFile");
     return new Promise(function(resolve, reject) {
-            console.log("DEBUG: svc.CreateBlobFromLocalFile");
             blob_svc.createBlockBlobFromLocalFile(
                 ctx.container,
                 ctx.blob,
@@ -218,7 +188,7 @@ exports.CreateBlobFromLocalFile = function(ctx) {
                     }
                 }
             );
-        })
+        });
 };
 
 

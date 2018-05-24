@@ -8,7 +8,7 @@
 const os = require("os");
 
 // import npm modules
-const Promise = require("promise");
+const Promise = require("promise"); // jshint ignore:line
 const redis = require('redis');
 
 // import libraries

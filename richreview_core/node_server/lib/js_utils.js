@@ -2,8 +2,6 @@
  * Created by ukka123 on 11/16/14.
  */
 
-console.log("DEBUG: before importing modules");
-
 // import built-in modules
 const path = require('path');
 const fs = require('fs');
@@ -17,8 +15,6 @@ const unzip = require('unzip');
 const moment = require('moment');
 const Promise = require("promise"); // jshint ignore:line
 const nodemailer = require('nodemailer');
-
-console.log("DEBUG: after importing modules");
 
 exports.generateSaltedSha1 = function(raw_key, salt){
     var shasum = crypto.createHash('sha1');
@@ -371,23 +367,6 @@ exports.getHostname = (function(){
  * CHANGES 20180510
  * added path resolution to walkSync
  */
-/*
-// TODO: test and delete commented code
-exports.walkSync = function(dir, filelist) {
-    console.log()
-  var fs = fs || require('fs'),
-      files = fs.readdirSync(dir);
-  filelist = filelist || [];
-  files.forEach(function(item) {
-      if (fs.statSync(dir + item).isDirectory()) {
-      filelist = exports.walkSync(dir + item + '/', filelist);
-    }
-    else {
-      filelist.push(dir + item);
-    }
-  });
-  return filelist;
-};*/
 exports.walkSync = function(dir, filelist) {
     var fs = fs || require('fs'),
         files = fs.readdirSync(dir);
@@ -408,22 +387,6 @@ exports.walkSync = function(dir, filelist) {
  * CHANGES 20180510
  * made getWebAppUrls work when node is launched from diff directory
  */
-/*
-// TODO: test and delete commented code
-exports.getWebAppUrls = function(path, prefix, exclude){
-    var filelist = [];
-    exports.walkSync(path + '/', filelist);
-    filelist.forEach(function(file, i){
-        filelist[i] = file.substring(path.length+1);
-    });
-    var urls = {};
-    filelist.forEach(function(file, i) {
-        if(file.match(exclude)===null){
-            urls[file] = prefix + file;
-        }
-    });
-    return urls;
-};*/
 exports.getWebAppUrls = function(start_path, prefix, exclude){
     var filelist = [];
     const full_start_path = path.join(__dirname, "../..", start_path);

@@ -28,16 +28,16 @@ var env = require('./lib/env.js');
 util.start("importing passport");
 const passport = require('passport');
 
-util.start("       importing google oauth 2.0 strategy");
+util.start("          google oauth 2.0 strategy");
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
-util.start("       importing passport-azure-ad");
+util.start("          passport-azure-ad");
 const wsfedsaml2 = require('./passport-azure-ad').WsfedStrategy;
 
-util.start("       importing passport-local strategy");
+util.start("          passport-local strategy");
 const LocalStrategy = require('passport-local').Strategy;
 
-util.start("       importing passport-lti");
+util.start("          passport-lti");
 var LtiStrategy = require('passport-lti');
 
 util.start("importing libraries");
@@ -50,8 +50,8 @@ const pilotStudy = require('./lib/pilot_study.js');
 util.start("connecting to redis");
 var RedisStore = require('connect-redis')(expressSession);
 
-util.start("importing test userids");
-require('./data/import_pilot_study_users');
+// util.start("importing test userids");
+// require('./data/import_pilot_study_users');
 
 util.start("importing routes");
 var _downloader = require('./routes/_downloader');
@@ -68,7 +68,7 @@ var resources = require('./routes/resources');
 var course = require('./routes/course');
 var bluemix_stt_auth = require('./routes/bluemix_stt_auth');
 var lti = require('./routes/lti');
-const login = require('./routes/login');
+const pilot = require('./routes/pilot');
 
 mkdirp('../_temp');
 mkdirp('../cache');
@@ -240,8 +240,6 @@ function passportSetup(){
 
     /**
      * use strategy OAuth2.0 with Google ID
-     *
-     * TODO: test strategy
      */
     util.debug("PASSPORT: set up Google auth");
     const redirect_uri = process.env.NODE_ENV === "development" ?
@@ -383,7 +381,8 @@ function setupServices(){
      *
      * make customary login for pilot study
      */
-    app.get('/login_pilot', login.pilot_login_page);
+    app.get('/login_pilot', pilot.pilot_login_page);
+    app.get('/pilot_admin', /*pilot.auth_pilot_admin,*/ pilot.pilot_admin);
 
     // post requests
     app.post('/dbs',        dbs.post);

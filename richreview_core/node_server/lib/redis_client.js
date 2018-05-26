@@ -13,24 +13,25 @@ const redis = require('redis');
 
 // import libraries
 const env = require('../lib/env');
+const util = require('../util');
 
 /**
  * If os hostname is spire then use the local redis server, otherwise use the server on richreview.net
  */
+let redisClient = null;
+
 if(os.hostname() !== "richreview") {
-    var redisClient = redis.createClient(6379);
+    util.start("using local redis server");
+    redisClient = redis.createClient(6379);
 } else {
-    var redisClient = redis.createClient(6379, "richreview.net");
+    util.start("using remove redis server");
+    redisClient = redis.createClient(6379, "richreview.net");
     redisClient.auth(env.redis_config.auth);
 }
 
-// TODO: test and delete comments
-// var redisClient = redis.createClient(6379, "richreview.net");
-// redisClient.auth(env.redis_config.auth);
-
 redisClient.on('error', function(err) {
     // "Redis connection to <hostname>:6379 failed - read ETIMEDOUT";
-    console.log('Redis error: ' + err);
+    util.error("Redis: "+err);
 });
 
 var ping_timeout = null;
@@ -46,6 +47,7 @@ var RedisClient = (function(){
     var pub = {};
 
     var commands = [
+        'GET',
         'KEYS',
         'EXISTS',
         'DEL',
@@ -54,12 +56,14 @@ var RedisClient = (function(){
         'HGETALL',
         'HEXISTS',
         'HKEYS', // added by Colin
+        'EXISTS', // added by Colin
         'HMSET',
         'HSET',
         'LPUSH',
         'RPUSH',
         'LREM',
-        'LRANGE'
+        'LRANGE',
+        'SET'
     ];
 
     commands.forEach(function(fstr){

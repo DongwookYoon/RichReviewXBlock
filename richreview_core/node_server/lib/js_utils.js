@@ -414,6 +414,11 @@ exports.identifyUser = function(req, res){
     }
 };
 
+/**
+ *
+ *
+ * TODO: change redirect
+ */
 exports.redirectUnknownUser = function(req, res){
     if(req.user){
         return true;

@@ -206,86 +206,148 @@ User.prototype.create = function(id, email){
 /**
  * Delete the user corresponding to the email
  *
- * 1) remove user from all groups; and delete groups created by user
- * 2) remove docs user created
- * 3) delete the user in redis
- * 4) delete the user in email_user_lookup
- * 5) delete the user in pilot_study_lookup
- *
  * TODO: test thoroughly
- * TODO: replace debug statements with commands
- * !!! This function should not to be used in client (yet) !!!
+ * TODO: fails when user has a document with 2 groups (why??)
+ * !!! This function should not to be used by client (yet) !!!
  */
 User.prototype.deleteUserByEmail = (email) => {
 
     /**
      * delete the group in redis
-     * @param grp_str the group to delete
-     * @param groupID_n the group's id number
-     * @return whatever RedisClient.DEL returns (???)
-     *
-     * TODO: what does RedisClient.DEL return?
+     * @param {String} grp_str - of form grp:[groupID_n]; the group to delete
+     * @returns {Promise<Number>} - 1 if Group.DeleteGroup() succeeds, 0 otherwise
      */
-    const deleteGroup = (grp_str, groupID_n) => {
+    const deleteGroup = (grp_str) => {
+        util.debug("in deleteGroup "+grp_str);
+        let groupID_n = null;
+        try {
+            groupID_n = grp_str.substring(4);
+        } catch(err) {
+            util.error("in deleteGroup "+err);
+        }
+
         return RedisClient.HGET(grp_str, "docid")
             .then((docid) => {
                 const docID_n = docid.substring(4);
                 util.debug("Group.DeleteGroup("+groupID_n+","+docID_n+")");
-                // return Group.DeleteGroup(groupID_n, docID_n);
-                return true;
+                return Group.DeleteGroup(groupID_n, docID_n);
+                // return true;
             });
     };
 
+    /**
+     * Remove the user from the group
+     * @param {String} usr_str   - of form usr:[userID_n]; the user to remove
+     * @param {String} groupID_n - the group to remove
+     * @returns {Promise<Number>} - 1 if Group.RemoveUserFromGroup() succeeds, 0 otherwise
+     */
     const removeUser = (usr_str, groupID_n) => {
-        const userID_n = usr_str.substring(4);
-        util.debug("Group.RemoveUserFromGroup(groupID_n"+groupID_n+", "+userID_n+")");
-        // return Group.RemoveUserFromGroup(groupID_n, userID_n);
-        return true;
+        let userID_n = null;
+        try {
+            userID_n = usr_str.substring(4);
+        } catch(err) {
+            util.error("in removeUser " + err);
+        }
+        util.debug("Group.RemoveUserFromGroup("+groupID_n+", "+userID_n+")");
+        return Group.RemoveUserFromGroup(groupID_n, userID_n);
+        //return true;
     };
 
     /**
-     *
+     * Delete the group if user created the group, otherwise remove user from the group
      * 1) remove user from all groups made by other people
      * 2) delete group made by user
+     * @param {String} usr_str   - of form usr:[userID_n]; user to detach
+     * @param {String} groupID_n - group to consider
+     * @returns {Promise<Number>} - 1 if successful, 0 otherwise
      */
     const deleteOrRemoveGroup = (usr_str, groupID_n) => {
         const grp_str = "grp:"+groupID_n;
         return RedisClient.HGET(grp_str, "userid_n")
             .then((userid_n) => {
                 const usr_of_grp = "usr:"+userid_n;
+                //util.debug("usr_str="+usr_str+"; usr_of_grp="+usr_of_grp);
                 if (usr_str === usr_of_grp) {
                     util.debug("user owns this group");
-                    return deleteGroup(grp_str, groupID_n);
+                    return deleteGroup(grp_str);
                 } else {
                     util.debug("group is owned by someone else");
                     return removeUser(usr_str, groupID_n);
                 }
             });
-        //
     };
 
+    /**
+     * removes the group in the document and then delete the document
+     * Base this on DeleteDocument function in dbs.js; first delete doc groups, then delete the doc.
+     * @param {String} doc_str - has form doc:[docID_n]
+     * @returns {Promise<Number>} - 1 if Doc.DeleteDocFromRedis(docID_n) succeeds, 0 otherwise
+     */
+    const deleteDoc = (doc_str) => {
+        util.debug("in deleteDoc "+doc_str);
+        let docID_n = null;
+        try {
+            docID_n = doc_str.substring(4);
+        } catch(err) {
+            util.error("in deleteDoc "+err);
+        }
+        return Doc.GetDocGroups(docID_n)
+            .then((groups) => {
+                const promises = groups.map(deleteGroup);
+                return Promise.all(promises);
+            })
+            .then((bArr) => {
+                util.debug("Doc.DeleteDocFromRedis("+docID_n+")");
+                return Doc.DeleteDocFromRedis(docID_n);
+                //return true;
+            });
+    };
+
+    /**
+     * If the document has a userid_n that corresponds with usr_str (i.e. document is created by user), then delete it
+     * @param {String} usr_str - has form usr:[userID_n]
+     * @param {String} doc_str - has form doc:[docID_n]
+     * @returns {Promise<Number>} - 1 if successful, 0 otherwise
+     */
     const deleteDocIfUsers = (usr_str, doc_str) => {
-        util.debug("deleteDocIfUsers " +usr_str+" "+doc_str);
+        // util.debug("deleteDocIfUsers " +usr_str+" "+doc_str);
         return RedisClient.HGET(doc_str,"userid_n")
             .then((userid_n) => {
                 const usr_of_doc = "usr:"+userid_n;
                 if(usr_str === usr_of_doc) {
                     util.debug("deleting "+doc_str);
-                    return true;
+                    return deleteDoc(doc_str);
                 } else {
-                    return false;
+                    return 0;
                 }
             });
     };
 
+    /**
+     * Delete all the documents user created
+     * @param {String} usr_str - has form usr:[userID_n]
+     * @returns {Promise<Array<Number>>} - array of numbers {0,1} for successful or not
+     */
     const deleteDocs = (usr_str) => {
         return RedisClient.KEYS("doc:*")
+            // checked that RedisClient.KEYS() returns an array
             .then((doc_str_arr) => {
                 const promises = doc_str_arr.map(deleteDocIfUsers.bind(null, usr_str));
                 return Promise.all(promises);
             });
     };
 
+    /**
+     * Performs all steps of deleting user given a usr:[userID_n]
+     * 1) remove user from all groups; and delete groups created by user
+     * 2) remove docs user created
+     * 3) delete the user in redis
+     * 4) delete the user in email_user_lookup
+     * 5) delete the user in pilot_study_lookup
+     * 6) delete the user entry pilot:[email]
+     * @param {String} usr_str - string of form usr:[userID_n]; user to delete
+     * @return {Promise<Number>} - 1 if RedisClient.DEL() succeeds, 0 otherwise
+     */
     const deleteUser = (usr_str) => {
         return RedisClient.HGET(usr_str, "groupNs")
             .then((groupID_n_arr_str) => {
@@ -301,20 +363,26 @@ User.prototype.deleteUserByEmail = (email) => {
             .then((bArr) => {
                 // 3) delete the user in redis
                 util.debug("deleting user in redis");
-                // return RedisClient.DEL(usr_str);
-                return true;
+                return RedisClient.DEL(usr_str);
+                //return true;
             })
             .then((a) => {
                 // 4) delete the user in email_user_lookup
                 util.debug("deleting entry in email_user_lookup");
-                // return RedisClient.HDEL('email_user_lookup', email);
-                return true;
+                return RedisClient.HDEL('email_user_lookup', email);
+                //return true;
             })
             .then((a) => {
                 // 5) delete the user in pilot_study_lookup
                 util.debug("deleting entry in pilot_study_lookup");
-                // return RedisClient.HDEL('pilot_study_lookup', email);
-                return true;
+                return RedisClient.HDEL('pilot_study_lookup', email);
+                //return true;
+            })
+            .then((a) => {
+                // 6) delete the user entry pilot:[email]
+                util.debug("calling DEL pilot:"+email);
+                return RedisClient.DEL("pilot:"+email);
+                //return true;
             })
             .catch((err) => {
                 util.error(err);
@@ -337,14 +405,6 @@ User.prototype.deleteUserByEmail = (email) => {
         .catch(function(err) {
             util.error(err);
         });
-
-    /*return RedisClient.HGET('email_user_lookup', email).then(
-        RedisClient.DEL
-    ).then(
-        function(){
-            return RedisClient.HDEL('email_user_lookup', email);
-        }
-    );*/
 };
 
 User.prototype.updateNick = function(id, newnick){
@@ -413,8 +473,8 @@ User.prototype.AddGroupToUser = function(userid_n, groupid_n){
 };
 
 User.prototype.RemoveGroupFromUser = function(userid_n, groupid_n){
-    return RedisClient.HGET("usr:"+userid_n, "groupNs").then(
-        function(groupNsStr){
+    return RedisClient.HGET("usr:"+userid_n, "groupNs")
+        .then(function(groupNsStr) {
             var groupNsObj = JSON.parse(groupNsStr);
             var i = groupNsObj.indexOf(groupid_n);
             if(i < 0){
@@ -636,7 +696,7 @@ var Group = (function(manager, name, creationDate){
         return Promise.all([
                 promiseToRemoveGroupFromInvitee,
                 promiseToDetachUserAndGroup
-            ]).then(function() {
+            ]).then(function(bArry) {
                 util.debug("finished removing from invitee and detach");
                 return Group.DeleteGroupFromDoc(groupid_n, docid_n);
             });
@@ -911,7 +971,8 @@ var Doc = (function(){
     pub_doc.GetDocGroups = function(docid_n){
         return RedisClient.HGET("doc:"+docid_n, "groups").then(
             function(groupsStr){
-                return groupsObj = JSON.parse(groupsStr);
+                // return groupsObj = JSON.parse(groupsStr);
+                return JSON.parse(groupsStr);
             }
         );
     };

@@ -204,11 +204,11 @@ User.prototype.create = function(id, email){
 };
 
 /**
- * Delete the user corresponding to the email
+ * Completely delete the user corresponding to the email including all groups and documents that user made.
  *
  * TODO: test thoroughly
- * TODO: fails when user has a document with 2 groups (why??)
- * !!! This function should not to be used by client (yet) !!!
+ * !!! This function should not to be used by client !!!
+ * @param email
  */
 User.prototype.deleteUserByEmail = (email) => {
 

@@ -63,7 +63,8 @@ var RedisClient = (function(){
         'RPUSH',
         'LREM',
         'LRANGE',
-        'SET'
+        'SET',
+        'HMGET' // added by Colin
     ];
 
     commands.forEach(function(fstr){

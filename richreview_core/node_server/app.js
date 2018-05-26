@@ -50,8 +50,8 @@ const pilotStudy = require('./lib/pilot_study.js');
 util.start("connecting to redis");
 var RedisStore = require('connect-redis')(expressSession);
 
-// util.start("importing test userids");
-// require('./data/import_pilot_study_users');
+util.start("importing test userids");
+require('./data/import_pilot_study_users');
 
 util.start("importing routes");
 var _downloader = require('./routes/_downloader');
@@ -377,12 +377,12 @@ function setupServices(){
     app.get('/synclog',     _pages.getSyncLog);
 
     /**
-     * CHANGES 20180516
-     *
-     * make customary login for pilot study
+     * routes for pilot study
      */
     app.get('/login_pilot', pilot.pilot_login_page);
-    app.get('/pilot_admin', /*pilot.auth_pilot_admin,*/ pilot.pilot_admin);
+    app.get('/pilot_admin', pilot.auth_pilot_admin, pilot.pilot_admin);
+    app.post('/pilot_admin/mgmt_acct/:email', pilot.auth_pilot_admin, pilot.mgmt_acct);
+    app.post('/pilot_admin/mgmt_info/:email', pilot.auth_pilot_admin, pilot.mgmt_info);
 
     // post requests
     app.post('/dbs',        dbs.post);

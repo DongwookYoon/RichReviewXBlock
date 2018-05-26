@@ -72,7 +72,7 @@ describe("spec", function() {
     });
 
     it("test create users", () => {
-        return PilotStudy.createStudentPilotUser("test01", "fire")
+        return PilotStudy.createStudentPilotUser("test05", "wind")
             .then(util.debug)
             .catch(util.error);
     });

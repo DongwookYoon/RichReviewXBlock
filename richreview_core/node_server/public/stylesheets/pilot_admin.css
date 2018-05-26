@@ -1,0 +1,79 @@
+
+.pilot_mgmt_container {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-gap: 5px;
+    padding-top: 8px;
+}
+
+.pilot_mgmt_user {
+    display: flex;
+    flex-wrap: nowrap;
+    border-bottom-style: solid;
+    border-bottom-width: 2px;
+    border-color: #c0c0c0;
+    box-shadow: 0 1px 5px 0 #c0c0c0;
+}
+
+.pilot_mgmt_acct_form {
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+.pilot_mgmt_info_form {
+    flex-grow: 1;
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+input[type="text"], input[type="password"] {
+    width: 100%;
+    /*padding: 12px 20px;
+    margin: 8px 0;*/
+    display: block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+input[type="checkbox"] {
+    width: 100%;
+}
+
+section {
+    /*border: 1px solid #ccc;*/
+    margin-left: 5px;
+    margin-bottom: 5px;
+}
+
+section.email_view {
+    width: 13em;
+}
+
+section.right_buff {
+    margin-right: 5px;
+}
+
+section.pswd_input {
+    width: 5em;
+}
+
+section.info_input {
+    width: 100%;
+}
+
+section.button_buff {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+button.form_button {
+    border: 1px solid #ccc;
+    /*margin: auto;*/
+    padding: 2px;
+}
+
+.vertical_line {
+    margin-left: 5px;
+    border-left: 1px solid #c0c0c0;
+}

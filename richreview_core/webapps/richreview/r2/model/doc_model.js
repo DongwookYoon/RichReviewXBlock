@@ -479,13 +479,14 @@
     };
     r2.Page.prototype.HitTest = function(pt){
         var rtn = r2.Obj.prototype.HitTest.apply(this, [pt]);
+        /* spotlight indexing disabled
         var i, spotlight;
         for(i = 0; spotlight = this._spotlight_cache[i]; ++i){
             var v = spotlight.HitTest(pt);
             if(v){
                 rtn.push(v);
             }
-        }
+        }*/
         return rtn;
     };
 

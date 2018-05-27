@@ -253,11 +253,11 @@
                 pub.set(cookie_setting);
             }
             else{
-                pub.set('newspeak');
+                pub.set('waveform');
             }
 
             if(r2.ctx.lti){ // edX/cornellX
-                pub.set('newspeak');
+                pub.set('waveform');
             }
         };
 

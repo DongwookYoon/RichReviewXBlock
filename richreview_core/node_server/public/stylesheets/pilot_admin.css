@@ -1,9 +1,19 @@
 
 .pilot_mgmt_container {
+    max-width: 73em;
+    margin-left: auto;
+    margin-right: auto;
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     grid-gap: 5px;
     padding-top: 8px;
+}
+
+@media screen and (max-width: 66em) {
+    .pilot_mgmt_container {
+        max-width: 36.6em;
+        grid-template-columns: 1fr;
+    }
 }
 
 .pilot_mgmt_user {
@@ -49,12 +59,16 @@ section.email_view {
     width: 13em;
 }
 
+section.is_active_input {
+    width: 5em;
+}
+
 section.right_buff {
     margin-right: 5px;
 }
 
 section.pswd_input {
-    width: 5em;
+    width: 8em;
 }
 
 section.info_input {

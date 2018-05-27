@@ -382,7 +382,8 @@ function setupServices(){
     app.get('/login_pilot', pilot.pilot_login_page);
     app.get('/pilot_admin', pilot.auth_pilot_admin, pilot.pilot_admin);
     app.post('/pilot_admin/mgmt_acct/:email', pilot.auth_pilot_admin, pilot.mgmt_acct);
-    app.post('/pilot_admin/mgmt_info/:email', pilot.auth_pilot_admin, pilot.mgmt_info);
+    // we cannot yet record user information!!
+    //app.post('/pilot_admin/mgmt_info/:email', pilot.auth_pilot_admin, pilot.mgmt_info);
 
     // post requests
     app.post('/dbs',        dbs.post);

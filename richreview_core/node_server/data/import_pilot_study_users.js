@@ -31,7 +31,49 @@ const R2D        = require('../lib/r2d');
 */
 
 const delete_exec = () => {
-    //R2D.User.prototype.deleteUserByEmail()
+    R2D.User.prototype.deleteUserByEmail("test01@pilot.study")
+        .then((b) => {
+            return R2D.User.prototype.deleteUserByEmail("test02@pilot.study");
+        })
+        .then((b) => {
+            return R2D.User.prototype.deleteUserByEmail("test03@pilot.study");
+        })
+        .then((b) => {
+            return R2D.User.prototype.deleteUserByEmail("test04@pilot.study");
+        })
+        .then((b) => {
+            return R2D.User.prototype.deleteUserByEmail("test05@pilot.study");
+        })
+        .then((b) => {
+            return R2D.User.prototype.deleteUserByEmail("korn102.01@pilot.study");
+        })
+        .then((b) => {
+            return R2D.User.prototype.deleteUserByEmail("korn102.reviewer@pilot.study");
+        })
+        .then((b) => {
+            return R2D.User.prototype.deleteUserByEmail("korn102.02@pilot.study");
+        })
+        .then((b) => {
+            return R2D.User.prototype.deleteUserByEmail("korn102.03@pilot.study");
+        })
+        .then((b) => {
+            return R2D.User.prototype.deleteUserByEmail("korn102.04@pilot.study");
+        })
+        .then((b) => {
+            return R2D.User.prototype.deleteUserByEmail("chin131.reviewer@pilot.study");
+        })
+        .then((b) => {
+            return R2D.User.prototype.deleteUserByEmail("chin131.01@pilot.study");
+        })
+        .then((b) => {
+            return R2D.User.prototype.deleteUserByEmail("chin131.02@pilot.study");
+        })
+        .then((b) => {
+            return R2D.User.prototype.deleteUserByEmail("chin131.03@pilot.study");
+        })
+        .then((b) => {
+            return R2D.User.prototype.deleteUserByEmail("chin131.04@pilot.study");
+        });
 };
 
 //delete_exec();

@@ -39,16 +39,22 @@ exports.pilot_admin = (req, res) => {
 exports.mgmt_acct = (req, res) => {
     const email = req.params.email;
     const password = req.body.password;
-    const is_active = req.body.is_active ? true : false;
-    pilotStudy.manageAccount(email, password, is_active)
+    const is_active = req.body.is_blocked ? false : true;
+    const req_user_email = req.user.email;
+    pilotStudy.manageAccount(email, password, is_active, req_user_email)
         .then((b) => {
             res.redirect("/pilot_admin");
         }).catch((err) => {
-        util.error(err);
+            util.error(err);
             res.redirect("/");
         });
 };
 
+/**
+ *
+ *
+ * this is disabled in app.js
+ */
 exports.mgmt_info = (req, res) => {
     const email = req.params.email;
     const first_name = req.body.first_name;

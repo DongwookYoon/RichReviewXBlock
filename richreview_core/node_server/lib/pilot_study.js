@@ -216,16 +216,21 @@ const retrieveUserDetails = () => {
  * @param {Boolean} is_active
  * @return {Promise|Promise.<number>}
  */
-const manageAccount = (email, password, is_active) => {
+const manageAccount = (email, password, is_active, req_user_email) => {
+    const changeAdminPassword = () => {
+        if(req_user_email === email) {
+            return RedisClient.HSET("pilot:"+email, "password", password);
+        } else {
+            throw "an admin cannot change the password of other admins";
+        }
+    };
+
     util.debug("managing account");
-    util.debug(email);
-    util.debug(password);
-    util.debug(is_active);
     return RedisClient.HGET("pilot:"+email,"is_admin")
-        .if((is_admin) => {
+        .then((is_admin) => {
             if(is_admin === "true") {
                 // if is admin then is_active does not change
-                return RedisClient.HSET("pilot:"+email, "password", password);
+                return changeAdminPassword();
             } else {
                 return RedisClient.HMSET("pilot:"+email, "password", password, "is_active", is_active);
             }
@@ -240,13 +245,11 @@ const manageAccount = (email, password, is_active) => {
  * @param {String} last_name
  * @param {String} sid
  * @return {Promise|Promise.<number>}
+ *
+ * Note: this is currently disabled because we cannot record user info
  */
 const manageUserInfo = (email, first_name, last_name, sid) => {
     util.debug("managing user info");
-    util.debug(email);
-    util.debug(first_name);
-    util.debug(last_name);
-    util.debug(sid);
     return RedisClient.HMSET("pilot:"+email, "first_name", first_name, "last_name", last_name, "sid", sid);
 };
 
@@ -258,14 +261,14 @@ const manageUserInfo = (email, first_name, last_name, sid) => {
 const localStrategyCB = function(id_str, password, done) {
     let userid = makeUserID(id_str);
 
-    util.debug("logging in...");
+    // util.debug("logging in...");
 
-    util.debug("get user Password");
+    // util.debug("get user Password");
     confirmUserIsActive(userid)
         .then(getUserPassword)
         .then(function(user_password) {
             if(password === user_password) {
-                util.debug("find by email");
+                // util.debug("find by email");
                 return R2D.User.prototype.findByEmail(userid);
             } else {
                 throw "password does not match";

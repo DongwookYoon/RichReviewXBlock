@@ -1,0 +1,9 @@
+extends __layout
+
+include mixins/_pilot_user_card
+
+block content
+    link(rel='stylesheet', href='/stylesheets/pilot_admin.css')
+    .pilot_mgmt_container
+        each pilot_user in pilot_users
+            +pilotUserCard(pilot_user)

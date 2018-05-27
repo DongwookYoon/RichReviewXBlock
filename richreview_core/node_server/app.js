@@ -1,57 +1,59 @@
 /**
+ * The node_server app
  *
- * The App
  */
 
-console.log("START: Starting app.js");
+const util = require('./util');
 
-console.log("START: importing built-in modules");
+util.start("Starting app.js");
+
+util.start("importing built-in modules");
 var http = require('http');
 var path = require('path');
 var fs = require('fs');
 
-console.log("START: importing express");
+util.start("importing express");
 var express = require('express');
 var expressSession = require('express-session');
 
-console.log("START: importing npm modules");
+util.start("importing npm modules");
 var bodyParser = require('body-parser');
 var logger = require('morgan');
 var mkdirp = require('mkdirp');
 var compression = require('compression');
 
-console.log("START: importing env.js");
+util.start("importing env.js");
 var env = require('./lib/env.js');
 
-console.log("START: importing passport");
+util.start("importing passport");
 const passport = require('passport');
 
-console.log("       importing google oauth 2.0 strategy");
+util.start("          google oauth 2.0 strategy");
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
-console.log("       importing passport-azure-ad");
+util.start("          passport-azure-ad");
 const wsfedsaml2 = require('./passport-azure-ad').WsfedStrategy;
 
-console.log("       importing passport-local strategy");
+util.start("          passport-local strategy");
 const LocalStrategy = require('passport-local').Strategy;
 
-console.log("       importing passport-lti");
+util.start("          passport-lti");
 var LtiStrategy = require('passport-lti');
 
-console.log("START: importing libraries");
+util.start("importing libraries");
 var js_utils = require('./lib/js_utils.js');
 var R2D = require('./lib/r2d.js');
 var LtiEngine = require('./lib/lti_engine.js');
 var redis_client = require('./lib/redis_client.js');
 const pilotStudy = require('./lib/pilot_study.js');
 
-console.log("START: connecting to redis");
+util.start("connecting to redis");
 var RedisStore = require('connect-redis')(expressSession);
 
-console.log("START: importing test userids");
+util.start("importing test userids");
 require('./data/import_pilot_study_users');
 
-console.log("START: importing routes");
+util.start("importing routes");
 var _downloader = require('./routes/_downloader');
 var _pages = require('./routes/_pages');
 var support = require('./routes/support');
@@ -66,7 +68,7 @@ var resources = require('./routes/resources');
 var course = require('./routes/course');
 var bluemix_stt_auth = require('./routes/bluemix_stt_auth');
 var lti = require('./routes/lti');
-const login = require('./routes/login');
+const pilot = require('./routes/pilot');
 
 mkdirp('../_temp');
 mkdirp('../cache');
@@ -75,11 +77,11 @@ mkdirp(env.path.temp_pdfs);
 
 const app = express();
 
-console.log("START: setup view engine");
+util.start("setup view engine");
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
-console.log("START: use middleware");
+util.start("use middleware");
 app.use(compression());
 app.use(logger('tiny'));
 app.use(bodyParser.json({limit: '50mb'}));
@@ -100,13 +102,13 @@ app.use(
     )
 );
 
-console.log("START: set up passport");
+util.start("set up passport");
 passportSetup();
 
-console.log("START: set static pages");
+util.start("set static pages");
 setupStaticPages();
 
-console.log("START: switch lti for user if needed");
+util.start("switch lti for user if needed");
 app.use(function(req, res, next){
     if(req.user instanceof LtiEngine.User) {
         if( (req.url !== '/bluemix_stt_auth' && req.url.substring(0, 5) !== '/lti_') && req.method !== 'POST'){
@@ -116,10 +118,10 @@ app.use(function(req, res, next){
     next();
 });
 
-console.log("START: set up routes");
+util.start("set up routes");
 setupServices();
 
-console.log("START: set up redirects");
+util.start("set up redirects");
 setRedirections();
 
 setErrLog();
@@ -155,7 +157,7 @@ function setupStaticPages(){
 function passportSetup(){
     // passport
 
-    console.log("PASSPORT: use initialize and session");
+    util.debug("PASSPORT: use initialize and session");
     app.use(passport.initialize());
     app.use(passport.session());
 
@@ -192,7 +194,7 @@ function passportSetup(){
      * TODO: make passport work with wsfedsaml2
      *
      */
-    console.log("PASSPORT: use wsfedsaml2 auth with cornell wsfed");
+    util.debug("PASSPORT: use wsfedsaml2 auth with cornell wsfed");
     passport.use(
         new wsfedsaml2(
             env.cornell_wsfed,
@@ -220,7 +222,7 @@ function passportSetup(){
         )
     );
 
-    console.log("PASSPORT: set up login_cornell routing");
+    util.debug("PASSPORT: set up login_cornell routing");
     app.get(
         '/login_cornell',
         passport.authenticate('wsfed-saml2', { failureRedirect: '/login_cornell', failureFlash: true }),
@@ -238,10 +240,8 @@ function passportSetup(){
 
     /**
      * use strategy OAuth2.0 with Google ID
-     *
-     * TODO: test strategy
      */
-    console.log("PASSPORT: set up Google auth");
+    util.debug("PASSPORT: set up Google auth");
     const redirect_uri = process.env.NODE_ENV === "development" ?
         env.google_oauth.redirect_uris[1] : env.google_oauth.redirect_uris[0];
     passport.use(
@@ -287,7 +287,7 @@ function passportSetup(){
     );
 
     // use Local Strategy as a passport strategy in app.js
-    console.log("PASSPORT: use Local Strategy");
+    util.debug("PASSPORT: use Local Strategy");
     passport.use(new LocalStrategy(
         {
             usernameField: 'id_str',
@@ -377,11 +377,13 @@ function setupServices(){
     app.get('/synclog',     _pages.getSyncLog);
 
     /**
-     * CHANGES 20180516
-     *
-     * make customary login for pilot study
+     * routes for pilot study
      */
-    app.get('/login_pilot', login.pilot_login_page);
+    app.get('/login_pilot', pilot.pilot_login_page);
+    app.get('/pilot_admin', pilot.auth_pilot_admin, pilot.pilot_admin);
+    app.post('/pilot_admin/mgmt_acct/:email', pilot.auth_pilot_admin, pilot.mgmt_acct);
+    // we cannot yet record user information!!
+    //app.post('/pilot_admin/mgmt_info/:email', pilot.auth_pilot_admin, pilot.mgmt_info);
 
     // post requests
     app.post('/dbs',        dbs.post);

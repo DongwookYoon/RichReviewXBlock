@@ -7,7 +7,7 @@ const path = require("path");
 const crypto = require('crypto');
 
 // import npm modules
-const Promise = require("promise");
+const Promise = require("promise"); // jshint ignore:line
 
 /**
  * Set the environment to development
@@ -26,12 +26,13 @@ const HASHFILE = HOSTNAME+'/richreview_webapp_hash.txt';
 // var WEBAPP_PATH = './../../webapps/richreview/'; // TODO: test and delete
 const WEBAPP_PATH = path.resolve(__dirname, '../../webapps/richreview/');
 
-console.log('App NODE_ENV:', process.env.NODE_ENV);
-
 // import libraries (depends on Node environment)
 const env = require('../lib/env');
 const azure = require('../lib/azure');
 const js_utils = require("../lib/js_utils");
+const util = require('../util');
+
+util.start('App NODE_ENV:'+process.env.NODE_ENV);
 
 /**
  * Sync the richreview web app

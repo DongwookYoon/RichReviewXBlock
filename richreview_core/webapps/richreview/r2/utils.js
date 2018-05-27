@@ -398,6 +398,12 @@
                     }
                 });
         };
+        
+        pub.focusWithoutScroll = function(target_dom){
+            let pos = r2.dom.getScroll();
+            target_dom.focus();
+            r2.dom.setScroll(pos.x, pos.y);
+        };
 
         return pub;
     }());

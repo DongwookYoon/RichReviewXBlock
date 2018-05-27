@@ -690,7 +690,7 @@
             pub_fc.focusPiece = function(piece_id){
                 var $dom = $tc_cur_page.find('#'+r2.util.escapeDomId(piece_id));
                 if($dom.hasClass('tc_piece')){
-                    $dom.parent().focus(); // focus on .tc_piecegroup
+                    r2.util.focusWithoutScroll($dom.parent());  // focus on .tc_piecegroup
                 }
                 else{
                     console.error('focusCtrl.focusPiece', $dom)

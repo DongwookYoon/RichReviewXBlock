@@ -119,7 +119,7 @@ var webAppSync = (function(){
         var promises = files.map(function(file){
             return azure.CreateBlobFromLocalFile({
                 container: 'cdn',
-                blob: HOSTNAME+'/'+file.slice(WEBAPP_PATH.length, file.length),
+                blob: HOSTNAME+file.slice(WEBAPP_PATH.length, file.length),
                 blob_localfile_path: file
             });
         });

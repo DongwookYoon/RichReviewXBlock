@@ -794,8 +794,8 @@
             pub_fc.setFocusable = function($target){
                 $target.attr('tabindex', 0);
                 $target.get(0).addEventListener('focus', function(){
-                    $(this).css('outline', 'rgba(77, 144, 254, 0.5) solid 1px');
-                    $(this).css('box-shadow', 'inset 0 0 0 0.003em rgba(77, 144, 254, 0.5)');
+                    //$(this).css('outline', 'rgba(77, 144, 254, 0.5) solid 1px');
+                    //$(this).css('box-shadow', 'inset 0 0 0 0.003em rgba(77, 144, 254, 0.5)');
                     last_focused_comment = $(this);
                 });
                 $target.get(0).addEventListener('blur', function(){

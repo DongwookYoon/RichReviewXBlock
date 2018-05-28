@@ -642,7 +642,7 @@
         };
 
         var getRmRatio = function(tt_depth){
-            return Math.pow(0.8, tt_depth - 1);
+            return Math.pow(0.8, tt_depth);
         };
 
         var getCommentRmRatio = function($comment){
@@ -657,7 +657,7 @@
         };
 
         var getTtIndentX = function(tt_depth, tt_x){
-            return tt_x + (tt_depth === 0 ? 0 : tt_depth - 1)*r2Const.PIECE_TEXTTEARING_INDENT;
+            return tt_x + (tt_depth === 0 ? 0 : tt_depth)*r2Const.PIECE_TEXTTEARING_INDENT;
         };
 
         var getCommentTtIndentX = function($comment){

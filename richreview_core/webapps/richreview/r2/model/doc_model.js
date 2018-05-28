@@ -647,7 +647,7 @@
         else{
             d = this._ttDepth-1;
         }
-        return this._ttX + d*r2Const.PIECE_TEXTTEARING_INDENT;
+        return this._ttX + (d+1)*r2Const.PIECE_TEXTTEARING_INDENT;
     };
     r2.Piece.prototype.GetTtIndentedWidth = function(){
         return this._ttX+this._ttW-this.GetTtIndent();
@@ -1102,7 +1102,7 @@
             var pieceaudios = this.GetParent().GatherPieceAudioByAnnotId(this._annotid);
             var lastpiece = pieceaudios[pieceaudios.length-1];
             var last_y = lastpiece.pos.y+lastpiece.GetContentSize().y-r2Const.PIECEAUDIO_LINE_WIDTH;
-            var ratio = Math.pow(0.8, this.GetTtDepth() - 1);
+            var ratio = Math.pow(0.8, this.GetTtDepth());
             var x_tip = this.pos.x + this.GetTtIndent() - (r2Const.RADIALMENU_OFFSET_X - r2Const.RADIALMENU_RADIUS) * ratio;
             r2.canv_ctx.beginPath();
             r2.canv_ctx.moveTo(x_bgn, last_y);

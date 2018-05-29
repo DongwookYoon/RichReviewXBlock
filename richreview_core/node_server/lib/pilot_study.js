@@ -202,6 +202,7 @@ const retrieveUserDetails = () => {
 
     return RedisClient.KEYS("pilot:*")
         .then((users) => {
+            users.sort();
             const promises = users.map((user) => {
                 return getUserDetail(user);
             });

@@ -424,7 +424,7 @@ exports.redirectUnknownUser = function(req, res){
         return true;
     }
     else{
-        res.redirect('/login_cornell');
+        res.redirect('/login_pilot');
         return false;
     }
 };

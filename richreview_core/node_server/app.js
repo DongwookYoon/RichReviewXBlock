@@ -299,7 +299,7 @@ function passportSetup(){
     app.post('/login_pilot',
         passport.authenticate('local', { failureRedirect: '/login_pilot' }),
         function(req, res) {
-            res.redirect('/');
+            res.redirect(req.session.latestUrl || '/');
         });
 
     const EDX_LTI_CONSUMER_OAUTH = {

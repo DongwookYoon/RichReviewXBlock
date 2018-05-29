@@ -7,15 +7,17 @@
 const RedisClient = require('../lib/redis_client').RedisClient;
 const pilotStudy  = require('../lib/pilot_study');
 const util        = require('../util');
+const js_utils    = require("../lib/js_utils");
 
 exports.pilot_login_page = (req, res) => {
-    req.session.latestUrl = req.originalUrl;
     res.render('login_pilot', {cur_page: 'Support', user: req.user });
 };
 
 exports.auth_pilot_admin = (req, res, next) => {
     util.debug("auth_pilot_admin");
-    const email = req.user.email;
+    req.session.latestUrl = req.originalUrl;
+    if(js_utils.redirectUnknownUser(req, res)){
+        const email = req.user.email;
     pilotStudy.confirmAdminStatus(email)
         .then((userid) => {
             return next();
@@ -24,6 +26,7 @@ exports.auth_pilot_admin = (req, res, next) => {
             util.error(err);
             res.redirect("/");
         });
+    }
 };
 
 exports.pilot_admin = (req, res) => {

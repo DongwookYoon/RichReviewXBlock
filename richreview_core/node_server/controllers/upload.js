@@ -6,12 +6,13 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const os = require("os");
 
 // import npm modules
 const formidable = require('formidable');
 const uuid = require('node-uuid');
 const mkdirp = require('mkdirp');
-const Promise = require("promise");
+const Promise = require("promise"); // jshint ignore:line
 const request = require("request");
 
 // import libraries
@@ -25,11 +26,11 @@ const R2D = require("../lib/r2d.js");
  * 
  * If os hostname is spire then use own django server (localhost)
  */
-const os = require("os");
-if(os.hostname() === "spire") {
-    var MUPLA_SERVER_LOCAL_URL = "http://localhost:5000/mupla_serve/";
+let MUPLA_SERVER_LOCAL_URL = null;
+if(process.env.NODE_ENV === 'production') {
+    MUPLA_SERVER_LOCAL_URL = "http://127.0.0.1:5000/mupla_serve/";
 } else {
-    var MUPLA_SERVER_LOCAL_URL = "http://127.0.0.1:5000/mupla_serve/";
+    MUPLA_SERVER_LOCAL_URL = "http://localhost:5000/mupla_serve/";
 }
 
 /**
@@ -39,7 +40,9 @@ if(os.hostname() === "spire") {
  */
 exports.page = function (req, res) {
     req.session.latestUrl = req.originalUrl;
-
+    res.render('upload', { cur_page: "upload", user: req.user });
+    /*
+    // TODO: test and del comment
     if(js_utils.redirectUnknownUser(req, res)){
         res.render(
             'upload',
@@ -48,7 +51,7 @@ exports.page = function (req, res) {
                 user: req.user,
             }
         );
-    }
+    }*/
 };
 
 /**
@@ -59,17 +62,17 @@ exports.page = function (req, res) {
 exports.post = function (req, res) {
     if(req.query.hasOwnProperty("mode")){
         // requests from the upload page. (see ./public/js/upload_helper.js)
-        if(req.query["mode"] == "GetUuid") {
+        if(req.query["mode"] === "GetUuid") {
             postRespServeUuid(req, res);
         }
-        else if(req.query["mode"] == "UploadFile" && req.query.hasOwnProperty("uuid") && req.query.hasOwnProperty("fileidx")) {
+        else if(req.query["mode"] === "UploadFile" && req.query.hasOwnProperty("uuid") && req.query.hasOwnProperty("fileidx")) {
             postRespUploadFile(req, res, req.query["uuid"], req.query["fileidx"]);
         }
-        else if(req.query["mode"]=="MergePdfs"){
+        else if(req.query["mode"]=== "MergePdfs"){
             postRespMergePdfs(req, res, req.query["uuid"]);
         }
         // request from the upload web app (see ./apps/MultiColumnAnalyzer).
-        else if(req.query["mode"]=="UploadDocLayout" && req.query.hasOwnProperty("uuid") ){
+        else if(req.query["mode"]=== "UploadDocLayout" && req.query.hasOwnProperty("uuid") ){
             postRespUploadDocLayout(req, res, req.query["uuid"]);
         }
     }

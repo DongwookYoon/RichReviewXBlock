@@ -515,81 +515,79 @@ postCms.student.doneUpload = function(course_id, netid, submission, path){
 exports.get = function (req, res) {
     req.session.latestUrl = req.originalUrl;
     var course_id = MATH_COURSE_ID;
-    if(js_utils.redirectUnknownUser(req, res)){
-        R2D.User.prototype.findById(req.user.id).then(
-            function(user){
-                var key = cmsUtil.getSaltedSha1(req.user.email);
-                if(req.query['review']){
-                    return cmsUtil.isInstructor(course_id, user.email).then(
-                        function(is_instructor){
-                            if(!is_instructor){
-                                throw 'only instructors can access this page.';
-                            }
-                            return null;
+    R2D.User.prototype.findById(req.user.id).then(
+        function(user){
+            var key = cmsUtil.getSaltedSha1(req.user.email);
+            if(req.query['review']){
+                return cmsUtil.isInstructor(course_id, user.email).then(
+                    function(is_instructor){
+                        if(!is_instructor){
+                            throw 'only instructors can access this page.';
                         }
-                    ).then(
-                        function(){
-                            res.render('cms_instructor_review',
+                        return null;
+                    }
+                ).then(
+                    function(){
+                        res.render('cms_instructor_review',
+                            {
+                                cur_page: 'CmsInstructor',
+                                user: req.user,
+                                BLOB_HOST: azure.BLOB_HOST,
+                                HOST: js_utils.getHostname() + "/",
+                                key: key,
+                                review: req.query['review']
+                            }
+                        );
+                    }
+                );
+            }
+            else{
+                return Promise.all(
+                    [
+                        cmsUtil.isInstructor(course_id, user.email),
+                        cmsUtil.isStudent(course_id, user.email)
+                    ]
+                ).then(
+                    function(result){
+                        if(result[0]){ // is_instructor
+                            res.render('cms_instructor_overview',
                                 {
                                     cur_page: 'CmsInstructor',
                                     user: req.user,
                                     BLOB_HOST: azure.BLOB_HOST,
                                     HOST: js_utils.getHostname() + "/",
-                                    key: key,
-                                    review: req.query['review']
+                                    key: key
                                 }
                             );
                         }
-                    );
-                }
-                else{
-                    return Promise.all(
-                        [
-                            cmsUtil.isInstructor(course_id, user.email),
-                            cmsUtil.isStudent(course_id, user.email)
-                        ]
-                    ).then(
-                        function(result){
-                            if(result[0]){ // is_instructor
-                                res.render('cms_instructor_overview',
-                                    {
-                                        cur_page: 'CmsInstructor',
-                                        user: req.user,
-                                        BLOB_HOST: azure.BLOB_HOST,
-                                        HOST: js_utils.getHostname() + "/",
-                                        key: key
-                                    }
-                                );
-                            }
-                            else if(result[1]){ // is_student
-                                res.render('cms_student',
-                                    {
-                                        cur_page: 'CmsStudent',
-                                        user: req.user,
-                                        BLOB_HOST: azure.BLOB_HOST,
-                                        HOST: js_utils.getHostname() + "/",
-                                        key: key
-                                    }
-                                );
-                            }
-                            else {
-                                res.render('cms_unidentified',
-                                    {
-                                        cur_page: 'CmsUnidentified',
-                                        user: req.user
-                                    }
-                                );
-                            }
+                        else if(result[1]){ // is_student
+                            res.render('cms_student',
+                                {
+                                    cur_page: 'CmsStudent',
+                                    user: req.user,
+                                    BLOB_HOST: azure.BLOB_HOST,
+                                    HOST: js_utils.getHostname() + "/",
+                                    key: key
+                                }
+                            );
                         }
-                    );
-                }
+                        else {
+                            res.render('cms_unidentified',
+                                {
+                                    cur_page: 'CmsUnidentified',
+                                    user: req.user
+                                }
+                            );
+                        }
+                    }
+                );
             }
-        ).catch(
-            function(err){
-                js_utils.PostResp(res, req, 400, err);
-            }
-        );
-    }
+        }
+    ).catch(
+        function(err){
+            js_utils.PostResp(res, req, 400, err);
+        }
+    );
 };
 
 exports.post = function(req, res){

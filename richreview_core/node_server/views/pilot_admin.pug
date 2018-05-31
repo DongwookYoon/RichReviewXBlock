@@ -1,9 +1,17 @@
 extends __layout
 
-include mixins/_pilot_user_card
+include mixins/_pilot_student_card
+include mixins/_pilot_admin_card
 
 block content
     link(rel='stylesheet', href='/stylesheets/pilot_admin.css')
+    .pilot_mgmt_header_container
+        h5 Admin
     .pilot_mgmt_container
         each pilot_user in pilot_users
-            +pilotUserCard(pilot_user)
+            +pilotAdminCard(pilot_user)
+    .pilot_mgmt_header_container
+        h5 Students
+    .pilot_mgmt_container
+        each pilot_user in pilot_users
+            +pilotStudentCard(pilot_user)

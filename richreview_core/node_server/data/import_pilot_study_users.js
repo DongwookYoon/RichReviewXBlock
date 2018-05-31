@@ -6,7 +6,7 @@
 
 const Promise    = require('promise'); // jshint ignore:line
 
-const pilotStudy = require('../lib/pilot_study');
+const pilotStudy = require('../lib/pilot_handler');
 const util       = require('../util');
 const R2D        = require('../lib/r2d');
 
@@ -73,6 +73,9 @@ const delete_exec = () => {
         })
         .then((b) => {
             return R2D.User.prototype.deleteUserByEmail("chin131.04@pilot.study");
+        })
+        .catch((err) => {
+            util.error(err);
         });
 };
 

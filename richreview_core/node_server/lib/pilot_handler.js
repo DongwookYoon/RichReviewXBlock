@@ -11,34 +11,24 @@ const Promise     = require("promise"); // jshint ignore:line
 const js_utils    = require('./js_utils');
 const env         = require('./env');
 const R2D         = require('./r2d');
-// const redisClient = require('./redis_client').redisClient;
 const RedisClient = require('./redis_client').RedisClient;
-const util = require('../util');
-
-/*
-For the pilot study we have
-in redis `pilot_study_lookup`, a list consisting of hash of key is id; value is password
-
-For each student we will give them an id and password
-
-A PilotUser will have
-userid:   string of form `[id]@pilot.study`
-password: string
-user:     R2D.User
-    user corr. to redis entry `usr:[js_utils.generateSaltedSha1(email, env.sha1_salt.netid).substring(0, 21)]`
-    we can look up user of email_user_lookup
- */
+const util        = require('../util');
 
 /**
- * Container for PilotUser
- * password;   // string; required;
- * user;       // User; required;
- * category;   // string; e.g. KOR, CHN, ADMIN, etc for view logic
- * first_name; // string
- * last_name;  // string
- * sid;        // string
- * isActive;   // boolean; required; is active
- * isAdmin;    // boolean; required; is admin
+ * Structure of pilot:[userid]
+ *
+ * userid is a pseudo-email of the form [id]@pilot.study
+ *
+ * password   {string} required -
+ * user       {string} required - has the form `usr:[js_utils.generateSaltedSha1(email, env.sha1_salt.netid)]`
+ * category   {string} - the section user belongs to for view logic e.g. KOR, CHN, ADMIN, etc
+ * first_name {string} optional - the first name of user
+ * last_name  {string} optional - the last name of user
+ * sid        {string} optional - the student id of user
+ * isActive   {string} required - is pilot user active?
+ * isAdmin    {string} required - is pilot user an admin?
+ *
+ * userid is also added to email_user_lookup as a hash field
  */
 
 /**
@@ -105,11 +95,11 @@ const createPilotUser = function(id_str, password, category, isAdmin) {
                 util.logger("IMPORT_PILOT_STUDY", "create a new R2D.User");
                 const hashed_userid = js_utils.generateSaltedSha1(userid, env.sha1_salt.netid).substring(0, 21);
                 return R2D.User.prototype.create(hashed_userid, userid)
-                    /*.then(function (user) {
-                        // 3) set pilot_study_lookup
-                        // util.logger("IMPORT_PILOT_STUDY","set pilot_study_lookup");
-                        return RedisClient.HSET("pilot_study_lookup", userid, password);
-                    })*/
+                /*.then(function (user) {
+                    // 3) set pilot_study_lookup
+                    // util.logger("IMPORT_PILOT_STUDY","set pilot_study_lookup");
+                    return RedisClient.HSET("pilot_study_lookup", userid, password);
+                })*/
                     .then(function (user) {
                         // 3) create redis entry
                         util.logger("IMPORT_PILOT_STUDY","create pilot: entry");
@@ -155,7 +145,7 @@ const confirmUserIsActive = (userid) => {
             if(b === "true") {
                 return userid;
             } else {
-                throw "user is not active";
+                throw "user is not active or does not exist";
             }
         });
 };
@@ -172,13 +162,19 @@ const confirmAdminStatus = (userid) => {
 };
 
 /**
- * Retrieve user details for pilot admin route
+ * Retrieve pilot study user details
+ * @returns {Promise|Promise.<object[]>} - a promise to object of user data
  */
 const retrieveUserDetails = () => {
-    const getUserDetail = (user) => {
-        const email = user.substring(6);
+    /**
+     * retrieve the pilot details from a pilot_key
+     * @param {string} pilot_key - of form pilot:[id]@pilot.study to get details
+     * @returns {Promise.<object>}
+     */
+    const rUserDetail = (pilot_key) => {
+        const email = pilot_key.substring(6);
         return RedisClient.HMGET(
-            user,
+            pilot_key,
             "first_name",
             "last_name",
             "sid",
@@ -186,7 +182,7 @@ const retrieveUserDetails = () => {
             "is_active",
             "is_admin"
         ).then((d) => {
-            const pilot_user = {
+            return {
                 email: email,
                 first_name: d[0],
                 last_name: d[1],
@@ -195,16 +191,13 @@ const retrieveUserDetails = () => {
                 is_active: d[4],
                 is_admin: d[5]
             };
-
-            return pilot_user;
         });
     };
 
     return RedisClient.KEYS("pilot:*")
-        .then((users) => {
-            users.sort();
-            const promises = users.map((user) => {
-                return getUserDetail(user);
+        .then((keys) => {
+            const promises = keys.map((key) => {
+                return rUserDetail(key);
             });
             return Promise.all(promises);
         });
@@ -254,29 +247,78 @@ const manageUserInfo = (email, first_name, last_name, sid) => {
     return RedisClient.HMSET("pilot:"+email, "first_name", first_name, "last_name", last_name, "sid", sid);
 };
 
+const retrieveUserDetail = (pilot_key) => {
+    const email = pilot_key.substring(6);
+    return RedisClient.HMGET(
+        "pilot:"+pilot_key,
+        "first_name",
+        "last_name",
+        "sid",
+        "is_active",
+        "is_admin"
+    ).then((d) => {
+        return {
+            email: email,
+            first_name: d[0],
+            last_name: d[1],
+            sid: d[2],
+            is_active: d[3],
+            is_admin: d[4]
+        };
+    });
+};
+
+/**
+ *
+ * Note: function always fulfill with user
+ *
+ */
+const plugPilot = (user) => {
+    return new Promise((fulfill) => {
+        RedisClient.EXISTS("pilot:"+user.email)
+            .then((b) => {
+                if(b === 1) {
+                    return retrieveUserDetail(user.email)
+                        .then((pilot_user) => {
+                            user.pilot = pilot_user;
+                            fulfill(user);
+                        });
+                } else {
+                    fulfill(user);
+                }
+            })
+            .catch((err) => {
+                fulfill(user);
+            });
+    });
+
+};
+
 /**
  * callback for Passport Local Strategy
  *
  *
  */
-const localStrategyCB = function(id_str, password, done) {
+const localStrategyCB = (id_str, password, done) => {
     let userid = makeUserID(id_str);
 
-    // util.debug("logging in...");
 
-    // util.debug("get user Password");
+
+    util.logger("localStrategyCB", "logging in "+userid+"...");
+
+    util.logger("localStrategyCB", "get user Password");
     confirmUserIsActive(userid)
         .then(getUserPassword)
         .then(function(user_password) {
             if(password === user_password) {
-                // util.debug("find by email");
-                return R2D.User.prototype.findByEmail(userid);
+                util.logger("localStrategyCB", "makeR2DUser");
+                return js_utils.findUserByEmail(userid);
             } else {
                 throw "password does not match";
             }
         })
         .then(function(user) {
-            util.debug("login success");
+            util.logger("localStrategyCB", "success");
             done(null, user);
 
         })
@@ -308,3 +350,4 @@ exports.manageAccount = manageAccount;
 exports.manageUserInfo = manageUserInfo;
 exports.confirmAdminStatus = confirmAdminStatus;
 exports.localStrategyCB = localStrategyCB;
+exports.plugPilot = plugPilot;

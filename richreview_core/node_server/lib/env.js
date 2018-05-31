@@ -40,12 +40,7 @@ exports.webapp_urls = {
 
 exports.config_files = {
     azure_keys:       path.join(__dirname, '..', 'ssl/azure_keys.json'),
-    bluemix_stt_auth: path.join(__dirname, '..', 'ssl/bluemix_stt_auth.json')//,
-    // TODO: these are not being used(?) test and delete commented
-    // google_open_id:   path.join(__dirname, '..', 'ssl/google_open_id.json'),
-    //ssl_key:          path.join(__dirname, '..', 'ssl/richreview_net.key'),
-    //ssl_cert:         path.join(__dirname, '..', 'ssl/richreview_net.crt'),
-    //ssl_ca:           path.join(__dirname, '..', 'ssl/root.crt')
+    bluemix_stt_auth: path.join(__dirname, '..', 'ssl/bluemix_stt_auth.json')
 };
 
 exports.google_oauth = JSON.parse(

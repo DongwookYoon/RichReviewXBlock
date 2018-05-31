@@ -86,7 +86,7 @@ var UserMgr = (function(){
         )
     };
 
-    pub.logIn = function(profile){
+    pub.logIn = function(profile) {
         if(!Status.ready()){ return Promise.reject(new Error('System is booting up. Retry in 1 min.'));}
         if(typeof profile === 'object' && typeof profile.user_id === 'string'){
             return (profile.user_id in cache ? Promise.resolve(cache[profile.user_id]) : createNew(profile))

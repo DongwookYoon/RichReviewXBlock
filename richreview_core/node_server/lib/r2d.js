@@ -33,7 +33,7 @@ User.prototype.getSignedUp = function(){
         function(keys){
             return Promise.all(
                 keys.map(function(key){
-                    return RedisClient.HGETALL(key)
+                    return RedisClient.HGETALL(key);
                 })
             ).then(
                 function(usrs){
@@ -52,9 +52,9 @@ User.prototype.getSignedUp = function(){
  * TODO: see if documentation is valid
  */
 User.prototype.cache = (function(){
-    var pub = {};
+    let pub = {};
 
-    var cache = {}; // for Google ID and Cornell NetID users
+    let cache = {};
 
     /**
      * create an array of User from the users in the redis server
@@ -130,25 +130,23 @@ User.prototype.findById = function(id){
 };
 
 /**
- * Get a promise to the user_id from given email
- * @param  email   - string of email
- * @return user_id - string of form 'usr':'id'
+ * Get a promise to the User object from given email
+ * @param  email  - string of email
+ * @return {User} - the user that corr. to the email
  */
 User.prototype.findByEmail = function(email){
     if(js_utils.validateEmail(email)){
-        return RedisClient.HGET('email_user_lookup', email).then(
-            function(id){
-                if(id){
+        return RedisClient.HGET('email_user_lookup', email)
+            .then((id) => {
+                if(id) {
                     return User.prototype.cache.get(id.substring(4));
-                }
-                else{
-                    return new Promise(function(resolve){resolve(null);});
+                } else {
+                    return Promise.resolve(null);
                 }
             }
         );
-    }
-    else{
-        return new Promise(function(resolve){resolve(null);});
+    } else {
+        return Promise.resolve(null);
     }
 };
 
@@ -387,7 +385,6 @@ User.prototype.deleteUserByEmail = (email) => {
             .catch((err) => {
                 util.error(err);
             });
-
 
         // we don't have to remove anything from the azure storage
     };

@@ -7,9 +7,12 @@ var R2D = require('../lib/r2d.js');
 
 exports.get = function (req, res) {
     req.session.latestUrl = req.originalUrl;
+    res.render('_pages_account', {cur_page: 'Account', user: req.user });
+    /*
+    // TODO: test and del comment
     if(js_utils.redirectUnknownUser(req, res)){
         res.render('_pages_account', {cur_page: 'Account', user: req.user });
-    }
+    }*/
 };
 
 exports.post = function(req, res){

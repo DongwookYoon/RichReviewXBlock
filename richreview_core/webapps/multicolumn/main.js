@@ -217,7 +217,7 @@
             for(i = 0; i < mupla.tblocks.length; ++i){
                 lines = mupla.tblocks[i].lines;
                 for(j = 0; j < lines.length; ++j){
-                    if((/^\s*$/).test(lines[j].text) || !isMostlyAlphaNumeric(lines[j].text)){
+                    if((/^\s*$/).test(lines[j].text)){
                         lines.splice(j, 1);
                         --j;
                     }

@@ -1,17 +1,24 @@
+/**
+ *
+ *
+ * created by Colin
+ */
 
-const util = require('../util');
-const expect = require('chai').expect;
-let R2D = null;
+const util      = require('../util');
+const expect    = require('chai').expect;
+let R2D         = null;
+let js_utils    = null;
 let RedisClient = null;
-let PilotStudy = null;
+let PilotStudy  = null;
 
 describe("spec", function() {
 
     before(function () {
         // require('../www/www');
         R2D = require('../lib/r2d');
+        js_utils = require('../lib/js_utils');
         RedisClient = require('../lib/redis_client').RedisClient;
-        PilotStudy = require('../lib/pilot_study');
+        PilotStudy = require('../lib/pilot_handler');
     });
 
     beforeEach(function () {
@@ -24,10 +31,6 @@ describe("spec", function() {
 
     afterEach(function() {
 
-    });
-
-    it("1 + 1 = 2", function () {
-        expect( 1 + 1 ).to.equal(2);
     });
 
     it("test redis 1", () => {
@@ -71,13 +74,40 @@ describe("spec", function() {
             });
     });
 
-    it("test create users", () => {
+    it("js_utils.validateEmail(email)", () => {
+        let b = null;
+        b = js_utils.validateEmail("test@pilot.study");
+        expect(b).to.deep.equal(true);
+        b = js_utils.validateEmail("test@edx.org");
+        expect(b).to.deep.equal(true);
+        b = js_utils.validateEmail("test@cornell.edu");
+        expect(b).to.deep.equal(true);
+        b = js_utils.validateEmail("test@edx.org");
+        expect(b).to.deep.equal(true);
+        b = js_utils.validateEmail("@cornell.edutest");
+        expect(b).to.deep.equal(false);
+        b = js_utils.validateEmail("testcornell.edu");
+        expect(b).to.deep.equal(false);
+        b = js_utils.validateEmail("@cornell.edu");
+        expect(b).to.deep.equal(false);
+        b = js_utils.validateEmail("test@alumni.ubc.ca");
+        expect(b).to.deep.equal(false);
+        return;
+    });
+
+
+
+    /*it("", () => {
+        return R2D.User.prototype.findByEmail("cchen795@gmail.com")
+    });*/
+
+    /*it("test create users", () => {
         return PilotStudy.createStudentPilotUser("test05", "wind")
             .then(util.debug)
             .catch(util.error);
-    });
+    });*/
 
-    it("test delete users", () => {
+    /*it("test delete users", () => {
         return R2D.User.prototype.deleteUserByEmail("korn102.01@pilot.study")
             .then((b) => {
                 util.debug("finished test");
@@ -87,7 +117,7 @@ describe("spec", function() {
                 util.error(err);
                 expect.fail();
             });
-    });
+    });*/
 
     // TODO: write some tests
 });

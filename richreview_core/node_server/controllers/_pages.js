@@ -6,11 +6,12 @@ var js_utils = require('../lib/js_utils');
 
 exports.about = function (req, res) {
     req.session.latestUrl = req.originalUrl;
+
     res.render('_pages_about', {cur_page: 'About', user: req.user });
 };
 
-exports.logout = function(req, res){
-    js_utils.logTimeAndUser(req, 'Logout');
+exports.logout = function(req, res) {
+    js_utils.logUserAction(req, 'logging out...');
     req.logout();
     res.redirect(
         'https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue='+
@@ -36,6 +37,6 @@ exports.admin = function(req, res){
 };
 
 exports.getSyncLog = function(req, res){
-    js_utils.logTimeAndUser(req, 'SyncLog/'+req.query.what);
+    js_utils.logUserAction(req, "SyncLog/"+req.query.what);
     res.send(200);
 };

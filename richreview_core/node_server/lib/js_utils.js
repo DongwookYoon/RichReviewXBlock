@@ -16,6 +16,10 @@ const moment = require('moment');
 const Promise = require("promise"); // jshint ignore:line
 const nodemailer = require('nodemailer');
 
+const pilotHandler = require("./pilot_handler");
+const R2D          = require("./r2d");
+const util         = require('../util');
+
 exports.generateSaltedSha1 = function(raw_key, salt){
     var shasum = crypto.createHash('sha1');
     shasum.update(raw_key+salt);
@@ -415,38 +419,47 @@ exports.identifyUser = function(req, res){
 };
 
 /**
+ * CHANGES: 20180530
+ * refactored
  *
- *
- * TODO: change redirect
+ * @param {string} email - the email to validate
+ * @return {boolean} - true if email is valid
  */
-exports.redirectUnknownUser = function(req, res){
-    if(req.user){
-        return true;
-    }
-    else{
-        res.redirect('/login_cornell');
-        return false;
-    }
+exports.validateEmail = (email) => {
+    const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    const matchesDomain = (email) => /(@pilot.study$)|(@gmail.com$)|(@cornell.edu$)|(@edx.org$)/g.test(email);
+
+    return re.test(email) && matchesDomain(email);
 };
 
-exports.validateEmail = function(email){
-    var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    if(re.test(email)){
-        if( email.substring(email.length-12).toLowerCase() === "@cornell.edu" ||
-            email.substring(email.length-10).toLowerCase() === "@gmail.com" ||
-            email.substring(email.length-8).toLowerCase() === "@edx.org" ||
-            email.substring(email.length-12).toLowerCase() === "@pilot.study"){
-            return true;
-        }
-        else{
-            return false;
-        }
-    }
-    else{
-        return false;
-    }
+/**
+ * @param {string} id
+ */
+exports.findUserByID = (id) => {
+    return R2D.User.prototype.findById(id)
+    /*******add project specific pluggins******/
+        .then((user) => {
+            return pilotHandler.plugPilot(user);
+        });
+    /******************************************/
 };
 
-exports.logTimeAndUser = function(req, msg){
-    console.log('>>>', msg, (new Date()).toString(), req.user ? req.user.email : 'unknown user');
+/**
+ *
+ * @param {string} userid - of form [id]@pilot.study
+ */
+exports.findUserByEmail = (email) => {
+    return R2D.User.prototype.findByEmail(email)
+        .then((user) => {
+            return pilotHandler.plugPilot(user);
+        });
+};
+
+/**
+ * CHANGES: 20180530
+ * refactored
+ * renamed from logTimeAndUser()
+ */
+exports.logUserAction = function(req, msg){
+    util.logger("LOG", (req.user ? req.user.email : "an unknown user") + " " + msg);
 };

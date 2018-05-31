@@ -2,6 +2,10 @@ const moment = require('moment');
 
 const d = () => { return moment().format('YY-MM-DD HH:mm:ss'); };
 
+/**
+ * I can disable statements using `process.env.NODE_ENV` variable
+ */
+
 exports.debug = function(stmt) {
     console.log("["+d()+"]<DEBUG>: "+stmt);
 };

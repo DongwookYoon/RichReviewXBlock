@@ -95,7 +95,7 @@ exports.get_admin = function(req, res){
     if(req.user instanceof LtiEngine.User){
         req.logout();
     }
-    if(js_utils.redirectUnknownUser(req, res) && assertCornellUser(req, res)){
+    if(assertCornellUser(req, res)){
         var data = {};
         LtiEngine.UserMgr.loadAllFromDb()
             .then(function(users) {

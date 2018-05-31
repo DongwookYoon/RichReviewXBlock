@@ -130,8 +130,8 @@ var webAppSync = (function(){
 }());
 
 
-var runServer = function() {
-    var app = require('../app');
+const runServer = () => {
+    const app = require('../app');
 
     let httpsPort = null;
     let httpPort = null;
@@ -153,7 +153,8 @@ var runServer = function() {
     require('http').createServer(app.http).listen(
         app.http.get('port'),
         function () {
-            console.log('Express server listening on HTTP port:', app.http.get('port'));
+            util.start("listening on HTTP port: " + app.http.get('port'));
+            //console.log('Express server listening on HTTP port:', app.http.get('port'));
         }
     );
 
@@ -167,7 +168,8 @@ var runServer = function() {
     ).listen(
         app.https.get('port'),
         function () {
-            console.log('Express server listening on HTTPS port:', app.https.get('port'));
+            util.start("listening on HTTPS port: " + app.https.get('port'));
+            //console.log('Express server listening on HTTPS port:', app.https.get('port'));
         }
     );
 };

@@ -1,4 +1,10 @@
 
+.pilot_mgmt_header_container {
+    max-width: 73em;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .pilot_mgmt_container {
     max-width: 73em;
     margin-left: auto;
@@ -6,13 +12,18 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-gap: 5px;
-    padding-top: 8px;
+    /*padding-top: 8px;*/
+    /*padding-bottom: 5em;*/
 }
 
 @media screen and (max-width: 66em) {
     .pilot_mgmt_container {
         max-width: 36.6em;
         grid-template-columns: 1fr;
+    }
+
+    .pilot_mgmt_header_container {
+        max-width: 36.6em;
     }
 }
 
@@ -56,7 +67,7 @@ section {
 }
 
 section.email_view {
-    width: 13em;
+    width: 17.6em;
 }
 
 section.is_active_input {

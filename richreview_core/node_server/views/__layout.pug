@@ -20,7 +20,7 @@ html
         script(src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js")
         script(src='https://richreview.azureedge.net/lib/bootstrap-3.2.0-dist/js/bootstrap.min.js')
     body
-        // header
+        - var is_admin = user !== undefined && user.pilot !== undefined && user.pilot.is_admin === 'true'
         .navbar.navbar-default.navbar-fixed-top(role="navigation" id="r2_navbar")
             .container.r2-topmenu
                 .navbar-header
@@ -39,21 +39,21 @@ html
                         li(class=cur_page === "Demo" ? "active" : "")
                             a(href="/demo")
                                 |Demo
-                        li(class=cur_page === "MyDocs" ? "active" : "")
+                        li(class=cur_page === "mydocs" ? "active" : "")
                             a(href="/mydocs")
                                 |My Docs
-                        li(class=cur_page === "Upload" ? "active" : "")
+                        li(class=cur_page === "upload" ? "active" : "")
                             a(href="/upload")
                                 |Upload
-                        //li(class=cur_page === "Viewer" ? "active" : "")
-                            a(href="/viewer")
-                                | Viewer
+                        if is_admin
+                            li(class=cur_page === "pilot_admin" ? "active" : "")
+                                a(href='/pilot_admin') Admin
                         li(class = cur_page === "Support" ? "active" : "")
                             a(href="/support")
                                 | Support
                     ul.nav.navbar-nav.navbar-right
                         li(class = cur_page === "Account" ? "active" : "")
-                            if user == undefined
+                            if user === undefined
                                 a(href="/login_pilot")
                                     i.fa.fa-sign-in
                                     |&nbspPilot Login
@@ -61,7 +61,7 @@ html
                                 a(href="/account")
                                     i.fa.fa-user
                                     |&nbsp#{user.nick}
-                        if user != undefined
+                        if user !== undefined
                             li
                                 a(href="/logout")
                                     i.fa.fa-sign-out

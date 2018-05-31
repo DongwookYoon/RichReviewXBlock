@@ -1,11 +1,10 @@
 /**
- * Login page to handle login requests
+ * Pilot controller to handle pilot related requests
  *
  * Created by Colin
  */
 
-const RedisClient = require('../lib/redis_client').RedisClient;
-const pilotStudy  = require('../lib/pilot_study');
+const pilotStudy  = require('../lib/pilot_handler');
 const util        = require('../util');
 
 exports.pilot_login_page = (req, res) => {
@@ -29,7 +28,7 @@ exports.auth_pilot_admin = (req, res, next) => {
 exports.pilot_admin = (req, res) => {
     pilotStudy.retrieveUserDetails()
         .then((pilot_users) => {
-            res.render("pilot_admin", { cur_page: 'Pilot Admin', user: req.user, pilot_users });
+            res.render("pilot_admin", { cur_page: "pilot_admin", user: req.user, pilot_users });
         }).catch((err) => {
             util.error(err);
             res.redirect("/");

@@ -86,6 +86,14 @@ passport.use(
  */
 const googleStrategyCB = (accessToken, refreshToken, profile, done) => {
     const email = profile.emails.length !== 0 ? profile.emails[0].value : '';
+    /*js_utils.findUserByID(profile.id)
+        .then((user) => {
+            return R2D.User.prototype.syncEmail(user, email);
+        })
+        .catch((err) => {
+            //var newid = js_utils.generateSaltedSha1(email, env.sha1_salt.netid).substring(0, 21);
+            return R2D.User.prototype.create(profile.id, email);
+        });*/
     R2D.User.prototype.isExist(profile.id)
         .then((is_exist) => {
             if(is_exist){
@@ -102,7 +110,7 @@ const googleStrategyCB = (accessToken, refreshToken, profile, done) => {
             done(null, user);
         })
         .catch(done);
-}
+};
 
 util.logger("PASSPORT", "use Google Strategy / 0Auth2.0 with Google+ API");
 const redirect_uri = process.env.NODE_ENV === "development" ?

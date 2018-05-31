@@ -268,20 +268,30 @@ const retrieveUserDetail = (pilot_key) => {
     });
 };
 
+/**
+ *
+ * Note: function always fulfill with user
+ *
+ */
 const plugPilot = (user) => {
+    return new Promise((fulfill) => {
+        RedisClient.EXISTS("pilot:"+user.email)
+            .then((b) => {
+                if(b === 1) {
+                    return retrieveUserDetail(user.email)
+                        .then((pilot_user) => {
+                            user.pilot = pilot_user;
+                            fulfill(user);
+                        });
+                } else {
+                    fulfill(user);
+                }
+            })
+            .catch((err) => {
+                fulfill(user);
+            });
+    });
 
-    return RedisClient.EXISTS("pilot:"+user.email)
-        .then((b) => {
-            if(b === 1) {
-                return retrieveUserDetail(user.email)
-                    .then((pilot_user) => {
-                        user.pilot = pilot_user;
-                        return user;
-                    });
-            } else {
-                return user;
-            }
-        });
 };
 
 /**

@@ -52,7 +52,7 @@ html
                             a(href="/support")
                                 | Support
                     ul.nav.navbar-nav.navbar-right
-                        li(class = cur_page === "Account" ? "active" : "")
+                        li(class = (cur_page === "account" || cur_page === "login") ? "active" : "")
                             if user === undefined
                                 a(href="/login_pilot")
                                     i.fa.fa-sign-in

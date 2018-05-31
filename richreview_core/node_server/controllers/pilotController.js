@@ -9,7 +9,7 @@ const util        = require('../util');
 const js_utils    = require("../lib/js_utils");
 
 exports.pilot_login_page = (req, res) => {
-    res.render('login_pilot', {cur_page: 'Support', user: req.user });
+    res.render('login_pilot', {cur_page: 'login', user: req.user });
 };
 
 exports.auth_pilot_admin = (req, res, next) => {

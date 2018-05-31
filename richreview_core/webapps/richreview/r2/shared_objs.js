@@ -199,7 +199,7 @@ var r2App = (function() {
         pub_ps.draw = function(canvas_ctx){
             if(selected_piece){
                 if(selected_piece.DrawSelected){
-                    //selected_piece.DrawSelected(canvas_ctx);
+                    selected_piece.DrawSelected(canvas_ctx);
                 }
             }
         };

@@ -647,7 +647,7 @@
         else{
             d = this._ttDepth-1;
         }
-        return this._ttX + d*r2Const.PIECE_TEXTTEARING_INDENT;
+        return this._ttX + (d+1)*r2Const.PIECE_TEXTTEARING_INDENT;
     };
     r2.Piece.prototype.GetTtIndentedWidth = function(){
         return this._ttX+this._ttW-this.GetTtIndent();
@@ -715,23 +715,35 @@
         }
     };
     r2.Piece.prototype.GetSelectedColors = function(){
-        var line_color; var glow_color;
+        var line_color; var fill_color;
         if(this._username && !this._isprivate){
             var user = r2.userGroup.GetUser(this._username);
             line_color = user.color_transparent_dark_html;
-            glow_color = user.color_transparent_normal_html;
+            fill_color = user.color_transparent_light_html;
         }
         else{
             line_color = 'rgba(0, 0, 0, 0.5)';
-            glow_color = 'rgba(75, 75, 75, 0.5)';
+            fill_color = 'rgba(75, 75, 75, 0.1)';
         }
-        return [line_color, glow_color];
+        return [line_color, fill_color];
     };
     r2.Piece.prototype.DrawSelected = function(canvas_ctx, x_offset){
         x_offset = typeof x_offset === "undefined" ? 0.0 : x_offset;
 
         if(this._visible) {
             var colors = this.GetSelectedColors();
+
+
+            canvas_ctx.beginPath();
+            canvas_ctx.fillStyle = colors[1];
+            canvas_ctx.moveTo(this.pos.x, this.pos.y);
+            canvas_ctx.lineTo(this.pos.x+this.size.x, this.pos.y);
+            canvas_ctx.lineTo(this.pos.x+this.size.x, this.pos.y+this._cnt_size.y);
+            canvas_ctx.lineTo(this.pos.x, this.pos.y+this._cnt_size.y);
+            canvas_ctx.closePath();
+            canvas_ctx.fill();
+            
+            
             var x_bgn = this.pos.x + this.GetTtIndent();
             var x0, x1, y;
 
@@ -753,10 +765,11 @@
             canvas_ctx.stroke();
             canvas_ctx.shadowBlur = 0;
 
+            /*
             // triangles
 
-            var tri_w = 0.005;
-            var tri_h_half = 0.0025;
+            var tri_w = 0.01;
+            var tri_h_half = 0.005;
 
             canvas_ctx.beginPath();
             canvas_ctx.fillStyle = colors[1];
@@ -768,7 +781,7 @@
             canvas_ctx.lineTo(x1+tri_w, y+tri_h_half);
             canvas_ctx.lineTo(x1+tri_w, y-tri_h_half);
 
-            canvas_ctx.fill();
+            canvas_ctx.fill();*/
         }
     };
     /**
@@ -1102,7 +1115,7 @@
             var pieceaudios = this.GetParent().GatherPieceAudioByAnnotId(this._annotid);
             var lastpiece = pieceaudios[pieceaudios.length-1];
             var last_y = lastpiece.pos.y+lastpiece.GetContentSize().y-r2Const.PIECEAUDIO_LINE_WIDTH;
-            var ratio = Math.pow(0.8, this.GetTtDepth() - 1);
+            var ratio = Math.pow(0.8, this.GetTtDepth());
             var x_tip = this.pos.x + this.GetTtIndent() - (r2Const.RADIALMENU_OFFSET_X - r2Const.RADIALMENU_RADIUS) * ratio;
             r2.canv_ctx.beginPath();
             r2.canv_ctx.moveTo(x_bgn, last_y);

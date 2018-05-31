@@ -158,7 +158,7 @@ router.post('/login_pilot',
     passport.authenticate('local', { failureRedirect: '/login_pilot' }),
     function(req, res) {
         js_utils.logUserAction(req, "logged in");
-        res.redirect('/');
+        res.redirect(req.session.latestUrl || '/');
     });
 
 router.post(

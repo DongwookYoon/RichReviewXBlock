@@ -642,7 +642,7 @@
         };
 
         var getRmRatio = function(tt_depth){
-            return Math.pow(0.8, tt_depth - 1);
+            return Math.pow(0.8, tt_depth);
         };
 
         var getCommentRmRatio = function($comment){
@@ -657,7 +657,7 @@
         };
 
         var getTtIndentX = function(tt_depth, tt_x){
-            return tt_x + (tt_depth === 0 ? 0 : tt_depth - 1)*r2Const.PIECE_TEXTTEARING_INDENT;
+            return tt_x + (tt_depth === 0 ? 0 : tt_depth)*r2Const.PIECE_TEXTTEARING_INDENT;
         };
 
         var getCommentTtIndentX = function($comment){
@@ -794,8 +794,8 @@
             pub_fc.setFocusable = function($target){
                 $target.attr('tabindex', 0);
                 $target.get(0).addEventListener('focus', function(){
-                    $(this).css('outline', 'rgba(77, 144, 254, 0.5) solid 1px');
-                    $(this).css('box-shadow', 'inset 0 0 0 0.003em rgba(77, 144, 254, 0.5)');
+                    //$(this).css('outline', 'rgba(77, 144, 254, 0.5) solid 1px');
+                    //$(this).css('box-shadow', 'inset 0 0 0 0.003em rgba(77, 144, 254, 0.5)');
                     last_focused_comment = $(this);
                 });
                 $target.get(0).addEventListener('blur', function(){

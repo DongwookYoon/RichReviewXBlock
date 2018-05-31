@@ -1158,13 +1158,14 @@ body::-webkit-scrollbar-corner {
 }
 
 .tc_page .tc_piecegroup:focus {
-  background: rgba(0,0,255,0.03);
+  /*background: rgba(0,0,255,0.03);*/
 }
 .tc_page .tc_piecegroup.highlight{
   background: rgba(0,0,0,0.15);
 }
-.tc_page .tc_piece:focus {
-  /*background: rgba(255,0,0,0.1);*/
+
+*:focus {
+  outline: none;
 }
 
 .tc_page .tc_piece {

@@ -12,7 +12,7 @@ const Promise = require("promise"); // jshint ignore:line
 const redis = require('redis');
 
 // import libraries
-const env = require('../lib/env');
+const env = require('./env');
 const util = require('../util');
 
 /**
@@ -24,7 +24,7 @@ if(os.hostname() !== "richreview") {
     util.start("using local redis server");
     redisClient = redis.createClient(6379);
 } else {
-    util.start("using remove redis server");
+    util.start("using remote redis server");
     redisClient = redis.createClient(6379, "richreview.net");
     redisClient.auth(env.redis_config.auth);
 }

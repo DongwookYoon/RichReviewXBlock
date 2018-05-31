@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+const util = require('../util');
+
 // import built-in modules
 const fs = require("fs");
 const os = require("os");
@@ -21,16 +23,16 @@ else{
     process.env.NODE_ENV = 'production';
 }
 
+// import libraries (depends on Node environment)
+const env = require('../lib/env');
+const file_utils = require('../lib/file_utils')
+const azure = require('../lib/azure');
+// const js_utils = require("../lib/js_utils");
+
 const HOSTNAME = os.hostname() === 'richreview' ? 'richreview' : 'localhost';
 const HASHFILE = HOSTNAME+'/richreview_webapp_hash.txt';
 // var WEBAPP_PATH = './../../webapps/richreview/'; // TODO: test and delete
 const WEBAPP_PATH = path.resolve(__dirname, '../../webapps/richreview/');
-
-// import libraries (depends on Node environment)
-const env = require('../lib/env');
-const azure = require('../lib/azure');
-const js_utils = require("../lib/js_utils");
-const util = require('../util');
 
 util.start('App NODE_ENV:'+process.env.NODE_ENV);
 
@@ -90,7 +92,7 @@ var webAppSync = (function(){
         }
         files = [];
         var all_files = [];
-        js_utils.walkSync(WEBAPP_PATH, all_files);
+        file_utils.walkSync(WEBAPP_PATH, all_files);
         var valid_exts = ['.js', '.css', '.html'];
         for(var i in all_files){
             var path = all_files[i];

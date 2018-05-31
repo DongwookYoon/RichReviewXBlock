@@ -370,8 +370,10 @@ exports.getHostname = (function(){
 /**
  * CHANGES 20180510
  * added path resolution to walkSync
+ * CHANGES 20180530
+ * move them to file_utils.js
  */
-exports.walkSync = function(dir, filelist) {
+/*exports.walkSync = function(dir, filelist) {
     var fs = fs || require('fs'),
         files = fs.readdirSync(dir);
     filelist = filelist || [];
@@ -385,13 +387,15 @@ exports.walkSync = function(dir, filelist) {
         }
     });
     return filelist;
-};
+};*/
 
 /**
  * CHANGES 20180510
  * made getWebAppUrls work when node is launched from diff directory
+ * CHANGES 20180530
+ * move them to file_utils.js
  */
-exports.getWebAppUrls = function(start_path, prefix, exclude){
+/*exports.getWebAppUrls = function(start_path, prefix, exclude){
     var filelist = [];
     const full_start_path = path.join(__dirname, "../..", start_path);
     exports.walkSync(full_start_path, filelist);
@@ -406,7 +410,7 @@ exports.getWebAppUrls = function(start_path, prefix, exclude){
     });
     // for(var key in urls) { console.log(key + " : " + urls[key]); }
     return urls;
-};
+};*/
 
 exports.identifyUser = function(req, res){
     if(req.user){

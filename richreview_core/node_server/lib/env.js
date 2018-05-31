@@ -7,7 +7,8 @@ const fs = require('fs');
 const path = require('path');
 
 // import libraries
-const js_utils = require('../lib/js_utils.js');
+const util     = require('../util');
+const file_utils = require('../lib/file_utils');
 
 exports.admin_list = [
     '116730002901619859123'
@@ -22,16 +23,18 @@ exports.path = {
     'webapp_multicolumn': 'webapps/multicolumn'
 };
 
+
+
 /**
  * make webapp urls
  */
 exports.webapp_urls = {
-    'multicolumn': js_utils.getWebAppUrls(
+    'multicolumn': file_utils.getWebAppUrls(
         'webapps/multicolumn',
         '/static_multicolumn/',
         /((\/|^)\..*)/
     ),
-    'richreview': js_utils.getWebAppUrls(
+    'richreview': file_utils.getWebAppUrls(
         'webapps/richreview',
         '/static_viewer/',
         /((\/|^)\..*)|(^test\/.*)/

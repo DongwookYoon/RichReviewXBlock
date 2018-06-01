@@ -218,20 +218,40 @@
         };
 
         pub.setAddGroupClick = function($btn_add_group, doc){
-            $btn_add_group.click(function(){
-                postDbs('AddNewGroup', {docid: doc.id}).then(
-                    function(resp){
-                        return postDbs('GetDocById', {docid:doc.id});
+            $btn_add_group.click(function(event){
+                if(event.shiftKey){
+                    var input_str = prompt("Please enter inputs for advanced 'Add Group'.");
+                    if(input_str){
+                        postDbs('AddNewGroupAdvanced', {docid: doc.id, d_str: input_str}).then(
+                            function(){
+                                return postDbs('GetDocById', {docid:doc.id});
+                            }
+                        ).then(
+                            function(resp) {
+                                refreshGroupList(resp, $btn_add_group.closest('.panel'));
+                            }
+                        ).catch(function(err){
+                            console.log(err);
+                            Helper.Util.HandleError(err);
+                        });
                     }
-                ).then(
-                    function(resp) {
-                        refreshGroupList(resp, $btn_add_group.closest('.panel'));
-                    }
-                ).catch(
-                    function(err){
-                        Helper.Util.HandleError(err);
-                    }
-                );
+                }
+                else{
+                    postDbs('AddNewGroup', {docid: doc.id}).then(
+                        function(resp){
+                            return postDbs('GetDocById', {docid:doc.id});
+                        }
+                    ).then(
+                        function(resp) {
+                            refreshGroupList(resp, $btn_add_group.closest('.panel'));
+                        }
+                    ).catch(
+                        function(err){
+                            Helper.Util.HandleError(err);
+                        }
+                    );
+                }
+                
             });
         };
 

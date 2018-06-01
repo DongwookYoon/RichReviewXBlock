@@ -192,6 +192,85 @@ var AddNewGroup = function(req, res){
     }
 };
 
+var AddNewGroupAdvanced = function(req, res){
+    if(js_utils.identifyUser(req, res)){
+        var d;
+        var user_students = [];
+        var user_instructors = [];
+        new Promise(
+            function(resolve, reject){ // check if all id exists
+                try{
+                    d = JSON.parse(req.body.d_str);
+                    if(Array.isArray(d.instructors) && Array.isArray(d.students)) {
+                        let promises = [];
+                        for(let i = 0; i < d.instructors.length; ++i) {
+                            promises.push(R2D.User.prototype.findByEmail(d.instructors[i]));
+                        }
+                        for(let i = 0; i < d.students.length; ++i) {
+                            promises.push(R2D.User.prototype.findByEmail(d.students[i]));
+                        }
+                        Promise.all(promises).then(function(results){
+                            if(results.every(function(item){return item!=null;})){
+                                for(let i = 0; i < results.length; ++i){
+                                    if(d.instructors.includes(results[i].email)){
+                                        user_instructors.push(results[i].id);
+                                    }
+                                    else{
+                                        user_students.push(results[i].id);
+                                    }
+                                }
+                                resolve();
+                            }
+                            else{
+                                reject("Invalid format");
+                            }
+                        }).catch(function(err){
+                            reject(err);
+                        });
+                    }
+                    else{
+                        reject("Invalid format");
+                    }
+                }
+                catch(err){
+                    reject("Invalid format");
+                }
+            }).then(function(){
+                return R2D.Doc.GetDocById_Promise(req.body.docid);
+            }).then(function(doc){
+                if(doc.userid_n === req.user.id){
+                    var i = 0;
+                    function done(i_closure){
+                        if(i_closure !== user_students.length){
+                            return R2D.Doc.AddNewGroup(req.user.id, req.body.docid).then(
+                                function(groupid){
+                                    return R2D.Group.connectGroupAndMultipleUsers(
+                                        groupid.substring(4),
+                                        user_instructors.concat(user_students[i_closure])
+                                    );
+                                }
+                            ).then(function(result){
+                                console.log(result);
+                                return done(++i);
+                            });
+                        }
+                        else{
+                            js_utils.PostResp(res, req, 200);
+                        }
+                    }
+                    done(0);
+                }
+                else{
+                    js_utils.PostResp(res, req, 400, 'you are not authorized to add a new group to this document.');
+                }
+            }
+        ).catch(function(err){
+                js_utils.PostResp(res, req, 400, err);
+            })
+    }
+    
+};
+
 var RenameDoc = function(req, res){
     if(typeof req.body.name == "undefined" || typeof req.body.value == "undefined"){
         js_utils.PostResp(res, req, 500);
@@ -566,6 +645,9 @@ exports.post = function(req, res){
             break;
         case "AddNewGroup":
             AddNewGroup(req, res);
+            break;
+        case "AddNewGroupAdvanced":
+            AddNewGroupAdvanced(req, res);
             break;
         case "RenameDoc":
             RenameDoc(req, res);

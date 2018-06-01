@@ -958,7 +958,9 @@ var Doc = (function(){
                 groupsObj.push(groupid);
                 return RedisClient.HSET(docid, "groups", JSON.stringify(groupsObj));
             }
-        ).then(
+        ).then(function() {
+            return Group.connectUserAndGroup(groupid.substring(4), userid_n)
+        }).then(
             function(){
                 return groupid;
             }

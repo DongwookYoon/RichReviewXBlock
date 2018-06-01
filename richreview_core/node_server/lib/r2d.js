@@ -1156,14 +1156,6 @@ const dataSanityCheckup = function() {
         )
     }());
 
-    /*
-    User.prototype.deleteByEmail('richreviewer0@gmail.com').catch(
-        function(err){
-            console.log(err);
-        }
-    );
-    */
-
 };
 
 // dataSanityCheckup();

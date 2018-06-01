@@ -168,7 +168,10 @@ var GetDocById = function(req, res){
     }
 };
 
-
+/**
+ *
+ * TODO: automatically add user to group he created
+ */
 var AddNewGroup = function(req, res){
     if(js_utils.identifyUser(req, res)){
         R2D.Doc.GetDocById_Promise(req.body.docid).then(

@@ -322,6 +322,9 @@
                 // ToDo bootstrap fix
                 $('#modal-window-intro-video').modal('show');
             }
+            $('#modal-window-intro-video').on("hidden.bs.modal", function () {
+                $('#modal-window-intro-video').find('video')[0].pause();
+            });
         };
         pub.Dismiss = function(never_show_again){
             if(never_show_again){

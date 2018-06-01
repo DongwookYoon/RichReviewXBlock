@@ -66,8 +66,8 @@ app.use(
             secret: env.redis_config.auth,
             saveUninitialized: false,
             resave: false,
-            // cookie: { maxAge: 3*60*60*1000 }
-            cookie: { maxAge: 60000 }
+            cookie: { maxAge: 3*60*60*1000 }
+            //cookie: { maxAge: 60000 }
         }
     )
 );

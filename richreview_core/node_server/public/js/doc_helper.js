@@ -310,20 +310,22 @@
                 {
                     $time_created.prepend(getIcon('fa-clock-o'));
                 }
+                
+                if(user_id === doc.userid_n){
+                    var $btn_add_group = createNewDomElement('a', ['btn', 'btn-primary', 'btn-sm'], $doc_ui);
+                    {
+                        $btn_add_group.append(getIcon('fa-plus-square'));
+                        doms.setAddGroupClick($btn_add_group, doc);
+                    }
 
-                var $btn_add_group = createNewDomElement('a', ['btn', 'btn-primary', 'btn-sm'], $doc_ui);
-                {
-                    $btn_add_group.append(getIcon('fa-plus-square'));
-                    doms.setAddGroupClick($btn_add_group, doc);
+                    var $btn_group = createNewDomElement('div', ['btn-group'], $doc_ui);
+                    var $btn_delete_all = createNewDomElement('a', ['btn', 'btn-danger', 'btn-sm'], $btn_group);
+                    {
+                        $btn_delete_all.append(getIcon('fa-trash'));
+                    }
+                    var $btn_delete_doc_confirm = doms.setDropDownBtn($btn_group, 'Delete this document');
+                    doms.setDocDeleteClick($btn_delete_doc_confirm, doc);
                 }
-
-                var $btn_group = createNewDomElement('div', ['btn-group'], $doc_ui);
-                var $btn_delete_all = createNewDomElement('a', ['btn', 'btn-danger', 'btn-sm'], $btn_group);
-                {
-                    $btn_delete_all.append(getIcon('fa-trash'));
-                }
-                var $btn_delete_doc_confirm = doms.setDropDownBtn($btn_group, 'Delete this document');
-                doms.setDocDeleteClick($btn_delete_doc_confirm, doc);
             }
         }
 
@@ -339,8 +341,10 @@
             return postDbs('GetGroupsData', {groupids: doc.groups}).then(
                 function(resp){
                     loadingIcon.removeFrom($panel_body);
-                    resp.forEach(function(group_data){
-                        setGroupDom(group_data, doc, $panel_body);
+                    resp.forEach(function(group_data) {
+                        if (user_id === doc.userid_n || group_data.group.users.participating.includes(user_id)  ) {
+                            setGroupDom(group_data, doc, $panel_body);
+                        }
                     });
                 }
             );
@@ -379,15 +383,17 @@
             $title.text(group_data.group.name);
             doms.setGroupTitle($title, group_data.group.id, doc);
 
-            var $group_ui = createNewDomElement('div', ['group_ui'], $group_row);
-            {
-                var $btn_group = createNewDomElement('div', ['btn-group'], $group_ui);
-                var $btn_delete = createNewDomElement('a', ['btn', 'btn-danger', 'btn-sm'], $btn_group);
+            if(user_id === doc.userid_n){
+                var $group_ui = createNewDomElement('div', ['group_ui'], $group_row);
                 {
-                    $btn_delete.append(getIcon('fa-trash'));
+                    var $btn_group = createNewDomElement('div', ['btn-group'], $group_ui);
+                    var $btn_delete = createNewDomElement('a', ['btn', 'btn-danger', 'btn-sm'], $btn_group);
+                    {
+                        $btn_delete.append(getIcon('fa-trash'));
+                    }
+                    var $btn_delete_confirm = doms.setDropDownBtn($btn_group, 'Delete this group');
+                    doms.setGroupDeleteClick($btn_delete_confirm, group_data, doc);
                 }
-                var $btn_delete_confirm = doms.setDropDownBtn($btn_group, 'Delete this group');
-                doms.setGroupDeleteClick($btn_delete_confirm, group_data, doc);
             }
 
             var $member_row = createNewDomElement('div', ['member_row'], $group_row);

@@ -13,10 +13,7 @@ exports.about = function (req, res) {
 exports.logout = function(req, res) {
     js_utils.logUserAction(req, 'logging out...');
     req.logout();
-    res.redirect(
-        'https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue='+
-        js_utils.getHostname()
-    );
+    res.redirect("/");
 };
 
 exports.input_test = function(req, res){

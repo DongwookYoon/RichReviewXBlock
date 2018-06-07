@@ -244,7 +244,6 @@ const managePassword = (email, password, req_user_email) => {
             throw "an admin cannot change the password of other admins";
         }
     };
-    util.debug("managing password");
 
     return RedisClient.HGET("pilot:"+email,"is_admin")
         .then((is_admin) => {
@@ -253,6 +252,18 @@ const managePassword = (email, password, req_user_email) => {
                 return changeAdminPassword();
             } else {
                 return RedisClient.HSET("pilot:"+email, "password", password);
+            }
+        });
+};
+
+const manageIsActive = (email, is_active) => {
+    //util.debug("manageIsActive: " + is_active);
+    return RedisClient.HGET("pilot:"+email,"is_admin")
+        .then((is_admin) => {
+            if(is_admin === "true") {
+                throw "admins cannot be blocked";
+            } else {
+                return RedisClient.HSET("pilot:"+email, "is_active", is_active);
             }
         });
 };
@@ -371,6 +382,7 @@ exports.createAdminPilotUser = createAdminPilotUser;
 exports.retrieveUserDetails = retrieveUserDetails;
 //exports.manageAccount = manageAccount;
 exports.managePassword = managePassword;
+exports.manageIsActive = manageIsActive;
 exports.manageUserInfo = manageUserInfo;
 exports.confirmAdminStatus = confirmAdminStatus;
 exports.localStrategyCB = localStrategyCB;

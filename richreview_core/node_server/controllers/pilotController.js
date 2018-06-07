@@ -42,7 +42,7 @@ exports.mgmt_acct = (req, res) => {
     const email    = req.params.email;
     const req_user_email = req.user.email;
     const op       = req.query.op;
-    util.debug(op);
+    //util.debug(op);
     util.debug(JSON.stringify(req.body));
     let promise = null;
     switch(op) {
@@ -51,7 +51,9 @@ exports.mgmt_acct = (req, res) => {
             promise = pilotHandler.managePassword(email, password, req_user_email);
             break;
         case "ChangeIsActive":
-            promise = Promise.resolve(1);
+            const is_active = req.body.value === "no";
+            util.debug(is_active);
+            promise = pilotHandler.manageIsActive(email, is_active);
             break;
         default:
             promise = Promise.reject("incorrect operation");

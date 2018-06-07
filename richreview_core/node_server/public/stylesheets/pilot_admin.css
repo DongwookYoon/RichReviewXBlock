@@ -25,6 +25,26 @@
     }
 }
 
+.panel-heading {
+    width: 100%;
+    background-color: whitesmoke;
+}
+.panel-heading > p {
+    color: black;
+}
+
+.panel {
+    margin-bottom: 15px;
+}
+
+.group_row {
+    padding : 10px 15px 10px 15px ;
+    border-top: solid 1px lightgray;
+}
+.group_row > a {
+    color: black;
+}
+
 .pilot_mgmt_user {
     display: flex;
     flex-wrap: nowrap;

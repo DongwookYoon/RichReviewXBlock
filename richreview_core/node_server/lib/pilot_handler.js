@@ -29,6 +29,8 @@ const util        = require('../util');
  * isAdmin    {string} required - is pilot user an admin?
  *
  * userid is also added to email_user_lookup as a hash field
+ *
+ * CHANGES: 20180520 - We are not allowed to record student details
  */
 
 /**
@@ -209,6 +211,9 @@ const retrieveUserDetails = () => {
  * @param {String} password
  * @param {Boolean} is_active
  * @return {Promise|Promise.<number>}
+ *
+ * Note: this function is deprecated
+ * TODO: delete
  */
 const manageAccount = (email, password, is_active, req_user_email) => {
     const changeAdminPassword = () => {
@@ -219,7 +224,6 @@ const manageAccount = (email, password, is_active, req_user_email) => {
         }
     };
 
-    util.debug("managing account");
     return RedisClient.HGET("pilot:"+email,"is_admin")
         .then((is_admin) => {
             if(is_admin === "true") {
@@ -230,6 +234,27 @@ const manageAccount = (email, password, is_active, req_user_email) => {
             }
         });
 
+};
+
+const managePassword = (email, password, req_user_email) => {
+    const changeAdminPassword = () => {
+        if(req_user_email === email) {
+            return RedisClient.HSET("pilot:"+email, "password", password);
+        } else {
+            throw "an admin cannot change the password of other admins";
+        }
+    };
+    util.debug("managing password");
+
+    return RedisClient.HGET("pilot:"+email,"is_admin")
+        .then((is_admin) => {
+            if(is_admin === "true") {
+                // if is admin then is_active does not change
+                return changeAdminPassword();
+            } else {
+                return RedisClient.HSET("pilot:"+email, "password", password);
+            }
+        });
 };
 
 /**
@@ -302,8 +327,6 @@ const plugPilot = (user) => {
 const localStrategyCB = (id_str, password, done) => {
     let userid = makeUserID(id_str);
 
-
-
     util.logger("localStrategyCB", "logging in "+userid+"...");
 
     util.logger("localStrategyCB", "get user Password");
@@ -346,7 +369,8 @@ const localStrategyCB = (id_str, password, done) => {
 exports.createStudentPilotUser = createStudentPilotUser;
 exports.createAdminPilotUser = createAdminPilotUser;
 exports.retrieveUserDetails = retrieveUserDetails;
-exports.manageAccount = manageAccount;
+//exports.manageAccount = manageAccount;
+exports.managePassword = managePassword;
 exports.manageUserInfo = manageUserInfo;
 exports.confirmAdminStatus = confirmAdminStatus;
 exports.localStrategyCB = localStrategyCB;

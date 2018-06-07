@@ -4,15 +4,12 @@ mixin pilotStudentCard(pilot_user = {})
             - var is_it_blocked  = (pilot_user.is_active === "false")
             form.pilot_mgmt_acct_form(action=`/pilot_admin/mgmt_acct/${pilot_user.email}` method="POST")
                 section.email_view
-                    b email
                     p= pilot_user.email
                 .vertical_line
                 section.pswd_input
-                    label(for="password") password
                     input.input(type="text" name="password" value=pilot_user.password required)
                 .vertical_line
                 section.is_active_input
-                    label(for="is_blocked") blocked?
                     input(type="checkbox" name="is_blocked" value="is_blocked" checked=is_it_blocked)
                 .vertical_line
                 section.button_buff

@@ -36,18 +36,43 @@ exports.pilot_admin = (req, res) => {
         });
 };
 
+
+
 exports.mgmt_acct = (req, res) => {
-    const email = req.params.email;
-    const password = req.body.password;
-    const is_active = req.body.is_blocked ? false : true;
+    const email    = req.params.email;
     const req_user_email = req.user.email;
-    pilotHandler.manageAccount(email, password, is_active, req_user_email)
-        .then((b) => {
+    const op       = req.query.op;
+    util.debug(op);
+    util.debug(JSON.stringify(req.body));
+    let promise = null;
+    switch(op) {
+        case "ChangePassword":
+            const password = req.body.value;
+            promise = pilotHandler.managePassword(email, password, req_user_email);
+            break;
+        case "ChangeIsActive":
+            promise = Promise.resolve(1);
+            break;
+        default:
+            promise = Promise.reject("incorrect operation");
+    }
+    promise.then((b) => {
             res.redirect("/pilot_admin");
         }).catch((err) => {
             util.error(err);
-            res.redirect("/");
+            res.redirect("/pilot_admin");
         });
+
+    // const password = req.body.password;
+    // const is_active = req.body.is_blocked ? false : true;
+    // const req_user_email = req.user.email;
+    // pilotHandler.manageAccount(email, password, is_active, req_user_email)
+    //     .then((b) => {
+    //         res.redirect("/pilot_admin");
+    //     }).catch((err) => {
+    //         util.error(err);
+    //         res.redirect("/");
+    //     });
 };
 
 /**

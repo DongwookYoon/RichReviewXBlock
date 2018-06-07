@@ -10,10 +10,8 @@
     margin-left: auto;
     margin-right: auto;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-gap: 5px;
-    /*padding-top: 8px;*/
-    /*padding-bottom: 5em;*/
+    grid-template-columns: 1fr;
+    grid-gap: 0;
 }
 
 @media screen and (max-width: 66em) {
@@ -33,7 +31,7 @@
     border-bottom-style: solid;
     border-bottom-width: 2px;
     border-color: #c0c0c0;
-    box-shadow: 0 1px 5px 0 #c0c0c0;
+    /*box-shadow: 0 1px 5px 0 #c0c0c0;*/
 }
 
 .pilot_mgmt_acct_form {
@@ -49,8 +47,6 @@
 
 input[type="text"], input[type="password"] {
     width: 100%;
-    /*padding: 12px 20px;
-    margin: 8px 0;*/
     display: block;
     border: 1px solid #ccc;
     box-sizing: border-box;
@@ -61,12 +57,11 @@ input[type="checkbox"] {
 }
 
 section {
-    /*border: 1px solid #ccc;*/
     margin-left: 5px;
     margin-bottom: 5px;
 }
 
-section.email_view {
+.email_view {
     width: 17.6em;
 }
 
@@ -74,11 +69,7 @@ section.is_active_input {
     width: 5em;
 }
 
-section.right_buff {
-    margin-right: 5px;
-}
-
-section.pswd_input {
+.pswd_input {
     width: 8em;
 }
 

@@ -124,7 +124,7 @@ exports.CreateContainerIfNotExist = function(ctx){
                     reject(err);
                 }
                 else{
-                    resolve(ctx)
+                    resolve(ctx);
                 }
             }
         );
@@ -135,7 +135,7 @@ exports.DoesBlobExist = function(ctx){
     return new Promise(function(resolve, reject){
         blob_svc.doesBlobExist(ctx.container, ctx.blob, function(err, resp){
             if(err){
-                reject(err)
+                reject(err);
             }
             else{
                 ctx.is_blob_exist = resp;
@@ -163,7 +163,7 @@ exports.SetBlobFromText = function(ctx){
     return new Promise(function(resolve, reject){
         blob_svc.createBlockBlobFromText(ctx.container, ctx.blob, ctx.text, function(err, resp){
             if(err){
-                reject(err)
+                reject(err);
             }
             else{
                 ctx.resp = resp;

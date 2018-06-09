@@ -1,19 +1,32 @@
 (function(r2) {
     "use strict";
+
     r2.constructErrorMsg = function(is_lti){
         var msg = 'Interesting... The system caught an unexpected error. Please wait for a couple of minutes,';
         if(is_lti){
-            msg += ' go back to the edX course page, and retry accessing this tool.'
+            msg += ' go back to the edX course page, and retry accessing this tool.';
         }
         else{
-            msg += ' and refresh the page. '
+            msg += ' and refresh the page. ';
         }
-        msg +=  ' If it\'s the same, please copy-and-paste this error message and report this to the manager (dy252@cornell.edu).'
+        msg +=  ' If it\'s the same, please copy-and-paste this error message and report this to the manager (dy252@cornell.edu).';
         return msg;
     };
 
-    r2.CDN_URL = 'https://richreview.azureedge.net';
-    r2.CDN_SUBURL = r2.CDN_URL+'/'+(window.location.hostname==='richreview.net'?'richreview':'localhost');
+    /**
+     * if running as development instance then
+     * else get cdn from azure blob service
+     */
+    console.log("DEBUG: " + r2.env);
+    if(r2.env === "production") {
+        console.log("DEBUG: loading from production route");
+        r2.CDN_URL    = 'https://richreview.azureedge.net';
+        r2.CDN_SUBURL = r2.CDN_URL+'/'+(window.location.hostname==='richreview.net'?'richreview':'localhost');
+    } else {
+        console.log("DEBUG: loading from development route");
+        r2.CDN_URL    = 'https://richreview.azureedge.net';
+        r2.CDN_SUBURL = '/static_viewer';
+    }
 
     r2.runSerialPromises = (function(){
         var runSerialPromises = function(promiseFuncs, rtns){
@@ -72,9 +85,10 @@
             }
         };
 
-        pub.get = function(url){
+        pub.get = function(url) {
             if(map === null){
-                return '/static_viewer/'+url;
+                // return '/static_viewer'+url;
+                return url;
             }
             else{
                 return map[url];
@@ -88,7 +102,7 @@
 
         r2.webappUrlMaps.init(webapp_url_maps);
 
-        var run = function(){
+        var run = function() {
             var scripts = [
                 ['https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/smoothness/jquery-ui.css', 'css'],
                 ['https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js', 'js'],
@@ -120,7 +134,7 @@
             ];
 
             var promises = scripts.map(function(script){
-                return function(){
+                return function() {
                     var is_absolute_path = script[0].indexOf('http://') === 0 || script[0].indexOf('https://') === 0;
                     return loadScriptByUrlAndType(
                         is_absolute_path ? script[0] : r2.webappUrlMaps.get(script[0]), // url

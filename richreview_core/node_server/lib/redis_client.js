@@ -20,13 +20,13 @@ const util = require('../util');
  */
 let redisClient = null;
 
-if(os.hostname() !== "richreview") {
-    util.start("using local redis server");
-    redisClient = redis.createClient(6379);
-} else {
+if(env.redis_config.use_remote_redis) {
     util.start("using remote redis server");
-    redisClient = redis.createClient(6379, "richreview.net");
+    redisClient = redis.createClient(env.redis_config.port, env.redis_config.url);
     redisClient.auth(env.redis_config.auth);
+} else {
+    util.start("using local redis server");
+    redisClient = redis.createClient(env.redis_config.port);
 }
 
 redisClient.on('error', function(err) {

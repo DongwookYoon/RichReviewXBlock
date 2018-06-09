@@ -13,10 +13,9 @@ block content_with_cprght
     .panel
         .panel-heading
             p Admin
-            // .pilot_mgmt_header_container
         .panel-body
-            .group-row.pilot_mgmt_container
-                .pilot_mgmt_user.pilot_mgmt_table
+            .pilot_mgmt_container
+                .pilot_mgmt_user
                     section.email_view
                         b email
                     .vertical_line
@@ -25,15 +24,14 @@ block content_with_cprght
                     .vertical_line
                     section.is_active_input
                         b blocked?
-            each pilot_user in pilot_user_sorted
-                +pilotAdminCard(pilot_user)
+                each pilot_user in pilot_user_sorted
+                    +pilotAdminCard(pilot_user)
     .panel
         .panel-heading
             p Students
-            // .pilot_mgmt_header_container
         .panel-body
             .pilot_mgmt_container
-                .pilot_mgmt_user.pilot_mgmt_table
+                .pilot_mgmt_user
                     section.email_view
                         b email
                     .vertical_line
@@ -42,5 +40,5 @@ block content_with_cprght
                     .vertical_line
                     section.is_active_input
                         b blocked?
-            each pilot_user in pilot_user_sorted
-                +pilotStudentCard(pilot_user)
+                each pilot_user in pilot_user_sorted
+                    +pilotStudentCard(pilot_user)

@@ -82,6 +82,76 @@ a:active {
   height: 100%;
 }
 
+/*****************************/
+/**     Flash Messages      **/
+/*****************************/
+
+.flash_messages {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    margin-left: auto;
+    margin-right: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-gap: 1rem;
+}
+
+.flash {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: solid 5px #ccc;
+}
+
+.flash--error {
+    border-color: #b92c28;
+}
+
+.flash--error:hover {
+    border-color: #d9534f;
+}
+
+.flash--warning {
+    border-color:  #e38d13;
+}
+
+.flash--warning:hover {
+    border-color: #f0ad4e;
+}
+
+.flash--success {
+    border-color: #3e8f3e;
+}
+
+.flash--success:hover {
+    border-color: #5cb85c;
+}
+
+.flash--info {
+    border-color: #28a4c9;
+}
+
+.flash--info:hover {
+   border-color: #5bc0de;
+}
+
+p.flash__text {
+    margin: 1em;
+}
+
+button.flash__remove {
+    background-color: white;
+    border: none;
+    padding:0 30px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+}
+
+/*****************************/
+/**        App page         **/
+/*****************************/
+
 #r2_app_page{
   overflow: hidden;
   position: relative;
@@ -165,8 +235,6 @@ a:active {
 .no_bottom_margin{
   margin-bottom: 0;
 }
-
-
 
 /*
  * About page

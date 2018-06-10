@@ -30,6 +30,7 @@ const authController     = require('../controllers/authController');
 /**
  * get requests
  */
+router.get('',                _pages.about);
 router.get('/',                _pages.about);
 router.get('/about',           _pages.about);
 router.get('/logout',          _pages.logout);
@@ -155,7 +156,11 @@ router.get(
 );
 
 router.post('/login_pilot',
-    passport.authenticate('local', { failureRedirect: '/login_pilot' }),
+    passport.authenticate('local', {
+        failureRedirect: '/login_pilot',
+        failureFlash: 'You failed to login',
+        successFlash: 'You are logged in'
+    }),
     function(req, res) {
         js_utils.logUserAction(req, "logged in");
         res.redirect(req.session.latestUrl || '/');

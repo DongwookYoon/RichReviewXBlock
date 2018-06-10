@@ -18,11 +18,12 @@ const mkdirp = require('mkdirp');
 const compression = require('compression');
 const passport = require('passport');
 const express = require('express');
-const expressSession = require('express-session');
+const session = require('express-session');
+const flash = require('connect-flash');
 
 // set up redis store
 util.start("setting up redis store");
-const RedisStore = require('connect-redis')(expressSession);
+const RedisStore = require('connect-redis')(session);
 
 // import libraries
 util.start("importing libraries");
@@ -56,20 +57,15 @@ app.use(compression());
 app.use(logger('tiny'));
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true }));
-app.use(
-    expressSession(
-        {
-            store: new RedisStore(
-                {
-                    client: redis_client.redisClient
-                }),
-            secret: env.redis_config.auth,
-            saveUninitialized: false,
-            resave: false,
-            cookie: { maxAge: 3*60*60*1000 }
-        }
-    )
-);
+app.use(session({
+    store: new RedisStore({
+        client: redis_client.redisClient
+    }),
+    secret: env.redis_config.auth,
+    saveUninitialized: false,
+    resave: false,
+    cookie: { maxAge: 3*60*60*1000 }
+}));
 
 util.start("initialize passport");
 app.use(passport.initialize());
@@ -78,8 +74,16 @@ app.use(passport.session());
 util.start("set static pages");
 setupStaticPages();
 
+app.use(flash());
+
+app.use((req, res, next) => {
+    res.locals.flashes = req.flash();
+    res.locals.user = req.user || null;
+    next();
+});
+
 util.start("switch lti for user if needed(?)");
-app.use(function(req, res, next){
+app.use((req, res, next) => {
     if(req.user instanceof LtiEngine.User) {
         if( (req.url !== '/bluemix_stt_auth' && req.url.substring(0, 5) !== '/lti_') && req.method !== 'POST'){
             req.logout();

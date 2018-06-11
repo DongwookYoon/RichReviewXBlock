@@ -27,9 +27,9 @@ const lti                = require('../controllers/lti');
 const pilotController    = require('../controllers/pilotController');
 const authController     = require('../controllers/authController');
 
-/**
- * get requests
- */
+/*****************************/
+/** routes for get requests **/
+/*****************************/
 router.get('',                _pages.about);
 router.get('/',                _pages.about);
 router.get('/about',           _pages.about);
@@ -56,24 +56,9 @@ router.get('/lti_discuss_rr',  lti.get_discuss_rr);
 router.get('/lti_discuss_bb',  lti.get_discuss_bb);
 router.get('/synclog',         _pages.getSyncLog);
 
-/**
- * controllers for pilot study
- */
-router.get('/login_pilot', pilotController.pilot_login_page);
-router.get('/pilot_admin',
-    authController.isLoggedIn,
-    pilotController.auth_pilot_admin,
-    pilotController.pilot_admin);
-router.post('/pilot_admin/mgmt_acct/:email',
-    authController.isLoggedIn,
-    pilotController.auth_pilot_admin,
-    pilotController.mgmt_acct);
-// we cannot yet record user information!!
-//app.post('/pilot_admin/mgmt_info/:email', pilot.auth_pilot_admin, pilot.mgmt_info);
-
-/**
- * post requests
- */
+/******************************/
+/** routes for post requests **/
+/******************************/
 router.post('/dbs',        dbs.post);
 router.post('/account',    account.post);
 router.post('/dataviewer', dataviewer.post);
@@ -84,6 +69,34 @@ router.post('/course',     course.post);
 router.post('/lti_dbs',    lti.post_dbs);
 router.post('/lti_survey', lti.post_survey);
 router.post('/lti_discuss_bb', lti.post_bb);
+
+/****************************/
+/** routes for pilot study **/
+/****************************/
+router.get('/login_pilot', pilotController.pilot_login_page);
+router.get('/pilot_admin',
+    authController.isLoggedIn,
+    pilotController.auth_pilot_admin,
+    pilotController.pilot_admin
+);
+router.post('/pilot_admin/mgmt_acct/:email',
+    authController.isLoggedIn,
+    pilotController.auth_pilot_admin,
+    pilotController.mgmt_acct
+);
+// TODO: finish route
+router.get('/pilot_backdoor',
+    // TODO: should auth is super-user
+    pilotController.pilot_backdoor
+);
+// we cannot yet record user information!!
+//app.post('/pilot_admin/mgmt_info/:email', pilot.auth_pilot_admin, pilot.mgmt_info);
+
+/***********/
+/** React **/
+/***********/
+
+router.get('/test_react', pilotController.testReact);
 
 /**
  * redirections

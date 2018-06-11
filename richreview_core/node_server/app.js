@@ -77,6 +77,7 @@ setupStaticPages();
 app.use(flash());
 
 app.use((req, res, next) => {
+    req.session.latestUrl = req.originalUrl; // TODO: ask Dongwook about this
     res.locals.flashes = req.flash();
     res.locals.user = req.user || null;
     next();
@@ -108,18 +109,27 @@ function setupStaticPages(){
     app.use(
         express.static(path.join(__dirname, 'public'))
     );
+
     app.use(
         '/static_viewer',
         express.static(path.resolve(__dirname, '..', env.path.webapp_richreview), { maxAge: 30*1000 })
     );
+
+    app.use(
+        '/static_react',
+        express.static(path.resolve(__dirname, 'dist'), { maxAge: 30*1000 })
+    );
+
     app.use(
         '/static_multicolumn',
         express.static(path.resolve(__dirname, '..', env.path.webapp_multicolumn), { maxAge: 30*1000 })
     );
+
     app.use(
         '/mupla_pdfs',
         express.static(path.resolve(__dirname, env.path.temp_pdfs), { maxAge: 30*1000 })
     );
+
     app.use(
         '/rrr',
         express.static('/home/rrr/', { maxAge: 30*1000 })

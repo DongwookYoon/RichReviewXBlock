@@ -612,23 +612,22 @@ var Group = (function(manager, name, creationDate){
     };
     
     pub_grp.connectGroupAndMultipleUsers = function(groupid_n, l_userid_n){
-        function run(i){
-            if(i !== l_userid_n.length) {
+        return (function loop(i){
+            if(i < l_userid_n.length) {
                 return pub_grp.AddUserToParticipating(groupid_n, l_userid_n[i]).then(
                     function () {
                         return User.prototype.AddGroupToUser(l_userid_n[i], groupid_n);
                     }
                 ).then(
                     function () {
-                        return run(i + 1);
+                        return loop(i + 1);
                     }
                 )
             }
             else{
                 return Promise.resolve();
             }
-        }
-        return run(0);
+        })(0);
     };
 
     pub_grp.GetDocIdByGroupId = function(groupid_n){

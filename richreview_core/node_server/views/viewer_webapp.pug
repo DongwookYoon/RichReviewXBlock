@@ -6,5 +6,5 @@ block content
         #r2_app_container(align="left")
 
         script(type='text/javascript', src="/js/viewer_helper.js")
-        script(type="text/javascript")
-            |loadRichReview('#{r2_ctx}');
+        script.
+            loadRichReview("#{r2_ctx}", "#{env}");

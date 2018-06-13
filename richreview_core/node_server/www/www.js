@@ -25,13 +25,12 @@ else{
 
 // import libraries (depends on Node environment)
 const env = require('../lib/env');
-const file_utils = require('../lib/file_utils')
+const file_utils = require('../lib/file_utils');
 const azure = require('../lib/azure');
 // const js_utils = require("../lib/js_utils");
 
 const HOSTNAME = os.hostname() === 'richreview' ? 'richreview' : 'localhost';
 const HASHFILE = HOSTNAME+'/richreview_webapp_hash.txt';
-// var WEBAPP_PATH = './../../webapps/richreview/'; // TODO: test and delete
 const WEBAPP_PATH = path.resolve(__dirname, '../../webapps/richreview/');
 
 util.start('App NODE_ENV:'+process.env.NODE_ENV);
@@ -43,7 +42,8 @@ var webAppSync = (function(){
     var files = null;
 
     var pub = {};
-    pub.run = function(){
+    pub.run = function() {
+        util.start("doing web-app sync");
         return getBlobStorageHash()
             .then(function(storage_hash){
                 var local_hash = getLocalFileHash(getLocalFileList());
@@ -156,7 +156,6 @@ const runServer = () => {
         app.http.get('port'),
         function () {
             util.start("listening on HTTP port: " + app.http.get('port'));
-            //console.log('Express server listening on HTTP port:', app.http.get('port'));
         }
     );
 
@@ -171,12 +170,20 @@ const runServer = () => {
         app.https.get('port'),
         function () {
             util.start("listening on HTTPS port: " + app.https.get('port'));
-            //console.log('Express server listening on HTTPS port:', app.https.get('port'));
         }
     );
 };
 
-if(process.argv[2]){
+if(process.env.NODE_ENV === 'production') {
+    webAppSync.run().then(() => {
+        runServer();
+    });
+} else {
+    util.start("skipping web-app sync");
+    runServer();
+}
+
+/*if(process.argv[2]){
     var process_course_submission = function(course_id, submission_id) {
         var pcs = require('../process_course_submission');
         pcs.run(course_id, submission_id);
@@ -185,4 +192,4 @@ if(process.argv[2]){
 }
 else{
     webAppSync.run().then(function(){runServer();});
-}
+}*/

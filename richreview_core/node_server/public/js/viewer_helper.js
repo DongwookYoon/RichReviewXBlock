@@ -2,14 +2,15 @@
  * Created by dongwookyoon on 6/10/15.
  */
 
-function loadRichReview(r2_ctx) {
+function loadRichReview(r2_ctx, env) {
     (function(r2){
         r2.platform = 'Azure';
         r2.scroll_wrapper = document.getElementById('r2_app_page');
         r2.ctx = JSON.parse(decodeURIComponent(r2_ctx));
+        r2.env = env;
         warnIE();
         loadJsScript("/static_viewer/load.js", "js").then(
-            function(){
+            function() {
                 r2.loadApp(null);
             }
         );
@@ -18,7 +19,7 @@ function loadRichReview(r2_ctx) {
 
 function warnIE(){
     var old_ie = -1; // Return value assumes failure.
-    if (navigator.appName == 'Microsoft Internet Explorer')
+    if (navigator.appName === 'Microsoft Internet Explorer')
     {
         var ua = navigator.userAgent;
         var re  = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
@@ -26,12 +27,12 @@ function warnIE(){
             old_ie = parseFloat( RegExp.$1 );
     }
     var ie11 = /rv:11.0/i.test(navigator.userAgent);
-    if(old_ie != -1 || ie11 ){ // detect ie
+    if(old_ie !== -1 || ie11 ){ // detect ie
         alert('Internet Explore is not supported. If you encounter any issue while using this tool, please consider using other browsers, such as Google Chrome, Mozilla Firefox, or Microsoft Edge.');
     }
 }
 
-var loadJsScript = function(url, type){
+var loadJsScript = function(url, type) {
     return new Promise(function(resolve, reject){
         var elem = null;
         if(type === 'js'){
@@ -48,7 +49,9 @@ var loadJsScript = function(url, type){
         if(elem){
             elem.onreadystatechange = resolve;
             elem.onload = resolve;
-            elem.onerror = function(){reject(new Error("Cannot load a resource file:" + url));};
+            elem.onerror = function(){
+                reject(new Error("Cannot load a resource file:" + url));
+            };
             document.getElementsByTagName('head')[0].appendChild(elem);
         }
         else{

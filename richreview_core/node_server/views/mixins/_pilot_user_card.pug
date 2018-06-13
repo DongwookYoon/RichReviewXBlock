@@ -1,4 +1,5 @@
 mixin pilotUserCard(pilot_user = {})
+    // this is deprecated
     .pilot_mgmt_user
         - var is_it_this_user = (pilot_user.email === user.email )
         - var is_it_blocked  = (pilot_user.is_active === "false")

@@ -137,6 +137,6 @@ exports.auth_pilot_superuser = (req, res, next) => {
 /** Test React App **/
 /********************/
 
-exports.testReact = (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'views/react.html'));
+exports.class_page = (req, res) => {
+    res.render("class", { cur_page: "class", user: req.user });
 };

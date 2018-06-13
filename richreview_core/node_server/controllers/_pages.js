@@ -12,15 +12,11 @@ exports.about = function (req, res) {
 exports.logout = function(req, res) {
     js_utils.logUserAction(req, 'logging out...');
     req.logout();
-<<<<<<< HEAD
     req.flash('success', 'You are now logged out');
     res.redirect(
         'https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue='+
         js_utils.getHostname()
     );
-=======
-    res.redirect("/");
->>>>>>> 30e0e3675003d4a8b9f2d98dcbe1065800e8bbe2
 };
 
 exports.input_test = function(req, res){

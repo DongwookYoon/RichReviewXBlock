@@ -92,11 +92,11 @@ router.get('/pilot_backdoor',
 // we cannot yet record user information!!
 //app.post('/pilot_admin/mgmt_info/:email', pilot.auth_pilot_admin, pilot.mgmt_info);
 
-/***********/
-/** React **/
-/***********/
+/****************************/
+/** routes for MyClass app **/
+/****************************/
 
-router.get('/test_react', pilotController.testReact);
+router.get('/class', pilotController.class_page);
 
 /**
  * redirections

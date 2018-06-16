@@ -32,7 +32,8 @@ const LtiEngine = require('./lib/lti_engine.js');
 const redis_client = require('./lib/redis_client.js');
 
 util.start("importing controllers");
-const routes = require('./routes/index');
+const routes    = require('./routes/index');
+const apiRoutes = require('./routes/api');
 
 util.start("setting up passport");
 require('./lib/passport');
@@ -95,6 +96,7 @@ app.use((req, res, next) => {
 
 util.start("setting up routes");
 app.use('/', routes);
+app.use('/api', apiRoutes);
 
 util.start("setting up error log");
 setErrLog();

@@ -84,19 +84,24 @@ router.post('/pilot_admin/mgmt_acct/:email',
     pilotController.auth_pilot_admin,
     pilotController.mgmt_acct
 );
-// TODO: finish route
-router.get('/pilot_backdoor',
-    // TODO: should auth is super-user
-    pilotController.pilot_backdoor
-);
-// we cannot yet record user information!!
-//app.post('/pilot_admin/mgmt_info/:email', pilot.auth_pilot_admin, pilot.mgmt_info);
 
 /****************************/
 /** routes for MyClass app **/
 /****************************/
 
-router.get('/class', pilotController.class_page);
+// TODO: turn into general backdoor; finish route
+// note there are no post req set up yet so is just view
+router.get('/pilot_backdoor',
+    authController.isLoggedIn,
+    // TODO: should auth is super-user
+    pilotController.pilot_backdoor
+);
+
+// TODO: finish route
+router.get('/class',
+    authController.isLoggedIn,
+    pilotController.class_page
+);
 
 /**
  * redirections

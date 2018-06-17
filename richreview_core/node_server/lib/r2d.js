@@ -385,8 +385,6 @@ User.prototype.deleteUserByEmail = (email) => {
             .catch((err) => {
                 util.error(err);
             });
-
-        // we don't have to remove anything from the azure storage
     };
 
     return RedisClient.HGET('email_user_lookup', email)
@@ -887,7 +885,7 @@ var Group = (function(manager, name, creationDate){
 var Doc = (function(){
     var pub_doc = {};
 
-    //redis doc hash structure
+    // redis doc hash structure
     // userid, creationDate, pdfid, name, groups(list)
 
     /**

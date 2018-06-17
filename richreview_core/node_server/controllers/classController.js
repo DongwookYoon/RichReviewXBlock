@@ -98,12 +98,16 @@ const getUBCUserFromRedis = (userid) => {
   return Promise.resolve(dummyData.mockUsers[userid]);
 };
 
-const getCourseFromRedis = (ubc_course_key) => {
-  dummyData
+const getCourseFromRedis = {}
+
+const getCourse = (ubc_course_key) => {
+  // corr. with cmd `keys ubc_course:*`
+  dummyData.mockCourses[ubc_course_key]
 
 };
 
 const getCourseKeysFromRedis = () => {
+  // corr. with cmd `keys ubc_course:*`
   const keys = Object.keys(dummyData.mockCourses);
   return Promise.resolve(keys);
 };
@@ -138,8 +142,16 @@ const getCourses = (req) => {
     const cb1 = (ubc_course_key) => {
       return getCourseInstructorList(ubc_course_key)
         .then((instructors) => {
-          return { ubc_course_key, instructors };
+          return { key: ubc_course_key, instructors };
         });
+    };
+
+    const cb2 = (ubc_course_obj) => {
+      return ubc_course_obj.instructors.includes(ubc_user_key);
+    };
+
+    const cb3 = () => {
+
     };
 
     return getCourseKeysFromRedis()
@@ -148,16 +160,10 @@ const getCourses = (req) => {
         return Promise.all(promises);
       })
       .then((ubc_course_objs) => {
-        const acc = [];
-        ubc_course_objs.forEach((ubc_course_obj) => {
-          if (ubc_course_obj.instructors.includes(ubc_user_key)) {
-            acc.push(ubc_course_obj.ubc_course_key);
-          }
-        });
-        return acc;
+        return ubc_course_objs.filter(cb2);
       })
-      .then((course_keys_of_instr) => {
-        const promises = course_keys_of_instr.map(getCourseFromRedis);
+      .then((ubc_course_objs) => {
+        const promises = ubc_course_objs.map(cb3);
         return Promise.all(promises);
       });
   };

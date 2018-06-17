@@ -74,42 +74,149 @@
  *      default     the student cannot see the assignment
  */
 
+const dummyData = require('../data/dummy_data');
+
 /**
+ * MyClass App
+ *
  * If User.level=student then just fetch that student's details
  * If User.level=instructor then get instructor's courses and return all students in those courses
  * If User.level=admin then fetch all students
  * If User.level=undefined then return empty array
- *
- * @param req
- * @param res
  */
-exports.fetchStudents = (req, res) => {
-  const dummyStudents = [
-    { id: "1", email: "test01@study.com", first_name: "Jonathan", last_name: "Flask", sid: "01234567" },
-    { id: "2", email: "test02@study.com", first_name: "Jordan", last_name: "Bayer", sid: "01234567" },
-    { id: "3", email: "test03@study.com", first_name: "Finn", last_name: "Wake", sid: "01234567" },
-    { id: "4", email: "test04@study.com", first_name: "Alex", last_name: "Moore", sid: "01234567" }
-  ];
-  res.send(dummyStudents);
+
+/**
+ * Get UBCUser from redis server
+ *
+ * currently using mock data
+ * TODO: get data from redis server
+ *
+ * @param userid {string}
+ * @returns {Promise<UBCUser>}
+ */
+const getUBCUserFromRedis = (userid) => {
+  return Promise.resolve(dummyData.mockUsers[userid]);
+};
+
+const getCourseFromRedis = (ubc_course_key) => {
+  dummyData
+
+};
+
+const getCourseKeysFromRedis = () => {
+  const keys = Object.keys(dummyData.mockCourses);
+  return Promise.resolve(keys);
+};
+
+const getCourseInstructorList = (ubc_course_key) => {
+  const instructors = dummyData.mockCourses[ubc_course_key].instructors;
+  return Promise.resolve(instructors);
 };
 
 /**
  *
- *
+ * @param req
+ * @return {*|Promise<UBCUser>}
+ */
+const getCourses = (req) => {
+
+  /**
+   *
+   */
+  const getCoursesAsStudent = (ubc_userid, ubc_user) => {
+
+  };
+
+  /**
+   * Get all course keys, then get each list of instructor from course key, then, pick out which course key has ubc_user_key in list.
+   *
+   * @param ubc_user_key {string} - has form `ubc_user:[userid]`
+   * @param ubc_user
+   * @return {*}
+   */
+  const getCoursesAsInstructor = (ubc_user_key) => {
+    const cb1 = (ubc_course_key) => {
+      return getCourseInstructorList(ubc_course_key)
+        .then((instructors) => {
+          return { ubc_course_key, instructors };
+        });
+    };
+
+    return getCourseKeysFromRedis()
+      .then((ubc_course_keys) => {
+        const promises = ubc_course_keys.map(cb1);
+        return Promise.all(promises);
+      })
+      .then((ubc_course_objs) => {
+        const acc = [];
+        ubc_course_objs.forEach((ubc_course_obj) => {
+          if (ubc_course_obj.instructors.includes(ubc_user_key)) {
+            acc.push(ubc_course_obj.ubc_course_key);
+          }
+        });
+        return acc;
+      })
+      .then((course_keys_of_instr) => {
+        const promises = course_keys_of_instr.map(getCourseFromRedis);
+        return Promise.all(promises);
+      });
+  };
+
+  const getCoursesAsAdmin = () => {
+
+  };
+
+  const userid = req.user.id;
+  const ubc_user_key = "ubc_user:"+userid;
+  return getUBCUserFromRedis(userid)
+    .then((ubc_user) => {
+      switch(ubc_user.auth_level) {
+        case "instructor":
+          return getCoursesAsInstructor(ubc_user_key, ubc_user);
+        case "student":
+          return getCoursesAsStudent(ubc_user_key, ubc_user);
+        default:
+          throw "in getUBCUserFromRedis; invalid auth_level";
+      }
+
+    });
+};
+
+const getStudents = () => {
+  const mockRedis = () => {
+    return Promise.resolve(dummyData.mockUsers);
+  };
+
+  return mockRedis()
+    .then((users) => {
+
+    })
+    .catch((err) => {
+
+    });
+};
+
+/**
  * @param req
  * @param res
  */
-exports.fetchAssignments = (req, res) => {
-  const dummyAssignments = [
-    { id: "", title: "hw01", docs: [], out_of: 10, grade: 5, due_date: "2018-06-16T20:02:48.302Z", status: "active" },
-    {},
-    {},
-    {}
-  ];
-  res.send(dummyAssignments);
-};
+exports.fetch = (req, res) => {
 
-exports.fetchCourses = (req, res) => {
-  const dummyCourses = [];
-  res.send(dummyCourses);
+  let promise = null;
+  switch(req.query.op) {
+    /**
+     * get all courses
+     */
+    case "courses":
+      promise = getCourses(req);
+      break;
+    default:
+      // TODO: send error message
+  }
+  promise.then((data) => {
+      res.send(data);
+      //
+    }).catch((err) => {
+      // TODO: figure out how to throw this error
+    });
 };

@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from 'prop-types';
-//import moment from
+
+import AssignmentGroup from './AssignmentGroup';
 
 class AssignmentPanel extends React.Component {
   constructor() {
@@ -17,18 +18,25 @@ class AssignmentPanel extends React.Component {
   }
 
   renderLists() {
-    if (Object.keys(this.props.asgmts).length === 0) {
+    if (Object.keys(this.props.asgmt_grps).length === 0) {
       return (<div className="asgmt-panel-content">
         No Assignments
       </div>);
     }
-    return (
+    /*return (
       <div className="asgmt-panel-content">
         {this.props.asgmts.map((asgmt) => (
           <div id={asgmt.id} key={asgmt.id} className="asgmt-card">
             {asgmt.title}
           </div>
         ))}
+      </div>
+    );*/
+    return (
+      <div className="asgmt-panel-content">
+        {this.props.asgmt_grps.map((asgmt_grp) => {
+          return <AssignmentGroup asgmt_grp={asgmt_grp} />
+        })}
       </div>
     );
   }

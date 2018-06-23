@@ -235,14 +235,7 @@ exports.getAssignmentsFromCourse = (req, res) => {
         };
       });
   };
-  /*getAssignmentKeysOfCourse(course_key)
-    .then((asgmt_keys) => {
-      const promises = asgmt_keys.map(getAssignmentProperties);
-      return Promise.all(promises);
-    })
-    .then((asgmts) => {
-      res.send(asgmts);
-    });*/
+
   getCourseActiveStudentsList(course_key)
     .then((student_keys) => {
       const promises = student_keys.map(cb1);

@@ -13,7 +13,7 @@ class App extends React.Component {
     this.state = {
       courses: [ ],
       users:   [ ],
-      asgmts:  [ ],
+      asgmt_grps:  [ ],
       view: ""
     };
 
@@ -33,8 +33,8 @@ class App extends React.Component {
         this.setState({ users });
       });
     api.fetchCourseAssignments(key)
-      .then((asgmts) => {
-        this.setState({ asgmts });
+      .then((asgmt_grps) => {
+        this.setState({ asgmt_grps });
       });
   }
 
@@ -55,7 +55,7 @@ class App extends React.Component {
             />
             <AssignmentPanel
               users={this.state.users}
-              asgmts={this.state.asgmts}
+              asgmt_grps={this.state.asgmt_grps}
             />
           </div>
         </div>

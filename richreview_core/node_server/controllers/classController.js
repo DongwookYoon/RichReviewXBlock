@@ -61,6 +61,38 @@ const getCourseBlockedStudentsList = (course_key) => {
   return Promise.resolve(blockeds);
 };
 
+const getAssignmentProperties = (asgmt_key) => {
+  const asgmt = dummyData.mockAssignments[asgmt_key];
+  asgmt.id = asgmt_key;
+  return Promise.resolve(asgmt);
+};
+
+const getAssignmentKeysOfCourse = (course_key) => {
+  // corr. with cmd `keys asgmt:*:<course_frag>:*`
+  const course_frag = course_key.substring(7);
+  util.debug(course_key+" "+course_frag);
+  let asgmt_keys = Object.keys(dummyData.mockAssignments);
+  asgmt_keys = asgmt_keys.filter((asgmt_key) => {
+    return asgmt_key.indexOf(course_frag) !== -1;
+  });
+  return Promise.resolve(asgmt_keys);
+};
+
+const getAssignmentsOfUser = (user_key) => {
+  // corr. with cmd `keys asgmt:*:*:*:*`
+  const userid = user_key.substring(4);
+  let asgmt_keys = Object.keys(dummyData.mockAssignments);
+  asgmt_keys = asgmt_keys.filter((asgmt_key) => {
+    return asgmt_key.indexOf("asgmt:"+userid) !== -1;
+  });
+  const asgmts = asgmt_keys.map((asgmt_key) => {
+    const asgmt = dummyData.mockAssignments[asgmt_key];
+    asgmt.id = asgmt_key;
+    return asgmt;
+  });
+  return Promise.resolve(asgmts);
+};
+
 /**
  * send a response to all the courses user has access to
  * TODO: auth_level is deprecated; make one general routing for all users
@@ -141,15 +173,15 @@ exports.getCourses = (req, res) => {
     });
 };
 
-exports.getUsers = (req, res) => {
+exports.getUsersFromCourse = (req, res) => {
   const course_key = req.params.course_key;
-  util.debug(course_key);
 
   Promise.all([
     getCourseInstructorList(course_key),
     getCourseActiveStudentsList(course_key),
     getCourseBlockedStudentsList(course_key)
-  ]).then((arr) => {
+  ])
+    .then((arr) => {
       const promise_instructors = Promise.all(arr[0].map(getUserFromRedis));
       const promise_active_stu  = Promise.all(arr[1].map(getUserFromRedis));
       const promise_blocked_stu = Promise.all(arr[2].map(getUserFromRedis));
@@ -169,11 +201,30 @@ exports.getUsers = (req, res) => {
     });
 };
 
-exports.getAssignments = (req, res) => {
-  return Promise.resolve(Object.keys(dummyData.mockAssignments)
-    .map((key) => {
-      const mockAssignment = dummyData.mockAssignments[key];
-      mockAssignment.id = key;
-      return mockAssignment;
-  })); // stub
+exports.getAssignmentsFromCourse = (req, res) => {
+  const course_key = req.params.course_key;
+  getAssignmentKeysOfCourse(course_key)
+    .then((asgmt_keys) => {
+      const promises = asgmt_keys.map(getAssignmentProperties);
+      return Promise.all(promises);
+    })
+    .then((asgmts) => {
+      res.send(asgmts);
+    });
+};
+
+/**
+ * TODO: not correct impl
+ */
+exports.getAssignmentsFromUser = (req, res) => {
+  const course_key = req.params.course_key;
+
+  getCourseActiveStudentsList(course_key)
+    .then((active_student_keys) => {
+      const promises = active_student_keys.map(getAssignmentsOfUser);
+      return Promise.all(promises);
+    })
+    .then((asgmts) => {
+      res.send(asgmts);
+    });
 };

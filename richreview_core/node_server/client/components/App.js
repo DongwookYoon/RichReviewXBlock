@@ -1,7 +1,7 @@
 import React from 'react';
 // import PropTypes from 'prop-types';
 
-import StudentPanel from './StudentPanel';
+import UserPanel from './UserPanel';
 import CoursePanel from './CoursePanel';
 import AssignmentPanel from './AssignmentPanel';
 import * as api from "../api";
@@ -12,7 +12,9 @@ class App extends React.Component {
 
     this.state = {
       courses: [ ],
-      users:   [ ]
+      users:   [ ],
+      asgmts:  [ ],
+      view: ""
     };
 
     this.selectCourse = this.selectCourse.bind(this);
@@ -21,9 +23,7 @@ class App extends React.Component {
   componentDidMount() {
     api.fetchCourses()
       .then((courses) => {
-        this.setState({
-          courses
-        });
+        this.setState({ courses });
       });
   }
 
@@ -31,9 +31,11 @@ class App extends React.Component {
     console.log("selected course "+key+" and fetching students");
     api.fetchCourseUsers(key)
       .then((users) => {
-        this.setState({
-          users
-        });
+        this.setState({ users });
+      });
+    api.fetchCourseAssignments(key)
+      .then((asgmts) => {
+        this.setState({ asgmts });
       });
   }
 
@@ -42,15 +44,18 @@ class App extends React.Component {
       <div className="myclass-shell">
         <div className="myclass-container">
           <div className="myclass-header">
-            <h1>MyClass</h1>
+            <h4>MyClass</h4>
           </div>
           <div className="myclass-contents">
             <CoursePanel
               courses={this.state.courses}
               selectCourse={this.selectCourse}
             />
-            <StudentPanel
+            <UserPanel
               users={this.state.users}
+            />
+            <AssignmentPanel
+              asgmts={this.state.asgmts}
             />
           </div>
         </div>

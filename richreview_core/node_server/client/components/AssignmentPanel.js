@@ -1,13 +1,11 @@
 import React from "react";
 import PropTypes from 'prop-types';
+//import moment from
 
 class AssignmentPanel extends React.Component {
   constructor() {
     super();
 
-    this.state = {
-      assignments: [ ]
-    };
   }
 
   componentDidMount() {
@@ -18,18 +16,30 @@ class AssignmentPanel extends React.Component {
 
   }
 
-  buildList() {
-    return this.state.assignments.map((assignment) => (
-      <div id={assignment.id}>
-        {assignment.title}
+  renderLists() {
+    if (Object.keys(this.props.asgmts).length === 0) {
+      return (<div className="asgmt-panel-content">
+        No Assignments
+      </div>);
+    }
+    return (
+      <div className="asgmt-panel-content">
+        {this.props.asgmts.map((asgmt) => (
+          <div id={asgmt.id}>
+            {asgmt.title}
+          </div>
+        ))}
       </div>
-    ));
+    );
   }
 
   render() {
     return (
-      <div className="assignment-page">
-        {this.buildList()}
+      <div className="asgmt-panel">
+        <div className="asgmt-panel-header">
+          <h4>Assignments</h4>
+        </div>
+        {this.renderLists()}
       </div>
     );
   }

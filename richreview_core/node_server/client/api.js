@@ -8,11 +8,11 @@ export const fetchCourses = () => {
 };
 
 export const fetchCourseUsers = (key) => {
-  return axios.get(`/api/class/fetch_users/${key}`)
+  return axios.get(`/api/class/fetch_course_users/${key}`)
     .then(resp => resp.data);
 };
 
-export const fetchAssignments = () => {
-  return axios.get(`/api/class/fetch_assignments`)
+export const fetchCourseAssignments = (key) => {
+  return axios.get(`/api/class/fetch_course_assignments/${key}`)
     .then(resp => resp.data);
 };

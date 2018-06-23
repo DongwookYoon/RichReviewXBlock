@@ -1,7 +1,7 @@
 import React from "react";
 // import PropTypes from 'prop-types';
 
-class StudentPanel extends React.Component {
+class UserPanel extends React.Component {
   constructor() {
     super();
 
@@ -77,7 +77,7 @@ class StudentPanel extends React.Component {
 
   renderLists() {
     if (Object.keys(this.props.users).length === 0) {
-      return (<div className="user-panel-list"></div>);
+      return (<div className="user-panel-content"></div>);
     }
     return (
       <div className="user-panel-content">
@@ -92,7 +92,7 @@ class StudentPanel extends React.Component {
     return (
       <div className="user-panel">
         <div className="user-panel-header">
-          <h2>Users</h2>
+          <h4>Users</h4>
         </div>
         {this.renderLists()}
       </div>
@@ -100,4 +100,4 @@ class StudentPanel extends React.Component {
   }
 }
 
-export default StudentPanel;
+export default UserPanel;

@@ -34,7 +34,7 @@ class CoursePanel extends React.Component {
     return (
       <div className="course-panel">
         <div className="course-panel-header">
-          <h2>Courses</h2>
+          <h4>Courses</h4>
         </div>
         <div className="course-panel-list">
           {this.buildCards()}

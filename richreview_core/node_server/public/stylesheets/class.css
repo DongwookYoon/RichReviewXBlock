@@ -1,0 +1,30 @@
+h4 {
+    margin: 0;
+}
+
+.myclass-header {
+    height: 60px;
+}
+
+.myclass-contents {
+    display: flex;
+    flex-grow: 1;
+    flex-wrap: nowrap;
+    border-top: solid 1px dodgerblue;
+    height: calc(100vh - 101px);
+}
+
+.course-panel {
+    width: 100%;
+}
+
+.user-panel {
+    width: 100%;
+    border-left: solid 1px dodgerblue;
+    border-right: solid 1px dodgerblue;
+
+}
+
+.asgmt-panel {
+    width: 100%;
+}

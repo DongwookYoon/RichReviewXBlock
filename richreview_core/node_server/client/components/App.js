@@ -28,7 +28,6 @@ class App extends React.Component {
   }
 
   selectCourse(key) {
-    console.log("selected course "+key+" and fetching students");
     api.fetchCourseUsers(key)
       .then((users) => {
         this.setState({ users });
@@ -55,6 +54,7 @@ class App extends React.Component {
               users={this.state.users}
             />
             <AssignmentPanel
+              users={this.state.users}
               asgmts={this.state.asgmts}
             />
           </div>

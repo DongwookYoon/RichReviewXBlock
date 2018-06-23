@@ -24,6 +24,7 @@ const dummyData = require('../data/dummy_data');
  */
 const getUserFromRedis = (user_key) => {
   const user = dummyData.mockUsers[user_key];
+  user.id = user_key;
   user.password = undefined;
   return Promise.resolve(user);
 };
@@ -67,10 +68,19 @@ const getAssignmentProperties = (asgmt_key) => {
   return Promise.resolve(asgmt);
 };
 
+const getAssignmentKeysOfCourseAndUser = (course_key, user_key) => {
+  const course_frag = course_key.substring(7);
+  const user_frag = user_key.substring(4);
+  let asgmt_keys = Object.keys(dummyData.mockAssignments);
+  asgmt_keys = asgmt_keys.filter((asgmt_key) => {
+    return asgmt_key.indexOf(user_frag+":"+course_frag) !== -1;
+  });
+  return Promise.resolve(asgmt_keys);
+};
+
 const getAssignmentKeysOfCourse = (course_key) => {
   // corr. with cmd `keys asgmt:*:<course_frag>:*`
   const course_frag = course_key.substring(7);
-  util.debug(course_key+" "+course_frag);
   let asgmt_keys = Object.keys(dummyData.mockAssignments);
   asgmt_keys = asgmt_keys.filter((asgmt_key) => {
     return asgmt_key.indexOf(course_frag) !== -1;
@@ -78,7 +88,7 @@ const getAssignmentKeysOfCourse = (course_key) => {
   return Promise.resolve(asgmt_keys);
 };
 
-const getAssignmentsOfUser = (user_key) => {
+/*const getAssignmentsOfUser = (user_key) => {
   // corr. with cmd `keys asgmt:*:*:*:*`
   const userid = user_key.substring(4);
   let asgmt_keys = Object.keys(dummyData.mockAssignments);
@@ -91,7 +101,7 @@ const getAssignmentsOfUser = (user_key) => {
     return asgmt;
   });
   return Promise.resolve(asgmts);
-};
+};*/
 
 /**
  * send a response to all the courses user has access to
@@ -110,7 +120,7 @@ exports.getCourses = (req, res) => {
     /**
      * cb1 and cb2 corr to redis commands
      * sismember course:<course-dept>:<course-nbr>:instructors <course_key>
-     * TODO: re-write
+     * TODO: remove instructors
      */
     const cb1 = (course_key) => {
       return getCourseInstructorList(course_key)
@@ -203,20 +213,54 @@ exports.getUsersFromCourse = (req, res) => {
 
 exports.getAssignmentsFromCourse = (req, res) => {
   const course_key = req.params.course_key;
-  getAssignmentKeysOfCourse(course_key)
+
+  const cb1 = (student_key) => {
+    return getAssignmentKeysOfCourseAndUser(course_key, student_key)
+      .then((asgmt_keys) => {
+        return [student_key, asgmt_keys];
+      });
+  };
+  const cb2 = (arr_depth_2) => {
+    const promise_student = getUserFromRedis(arr_depth_2[0]);
+    const promises_assignments = arr_depth_2[1].map(getAssignmentProperties);
+    const promise_for_asgmts = Promise.all(promises_assignments);
+    return Promise.all([
+      promise_student,
+      promise_for_asgmts
+    ])
+      .then((obj) => {
+        return {
+          student: obj[0],
+          asgmts: obj[1]
+        };
+      });
+  };
+  /*getAssignmentKeysOfCourse(course_key)
     .then((asgmt_keys) => {
       const promises = asgmt_keys.map(getAssignmentProperties);
       return Promise.all(promises);
     })
     .then((asgmts) => {
       res.send(asgmts);
+    });*/
+  getCourseActiveStudentsList(course_key)
+    .then((student_keys) => {
+      const promises = student_keys.map(cb1);
+      return Promise.all(promises);
+    })
+    .then((arr_depth_3) => {
+      const promises = arr_depth_3.map(cb2);
+      return Promise.all(promises);
+    })
+    .then((arr) => {
+      res.send(arr);
     });
 };
 
 /**
  * TODO: not correct impl
  */
-exports.getAssignmentsFromUser = (req, res) => {
+/*exports.getAssignmentsFromUser = (req, res) => {
   const course_key = req.params.course_key;
 
   getCourseActiveStudentsList(course_key)
@@ -227,4 +271,4 @@ exports.getAssignmentsFromUser = (req, res) => {
     .then((asgmts) => {
       res.send(asgmts);
     });
-};
+};*/

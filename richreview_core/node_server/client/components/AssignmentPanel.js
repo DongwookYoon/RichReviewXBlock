@@ -25,7 +25,7 @@ class AssignmentPanel extends React.Component {
     return (
       <div className="asgmt-panel-content">
         {this.props.asgmts.map((asgmt) => (
-          <div id={asgmt.id}>
+          <div id={asgmt.id} key={asgmt.id} className="asgmt-card">
             {asgmt.title}
           </div>
         ))}

@@ -4,6 +4,8 @@ h4 {
 
 .myclass-header {
     height: 60px;
+    padding-left: 20px;
+    padding-top: 12px;
 }
 
 .myclass-contents {

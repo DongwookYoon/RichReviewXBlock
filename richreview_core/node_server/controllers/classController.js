@@ -4,76 +4,7 @@
  * created by Colin
  */
 
-/**
- * User ( usr:<userid> )
- * userid is a sha1 hash with salt from netid
- *
- * type    hash / class
- *
- * nick     {string} - nickname
- * email    {string} required - email of user
- * groupNs  {string|Array<string>} required - array of groupid user is in
- *
- * userid is also added to email_user_lookup as a hash field
- */
-
-/**
- * UBCUser ( ubc_user:<userid> )
- * userid is a sha1 hash with salt from netid
- *
- * password   {string} - made from irreversible sha1 hash with salt from netid
- * auth_level {string} - is one of "student", "instructor", or "admin"; refers to security level in terms of access to functionality (delete, doc creation, etc); also affects routing.
- *
- * is_active   {string|boolean} - can access ; instructor and admin should ALWAYS be active
- * courses    {string|Array<string>} - an array of strings for courses of form `ubc_course:<course-dept>:<course-number>`
- * portfolios {string|Array<string>} - an array of strings for portfolios of form `ubc_portfolio:<userid>:<course-dept>:<course-number>`
- *
- * first_name {string} optional - the first name of user
- * last_name  {string} optional - the last name of user
- * sid        {string} optional - the student id of user
- *
- */
-
-/**
- * Course ( ubc_course:<course-dept>:<course-number> )
- *
- * name  {string} - name of the course; defaults to `<course-dept> <course-number>`
- * users {string|Array<string>} - array of usr:[userid] for User (students, instructors and admin)
- */
-
-/**
- * Portfolio ( ubc_portfolio:<userid>:<course-dept>:<course-number> )
- * Search for portfolios belonging to [userid] by `keys ubc_portfolio:[userid]:*`
- * Search for portfolios belonging to [course-dept] and [course-number] by `keys ubc_portfolio:*:[course-dept]:[course-number]`
- *
- * assignments {string|Array<string>} - array of string `ubc_asgmt:<userid>:<course-dept>:<course-number>:<title>`
- *
- * TODO: this may not be necessary
- */
-
-/**
- * Assignment ( ubc_asgmt:<userid>:<course-dept>:<course-number>:<title-slug> )
- * userid      is a sha1 hash with salt from netid
- * title-slug  is the slug of the name of the title
- * Search for assignments belonging to [userid] by `keys ubc_asgmt:[userid]:*`
- * Search for assignments belonging to [course-dept] and [course-number] by `keys ubc_asgmt:*:[course-dept]:[course-number]:*`
- *
- * type    hash / class
- *
- * member title     {string}required - defaults to `<email-hash>_<timestamp>`
- * member docs      {string|Array<string>} - an array of docid for Doc relating to this assignment
- * member out_of    {number} optional - the amount of marks the assignment is worth
- * member grade     {number} optional - the grade given to student after marking
- * member stat_date {string|Array<string>} required - the date status is updated; statuses and the dates they are instantiated
- * member due_date  {string} optional - is of form ISO 8601 Extended Format and instantiated as new Date().toISOString(); if due_date undefined then no due date.
- * member status   {string} required - is one of "hidden", "active", "blocked", "marked", "submitted"
- *      "hidden"    the student cannot see the assignment
- *      "active"    the student cannot see
- *      "submitted" indicates the student submitted
- *      "marked"    indicates the student
- *      default     the student cannot see the assignment
- */
-
+const util = require('../util');
 const dummyData = require('../data/dummy_data');
 
 /**
@@ -87,142 +18,162 @@ const dummyData = require('../data/dummy_data');
 
 /**
  * Get UBCUser from redis server
- *
- * currently using mock data
  * TODO: get data from redis server
- *
  * @param userid {string}
- * @returns {Promise<UBCUser>}
+ * @returns {Promise<User>}
  */
-const getUBCUserFromRedis = (userid) => {
-  return Promise.resolve(dummyData.mockUsers[userid]);
+const getUserFromRedis = (user_key) => {
+  const user = dummyData.mockUsers[user_key];
+  user.password = undefined;
+  return Promise.resolve(user);
 };
 
-const getCourseFromRedis = {}
-
-const getCourse = (ubc_course_key) => {
-  // corr. with cmd `keys ubc_course:*`
-  dummyData.mockCourses[ubc_course_key]
-
+const getCourseProperties = (course_key) => {
+  // corr. with cmd `keys course:*`
+  return Promise.resolve({
+    id: course_key,
+    name: dummyData.mockCourses[course_key].name,
+    course_is_active: dummyData.mockCourses[course_key].course_is_active,
+  });
 };
 
 const getCourseKeysFromRedis = () => {
-  // corr. with cmd `keys ubc_course:*`
+  // corr. with cmd `keys course:*`
   const keys = Object.keys(dummyData.mockCourses);
   return Promise.resolve(keys);
 };
 
-const getCourseInstructorList = (ubc_course_key) => {
-  const instructors = dummyData.mockCourses[ubc_course_key].instructors;
+const getCourseInstructorList = (course_key) => {
+  // corr. with cmd `smembers course:<..>:<..>:instructors`
+  const instructors = dummyData.mockCourses[course_key].instructors;
   return Promise.resolve(instructors);
 };
 
+const getCourseActiveStudentsList = (course_key) => {
+  // corr. with cmd `smembers course:<..>:<..>:students:active`
+  const actives = dummyData.mockCourses[course_key].active_students;
+  return Promise.resolve(actives);
+};
+
+const getCourseBlockedStudentsList = (course_key) => {
+  // corr. with cmd `smembers course:<..>:<..>:students:blocked`
+  const blockeds = dummyData.mockCourses[course_key].blocked_students;
+  return Promise.resolve(blockeds);
+};
+
 /**
- *
- * @param req
- * @return {*|Promise<UBCUser>}
+ * send a response to all the courses user has access to
+ * TODO: auth_level is deprecated; make one general routing for all users
  */
-const getCourses = (req) => {
+exports.getCourses = (req, res) => {
 
-  /**
-   *
-   */
-  const getCoursesAsStudent = (ubc_userid, ubc_user) => {
-
+  const getCoursesAsStudent = (userid, user) => {
+    return []; // stub
   };
 
   /**
-   * Get all course keys, then get each list of instructor from course key, then, pick out which course key has ubc_user_key in list.
-   *
-   * @param ubc_user_key {string} - has form `ubc_user:[userid]`
-   * @param ubc_user
-   * @return {*}
+   * Get all course keys, then get each list of instructor from course key, then, pick out which course key has user_key in list.
    */
-  const getCoursesAsInstructor = (ubc_user_key) => {
-    const cb1 = (ubc_course_key) => {
-      return getCourseInstructorList(ubc_course_key)
+  const getCoursesAsInstructor = (user_key, user) => {
+    /**
+     * cb1 and cb2 corr to redis commands
+     * sismember course:<course-dept>:<course-nbr>:instructors <course_key>
+     * TODO: re-write
+     */
+    const cb1 = (course_key) => {
+      return getCourseInstructorList(course_key)
         .then((instructors) => {
-          return { key: ubc_course_key, instructors };
+          return { id: course_key, instructors };
         });
     };
 
-    const cb2 = (ubc_course_obj) => {
-      return ubc_course_obj.instructors.includes(ubc_user_key);
+    const cb2 = (course_obj) => {
+      util.debug(user_key);
+      return course_obj.instructors.includes(user_key);
     };
 
-    const cb3 = () => {
-
+    const cb3 = (course_obj_init) => {
+      return getCourseProperties(course_obj_init.id)
+        .then((course_obj) => {
+          course_obj.id = course_obj_init.id;
+          return course_obj;
+        });
     };
 
     return getCourseKeysFromRedis()
-      .then((ubc_course_keys) => {
-        const promises = ubc_course_keys.map(cb1);
+      .then((course_keys) => {
+        const promises = course_keys.map(cb1);
         return Promise.all(promises);
       })
-      .then((ubc_course_objs) => {
-        return ubc_course_objs.filter(cb2);
+      .then((course_objs) => {
+        return course_objs.filter(cb2);
       })
-      .then((ubc_course_objs) => {
-        const promises = ubc_course_objs.map(cb3);
+      .then((course_objs) => {
+        const promises = course_objs.map(cb3);
         return Promise.all(promises);
       });
   };
 
-  const getCoursesAsAdmin = () => {
-
+  const getCoursesAsAdmin = (user_key, user) => {
+    return []; // stub
   };
 
-  const userid = req.user.id;
-  const ubc_user_key = "ubc_user:"+userid;
-  return getUBCUserFromRedis(userid)
-    .then((ubc_user) => {
-      switch(ubc_user.auth_level) {
+  // TODO: properly get user
+  // const userid = req.user.id;
+  const userid = "e9973dcd22"; // to test instructor
+
+  const user_key = "usr:"+userid;
+  getUserFromRedis(user_key).then((user) => {
+      // TODO: case for user.auth_level == undefined
+      switch(user.auth_level) {
+        case "admin":
+          return getCoursesAsAdmin(user_key, user);
         case "instructor":
-          return getCoursesAsInstructor(ubc_user_key, ubc_user);
+          return getCoursesAsInstructor(user_key, user);
         case "student":
-          return getCoursesAsStudent(ubc_user_key, ubc_user);
+          return getCoursesAsStudent(user_key, user);
         default:
+          // TODO: do something about this case
           throw "in getUBCUserFromRedis; invalid auth_level";
       }
-
+    }).then((course_objs) => {
+      res.send(course_objs);
     });
 };
 
-const getStudents = () => {
-  const mockRedis = () => {
-    return Promise.resolve(dummyData.mockUsers);
-  };
+exports.getUsers = (req, res) => {
+  const course_key = req.params.course_key;
+  util.debug(course_key);
 
-  return mockRedis()
-    .then((users) => {
-
+  Promise.all([
+    getCourseInstructorList(course_key),
+    getCourseActiveStudentsList(course_key),
+    getCourseBlockedStudentsList(course_key)
+  ]).then((arr) => {
+      const promise_instructors = Promise.all(arr[0].map(getUserFromRedis));
+      const promise_active_stu  = Promise.all(arr[1].map(getUserFromRedis));
+      const promise_blocked_stu = Promise.all(arr[2].map(getUserFromRedis));
+      return Promise.all([
+        promise_instructors,
+        promise_active_stu,
+        promise_blocked_stu
+      ]);
     })
-    .catch((err) => {
-
+    .then((arr) => {
+      util.debug(JSON.stringify(arr));
+      res.send({
+        instructors:      arr[0],
+        active_students:  arr[1],
+        blocked_students: arr[2]
+      });
     });
 };
 
-/**
- * @param req
- * @param res
- */
-exports.fetch = (req, res) => {
-
-  let promise = null;
-  switch(req.query.op) {
-    /**
-     * get all courses
-     */
-    case "courses":
-      promise = getCourses(req);
-      break;
-    default:
-      // TODO: send error message
-  }
-  promise.then((data) => {
-      res.send(data);
-      //
-    }).catch((err) => {
-      // TODO: figure out how to throw this error
-    });
+exports.getAssignments = (req, res) => {
+  return Promise.resolve(Object.keys(dummyData.mockAssignments)
+    .map((key) => {
+      const mockAssignment = dummyData.mockAssignments[key];
+      mockAssignment.id = key;
+      return mockAssignment;
+  })); // stub
 };

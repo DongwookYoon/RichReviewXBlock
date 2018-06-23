@@ -7,8 +7,8 @@ export const fetchCourses = () => {
     .then(resp => resp.data);
 };
 
-export const fetchStudents = () => {
-  return axios.get(`/api/class/fetch_students`)
+export const fetchCourseUsers = (key) => {
+  return axios.get(`/api/class/fetch_users/${key}`)
     .then(resp => resp.data);
 };
 

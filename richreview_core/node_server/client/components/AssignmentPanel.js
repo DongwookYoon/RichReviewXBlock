@@ -1,17 +1,12 @@
 import React from "react";
 import PropTypes from 'prop-types';
 
-class AssignmentPage extends React.Component {
+class AssignmentPanel extends React.Component {
   constructor() {
     super();
 
     this.state = {
-      assignments: [
-        { title: "test_hw01" },
-        { title: "test_hw02" },
-        { title: "test_hw03" },
-        { title: "test_hw04" }
-      ]
+      assignments: [ ]
     };
   }
 
@@ -25,7 +20,7 @@ class AssignmentPage extends React.Component {
 
   buildList() {
     return this.state.assignments.map((assignment) => (
-      <div>
+      <div id={assignment.id}>
         {assignment.title}
       </div>
     ));
@@ -40,4 +35,4 @@ class AssignmentPage extends React.Component {
   }
 }
 
-export default AssignmentPage;
+export default AssignmentPanel;

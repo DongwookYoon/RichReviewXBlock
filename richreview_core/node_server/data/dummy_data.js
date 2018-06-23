@@ -1,79 +1,108 @@
 
 
 exports.mockUsers = {
-  // ubc_user:4bb6974cd5
-  // ubc_user:38ac76f47b
-  "ubc_user:7d97e98f8a": {
+  // usr:4bb6974cd5
+  // usr:38ac76f47b
+  "usr:7d97e98f8a": {
+    admin: false,
     password: "pass1234",
     auth_level: "student",
     email: "jflask@ubc.alumni.ca",
     first_name: "Jonathan",
     last_name: "Flask",
-    sid: "01234567"
+    sid: "01234567",
+    nick: "jflask",
+    groupNs: []
   },
-  "ubc_user:f710c7e7fe": {
+  "usr:f710c7e7fe": {
+    admin: false,
     password: "pass1234",
     auth_level: "student",
     email: "jbayer@ubc.alumni.ca",
     first_name: "Jordan",
     last_name: "Bayer",
-    sid: "01234567"
+    sid: "01234567",
+    nick: "jbayer",
+    groupNs: []
   },
-  "ubc_user:703abc8f63": {
+  "usr:703abc8f63": {
+    admin: false,
     password: "pass1234",
     auth_level: "student",
     email: "fwake@ubc.alumni.ca",
     first_name: "Finn",
     last_name: "Wake",
-    sid: "01234567"
+    sid: "01234567",
+    nick: "fwake",
+    groupNs: []
   },
-  "ubc_user:c90a80ff67": {
+  "usr:4bb6974cd5": {
+    admin: false,
+    password: "pass1234",
+    auth_level: "student",
+    email: "jsj@alumni.ubc.ca",
+    first_name: "jack",
+    last_name: "SJ",
+    nick: "amoore",
+    groupNs: []
+  },
+  "usr:c90a80ff67": {
+    admin: false,
     password: "pass1234",
     auth_level: "instructor",
     email: "amoore@ubc.ca",
     first_name: "Alex",
-    last_name: "Moore"
+    last_name: "Moore",
+    nick: "amoore",
+    groupNs: []
   },
-  "ubc_user:e9973dcd22": {
+  "usr:e9973dcd22": {
+    admin: false,
     password: "pass1234",
     auth_level: "instructor",
     email: "mwester@ubc.ca",
     first_name: "Max",
-    last_name: "Wester"
+    last_name: "Wester",
+    nick: "mwester",
+    groupNs: []
   }
 };
 
 exports.mockCourses = {
-  "ubc_course:korn:100": {
+  "course:korn:100": {
     name: "Introduction to Korean",
     course_is_active: true,
     instructors: [
-      "ubc_user:c90a80ff67"
+      "usr:c90a80ff67"
     ],
     active_students: [
-      "ubc_user:7d97e98f8a",
-      "ubc_user:f710c7e7fe"
+      "usr:7d97e98f8a",
+      "usr:f710c7e7fe"
     ],
-    blocked_students: [ ],
+    blocked_students: [
+      "usr:4bb6974cd5"
+    ],
     asgmt_slugs: ["hw1", "hw2"]
   },
-  "ubc_course:japn:100": {
+  "course:japn:100": {
     name: "Introduction to Japanese",
     course_is_active: true,
     instructors: [
-      "ubc_user:e9973dcd22"
+      "usr:e9973dcd22"
     ],
     active_students: [
-      "ubc_user:f710c7e7fe",
-      "ubc_user:703abc8f63"
+      "usr:f710c7e7fe",
+      "usr:703abc8f63"
     ],
-    blocked_students: [ ],
+    blocked_students: [
+      "usr:4bb6974cd5"
+    ],
     asgmt_slugs: ["a"]
   }
 };
 
 exports.mockAssignments = {
-  "ubc_asgmt:7d97e98f8a:korn:100:hw1": {
+  "asgmt:7d97e98f8a:korn:100:hw1": {
     title: "HW1",
     group: [ "grp:989266" ],
     out_of:    10,
@@ -81,7 +110,7 @@ exports.mockAssignments = {
     due_date:  "2018-06-17T01:52:02.625Z",
     status:    "active"
   },
-  "ubc_asgmt:7d97e98f8a:korn:100:hw2": {
+  "asgmt:7d97e98f8a:korn:100:hw2": {
     title: "HW2",
     group: [ "grp:887406" ],
     out_of:    20,
@@ -89,7 +118,7 @@ exports.mockAssignments = {
     due_date:  "2018-06-17T01:52:02.625Z",
     status:    "active"
   },
-  "ubc_asgmt:f710c7e7fe:korn:100:hw1": {
+  "asgmt:f710c7e7fe:korn:100:hw1": {
     title: "HW1",
     group: [ "grp:529140" ],
     out_of:    10,
@@ -98,7 +127,7 @@ exports.mockAssignments = {
     status:    "active"
 
   },
-  "ubc_asgmt:f710c7e7fe:korn:100:hw2": {
+  "asgmt:f710c7e7fe:korn:100:hw2": {
     title: "HW2",
     group: [ "grp:159245" ],
     out_of:    20,
@@ -106,7 +135,7 @@ exports.mockAssignments = {
     due_date:  "2018-06-17T01:52:02.625Z",
     status:    "active"
   },
-  "ubc_asgmt:f710c7e7fe:japn:100:a": {
+  "asgmt:f710c7e7fe:japn:100:a": {
     title: "A",
     group: [ "grp:159245" ],
     out_of:    20,
@@ -114,7 +143,7 @@ exports.mockAssignments = {
     due_date:  "2018-06-17T01:52:02.625Z",
     status:    "active"
   },
-  "ubc_asgmt:703abc8f63:japn:100:a": {
+  "asgmt:703abc8f63:japn:100:a": {
     title: "A",
     group: [ "grp:159245" ],
     out_of:    20,

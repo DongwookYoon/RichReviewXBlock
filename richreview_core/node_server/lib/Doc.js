@@ -1,6 +1,10 @@
 /**
  * Doc
  *
+ * The file for the Doc class
+ *
+ * imported from r2d.js
+ * created by Colin
  */
 
 // import npm modules
@@ -8,7 +12,6 @@ const Promise = require("promise"); // jshint ignore:line
 
 // import libraries
 const js_utils = require('./js_utils.js');
-const redisClient = require('./redis_client').redisClient;
 const RedisClient = require('./redis_client').RedisClient;
 const util = require('../util');
 
@@ -17,7 +20,8 @@ const Group = require('./Group').Group;
 /*
  * Doc
  */
-var Doc = (function(){
+var Doc = (function() {
+
   var pub_doc = {};
 
   // redis doc hash structure

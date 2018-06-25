@@ -43,6 +43,7 @@ exports.mockUsers = {
     email: "jsj@alumni.ubc.ca",
     first_name: "jack",
     last_name: "SJ",
+    sid: "01234567",
     nick: "amoore",
     groupNs: []
   },
@@ -82,6 +83,18 @@ exports.mockCourses = {
     blocked_students: [
       "usr:4bb6974cd5"
     ],
+    asgmt_slugs: ["hw1", "hw2"]
+  },
+  "course:korn:200": {
+    name: "Intermediate Korean",
+    course_is_active: true,
+    instructors: [
+      "usr:c90a80ff67"
+    ],
+    active_students: [
+      "usr:4bb6974cd5"
+    ],
+    blocked_students: [],
     asgmt_slugs: ["hw1", "hw2"]
   },
   "course:japn:100": {
@@ -131,6 +144,30 @@ exports.mockAssignments = {
     title: "HW2",
     group: [ "grp:159245" ],
     out_of:    20,
+    stat_date: "2018-06-16T20:02:48.302Z",
+    due_date:  "2018-06-17T01:52:02.625Z",
+    status:    "active"
+  },
+  "asgmt:4bb6974cd5:korn:200:korn-200-hw1": {
+    title: "Korean 200 HW1",
+    group: [ "grp:324251" ],
+    out_of:    1,
+    stat_date: "2018-06-16T20:02:48.302Z",
+    due_date:  "2018-06-17T01:52:02.625Z",
+    status:    "active"
+  },
+  "asgmt:4bb6974cd5:korn:200:korn-200-hw2": {
+    title: "Korean 200 HW2",
+    group: [ "grp:321610" ],
+    out_of:    1,
+    stat_date: "2018-06-16T20:02:48.302Z",
+    due_date:  "2018-06-17T01:52:02.625Z",
+    status:    "active"
+  },
+  "asgmt:4bb6974cd5:korn:200:korn-200-hw3": {
+    title: "Korean 200 HW3",
+    group: [ "grp:138743" ],
+    out_of:    1,
     stat_date: "2018-06-16T20:02:48.302Z",
     due_date:  "2018-06-17T01:52:02.625Z",
     status:    "active"

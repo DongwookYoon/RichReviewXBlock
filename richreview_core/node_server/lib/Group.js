@@ -1,6 +1,10 @@
 /**
- * User
+ * Group
  *
+ * The file for the Group class
+ *
+ * imported from r2d.js
+ * created by Colin
  */
 
 // import npm modules
@@ -17,7 +21,7 @@ const User = require('./User').User;
 /*
  * Group
  */
-var Group = (function(manager, name, creationDate){
+var Group = (function(manager, name, creationDate) {
 
   /*
    userid

@@ -12,7 +12,7 @@ class App extends React.Component {
 
     this.state = {
       courses: [ ],
-      users:   [ ],
+      users:   { },
       asgmt_grps:  [ ],
       view: ""
     };

@@ -23,17 +23,19 @@ userid is also added to email_user_lookup as a hash field
 ## Course
 
 **Course** ( `course:<course-dept>:<course-number>` )
+
+**course properties** ( `course:<course-dept>:<course-number>:prop` )
 @type hash / class
 @member course_is_active {boolean} - true if course is active, false otherwise
 @member name  {string} - name of the course; defaults to `<course-dept> <course-number>`
 
 ## Course users
 
-**course instructor** ( `course:<course-dept>:<course-number>:instructors` ) is of type set containing instructors of course
+**course instructor** ( `course:<course-dept>:<course-number>:instructors` ) is of type set containing the userid of instructors of course
 
-**course active students** ( `course:<course-dept>:<course-number>:students:active` ) is of type set containing active students of course
+**course active students** ( `course:<course-dept>:<course-number>:students:active` ) is of type set containing the userid of active students of course
 
-**course blocked students** ( `course:<course-dept>:<course-number>:students:blocked` ) is of type set containing blocked students of course
+**course blocked students** ( `course:<course-dept>:<course-number>:students:blocked` ) is of type set containing the userid of blocked students of course
 
 ## Assignment
 
@@ -43,9 +45,10 @@ title-slug  is the slug of the name of the title
 Search for assignments belonging to [userid] by `keys asgmt:[userid]:*`  
 Search for assignments belonging to [course-dept] and [course-number] by `keys asgmt:*:[course-dept]:[course-number]:*`  
 
+**assignment data** ( `asgmt:<userid>:<course-dept>:<course-number>:<title-slug>:prop` )
 @type    hash / class 
 @member title     {string}required - defaults to `<email-hash>_<timestamp>` 
-@member docs      {string|Array<string>} - an array of docid for Doc relating to this assignment 
+@member group     {string|Array<string>} - an array of groupid for Group relating to this assignment
 @member out_of    {number} optional - the amount of marks the assignment is worth 
 @member grade     {number} optional - the grade given to student after marking 
 @member stat_date {string|Array<string>} required - the date status is updated; statuses and the dates they are instantiated 
@@ -56,6 +59,8 @@ Search for assignments belonging to [course-dept] and [course-number] by `keys a
  -   "submitted" indicates the student submitted 
  -   "marked"    indicates assignment is marked 
  -   default     (error) the student cannot see the assignment
+
+**assignment data** ( `asgmt:<userid>:<course-dept>:<course-number>:<title-slug>:groups` ) a set containing all the groupid of the groups associated with this assignment
 
  /**
   * User ( usr:<userid> )

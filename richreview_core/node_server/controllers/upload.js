@@ -41,17 +41,6 @@ if(process.env.NODE_ENV === 'production') {
 exports.page = function (req, res) {
     req.session.latestUrl = req.originalUrl;
     res.render('upload', { cur_page: "upload", user: req.user });
-    /*
-    // TODO: test and del comment
-    if(js_utils.redirectUnknownUser(req, res)){
-        res.render(
-            'upload',
-            {
-                cur_page: 'Upload',
-                user: req.user,
-            }
-        );
-    }*/
 };
 
 /**

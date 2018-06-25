@@ -1,23 +1,18 @@
 mixin pilotAdminCard(pilot_user = {})
     if pilot_user.is_admin === "true"
-        .pilot_mgmt_user
-            - var is_it_this_user = (pilot_user.email === user.email )
-            form.pilot_mgmt_acct_form(action=`/pilot_admin/mgmt_acct/${pilot_user.email}` method="POST")
-                section.email_view
-                    b email
-                    p= pilot_user.email
-                .vertical_line
-                section.pswd_input
-                    if !is_it_this_user
-                        b password
-                        p &bull; &bull; &bull; &bull; &bull;
-                    else
-                        label(for="password") password
-                        input.input(type="text" name="password" value=pilot_user.password required)
-                .vertical_line
-                section.is_active_input
-                    b blocked?
-                    p= (is_it_blocked ? "yes" : "no")
-                .vertical_line
-                section.button_buff
-                    button.form_button(type="submit") save
+        - var div_id = pilot_user.email.replace(/\.|\@/g,'_')
+        - var is_it_this_user = (pilot_user.email === user.email )
+        div(id=div_id).pilot_mgmt_user
+            section.email_view
+                p= pilot_user.email
+            .vertical_line
+            section.pswd_input
+                if !is_it_this_user
+                    p &bull; &bull; &bull; &bull; &bull;
+                else
+                    a(href="#" id="password")= pilot_user.password
+                    script.
+                        makePasswordEditable( "#{div_id}", "#{pilot_user.email}", "#{pilot_user.password}" );
+            .vertical_line
+            section.is_active_input
+                p= (is_it_blocked ? "yes" : "no")

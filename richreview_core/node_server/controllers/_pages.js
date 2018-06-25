@@ -6,14 +6,17 @@ var js_utils = require('../lib/js_utils');
 
 exports.about = function (req, res) {
     req.session.latestUrl = req.originalUrl;
-
     res.render('_pages_about', {cur_page: 'About', user: req.user });
 };
 
 exports.logout = function(req, res) {
     js_utils.logUserAction(req, 'logging out...');
     req.logout();
-    res.redirect("/");
+    req.flash('success', 'You are now logged out');
+    res.redirect(
+        'https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue='+
+        js_utils.getHostname()
+    );
 };
 
 exports.input_test = function(req, res){

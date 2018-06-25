@@ -2,6 +2,15 @@ extends __layout
 
 block content
     .container
+        if locals.flashes
+            .flash_messages
+                - const categories = Object.keys(locals.flashes)
+                each category in categories
+                    each message in flashes[category]
+                        .flash(class=`flash--${category}` onClick="var parent = this.parentElement; console.log(parent.childNodes.length); if(parent.childNodes.length <= 1) {  parent.remove(); } else { this.remove(); }")
+                            p.flash__text!= message
+                            button.flash__remove: i(aria-hidden="true").fa.fa-times
+
         block content_with_cprght
     p.text-muted.text-center(style="padding-top: 35px;")
         |&copy;

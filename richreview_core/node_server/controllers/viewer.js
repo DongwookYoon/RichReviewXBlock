@@ -14,6 +14,7 @@ exports.page = function (req, res) {
         );
         return;
     }
+
     {
         var urlqueries = req.originalUrl.replace("/viewer?", "");
         if(req.user){
@@ -21,8 +22,7 @@ exports.page = function (req, res) {
         }
         urlqueries = querystring.parse(urlqueries);
 
-        // console.log("DEBUG: " + js_utils.getHostname());
-        var r2_ctx = {
+        const r2_ctx = {
             pdfid: urlqueries["access_code"] || "",
             docid: urlqueries["docid"] || "",
             groupid: urlqueries["groupid"] || "",
@@ -30,20 +30,16 @@ exports.page = function (req, res) {
             pdfjs_url: azure.BLOB_HOST + urlqueries["access_code"] + "/doc.vs_doc",
             serve_dbs_url: js_utils.getHostname() + '/dbs?',
             pmo: urlqueries["pmo"] || "",
-            comment: urlqueries["comment"] || ""
+            comment: urlqueries["comment"] || "",
         };
-
-        /*for(var k in r2_ctx) {
-            console.log("DEBUG: "+k+": "+r2_ctx[k]);
-        }*/
-        console.log("DEBUG: " + r2_ctx.pdfid);
 
         res.render(
             'viewer_webapp',
             {
                 cur_page: 'Viewer',
                 user: req.user,
-                r2_ctx: encodeURIComponent(JSON.stringify(r2_ctx))
+                r2_ctx: encodeURIComponent(JSON.stringify(r2_ctx)),
+                env: process.env.NODE_ENV
             }
         );
     }

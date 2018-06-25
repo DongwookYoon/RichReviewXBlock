@@ -83,7 +83,7 @@ var bluemix_stt = (function(bluemix_stt) {
         options.message = {
             'action': 'start',
             'content-type': 'audio/l16;rate=' + (mic ? mic.RECORDER_SOURCE_SAMPLE_RATE: 22050),
-            'interim_results': true,
+            //'interim_results': true,
             'continuous': true,
             'word_confidence': true,
             'timestamps': true,
@@ -129,29 +129,23 @@ var bluemix_stt = (function(bluemix_stt) {
         bluemix_stt.socket.initSocket(options, onOpen, onListening, onMessage, onError, onClose);
     };
 
+    //fixMe: onTemp disabled, and will never run.
     bluemix_stt.messageParser = (function(){
         var pub = {};
 
         var callbacks = {};
-
+        
         pub.run = function(msg){
-            if(msg.results && msg.results.length){
-                var is_final = msg.results[0].final;
-                var best_alternative = msg.results[0].alternatives[0];
-                for(var i = 0; i < best_alternative.timestamps.length; ++i){
-                    if(best_alternative.timestamps[i][0]=='%HESITATION'){
-                        best_alternative.timestamps[i][0] = '...';
+            if (msg.results) {
+                for(let i = 0; i < msg.results.length; ++i){
+                    let best_alternative = msg.results[i].alternatives[0];
+                    for (let j = 0; j < best_alternative.timestamps.length; ++j) {
+                        if (best_alternative.timestamps[j][0] == '%HESITATION') {
+                            best_alternative.timestamps[j][0] = '...';
+                        }
+                        best_alternative.timestamps[j].push(best_alternative.word_confidence[j][1]); // append word confidence values to the end of the timestamp data 
                     }
-                    if(is_final){
-                        // push word-confidence
-                        best_alternative.timestamps[i].push(best_alternative.word_confidence[i][1]);
-                    }
-                }
-                if(is_final){
-                    callbacks.onFinal(best_alternative.timestamps, msg.results[0].alternatives);
-                }
-                else{
-                    callbacks.onTemp(best_alternative.timestamps);
+                    callbacks.onFinal(best_alternative.timestamps, msg.results[i].alternatives);
                 }
             }
         };

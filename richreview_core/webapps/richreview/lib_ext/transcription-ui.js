@@ -106,7 +106,6 @@
                 $(this).toggleClass('fresh-recording', false);
                 $(this).toggleClass('old-recording', true);
             });
-
             insert_pos = getCarret().idx_anchor;
             insertRecordingIndicator.insert(insert_pos++);
 
@@ -132,7 +131,6 @@
             $textbox.children('span').each(function(idx) {
                 $(this).toggleClass('old-recording', false);
             });
-
             getCarret();
 
             r2App.is_recording_or_transcribing = false;
@@ -191,7 +189,6 @@
         pub.SetData = function(data){
             $textbox.empty();
             data.forEach(function(datum){
-                console.log(datum);
                 insertNewTalken(datum, $textbox.children().length, false); // is_fresh = false;
             });
             renderViewTalkens();
@@ -860,7 +857,6 @@
                 $textbox.blur();
                 tooltip.focus();
                 if(select_all){
-                    console.log('selectAll');
                     tooltip.selectAll();
                 }
                 return true;
@@ -967,12 +963,6 @@
                 return {idx_anchor:0};
             }
             var sel = window.getSelection();
-            if(sel.anchorNode === null || 
-                (sel.anchorNode.parentNode.parentNode !== $textbox[0] &&
-                sel.anchorNode.parentNode.parentNode.classList.contains('r2_piece_simplespeech'))
-            ){ // when focused to textbox
-                sel = setCarret(sel.anchorOffset);
-            }
             carret.idx_anchor = sel.anchorOffset + $textbox.children().index($(sel.anchorNode.parentNode));
             carret.idx_focus = sel.focusOffset + $textbox.children().index($(sel.focusNode.parentNode));
 
@@ -980,6 +970,7 @@
 
             carret.idx_bgn = Math.min(carret.idx_anchor, carret.idx_focus);
             carret.idx_end = Math.max(carret.idx_anchor, carret.idx_focus);
+
             return carret;
         };
 
@@ -1001,6 +992,7 @@
             }
             sel.removeAllRanges();
             sel.addRange(range);
+
             return sel;
         };
 

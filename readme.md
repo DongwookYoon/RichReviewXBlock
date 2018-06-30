@@ -1,3 +1,23 @@
+# RichReview
+
+Install the node version manager `n` and then install the latest stable version of node.
+
+```
+git clone https://github.com/tj/n
+cd n
+make install
+n stable
+```
+
+For more details see this [stack overflow guide](https://stackoverflow.com/questions/19451851/install-node-js-to-install-n-to-install-node-js)
+
+```bash
+git clone https://github.com/DongwookYoon/RichReviewXBlock.git
+cd RichReviewXBlock/richreview
+```
+
+You should be given a zip file containing all the 
+
 # RichReviewXBlock
 This XBlock is a edX course applet that served a collaborative multimodal annotation feature.
 This package also includes NodeJS server that runs standalone.

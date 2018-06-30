@@ -9,6 +9,7 @@ const passport  = require('passport');
 
 const env = require('./env.js');
 const js_utils = require('./js_utils');
+const lib_utils = require('./lib_utils');
 const R2D = require('./r2d.js');
 const LtiEngine = require('./lti_engine.js');
 const pilotHandler = require('./pilot_handler.js');
@@ -32,7 +33,7 @@ passport.serializeUser(function(user, done){
 passport.deserializeUser(function(id, done){
     LtiEngine.UserMgr.getById(id)
         .catch(function(err) {
-            return js_utils.findUserByID(id);
+            return lib_utils.findUserByID(id);
         }
     ).then(
         function(user){
@@ -55,7 +56,7 @@ passport.use(
     new wsfedsaml2(
         env.cornell_wsfed,
         function(profile, done) {
-            js_utils.findUserByEmail(profile.upn)
+            lib_utils.findUserByEmail(profile.upn)
             //R2D.User.prototype.findByEmail(profile.upn)
                 .then(function(user) {
                     if(user) {
@@ -81,24 +82,13 @@ passport.use(
 
 /**
  * use strategy OAuth2.0 with Google ID
- *
- * TODO: refactor to use js_utils.findUserByEmail(email)
  */
 const googleStrategyCB = (accessToken, refreshToken, profile, done) => {
     const email = profile.emails.length !== 0 ? profile.emails[0].value : '';
-    /*js_utils.findUserByID(profile.id)
-        .then((user) => {
-            return R2D.User.prototype.syncEmail(user, email);
-        })
-        .catch((err) => {
-            //var newid = js_utils.generateSaltedSha1(email, env.sha1_salt.netid).substring(0, 21);
-            return R2D.User.prototype.create(profile.id, email);
-        });*/
     R2D.User.prototype.isExist(profile.id)
         .then((is_exist) => {
-            if(is_exist){
-                // return R2D.User.prototype.findById(profile.id)
-                return js_utils.findUserByID(profile.id)
+            if(is_exist) {
+                return lib_utils.findUserByID(profile.id)
                     .then((user) => {
                         return R2D.User.prototype.syncEmail(user, email);
                     });

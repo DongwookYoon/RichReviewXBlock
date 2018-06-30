@@ -12,6 +12,7 @@ const js_utils    = require('./js_utils');
 const env         = require('./env');
 const R2D         = require('./r2d');
 const RedisClient = require('./redis_client').RedisClient;
+const lib_utils   = require('./lib_utils');
 const util        = require('../util');
 
 /**
@@ -346,7 +347,7 @@ const localStrategyCB = (id_str, password, done) => {
         .then(function(user_password) {
             if(password === user_password) {
                 util.logger("localStrategyCB", "makeR2DUser");
-                return js_utils.findUserByEmail(userid);
+                return lib_utils.findUserByEmail(userid);
             } else {
                 throw "password does not match";
             }

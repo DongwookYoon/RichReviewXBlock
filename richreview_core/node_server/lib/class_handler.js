@@ -5,27 +5,13 @@ const crypto = require('crypto');
 const R2D = require('./r2d');
 const RedisClient = require('./redis_client').RedisClient;
 const env = require('./env');
+const js_utils = require('./js_utils');
 const util = require('../util');
 const dummyData = require('../data/dummy_data');
 
 /******************/
 /** user methods **/
 /******************/
-
-/**
- * Copied from js_utils.js
- * TODO: move validateEmail() out of js_utils
- * TODO: note the ubc.ca validation
- *
- * @param email
- * @return {boolean}
- */
-const validateEmail = (email) => {
-  const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-  const matchesDomain = (email) => /(@([a-zA-Z0-9]\.)?ubc.ca$)|(@pilot.study$)|(@gmail.com$)|(@cornell.edu$)|(@edx.org$)/g.test(email);
-
-  return re.test(email) && matchesDomain(email);
-};
 
 /**
  *
@@ -76,7 +62,7 @@ const createUser = (email, password) => {
   };
 
   util.logger("ADMIN UBC STUDY","checking email is valid");
-  if(!validateEmail(email)) {
+  if(!js_utils.validateEmail(email)) {
     return Promise.reject("bad email");
   }
 
@@ -96,6 +82,13 @@ const createUser = (email, password) => {
     });
 };
 
+/**
+ *
+ * @param user
+ * @param password
+ * @throws {string} - user does not have stored password
+ * @return {boolean} true if password is correct, false otherwise
+ */
 const validatePassword = (user, password) => {
   if(!user.password_hash || !user.salt) {
     throw "user does not have stored password";
@@ -247,6 +240,10 @@ const createCourse = (course_dept, course_nbr, course_name) => {
     });
 };
 
+const deleteCourse = (course_dept, course_nbr) => {
+
+};
+
 const addInstructorToCourse = (course_dept, course_nbr, user) => {
   const course_instructors_key = "course:"+course_dept+":"+course_nbr+":instructors";
   return RedisClient.SADD(course_instructors_key, user.id);
@@ -257,7 +254,7 @@ const addStudentToCourse = (course_dept, course_nbr, user) => {
   return RedisClient.SADD(course_stu_bl_key, user.id);
 };
 
-const makeStudentActive = (course_dept, course_nbr, user) => {
+const activateStudent = (course_dept, course_nbr, user) => {
   const course_key = "course:"+course_dept+":"+course_nbr;
   const course_stu_bl_key = course_key+":students:blocked";
   const course_stu_av_key = course_key+":students:active";

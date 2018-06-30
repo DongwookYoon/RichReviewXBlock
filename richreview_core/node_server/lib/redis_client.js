@@ -64,11 +64,14 @@ var RedisClient = (function(){
         'LREM',
         'LRANGE',
         'SET',
+        'SMOVE', // added by Colin
+        'SMEMBERS', // added by Colin
+        'SADD', // added by Colin
         'HMGET' // added by Colin
     ];
 
     commands.forEach(function(fstr){
-        pub[fstr] = function(/*arguments*/){
+        pub[fstr] = function(/*arguments*/) {
             var args = Array.prototype.slice.call(arguments);
             return new Promise(function(resolve, reject){
                 args.push(function(err,rtn){

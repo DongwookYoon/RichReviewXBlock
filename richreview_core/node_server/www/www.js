@@ -16,10 +16,13 @@ const Promise = require("promise"); // jshint ignore:line
  *
  * should be placed before require(app)
  */
-if(typeof v8debug === 'object' || os.hostname() !== "richreview"){
+if(
+  typeof v8debug === 'object'       ||
+  os.hostname() !== "richreview"    ||
+  os.hostname() !== "richreview-vm"
+) {
     process.env.NODE_ENV = 'development';
-}
-else{
+} else {
     process.env.NODE_ENV = 'production';
 }
 
@@ -34,6 +37,7 @@ const HASHFILE = HOSTNAME+'/richreview_webapp_hash.txt';
 const WEBAPP_PATH = path.resolve(__dirname, '../../webapps/richreview/');
 
 util.start('App NODE_ENV:'+process.env.NODE_ENV);
+util.start('App hostname:'+os.hostname());
 
 /**
  * Sync the richreview web app
@@ -74,12 +78,12 @@ var webAppSync = (function(){
                     return azure.GetBlobToText(ctx)
                         .then(function(ctx){
                             return ctx.text;
-                        })
+                        });
                 }
                 else{
                     return null;
                 }
-            })
+            });
     }
 
     function setBlobStorageHash(text){
@@ -138,11 +142,11 @@ const runServer = () => {
     let httpsPort = null;
     let httpPort = null;
 
-    if (HOSTNAME === 'richreview') { // on richreview.net
+    //if (HOSTNAME === 'richreview') { // on richreview.net
+    if (process.env.NODE_ENV === 'production') {
         httpsPort = 443;
         httpPort = 80;
-    }
-    else{ // on localhost
+    } else{ // on localhost
         httpsPort = 8001;
         httpPort = 8002;
     }

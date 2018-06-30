@@ -6,7 +6,9 @@
 // });
 
 module.exports = {
-    entry: __dirname + '/client/richreview.js',
+    entry: __dirname + '/client/myclass.js',
+    mode: 'development',
+    devtool: 'inline-source-map',
     module: {
         rules: [
             {

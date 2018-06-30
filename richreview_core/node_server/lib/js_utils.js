@@ -16,8 +16,6 @@ const moment = require('moment');
 const Promise = require("promise"); // jshint ignore:line
 const nodemailer = require('nodemailer');
 
-const pilotHandler = require("./pilot_handler");
-const R2D          = require("./r2d");
 const util         = require('../util');
 
 exports.generateSaltedSha1 = function(raw_key, salt){
@@ -99,7 +97,7 @@ exports.PostResp = function(res, req, code, err){
     }
 
     res.statusCode = code;
-    if(req.headers.origin === 'https://localhost:8000' || req.headers.origin == 'https://localhost:8001' ){
+    if(req.headers.origin === 'https://localhost:8000' || req.headers.origin === 'https://localhost:8001' ){
         res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     }
     res.send(s);
@@ -367,51 +365,6 @@ exports.getHostname = (function(){
     };
 }());
 
-/**
- * CHANGES 20180510
- * added path resolution to walkSync
- * CHANGES 20180530
- * move them to file_utils.js
- */
-/*exports.walkSync = function(dir, filelist) {
-    var fs = fs || require('fs'),
-        files = fs.readdirSync(dir);
-    filelist = filelist || [];
-    files.forEach(function(item) {
-        var item_path = path.join(dir, item);
-        if (fs.statSync(item_path).isDirectory()) {
-            filelist = exports.walkSync(item_path, filelist);
-        }
-        else {
-            filelist.push(item_path);
-        }
-    });
-    return filelist;
-};*/
-
-/**
- * CHANGES 20180510
- * made getWebAppUrls work when node is launched from diff directory
- * CHANGES 20180530
- * move them to file_utils.js
- */
-/*exports.getWebAppUrls = function(start_path, prefix, exclude){
-    var filelist = [];
-    const full_start_path = path.join(__dirname, "../..", start_path);
-    exports.walkSync(full_start_path, filelist);
-    filelist.forEach(function(file, i){
-        filelist[i] = file.substring(full_start_path.length + 1);
-    });
-    var urls = {};
-    filelist.forEach(function(file, i) {
-        if(file.match(exclude)===null){
-            urls[file] = prefix + file;
-        }
-    });
-    // for(var key in urls) { console.log(key + " : " + urls[key]); }
-    return urls;
-};*/
-
 exports.identifyUser = function(req, res){
     if(req.user){
         return true;
@@ -431,32 +384,9 @@ exports.identifyUser = function(req, res){
  */
 exports.validateEmail = (email) => {
     const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    const matchesDomain = (email) => /(@pilot.study$)|(@gmail.com$)|(@cornell.edu$)|(@edx.org$)/g.test(email);
+    const matchesDomain = (email) => /(@(([a-zA-Z0-9])*\.)?ubc.ca$)|(@pilot.study$)|(@gmail.com$)|(@cornell.edu$)|(@edx.org$)/g.test(email);
 
     return re.test(email) && matchesDomain(email);
-};
-
-/**
- * @param {string} id
- */
-exports.findUserByID = (id) => {
-    return R2D.User.prototype.findById(id)
-    /*******add project specific pluggins******/
-        .then((user) => {
-            return pilotHandler.plugPilot(user);
-        });
-    /******************************************/
-};
-
-/**
- *
- * @param {string} userid - of form [id]@pilot.study
- */
-exports.findUserByEmail = (email) => {
-    return R2D.User.prototype.findByEmail(email)
-        .then((user) => {
-            return pilotHandler.plugPilot(user);
-        });
 };
 
 /**

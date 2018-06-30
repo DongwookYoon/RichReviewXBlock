@@ -25,3 +25,7 @@ exports.logger = function(type, stmt) {
 exports.testl = function(stmt) {
     console.log("["+d()+"]<TEST>: "+stmt);
 };
+
+exports.isString = function(str) {
+    return Object.prototype.toString.call(str) === '[object String]';
+};

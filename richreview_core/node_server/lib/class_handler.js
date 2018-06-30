@@ -1,45 +1,117 @@
 
 
-const util = require('../util');
-const dummyData = require('../data/dummy_data');
+const crypto = require('crypto');
+
 const R2D = require('./r2d');
 const RedisClient = require('./redis_client').RedisClient;
-const js_util = require('./js_utils');
 const env = require('./env');
+const util = require('../util');
+const dummyData = require('../data/dummy_data');
+
+/******************/
+/** user methods **/
+/******************/
 
 /**
- * A wrapper to create user according to UBC study
+ * Copied from js_utils.js
+ * TODO: move validateEmail() out of js_utils
+ * TODO: note the ubc.ca validation
+ *
+ * @param email
+ * @return {boolean}
  */
-const createUser = (id, email, password) => {
+const validateEmail = (email) => {
+  const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  const matchesDomain = (email) => /(@([a-zA-Z0-9]\.)?ubc.ca$)|(@pilot.study$)|(@gmail.com$)|(@cornell.edu$)|(@edx.org$)/g.test(email);
+
+  return re.test(email) && matchesDomain(email);
+};
+
+/**
+ *
+ * @param email
+ */
+const makeID = (email) => {
+  let hmac = crypto.createHmac('sha1', env.sha1_salt.netid);
+  hmac.update(email, 'utf8');
+  return hmac.digest('hex').toLowerCase();
+};
+
+const makeSalt = () => {
+  return crypto.randomBytes(64).toString('hex');
+};
+
+/**
+ *
+ * @param password {string} - a string that is at least 8 characters in length
+ * @param salt {string}
+ */
+const encryptPassword = (password, salt) => {
+  return crypto.createHmac('sha1', salt).update(password, 'utf8').digest('hex');
+};
+
+/**
+ * A wrapper to create user according to UBC study.
+ *
+ * If password is shorter than 8 characters then reject.
+ * Note that we d
+ */
+const createUser = (email, password) => {
   const go = () => {
     util.logger("ADMIN UBC STUDY","creating user "+email);
-    const password_hash = js_util.generateSaltedSha1(password ,env.sha1_salt);
+    util.logger("ADMIN UBC STUDY","making ID");
+    const id = makeID(email);
+    util.logger("ADMIN UBC STUDY","making salt");
+    const salt = makeSalt();
+    util.logger("ADMIN UBC STUDY","making password hash");
+    const password_hash = encryptPassword(password, salt);
     const is_admin = false;
     const sid = "";
     const first_name = "";
     const last_name = "";
+    util.logger("ADMIN UBC STUDY","calling R2D User create()");
     return R2D.User.prototype.create(
-      id, email, password_hash, is_admin, sid, first_name, last_name
+      id, email, password_hash, salt, is_admin, sid, first_name, last_name
     );
   };
 
+  util.logger("ADMIN UBC STUDY","checking email is valid");
+  if(!validateEmail(email)) {
+    return Promise.reject("bad email");
+  }
+
+  util.logger("ADMIN UBC STUDY","checking password is valid");
+  if(!util.isString(password) || password.length < 8) {
+    return Promise.reject("bad password");
+  }
+
   util.logger("ADMIN UBC STUDY","check if user already exists");
-  R2D.User.prototype.findByEmail(email)
+  return R2D.User.prototype.findByEmail(email)
     .then((user) => {
       if(user) {
-        return "user "+email+" already exists";
+        throw "user "+email+" already exists";
       } else {
         return go();
       }
     });
 };
 
-const createAsgmt = (user, asgmt_name) => {
+const validatePassword = (user, password) => {
+  if(!user.password_hash || !user.salt) {
+    throw "user does not have stored password";
+  }
 
+  return user.password_hash === encryptPassword(password, user.salt);
 };
+
+exports.makeID = makeID;
+exports.createUser = createUser;
+exports.validatePassword = validatePassword;
 
 /*
  * Course ( `course:<course-dept>:<course-number>` )
+ *
+ * userid is sha1 hash with salt
  *
  * course properties ( `course:<course-dept>:<course-number>:prop` )
  * @type hash / class
@@ -112,7 +184,7 @@ Course.cache = (function() {
       if(cache.hasOwnProperty(course_key)) {
         resolve();
       } else {
-        reject(course_dept+" "+" does not exist");
+        reject(course_dept+" "+course_nbr+" does not exist");
       }
     });
   };
@@ -122,12 +194,40 @@ Course.cache = (function() {
   return pub;
 }());
 
+
+
 Course.prototype.getInstructors = function() {
   const cb = (instr_id) => {
     return R2D.User.prototype.findById(instr_id);
   };
 
-  const course_instr_key = "course:"+this.dept+this.number+":instructors";
+  const course_instr_key = "course:"+this.dept+":"+this.number+":instructors";
+  return RedisClient.SMEMBERS(course_instr_key)
+    .then((instr_ids) => {
+      const promises = instr_ids.map(cb);
+      return Promise.all(promises);
+    });
+};
+
+Course.prototype.getActiveStudents = function() {
+  const cb = (instr_id) => {
+    return R2D.User.prototype.findById(instr_id);
+  };
+
+  const course_instr_key = "course:"+this.dept+":"+this.number+":active:students";
+  return RedisClient.SMEMBERS(course_instr_key)
+    .then((instr_ids) => {
+      const promises = instr_ids.map(cb);
+      return Promise.all(promises);
+    });
+};
+
+Course.prototype.getBlockedStudents = function() {
+  const cb = (instr_id) => {
+    return R2D.User.prototype.findById(instr_id);
+  };
+
+  const course_instr_key = "course:"+this.dept+":"+this.number+":blocked:students";
   return RedisClient.SMEMBERS(course_instr_key)
     .then((instr_ids) => {
       const promises = instr_ids.map(cb);
@@ -141,7 +241,10 @@ const createCourse = (course_dept, course_nbr, course_name) => {
     course_key,
     "course_is_active", false,
     name, course_name
-  );
+  )
+    .then((b) => {
+      return Course.cache.loadFromDB(course_dept, course_nbr);
+    });
 };
 
 const addInstructorToCourse = (course_dept, course_nbr, user) => {
@@ -199,7 +302,7 @@ const getCoursesWhereUserIsInstructor = (user) => {
     })
     .then((query_objs) => {
       return query_objs.filter(cb2);
-    })
+    });
 
 };
 

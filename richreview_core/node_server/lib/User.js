@@ -33,7 +33,8 @@ const Doc = require('./Doc').Doc;
  * @member groupNs  {string|Array<string>} required - array of groupid user is in
  *
  * UBC study has additional fields
- * @member password_hash {string}  - made from irreversible sha1 hash with salt from netid
+ * @member password_hash {string} - made from irreversible sha1 hash with salt from netid
+ * @member salt          {string} - random generated string for password salt
  * @member is_admin      {boolean} - if admin then can access experimental/super functionality (delete users, view password hashes, etc); also affects routing.
  * @member sid           {string} optional - the student id of user
  * @member first_name    {string} optional - the first name of user
@@ -43,13 +44,14 @@ const Doc = require('./Doc').Doc;
  */
 const User = function(id, nickname, email,
               /** new fields **/
-              password_hash, is_admin, sid, first_name, last_name
+              password_hash, salt, is_admin, sid, first_name, last_name
               /****************/) {
   this.id = id;
   this.nick = nickname;
   this.email = email;
   if(password_hash) {
     this.password_hash = password_hash;
+    this.salt          = salt;
     this.is_admin      = is_admin;
     this.sid           = sid;
     this.first_name    = first_name;
@@ -58,6 +60,7 @@ const User = function(id, nickname, email,
 };
 
 /**
+ * methods:
  *
  * cache
  * isExist
@@ -149,6 +152,7 @@ User.prototype.cache = (function(){
             result.nick,
             result.email,
             result.password_hash,
+            result.salt,
             result.is_admin,
             result.sid,
             result.first_name,
@@ -226,6 +230,7 @@ User.prototype.findByEmail = function(email){
  * @param id
  * @param email
  * @param password_hash
+ * @param salt            // TODO: enforce
  * @param is_admin
  * @param sid
  * @param first_name
@@ -234,7 +239,7 @@ User.prototype.findByEmail = function(email){
  */
 User.prototype.create = function(id, email,
   /** new fields **/
-  password_hash, is_admin, sid, first_name, last_name
+  password_hash, salt, is_admin, sid, first_name, last_name
   /****************/) {
 
   var groupids = [];
@@ -247,13 +252,14 @@ User.prototype.create = function(id, email,
   )
     .then((b) => {
       if(!password_hash) {
-        util.debug("in create(): is not UBC study");
+        util.logger("USER CREATE", "is not UBC study");
         return null;
       } // else
-      util.debug("in create(): is UBC study; setting password, etc");
+      util.logger("USER CREATE", "is UBC study; setting password, etc");
       return RedisClient.HMSET(
         'usr:'+id,
         'password_hash', password_hash,
+        'salt',          salt,
         'is_admin',      is_admin,
         'sid',           sid,
         'first_name',    first_name,

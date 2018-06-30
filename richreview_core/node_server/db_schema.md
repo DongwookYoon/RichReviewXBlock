@@ -12,7 +12,8 @@ userid is a sha1 hash with salt from netid
 @member email    {string} required - email of user
 @member groupNs  {string|Array<string>} required - array of groupid user is in
 
-@member password   {string} - made from irreversible sha1 hash with salt from netid
+@member password_hash {string} - made from irreversible sha1 hash with salt from netid
+@member salt       {string}
 @member auth_level {string} - is one of "student", "instructor", or "admin"; refers to security level in terms of access to functionality (delete, doc creation, etc); also affects routing.
 @member first_name {string} optional - the first name of user
 @member last_name  {string} optional - the last name of user

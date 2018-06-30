@@ -454,9 +454,11 @@ exports.findUserByID = (id) => {
  */
 exports.findUserByEmail = (email) => {
     return R2D.User.prototype.findByEmail(email)
+    /*******add project specific pluggins******/
         .then((user) => {
             return pilotHandler.plugPilot(user);
         });
+  /******************************************/
 };
 
 /**

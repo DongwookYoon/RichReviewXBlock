@@ -4,9 +4,6 @@
  *
  */
 
-// import built-in modules
-const os = require("os");
-
 // import npm modules
 const Promise = require("promise"); // jshint ignore:line
 const redis = require('redis');
@@ -16,22 +13,37 @@ const env = require('./env');
 const util = require('../util');
 
 /**
- * If os hostname is spire then use the local redis server, otherwise use the server on richreview.net
+ * switch redis client dependent on host
  */
 let redisClient = null;
 
-if(env.redis_config.use_remote_redis) {
-    util.start("using remote redis server");
+if(process.env.NODE_ENV === 'production') {
+  if(process.env.HOSTNAME === process.env.RICHREVIEW_CA_VM) {
+    util.start("using redis cache for RichReview CA VM");
+    redisClient = redis.createClient(
+      env.redis_config.redis_cache.port,
+      env.redis_config.redis_cache.hostname,
+      {
+        auth_pass: env.redis_config.redis_cache.access_key,
+        tls: {
+            servername: env.redis_config.redis_cache.hostname
+        }
+      }
+    );
+  } else if(process.env.HOSTNAME === process.env.RICHREVIEW_VM) {
+    util.start("using remote redis server for RichReview VM");
     redisClient = redis.createClient(env.redis_config.port, env.redis_config.url);
     redisClient.auth(env.redis_config.auth);
+  } else {
+      util.error("cannot create redis client: unknown production environment");
+  }
 } else {
-    util.start("using local redis server");
-    redisClient = redis.createClient(env.redis_config.port);
+  util.start("using local redis server");
+  redisClient = redis.createClient(env.redis_config.port);
 }
 
 redisClient.on('error', function(err) {
-    // "Redis connection to <hostname>:6379 failed - read ETIMEDOUT";
-    util.error("Redis: "+err);
+    util.error(err);
 });
 
 var ping_timeout = null;
@@ -55,8 +67,8 @@ var RedisClient = (function(){
         'HDEL',
         'HGETALL',
         'HEXISTS',
-        'HKEYS', // added by Colin
-        'EXISTS', // added by Colin
+        'HKEYS',
+        'EXISTS',
         'HMSET',
         'HSET',
         'LPUSH',
@@ -64,10 +76,10 @@ var RedisClient = (function(){
         'LREM',
         'LRANGE',
         'SET',
-        'SMOVE', // added by Colin
-        'SMEMBERS', // added by Colin
-        'SADD', // added by Colin
-        'HMGET' // added by Colin
+        'SMOVE',
+        'SMEMBERS',
+        'SADD',
+        'HMGET'
     ];
 
     commands.forEach(function(fstr){

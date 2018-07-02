@@ -1,42 +1,22 @@
+
+const path = require('path');
+const fs = require('fs');
+
 const redis = require('redis');
 
 const util = require('../util');
 const node_util = require('util');
 
-// util.debug(Object.keys(redis.RedisClient.prototype).sort());
+const redis_config = JSON.parse(
+  fs.readFileSync(path.join(__dirname, '..', 'ssl/redis_config.json'), 'utf-8')
+);
 
-const COMMANDS = [
-  'GET',
-  'KEYS',
-  'EXISTS',
-  'DEL',
-  'HGET',
-  'HDEL',
-  'HGETALL',
-  'HEXISTS',
-  'HKEYS',
-  'EXISTS',
-  'HMSET',
-  'HSET',
-  'LPUSH',
-  'RPUSH',
-  'LREM',
-  'LRANGE',
-  'SET',
-  'SMOVE',
-  'SMEMBERS',
-  'SADD',
-  'HMGET',
-  'client'
-];
 
-util.debug(Object.keys(COMMANDS).sort());
+const LOCAL_REDIS_PORT = redis_config.port;
 
-const LOCAL_REDIS_PORT = 6379;
-
-const REDIS_CACHE_KEY = "j+DzNp9nrLP1FzboDd4FJSHTj1tfc4c6FHecDWZthIo=";
-const REDIS_CACHE_HOSTNAME = "richreview-redis-ca.redis.cache.windows.net";
-const REDIS_CACHE_PORT = 6380;
+const REDIS_CACHE_KEY = redis_config.redis_cache.access_key;
+const REDIS_CACHE_HOSTNAME = redis_config.redis_cache.hostname;
+const REDIS_CACHE_PORT = redis_config.redis_cache.port;
 
 const redisCacheClient = redis.createClient(
   REDIS_CACHE_PORT,
@@ -53,7 +33,7 @@ const redisLocalClient = redis.createClient(LOCAL_REDIS_PORT);
 
 const promisifyRedisClient = function(client) {
   const pub = { };
-  COMMANDS.forEach((command) => {
+  Object.keys(redis.RedisClient.prototype).forEach((command) => {
     pub[command] = node_util.promisify(client[command]).bind(client);
   });
   return pub;
@@ -86,4 +66,67 @@ async function testCache() {
   console.log("Cache response : " + await RedisCacheClient.client("LIST"));
 }
 
-testCache();
+// testCache();
+
+let TYPES = {
+  hash: 0,
+  list: 0,
+  set: 0,
+  string: 0,
+  unknown: 0
+};
+
+const treat_entry = (entry) => {
+  const cb = (type) => {
+    switch(type) {
+      case "hash":
+        TYPES.hash++;
+        break;
+      case "list":
+        TYPES.list++;
+        break;
+      case "set":
+        TYPES.set++;
+        break;
+      case "string":
+        TYPES.string++;
+        break;
+      default:
+        TYPES.unknown++;
+    }
+  };
+
+  return RedisLocalClient.TYPE(entry).then(cb);
+};
+
+const scan_loop = (cursor) => {
+  let promise = null;
+  if(cursor) {
+    promise = RedisLocalClient.SCAN(cursor);
+  } else {
+    promise = RedisLocalClient.SCAN(0);
+  }
+  return promise
+    .then((result) => {
+      const nextCursor = Number.parseInt(result[0]);
+      const promises = result[1].map(treat_entry);
+      return Promise.all(promises)
+        .then((a) => {
+          console.log(nextCursor);
+          if(nextCursor === 0) {
+            return null;
+          } else {
+            return scan_loop(nextCursor);
+          }
+        });
+    });
+};
+
+const import_exec = () => {
+  return scan_loop()
+    .then((b) => {
+      util.debug(JSON.stringify(TYPES, null, '\t'));
+    });
+};
+
+import_exec();

@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-const util = require('../util');
-
 // import built-in modules
 const fs = require("fs");
 const os = require("os");
@@ -11,16 +9,27 @@ const crypto = require('crypto');
 // import npm modules
 const Promise = require("promise"); // jshint ignore:line
 
+// import libraries
+const util = require('../util');
+
+// declare env variables
+process.env.RICHREVIEW_CA_VM = "richreview-vm";
+process.env.RICHREVIEW_VM    = "richreview";
+process.env.HOSTNAME         = os.hostname();
+
 /**
- * Set the environment to development
- *
- * should be placed before require(app)
+ * Set the environment to development.
+ * lines should be placed before require(app)
  */
-if(
-  typeof v8debug === 'object'       ||
-  os.hostname() !== "richreview"    ||
-  os.hostname() !== "richreview-vm"
-) {
+const isDev = () => {
+  const hn = process.env.HOSTNAME;
+  util.start('App hostname:'+hn);
+  return typeof v8debug === 'object' ||
+    (hn !== process.env.RICHREVIEW_CA_VM &&
+     hn !== process.env.RICHREVIEW_VM);
+};
+
+if(isDev()) {
     process.env.NODE_ENV = 'development';
 } else {
     process.env.NODE_ENV = 'production';
@@ -30,14 +39,13 @@ if(
 const env = require('../lib/env');
 const file_utils = require('../lib/file_utils');
 const azure = require('../lib/azure');
-// const js_utils = require("../lib/js_utils");
 
-const HOSTNAME = os.hostname() === 'richreview' ? 'richreview' : 'localhost';
+// declare constants
+const HOSTNAME = process.env.HOSTNAME === 'richreview' ? 'richreview' : 'localhost';
 const HASHFILE = HOSTNAME+'/richreview_webapp_hash.txt';
 const WEBAPP_PATH = path.resolve(__dirname, '../../webapps/richreview/');
 
 util.start('App NODE_ENV:'+process.env.NODE_ENV);
-util.start('App hostname:'+os.hostname());
 
 /**
  * Sync the richreview web app
@@ -142,7 +150,6 @@ const runServer = () => {
     let httpsPort = null;
     let httpPort = null;
 
-    //if (HOSTNAME === 'richreview') { // on richreview.net
     if (process.env.NODE_ENV === 'production') {
         httpsPort = 443;
         httpPort = 80;

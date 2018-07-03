@@ -12,7 +12,7 @@ const redis_config = JSON.parse(
 );
 
 
-const LOCAL_REDIS_PORT = redis_config.port;
+const LOCAL_REDIS_PORT = 6379;
 
 const REDIS_CACHE_KEY = redis_config.redis_cache.access_key;
 const REDIS_CACHE_HOSTNAME = redis_config.redis_cache.hostname;
@@ -43,13 +43,6 @@ const RedisCacheClient = promisifyRedisClient(redisCacheClient);
 const RedisLocalClient = promisifyRedisClient(redisLocalClient);
 
 async function testCache() {
-
-  // Perform cache operations using the cache connection object...
-
-  // Simple PING command
-
-
-  // Simple get and put of integral data types into the cache
   console.log("\nCache command: GET Message");
   console.log("Cache response : " + await RedisCacheClient.GET("Message"));
 
@@ -68,35 +61,127 @@ async function testCache() {
 
 // testCache();
 
-const test_migration = () => {
-  return RedisLocalClient.SET("test", "success")
+const test_specs = () => {
+  //console.log(JSON.stringify(RedisCacheClient.server_info, null, '\t'));
+  console.log(JSON.stringify(RedisCacheClient.redis_version));
+
+};
+
+// test_specs();
+
+const test_migration_hash = () => {
+  util.debug("starting test_migration_hash");
+  return RedisLocalClient.HMSET("test", "key1", "val1", "key2", "val2", "key3", "val3")
     .then((b) => {
-      return RedisLocalClient.MIGRATE(redis_config.redis_cache.hostname, redis_config.redis_cache.port, "test", 0, 1000, "COPY");
+      util.debug(b);
+      // does not work
+      //return RedisLocalClient.MIGRATE(redis_config.redis_cache.hostname, 6379, "test", 0, 1000, "COPY");
+      return RedisLocalClient.HGETALL("test");
     })
-    .then((outcome) => {
-      util.debug(outcome);
-      return RedisCacheClient.GET("test");
+    .then((data) => {
+      const arr = [];
+      Object.keys(data).forEach((key) => { arr.push(key, data[key]); });
+      util.debug(JSON.stringify(arr));
+      return RedisCacheClient.HMSET("test", ...arr);
     })
-    .then((test) => {
-      util.debug(test);
+    .then((b) => {
+      util.debug(b);
+      return RedisCacheClient.HGETALL("test");
+    })
+    .then((data) => {
+      util.debug(JSON.stringify(data));
+      return RedisLocalClient.DEL("test");
+    })
+    .then((b) => {
+      util.debug(b);
+      return RedisCacheClient.DEL("test");
+    })
+    .then((b) => {
+      util.debug(b);
+      util.debug("done");
     })
     .catch((err) => {
       util.error(err);
     });
 };
 
-test_migration();
+//test_migration_hash();
 
-let TYPES = {
-  hash: 0,
-  list: 0,
-  set: 0,
-  string: 0,
-  unknown: 0
+const test_migration_list = () => {
+  util.debug("starting test_migration_list");
+  return RedisLocalClient.RPUSH("test", "val1", "val2", "val3", "val4")
+    .then((b) => {
+      util.debug(b);
+      return RedisLocalClient.LRANGE("test", 0, -1);
+    })
+    .then((data) => {
+      util.debug(JSON.stringify(data));
+      return RedisCacheClient.RPUSH("test", ...data);
+    })
+    .then((b) => {
+      util.debug(b);
+      return RedisCacheClient.LRANGE("test", 0, -1);
+    })
+    .then((data) => {
+      util.debug(JSON.stringify(data));
+      return RedisLocalClient.DEL("test");
+    })
+    .then((b) => {
+      util.debug(b);
+      return RedisCacheClient.DEL("test");
+    })
+    .then((b) => {
+      util.debug(b);
+      util.debug("done");
+    })
+    .catch((err) => {
+      util.error(err);
+    });
 };
 
-const treat_entry = (entry) => {
-  const cb_count = (type) => {
+//test_migration_list();
+
+const exec = (cb) => {
+  const treat_entry = (entry) => {
+    return RedisLocalClient.TYPE(entry).then(cb.bind(null, entry));
+  };
+
+  const scan_loop = (cursor) => {
+    let promise = null;
+    if(cursor) {
+      promise = RedisLocalClient.SCAN(cursor);
+    } else {
+      promise = RedisLocalClient.SCAN(0);
+    }
+    return promise
+      .then((result) => {
+        const nextCursor = Number.parseInt(result[0]);
+        const promises = result[1].map(treat_entry);
+        return Promise.all(promises)
+          .then((a) => {
+            //console.log(nextCursor);
+            if(nextCursor === 0) {
+              return null;
+            } else {
+              return scan_loop(nextCursor);
+            }
+          });
+      });
+  };
+
+  return scan_loop();
+};
+
+const exec_count = () => {
+  const TYPES = {
+    hash: 0,
+    list: 0,
+    set: 0,
+    string: 0,
+    unknown: 0
+  };
+
+  const cb_count = (entry, type) => {
     switch(type) {
       case "hash":
         TYPES.hash++;
@@ -115,37 +200,63 @@ const treat_entry = (entry) => {
     }
   };
 
-  return RedisLocalClient.TYPE(entry).then(cb_count);
-};
-
-const scan_loop = (cursor) => {
-  let promise = null;
-  if(cursor) {
-    promise = RedisLocalClient.SCAN(cursor);
-  } else {
-    promise = RedisLocalClient.SCAN(0);
-  }
-  return promise
-    .then((result) => {
-      const nextCursor = Number.parseInt(result[0]);
-      const promises = result[1].map(treat_entry);
-      return Promise.all(promises)
-        .then((a) => {
-          console.log(nextCursor);
-          if(nextCursor === 0) {
-            return null;
-          } else {
-            return scan_loop(nextCursor);
-          }
-        });
-    });
-};
-
-const import_exec = () => {
-  return scan_loop()
+  exec(cb_count)
     .then((b) => {
       util.debug(JSON.stringify(TYPES, null, '\t'));
     });
 };
 
-//import_exec();
+const exec_import = () => {
+  const treatHash = (entry) => {
+    return RedisLocalClient.HGETALL(entry)
+      .then((data) => {
+        const arr = [];
+        Object.keys(data).forEach((key) => { arr.push(key, data[key]); });
+        return RedisCacheClient.HMSET("test", ...arr);
+      })
+      .catch((err) => {
+        util.error(entry+" "+err);
+      });
+  };
+
+  const treatList = (entry) => {
+    return RedisLocalClient.LRANGE(entry, 0, -1)
+      .then((data) => {
+        return RedisCacheClient.RPUSH(entry, ...data);
+      })
+      .catch((err) => {
+        util.error(entry+" "+err);
+      });
+  };
+
+  const cb_set = (entry, type) => {
+    const TYPES = {
+      hash: 0,
+      list: 0,
+      set: 0,
+      string: 0,
+      unknown: 0
+    };
+
+    switch(type) {
+      case "hash":
+        return treatHash(entry);
+      case "list":
+        return treatList(entry);
+      case "set":
+        TYPES.set++; // FAIL
+        break;
+      case "string":
+        TYPES.string++; // FAIL
+        break;
+      default:
+        TYPES.unknown++; // FAIL
+    }
+  };
+
+  exec(cb_set);
+};
+
+exec_count();
+
+//exec_import();

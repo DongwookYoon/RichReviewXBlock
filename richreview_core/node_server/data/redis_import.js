@@ -68,6 +68,25 @@ async function testCache() {
 
 // testCache();
 
+const test_migration = () => {
+  return RedisLocalClient.SET("test", "success")
+    .then((b) => {
+      return RedisLocalClient.MIGRATE(redis_config.redis_cache.hostname, redis_config.redis_cache.port, "test", 0, 1000, "COPY");
+    })
+    .then((outcome) => {
+      util.debug(outcome);
+      return RedisCacheClient.GET("test");
+    })
+    .then((test) => {
+      util.debug(test);
+    })
+    .catch((err) => {
+      util.error(err);
+    });
+};
+
+test_migration();
+
 let TYPES = {
   hash: 0,
   list: 0,
@@ -77,7 +96,7 @@ let TYPES = {
 };
 
 const treat_entry = (entry) => {
-  const cb = (type) => {
+  const cb_count = (type) => {
     switch(type) {
       case "hash":
         TYPES.hash++;
@@ -96,7 +115,7 @@ const treat_entry = (entry) => {
     }
   };
 
-  return RedisLocalClient.TYPE(entry).then(cb);
+  return RedisLocalClient.TYPE(entry).then(cb_count);
 };
 
 const scan_loop = (cursor) => {
@@ -129,4 +148,4 @@ const import_exec = () => {
     });
 };
 
-import_exec();
+//import_exec();

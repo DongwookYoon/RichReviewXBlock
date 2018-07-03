@@ -202,7 +202,7 @@ const exec_count = () => {
 
   exec(cb_count)
     .then((b) => {
-      util.debug(JSON.stringify(TYPES, null, '\t'));
+      util.logger("in local redis", JSON.stringify(TYPES, null, '\t'));
     })
     .catch((err) => {
       util.error(err);
@@ -259,7 +259,72 @@ const exec_import = () => {
 
   exec(cb_set)
     .then((b) => {
-      util.error(JSON.stringify(FAILS, null, '\t'));
+      util.debug("missing these...");
+      util.debug(JSON.stringify(FAILS, null, '\t'));
+    })
+    .catch((err) => {
+      util.error(err);
+    });
+};
+
+const exec_cache_count = () => {
+  const TYPES = {
+    hash: 0,
+    list: 0,
+    set: 0,
+    string: 0,
+    unknown: 0
+  };
+
+  const cb_count = (entry, type) => {
+    switch(type) {
+      case "hash":
+        TYPES.hash++;
+        break;
+      case "list":
+        TYPES.list++;
+        break;
+      case "set":
+        TYPES.set++;
+        break;
+      case "string":
+        TYPES.string++;
+        break;
+      default:
+        TYPES.unknown++;
+    }
+  };
+
+  const treat_entry = (entry) => {
+    return RedisLocalClient.TYPE(entry).then(cb_count);
+  };
+
+  const scan_loop = (cursor) => {
+    let promise = null;
+    if(cursor) {
+      promise = RedisCacheClient.SCAN(cursor);
+    } else {
+      promise = RedisCacheClient.SCAN(0);
+    }
+    return promise
+      .then((result) => {
+        const nextCursor = Number.parseInt(result[0]);
+        const promises = result[1].map(treat_entry);
+        return Promise.all(promises)
+          .then((a) => {
+            //console.log(nextCursor);
+            if(nextCursor === 0) {
+              return null;
+            } else {
+              return scan_loop(nextCursor);
+            }
+          });
+      });
+  };
+
+  return scan_loop()
+    .then((b) => {
+      util.logger("in cache redis", JSON.stringify(TYPES, null, '\t'));
     })
     .catch((err) => {
       util.error(err);
@@ -267,5 +332,7 @@ const exec_import = () => {
 };
 
 exec_count();
+
+exec_cache_count();
 
 //exec_import();

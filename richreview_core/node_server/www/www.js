@@ -41,7 +41,10 @@ const file_utils = require('../lib/file_utils');
 const azure = require('../lib/azure');
 
 // declare constants
-const HOSTNAME = process.env.HOSTNAME === 'richreview' ? 'richreview' : 'localhost';
+
+
+//const HOSTNAME = process.env.HOSTNAME === 'richreview' ? 'richreview' : 'localhost';
+const HOSTNAME = process.env.NODE_ENV === 'production' ? 'richreview' : 'localhost';
 const HASHFILE = HOSTNAME+'/richreview_webapp_hash.txt';
 const WEBAPP_PATH = path.resolve(__dirname, '../../webapps/richreview/');
 

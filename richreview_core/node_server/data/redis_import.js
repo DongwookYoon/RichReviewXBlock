@@ -11,7 +11,6 @@ const redis_config = JSON.parse(
   fs.readFileSync(path.join(__dirname, '..', 'ssl/redis_config.json'), 'utf-8')
 );
 
-
 const LOCAL_REDIS_PORT = 6379;
 
 const REDIS_CACHE_KEY = redis_config.redis_cache.access_key;
@@ -198,6 +197,8 @@ const exec_count = () => {
       default:
         TYPES.unknown++;
     }
+
+    return null;
   };
 
   exec(cb_count)
@@ -223,7 +224,7 @@ const exec_import = () => {
       .then((data) => {
         const arr = [];
         Object.keys(data).forEach((key) => { arr.push(key, data[key]); });
-        return RedisCacheClient.HMSET("test", ...arr);
+        return RedisCacheClient.HMSET(entry, ...arr);
       })
       .catch((err) => {
         util.error(entry+" "+err);
@@ -248,12 +249,13 @@ const exec_import = () => {
         return treatList(entry);
       case "set":
         FAILS.set++; // FAIL
-        break;
+        return Promise.resolve(0);
       case "string":
         FAILS.string++; // FAIL
-        break;
+        return Promise.resolve(0);
       default:
         FAILS.unknown++; // FAIL
+        return Promise.resolve(0);
     }
   };
 
@@ -293,10 +295,12 @@ const exec_cache_count = () => {
       default:
         TYPES.unknown++;
     }
+
+    return null;
   };
 
   const treat_entry = (entry) => {
-    return RedisLocalClient.TYPE(entry).then(cb_count);
+    return RedisCacheClient.TYPE(entry).then(cb_count.bind(null, entry));
   };
 
   const scan_loop = (cursor) => {
@@ -331,8 +335,26 @@ const exec_cache_count = () => {
     });
 };
 
-exec_count();
+const clear_redis_cache = () => {
+  return RedisCacheClient.FLUSHALL()
+    .then((s) => {
+      util.debug(s);
+      util.debug("cleared redis cache");
+    });
+};
 
-exec_cache_count();
+/*in local redis
+    hash   2413,
+    list   1767,
+    set  0,
+    string   0,
+    unknown  0
+}*/
+
+//exec_count();
 
 //exec_import();
+
+//exec_cache_count();
+
+//clear_redis_cache();

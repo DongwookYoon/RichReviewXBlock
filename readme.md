@@ -27,9 +27,9 @@ sudo n stable
 
 For more details see this [stack overflow guide](https://stackoverflow.com/questions/19451851/install-node-js-to-install-n-to-install-node-js).
 
-### Install and Configure Redis in the VM (for testing purposes)
+### Install and Configure Redis in the VM
 
-Ubuntu 19.04 LTS provides the latest Redis server as part of the official Ubuntu [package respository](https://packages.ubuntu.com/bionic/database/redis). This will give you a redis server with version >=4.0.9. 
+Ubuntu 18.04 LTS provides the latest Redis server as part of the official Ubuntu [package respository](https://packages.ubuntu.com/bionic/database/redis). This will give you a redis server with version >=4.0.9.
 
 ```bash
 apt show redis
@@ -60,6 +60,10 @@ sudo chmod 755 redis
 sudo service redis-server start
 ```
 
+To use Redis with NodeJS we are using the `redis` [package](https://github.com/NodeRedis/node_redis). This allows us to call the redis [commands](https://redis.io/commands) inside Node scripts. We can even promisify redis commands by passing `util.promisify` on them. See `data/redis_import.js` for more details.
+
+### Configure the Azure Redis Cache
+
 ### Install and Configure RichReview
 
 ```bash
@@ -81,10 +85,18 @@ unzip ssl.zip
 rm ssl.zip
 ```
 
+Configure MuPla for PDFs
+
 ```bash
 cd ~/RichReviewXBlock/mupla_core/mupla
 make
 ```
+
+### Test RichReview
+
+You can test RichReview straight from the VM https://40.85.241.164:443
+
+Primary blob service endpoint is https://richreview2ca.blob.core.windows.net
 
 # RichReviewXBlock
 This XBlock is a edX course applet that served a collaborative multimodal annotation feature.

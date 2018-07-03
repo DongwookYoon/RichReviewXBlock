@@ -203,10 +203,21 @@ const exec_count = () => {
   exec(cb_count)
     .then((b) => {
       util.debug(JSON.stringify(TYPES, null, '\t'));
+    })
+    .catch((err) => {
+      util.error(err);
     });
 };
 
 const exec_import = () => {
+  const FAILS = {
+    hash: 0,
+    list: 0,
+    set: 0,
+    string: 0,
+    unknown: 0
+  };
+
   const treatHash = (entry) => {
     return RedisLocalClient.HGETALL(entry)
       .then((data) => {
@@ -230,31 +241,29 @@ const exec_import = () => {
   };
 
   const cb_set = (entry, type) => {
-    const TYPES = {
-      hash: 0,
-      list: 0,
-      set: 0,
-      string: 0,
-      unknown: 0
-    };
-
     switch(type) {
       case "hash":
         return treatHash(entry);
       case "list":
         return treatList(entry);
       case "set":
-        TYPES.set++; // FAIL
+        FAILS.set++; // FAIL
         break;
       case "string":
-        TYPES.string++; // FAIL
+        FAILS.string++; // FAIL
         break;
       default:
-        TYPES.unknown++; // FAIL
+        FAILS.unknown++; // FAIL
     }
   };
 
-  exec(cb_set);
+  exec(cb_set)
+    .then((b) => {
+      util.error(JSON.stringify(FAILS, null, '\t'));
+    })
+    .catch((err) => {
+      util.error(err);
+    });
 };
 
 exec_count();

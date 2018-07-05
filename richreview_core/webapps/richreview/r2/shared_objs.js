@@ -103,8 +103,9 @@ var r2App = (function() {
 
     r2.util.setAjaxCsrfToken();
 
-    pub.file_storage_url = "https://richreview.blob.core.windows.net/";
-    pub.server_url = document.location.hostname == "localhost" ? "https://localhost:8001/" : "https://richreview.net/";
+    pub.file_storage_url = "https://richreview2ca.blob.core.windows.net/";
+    //pub.server_url = document.location.hostname === "localhost" ? "https://localhost:8001/" : "https://richreview.net/";
+  pub.server_url = document.location.hostname === "localhost" ? "https://localhost:8001/" : "https://40.85.241.164:443/";
 
     pub.bluemix_tts_auth_context = null;
     pub.invalidate_static_scene = false;

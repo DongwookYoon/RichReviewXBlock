@@ -351,7 +351,7 @@ exports.Email = function(frommail, tomail, subject, textbody, htmlbody){
 };
 
 /**
- * TODO: edit this
+ * TODO: clear comment
  */
 /*exports.getHostname = (function(){
     var url = "";

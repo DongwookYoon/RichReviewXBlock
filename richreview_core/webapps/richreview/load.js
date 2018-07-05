@@ -150,7 +150,7 @@
                             throw new Error('Cannot load a resource file: '+rtns[i].target.src)
                         }
                     }
-                    return r2.makeLocalJs('https://richreview.azureedge.net/lib/pdfjs/pdf.worker.js') // prevent CORS issue
+                    return r2.makeLocalJs('https://richreview2ca.azureedge.net/lib/pdfjs/pdf.worker.js') // prevent CORS issue
                         .then(function(local_url){
                             PDFJS.workerSrc = local_url;
                         });

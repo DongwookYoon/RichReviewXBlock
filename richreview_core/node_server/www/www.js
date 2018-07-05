@@ -9,16 +9,16 @@ const crypto = require('crypto');
 // import npm modules
 const Promise = require("promise"); // jshint ignore:line
 
-// import libraries
+// import util
 const util = require('../util');
 
 // declare env variables
 process.env.RICHREVIEW_CA_VM  = "richreview-vm";
 process.env.RICHREVIEW_VM     = "richreview";
 process.env.HOSTNAME          = os.hostname();
-process.env.RICHREVIEW_CA_URL =  "https://40.85.241.164:443";
-process.env.RICHREVIEW_URL    =  "https://richreview.net";
-process.env.LOCALHOST_URL     = "localhost:8001";
+process.env.RICHREVIEW_CA_URL = "https://40.85.241.164:443";
+process.env.RICHREVIEW_URL    = "https://richreview.net";
+process.env.LOCALHOST_URL     = "https://localhost:8001";
 
 /**
  * Set the environment to development.
@@ -49,8 +49,23 @@ switch(process.env.HOSTNAME) {
     process.env.HOST_URL = process.env.LOCALHOST_URL;
 }
 
-// import libraries (depends on Node environment)
+// import env (depends on Node environment)
 const env = require('../lib/env');
+
+if(process.env.HOSTNAME === process.env.RICHREVIEW_VM) {
+  util.start("using non CA Azure");
+  process.env.BLOB_HOST = env.azure_config.storage.host;
+  process.env.STORAGE_ACCOUNT = env.azure_config.storage.account_name;
+  process.env.STORAGE_KEY = env.azure_config.storage.access_key;
+  process.env.CDN_ENDPOINT = env.azure_config.cdn.endpoint;
+} else {
+  util.start("using CA Azure");
+  process.env.BLOB_HOST = env.azure_config.storage_ca.host;
+  process.env.STORAGE_ACCOUNT = env.azure_config.storage_ca.account_name;
+  process.env.STORAGE_KEY = env.azure_config.storage_ca.access_key;
+  process.env.CDN_ENDPOINT = env.azure_config.cdn.endpoint_ca;
+}
+
 const file_utils = require('../lib/file_utils');
 const azure = require('../lib/azure');
 

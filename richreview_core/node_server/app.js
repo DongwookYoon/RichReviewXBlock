@@ -79,6 +79,8 @@ app.use(flash());
 
 app.use((req, res, next) => {
     // req.session.latestUrl = req.originalUrl; // TODO: ask Dongwook about this
+    res.locals.cdn_endpoint = process.env.CDN_ENDPOINT;
+    res.locals.host_url     = process.env.HOST_URL;
     res.locals.flashes = req.flash();
     res.locals.user = req.user || null;
     next();

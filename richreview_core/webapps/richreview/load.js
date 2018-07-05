@@ -18,14 +18,16 @@
      * else get cdn from azure blob service
      */
     console.log("DEBUG: " + r2.env);
+    console.log("DEBUG: " + r2.cdn_endpoint);
+    console.log("DEBUG: " + window.location.hostname);
+
+    r2.CDN_URL    = r2.cdn_endpoint;
     if(r2.env === "production") {
         console.log("DEBUG: loading from production route");
-        r2.CDN_URL    = 'https://richreview2ca.azureedge.net';
         // r2.CDN_SUBURL = r2.CDN_URL+'/'+(window.location.hostname==='richreview.net'?'richreview':'localhost');
       r2.CDN_SUBURL = r2.CDN_URL+'/richreview';
     } else {
         console.log("DEBUG: loading from development route");
-        r2.CDN_URL    = 'https://richreview2ca.azureedge.net';
         r2.CDN_SUBURL = '/static_viewer';
     }
 
@@ -58,7 +60,7 @@
         return runSerialPromises;
     }());
 
-    r2.makeLocalJs = function(url){
+    r2.makeLocalJs = function(url) {
         return $.get(url)
             .then(function(data){
                 var blob;
@@ -151,7 +153,7 @@
                             throw new Error('Cannot load a resource file: '+rtns[i].target.src)
                         }
                     }
-                    return r2.makeLocalJs('https://richreview2ca.azureedge.net/lib/pdfjs/pdf.worker.js') // prevent CORS issue
+                    return r2.makeLocalJs(r2.cdn_endpoint+'/lib/pdfjs/pdf.worker.js') // prevent CORS issue
                         .then(function(local_url){
                             PDFJS.workerSrc = local_url;
                         });

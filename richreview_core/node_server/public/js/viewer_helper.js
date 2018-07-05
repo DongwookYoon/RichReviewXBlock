@@ -2,12 +2,13 @@
  * Created by dongwookyoon on 6/10/15.
  */
 
-function loadRichReview(r2_ctx, env) {
+function loadRichReview(r2_ctx, env, cdn_endpoint) {
     (function(r2){
         r2.platform = 'Azure';
         r2.scroll_wrapper = document.getElementById('r2_app_page');
         r2.ctx = JSON.parse(decodeURIComponent(r2_ctx));
         r2.env = env;
+        r2.cdn_endpoint = cdn_endpoint;
         warnIE();
         loadJsScript("/static_viewer/load.js", "js").then(
             function() {

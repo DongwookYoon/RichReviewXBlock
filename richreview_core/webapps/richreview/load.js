@@ -21,7 +21,8 @@
     if(r2.env === "production") {
         console.log("DEBUG: loading from production route");
         r2.CDN_URL    = 'https://richreview2ca.azureedge.net';
-        r2.CDN_SUBURL = r2.CDN_URL+'/'+(window.location.hostname==='richreview.net'?'richreview':'localhost');
+        // r2.CDN_SUBURL = r2.CDN_URL+'/'+(window.location.hostname==='richreview.net'?'richreview':'localhost');
+      r2.CDN_SUBURL = r2.CDN_URL+'/richreview';
     } else {
         console.log("DEBUG: loading from development route");
         r2.CDN_URL    = 'https://richreview2ca.azureedge.net';

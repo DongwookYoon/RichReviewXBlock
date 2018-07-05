@@ -97,11 +97,9 @@ exports.PostResp = function(res, req, code, err){
     }
 
     res.statusCode = code;
-    // TODO: replace hotfix
-    /*if(req.headers.origin === 'https://localhost:8000' || req.headers.origin === 'https://localhost:8001' ){
+    if(req.headers.origin === 'https://localhost:8000' || req.headers.origin === 'https://localhost:8001' ){
         res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
-    }*/
-    res.setHeader('Access-Control-Allow-Origin', "*");
+    }
     res.send(s);
 };
 

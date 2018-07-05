@@ -15,10 +15,21 @@ const tedious = require('tedious');
 
 // import libraries
 const env = require('../lib/env');
+const util = require('../util');
 
 // set module variables
-const BLOB_HOST = 'https://richreview.blob.core.windows.net/';
-const ACCOUNT = 'richreview';
+if(process.env.HOSTNAME === process.env.RICHREVIEW_VM) {
+    util.start("using non CA Azure");
+    process.env.BLOB_HOST = env.azure_config.storage.host;
+    process.env.STORAGE_ACCOUNT = env.azure_config.storage.account_name;
+} else {
+    util.start("using CA Azure");
+    process.env.BLOB_HOST = env.azure_config.storage_ca.host;
+    process.env.STORAGE_ACCOUNT = env.azure_config.storage_ca.account_name;
+}
+
+const BLOB_HOST = process.env.BLOB_HOST;
+const ACCOUNT = process.env.STORAGE_ACCOUNT;
 
 nconf.env().file({ file: env.config_files.azure_keys });
 
@@ -77,8 +88,12 @@ exports.BlobFileDownload = function(c, b, f, cb){
     rd.pipe(wr);
 };
 
-exports.svc = blob_svc;
-exports.BLOB_HOST = BLOB_HOST;
+/**
+ * TODO: azure.sqlQuery() is obsolete, can delete
+ *
+ * @param cmd
+ * @param callback
+ */
 exports.sqlQuery = function(cmd, callback){
     var sqlconn = new ConnectionTD(sql_key_tedious);
     sqlconn.on('connect', function(error) {
@@ -203,5 +218,8 @@ exports.ListBlobsWithPrefix = function(container, prefix){
             }
         });
 
-    })
+    });
 };
+
+exports.svc = blob_svc;
+exports.BLOB_HOST = BLOB_HOST;

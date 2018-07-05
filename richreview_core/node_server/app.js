@@ -80,6 +80,7 @@ app.use(flash());
 app.use((req, res, next) => {
     // req.session.latestUrl = req.originalUrl; // TODO: ask Dongwook about this
     res.locals.flashes = req.flash();
+    res.locals.
     res.locals.user = req.user || null;
     next();
 });

@@ -46,6 +46,10 @@ exports.config_files = {
     bluemix_stt_auth: path.join(__dirname, '..', 'ssl/bluemix_stt_auth.json')
 };
 
+exports.azure_config = JSON.parse(
+  fs.readFileSync(path.join(__dirname, '..', 'ssl/azure_keys.json'), 'utf-8')
+);
+
 exports.google_oauth = JSON.parse(
     fs.readFileSync(path.join(__dirname, '..', 'ssl/google_open_id.json'), 'utf-8')
 )["web"];

@@ -3,9 +3,14 @@
  */
 
 
-var SERVER_URL;
-if(document.location.hostname == "localhost"){SERVER_URL = "https://localhost:8001/";}
-else{SERVER_URL = "https://richreview.net/";}
+var SERVER_URL = null;
+console.log("DEBUG: document.location.hostname="+document.location.hostname);
+if (document.location.hostname === "localhost") {
+    SERVER_URL = "https://localhost:8001/";
+} else {
+    SERVER_URL = "https://40.85.241.164:443";
+}
+// else{SERVER_URL = "https://richreview.net/";}
 
 var FILE_UPLOAD_URL = "upload";
 var DOC_LAYOUT_UPLOAD_URL = SERVER_URL+"upload?mode=UploadDocLayout";

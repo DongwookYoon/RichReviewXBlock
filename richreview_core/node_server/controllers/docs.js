@@ -97,7 +97,7 @@ function RenderDocumentsPage(res){
 function CleanUpContainer(c_name, callback){
     azure.svc.listBlobsSegmented(c_name, null, function (error, blobs) {
         if (error) {
-            if(error.code == 'ContainerNotFound'){
+            if(error.code === 'ContainerNotFound'){
                 azure.svc.createContainerIfNotExists(c_name, { publicAccessLevel : 'blob' }, function (error) {
                     if (error) {
                         console.log('CleanUpContainer - creating container failed :', c_name, error);
@@ -115,7 +115,7 @@ function CleanUpContainer(c_name, callback){
         }
         else {
             var deleted = 0;
-            if(blobs.entries == 0){
+            if(blobs.entries === 0){
                 callback(null);
             }
             else{

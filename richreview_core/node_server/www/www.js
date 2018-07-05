@@ -13,9 +13,12 @@ const Promise = require("promise"); // jshint ignore:line
 const util = require('../util');
 
 // declare env variables
-process.env.RICHREVIEW_CA_VM = "richreview-vm";
-process.env.RICHREVIEW_VM    = "richreview";
-process.env.HOSTNAME         = os.hostname();
+process.env.RICHREVIEW_CA_VM  = "richreview-vm";
+process.env.RICHREVIEW_VM     = "richreview";
+process.env.HOSTNAME          = os.hostname();
+process.env.RICHREVIEW_CA_URL =  "https://40.85.241.164:443";
+process.env.RICHREVIEW_URL    =  "https://richreview.net";
+process.env.LOCALHOST_URL     = "localhost:8001";
 
 /**
  * Set the environment to development.
@@ -33,6 +36,17 @@ if(isDev()) {
     process.env.NODE_ENV = 'development';
 } else {
     process.env.NODE_ENV = 'production';
+}
+
+switch(process.env.HOSTNAME) {
+  case process.env.RICHREVIEW_CA_VM:
+      process.env.HOST_URL = process.env.RICHREVIEW_CA_URL;
+      break;
+  case process.env.RICHREVIEW_VM:
+      process.env.HOST_URL = process.env.RICHREVIEW_URL;
+      break;
+  default:
+    process.env.HOST_URL = process.env.LOCALHOST_URL;
 }
 
 // import libraries (depends on Node environment)
@@ -98,7 +112,7 @@ var webAppSync = (function(){
     }
 
     function setBlobStorageHash(text){
-        return azure.SetBlobFromText({container: 'cdn', blob: HASHFILE, text: text})
+        return azure.SetBlobFromText({container: 'cdn', blob: HASHFILE, text: text});
     }
 
     function getLocalFileList(){

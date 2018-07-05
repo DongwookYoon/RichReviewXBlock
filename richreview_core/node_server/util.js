@@ -22,6 +22,10 @@ exports.logger = function(type, stmt) {
     console.log("["+d()+"]<"+type+">: "+stmt);
 };
 
+exports.printer = function(type, stmt) {
+  console.log("<"+type+">: "+stmt);
+};
+
 exports.testl = function(stmt) {
     console.log("["+d()+"]<TEST>: "+stmt);
 };

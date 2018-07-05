@@ -353,8 +353,8 @@ exports.Email = function(frommail, tomail, subject, textbody, htmlbody){
 /**
  * TODO: edit this
  */
-exports.getHostname = (function(){
-    /*var url = "";
+/*exports.getHostname = (function(){
+    var url = "";
     return function(){
         if(url === ""){
             url = 'localhost:8001';
@@ -365,9 +365,11 @@ exports.getHostname = (function(){
             console.log("Hostname :", url);
         }
         return url;
-    };*/
+    };
+}());*/
+exports.getHostname = function () {
     return process.env.HOST_URL;
-}());
+};
 
 exports.identifyUser = function(req, res){
     if(req.user){

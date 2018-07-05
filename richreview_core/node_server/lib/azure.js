@@ -22,10 +22,12 @@ if(process.env.HOSTNAME === process.env.RICHREVIEW_VM) {
     util.start("using non CA Azure");
     process.env.BLOB_HOST = env.azure_config.storage.host;
     process.env.STORAGE_ACCOUNT = env.azure_config.storage.account_name;
+  process.env.STORAGE_KEY = env.azure_config.storage_ca.access_key;
 } else {
     util.start("using CA Azure");
     process.env.BLOB_HOST = env.azure_config.storage_ca.host;
     process.env.STORAGE_ACCOUNT = env.azure_config.storage_ca.account_name;
+    process.env.STORAGE_KEY = env.azure_config.storage_ca.access_key;
 }
 
 const BLOB_HOST = process.env.BLOB_HOST;
@@ -34,7 +36,8 @@ const ACCOUNT = process.env.STORAGE_ACCOUNT;
 nconf.env().file({ file: env.config_files.azure_keys });
 
 const sql_key_tedious = nconf.get("sql_key_tedious");
-const blob_storage_key = nconf.get("blob_storage_key");
+//const blob_storage_key = nconf.get("blob_storage_key");
+const blob_storage_key = process.env.STORAGE_KEY;
 
 if( typeof sql_key_tedious === 'undefined' ||  typeof blob_storage_key === 'undefined' ){
     throw new Error('auth configuration file not found : ' + env.config_files.azure_keys);

@@ -84,7 +84,7 @@ var webAppSync = (function(){
                     return uploadLocalFile(getLocalFileList())
                         .then(function(resp){
                             console.log(resp);
-                            return setBlobStorageHash(local_hash)
+                            return setBlobStorageHash(local_hash);
                         });
                 }
             })

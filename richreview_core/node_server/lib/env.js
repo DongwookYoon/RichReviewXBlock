@@ -50,7 +50,7 @@ exports.node_config = JSON.parse(
 );
 
 exports.azure_config = JSON.parse(
-  fs.readFileSync(path.join(__dirname, '..', 'ssl/azure_keys.json'), 'utf-8')
+  fs.readFileSync(path.join(__dirname, '..', 'ssl/azure_config.json'), 'utf-8')
 );
 
 exports.google_oauth = JSON.parse(

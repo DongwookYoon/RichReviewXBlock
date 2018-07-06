@@ -78,9 +78,9 @@ Before running the system you will need the following files under **RichReviewXB
 * **richreview_net.crt** - private server certificate
 * **richreview_net.key** - private server key
 * **google_open_id.json** - Google OpenID Connect credential
-* **azure_keys.json** - Azure Blob Storage access keys
+* **azure_config.json** - Azure Blob Storage access keys
 
-Why do we need these? Firstly, the **.crt** and **.key** files are for the standard SSL authentication. Secondly, we authenticates RichReview users with Google OpenID Connect authentication, and **google_open_id.json** is for this OAuth credential. You can simply generate your own at [Google Developers Console](https://console.developers.google.com/project). Remember that the login redirection is to *'/login-oauth2-return'*. Finally, **azure_keys.json** has JSON dictionary for Azure datastorage accesskeys. 'blob_storage_key' key has an access key for the Azure Blob Storage (see [how to get the key](http://justazure.com/azure-blob-storage-part-two-getting-started/)), and 'sql_key_tedious' key has a 'tedious' login information for the Azure SQL datastorage (see an [example](https://github.com/pekim/tedious/wiki/Connect-to-sql-in-azure)).
+Why do we need these? Firstly, the **.crt** and **.key** files are for the standard SSL authentication. Secondly, we authenticates RichReview users with Google OpenID Connect authentication, and **google_open_id.json** is for this OAuth credential. You can simply generate your own at [Google Developers Console](https://console.developers.google.com/project). Remember that the login redirection is to *'/login-oauth2-return'*. Finally, **azure_config.json** has JSON dictionary for Azure datastorage accesskeys. 'blob_storage_key' key has an access key for the Azure Blob Storage (see [how to get the key](http://justazure.com/azure-blob-storage-part-two-getting-started/)), and 'sql_key_tedious' key has a 'tedious' login information for the Azure SQL datastorage (see an [example](https://github.com/pekim/tedious/wiki/Connect-to-sql-in-azure)).
 
 # Run
 

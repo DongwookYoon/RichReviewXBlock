@@ -1,25 +1,54 @@
+/**
+ * Migrate blob storage
+ *
+ * Created by Colin
+ */
 
-const fs = require('fs');
-const path = require('path');
 const node_util = require('util');
 
 const azure = require('azure-storage');
 
-const env  = require('../lib/env');
 const util = require('../util');
 
-const azure_config = env.azure_config;
+/**
+ * 'FROM' Azure Storage (migrate)=> 'TO' Azure Storage
+ */
+const azure_config = {
+  storage_FROM: {
+    account_name: "richreview",
+    host: "https://richreview.blob.core.windows.net/",
+    access_key: "ANmkaV4qBNURDOHL72e+iPUshpR4oz4Ga1h7wb6RBb/DPCOylQ32vtEqwZfW+SVgkwHlz8GoFFDGtBkLl9l2aQ==",
+    connection_string: "DefaultEndpointsProtocol=https;AccountName=richreview;AccountKey=ANmkaV4qBNURDOHL72e+iPUshpR4oz4Ga1h7wb6RBb/DPCOylQ32vtEqwZfW+SVgkwHlz8GoFFDGtBkLl9l2aQ==;EndpointSuffix=core.windows.net",
+    SAS_TOKEN: ""
+  },
+  storage_TO: {
+    account_name: "richreview2ca",
+    host: "https://richreview2ca.blob.core.windows.net/",
+    access_key: "3H3bp0hEgaJURELx/dx5p1S2scvKW6HZd1li3hOn9SccofvlJZsvDJx7E14oULU2qV9pMIMynN6LXXbBQdITxA==",
+    connection_string: "DefaultEndpointsProtocol=https;AccountName=richreview2ca;AccountKey=3H3bp0hEgaJURELx/dx5p1S2scvKW6HZd1li3hOn9SccofvlJZsvDJx7E14oULU2qV9pMIMynN6LXXbBQdITxA==;EndpointSuffix=core.windows.net"
+  }
+};
 
 /**
- * SAS Token to get access to blobs from non-CA Azure Storage
+ * SAS Token to get access to blobs from your 'FROM' Azure Storage
  *
- * go to azure to regenerate the SAS token
+ * go to Azure Portal to regenerate the SAS token
  */
-const SASToken = "";
+const SASToken = azure_config.SAS_TOKEN;
 
+/**
+ * Client of 'FROM' Azure Storage
+ */
 const blobService = azure.createBlobService(azure_config.storage.connection_string).withFilter(new azure.ExponentialRetryPolicyFilter());
+
+/**
+ * Client of 'FROM' Azure Storage
+ */
 const blobCAService = azure.createBlobService(azure_config.storage_ca.connection_string).withFilter(new azure.ExponentialRetryPolicyFilter());
 
+/**
+ * Script to promisify client commands
+ */
 const promisifyBlobService = function(service) {
   const pub = { };
   Object.keys(azure.BlobService.prototype).forEach((command) => {
@@ -27,12 +56,13 @@ const promisifyBlobService = function(service) {
   });
   return pub;
 };
-
+/*******************************************************/
 const BlobService = promisifyBlobService(blobService);
 const BlobCAService = promisifyBlobService(blobCAService);
 
 /**
- * List all containers from Azure Storage (non CA)
+ * List all containers from an Azure Storage
+ * @param service {BlobService} - the client of storage to list
  */
 function listContainers(service) {
   const maxResults = 10;
@@ -72,15 +102,12 @@ function listContainers(service) {
     });
 }
 
-//listContainers(BlobService);
-//listContainers(BlobCAService);
-
 /**
- * List all blobs from given container from Azure Storage (non CA)
+ * List all blobs from given container from an Azure Storage
  *
- * @param service
- * @param container
- * @param prefix?
+ * @param {BlobService} service   - the client of storage to list
+ * @param {string}      container - the name of the container to list
+ * @param {string}      [prefix]  - the subdirectory to list
  */
 function listBlobs(service, container, prefix) {
   const COUNT = {};
@@ -123,17 +150,14 @@ function listBlobs(service, container, prefix) {
 }
 
 /**
- * In azure blob (not CA),
+ * Test migration of a container
  *
- * There are 3 containers: cdn, course, math2220-fall2015
- * There is 1 special blob: , data
+ * @param {string} [container="cdn"] - container to migrate
  */
-
-/**
- * Test migration of cdn container from non-CA Azure Storage to CA Azure Storage
- */
-function test_migration() {
-  const container = "cdn";
+function test_migration(container) {
+  if(!container) {
+    container = "cdn";
+  }
 
   const relocate_block_blob = (blob_name) => {
     const URI = azure_config.storage.host+container+"/"+blob_name+SASToken;
@@ -163,6 +187,9 @@ function test_migration() {
 /**
  * This function deals with migrating specific blobs in case migrate_exec() fails.
  *
+ * @param {string} container - the container to migrate
+ * @param {string} publicAccessLevel - the access level of the container: 'container', 'blob', etc
+ * @param {string} [prefix] - the subdirectory to migrate
  */
 function migrate_container_special(container, publicAccessLevel, prefix) {
   const maxResults = 5;
@@ -171,12 +198,12 @@ function migrate_container_special(container, publicAccessLevel, prefix) {
 
   const migrate_block_blob = (blob_name) => {
     const URI = azure_config.storage.host+container+"/"+blob_name+SASToken;
-    util.printer("BLOB MIGRATE","migrating: "+URI);
+    //util.printer("BLOB MIGRATE","migrating: "+URI);
     return new Promise(function(resolve, reject) {
       BlobCAService.startCopyBlob(URI, container, blob_name)
         .then((res) => { resolve(res); })
         .catch((err) => {
-          util.printer("BLOB MIGRATE","MASSIVE FALIURE :: MASSIVE FALIURE :: MASSIVE FALIURE\nURI= "+URI+"\nERR="+err);
+          util.printer("BLOB MIGRATE","FALIURE, URI= "+URI+"\nERR="+err);
           fails.push(URI);
           resolve(err);
         });
@@ -185,10 +212,14 @@ function migrate_container_special(container, publicAccessLevel, prefix) {
 
   const scanBlobs = (currentToken) => {
     let promise = null;
-    if (currentToken) {
-      promise = BlobService.listBlobsSegmentedWithPrefix(container, prefix, currentToken, {maxResults});
-    } else {
-      promise = BlobService.listBlobsSegmentedWithPrefix(container, prefix, null, {maxResults});
+    if (currentToken && prefix) {
+      promise = BlobService.listBlobsSegmentedWithPrefix(container, prefix, currentToken);
+    } else if (!currentToken && prefix) {
+      promise = BlobService.listBlobsSegmentedWithPrefix(container, prefix, null);
+    } else if (currentToken && !prefix) {
+      promise = BlobService.listBlobsSegmented(container, currentToken);
+    } else { // (!currentToken && !prefix)
+      promise = BlobService.listBlobsSegmented(container, null);
     }
     return promise
       .then((results) => {
@@ -225,22 +256,35 @@ function migrate_container_special(container, publicAccessLevel, prefix) {
 }
 
 /**
- * For the files that weren't migrated properly, we want to download them and manually upload them again
+ * Download container blobs to your directory
+ *
+ * @param {BlobService} service - the client of storage to download
+ * @param {string} container - the container to download
+ * @param {Array.<string>} dl_arr - list of blobs and their prefix to download
+ * @param {string} [dl_to_path=__dirname + "/TEMP"] the directory to download to
  */
-function download_files_misc () {
-  const dl_arr = [ ];
-  const container = "data";
-  const path_to = "/home/fireofearth/Machines/richreview/TMP/";
+function download_files_misc (service, container, dl_arr, dl_to_path) {
+  if(!dl_arr) {
+    dl_arr = [ ];
+  }
+  if(!container) {
+    container = "data";
+  }
+  if(!dl_to_path) {
+    dl_to_path = __dirname + "/TEMP";
+  }
+  if(!/\/$/.test(dl_to_path)) {
+    dl_to_path = dl_to_path + "/";
+  }
   const promises = dl_arr.map((blob_name) => {
-    return BlobService.getBlobToLocalFile(container, "audio/"+blob_name, path_to+blob_name);
+    return service.getBlobToLocalFile(container, blob_name, dl_to_path+blob_name);
   });
   return Promise.all(promises).then((b) => { util.printer("BLOB MIGRATE", "done"); });
 }
 
-//download_files_misc();
-
 /**
  * We use this to search for the files that weren't migrated properly
+ * HOTFIX
  */
 function check_consistency_misc () {
   const container = "data";
@@ -300,10 +344,6 @@ function check_consistency_misc () {
     });
 }
 
-//check_consistency_misc();
-
-//migrate_container_special("data", "Blob", "audio");
-
 /**
  * Migrate a single container
  *
@@ -360,8 +400,6 @@ function migrate_container(container, publicAccessLevel) {
     });
 }
 
-//migrate_container("data", "Blob");
-
 /**
  *
  * Migrate all containers and blobs inside of them
@@ -403,4 +441,65 @@ function migrate_exec() {
     });
 }
 
+/*****************/
+
+/**
+ * In Azure Storage
+ *
+ * There are 3 containers: cdn, course, math2220-fall2015
+ * There is 1 special blob: data
+ */
+
+/**
+ * List all containers from an Azure Storage
+ * @param service {BlobService} - the client of storage to list
+ */
+//listContainers(service)
+
+/**
+ * List all blobs from given container from an Azure Storage
+ *
+ * @param {BlobService} service   - the client of storage to list
+ * @param {string}      container - the name of the container to list
+ * @param {string}      [prefix]  - the subdirectory to list
+ */
+//listBlobs(service, container, prefix)
+
+/**
+ * Test migration of a container
+ *
+ * @param {string} [container="cdn"] - container to migrate
+ * @return {*}
+ */
+//test_migration(container)
+
+/**
+ * This function deals with migrating specific blobs in case migrate_exec() fails.
+ *
+ * @param {BlobService} container - the container to migrate
+ * @param {string} publicAccessLevel - the access level of the container: 'container', 'blob', etc
+ * @param {string} [prefix] - the subdirectory to migrate
+ */
+//migrate_container_special(container, publicAccessLevel, prefix)
+
+/**
+ * Download container blobs to your directory
+ *
+ * @param {BlobService} service - the client of storage to download
+ * @param {string} container - the container to download
+ * @param {Array.<string>} dl_arr - list of blobs and their prefix to download
+ * @param {string} [dl_to_path=__dirname + "/TEMP"] the directory to download to
+ */
+//download_files_misc (service, container, dl_arr, dl_to_path)
+
+/**
+ * We use this to search for the files that weren't migrated properly
+ * HOTFIX
+ */
+//check_consistency_misc ()
+
+/**
+ *
+ * Migrate all containers and the blobs inside of the containers
+ */
 //migrate_exec();

@@ -58,16 +58,6 @@ async function testCache() {
   console.log("Cache response : " + await RedisCacheClient.client("LIST"));
 }
 
-// testCache();
-
-const test_specs = () => {
-  //console.log(JSON.stringify(RedisCacheClient.server_info, null, '\t'));
-  console.log(JSON.stringify(RedisCacheClient.redis_version));
-
-};
-
-// test_specs();
-
 const test_migration_hash = () => {
   util.debug("starting test_migration_hash");
   return RedisLocalClient.HMSET("test", "key1", "val1", "key2", "val2", "key3", "val3")
@@ -138,8 +128,6 @@ const test_migration_list = () => {
     });
 };
 
-//test_migration_list();
-
 const exec = (cb) => {
   const treat_entry = (entry) => {
     return RedisLocalClient.TYPE(entry).then(cb.bind(null, entry));
@@ -171,6 +159,9 @@ const exec = (cb) => {
   return scan_loop();
 };
 
+/**
+ * Count the number of keys in your Redis server by datatype
+ */
 const exec_count = () => {
   const TYPES = {
     hash: 0,
@@ -210,6 +201,10 @@ const exec_count = () => {
     });
 };
 
+/**
+ * Migrate the keys from your Redis server to the Azure Redis Cache
+ * NOTE: only migrates hash and list datatypes
+ */
 const exec_import = () => {
   const FAILS = {
     hash: 0,
@@ -269,6 +264,9 @@ const exec_import = () => {
     });
 };
 
+/**
+ * Count the number of keys in the Azure Redis Cache by datatype
+ */
 const exec_cache_count = () => {
   const TYPES = {
     hash: 0,
@@ -335,6 +333,10 @@ const exec_cache_count = () => {
     });
 };
 
+/**
+ * resets the Azure Redis Cache
+ * WARNING: remember to backup and export (no script yet) the cache before resetting!
+ */
 const clear_redis_cache = () => {
   return RedisCacheClient.FLUSHALL()
     .then((s) => {
@@ -343,18 +345,34 @@ const clear_redis_cache = () => {
     });
 };
 
-/*in local redis
-    hash   2413,
-    list   1767,
-    set  0,
-    string   0,
-    unknown  0
-}*/
+/**********************/
 
+//testCache();
+//test_migration_hash();
+//test_migration_list();
+
+/**
+ * Count the number of keys in your Redis server by datatype
+ */
 //exec_count();
 
-//exec_import();
-
+/**
+ * Count the number of keys in the Azure Redis Cache by datatype
+ */
 //exec_cache_count();
 
-//clear_redis_cache();
+/**
+ * Migrate the keys from your Redis server to the Azure Redis Cache
+ * NOTE: only migrates hash and list datatypes
+ */
+//exec_import();
+
+/**********************/
+
+/**
+ * resets the Azure Redis Cache
+ * WARNING: remember to backup and export (no script yet) the cache before resetting!
+ */
+// clear_redis_cache();
+
+/**********************/

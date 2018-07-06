@@ -1,6 +1,6 @@
 # UBC Study
 
-Here are the new redis database models for the UBC study
+These are the (new) redis database models for UBC courses
 
 ## User
 
@@ -61,7 +61,9 @@ Search for assignments belonging to [course-dept] and [course-number] by `keys a
  -   "marked"    indicates assignment is marked 
  -   default     (error) the student cannot see the assignment
 
-**assignment data** ( `asgmt:<userid>:<course-dept>:<course-number>:<title-slug>:groups` ) a set containing all the groupid of the groups associated with this assignment
+**assignment groups** ( `asgmt:<userid>:<course-dept>:<course-number>:<title-slug>:groups` ) a set containing all the groupid of the groups associated with this assignment
+
+**Not sure if useful V V V**
 
  /**
   * User ( usr:<userid> )

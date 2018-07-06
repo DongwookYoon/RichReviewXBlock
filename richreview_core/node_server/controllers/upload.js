@@ -252,7 +252,7 @@ function postRespUploadDocLayout(req, res, myuuid) {
         .then(Post_UploadDocLayout_CreateAzureBlob_VsDoc)
         .then(Post_UploadDocLayout_CreateDocAndGroupDb)
         .then(function(_ctx) {
-            var redirect_url = js_utils.getHostname() +
+            var redirect_url = process.env.HOST_URL +
                 "/viewer?access_code="+_ctx.pdf_hash +
                 "&docid=" + _ctx.docid.substring(4) +
                 "&groupid=" + _ctx.groupid.substring(4);

@@ -182,7 +182,7 @@ exports.get_observe = function(req, res){
                     groupid: "",
                     pdf_url: azure.BLOB_HOST + pdfid+ "/doc.pdf",
                     pdfjs_url: azure.BLOB_HOST + pdfid + "/doc.vs_doc",
-                    serve_dbs_url: js_utils.getHostname() + '/lti_dbs?',
+                    serve_dbs_url: process.env.HOST_URL + '/lti_dbs?',
                     lti: true,
                     lti_data: {}
                 };
@@ -258,7 +258,7 @@ exports.get_discuss_rr = function(req, res){
                 groupid: "",
                 pdf_url: azure.BLOB_HOST + DISCUSS_PDF_ID + "/doc.pdf",
                 pdfjs_url: azure.BLOB_HOST + DISCUSS_PDF_ID + "/doc.vs_doc",
-                serve_dbs_url: js_utils.getHostname() + '/lti_dbs?',
+                serve_dbs_url: process.env.HOST_URL + '/lti_dbs?',
                 lti: true,
                 lti_data: {}
             };

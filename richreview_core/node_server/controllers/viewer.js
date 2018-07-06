@@ -28,7 +28,7 @@ exports.page = function (req, res) {
             groupid: urlqueries["groupid"] || "",
             pdf_url: azure.BLOB_HOST + urlqueries["access_code"] + "/doc.pdf",
             pdfjs_url: azure.BLOB_HOST + urlqueries["access_code"] + "/doc.vs_doc",
-            serve_dbs_url: js_utils.getHostname() + '/dbs?',
+            serve_dbs_url: process.env.HOST_URL + '/dbs?',
             pmo: urlqueries["pmo"] || "",
             comment: urlqueries["comment"] || "",
         };

@@ -15,7 +15,7 @@ exports.logout = function(req, res) {
     req.flash('success', 'You are now logged out');
     res.redirect(
         'https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue='+
-        js_utils.getHostname()
+        process.env.HOST_URL
     );
 };
 

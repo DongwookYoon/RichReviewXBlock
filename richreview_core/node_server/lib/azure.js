@@ -8,27 +8,18 @@ const fs = require('fs');
 
 // import npm modules
 const Promise = require("promise"); // jshint ignore:line
-const nconf = require('nconf');
 const storage = require('azure-storage');
 const request = require('request');
-const tedious = require('tedious');
 
 // import libraries
 const env = require('../lib/env');
 const util = require('../util');
 
-const BLOB_HOST = process.env.BLOB_HOST;
-const ACCOUNT = process.env.STORAGE_ACCOUNT;
+const BLOB_HOST = env.azure_config.storage.host;
+const ACCOUNT = env.azure_config.storage.account_name;
+const STORAGE_KEY = env.azure_config.storage.access_key;
 
-nconf.env().file({ file: env.config_files.azure_keys });
-
-const sql_key_tedious = nconf.get("sql_key_tedious");
-const blob_storage_key = process.env.STORAGE_KEY;
-
-var blob_svc = storage.createBlobService(ACCOUNT, blob_storage_key, BLOB_HOST).withFilter(new storage.ExponentialRetryPolicyFilter());
-
-var ConnectionTD = tedious.Connection;
-var RequestTD = tedious.Request;
+const blobService = storage.createBlobService(ACCOUNT, STORAGE_KEY, BLOB_HOST).withFilter(new storage.ExponentialRetryPolicyFilter());
 
 exports.getSas = function(container, blob, expiry){ // expires in seconds
     // helpful links:
@@ -46,7 +37,7 @@ exports.getSas = function(container, blob, expiry){ // expires in seconds
         }
     };
 
-    var sas = blob_svc.generateSharedAccessSignature(container, blob, policy);
+    var sas = blobService.generateSharedAccessSignature(container, blob, policy);
     return sas;
 };
 
@@ -73,50 +64,9 @@ exports.BlobFileDownload = function(c, b, f, cb){
     rd.pipe(wr);
 };
 
-/**
- * TODO: azure.sqlQuery() is obsolete, can delete
- *
- * @param cmd
- * @param callback
- */
-exports.sqlQuery = function(cmd, callback){
-    var sqlconn = new ConnectionTD(sql_key_tedious);
-    sqlconn.on('connect', function(error) {
-            if(error){
-                console.log('Error from sqlconn.on');
-                console.log(error);
-                callback(error);
-            }
-            else{
-                var result = [];
-                sqlreq = new RequestTD(cmd, function(err, rowCount) {
-                    if (error) {
-                        console.log('Error from RequestTD');
-                        console.log(error);
-                        callback(error);
-                    } else {
-                        callback(error, result);
-                    }
-                    sqlconn.close();
-                });
-
-                sqlreq.on('row', function(columns) {
-                    var r = {};
-                    for(var i = 0; i < columns.length; ++i){
-                        r[columns[i].metadata.colName] = columns[i].value;
-                    }
-                    result.push(r);
-                });
-
-                sqlconn.execSql(sqlreq);
-            }
-        }
-    );
-};
-
 exports.CreateContainerIfNotExist = function(ctx){
     return new Promise(function(resolve, reject){
-        blob_svc.createContainerIfNotExists(
+        blobService.createContainerIfNotExists(
             ctx.container,
             { publicAccessLevel : 'blob' },
             function(err, result){
@@ -133,7 +83,7 @@ exports.CreateContainerIfNotExist = function(ctx){
 
 exports.DoesBlobExist = function(ctx){
     return new Promise(function(resolve, reject){
-        blob_svc.doesBlobExist(ctx.container, ctx.blob, function(err, resp){
+        blobService.doesBlobExist(ctx.container, ctx.blob, function(err, resp){
             if(err){
                 reject(err);
             }
@@ -147,7 +97,7 @@ exports.DoesBlobExist = function(ctx){
 
 exports.GetBlobToText = function(ctx){
     return new Promise(function(resolve, reject){
-        blob_svc.getBlobToText(ctx.container, ctx.blob, function(err, resp){
+        blobService.getBlobToText(ctx.container, ctx.blob, function(err, resp){
             if(err){
                 reject(err);
             }
@@ -161,7 +111,7 @@ exports.GetBlobToText = function(ctx){
 
 exports.SetBlobFromText = function(ctx){
     return new Promise(function(resolve, reject){
-        blob_svc.createBlockBlobFromText(ctx.container, ctx.blob, ctx.text, function(err, resp){
+        blobService.createBlockBlobFromText(ctx.container, ctx.blob, ctx.text, function(err, resp){
             if(err){
                 reject(err);
             }
@@ -175,7 +125,7 @@ exports.SetBlobFromText = function(ctx){
 
 exports.CreateBlobFromLocalFile = function(ctx) {
     return new Promise(function(resolve, reject) {
-            blob_svc.createBlockBlobFromLocalFile(
+            blobService.createBlockBlobFromLocalFile(
                 ctx.container,
                 ctx.blob,
                 ctx.blob_localfile_path,
@@ -194,7 +144,7 @@ exports.CreateBlobFromLocalFile = function(ctx) {
 
 exports.ListBlobsWithPrefix = function(container, prefix){
     return new Promise(function(resolve, reject){
-        blob_svc.listBlobsSegmentedWithPrefix(container, prefix, undefined, function(err, resp){
+        blobService.listBlobsSegmentedWithPrefix(container, prefix, undefined, function(err, resp){
             if(err){
                 reject(err);
             }
@@ -206,5 +156,5 @@ exports.ListBlobsWithPrefix = function(container, prefix){
     });
 };
 
-exports.svc = blob_svc;
+exports.svc = blobService;
 exports.BLOB_HOST = BLOB_HOST;

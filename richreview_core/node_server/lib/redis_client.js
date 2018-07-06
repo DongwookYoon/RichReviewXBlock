@@ -18,7 +18,7 @@ const util = require('../util');
 let redisClient = null;
 
 if(process.env.NODE_ENV === 'production') {
-  if(process.env.HOSTNAME === process.env.RICHREVIEW_CA_VM) {
+  if(process.env.HOSTNAME === env.node_config.RICHREVIEW_CA_VM) {
     util.start("using redis cache for RichReview CA VM");
     redisClient = redis.createClient(
       env.redis_config.redis_cache.port,
@@ -30,7 +30,7 @@ if(process.env.NODE_ENV === 'production') {
         }
       }
     );
-  } else if(process.env.HOSTNAME === process.env.RICHREVIEW_VM) {
+  } else if(process.env.HOSTNAME === env.node_config.RICHREVIEW_VM) {
     util.start("using remote redis server for RichReview VM");
     redisClient = redis.createClient(env.redis_config.port, env.redis_config.url);
     redisClient.auth(env.redis_config.auth);

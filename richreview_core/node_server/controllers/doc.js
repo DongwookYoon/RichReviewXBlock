@@ -12,7 +12,7 @@ exports.get = function(req, res){
             cur_page: "mydocs",
             user: req.user,
             BLOB_HOST: azure.BLOB_HOST,
-            HOST: js_utils.getHostname() + "/",
+            HOST: process.env.HOST_URL + "/",
             user_data: encodeURIComponent(JSON.stringify(req.user))
         }
     );

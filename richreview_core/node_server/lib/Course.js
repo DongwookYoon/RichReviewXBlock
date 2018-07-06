@@ -14,12 +14,6 @@ const js_utils = require('./js_utils.js');
 const RedisClient = require('./redis_client').RedisClient;
 const util = require('../util');
 
-const Group = require('./Group').Group;
-const Doc = require('./Doc').Doc;
-
-const Course = {}
-
-
-
+const Course = {};
 
 exports.Course = Course;

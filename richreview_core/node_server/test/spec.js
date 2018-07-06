@@ -15,29 +15,22 @@ let ClassHandler = null;
 
 describe("spec", function() {
 
-    before(function () {
-        // require('../www/www');
-        R2D = require('../lib/r2d');
-        js_utils = require('../lib/js_utils');
-        RedisClient = require('../lib/redis_client').RedisClient;
-        PilotHandler = require('../lib/pilot_handler');
-        ClassHandler = require('../lib/class_handler');
-    });
+  before(function () {
+    RedisClient = require('../lib/redis_client').RedisClient;
+    R2D = require('../lib/r2d');
+    js_utils = require('../lib/js_utils');
+    PilotHandler = require('../lib/pilot_handler');
+    ClassHandler = require('../lib/class_handler');
+  });
 
-    beforeEach(function () {
+  beforeEach(function () { });
 
-    });
+  after(function () { });
 
-    after(function () {
-
-    });
-
-    afterEach(function() {
-
-    });
+  afterEach(function() { });
 
     it("test redis 1", (done) => {
-        return RedisClient.SET("mykey", "v")
+        RedisClient.SET("mykey", "v")
             .then((b) => {
                 util.debug("after set");
                 util.debug(b);
@@ -102,26 +95,25 @@ describe("spec", function() {
 
     // TODO: write some tests
     it("ClassHandler: create user test@ubc.ca", (done) => {
-        const email = "test@ubc.ca";
-        const password = "test_password_123";
-        util.testl("user's id is " + ClassHandler.makeID(email));
-        ClassHandler.createUser("test@ubc.ca", password)
-            .then((user) => {
-                util.testl(JSON.stringify(user));
-                expect(user.email).to.equal("test@ubc.ca");
-                const id = ClassHandler.makeID(email);
-                return RedisClient.HGETALL("usr:"+id);
-            })
-            .then((user_obj) => {
-                util.testl(JSON.stringify(user_obj));
-                expect(user_obj.email).to.equal("test@ubc.ca");
-                ClassHandler.
-                done();
-            })
-            .catch((err) => {
-                assert.fail();
-
-            });
+      const email = "test@ubc.ca";
+      const password = "test_password_123";
+      util.testl("user's id is " + ClassHandler.makeID(email));
+      ClassHandler.createUser("test@ubc.ca", password)
+        .then((user) => {
+          util.testl(JSON.stringify(user));
+          expect(user.email).to.equal("test@ubc.ca");
+          const id = ClassHandler.makeID(email);
+          return RedisClient.HGETALL("usr:"+id);
+        })
+        .then((user_obj) => {
+          util.testl(JSON.stringify(user_obj));
+          expect(user_obj.email).to.equal("test@ubc.ca");
+        })
+        .catch((err) => {
+          util.error(err);
+          assert.fail();
+        })
+        .finally(done);
     });
 
   it("ClassHandler: validate ", (done) => {
@@ -136,6 +128,9 @@ describe("spec", function() {
           assert.fail();
         }
         done();
+      })
+      .catch((err) => {
+        assert.fail();
       });
 
   });
@@ -143,19 +138,22 @@ describe("spec", function() {
     it("ClassHandler, R2D: delete user test@ubc.ca", (done) => {
         const email = "test@ubc.ca";
         R2D.User.prototype.deleteUserByEmail(email)
-            .then((b) => {
-                return R2D.User.prototype.findByEmail(email);
-            })
-            .then((u) => {
-                expect(u).to.equal(null);
-
-                const id = ClassHandler.makeID(email);
-                return RedisClient.HGETALL("usr:"+id);
-            })
-            .then((u) => {
-              util.testl(u);
-              done();
-            });
+          .then((b) => {
+              return R2D.User.prototype.findByEmail(email);
+          })
+          .then((u) => {
+              expect(u).to.equal(null);
+              const id = ClassHandler.makeID(email);
+              return RedisClient.HGETALL("usr:"+id);
+          })
+          .then((u) => {
+            util.testl(u);
+            return Promise.resolve();
+          })
+          .catch((err) => {
+            util.error(err);
+          })
+          .finally(done);
 
 
     });

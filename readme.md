@@ -4,14 +4,14 @@
 
 ### Configure the VM
 
-We are using Ubuntu 19.04 LTS
+We are using Ubuntu 18.04 LTS
 
 ```bash
 sudo apt update
 sudo apt upgrade
 sudo apt autoremove
 # here are some utilities you may need later on
-sudo apt install build-essential unzip
+sudo apt install build-essential unzip python-pip
 ```
 
 ### Install Node
@@ -85,11 +85,28 @@ unzip ssl.zip
 rm ssl.zip
 ```
 
-Configure MuPla for PDFs
+### Configure MuPla for PDFs
+
+You need `build-essential` to compile mupla source code. Just call make to do so.
 
 ```bash
 cd ~/RichReviewXBlock/mupla_core/mupla
 make
+```
+
+### Configure Django Server
+
+Install the packages for python using python package manager pip. You installed pip from `pip-python`.
+
+```bash
+python --version
+#
+pip freeze
+# should show the python packages installed on the VM already 
+pip install Django==1.8
+pip install PyPDF2==1.24
+cd ~/RichReviewXBlock/mupla_core/django_server
+sudo python manage.py runserver 5000
 ```
 
 ### Test RichReview

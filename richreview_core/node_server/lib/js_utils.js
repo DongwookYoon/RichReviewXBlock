@@ -3,9 +3,7 @@
  */
 
 // import built-in modules
-const path = require('path');
 const fs = require('fs');
-const os = require("os");
 const crypto = require('crypto');
 
 // import npm modules
@@ -348,27 +346,6 @@ exports.Email = function(frommail, tomail, subject, textbody, htmlbody){
             });
         }
     );
-};
-
-/**
- * TODO: clear comment
- */
-/*exports.getHostname = (function(){
-    var url = "";
-    return function(){
-        if(url === ""){
-            url = 'localhost:8001';
-            if(os.hostname() === 'richreview'){
-                url = 'richreview.net';
-            }
-            url = 'https://'+url;
-            console.log("Hostname :", url);
-        }
-        return url;
-    };
-}());*/
-exports.getHostname = function () {
-    return process.env.HOST_URL;
 };
 
 exports.identifyUser = function(req, res){

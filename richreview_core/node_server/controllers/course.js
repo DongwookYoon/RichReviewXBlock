@@ -533,7 +533,7 @@ exports.get = function (req, res) {
                                 cur_page: 'CmsInstructor',
                                 user: req.user,
                                 BLOB_HOST: azure.BLOB_HOST,
-                                HOST: js_utils.getHostname() + "/",
+                                HOST: process.env.HOST_URL + "/",
                                 key: key,
                                 review: req.query['review']
                             }
@@ -555,7 +555,7 @@ exports.get = function (req, res) {
                                     cur_page: 'CmsInstructor',
                                     user: req.user,
                                     BLOB_HOST: azure.BLOB_HOST,
-                                    HOST: js_utils.getHostname() + "/",
+                                    HOST: process.env.HOST_URL + "/",
                                     key: key
                                 }
                             );
@@ -566,7 +566,7 @@ exports.get = function (req, res) {
                                     cur_page: 'CmsStudent',
                                     user: req.user,
                                     BLOB_HOST: azure.BLOB_HOST,
-                                    HOST: js_utils.getHostname() + "/",
+                                    HOST: process.env.HOST_URL + "/",
                                     key: key
                                 }
                             );

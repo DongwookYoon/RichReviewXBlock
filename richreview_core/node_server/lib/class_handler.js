@@ -2,11 +2,14 @@
 
 const crypto = require('crypto');
 
-const R2D = require('./r2d');
 const RedisClient = require('./redis_client').RedisClient;
+const R2D = require('./r2d');
+const Course = require('./Course');
+
 const env = require('./env');
 const js_utils = require('./js_utils');
 const util = require('../util');
+
 const dummyData = require('../data/dummy_data');
 
 /******************/
@@ -101,147 +104,13 @@ exports.makeID = makeID;
 exports.createUser = createUser;
 exports.validatePassword = validatePassword;
 
-/*
- * Course ( `course:<course-dept>:<course-number>` )
- *
- * userid is sha1 hash with salt
- *
- * course properties ( `course:<course-dept>:<course-number>:prop` )
- * @type hash / class
- * @member is_active {boolean} - true if course is active, false otherwise
- * @member name  {string} - name of the course; defaults to `<course-dept> <course-number>`
- *
- * course instructors ( `course:<course-dept>:<course-number>:instructors` ) is of type set containing the userid of instructors of course
- *
- * course active students ( `course:<course-dept>:<course-number>:students:active` ) is of type set containing the userid of active students of course
- *
- * course blocked students ( `course:<course-dept>:<course-number>:students:blocked` ) is of type set containing the userid of blocked students of course
- *
- */
+/********************/
+/** course methods **/
+/********************/
 
-/**
- *
- * @param dept {string}
- * @param number {string}
- * @param is_active {boolean} - whether the course is active or disabled
- * @param name {string}
- * @constructor
- */
-const Course = function(dept, number, is_active, name) {
-  this.dept = dept;
-  this.number = number;
-  this.is_active = is_active;
-  this.name = name;
-};
-
-Course.cache = (function() {
-  let cache = {};
-  const pub = {};
-
-  const loadFromDBInternal = (course_key) => {
-    return RedisClient.HGETALL(course_key)
-      .then((course_prop) => {
-        const course_arr = course_key.split(':');
-        const course_dept = course_arr[1];
-        const course_nbr = course_arr[2];
-        const course = new Course(
-          course_dept, course_nbr, course_prop.is_active, course_prop.name
-        );
-        cache[course_key] = course;
-        return course;
-      });
-  };
-
-  pub.loadFromDB = (course_dept, course_nbr) => {
-    const course_key = "course:"+course_dept+":"+course_nbr+":prop";
-    return loadFromDBInternal(course_key);
-  };
-
-  pub.populate = () => {
-    return RedisClient.KEYS("course:*:*:prop")
-      .then((course_keys) => {
-        const promises = course_keys.map(loadFromDBInternal);
-        return Promise.all(promises);
-      })
-      .then((courses) => {
-        util.logger("Course", courses.length+" courses loaded");
-      })
-      .catch((err) => {
-        util.error(err);
-      });
-  };
-
-  pub.get = (course_dept, course_nbr) => {
-    const course_key = "course:"+course_dept+":"+course_nbr+":prop";
-    return new Promise((resolve, reject) => {
-      if(cache.hasOwnProperty(course_key)) {
-        resolve();
-      } else {
-        reject(course_dept+" "+course_nbr+" does not exist");
-      }
-    });
-  };
-
-  pub.populate();
-
-  return pub;
-}());
-
-
-
-Course.prototype.getInstructors = function() {
-  const cb = (instr_id) => {
-    return R2D.User.prototype.findById(instr_id);
-  };
-
-  const course_instr_key = "course:"+this.dept+":"+this.number+":instructors";
-  return RedisClient.SMEMBERS(course_instr_key)
-    .then((instr_ids) => {
-      const promises = instr_ids.map(cb);
-      return Promise.all(promises);
-    });
-};
-
-Course.prototype.getActiveStudents = function() {
-  const cb = (instr_id) => {
-    return R2D.User.prototype.findById(instr_id);
-  };
-
-  const course_instr_key = "course:"+this.dept+":"+this.number+":active:students";
-  return RedisClient.SMEMBERS(course_instr_key)
-    .then((instr_ids) => {
-      const promises = instr_ids.map(cb);
-      return Promise.all(promises);
-    });
-};
-
-Course.prototype.getBlockedStudents = function() {
-  const cb = (instr_id) => {
-    return R2D.User.prototype.findById(instr_id);
-  };
-
-  const course_instr_key = "course:"+this.dept+":"+this.number+":blocked:students";
-  return RedisClient.SMEMBERS(course_instr_key)
-    .then((instr_ids) => {
-      const promises = instr_ids.map(cb);
-      return Promise.all(promises);
-    });
-};
-
-const createCourse = (course_dept, course_nbr, course_name) => {
-  const course_key = "course:"+course_dept+":"+course_nbr;
-  return RedisClient.HMSET(
-    course_key,
-    "course_is_active", false,
-    name, course_name
-  )
-    .then((b) => {
-      return Course.cache.loadFromDB(course_dept, course_nbr);
-    });
-};
-
-const deleteCourse = (course_dept, course_nbr) => {
-
+const deleteCourse = (course) => {
+  // course.delete
+  // const course_key = "course:"+course_dept+":"+course_nbr;
 };
 
 const addInstructorToCourse = (course_dept, course_nbr, user) => {

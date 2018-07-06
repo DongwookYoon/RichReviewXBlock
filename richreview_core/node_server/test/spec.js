@@ -154,8 +154,8 @@ describe("spec", function() {
             util.error(err);
           })
           .finally(done);
-
-
     });
+
+    it("ClassHandler, ")
 
 });

@@ -46,6 +46,7 @@ richreview_core/node_server/cache/
 richreview_core/node_server/_temp/
 richreview_core/node_server/passport-azure-ad/node_modules/
 richreview_core/node_server/dist/
+richreview_core/node_server/cdn/
 
 #pdf_batch data
 utils/pdf_batch/data/

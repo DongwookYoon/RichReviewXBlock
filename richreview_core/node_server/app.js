@@ -79,7 +79,8 @@ app.use(flash());
 
 app.use((req, res, next) => {
     // req.session.latestUrl = req.originalUrl; // TODO: ask Dongwook about this
-    res.locals.cdn_endpoint = env.azure_config.cdn.endpoint;
+    //res.locals.cdn_endpoint = env.azure_config.cdn.endpoint;
+    res.locals.cdn_endpoint = "CDN";
     res.locals.host_url     = env.node_config.HOST_URL;
     res.locals.flashes = req.flash();
     res.locals.user = req.user || null;
@@ -135,8 +136,9 @@ function setupStaticPages(){
     );
 
     app.use(
-        '/rrr',
-        express.static('/home/rrr/', { maxAge: 30*1000 })
+        '/CDN',
+        express.static(path.resolve(__dirname, 'cdn'), { maxAge: 30*1000 })
+
     );
 }
 

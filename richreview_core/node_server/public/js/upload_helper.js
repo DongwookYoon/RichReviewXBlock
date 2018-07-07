@@ -2,11 +2,17 @@
  * Created by Dongwook on 12/13/2014.
  */
 
-
+/**
+ * switch the server url according to browser hostname
+ * TODO: pass node env variable as HOSTNAME instead of hardcode
+ */
 var SERVER_URL = null;
-console.log("DEBUG: document.location.hostname="+document.location.hostname);
-if (document.location.hostname === "localhost") {
+var HOSTNAME = document.location.hostname;
+console.log("DEBUG: document.location.hostname="+HOSTNAME);
+if (HOSTNAME === "localhost") {
     SERVER_URL = "https://localhost:8001/";
+} else if (HOSTNAME === "richreview.net") {
+    SERVER_URL = "https://richreview.net/";
 } else {
     SERVER_URL = "https://40.85.241.164:443/";
 }

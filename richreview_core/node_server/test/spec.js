@@ -156,6 +156,6 @@ describe("spec", function() {
           .finally(done);
     });
 
-    it("ClassHandler, ")
+    //it("ClassHandler, ")
 
 });

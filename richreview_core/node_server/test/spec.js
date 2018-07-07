@@ -95,6 +95,7 @@ function specModel() {
       })
       .then((user_obj) => {
         expect(user_obj.email).to.equal("jflask@ubc.ca");
+        expect(user_obj.nick).to.equal("jflask");
         return null;
       })
       .catch((err) => {
@@ -186,22 +187,35 @@ function specModel() {
       .finally(done);
   });
 
-  it("ClassHandler: add users as students, ", (done) => {
-    const emails = ["amoore@ubc.ca", "gfleming@ubc.ca", "jdoe@ubc.ca", "btorrace@ubc.ca"];
+  it("ClassHandler: create userBatch1", (done) => {
+    const nicks = ["amoore", "gfleming", "jdoe", "btorrace"];
+    const emails = nicks.map(nick => { return nick+"@ubc.ca"; });
+    const ids = emails.map(ClassHandler.makeID);
+    const user_keys = ids.map(id => { return "usr:"+id; });
     const password = "test_password_123";
-    const ids = [
-      ClassHandler.makeID(emails[0]), ClassHandler.makeID(emails[1]),
-      ClassHandler.makeID(emails[2]), ClassHandler.makeID(emails[3])
-    ];
-
-
-    const promises = [
-      ClassHandler.createUser(emails[0], password), // TODO check collisions
-      ClassHandler.createUser(emails[1], password),
-      ClassHandler.createUser(emails[2], password),
-      ClassHandler.createUser(emails[3], password)
-    ];
-    return Promise.all(promises)
+    console.log(JSON.stringify(user_keys,null,"\t"));
+    const argl = emails.map((email) => { return [email, password]; });
+    js_utils.promiseLoopApply(ClassHandler.createUser, argl)
+      .then(bArr => {
+        return emails.map(User.prototype.findByEmail);
+      })
+      .then(users => {
+        users.forEach((user, index) => {
+          expect(user.email).to.equal(emails[index]);
+        });
+        return user_keys.map(redis_utils.keyExists);
+      })
+      .then(bArr => {
+        expect(bArr).to.deep.equal([true,true,true,true]);
+        return user_keys.map(RedisClient.HGETALL);
+      })
+      .then(user_objs => {
+        console.log(JSON.stringify(user_objs,null,"\t"));
+        user_objs.forEach((user_obj, index) => {
+          expect(user_obj.email).to.equal(emails[index]);
+          expect(user_obj.nick).to.equal(nicks[index]);
+        });
+      })
       .finally(done);
   });
 
@@ -217,7 +231,7 @@ function specModel() {
       jflask = R2D.User.cache.get(jflask__id)
     } catch(err) {
       util.error(err);
-      assert.fail();
+      assert.fail(err);
       done();
     }
     course.addInstructor(jflask)
@@ -239,8 +253,33 @@ function specModel() {
       .finally(done);
   });
 
-  it("Course: add", (done) => {
-
+  it("Course: add userBatch1 to students", (done) => {
+    const nicks = ["amoore", "gfleming", "jdoe", "btorrace"];
+    const emails = nicks.map(nick => { return nick+"@ubc.ca"; });
+    const ids = emails.map(ClassHandler.makeID);
+    const course_dept = "cpsc";
+    const course_nbr  = "437d";
+    const _key = "course:"+course_dept+":"+course_nbr;
+    let course = null;
+    let students = null;
+    try {
+      course = Course.cache.get(course_dept, course_nbr);
+      students = ids.map(User.cache.get);
+    } catch(err) { assert.fail(err); } // TODO: fail?
+    const promises = students.map(course.addStudent); // add to blocked students
+    Promise.all(promises)
+      .then(bArr => {
+        return course.getStudents();
+      })
+      .then(students => {
+        students.to.have.property("blocked");
+        students.to.not.have.property("active");
+        console.log(JSON.stringify(students.blocked));
+      })
+      .catch(err => {
+        assert.fail(err);
+      })
+      .finally(done);
   });
 
   it("Course: delete CPSC 437D", (done) => {
@@ -285,33 +324,35 @@ function specModel() {
       .finally(done);
   });
 
-  it("ClassHandler: delete users as students, ", (done) => {
-    const emails = ["amoore@ubc.ca", "gfleming@ubc.ca", "jdoe@ubc.ca", "btorrace@ubc.ca"];
-    const password = "test_password_123";
-    const ids = [
-      ClassHandler.makeID(emails[0]), ClassHandler.makeID(emails[1]),
-      ClassHandler.makeID(emails[2]), ClassHandler.makeID(emails[3])
-    ];
-
-
-    const promises = [ // TODO bad idea b/c collisions
-      R2D.User.prototype.deleteUserByEmail(emails[0]),
-      R2D.User.prototype.deleteUserByEmail(emails[1]),
-      R2D.User.prototype.deleteUserByEmail(emails[2]),
-      R2D.User.prototype.deleteUserByEmail(emails[3])
-      ClassHandler.createUser(emails[0], password),
-      ClassHandler.createUser(emails[1], password),
-      ClassHandler.createUser(emails[2], password),
-      ClassHandler.createUser(emails[3], password)
-    ];
-    return Promise.all(promises)
+  it("ClassHandler: delete userBatch1", (done) => {
+    const nicks = ["amoore", "gfleming", "jdoe", "btorrace"];
+    const emails = nicks.map(nick => { return nick+"@ubc.ca"; });
+    const ids = emails.map(ClassHandler.makeID);
+    const user_keys = ids.map(id => { return "usr:"+id; });
+    console.log(JSON.stringify(user_keys,null,"\t"));
+    /*****************************/
+    js_utils.promiseLoop(R2D.User.deleteUserByEmail, emails)
+      .then(bArr => {
+        return emails.map(User.prototype.findByEmail);
+      })
+      .then(bArr => {
+        expect(bArr).to.deep.equal([null,null,null,null]);
+        return user_keys.map(redis_utils.keyExists);
+      })
+      .then(bArr => {
+        expect(bArr).to.deep.equal([false,false,false,false]);
+      })
+      .catch(err => {
+        assert.fail(err);
+      })
       .finally(done);
   });
 
   it("ClassHandler: User: delete jflask", (done) => {
     const email = "jflask@ubc.ca";
-    R2D.User.prototype.deleteUserByEmail(email)
+    R2D.User.deleteUserByEmail(email)
       .then((b) => {
+
         return R2D.User.prototype.findByEmail(email);
       })
       .then((u) => {

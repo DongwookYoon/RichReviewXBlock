@@ -63,13 +63,14 @@ let ping_timeout = null;
  */
 const promisifyRedisClient = function(client) {
   const pub = { };
+
   Object.keys(redis.RedisClient.prototype).forEach((command) => {
     pub[command] = node_util.promisify(client[command]).bind(client);
   });
 
-  pub.end = function() {
+  pub.end = function(flush) {
     clearTimeout(ping_timeout);
-    redisClient.end();
+    redisClient.end(flush);
   };
 
   pub.quit = function() {
@@ -91,68 +92,12 @@ exports.util = (function () {
     };
 
     pub.isMember  = function(key, value) {
-      return RedisClient.SMEMBER(key, value)
+      return RedisClient.SISMEMBER(key, value)
         .then((b) => { return b === 1; });
     };
 
     return pub;
 } ( ));
-
-/*
- *  Promisified RedisWrapper
- */
-/*var RedisClient = (function(){
-    var pub = {};
-
-    var commands = [
-        'GET',
-        'KEYS',
-        'EXISTS',
-        'DEL',
-        'HGET',
-        'HDEL',
-        'HGETALL',
-        'HEXISTS',
-        'HKEYS',
-        'EXISTS',
-        'HMSET',
-        'HSET',
-        'LPUSH',
-        'RPUSH',
-        'LREM',
-        'LRANGE',
-        'SET',
-        'SMOVE',
-        'SMEMBERS',
-        'SADD',
-        'HMGET'
-    ];
-
-    commands.forEach(function(fstr){
-        pub[fstr] = function(/!*arguments*!/) {
-            var args = Array.prototype.slice.call(arguments);
-            return new Promise(function(resolve, reject){
-                args.push(function(err,rtn){
-                    if (err) {
-                        reject(err);
-                    }
-                    else {
-                        resolve(rtn);
-                    }
-                });
-                redisClient[fstr].apply(redisClient, args);
-            });
-        };
-    });
-
-
-    pub.end = function(){
-        clearTimeout(ping_timeout);
-        redisClient.end();
-    };
-
-    return pub;
-}());*/
 
 exports.redisClient = redisClient;
 exports.RedisClient = RedisClient;

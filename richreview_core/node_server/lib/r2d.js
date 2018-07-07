@@ -201,14 +201,6 @@ User.cache = (function(){
     else{
       throw "there are no users with ID "+id;
     }
-    /*return new Promise(function(resolve, reject) {
-      if(cache.hasOwnProperty(id)){
-        resolve(cache[id]);
-      }
-      else{
-        reject('the user with id:' + id + ' does not exist.');
-      }
-    });*/
   };
 
   /**
@@ -317,6 +309,7 @@ User.prototype.create = function(id, email,
         'usr:'+id
       );
     })
+    /** Manage invitations to this user **/
     .then(function() {
       return RedisClient.LRANGE('inv:'+email, 0, -1)
         .then(function(_groupids) {
@@ -328,14 +321,15 @@ User.prototype.create = function(id, email,
       var argl = groupids.map(function(groupid) {
         return [groupid.substring(4), id];
       });
-      return js_utils.PromiseLoop(Group.connectUserAndGroup, argl);
+      return js_utils.promiseLoopApply(Group.connectUserAndGroup, argl);
     })
     .then(function(){
       var argl = groupids.map(function(groupid){
         return [groupid.substring(4), email];
       });
-      return js_utils.PromiseLoop(Group.CancelInvited, argl);
+      return js_utils.promiseLoopApply(Group.CancelInvited, argl);
     })
+    /*************************************/
     .then(function(){
       return User.cache.loadFromDb(id);
     });
@@ -351,7 +345,7 @@ User.prototype.create = function(id, email,
  * TODO: should delete user's assignments
  * TODO: should remove user from cache
  */
-User.prototype.deleteUserByEmail = (email) => {
+User.deleteUserByEmail = (email) => {
 
   /**
    * delete the group in redis
@@ -793,7 +787,7 @@ const Group = (function(manager, name, creationDate) {
       for(var i = 0; i < groupObj.users.participating.length; ++i){
         argl.push(["usr:"+groupObj.users.participating[i], "nick"]);
       }
-      js_utils.PromiseLoop(RedisClient.HGET, argl).then(resolve).catch(reject);
+      js_utils.promiseLoopApply(RedisClient.HGET, argl).then(resolve).catch(reject);
     }).then(
       function(nicknames){
         for(var i = 0; i < nicknames.length; ++i){
@@ -838,7 +832,7 @@ const Group = (function(manager, name, creationDate) {
     util.debug("starting promiseToRemoveGroupFromInvitee");
     const promiseToRemoveGroupFromInvitee = Group.GetUsersFromGroup(groupid_n)
       .then(function(users) {
-        return js_utils.PromiseLoop(
+        return js_utils.promiseLoopApply(
           removeGroupFromInvitee,
           users.invited.map(function(email) {
               return [email];
@@ -850,7 +844,7 @@ const Group = (function(manager, name, creationDate) {
     util.debug("starting promiseToDetachUserAndGroup");
     const promiseToDetachUserAndGroup = Group.GetUsersFromGroup(groupid_n)
       .then(function(users) {
-        return js_utils.PromiseLoop(
+        return js_utils.promiseLoopApply(
           detachUserAndGroup,
           users.participating.map(function(userid_n) {
               return [userid_n];
@@ -1098,7 +1092,7 @@ var Doc = (function() {
   pub_doc.GetDocByUser_Promise = function(userid_n){
     return RedisClient.KEYS('doc:'+userid_n+'_*').then(
       function(docids){
-        return js_utils.PromiseLoop(pub_doc.GetDocById_Promise, docids.map(function(docid){return [docid];})).then(
+        return js_utils.promiseLoopApply(pub_doc.GetDocById_Promise, docids.map(function(docid){return [docid];})).then(
           function(doc_objs){
             return doc_objs;
           }

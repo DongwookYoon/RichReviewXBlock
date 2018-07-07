@@ -179,7 +179,26 @@ webpack
 
 #### Install forever
 
-To be continued...
+It's unsafe to install global npm modules in root, which is npm's default global install location. Instead you want to set global modules within the home directory.
+
+```bash
+mkdir ~/.npm-global
+npm config set prefix '~/.npm-global'
+```
+
+Add the line `PATH="$HOME/.npm-global/bin:$PATH"` to then end of your `.profile` file.
+
+```bash
+source ~/.profile
+npm install -g forever
+ln -s ~/.npm-global/bin/forever ~
+
+# list the running forever processes; use sudo for processes run by root
+forever list
+
+# kill all running forever processes
+forever stopall
+```
 
 #### Import SSL
 
@@ -208,20 +227,28 @@ Install the packages for Python using python package manager `pip`. You installe
 
 ```bash
 python --version
-#
+
 pip freeze
 # should show the python packages installed on the VM already 
+
 pip install Django==1.8
 pip install PyPDF2==1.24
 cd ~/RichReviewXBlock/mupla_core/django_server
 sudo python manage.py runserver 5000
 ```
 
-### Maintenance
+### Maintenance and scripts
 
-To run the application server from the VM. You can use `screen` to start an instance of the Django server, and `forever` to start an instance of the Node server.
+To run the application server from the VM. You can use `screen` to start an instance of the Django server, and `forever` to start an instance of the Node server. However, there are scripts that do this for you. Simply call `deploy_scripts.sh` to set up maintenance scripts, and then call them (i.e. `rrrun.sh`) in your home directory.
 
-#### Scripts
+```bash
+cd ~/RichReviewXBlock/utils/scripts
+./deploy_scripts.sh
+cd ~
+./rrrun.sh # starts RichReview application
+```
+
+#### About the scripts
 
 Script to start Node server `stop_node.sh`
 
@@ -308,9 +335,18 @@ screen -S mupla -X colon "logfile flush 0^M"
 
 ```
 
+Script to start RichReview `rrrun.sh`
+
+```bash
+#!/bin/bash
+
+~/restart_django.sh
+~/restart_node.sh
+```
+
 #### Brief tutorial
 
-Screen is nice to use for testing if you have multiple commandline processes you want to run at one.
+`screen` is nice to use for testing if you have multiple commandline processes you want to run at one.
 
 ```bash
 touch log_test.txt
@@ -336,6 +372,24 @@ screen -S testInstance -X colon "logfile flush 0^M"
 ## kill screen session testInstance
 screen -X -S testInstance quit
 ```
+
+`killall` is a good way to stop processes.
+
+```bash
+`sudo killall <OPTIONS> screen
+```
+
+Options:
+
+**`-1`** or **`-HUP`** makes kill send the "Hang Up" signal to processes. Most daemons are programmed to re-read their configuration when they receive such a signal. It is the safest kill signal there is.
+
+**`-2`** or **`-SIGINT`** is the same as starting some program and pressing CTRL+C during execution.
+
+**`-9`** or **`-KILL`** makes kernel let go of the process without informing the process of it. This is the "hardest" and most unsafe kill signal available, and should only be used to stop something that seems unstoppable.
+
+**`-15`** or **`-TERM`** tell sthe process to stop whatever it's doing, and end itself. When you don't specify any signal, this signal is used. It should be fairly safe to perform, but better start with a "-1" or "-HUP".
+
+From (http://meinit.nl/the-3-most-important-kill-signals-on-the-linux-unix-command-line)
 
 ### Test RichReview
 

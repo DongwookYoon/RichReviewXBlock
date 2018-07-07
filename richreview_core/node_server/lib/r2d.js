@@ -71,10 +71,34 @@ const User = function(id, nickname, email,
  */
 
 /**
+ * Update user's SID, first name and last name
+ * @param {string} sid
+ * @param {string} first_name
+ * @param {string} last_name
+ * @return {Promise.<User>}
+ */
+User.prototype.updateDetails = function(sid, first_name, last_name) {
+  if(this.password_hash) {
+    const user_key = "usr:"+this.id;
+    return RedisClient.HMSET(
+      user_key,
+      "sid", sid,
+      "first_name", first_name,
+      "last_name", last_name
+    )
+      .then((b) => {
+        return User.cache.loadFromDb(this.id);
+      });
+  } else {
+    return Promise.reject("Cannot update an old version of the user");
+  }
+};
+
+/**
  * get an array of all the users that signed up in the redis server
  * usrs is Array<usr>
  * usr is of form { email, groupNs, nick, id }
- * return usrs
+ * @return {Array.<User>}
  */
 User.prototype.getSignedUp = function(){
   return RedisClient.KEYS('usr:*').then(
@@ -102,7 +126,7 @@ User.prototype.getSignedUp = function(){
  * @function loadFromDb
  * @function get
  */
-User.prototype.cache = (function(){
+User.cache = (function(){
   let pub = {};
 
   let cache = {};
@@ -140,9 +164,8 @@ User.prototype.cache = (function(){
   pub.loadFromDb = function(id) {
     return RedisClient.HGETALL("usr:"+id)
       .then(function(result) {
-          let new_user = null;
           if (result.password_hash) {
-            new_user = new User(
+            cache[id] = new User(
               id,
               result.nick,
               result.email,
@@ -154,60 +177,86 @@ User.prototype.cache = (function(){
               result.last_name
             );
           } else {
-            new_user = new User(
+            cache[id] = new User(
               id,
               result.nick,
               result.email
             );
           }
-          cache[id] = new_user;
-          return new_user;
+          return cache[id];
         }
       );
   };
 
   /**
-   * return a promise to a User in the cache
-   * @arg    id
-   * @return Promise<User>
+   * return a user in the cache
+   * @throws "there are no users with ID"
+   * @arg    {string} id      - ID of user to get
+   * @return {Promise.<User>} - user with the ID
    */
-  pub.get = function(id){
-    return new Promise(function(resolve, reject) {
+  pub.get = function(id) {
+    if(pub.exists(id)){
+      return cache[id];
+    }
+    else{
+      throw "there are no users with ID "+id;
+    }
+    /*return new Promise(function(resolve, reject) {
       if(cache.hasOwnProperty(id)){
         resolve(cache[id]);
       }
       else{
         reject('the user with id:' + id + ' does not exist.');
       }
-    });
+    });*/
+  };
+
+  /**
+   * Return true if user exists, false otherwise
+   * @param id
+   * @return {boolean}
+   */
+  pub.exists = function(id) {
+    return cache.hasOwnProperty(id);
   };
 
   pub.populate();
 
   return pub;
-}());
+} ( ));
 
-User.prototype.isExist = function(id){
+/**
+ * this is redundant
+ * TODO: test and delete
+ */
+/*User.prototype.isExist = function(id){
   return RedisClient.EXISTS('usr:'+id);
-};
+};*/
 
 User.prototype.findById = function(id){
-  return User.prototype.cache.get(id);
+  return new Promise((resolve, reject) => {
+    try {
+      const user = User.cache.get(id);
+      resolve(user);
+    } catch(err) {
+      reject(err);
+    }
+  });
 };
 
 /**
  * Get a promise to the User object from given email
- * @param  email  - string of email
- * @return {User} - the user that corr. to the email
+ * @param  {string} email - email of user to find
+ * @return {Promise.<User>} - promise for the user of that email
  */
 User.prototype.findByEmail = function(email){
   if(js_utils.validateEmail(email)){
     return RedisClient.HGET('email_user_lookup', email)
       .then((id) => {
           if(id) {
-            return User.prototype.cache.get(id.substring(4));
+            return User.cache.get(id.substring(4));
           } else {
-            return Promise.resolve(null);
+            return null;
           }
         }
       );
@@ -217,7 +266,7 @@ User.prototype.findByEmail = function(email){
 };
 
 /**
- * Creates a new user in redis and caches user to User.prototype.cache
+ * Creates a new user in redis and caches user to User.cache
  * Additionally it consumes invites to add new user to groups it is invited to
  *
  * TODO: should prevent create() from creating user if user already exists(?)
@@ -230,7 +279,7 @@ User.prototype.findByEmail = function(email){
  * @param sid
  * @param first_name
  * @param last_name
- * @return {Promise<User>}
+ * @return {Promise.<User>}
  */
 User.prototype.create = function(id, email,
                                  /** new fields **/
@@ -288,7 +337,7 @@ User.prototype.create = function(id, email,
       return js_utils.PromiseLoop(Group.CancelInvited, argl);
     })
     .then(function(){
-      return User.prototype.cache.loadFromDb(id);
+      return User.cache.loadFromDb(id);
     });
 };
 
@@ -507,7 +556,7 @@ User.prototype.updateNick = function(id, newnick){
     'nick', newnick
   ).then(
     function(){
-      return User.prototype.cache.loadFromDb(id);
+      return User.cache.loadFromDb(id);
     }
   );
 };
@@ -540,7 +589,7 @@ User.prototype.syncEmail = function(user, newemail){
         }
       ).then(
         function(){
-          return User.prototype.cache.loadFromDb(user.id);
+          return User.cache.loadFromDb(user.id);
         }
       ).then(
         function(user){

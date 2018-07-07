@@ -78,7 +78,6 @@ setupStaticPages();
 app.use(flash());
 
 app.use((req, res, next) => {
-    // req.session.latestUrl = req.originalUrl; // TODO: ask Dongwook about this
     res.locals.cdn_endpoint = env.azure_config.cdn.endpoint;
     res.locals.host_url     = env.node_config.HOST_URL;
     res.locals.flashes = req.flash();

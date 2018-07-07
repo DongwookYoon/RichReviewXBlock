@@ -85,7 +85,9 @@ passport.use(
  */
 const googleStrategyCB = (accessToken, refreshToken, profile, done) => {
     const email = profile.emails.length !== 0 ? profile.emails[0].value : '';
-    R2D.User.prototype.isExist(profile.id)
+    const b = R2D.User.cache.exists(profile.id);
+    new Promise.resolve(b)
+    //R2D.User.prototype.isExist(profile.id)
         .then((is_exist) => {
             if(is_exist) {
                 return lib_utils.findUserByID(profile.id)

@@ -5,7 +5,7 @@
  */
 
 // import npm modules
-const Promise = require("promise"); // jshint ignore:line
+const node_util = require('util');
 const redis = require('redis');
 
 // import libraries
@@ -42,20 +42,66 @@ if(process.env.NODE_ENV === 'production') {
   redisClient = redis.createClient(env.redis_config.port);
 }
 
+/**
+ * Set error handler
+ */
 redisClient.on('error', function(err) {
     util.error(err);
 });
 
-var ping_timeout = null;
-(function PingRedisServer(){
+/**
+ * Ping server periodically
+ */
+let ping_timeout = null;
+(function PingRedisServer() {
     redisClient.ping(redis.print);
     ping_timeout = setTimeout(PingRedisServer, 3*60*1000);
-}());
+} ( ));
+
+/**
+ * Promisify all redis prototype functions including Redis commands
+ */
+const promisifyRedisClient = function(client) {
+  const pub = { };
+  Object.keys(redis.RedisClient.prototype).forEach((command) => {
+    pub[command] = node_util.promisify(client[command]).bind(client);
+  });
+
+  pub.end = function() {
+    clearTimeout(ping_timeout);
+    redisClient.end();
+  };
+
+  pub.quit = function() {
+    clearTimeout(ping_timeout);
+    redisClient.quit();
+  };
+
+  return pub;
+};
+
+const RedisClient = promisifyRedisClient(redisClient);
+
+exports.util = (function () {
+    const pub = { };
+
+    pub.keyExists = function(key) {
+        return RedisClient.EXISTS(key)
+          .then((b) => { return b === 1; });
+    };
+
+    pub.isMember  = function(key, value) {
+      return RedisClient.SMEMBER(key, value)
+        .then((b) => { return b === 1; });
+    };
+
+    return pub;
+} ( ));
 
 /*
  *  Promisified RedisWrapper
  */
-var RedisClient = (function(){
+/*var RedisClient = (function(){
     var pub = {};
 
     var commands = [
@@ -83,7 +129,7 @@ var RedisClient = (function(){
     ];
 
     commands.forEach(function(fstr){
-        pub[fstr] = function(/*arguments*/) {
+        pub[fstr] = function(/!*arguments*!/) {
             var args = Array.prototype.slice.call(arguments);
             return new Promise(function(resolve, reject){
                 args.push(function(err,rtn){
@@ -106,7 +152,7 @@ var RedisClient = (function(){
     };
 
     return pub;
-}());
+}());*/
 
 exports.redisClient = redisClient;
 exports.RedisClient = RedisClient;

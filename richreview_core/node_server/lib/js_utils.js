@@ -14,7 +14,7 @@ const moment = require('moment');
 const Promise = require("promise"); // jshint ignore:line
 const nodemailer = require('nodemailer');
 
-const util         = require('../util');
+const util = require('../util');
 
 exports.generateSaltedSha1 = function(raw_key, salt){
     var shasum = crypto.createHash('sha1');

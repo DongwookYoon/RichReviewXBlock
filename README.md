@@ -3,7 +3,7 @@
 This is a Node/Express app for [RichReview](https://github.com/DongwookYoon/RichReviewWebApp). It contains these modules:
 
 - [**Node backend**](https://nodejs.org/en/)
-- **MuPla** Django server that runs a MuPDF pdf editing [utilites]((https://mupdf.com/docs/index.html))
+- **MuPla** Django server that runs a MuPDA (or MuPDF) pdf editing [utilites]((https://mupdf.com/docs/index.html))
 - [**RichReview Web App**](https://www.youtube.com/watch?v=twSTqxghHNQ)
 - **PDF Multicolumn Analyzer Web App** which runs [PDF.js](https://mozilla.github.io/pdf.js/)
 
@@ -157,7 +157,9 @@ HTTPS Protocol|enabled|443
 
 Whenever, your CORS settings change, recreate the CDN endpoint and *clear your browser cache*.
 
-### Install and Configure RichReview
+### Set up RichReview's Node Server
+
+#### Install and Build the Node Server
 
 ```bash
 cd <path to home>
@@ -175,6 +177,12 @@ npm install
 webpack
 ```
 
+#### Install forever
+
+To be continued...
+
+#### Import SSL
+
 You should be given a zip file containing all the ssl files. This contains all the . You may want to change the variables in the ssl files such as `node_config.json`, `redis_config.json` and `azure_config.json` every time you are setting up a new server environment.
 
 ```bash
@@ -183,18 +191,20 @@ unzip ssl.zip
 rm ssl.zip
 ```
 
-### Configure MuPla for PDFs
+### Set up RichReview's MuPla module
 
-You need `build-essential` to compile mupla source code. Just call make to do so.
+#### Build MuPla
+
+You installed `build-essential` during the initial VM setup. The `build-essential` package contains the binaries you need compile the C/C++ mupla source code. It comes with the build tool `make`. Now call `make` build mupla.
 
 ```bash
 cd ~/RichReviewXBlock/mupla_core/mupla
 make
 ```
 
-### Configure Django Server
+#### Configure Django Server
 
-Install the packages for python using python package manager pip. You installed pip from `pip-python`.
+Install the packages for Python using python package manager `pip`. You installed `pip` from `pip-python` during the initial VM setup. [Django](https://www.djangoproject.com/) is a webframework that let's us run a server on Python. [PyPDF2](https://mstamy2.github.io/PyPDF2/) is a module that contains functions to merge and read pdfs.
 
 ```bash
 python --version
@@ -205,6 +215,126 @@ pip install Django==1.8
 pip install PyPDF2==1.24
 cd ~/RichReviewXBlock/mupla_core/django_server
 sudo python manage.py runserver 5000
+```
+
+### Maintenance
+
+To run the application server from the VM. You can use `screen` to start an instance of the Django server, and `forever` to start an instance of the Node server.
+
+#### Scripts
+
+Script to start Node server `stop_node.sh`
+
+```bash
+#!/bin/bash
+
+~/restart_django.sh
+~/restart_node.sh
+```
+
+Script to stop Node server `stop_node.sh`
+
+```bash
+#!/bin/bash
+
+echo "//// STOP NODE SERVER"
+
+~/.npm-global/bin/forever stopall
+sudo fuser -k -HUP -n tcp 80
+sudo fuser -k -HUP -n tcp 443
+sudo killall -TERM nodejs
+sudo killall -TERM node
+```
+
+Script to stop Django server `stop_django.sh`
+
+```bash
+#!/bin/bash
+
+echo "//// STOP DJANGO SERVER"
+
+sudo fuser -k -HUP -n tcp 5000
+sudo killall -TERM screen
+```
+
+Script to stop all `stop_all.sh`
+
+```bash
+#!/bin/bash
+
+~/stop_node.sh
+~/stop_django.sh
+```
+
+Script to update `update_richreview.sh`
+
+```bash
+#!/bin/bash
+
+~/stop_all.sh
+
+echo "//// UPDATING RICHREVIEW"
+
+cd ~/RichReviewXBlock
+git pull
+cd ~
+```
+
+Script to start Node server `restart_node.sh`. Here we are using [forever]((https://www.npmjs.com/package/forever)) to load the node scripts.
+
+```bash
+#!/bin/bash
+
+~/stop_node.sh
+
+echo "//// STARING NODE SERVER"
+
+sudo ~/.npm-global/bin/forever start --append -l ~/log_node.txt -e ~/log_node_err.txt --minUptime 1000 --spinSleepTime 30000 ~/RichReviewXBlock/richreview_core/node_server/www/www.js
+```
+
+Script to start Django server `restart_django.sh`
+
+```bash
+#!/bin/bash
+
+~/stop_django.sh
+
+echo "//// STARING DJANGO SERVER"
+
+screen -dmS mupla -L -Logfile ~/log_django.txt bash -c "cd ~/RichReviewXBlock/mupla_core/django_server; sudo python manage.py runserver 5000; cd ~"
+
+sleep 1
+screen -S mupla -X colon "logfile flush 0^M"
+
+```
+
+#### Brief tutorial
+
+Screen is nice to use for testing if you have multiple commandline processes you want to run at one.
+
+```bash
+touch log_test.txt
+chmod 755 log_test.txt
+
+screen -dmS ./test.sh
+
+# run screen with session name testInstance, to call test.sh, and log output to log_test.txt
+screen -dmS testInstance -L -Logfile ~/log_test.txt bash -c ./test.sh
+
+# run infinite loop
+while true; do echo "HELLO"; sleep 1; done
+
+# run screen with session name testInstance, to call infinite loop, and log output to log_test.txt
+screen -dmS testInstance -L -Logfile ~/log_test.txt bash -c "while true; do echo "HELLO"; sleep 1; done"
+
+# list all screen sessions
+screen -ls
+
+# flush output of session testInstance to log file
+screen -S testInstance -X colon "logfile flush 0^M"
+
+## kill screen session testInstance
+screen -X -S testInstance quit
 ```
 
 ### Test RichReview

@@ -12,20 +12,22 @@ const util = require('../util');
 
 /**
  * 'FROM' Azure Storage (migrate)=> 'TO' Azure Storage
+ *
+ * TODO: replace to not expose...
  */
 const azure_config = {
   storage_FROM: {
     account_name: "richreview",
     host: "https://richreview.blob.core.windows.net/",
-    access_key: "ANmkaV4qBNURDOHL72e+iPUshpR4oz4Ga1h7wb6RBb/DPCOylQ32vtEqwZfW+SVgkwHlz8GoFFDGtBkLl9l2aQ==",
-    connection_string: "DefaultEndpointsProtocol=https;AccountName=richreview;AccountKey=ANmkaV4qBNURDOHL72e+iPUshpR4oz4Ga1h7wb6RBb/DPCOylQ32vtEqwZfW+SVgkwHlz8GoFFDGtBkLl9l2aQ==;EndpointSuffix=core.windows.net",
+    access_key: "",
+    connection_string: "",
     SAS_TOKEN: ""
   },
   storage_TO: {
     account_name: "richreview2ca",
     host: "https://richreview2ca.blob.core.windows.net/",
-    access_key: "3H3bp0hEgaJURELx/dx5p1S2scvKW6HZd1li3hOn9SccofvlJZsvDJx7E14oULU2qV9pMIMynN6LXXbBQdITxA==",
-    connection_string: "DefaultEndpointsProtocol=https;AccountName=richreview2ca;AccountKey=3H3bp0hEgaJURELx/dx5p1S2scvKW6HZd1li3hOn9SccofvlJZsvDJx7E14oULU2qV9pMIMynN6LXXbBQdITxA==;EndpointSuffix=core.windows.net"
+    access_key: "",
+    connection_string: ""
   }
 };
 

@@ -7,9 +7,6 @@ from django.http import HttpResponse
 if __name__ != "__main__":
     from django.views.decorators.csrf import csrf_exempt
 
-# CHANGES: 20180505
-# TODO: test and delete
-# lib_path = os.path.abspath(os.path.join('..', '..', 'richreview', 'mupla_ctype'))
 lib_path = os.path.abspath(os.path.join('..', 'mupla_ctype'))
 sys.path.append(lib_path)
 

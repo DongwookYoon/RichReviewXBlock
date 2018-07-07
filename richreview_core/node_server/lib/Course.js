@@ -132,7 +132,7 @@ Course.prototype.delete = function() {
 };
 
 Course.prototype.addInstructor = function(user) {
-  return RedisClient.
+  //return RedisClient.
 };
 
 Course.prototype.getInstructors = function() {

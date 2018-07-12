@@ -145,6 +145,27 @@ router.get(
  * auth
  */
 router.get(
+  '/login_ubc',
+  passport.authenticate(
+    'saml',
+    { failureRedirect: '/login_ubc', failureFlash: true }),
+  function(req, res) {
+    res.redirect(req.session.latestUrl || '/');
+  }
+);
+
+router.post(
+    '/login_ubc_return',
+    passport.authenticate(
+      'saml',
+      { failureRedirect: '/login_cornell', failureFlash: true }),
+    function(req, res) {
+      js_utils.logUserAction(req, "logged in");
+      res.redirect(req.session.latestUrl || '/');
+    }
+);
+
+router.get(
     '/login_cornell',
     passport.authenticate('wsfed-saml2', { failureRedirect: '/login_cornell', failureFlash: true }),
     function(req, res) {
@@ -164,7 +185,7 @@ router.get(
     passport.authenticate( 'google', { scope:['email'] } )
 );
 
-router.get(
+router.post(
     '/login-oauth2-return',
     passport.authenticate( 'google', { failureRedirect: '/login_google' } ),
     function(req, res) {

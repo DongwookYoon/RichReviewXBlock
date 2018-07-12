@@ -3,6 +3,8 @@
  *
  * created by Colin
  */
+const fs = require('fs');
+const path = require('path');
 
 const util = require('../util');
 const passport  = require('passport');
@@ -13,6 +15,9 @@ const lib_utils = require('./lib_utils');
 const R2D = require('./r2d.js');
 const LtiEngine = require('./lti_engine.js');
 const pilotHandler = require('./pilot_handler.js');
+
+util.start("          passport SAML Strategy");
+const SAMLStrategy = require('passport-saml').Strategy;
 
 util.start("          google oauth 2.0 strategy");
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
@@ -47,6 +52,47 @@ passport.deserializeUser(function(id, done){
         }
     );
 });
+
+const callbackURL = 'https://40.85.241.164/login_ubc_return';
+
+const entryPoint = 'https://authentication.stg.id.ubc.ca/idp/profile/SAML2/Unsolicited/SSO?providerId=richreview';
+
+const issuer = 'richreview';
+
+const cert = fs.readFileSync(
+  path.join(__dirname, '..', 'ssl/idp_cert.cert')
+);
+
+const privateCert = fs.readFileSync(
+  path.join(__dirname, '..', 'ssl/sp_richreview_ubc.cert')
+);
+
+const decryptionPvk = fs.readFileSync(
+  path.join(__dirname, '..', 'ssl/sp_richreview_ubc.key')
+);
+
+const samlStrategy = new SAMLStrategy(
+  {
+    callbackUrl: callbackURL,
+    entryPoint: entryPoint,
+    issuer: issuer,
+    cert,
+    privateCert,
+    decryptionPvk
+  },
+  function(profile, done) {
+    console.log(JSON.stringify(profile));
+
+    findByEmail(profile.email, function(err, user) {
+      if (err) {
+        return done(err);
+      }
+      return done(null, user);
+    });
+  });
+
+util.logger("PASSPORT", "use SAML2 auth for UBC");
+passport.use(samlStrategy);
 
 /**
  * Use wsfed SAML 2.0 to login with Cornell NetID

@@ -55,9 +55,9 @@ passport.deserializeUser(function(id, done){
 
 const callbackURL = 'https://40.85.241.164/login_ubc_return';
 
-const entryPoint = 'https://authentication.stg.id.ubc.ca/idp/profile/SAML2/Unsolicited/SSO?providerId=richreview';
+const entryPoint = 'https://authentication.stg.id.ubc.ca/idp/profile/SAML2/Unsolicited/SSO?providerId=sp_richreview_ubc';
 
-const issuer = 'richreview';
+const issuer = 'sp_richreview_ubc';
 
 const cert = fs.readFileSync(
   path.join(__dirname, '..', 'ssl/idp_cert.cert')

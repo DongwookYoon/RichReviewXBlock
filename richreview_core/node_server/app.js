@@ -38,9 +38,6 @@ const apiRoutes = require('./routes/api');
 util.start("setting up passport");
 require('./lib/passport');
 
-// util.start("importing test userids");
-// require('./data/import_pilot_study_users');
-
 util.start("making temp and cache files");
 mkdirp('../_temp');
 mkdirp('../cache');

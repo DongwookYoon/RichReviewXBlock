@@ -53,42 +53,35 @@ passport.deserializeUser(function(id, done){
     );
 });
 
-const callbackURL = 'https://40.85.241.164/login_ubc_return';
-
-const entryPoint = 'https://authentication.stg.id.ubc.ca/idp/profile/SAML2/Unsolicited/SSO?providerId=sp_richreview_ubc';
-
-const issuer = 'sp_richreview_ubc';
-
-const cert = fs.readFileSync(
-  path.join(__dirname, '..', 'ssl/idp_cert.cert')
-);
-
-const privateCert = fs.readFileSync(
-  path.join(__dirname, '..', 'ssl/sp_richreview_ubc.cert')
-);
-
-const decryptionPvk = fs.readFileSync(
-  path.join(__dirname, '..', 'ssl/sp_richreview_ubc.key')
-);
-
 const samlStrategy = new SAMLStrategy(
   {
-    callbackUrl: callbackURL,
-    entryPoint: entryPoint,
-    issuer: issuer,
-    cert,
-    privateCert,
-    decryptionPvk
+    callbackUrl: env.ubc.idp_config.callbackURL,
+    entryPoint: env.ubc.idp_config.entryPoint,
+    issuer: env.ubc.idp_config.entityID,
+    cert: env.ubc.idp_config.cert,
+    privateCert: env.ubc.privateCert,
+    decryptionPvk: env.ubc.decryptionPvk
   },
   function(profile, done) {
     console.log(JSON.stringify(profile));
 
-    findByEmail(profile.email, function(err, user) {
-      if (err) {
-        return done(err);
-      }
-      return done(null, user);
-    });
+    lib_utils.findUserByEmail(profile.email)
+      .then(function(user) {
+        if(user) {
+          return user;
+        } else {
+          const email  = "";
+          const new_id = "";
+
+          done("ERR: login incomplete", null);
+
+          /*return R2D.User.prototype.create(
+            newid,
+            email
+          );*/
+        }
+      })
+      .catch(done);
   });
 
 util.logger("PASSPORT", "use SAML2 auth for UBC");
@@ -107,8 +100,7 @@ passport.use(
                 .then(function(user) {
                     if(user) {
                         return user;
-                    }
-                    else{
+                    } else{
                         var email = profile.upn;
                         var newid = js_utils.generateSaltedSha1(email, env.sha1_salt.netid).substring(0, 21);
                         return R2D.User.prototype.create(

@@ -11,11 +11,9 @@ var HOSTNAME = document.location.hostname;
 console.log("DEBUG: document.location.hostname="+HOSTNAME);
 if (HOSTNAME === "localhost") {
     SERVER_URL = "https://localhost:8001/";
-} else if (HOSTNAME === "richreview.net") {
-    SERVER_URL = "https://richreview.net/";
 } else {
-    SERVER_URL = "https://40.85.241.164:443/";
-}
+    SERVER_URL = "https://richreview.net/";
+};
 // else{SERVER_URL = "https://richreview.net/";}
 
 var FILE_UPLOAD_URL = "upload";

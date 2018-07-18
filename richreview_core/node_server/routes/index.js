@@ -158,7 +158,7 @@ router.post(
     '/login_ubc_return',
     passport.authenticate(
       'saml',
-      { failureRedirect: '/login_cornell', failureFlash: true }),
+      { failureRedirect: '/login_ubc', failureFlash: true }),
     function(req, res) {
       js_utils.logUserAction(req, "logged in");
       res.redirect(req.session.latestUrl || '/');

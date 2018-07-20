@@ -1,0 +1,8 @@
+
+# dump files
+*.rdb
+
+# folders
+node_modules/
+redis-*/
+

@@ -12,4 +12,5 @@ if fileExists redis-*.tar.gz; then
     tar xzf redis-stable.tar.gz
     cd redis-stable
     make
+    # TODO: if tar file exist then use most recent one
 fi

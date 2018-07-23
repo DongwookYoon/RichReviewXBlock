@@ -1,9 +1,9 @@
 /**
- *
- *
- *
- *
- *
+ * Node worker that:
+ * 1) spawns a child shell process running portable redis server
+ * 2) migrates keys from the Azure Redis Cache to this redis server
+ * 3) saves data in redis server as a backup .rdb file
+ * 4) backup is `redis_backup.[TIMESTAMP].rdb`
  *
  * To launch the managing redis server independently call
  *
@@ -13,6 +13,8 @@
  * To check backup set the db file name to the the backup file you want to check
  *
  * ./redis-4.0.10/src/redis-server --port 8555 --dir ./ --dbfilename redis_backup.20180720130767.rdb
+ *
+ * TODO: getting message "6760:M 20 Jul 13:44:53.709 # There is a child saving an .rdb. Killing it!" so I disabled autosave. Double check.
  *
  * Created by Colin
  */
@@ -59,7 +61,6 @@ const redisSpawn = child_process.spawn(
 );
 
 const redisLocalClient = redis.createClient(LOCAL_REDIS_PORT);
-
 const redisCacheClient = redis.createClient(
   REDIS_CACHE_PORT,
   REDIS_CACHE_HOSTNAME,
@@ -70,7 +71,7 @@ const redisCacheClient = redis.createClient(
     }
   }
 );
-
+/*******************************************************/
 const promisifyRedisClient = function(client) {
     const pub = { };
     Object.keys(redis.RedisClient.prototype).forEach((command) => {
@@ -78,7 +79,7 @@ const promisifyRedisClient = function(client) {
     });
     return pub;
 };
-
+/*******************************************************/
 const RedisLocalClient = promisifyRedisClient(redisLocalClient);
 const RedisCacheClient = promisifyRedisClient(redisCacheClient);
 
@@ -245,7 +246,10 @@ const testSortedSet = () => {
 };
 
 /**
- * Main backup handler
+ * Handler that copies up all keys in Azure Redis Cache to the local redis server booted by redisSpawn child process; please check that there are no FAILS after exec_backup is complete.
+ * MUTATION: Local redis server in redisSpawn gets populated by by keys in Azure Redis Cache
+ * ASYNCHRONOUS
+ * TODO: a race condition can theoretically happen if exec_backup happens before redisSpawn is initialized
  */
 const exec_backup = () => {
   const FAILS = {
@@ -437,6 +441,11 @@ const exec_backup = () => {
     });
 };
 
+/**
+ * Handler calls asynchronous save on local redis server (redisSpawn) and waits until save is complete.
+ * MUTATION: dump.rdb stores all redis keys from Azure Redis Cache
+ * ASYNCHRONOUS
+ */
 const saveLocalServer = () => {
   let lastSave = null;
 
@@ -468,6 +477,10 @@ const saveLocalServer = () => {
     .then(waitUntilSave.bind(null, null, null));
 };
 
+/**
+ * Handler tells local redis server (redisSpawn) to shut down.
+ * ASYNCHRONOUS
+ */
 const redisClose = () => {
     return new Promise((resolve, reject) => {
         child_process.execFile(
@@ -482,6 +495,10 @@ const redisClose = () => {
     });
 };
 
+/**
+ * Handler calls manage.sh to name dump.rdb as unique DB snapshot with timestamp
+ * ASYNCHRONOUS
+ */
 const manageDumpScript = () => {
   const DATE_LINE = moment().format('YYYYMMDDHHMMSS');
   return new Promise((resolve, reject) => {
@@ -514,8 +531,7 @@ redisSpawn.on('close', (code) => {
 });
 
 redisSpawn.on('error', (err) => {
-  log_error(err);
-
+  log_error(`child process has error ${err}`);
 });
 
 exec_backup()

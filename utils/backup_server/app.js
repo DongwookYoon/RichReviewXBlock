@@ -15,6 +15,7 @@ const child_process = require('child_process');
 const CronJob = require('cron').CronJob;
 
 const helpers = require('./helpers');
+const moment  = require('moment');
 
 const log = function(stmt) {
   console.log("<APP>: "+stmt);
@@ -23,6 +24,8 @@ const log = function(stmt) {
 const log_error = function(stmt) {
   console.error("<APP ERR>: "+stmt);
 };
+
+const REMOTE_HOST = "rr_admin@40.85.220.29";
 
 let backup_azure_str_lock = 0;
 function backup_azure_str_launch() {
@@ -98,12 +101,53 @@ function backup_redis_cache_launch() {
   });
 }
 
+let backup_log_files_lock = 0;
+function backup_log_files_launch() {
+  log(`pinging job backup_redis_cache, received ${backup_log_files_lock}`);
+  if(backup_log_files_lock) {
+    return;
+  } else {
+    backup_log_files_lock = 1;
+    log("starting job backup_redis_cache");
+  }
+
+  const DATE_LINE = moment().format('YYYYMMDDHHMMSS');
+  const nd = child_process.spawn(
+    __dirname + '/backup_logs.sh',
+    [REMOTE_HOST, DATE_LINE]
+  );
+
+  nd.stdout.on('data', (data) => {
+    console.log(data.toString());
+  });
+
+  nd.stderr.on('data', (data) => {
+    console.error(data.toString());
+  });
+
+  nd.on('close', (code) => {
+    console.log(`child process closed with code ${code}`);
+    const ok_msg = "log files are backed up";
+    const er_msg = `log files backup process ended on code ${code}`;
+    const resp_msg = code === 0? ok_msg : er_msg;
+    helpers.sendMail("Backup Log Files", resp_msg);
+    backup_log_files_lock = 0;
+  });
+
+  nd.on('exit', (code) => {
+    console.log(`child process exited with code ${code}`);
+  });
+
+  nd.on('error', (err) => {
+    console.error(`child process has error ${err}`);
+  });
+}
+
 /**
+ * TIME SEQUENCE
  * seconds minutes hours day/mth months day/wk
  * ' *       *       *      *      *      *'
- *
  */
-
 log("starting jobs...");
 
 /**
@@ -132,7 +176,7 @@ const test_job_lock = new CronJob(
 const log_date_job = new CronJob(
   "0 30 1 * * *",
   function() {
-      const time = require('moment')().format('MMMM Do YYYY, h:mm:ss a');
+      const time = moment().format('MMMM Do YYYY, h:mm:ss a');
       log(`It is now ${time}`);
   },
   null,

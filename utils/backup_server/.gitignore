@@ -2,6 +2,9 @@
 # dump files
 *.rdb
 
+# text files
+*.txt
+
 # folders
 node_modules/
 redis-*/

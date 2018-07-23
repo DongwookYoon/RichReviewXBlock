@@ -5,6 +5,7 @@ const util = require('util');
 const fs = require('fs');
 const path = require('path');
 
+const mkdirp = require('mkdirp');
 const azure = require('azure-storage');
 
 const log = function(stmt) {
@@ -38,6 +39,15 @@ const BlobService = promisifyBlobService(blobService);
 
 function exec_backup() {
 
+  function makePath(localPath) {
+    return new Promise((resolve, reject) => {
+      mkdirp(localPath, (err) => {
+        if(err) { reject(err); }
+        else    { resolve(); }
+      });
+    });
+  }
+
   function doesLocalFileExist(localFilename) {
     return new Promise((resolve) => {
       fs.access(localFilename, fs.constants.F_OK, (err) => {
@@ -66,11 +76,25 @@ function exec_backup() {
   }
 
   function downloadBlob(container, blobName, localFilename) {
-    return BlobService.getBlobToLocalFile(container, blobName, localFilename);
+    const localPath = path.dirname(localFilename);
+    return makePath(localPath)
+      .then((b) => {
+        return BlobService.getBlobToLocalFile(container, blobName, localFilename);
+      });
   }
 
   function handleLocalFileExist(container, blobName, localFilename) {
     const localTempFilename = DOWNLOAD_DIR + container + '/' + blobName + '.tttemp';
+
+    const handleFilesAreInSync = () => {
+      return deleteLocalFile(localTempFilename);
+    };
+    const handleFilesAreNotInSync = () => {
+      return deleteLocalFile(localFilename)
+        .then(b => {
+          renameFile(localTempFilename, localFilename);
+        });
+    };
 
     return BlobService.getBlobToLocalFile(container, blobName, localTempFilename)
       .then((response) => {
@@ -81,18 +105,12 @@ function exec_backup() {
       })
       .then(([tempFile, localFile]) => {
         if(tempFile.toString() === localFile.toString()) {
+        //if(Buffer.compare(tempFile, localFile)) {
           log(`File in sync: ${localFilename}`);
-          return false;
+          return handleFilesAreInSync();
         } else {
           log(`File not in sync: ${localFilename}`);
-          return deleteLocalFile(localFilename);
-        }
-      })
-      .then((deleted) => {
-        if(deleted) {
-          return renameFile(localTempFilename, localFilename);
-        } else {
-          return null;
+          return handleFilesAreNotInSync();
         }
       });
   }
@@ -104,6 +122,7 @@ function exec_backup() {
    */
   function sync_blob(container, blobName) {
     const localFilename = DOWNLOAD_DIR + container + '/' + blobName;
+    //log(`${container} : ${blobName}`)
 
     return doesLocalFileExist(localFilename)
       .then(fileExists => {
@@ -127,9 +146,9 @@ function exec_backup() {
     const scanBlobs = (currentToken) => {
       let promise = null;
       if (currentToken) {
-        promise = BlobService.listBlobsSegmented(container, currentToken, { MAX_BLOB_RESULTS });
+        promise = BlobService.listBlobsSegmented(container, currentToken, { maxResults: MAX_BLOB_RESULTS });
       } else {
-        promise = BlobService.listBlobsSegmented(container, null, { MAX_BLOB_RESULTS });
+        promise = BlobService.listBlobsSegmented(container, null, { maxResults: MAX_BLOB_RESULTS });
       }
       return promise
         .then((results) => {
@@ -142,6 +161,7 @@ function exec_backup() {
         .then((cToken) => {
           if (cToken) {
             return scanBlobs(cToken);
+            //return null;
           } else {
             return null;
           }
@@ -165,9 +185,9 @@ function exec_backup() {
   const scanContainers = (currentToken) => {
     let promise = null;
     if(currentToken) {
-      promise = BlobService.listContainersSegmented(currentToken, { MAX_CONTAINER_RESULTS });
+      promise = BlobService.listContainersSegmented(currentToken, { maxResults: MAX_CONTAINER_RESULTS });
     } else {
-      promise = BlobService.listContainersSegmented(null, { MAX_CONTAINER_RESULTS });
+      promise = BlobService.listContainersSegmented(null, { maxResults: MAX_CONTAINER_RESULTS });
     }
     return promise
       .then((results) => {
@@ -180,6 +200,7 @@ function exec_backup() {
       .then((cToken) => {
         if(cToken) {
           return scanContainers(cToken);
+          //return null;
         } else {
           return null;
         }

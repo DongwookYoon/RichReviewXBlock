@@ -14,8 +14,6 @@
  *
  * ./redis-4.0.10/src/redis-server --port 8555 --dir ./ --dbfilename redis_backup.20180720130767.rdb
  *
- * TODO: getting message "6760:M 20 Jul 13:44:53.709 # There is a child saving an .rdb. Killing it!" so I disabled autosave. Double check.
- *
  * Created by Colin
  */
 
@@ -26,6 +24,8 @@ const path = require('path');
 
 const moment = require('moment');
 const redis = require('redis');
+
+const helpers = require('./helpers');
 
 const redis_config = JSON.parse(
   fs.readFileSync(path.join(__dirname, '../..', 'richreview_core/node_server/ssl/redis_config.json'), 'utf-8')
@@ -42,7 +42,7 @@ const log = function(stmt) {
 };
 
 const log_error = function(stmt) {
-  console.error("<ERR>: "+stmt);
+  console.error("<BACKUP REDIS ERR>: "+stmt);
 };
 
 /**
@@ -267,6 +267,7 @@ const exec_backup = () => {
     string: 0,
     zset: 0,
   };
+  const FAIL_ACC = [ ];
 
   /**
    * Recursive function to SCAN and run callback on all redis key entries.
@@ -330,6 +331,7 @@ const exec_backup = () => {
       .catch((err) => {
         log_error(entry+" "+err);
         FAILS.hash++; // FAIL
+        FAIL_ACC.push(`${type}: ${entry}`);
         return 0;
       });
   };
@@ -348,6 +350,7 @@ const exec_backup = () => {
       .catch((err) => {
         log_error(entry+" "+err);
         FAILS.list++; // FAIL
+        FAIL_ACC.push(`${type}: ${entry}`);
         return 0;
       });
   };
@@ -365,6 +368,7 @@ const exec_backup = () => {
       .catch((err) => {
         log_error(entry+" "+err);
         FAILS.set++; // FAIL
+        FAIL_ACC.push(`${type}: ${entry}`);
         return 0;
       });
   };
@@ -382,6 +386,7 @@ const exec_backup = () => {
       .catch((err) => {
         log_error(entry+" "+err);
         FAILS.string++; // FAIL
+        FAIL_ACC.push(`${type}: ${entry}`);
         return 0;
       });
   };
@@ -405,6 +410,7 @@ const exec_backup = () => {
       .catch((err) => {
         log_error(entry+" "+err);
         FAILS.zset++; // FAIL
+        FAIL_ACC.push(`${type}: ${entry}`);
         return 0;
       });
   };
@@ -424,20 +430,38 @@ const exec_backup = () => {
         return treatSortedSet(entry);
       default:
         FAILS.unknown++; // FAIL
+        FAIL_ACC.push(`${type}: ${entry}`);
         return Promise.resolve(0);
     }
   };
 
+  const notify = () => {
+    log("backup keys:");
+    console.log(JSON.stringify(IMPORTED, null, '\t'));
+    log("missing keys:");
+    console.log(JSON.stringify(FAILS, null, '\t'));
+    log("Sending email update...");
+    let message = `Redis backup imported:\n${IMPORTED.set} sets,\n${IMPORTED.list} lists,\n${IMPORTED.hash} hashes,\n${IMPORTED.string} strings,\n${IMPORTED.zset} sorted sets\n\n`;
+    if(FAIL_ACC.length > 0) {
+      message += `some keys failed! Fail count:\n${FAILS.set} sets,\n${FAILS.list} lists,\n${FAILS.hash} hashes,\n${FAILS.string} strings,\n${FAILS.zset} sorted sets\n\nThese keys did not back up:\n`;
+      const iterLength = Math.min(FAIL_ACC.length, 30);
+      for(let i = 0; i < iterLength; i++) {
+        message += `${FAIL_ACC[i]}\n`
+      }
+    }
+    return helpers.sendMail(
+      "COMPLETE | Backup Redis Cache", message
+    );
+  };
+
+  log("starting exec_backup");
   return exec(cb_set)
-    .then((b) => {
-      log("imported keys:");
-      console.log(JSON.stringify(IMPORTED, null, '\t'));
-      log("missing keys:");
-      console.log(JSON.stringify(FAILS, null, '\t'));
-      return null;
-    })
+    .then(notify)
     .catch((err) => {
       log_error(err);
+      return helpers.sendMail(
+        "FAILED | Backup Redis Cache", err
+      );
     });
 };
 
@@ -557,4 +581,7 @@ exec_backup()
   })
   .catch(err => {
     log_error(err);
+    return helpers.sendMail(
+      "System error | Backup Redis Cache", err
+    );
   });

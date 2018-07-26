@@ -27,7 +27,12 @@ exports.printer = function(type, stmt) {
 };
 
 exports.testl = function(stmt) {
-    console.log("["+d()+"]<TEST>: "+stmt);
+    console.log("<TEST>: "+stmt);
+};
+
+exports.teste = function(err) {
+  if(err instanceof Error) { err = `${err.code}: ${err.message}`; }
+  console.log("<ERR>: "+err);
 };
 
 exports.isString = function(str) {

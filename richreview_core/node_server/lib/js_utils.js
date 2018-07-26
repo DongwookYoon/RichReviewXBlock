@@ -368,10 +368,6 @@ exports.promiseLoop = function(func, args){
   });
 };
 
-exports.promiseMap = function(func, args) {
-    return
-};
-
 exports.Email = function(frommail, tomail, subject, textbody, htmlbody){
     return new Promise(
         function(resolve, reject){

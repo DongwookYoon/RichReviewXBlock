@@ -4,36 +4,21 @@
  * created by Colin
  */
 
+const node_util  = require('util');
+
 const util       = require('../util');
 const expect     = require('chai').expect;
 const assert     = require('chai').assert;
 
-let js_utils     = null;
-let RedisClient  = null;
-let R2D          = null;
-let redis_utils  = null;
-let PilotHandler = null;
-let ClassHandler = null;
-let Course       = null;
+let js_utils     = require('../lib/js_utils');
 
 describe("miscellaneous tests", function() {
 
-  before(function () {
-    js_utils     = require('../lib/js_utils');
-    // RedisClient  = require('../lib/redis_client').RedisClient;
-    // R2D          = require('../lib/r2d');
-    // redis_utils  = require('../lib/redis_client').util;
-    // PilotHandler = require('../lib/pilot_handler');
-    // ClassHandler = require('../lib/class_handler');
-    // Course       = require('../lib/Course');
-  });
+  before(function () { });
 
   beforeEach(function () { });
 
-  after(function () {
-    // RedisClient.quit();
-
-  });
+  after(function () { });
 
   afterEach(function () { });
 
@@ -69,6 +54,34 @@ describe("miscellaneous tests", function() {
         util.error(err);
         assert.fail(err);
         return null;
+      })
+      .finally(done);
+  });
+
+  it("test promisify", (done) => {
+    function test(a, b, cb) {
+      if(a === -1 || b === -1) {
+        cb(new Error("failure"), null, null);
+      } else {
+        cb(null, a + b, a * b);
+      }
+    }
+
+    test(2, 3, (err, c, d) => {
+      if(err) {
+        console.log(err.message);
+        return;
+      }
+      console.log(c, d);
+    });
+
+    const testAsync = node_util.promisify(test);
+    testAsync(2, 3)
+      .then((c, d) => {
+        console.log(c, d);
+      })
+      .catch((err) => {
+        console.log(err.message);
       })
       .finally(done);
   });

@@ -1,24 +1,19 @@
 const nodemailer = require('nodemailer');
 
+const nodemailer_config = JSON.parse(
+  fs.readFileSync(
+    path.join(__dirname, '../..', 'richreview_core/node_server/ssl/nodemailer_config.json')
+    , 'utf-8'
+  )
+);
+
+const transporter = nodemailer.createTransport(nodemailer_config.transportOptions);
+
 exports.sendMail = function(subject, text) {
-  const toEmail = "John Doe <jdoe@email.com>";
 
-  const MAIL_USER = "eeac3290faceca";
-  const MAIL_PASS = "f2077e357e071a";
-  const MAIL_HOST = "smtp.mailtrap.io";
-  const MAIL_PORT = 2525;
-
-  let transporter = nodemailer.createTransport({
-    host: MAIL_HOST,
-    port: MAIL_PORT,
-    auth: {
-      user: MAIL_USER,
-      pass: MAIL_PASS
-    }
-  });
   const mailOptions = {
-    from: toEmail,
-    to:   toEmail,
+    from: nodemailer_config.alertSentFromEmail,
+    to:   nodemailer_config.alertSendToEmails,
     subject: subject,
     text: text,
     html: ""

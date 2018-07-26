@@ -12,5 +12,8 @@ if fileDNExists redis-*.tar.gz; then
     tar xzf redis-stable.tar.gz
     cd redis-stable
     make
-    # TODO: if tar file exist then use most recent one
 fi
+
+mkdir -p azure_str_backup
+mkdir -p redis_backup
+mkdir -p log_backup

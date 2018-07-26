@@ -6,7 +6,8 @@
  * 3.2) Compares and updates blob is if files have changed
  * 3.3) Skip the blob if already downloaded and unchanged
  *
- * Note backup script does not delete local files if blob has been deleted.
+ * Note: backup script does not delete local files if blob has been deleted.
+ * Note: as of 20 July, 2018, there are 726 containers, and 9365 blobs
  */
 
 // import node modules
@@ -32,12 +33,10 @@ const log_error = function(stmt) {
 const MAX_CONTAINER_RESULTS = 3;
 const MAX_BLOB_RESULTS = 5;
 const DOWNLOAD_DIR = __dirname + '/azure_str_backup/';
-const readFileAsync = util.promisify(fs.readFile);
-
 const azure_config = JSON.parse(
   fs.readFileSync(path.join(__dirname, '../..', 'richreview_core/node_server/ssl/azure_config.json'), 'utf-8')
 );
-
+const readFileAsync = util.promisify(fs.readFile);
 const blobService = azure.createBlobService(azure_config.storage.connection_string).withFilter(new azure.ExponentialRetryPolicyFilter());
 
 const promisifyBlobService = function(service) {
@@ -270,13 +269,13 @@ function exec_backup() {
     } else { message += `\n\n\n`; }
     message += `blobs:\n${COUNT.blobs.downloaded} downloaded,\n${COUNT.blobs.updated} updated,\n${COUNT.blobs.skipped} skipped`;
     if(COUNT.blobs.failed > 0) {
-      message += `,\n${COUNT.blobs.failed} failed to import`
-    } else { message += `\n\n\n` }
-    message += "These keys did not back up:\n";
-    const iterLength = Math.min(FAIL_ACC.length, 30);
-    for(let i = 0; i < iterLength; i++) {
-      message += `${FAIL_ACC[i]}\n`
-    }
+      message += `,\n${COUNT.blobs.failed} failed to import\n\n\n`;
+      message += "These keys did not back up:\n";
+      const iterLength = Math.min(FAIL_ACC.length, 30);
+      for(let i = 0; i < iterLength; i++) {
+        message += `${FAIL_ACC[i]}\n`
+      }
+    } else { message += `\n` }
     return helpers.sendMail(
       "COMPLETE | Backup Azure Storage", message
     );

@@ -5,7 +5,7 @@
  */
 
 // import npm modules
-const Promise = require("promise"); // jshint ignore:line
+const node_util = require('util');
 const redis = require('redis');
 
 // import libraries
@@ -42,71 +42,62 @@ if(process.env.NODE_ENV === 'production') {
   redisClient = redis.createClient(env.redis_config.port);
 }
 
+/**
+ * Set error handler
+ */
 redisClient.on('error', function(err) {
     util.error(err);
 });
 
-var ping_timeout = null;
-(function PingRedisServer(){
+/**
+ * Ping server periodically
+ */
+let ping_timeout = null;
+(function PingRedisServer() {
     redisClient.ping(redis.print);
     ping_timeout = setTimeout(PingRedisServer, 3*60*1000);
-}());
+} ( ));
 
-/*
- *  Promisified RedisWrapper
+/**
+ * Promisify all redis prototype functions including Redis commands
  */
-var RedisClient = (function(){
-    var pub = {};
+const promisifyRedisClient = function(client) {
+  const pub = { };
 
-    var commands = [
-        'GET',
-        'KEYS',
-        'EXISTS',
-        'DEL',
-        'HGET',
-        'HDEL',
-        'HGETALL',
-        'HEXISTS',
-        'HKEYS',
-        'EXISTS',
-        'HMSET',
-        'HSET',
-        'LPUSH',
-        'RPUSH',
-        'LREM',
-        'LRANGE',
-        'SET',
-        'SMOVE',
-        'SMEMBERS',
-        'SADD',
-        'HMGET'
-    ];
+  Object.keys(redis.RedisClient.prototype).forEach((command) => {
+    pub[command] = node_util.promisify(client[command]).bind(client);
+  });
 
-    commands.forEach(function(fstr){
-        pub[fstr] = function(/*arguments*/) {
-            var args = Array.prototype.slice.call(arguments);
-            return new Promise(function(resolve, reject){
-                args.push(function(err,rtn){
-                    if (err) {
-                        reject(err);
-                    }
-                    else {
-                        resolve(rtn);
-                    }
-                });
-                redisClient[fstr].apply(redisClient, args);
-            });
-        };
-    });
+  pub.end = function(flush) {
+    clearTimeout(ping_timeout);
+    redisClient.end(flush);
+  };
 
+  pub.quit = function() {
+    clearTimeout(ping_timeout);
+    redisClient.quit();
+  };
 
-    pub.end = function(){
-        clearTimeout(ping_timeout);
-        redisClient.end();
+  return pub;
+};
+
+const RedisClient = promisifyRedisClient(redisClient);
+
+exports.util = (function () {
+    const pub = { };
+
+    pub.keyExists = function(key) {
+        return RedisClient.EXISTS(key)
+          .then((b) => { return b === 1; });
+    };
+
+    pub.isMember  = function(key, value) {
+      return RedisClient.SISMEMBER(key, value)
+        .then((b) => { return b === 1; });
     };
 
     return pub;
-}());
+} ( ));
 
 exports.redisClient = redisClient;
 exports.RedisClient = RedisClient;

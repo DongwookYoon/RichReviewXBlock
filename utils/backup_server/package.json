@@ -1,0 +1,19 @@
+{
+  "name": "backup_scripts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "nd_child_test.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "azure-storage": "^2.10.0",
+    "cron": "^1.3.0",
+    "mkdirp": "^0.5.1",
+    "moment": "^2.22.2",
+    "nodemailer": "^4.6.7",
+    "redis": "^2.8.0"
+  }
+}

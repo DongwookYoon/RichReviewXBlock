@@ -72,3 +72,11 @@ exports.redis_config = JSON.parse(
 exports.ssl_key = fs.readFileSync(path.join(__dirname, '..', 'ssl/richreview_net.key'));
 exports.ssl_cert = fs.readFileSync(path.join(__dirname, '..', 'ssl/richreview_net.crt'));
 exports.ssl_ca = fs.readFileSync(path.join(__dirname, '..', 'ssl/root.crt'));
+
+exports.ubc = {
+    idp_config: JSON.parse(
+      fs.readFileSync(path.join(__dirname, '..', 'ssl/ubc_idp_config.json'), 'utf-8')
+    ),
+    privateCert: fs.readFileSync(path.join(__dirname, '..', 'ssl/sp_richreview_ubc.cert'), 'utf-8'),
+    decryptionPvk: fs.readFileSync(path.join(__dirname, '..', 'ssl/sp_richreview_ubc.key'), 'utf-8')
+};

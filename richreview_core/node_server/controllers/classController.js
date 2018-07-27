@@ -24,7 +24,7 @@ const class_handler = require('../lib/class_handler');
  * @returns {Promise<User>}
  */
 const getUserFromRedis = (user_key) => {
-  // corr. User.prototype.cache.
+  // corr. User.cache.
   const user = dummyData.mockUsers[user_key];
   user.id = user_key;
   user.password = undefined;

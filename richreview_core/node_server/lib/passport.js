@@ -3,6 +3,8 @@
  *
  * created by Colin
  */
+const fs = require('fs');
+const path = require('path');
 
 const util = require('../util');
 const passport  = require('passport');
@@ -13,6 +15,9 @@ const lib_utils = require('./lib_utils');
 const R2D = require('./r2d.js');
 const LtiEngine = require('./lti_engine.js');
 const pilotHandler = require('./pilot_handler.js');
+
+util.start("          passport SAML Strategy");
+const SAMLStrategy = require('passport-saml').Strategy;
 
 util.start("          google oauth 2.0 strategy");
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
@@ -48,6 +53,40 @@ passport.deserializeUser(function(id, done){
     );
 });
 
+const samlStrategy = new SAMLStrategy(
+  {
+    callbackUrl: env.ubc.idp_config.callbackURL,
+    entryPoint: env.ubc.idp_config.entryPoint,
+    issuer: env.ubc.idp_config.entityID,
+    cert: env.ubc.idp_config.cert,
+    privateCert: env.ubc.privateCert,
+    decryptionPvk: env.ubc.decryptionPvk
+  },
+  function(profile, done) {
+    console.log(JSON.stringify(profile));
+
+    lib_utils.findUserByEmail(profile.email)
+      .then(function(user) {
+        if(user) {
+          return user;
+        } else {
+          const email  = "";
+          const new_id = "";
+
+          done("ERR: login incomplete", null);
+
+          /*return R2D.User.prototype.create(
+            newid,
+            email
+          );*/
+        }
+      })
+      .catch(done);
+  });
+
+util.logger("PASSPORT", "use SAML2 auth for UBC");
+passport.use(samlStrategy);
+
 /**
  * Use wsfed SAML 2.0 to login with Cornell NetID
  */
@@ -61,8 +100,7 @@ passport.use(
                 .then(function(user) {
                     if(user) {
                         return user;
-                    }
-                    else{
+                    } else{
                         var email = profile.upn;
                         var newid = js_utils.generateSaltedSha1(email, env.sha1_salt.netid).substring(0, 21);
                         return R2D.User.prototype.create(
@@ -85,7 +123,9 @@ passport.use(
  */
 const googleStrategyCB = (accessToken, refreshToken, profile, done) => {
     const email = profile.emails.length !== 0 ? profile.emails[0].value : '';
-    R2D.User.prototype.isExist(profile.id)
+    const b = R2D.User.cache.exists(profile.id);
+    new Promise.resolve(b)
+    //R2D.User.prototype.isExist(profile.id)
         .then((is_exist) => {
             if(is_exist) {
                 return lib_utils.findUserByID(profile.id)

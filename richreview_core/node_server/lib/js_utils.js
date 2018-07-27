@@ -14,7 +14,7 @@ const moment = require('moment');
 const Promise = require("promise"); // jshint ignore:line
 const nodemailer = require('nodemailer');
 
-const util         = require('../util');
+const util = require('../util');
 
 exports.generateSaltedSha1 = function(raw_key, salt){
     var shasum = crypto.createHash('sha1');
@@ -291,38 +291,81 @@ exports.serialPromiseFuncs = function(promiseFuncs, rtns){
     }
 };
 
-
-exports.PromiseLoop = function(func, argl){
-    var rtnl = new Array(argl.length);
-    return new Promise(function(resolve, reject){
-        function job(n){
-            if(n !== argl.length){
-                func.apply(this, argl[n]).then(
-                    function(rtn){
-                        try{
-                            rtnl[n] = rtn;
-                            job(n+1);
-                        }
-                        catch(err){
-                            throw err;
-                        }
-                    }
-                ).catch(
-                    reject
-                );
+/**
+ * Calls async function over an array of array arguments using apply
+ * @param {function(...*): Promise} func - the function
+ * @param {Array.<*[]>} argl
+ * @return {Promise[]} - the array of results from the async function
+ */
+exports.promiseLoopApply = function(func, argl){
+  const rtnl = new Array(argl.length);
+  return new Promise(function(resolve, reject) {
+    /********/
+    function job(n) {
+      if(n !== argl.length) {
+        /********/
+        //func.apply(this, argl[n]) // `this` is misleading
+        func.apply(null, argl[n])
+          .then(function(rtn) {
+            try {
+              rtnl[n] = rtn;
+              job(n+1);
+            } catch(err){
+              throw err;
             }
-            else{
-                resolve(rtnl);
-            }
-        }
+          })
+          .catch(reject);
+          /********/
+      } else {
+          resolve(rtnl);
+      }
+    }
+    /********/
+    try {
+        job(0);
+    } catch(err){
+        reject(err);
+    }
+    /********/
+  });
+};
 
-        try{
-            job(0);
-        }
-        catch(err){
-            reject(err);
-        }
-    });
+/**
+ * Calls async function over an array arguments
+ * @param {function(...*): Promise} func - the function
+ * @param {Array.<*>} args
+ * @return {Promise[]} - the array of results from the async function
+ */
+exports.promiseLoop = function(func, args){
+  const rtnl = new Array(args.length);
+  return new Promise(function(resolve, reject) {
+    /********/
+    function job(n) {
+      if(n !== args.length) {
+        /********/
+        func(args[n])
+          .then(function(rtn) {
+            try {
+              rtnl[n] = rtn;
+              job(n+1);
+            } catch(err){
+              throw err;
+            }
+          })
+          .catch(reject);
+        /********/
+      } else {
+        resolve(rtnl);
+      }
+    }
+    /********/
+    try {
+      job(0);
+    } catch(err){
+      reject(err);
+    }
+    /********/
+  });
 };
 
 exports.Email = function(frommail, tomail, subject, textbody, htmlbody){

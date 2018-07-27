@@ -38,9 +38,6 @@ const apiRoutes = require('./routes/api');
 util.start("setting up passport");
 require('./lib/passport');
 
-// util.start("importing test userids");
-// require('./data/import_pilot_study_users');
-
 util.start("making temp and cache files");
 mkdirp('../_temp');
 mkdirp('../cache');
@@ -78,7 +75,6 @@ setupStaticPages();
 app.use(flash());
 
 app.use((req, res, next) => {
-    // req.session.latestUrl = req.originalUrl; // TODO: ask Dongwook about this
     res.locals.cdn_endpoint = env.azure_config.cdn.endpoint;
     res.locals.host_url     = env.node_config.HOST_URL;
     res.locals.flashes = req.flash();

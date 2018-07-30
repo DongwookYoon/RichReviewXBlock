@@ -5,7 +5,7 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-BACKUP_FILE="redis_backup.${1}.rdb"
+BACKUP_FILE="redis_backup/redis_backup.${1}.rdb"
 mv dump.rdb $BACKUP_FILE
 rm -f dump.rdb
 echo "backup created"

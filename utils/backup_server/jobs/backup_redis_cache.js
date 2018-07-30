@@ -25,7 +25,7 @@ const path = require('path');
 const moment = require('moment');
 const redis = require('redis');
 
-const helpers = require('./helpers');
+const helpers = require('../helpers');
 
 const redis_config = JSON.parse(
   fs.readFileSync(path.join(__dirname, '../..', 'richreview_core/node_server/ssl/redis_config.json'), 'utf-8')
@@ -35,7 +35,7 @@ const REDIS_CACHE_KEY = redis_config.redis_cache.access_key;
 const REDIS_CACHE_HOSTNAME = redis_config.redis_cache.hostname;
 const REDIS_CACHE_PORT = redis_config.redis_cache.port;
 const LOCAL_REDIS_PORT = 8555;
-const REDIS_PATH = __dirname + '/redis-4.0.10/';
+const REDIS_PATH = path.join(__dirname, '..', 'redis-4.0.10');
 
 const log = function(stmt) {
   console.log("<BACKUP REDIS CACHE>: "+stmt);
@@ -57,7 +57,7 @@ const log_error = function(stmt) {
 log("DEBUG: spawning from "+REDIS_PATH);
 const redisSpawn = child_process.spawn(
     REDIS_PATH + 'src/redis-server',
-    [__dirname + '/' + 'redis.conf']
+    [path.join(__dirname, '..', 'redis.conf')]
 );
 
 const redisLocalClient = redis.createClient(LOCAL_REDIS_PORT);
@@ -508,7 +508,7 @@ const saveLocalServer = () => {
 const redisClose = () => {
     return new Promise((resolve, reject) => {
         child_process.execFile(
-            REDIS_PATH + 'src/redis-cli',
+            REDIS_PATH + '/src/redis-cli',
             ['-p', '8555', 'shutdown'],
             (error, stdout, stderr) => {
                 if(error) { reject(error); }
@@ -527,10 +527,10 @@ const manageDumpScript = () => {
   const DATE_LINE = moment().format('YYYYMMDDHHMMSS');
   return new Promise((resolve, reject) => {
     child_process.execFile(
-      __dirname + '/' + 'manage.sh',
+      path.join(__dirname, '..', 'scripts/manage_redis.sh'),
       [DATE_LINE],
       {
-        cwd: __dirname
+        cwd: path.join(__dirname, '..')
       },
       (error, stdout, stderr) => {
         if(error) { reject(error); }

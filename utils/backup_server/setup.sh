@@ -12,6 +12,13 @@ if fileDNExists redis-*.tar.gz; then
     tar xzf redis-stable.tar.gz
     cd redis-stable
     make
+else
+  for ff in redis-*.tar.gz; do
+    tar xzf $ff
+    cd $ff
+    make
+    break
+  done
 fi
 
 mkdir -p azure_str_backup

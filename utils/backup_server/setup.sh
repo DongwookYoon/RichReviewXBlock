@@ -21,6 +21,8 @@ else
   done
 fi
 
+cd ..
+
 mkdir -p azure_str_backup
 mkdir -p redis_backup
 mkdir -p log_backup

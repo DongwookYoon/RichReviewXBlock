@@ -41,8 +41,9 @@ const log = function(stmt) {
   console.log("<BACKUP REDIS CACHE>: "+stmt);
 };
 
-const log_error = function(stmt) {
-  console.error("<BACKUP REDIS ERR>: "+stmt);
+const log_error = function(err) {
+  if(err instanceof Error) { err = `${err.code}: ${err.message}`; }
+  console.error("<BACKUP REDIS ERR>: "+err);
 };
 
 /**

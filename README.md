@@ -13,7 +13,31 @@ Additionally it makes use of Redis to store user metadata, and Azure Storage to 
 
 ### Configure the VM
 
-We are using Ubuntu 18.04 LTS
+These instructions refer to the Ubuntu 18.04 LTS Server, although they can also refer to any linux distribution with minor changes. The first thing you want to do is establish a secure connection from your computer to a VM. This way, you don't need to enter your password at every connection. These same instructions are needed if you want to set up a [backup server](#backup-server) because your backup server needs to connect to the VM.
+
+```bash
+# Generate a pair of authentication keys. Do not enter a passphrase:
+ssh-keygen -t rsa
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/<User>/.ssh/id_rsa):
+Created directory '/home/<User>/.ssh'.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /home/<User>/.ssh/id_rsa.
+Your public key has been saved in /home/<User>/.ssh/id_rsa.pub.
+The key fingerprint is:
+3e:4f:05:79:3a:9f:96:7c:3b:ad:e9:58:37:bc:37:e4 <User>@<Your Computer>
+
+# Create a .ssh folder in your Remote VM
+ssh <Remote User>@<Remote VM> mkdir -p .ssh
+
+# Add the authentication keys to your Remote VM's authorized keys
+cat .ssh/id_rsa.pub | ssh <Remote User>@<Remote VM> 'cat >> .ssh/authorized_keys'
+```
+
+Sourced from (http://www.linuxproblem.org/art_9.html)
+
+You also need to run some installation commands to update your VM.
 
 ```bash
 sudo apt update
@@ -21,7 +45,7 @@ sudo apt upgrade
 sudo apt autoremove
 
 # these are some utilities you need later on
-sudo apt install build-essential unzip python-pip
+sudo apt install git build-essential unzip python-pip
 ```
 
 ### Install Node
@@ -391,9 +415,21 @@ Options:
 
 From (http://meinit.nl/the-3-most-important-kill-signals-on-the-linux-unix-command-line)
 
+### Backup Server
+
+RichReview comes with a backup server. It's a server that uses Cron Jobs to:
+
+- Maintain a local copy of the Azure Storage
+- Create daily snapshots of the Azure Redis Cache
+- Save log files of running processes in the VM
+
+You can run these jobs independently or use the Cron Job app to trigger them periodically.
+
+Go to `utils/backup_server` and run `setup.sh`.
+
 ### Test RichReview
 
-You're finally done! You can test RichReview straight from the VM (https://40.85.241.164:443). In the future there will be a weblink.
+You're finally done! You can test RichReview straight from the VM. I
 
 ## License
 

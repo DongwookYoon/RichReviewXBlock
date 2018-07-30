@@ -25,8 +25,6 @@ const log_error = function(stmt) {
   console.error("<APP ERR>: "+stmt);
 };
 
-const REMOTE_HOST = "rr_admin@richreview.net";
-
 let backup_azure_str_lock = 0;
 function backup_azure_str_launch() {
   log(`pinging job backup_azure_str, received ${backup_azure_str_lock}`);
@@ -111,38 +109,15 @@ function backup_log_files_launch() {
     log("starting job backup_redis_cache");
   }
 
-  const DATE_LINE = moment().format('YYYYMMDDHHMMSS');
-  const nd = child_process.spawn(
-    __dirname + 'scripts/backup_logs.sh',
-    [REMOTE_HOST, DATE_LINE],
-    {
-      cwd: path.join(__dirname, '..')
-    }
-  );
-
-  nd.stdout.on('data', (data) => {
-    console.log(data.toString());
-  });
-
-  nd.stderr.on('data', (data) => {
-    console.error(data.toString());
-  });
-
-  nd.on('close', (code) => {
-    console.log(`child process closed with code ${code}`);
-    const ok_msg = "log files are backed up";
-    const er_msg = `log files backup process ended on code ${code}`;
-    const resp_msg = code === 0? ok_msg : er_msg;
-    helpers.sendMail("Backup Log Files", resp_msg);
-    backup_log_files_lock = 0;
-  });
-
-  nd.on('exit', (code) => {
-    console.log(`child process exited with code ${code}`);
-  });
-
-  nd.on('error', (err) => {
-    console.error(`child process has error ${err}`);
+  new Promise((resolve, reject) => {
+    child_process.execFile('./jobs/backup_logs.js', (error, stdout, stderr) => {
+      if(error) {
+        if(error) { reject(error); }
+        if(stdout) { console.log(stdout); }
+      }
+      backup_log_files_lock = 0;
+      resolve(true);
+    });
   });
 }
 
@@ -204,6 +179,17 @@ const backup_redis_cache_job = new CronJob(
   // 1 AM every day
   "0 0 1 * * *",
   backup_redis_cache_launch,
+  null,
+  false
+);
+
+const backup_logs_job = new CronJob(
+  /* seconds minutes hours day/mth months day/wk */
+  /* ' *       *       *      *      *      *'   */
+  /* 1 AM on Everyday                            */
+  // 1 AM every day
+  "0 0 1 * * *",
+  backup_log_files_launch,
   null,
   false
 );

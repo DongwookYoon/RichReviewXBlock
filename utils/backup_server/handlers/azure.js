@@ -123,7 +123,7 @@ BlobSyncManager.prototype.notify = function() {
   log("done exec_blob_sync:");
   console.log(JSON.stringify(this.COUNT, null, '\t'));
 
-  let message = "I did a backup of Azure Storage.";
+  let message = "I did a backup of Azure Storage. ";
   
   message += this.FILE_DNE ? "(WARNING) Last Modified Record cannot be found. Starting from new record.": "";
     
@@ -159,7 +159,8 @@ BlobSyncManager.prototype.notify = function() {
  * TODO: WARNING! The function is not atomic.
  */
 BlobSyncManager.prototype.exec = function(container, blobName, dryRun) {
-  const localFilename = DOWNLOAD_DIR + container + '/' + blobName;
+  const completePath  = container+'/'+blobName;
+  const localFilename = DOWNLOAD_DIR+'/'+completePath;
   const that = this;
 
   function makePath(localPath) {
@@ -212,7 +213,7 @@ BlobSyncManager.prototype.exec = function(container, blobName, dryRun) {
       })
       .then((result) => {
         if(result.hasOwnProperty('lastModified')) {
-          that.lastModified[container+'/'+blobName] = Number.parseInt(moment(result.lastModified).format('YYYYMMDDHHMMSS'));
+          that.lastModified[completePath] = Number.parseInt(moment(result.lastModified).format('YYYYMMDDHHMMSS'));
         } else {
           // do nothing
         }
@@ -220,14 +221,18 @@ BlobSyncManager.prototype.exec = function(container, blobName, dryRun) {
       });
   }
 
+  /**
+   * If updatedTimeStamp is a number, the
+   * @param {number} updatedTimeStamp
+   */
   function downloadIfBinaryDistinctFile(updatedTimeStamp) {
-    const localTempFilename = DOWNLOAD_DIR +'/'+container+'/'+blobName+'.tttemp';
+    const localTempFilename = DOWNLOAD_DIR +'/'+completePath+'.tttemp';
 
     const handleFilesAreInSync = () => {
       return deleteLocalFile(localTempFilename)
         .then(b => {
           if(updatedTimeStamp) {
-            that.lastModified[container+'/'+blobName] = updatedTimeStamp;
+            that.lastModified[completePath] = updatedTimeStamp;
             that.COUNT.blobs.updated++;
           }
           else { that.COUNT.blobs.skipped++; }
@@ -242,7 +247,7 @@ BlobSyncManager.prototype.exec = function(container, blobName, dryRun) {
         })
         .then(b => {
           if(updatedTimeStamp) {
-            that.lastModified[container+'/'+blobName] = updatedTimeStamp;
+            that.lastModified[completePath] = updatedTimeStamp;
           }
           that.COUNT.blobs.updated++;
           return null;
@@ -290,7 +295,7 @@ BlobSyncManager.prototype.exec = function(container, blobName, dryRun) {
           );
         }
 
-        if(that.lastModified.hasOwnProperty(container+'/'+blobName)) {
+        if(that.lastModified.hasOwnProperty(completePath)) {
           return handleLastModifiedFile(updatedTimeStamp);
         } else {
           return downloadIfBinaryDistinctFile(updatedTimeStamp);
@@ -315,7 +320,7 @@ BlobSyncManager.prototype.exec = function(container, blobName, dryRun) {
     })
     .catch((err) => {
       log_error(err);
-      const errorMessage = err instanceof Error ? err.message : err;
+      const errorMessage = err instanceof Error ? `${err.code}: ${err.message}` : err;
       that.COUNT.blobs.failed++;
       that.FAIL_ACC.push(`${container}: ${blobName}: ${errorMessage}`);
       return null;
@@ -341,7 +346,7 @@ WriteLastModifiedManager.prototype.notify = function() {
   log("done exec_write_lastModified:");
   console.log(JSON.stringify(this.COUNT, null, '\t'));
 
-  let message = this.FILE_DNE ? "I'm starting a new record of Azure Storage blob's lastModified dates" : "(WARNING) I refreshed an existing record of Azure Storage blob's lastModified dates";
+  let message = this.FILE_DNE ? "I'm starting a new record of Azure Storage blob's lastModified dates." : "(WARNING) I refreshed an existing record of Azure Storage blob's lastModified dates.";
 
   message += `\n\n\ncontainers:\n${this.COUNT.containers.imported} updated`;
 
@@ -388,8 +393,8 @@ WriteLastModifiedManager.prototype.exec = function(container, blobName) {
       }
     })
     .catch((err) => {
-      const errorMessage = err instanceof Error ? err.message : err;
-      log_error(errorMessage);
+      log_error(err);
+      const errorMessage = err instanceof Error ? `${err.code}: ${err.message}` : err;
       that.COUNT.blobs.failed++;
       that.FAIL_ACC.push(`${container}: ${blobName}: ${errorMessage }`);
     });
@@ -441,8 +446,8 @@ function run_service(serviceManager) {
         serviceManager.COUNT.containers.imported++;
       })
       .catch((err) => {
-        const errorMessage = err instanceof Error ? err.message : err;
-        log_error(errorMessage);
+        log_error(err);
+        const errorMessage = err instanceof Error ? `${err.code}: ${err.message}` : err;
         serviceManager.COUNT.containers.failed++;
         serviceManager.FAIL_ACC.push(`${container}: (all): ${errorMessage}`);
       });
@@ -465,6 +470,7 @@ function run_service(serviceManager) {
           return backup_container(entry.name);
         });
         return Promise.all(promises)
+          .then(serviceManager.persistLastModified.bind(serviceManager))
           .then((b) => { return results.continuationToken; });
       })
       .then((cToken) => {

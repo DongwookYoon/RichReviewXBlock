@@ -16,7 +16,7 @@ if [ -z "$2" ]; then
     exit 0
 fi
 
-mv log_node.txt     "log_node.${2}.txt"
-mv log_node_err.txt "log_node_err.${2}.txt"
-mv log_django.txt   "log_django.${2}.txt"
+mv log_node.txt     "log_backup/log_node.${2}.txt"
+mv log_node_err.txt "log_backup/log_node_err.${2}.txt"
+mv log_django.txt   "log_backup/log_django.${2}.txt"
 

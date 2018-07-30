@@ -25,7 +25,7 @@ const log_error = function(stmt) {
   console.error("<APP ERR>: "+stmt);
 };
 
-const REMOTE_HOST = "rr_admin@40.85.220.29";
+const REMOTE_HOST = "rr_admin@richreview.net";
 
 let backup_azure_str_lock = 0;
 function backup_azure_str_launch() {
@@ -113,8 +113,11 @@ function backup_log_files_launch() {
 
   const DATE_LINE = moment().format('YYYYMMDDHHMMSS');
   const nd = child_process.spawn(
-    __dirname + '/backup_logs.sh',
-    [REMOTE_HOST, DATE_LINE]
+    __dirname + 'scripts/backup_logs.sh',
+    [REMOTE_HOST, DATE_LINE],
+    {
+      cwd: path.join(__dirname, '..')
+    }
   );
 
   nd.stdout.on('data', (data) => {

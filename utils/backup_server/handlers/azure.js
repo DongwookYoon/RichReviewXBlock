@@ -21,6 +21,7 @@ const azure = require('azure-storage');
 const moment = require('moment');
 
 const helpers = require('../helpers');
+const env = require('../env');
 
 const log = function(stmt) {
   console.log("<BACKUP AZURE STR>: "+stmt);
@@ -35,12 +36,9 @@ const MAX_CONTAINER_RESULTS = 3;
 const MAX_BLOB_RESULTS = 5;
 const DOWNLOAD_DIR = path.join(__dirname, '..', 'azure_str_backup');
 const LAST_MODIFIED_RECORD_DIR = path.join(__dirname, '..', 'azure_str_last_modified_record.json');
-const azure_config = JSON.parse(
-  fs.readFileSync(path.join(__dirname, '../../..', 'richreview_core/node_server/ssl/azure_config.json'), 'utf-8')
-);
 const readFileAsync  = util.promisify(fs.readFile);
 const writeFileAsync = util.promisify(fs.writeFile);
-const blobService = azure.createBlobService(azure_config.storage.connection_string).withFilter(new azure.ExponentialRetryPolicyFilter());
+const blobService = azure.createBlobService(env.azure_config.storage.connection_string).withFilter(new azure.ExponentialRetryPolicyFilter());
 
 const promisifyBlobService = function(service) {
   const pub = { };
@@ -85,10 +83,10 @@ function ServiceManager() {
 ServiceManager.prototype.uploadLastModified = function () {
   const that = this;
 
-  log("getting last modified records");
+  helpers.log("getting last modified records");
   return readFileAsync(LAST_MODIFIED_RECORD_DIR, 'utf-8')
     .catch((err) => {
-      log_error(err);
+      helpers.log_error(err);
       if(err instanceof Error && err.code === "ENOENT") {
         that.FILE_DNE = true;
         return "{}";
@@ -120,7 +118,7 @@ BlobSyncManager.prototype.constructor = BlobSyncManager;
  * Notify admin by email after blob sync
  */
 BlobSyncManager.prototype.notify = function() {
-  log("done exec_blob_sync:");
+  helpers.log("done exec_blob_sync:");
   console.log(JSON.stringify(this.COUNT, null, '\t'));
 
   let message = "I did a backup of Azure Storage. ";
@@ -264,10 +262,10 @@ BlobSyncManager.prototype.exec = function(container, blobName, dryRun) {
       .then(([tempFile, localFile]) => {
         if(tempFile.toString() === localFile.toString()) {
           //if(Buffer.compare(tempFile, localFile)) {
-          log(`File in sync: ${localFilename}`);
+          helpers.log(`File in sync: ${localFilename}`);
           return handleFilesAreInSync();
         } else {
-          log(`File not in sync: ${localFilename}`);
+          helpers.log(`File not in sync: ${localFilename}`);
           return handleFilesAreNotInSync();
         }
       });
@@ -275,10 +273,10 @@ BlobSyncManager.prototype.exec = function(container, blobName, dryRun) {
 
   function handleLastModifiedFile(updatedTimeStamp) {
     if(updatedTimeStamp && updatedTimeStamp > that.lastModified[container+'/'+blobName]) {
-      log("the last modified date has been updated");
+      helpers.log("the last modified date has been updated");
       return downloadIfBinaryDistinctFile(updatedTimeStamp);
     } else {
-      log("the last modified date is unchanged");
+      helpers.log("the last modified date is unchanged");
       that.COUNT.blobs.skipped++;
       return Promise.resolve(null);
     }
@@ -304,22 +302,22 @@ BlobSyncManager.prototype.exec = function(container, blobName, dryRun) {
   }
 
   if(dryRun) {
-    log(`sync_blob dryrun: ${container}: ${blobName}`);
+    helpers.log(`sync_blob dryrun: ${container}: ${blobName}`);
     return;
   }
 
   return doesLocalFileExist(localFilename)
     .then(fileExists => {
       if(fileExists) {
-        log(`File exists: ${localFilename}`);
+        helpers.log(`File exists: ${localFilename}`);
         return handleLocalFileExist();
       } else {
-        log(`File not exist: ${localFilename}`);
+        helpers.log(`File not exist: ${localFilename}`);
         return downloadBlob();
       }
     })
     .catch((err) => {
-      log_error(err);
+      helpers.log_error(err);
       const errorMessage = err instanceof Error ? `${err.code}: ${err.message}` : err;
       that.COUNT.blobs.failed++;
       that.FAIL_ACC.push(`${container}: ${blobName}: ${errorMessage}`);
@@ -343,7 +341,7 @@ WriteLastModifiedManager.prototype.constructor = WriteLastModifiedManager;
  * notify admin after last modified dates are updated
  */
 WriteLastModifiedManager.prototype.notify = function() {
-  log("done exec_write_lastModified:");
+  helpers.log("done exec_write_lastModified:");
   console.log(JSON.stringify(this.COUNT, null, '\t'));
 
   let message = this.FILE_DNE ? "I'm starting a new record of Azure Storage blob's lastModified dates." : "(WARNING) I refreshed an existing record of Azure Storage blob's lastModified dates.";
@@ -385,7 +383,7 @@ WriteLastModifiedManager.prototype.exec = function(container, blobName) {
   return BlobService.getBlobProperties(container, blobName)
     .then((result) => {
       if(result.hasOwnProperty('lastModified')) {
-        log(`got lastModified of ${container}/${blobName}`);
+        helpers.log(`got lastModified of ${container}/${blobName}`);
         that.lastModified[container+'/'+blobName] = Number.parseInt(moment(result.lastModified).format('YYYYMMDDHHMMSS'));
         that.COUNT.blobs.updated++;
       } else {
@@ -393,7 +391,7 @@ WriteLastModifiedManager.prototype.exec = function(container, blobName) {
       }
     })
     .catch((err) => {
-      log_error(err);
+      helpers.log_error(err);
       const errorMessage = err instanceof Error ? `${err.code}: ${err.message}` : err;
       that.COUNT.blobs.failed++;
       that.FAIL_ACC.push(`${container}: ${blobName}: ${errorMessage }`);
@@ -439,14 +437,14 @@ function run_service(serviceManager) {
         });
     };
 
-    log("opening container: "+container);
+    helpers.log("opening container: "+container);
     return scanBlobs()
       .then((b) => {
-        log("closed container: "+container);
+        helpers.log("closed container: "+container);
         serviceManager.COUNT.containers.imported++;
       })
       .catch((err) => {
-        log_error(err);
+        helpers.log_error(err);
         const errorMessage = err instanceof Error ? `${err.code}: ${err.message}` : err;
         serviceManager.COUNT.containers.failed++;
         serviceManager.FAIL_ACC.push(`${container}: (all): ${errorMessage}`);
@@ -482,13 +480,13 @@ function run_service(serviceManager) {
       });
   };
 
-  log("starting run_service");
+  helpers.log("starting run_service");
   return serviceManager.uploadLastModified()
     .then(scanContainers.bind(null, null))
     .then(serviceManager.persistLastModified.bind(serviceManager))
     .then(serviceManager.notify.bind(serviceManager))
     .catch((err) => {
-      log_error(err);
+      helpers.log_error(err);
       return helpers.sendMail(
         "FAILED | Backup Azure Storage", err
       );

@@ -26,16 +26,15 @@ const moment = require('moment');
 const redis = require('redis');
 
 const helpers = require('../helpers');
+const env = require('../env');
 
-const redis_config = JSON.parse(
-  fs.readFileSync(path.join(__dirname, '../..', 'richreview_core/node_server/ssl/redis_config.json'), 'utf-8')
-);
-
-const REDIS_CACHE_KEY = redis_config.redis_cache.access_key;
-const REDIS_CACHE_HOSTNAME = redis_config.redis_cache.hostname;
-const REDIS_CACHE_PORT = redis_config.redis_cache.port;
-const LOCAL_REDIS_PORT = 8555;
-const REDIS_PATH = path.join(__dirname, '..', 'redis-4.0.10');
+/**
+ * Get a redis server directory
+ */
+const redis_directories = fs.readdirSync(path.join(__dirname, '..'))
+  .filter((bbb) => {
+    return fs.statSync(path.join(__dirname, '..', bbb)).isDirectory() && /^redis-[a-zA-z0-9\-\.]+$/.test(bbb); });
+const REDIS_PATH = path.join(__dirname, '..', redis_directories[0]);
 
 const log = function(stmt) {
   console.log("<BACKUP REDIS CACHE>: "+stmt);
@@ -61,14 +60,16 @@ const redisSpawn = child_process.spawn(
     [path.join(__dirname, '..', 'redis.conf')]
 );
 
-const redisLocalClient = redis.createClient(LOCAL_REDIS_PORT);
+const redisLocalClient = redis.createClient(
+  env.redis_config.backup_port
+);
 const redisCacheClient = redis.createClient(
-  REDIS_CACHE_PORT,
-  REDIS_CACHE_HOSTNAME,
+  env.redis_config.redis_cache.port,
+  env.redis_config.redis_cache.hostname,
   {
-    auth_pass: REDIS_CACHE_KEY,
+    auth_pass: env.redis_config.redis_cache.access_key,
     tls: {
-      servername: REDIS_CACHE_HOSTNAME
+      servername: env.redis_config.redis_cache.hostname
     }
   }
 );

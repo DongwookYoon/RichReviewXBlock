@@ -10,7 +10,7 @@ const env = require('../env');
 const DATE_LINE = moment().format('YYYYMMDDHHMMSS');
 const nd = child_process.spawn(
   path.join(__dirname,'..', 'scripts/backup_logs.sh'),
-  [env.REMOTE_HOST, DATE_LINE],
+  [env.node_config.REMOTE_HOST, DATE_LINE],
   {
     cwd: path.join(__dirname, '..')
   }

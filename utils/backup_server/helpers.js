@@ -4,20 +4,15 @@ const path = require('path');
 
 const nodemailer = require('nodemailer');
 
-const nodemailer_config = JSON.parse(
-  fs.readFileSync(
-    path.join(__dirname, '../..', 'richreview_core/node_server/ssl/nodemailer_config.json')
-    , 'utf-8'
-  )
-);
+const env = require('./env');
 
-const transporter = nodemailer.createTransport(nodemailer_config.transportOptions);
+const transporter = nodemailer.createTransport(env.nodemailer_config.transportOptions);
 
 exports.sendMail = function(subject, text) {
 
   const mailOptions = {
-    from: nodemailer_config.alertSentFromEmail,
-    to:   nodemailer_config.alertSendToEmails,
+    from: env.nodemailer_config.alertSentFromEmail,
+    to:   env.nodemailer_config.alertSendToEmails,
     subject: subject,
     text: text,
     html: ""

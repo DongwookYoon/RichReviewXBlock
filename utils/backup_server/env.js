@@ -12,6 +12,12 @@ try {
   exports.node_config = JSON.parse(
     fs.readFileSync(path.join(__dirname, '../../..', 'richreview_core/node_server/ssl/node_config.json'), 'utf-8')
   );
+  exports.nodemailer_config = JSON.parse(
+    fs.readFileSync(
+      path.join(__dirname, '../..', 'richreview_core/node_server/ssl/nodemailer_config.json')
+      , 'utf-8'
+    )
+  );
   console.log("Load ssl from node server");
 } catch(err) {
   console.log("Load ssl from backend server");
@@ -23,5 +29,11 @@ try {
   );
   exports.node_config = JSON.parse(
     fs.readFileSync(path.join(__dirname, '..', 'ssl/node_config.json'), 'utf-8')
+  );
+  exports.nodemailer_config = JSON.parse(
+    fs.readFileSync(
+      path.join(__dirname, 'ssl/nodemailer_config.json')
+      , 'utf-8'
+    )
   );
 }

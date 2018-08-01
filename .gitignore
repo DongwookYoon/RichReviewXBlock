@@ -49,9 +49,10 @@ richreview_core/node_server/dist/
 richreview_core/node_server/cdn/
 
 #backup_server
+utils/backup_server/ssl
 utils/backup_server/azure_str_last_modified_record.json
-utils/backup_server/redis-4.0.10.tar.gz
-utils/backup_server/redis-4.0.10/
+utils/backup_server/redis-*.tar.gz
+utils/backup_server/redis-*/
 utils/backup_server/log_backup/
 utils/backup_server/redis_backup/
 utils/backup_server/azure_str_backup/

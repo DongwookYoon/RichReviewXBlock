@@ -7,10 +7,10 @@ try {
     fs.readFileSync(path.join(__dirname, '../..', 'richreview_core/node_server/ssl/redis_config.json'), 'utf-8')
   );
   exports.azure_config = JSON.parse(
-    fs.readFileSync(path.join(__dirname, '../../..', 'richreview_core/node_server/ssl/azure_config.json'), 'utf-8')
+    fs.readFileSync(path.join(__dirname, '../..', 'richreview_core/node_server/ssl/azure_config.json'), 'utf-8')
   );
   exports.node_config = JSON.parse(
-    fs.readFileSync(path.join(__dirname, '../../..', 'richreview_core/node_server/ssl/node_config.json'), 'utf-8')
+    fs.readFileSync(path.join(__dirname, '../..', 'richreview_core/node_server/ssl/node_config.json'), 'utf-8')
   );
   exports.nodemailer_config = JSON.parse(
     fs.readFileSync(

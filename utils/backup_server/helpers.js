@@ -30,10 +30,19 @@ exports.sendMail = function(subject, text) {
 };
 
 exports.log = function(stmt) {
-  console.log("<BACKUP LOGS>: "+stmt);
+  console.log("<APP>: "+stmt);
 };
 
 exports.log_error = function(err) {
   if(err instanceof Error) { err = `${err.code}: ${err.message}`; }
-  console.error("<BACKUP LOGS ERR>: "+err);
+  console.error("<APP ERR>: "+err);
+};
+
+exports.makeLogs = function(SCOPE) {
+  const log = (stmt) => { console.log(`<${SCOPE}>: ${stmt}`); }
+  const log_error = (err) => {
+    if(err instanceof Error) { err = `${err.code}: ${err.message}`; }
+    console.error(`<${SCOPE} ERR>: ${err}`);
+  }
+  return { log, log_error };
 };

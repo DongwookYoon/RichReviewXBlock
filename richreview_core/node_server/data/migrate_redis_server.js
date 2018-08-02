@@ -1,3 +1,7 @@
+/**
+ *
+ * WARNING: this file is deprecated. Use the migration script in backup_server
+ */
 
 const path = require('path');
 const fs = require('fs');
@@ -359,7 +363,7 @@ const clear_redis_cache = () => {
 /**
  * Count the number of keys in the Azure Redis Cache by datatype
  */
-//exec_cache_count();
+exec_cache_count();
 
 /**
  * Migrate the keys from your Redis server to the Azure Redis Cache

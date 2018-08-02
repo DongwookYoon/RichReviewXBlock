@@ -12,9 +12,13 @@
  *
  * To check backup set the db file name to the the backup file you want to check
  *
- * ./redis-4.0.10/src/redis-server --port 8555 --dir ./ --dbfilename redis_backup.20180720130767.rdb
+ * ./redis-4.0.10/src/redis-server --port 8555 --dir ./redis_backup --dbfilename redis_backup.20180720130767.rdb
  *
  * Created by Colin
+ */
+
+/**
+ * TODO: delete header, import redis handler, and retest
  */
 
 const child_process = require('child_process');
@@ -56,7 +60,7 @@ const log_error = function(err) {
  */
 log("DEBUG: spawning from "+REDIS_PATH);
 const redisSpawn = child_process.spawn(
-    REDIS_PATH + 'src/redis-server',
+    path.join(REDIS_PATH, 'src/redis-server'),
     [path.join(__dirname, '..', 'redis.conf')]
 );
 
@@ -84,168 +88,6 @@ const promisifyRedisClient = function(client) {
 /*******************************************************/
 const RedisLocalClient = promisifyRedisClient(redisLocalClient);
 const RedisCacheClient = promisifyRedisClient(redisCacheClient);
-
-/**
- * Unit test to test redis hash operations
- */
-const testHash = () => {
-  log("starting test_backup_hash");
-  return RedisLocalClient.HMSET("test", "key1", "val1", "key2", "val2", "key3", "val3")
-    .then((b) => {
-      log(b);
-      return RedisLocalClient.HGETALL("test");
-    })
-    .then((data) => {
-      console.log(JSON.stringify(data, null, '\t'));
-      return null;
-    })
-    .then((b) => {
-      return RedisLocalClient.DEL("test");
-    })
-    .then((b) => {
-      log("done");
-      return true;
-    })
-    .catch((err) => {
-      log(err);
-    });
-};
-
-/**
- * Unit test to test redis list operations
- */
-const testList = () => {
-  util.debug("starting test_migration_list");
-  return RedisCacheClient.RPUSH("test", "val1", "val2", "val3", "val4")
-    .then((b) => {
-      return RedisCacheClient.LRANGE("test", 0, -1);
-    })
-    .then((arr) => {
-      log("in cache redis: "+JSON.stringify(arr));
-      return RedisLocalClient.RPUSH.bind(null, "test").apply(null, arr);
-    })
-    .then((b) => {
-      return RedisLocalClient.LRANGE("test", 0, -1);
-    })
-    .then((arr) => {
-      log("in local redis: "+JSON.stringify(arr));
-      return RedisLocalClient.DEL("test");
-    })
-    .then((b) => {
-      return RedisCacheClient.DEL("test");
-    })
-    .then((b) => {
-      return true;
-    })
-    .catch((err) => {
-      util.error(err);
-    });
-};
-
-/**
- * Unit test to test redis string operations
- */
-const testString = () => {
-  log("starting test_backup_hash");
-  return RedisCacheClient.SET("test", "1", "EX", 9999)
-    .then(b => {
-      return RedisCacheClient.INCRBY("test", 10);
-    })
-    .then(b => {
-      return Promise.all([
-        RedisCacheClient.GET("test"),
-        RedisCacheClient.TTL("test")
-      ]);
-    })
-    .then(([val, time]) => {
-      log("val: "+typeof val+" "+val);
-      log("time: "+typeof time+" "+time);
-      return RedisCacheClient.DEL("test");
-    })
-    .then(val => {
-      log("del val: "+typeof val+" "+val);
-      return true;
-    })
-    .catch(err => {
-      log_error(err);
-    });
-};
-
-/**
- * Unit test to test redis set operations
- */
-const testSet = () => {
-  log("starting test_backup_set");
-  return RedisCacheClient.SADD("test", "value1", "value2", "value3", "value4")
-    .then(b => {
-      return RedisCacheClient.SMEMBERS("test");
-    })
-    .then((members /* @param {string[]} members */) => {
-      log(typeof members);
-      console.log(JSON.stringify(members, null, '\t'));
-      return RedisLocalClient.SADD("test", ...members);
-    })
-    .then(b => {
-      return RedisLocalClient.SMEMBERS("test");
-    })
-    .then((members /* @param {string[]} members */) => {
-      log(typeof members);
-      console.log(JSON.stringify(members, null, '\t'));
-      return RedisCacheClient.DEL("test");
-    })
-    .then(b => {
-      log("del val: "+typeof b+" "+b);
-      return RedisLocalClient.DEL("test");
-    })
-    .then(b => {
-      log("del val: "+typeof b+" "+b);
-      return true;
-    })
-    .catch(err => {
-      log_error(err);
-    });
-};
-
-/**
- * Unit test to test redis sorted set operations
- */
-const testSortedSet = () => {
-  return RedisCacheClient.ZADD("test", 1, "val1", 2, "val2", 3, "val3", 4, "val4")
-    .then(b => {
-      return RedisCacheClient.ZRANGE("test", 0, -1, "WITHSCORES");
-    })
-    .then(arr => {
-      let tmp = null;
-      for(let i = 0; i < arr.length; i += 2) {
-         tmp = arr[i + 1];
-         arr[i + 1] = arr[i];
-         arr[i] = tmp;
-      }
-      log("in cache redis: "+JSON.stringify(arr));
-      return RedisLocalClient.ZADD.bind(null,"test").apply(null, arr);
-    })
-    .then(b => {
-      return RedisLocalClient.ZRANGE("test", 0, -1, "WITHSCORES");
-    })
-
-    .then(arr => {
-      log("in local redis: "+JSON.stringify(arr));
-      return RedisLocalClient.TYPE("test");
-    })
-    .then(type => {
-      log(type);
-      return RedisCacheClient.DEL("test");
-    })
-    .then(b => {
-      return RedisLocalClient.DEL("test");
-    })
-    .then(b => {
-      return true;
-    })
-    .catch(err => {
-      log_error(err);
-    });
-};
 
 /**
  * Handler that copies up all keys in Azure Redis Cache to the local redis server booted by redisSpawn child process; please check that there are no FAILS after exec_backup is complete.

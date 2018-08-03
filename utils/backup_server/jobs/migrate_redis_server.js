@@ -1,11 +1,20 @@
 /**
- * TODO: not run yet, find time to run
+ * node
  */
 
 const helpers = require('../helpers');
 const { log, log_error } = require('../helpers').makeLogs("MIGR REDIS");
 
-const spawnLocalRedis  = require('../handlers/redis').spawnLocalRedis;
+/**
+ * This command corresponds to
+ * ./redis-4.0.10/src/redis-server --port 8555 --dir ./ --dbfilename redis_migrate.rdb
+ */
+require('../handlers/redis').spawnLocalRedis({
+  port: 8555,
+  dir:  "./",
+  dbfilename: "redis_migrate.rdb"
+});
+
 const RedisLocalClient = require('../handlers/redis').createRedisLocalClient();
 const RedisCacheClient = require('../handlers/redis').createRedisCacheClient();
 const localRedisClose  = require('../handlers/redis').localRedisClose;
@@ -208,13 +217,6 @@ const exec_migrate = () => {
       );
     });
 };
-
-// ./redis-4.0.10/src/redis-server --port 8555 --dir ./redis_backup --dbfilename redis_backup.20180720130767.rdb
-spawnLocalRedis({
-  port: 8555,
-  dir:  "./",
-  dbfilename: "redis_migrate.rdb"
-});
 
 exec_migrate()
   .then(() => {

@@ -2,6 +2,16 @@
  *
  * Redis server header
  *
+ * To launch the managing redis server independently call
+ *
+ * ./redis-4.0.10/src/redis-server ./redis.conf
+ * ./redis-4.0.10/src/redis-cli -p 8555
+ *
+ * To check backup set the db file name to the the backup file you want to copy the rdb file from redis_backup to backup_server root and then call
+ *
+ * ./redis-4.0.10/src/redis-server --port 8555 --dir ./ --dbfilename redis_migrate.rdb
+ *
+ * Created by Colin
  */
 
 const child_process = require('child_process');
@@ -9,10 +19,9 @@ const util = require('util');
 const fs = require('fs');
 const path = require('path');
 
-const moment = require('moment');
 const redis = require('redis');
 
-const helpers = require('../helpers');
+const { log, log_error } = require('../helpers').makeLogs("REDIS");
 const env = require('../env');
 
 /**
@@ -24,17 +33,12 @@ const redis_directories = fs.readdirSync(path.join(__dirname, '..'))
 const REDIS_PATH = path.join(__dirname, '..', redis_directories[0]);
 
 /**
- * spawn the redis server to to handle the downloading of redis keys.
- *
- * To launch this server independently call
- * ./redis-4.0.10/src/redis-server ./redis-4.0.10/redis.conf
- * ./redis-4.0.10/src/redis-cli -p 8555
- * ./redis-4.0.10/src/redis-server --port 8555 --dir ./redis_backup --dbfilename redis_backup.20180720130767.rdb
+ * spawn the redis server to to handle the downloading of redis keys. The default settings uses the configuration file redis.conf which set the port to 8555 and the working directory to backup_server.
  *
  * @param {Object} [options] - the optional arguments for redis-server
  */
 exports.spawnLocalRedis = (options) => {
-  helpers.log("DEBUG: spawning from "+REDIS_PATH);
+  log("spawning from "+REDIS_PATH);
   let arguments = null;
   if(!options) { // using default arguments
     arguments = [path.join(__dirname, '..', 'redis.conf')];
@@ -54,10 +58,29 @@ exports.spawnLocalRedis = (options) => {
       arguments.push("--dbfilename", options.dbfilename);
     }
   }
-  return child_process.spawn(
+  const redisSpawn = child_process.spawn(
     path.join(REDIS_PATH, 'src/redis-server'),
     arguments
   );
+
+  redisSpawn.stdout.on('data', (data) => {
+    log(`stdout: ${data}`);
+
+  });
+
+  redisSpawn.stderr.on('data', (data) => {
+    log(`stderr: ${data}`);
+  });
+
+  redisSpawn.on('close', (code) => {
+    log(`child process exited with code ${code}`);
+  });
+
+  redisSpawn.on('error', (err) => {
+    log_error(`child process has error ${err}`);
+  });
+
+  return redisSpawn;
 };
 /*******************************************************/
 /**
@@ -106,3 +129,20 @@ exports.localRedisClose = () => {
   });
 };
 exports.REDIS_PATH = REDIS_PATH;
+/*******************************************************/
+/**
+ * resets a redis server
+ * WARNING: remember to backup and export (no script yet) the cache before resetting!
+ * WARNING: you should not run this function on a local redis server.
+ *
+ * There are no script to reset the redis server. You should run it directly in terminal:
+ *
+ * node <<< "const RCClient = require('./handlers/redis').createRedisCacheClient(); require('./handlers/redis').resetRedisCache(RCClient).then(() => { return RCClient.quit(); });"
+ */
+exports.resetRedisCache = (redisClient) => {
+  return redisClient.FLUSHALL()
+    .then((s) => {
+      log(s);
+      log("WARNING: redis server is reset");
+    });
+};

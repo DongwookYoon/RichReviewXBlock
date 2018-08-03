@@ -79,6 +79,20 @@ describe("test redis operations", function() {
       });
   });
 
+  it("ttl of persisting key is -1", function () {
+    const key = "test";
+    return RedisCacheClient.SADD(key, "value1", "value2", "value3", "value4")
+      .then(() => { return RedisCacheClient.TTL(key); })
+      .then((time) => {
+        expect(time).to.equal(-1);
+      })
+      .then(() => { return RedisCacheClient.DEL(key); })
+      .catch((err) => {
+        helpers.log_error(err);
+        assert.fail(err);
+      });
+  });
+
   it("send string+expiration from cache to local", function () {
     this.timeout(10000);
     const key = "test";

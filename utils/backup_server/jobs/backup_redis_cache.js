@@ -16,78 +16,19 @@
  *
  * Created by Colin
  */
-
-/**
- * TODO: delete header, import redis handler, and retest
- */
-
 const child_process = require('child_process');
-const util = require('util');
 const fs = require('fs');
 const path = require('path');
 
 const moment = require('moment');
-const redis = require('redis');
 
 const helpers = require('../helpers');
-const env = require('../env');
+const { log, log_error } = require('../helpers').makeLogs("BACKUP REDIS");
 
-/**
- * Get a redis server directory
- */
-const redis_directories = fs.readdirSync(path.join(__dirname, '..'))
-  .filter((bbb) => {
-    return fs.statSync(path.join(__dirname, '..', bbb)).isDirectory() && /^redis-[a-zA-z0-9\-\.]+$/.test(bbb); });
-const REDIS_PATH = path.join(__dirname, '..', redis_directories[0]);
-
-const log = function(stmt) {
-  console.log("<BACKUP REDIS CACHE>: "+stmt);
-};
-
-const log_error = function(err) {
-  if(err instanceof Error) { err = `${err.code}: ${err.message}`; }
-  console.error("<BACKUP REDIS ERR>: "+err);
-};
-
-/**
- * spawn the redis server to to handle the downloading of redis keys.
- *
- * To launch this server independently call
- *
- * ./redis-4.0.10/src/redis-server ./redis-4.0.10/redis.conf
- * ./redis-4.0.10/src/redis-cli -p 8555
- *
- */
-log("DEBUG: spawning from "+REDIS_PATH);
-const redisSpawn = child_process.spawn(
-    path.join(REDIS_PATH, 'src/redis-server'),
-    [path.join(__dirname, '..', 'redis.conf')]
-);
-
-const redisLocalClient = redis.createClient(
-  env.redis_config.backup_port
-);
-const redisCacheClient = redis.createClient(
-  env.redis_config.redis_cache.port,
-  env.redis_config.redis_cache.hostname,
-  {
-    auth_pass: env.redis_config.redis_cache.access_key,
-    tls: {
-      servername: env.redis_config.redis_cache.hostname
-    }
-  }
-);
-/*******************************************************/
-const promisifyRedisClient = function(client) {
-    const pub = { };
-    Object.keys(redis.RedisClient.prototype).forEach((command) => {
-        pub[command] = util.promisify(client[command]).bind(client);
-    });
-    return pub;
-};
-/*******************************************************/
-const RedisLocalClient = promisifyRedisClient(redisLocalClient);
-const RedisCacheClient = promisifyRedisClient(redisCacheClient);
+require('../handlers/redis').spawnLocalRedis();
+const RedisCacheClient = require('../handlers/redis').createRedisCacheClient();
+const RedisLocalClient = require('../handlers/redis').createRedisLocalClient();
+const localRedisClose = require('../handlers/redis').localRedisClose;
 
 /**
  * Handler that copies up all keys in Azure Redis Cache to the local redis server booted by redisSpawn child process; please check that there are no FAILS after exec_backup is complete.
@@ -346,24 +287,6 @@ const saveLocalServer = () => {
 };
 
 /**
- * Handler tells local redis server (redisSpawn) to shut down.
- * ASYNCHRONOUS
- */
-const redisClose = () => {
-    return new Promise((resolve, reject) => {
-        child_process.execFile(
-            REDIS_PATH + '/src/redis-cli',
-            ['-p', '8555', 'shutdown'],
-            (error, stdout, stderr) => {
-                if(error) { reject(error); }
-                if(stdout) { log(stdout); }
-                resolve(true);
-            }
-        );
-    });
-};
-
-/**
  * Handler calls manage.sh to name dump.rdb as unique DB snapshot with timestamp
  * ASYNCHRONOUS
  */
@@ -385,23 +308,6 @@ const manageDumpScript = () => {
   });
 };
 
-redisSpawn.stdout.on('data', (data) => {
-  log(`stdout: ${data}`);
-
-});
-
-redisSpawn.stderr.on('data', (data) => {
-  log(`stderr: ${data}`);
-});
-
-redisSpawn.on('close', (code) => {
-  log(`child process exited with code ${code}`);
-});
-
-redisSpawn.on('error', (err) => {
-  log_error(`child process has error ${err}`);
-});
-
 exec_backup()
   .then(b => {
     return RedisCacheClient.quit();
@@ -418,7 +324,7 @@ exec_backup()
     return RedisLocalClient.quit();
   })
   .then(b => {
-    return redisClose();
+    return localRedisClose();
   })
   .then(b => {
     return manageDumpScript();

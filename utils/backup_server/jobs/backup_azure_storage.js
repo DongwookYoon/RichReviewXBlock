@@ -9,6 +9,7 @@
  * Note: backup script does not delete local files if blob has been deleted.
  * Note: as of 20 July, 2018, there are 726 containers, and 9365 blobs
  */
-const azure = require('../handlers/azure');
+const run_service = require('../handlers/azure').run_service;
+const BlobSyncManager = require('../handlers/BlobSyncManager');
 
-azure.run_service(new azure.BlobSyncManager());
+run_service(new BlobSyncManager());

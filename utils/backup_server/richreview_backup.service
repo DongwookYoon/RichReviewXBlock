@@ -1,0 +1,21 @@
+[Unit]
+Description=RichReview Backup Server
+#Requires=After=mysql.service       # Requires the mysql service to run first
+
+[Service]
+ExecStart=/usr/local/bin/node ~/RichReviewXBlock/utils/backup_server/app.js
+# Required on some systems
+#WorkingDirectory=~/RichReviewXBlock/utils/backup_server/app.js
+Restart=always
+# Restart service after 10 seconds if node service crashes
+RestartSec=10
+# Output to syslog
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=nodejs-example
+User=dwyoon
+#Group=<alternate group>
+Environment=NODE_ENV=production PORT=8554
+
+[Install]
+WantedBy=multi-user.target

@@ -80,7 +80,7 @@ exports.run_service = function (serviceManager) {
     log("opening container: "+container);
     return scanBlobs()
       .then((b) => {
-        log("closed container: "+container);
+        // log("closed container: "+container);
         serviceManager.COUNT.containers.imported++;
       })
       .catch((err) => {

@@ -65,21 +65,19 @@ const samlStrategy = new SAMLStrategy(
   function(profile, done) {
     console.log(JSON.stringify(profile));
 
+    // using ubcEduPersistentID; urn:oid:1.3.6.1.4.1.60.1.7.1
     lib_utils.findUserByEmail(profile.email)
       .then(function(user) {
         if(user) {
           return user;
         } else {
-          const email  = "";
-          const new_id = "";
-
-          done("ERR: login incomplete", null);
-
-          /*return R2D.User.prototype.create(
-            newid,
-            email
-          );*/
+          const email  = profile.email;
+          const new_id = profile["urn:oid:1.3.6.1.4.1.60.1.7.1"];
+          return R2D.User.prototype.create(new_id, email);
         }
+      })
+      .then(user => {
+        done(null, user);
       })
       .catch(done);
   });
@@ -108,12 +106,11 @@ passport.use(
                             email
                         );
                     }
-                }
-            ).then(
-                function(user){
+                })
+                .then(function(user) {
                     done(null, user);
-                }
-            ).catch(done);
+                })
+                .catch(done);
         }
     )
 );

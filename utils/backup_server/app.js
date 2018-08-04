@@ -28,7 +28,7 @@ function backup_azure_str_launch() {
 
   const nd = child_process.spawn(
     'node',
-    [__dirname + '/' + 'backup_azure_storage.js']
+    [__dirname + '/jobs/backup_azure_storage.js']
   );
 
   nd.stdout.on('data', (data) => {
@@ -65,7 +65,7 @@ function backup_redis_cache_launch() {
 
   const nd = child_process.spawn(
     'node',
-    [__dirname + '/' + 'backup_redis_cache.js']
+    [__dirname + '/jobs/backup_redis_cache.js']
   );
 
   nd.stdout.on('data', (data) => {
@@ -92,23 +92,38 @@ function backup_redis_cache_launch() {
 
 let backup_log_files_lock = 0;
 function backup_log_files_launch() {
-  helpers.log(`pinging job backup_redis_cache, received ${backup_log_files_lock}`);
+  helpers.log(`pinging job backup_logs, received ${backup_log_files_lock}`);
   if(backup_log_files_lock) {
     return;
   } else {
     backup_log_files_lock = 1;
-    helpers.log("starting job backup_redis_cache");
+    helpers.log("starting job backup_logs");
   }
 
-  new Promise((resolve, reject) => {
-    child_process.execFile('./jobs/backup_logs.js', (error, stdout, stderr) => {
-      if(error) {
-        if(error) { reject(error); }
-        if(stdout) { console.log(stdout); }
-      }
-      backup_log_files_lock = 0;
-      resolve(true);
-    });
+  const nd = child_process.spawn(
+    'node',
+    [__dirname + '/jobs/backup_logs.js']
+  );
+
+  nd.stdout.on('data', (data) => {
+    console.log(data.toString());
+  });
+
+  nd.stderr.on('data', (data) => {
+    console.error(data.toString());
+  });
+
+  nd.on('close', (code) => {
+    console.log(`child process closed with code ${code}`);
+    backup_redis_cache_lock = 0;
+  });
+
+  nd.on('exit', (code) => {
+    console.log(`child process exited with code ${code}`);
+  });
+
+  nd.on('error', (err) => {
+    console.error(`child process has error ${err}`);
   });
 }
 
@@ -186,3 +201,4 @@ const backup_logs_job = new CronJob(
 log_date_job.start();
 backup_azure_str_job.start();
 backup_redis_cache_job.start();
+backup_logs_job.start();

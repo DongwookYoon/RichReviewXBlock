@@ -28,7 +28,10 @@ function backup_azure_str_launch() {
 
   const nd = child_process.spawn(
     'node',
-    [__dirname + '/jobs/backup_azure_storage.js']
+    [__dirname + '/jobs/backup_azure_storage.js'],
+    {
+	cwd: __dirname
+    }
   );
 
   nd.stdout.on('data', (data) => {
@@ -65,7 +68,10 @@ function backup_redis_cache_launch() {
 
   const nd = child_process.spawn(
     'node',
-    [__dirname + '/jobs/backup_redis_cache.js']
+    [__dirname + '/jobs/backup_redis_cache.js'],
+    {
+	cwd: __dirname
+    }
   );
 
   nd.stdout.on('data', (data) => {
@@ -102,7 +108,10 @@ function backup_log_files_launch() {
 
   const nd = child_process.spawn(
     'node',
-    [__dirname + '/jobs/backup_logs.js']
+    [__dirname + '/jobs/backup_logs.js'],
+    {
+	cwd: __dirname
+    }
   );
 
   nd.stdout.on('data', (data) => {
@@ -190,9 +199,8 @@ const backup_redis_cache_job = new CronJob(
 const backup_logs_job = new CronJob(
   /* seconds minutes hours day/mth months day/wk */
   /* ' *       *       *      *      *      *'   */
-  /* 1 AM on Everyday                            */
-  // 1 AM every day
-  "0 0 1 * * *",
+  /* 1:30 AM on Everyday                         */
+  "0 30 1 * * *",
   backup_log_files_launch,
   null,
   false

@@ -429,7 +429,7 @@ Go to `utils/backup_server` and run `setup.sh`.
 
 ### Test RichReview
 
-You're finally done! You can test RichReview straight from the VM. I
+You're finally done! You can test RichReview straight from the VM.
 
 ## License
 

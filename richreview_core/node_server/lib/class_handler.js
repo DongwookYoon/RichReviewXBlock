@@ -43,7 +43,10 @@ const encryptPassword = (password, salt) => {
  * A wrapper to create user according to UBC study.
  *
  * If password is shorter than 8 characters then reject.
- * Note that we d
+ *
+ * Note: this should not be used in conjunction with CWL login
+ * Note: R2D.User.prototype.findByEmail is deprecated
+ * TODO: remove R2D.User.prototype.findByEmail
  */
 const createUser = (email, password) => {
   const go = () => {

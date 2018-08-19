@@ -334,7 +334,8 @@ const plugPilot = (user) => {
 /**
  * callback for Passport Local Strategy
  *
- *
+ * NOTE: lib_utils.findUserByEmail is deprecated. Now using lib_utils.findUserByID
+ * TODO: test changes
  */
 const localStrategyCB = (id_str, password, done) => {
     let userid = makeUserID(id_str);
@@ -347,7 +348,9 @@ const localStrategyCB = (id_str, password, done) => {
         .then(function(user_password) {
             if(password === user_password) {
                 util.logger("localStrategyCB", "makeR2DUser");
-                return lib_utils.findUserByEmail(userid);
+                const hashed_id = js_utils.generateSaltedSha1(userid, env.sha1_salt.netid).substring(0, 21);
+                return lib_utils.findUserByID(hashed_id); // TODO: test changes here
+                // return lib_utils.findUserByEmail(userid);
             } else {
                 throw "password does not match";
             }

@@ -15,6 +15,7 @@ const lib_utils = require('./lib_utils');
 const R2D = require('./r2d.js');
 const LtiEngine = require('./lti_engine.js');
 const pilotHandler = require('./pilot_handler.js');
+const UBCHandler   = require('./ubc_handler');
 
 util.start("          passport SAML Strategy");
 const SAMLStrategy = require('passport-saml').Strategy;
@@ -53,40 +54,25 @@ passport.deserializeUser(function(id, done){
     );
 });
 
-const samlStrategy = new SAMLStrategy(
+const UBCsamlStrategy = new SAMLStrategy(
   {
-    callbackUrl: env.ubc.idp_config.callbackURL,
+    callbackUrl: env.ubc.idp_config.callbackUrl,
     entryPoint: env.ubc.idp_config.entryPoint,
     issuer: env.ubc.idp_config.entityID,
     cert: env.ubc.idp_config.cert,
-    privateCert: env.ubc.privateCert,
-    decryptionPvk: env.ubc.decryptionPvk
+    logoutUrl: env.ubc.idp_config.logoutUrl,
+    logoutCallbackUrl: env.ubc.idp_config.logoutCallbackUrl
   },
-  function(profile, done) {
-    console.log(JSON.stringify(profile));
-
-    // using ubcEduPersistentID; urn:oid:1.3.6.1.4.1.60.1.7.1
-    lib_utils.findUserByEmail(profile.email)
-      .then(function(user) {
-        if(user) {
-          return user;
-        } else {
-          const email  = profile.email;
-          const new_id = profile["urn:oid:1.3.6.1.4.1.60.1.7.1"];
-          return R2D.User.prototype.create(new_id, email);
-        }
-      })
-      .then(user => {
-        done(null, user);
-      })
-      .catch(done);
-  });
+  UBCHandler.UBCsamlStrategyCB
+);
 
 util.logger("PASSPORT", "use SAML2 auth for UBC");
-passport.use(samlStrategy);
+passport.use(UBCsamlStrategy);
 
 /**
  * Use wsfed SAML 2.0 to login with Cornell NetID
+ *
+ * TODO: Cornell login is deprecated; using it (and lib_utils.findUserByEmail) will result in program breaking changes
  */
 util.logger("PASSPORT", "use wsfed SAML2 auth with Cornell NetID");
 passport.use(

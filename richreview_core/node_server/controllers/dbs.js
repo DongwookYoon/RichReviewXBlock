@@ -195,6 +195,11 @@ var AddNewGroup = function(req, res){
     }
 };
 
+/**
+ *
+ * NOTE: R2D.User.prototype.findByEmail is deprecated
+ * TODO: replace `R2D.User.prototype.findByEmail` with `R2D.User.prototype.findByID`
+ */
 var AddNewGroupAdvanced = function(req, res){
     if(js_utils.identifyUser(req, res)){
         let d;

@@ -4,23 +4,16 @@
 
 // import built-in modules
 const fs = require('fs');
-const crypto = require('crypto');
 
 // import npm modules
-const request = require('request');
-const mkdirp = require('mkdirp');
-const unzip = require('unzip');
-const moment = require('moment');
-const Promise = require("promise"); // jshint ignore:line
+const request    = require('request');
+const mkdirp     = require('mkdirp');
+const unzip      = require('unzip');
+const moment     = require('moment');
+const Promise    = require("promise"); // jshint ignore:line
 const nodemailer = require('nodemailer');
 
 const util = require('../util');
-
-exports.generateSaltedSha1 = function(raw_key, salt){
-    var shasum = crypto.createHash('sha1');
-    shasum.update(raw_key+salt);
-    return shasum.digest('hex').toLowerCase();
-};
 
 exports.CreateCleanFolderAsync = function(_path, callback){
     try {

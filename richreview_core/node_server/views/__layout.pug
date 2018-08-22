@@ -1,4 +1,5 @@
 ﻿doctype html
+
 html
     head
         meta(charset='utf-8')
@@ -52,20 +53,7 @@ html
                             a(href="/support")
                                 | Support
                     ul.nav.navbar-nav.navbar-right
-                        li(class = (cur_page === "account" || cur_page === "login") ? "active" : "")
-                            if user === undefined
-                                a(href="/login_pilot")
-                                    i.fa.fa-sign-in
-                                    |&nbspPilot Login
-                            else
-                                a(href="/account")
-                                    i.fa.fa-user
-                                    |&nbsp#{user.nick}
-                        if user !== undefined
-                            li
-                                a(href="/logout")
-                                    i.fa.fa-sign-out
-                                    |&nbspLogout
+                        include components/_login_dropdown
 
         .content_table
             .content_header

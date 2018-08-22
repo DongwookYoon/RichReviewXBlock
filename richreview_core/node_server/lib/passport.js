@@ -3,14 +3,11 @@
  *
  * created by Colin
  */
-const fs = require('fs');
-const path = require('path');
 
 const util = require('../util');
 const passport  = require('passport');
 
 const env = require('./env.js');
-const js_utils = require('./js_utils');
 const lib_utils = require('./lib_utils');
 const R2D = require('./r2d.js');
 const LtiEngine = require('./lti_engine.js');
@@ -54,6 +51,9 @@ passport.deserializeUser(function(id, done){
     );
 });
 
+/**
+ * Use SAML 2.0 to login using UBC CWL
+ */
 const UBCsamlStrategy = new SAMLStrategy(
   {
     callbackUrl: env.ubc.idp_config.callbackUrl,
@@ -71,40 +71,20 @@ passport.use(UBCsamlStrategy);
 
 /**
  * Use wsfed SAML 2.0 to login with Cornell NetID
- *
- * TODO: Cornell login is deprecated; using it (and lib_utils.findUserByEmail) will result in program breaking changes
  */
-util.logger("PASSPORT", "use wsfed SAML2 auth with Cornell NetID");
-passport.use(
-    new wsfedsaml2(
-        env.cornell_wsfed,
-        function(profile, done) {
-            lib_utils.findUserByEmail(profile.upn)
-            //R2D.User.prototype.findByEmail(profile.upn)
-                .then(function(user) {
-                    if(user) {
-                        return user;
-                    } else{
-                        var email = profile.upn;
-                        var newid = js_utils.generateSaltedSha1(email, env.sha1_salt.netid).substring(0, 21);
-                        return R2D.User.prototype.create(
-                            newid,
-                            email
-                        );
-                    }
-                })
-                .then(function(user) {
-                    done(null, user);
-                })
-                .catch(done);
-        }
-    )
+const CornellStrategy = new wsfedsaml2(
+  env.cornell_wsfed,
+  lib_utils.CornellStrategyCB
 );
+
+util.logger("PASSPORT", "use wsfed SAML2 auth with Cornell NetID");
+passport.use(CornellStrategy);
 
 /**
  * use strategy OAuth2.0 with Google ID
  */
 const googleStrategyCB = (accessToken, refreshToken, profile, done) => {
+    console.log(JSON.stringify(profile, null, '\t'));
     const email = profile.emails.length !== 0 ? profile.emails[0].value : '';
     const b = R2D.User.cache.exists(profile.id);
     new Promise.resolve(b)
@@ -153,6 +133,8 @@ passport.use(new LocalStrategy(
 
 /**
  * use LTI Strategy
+ *
+ * TODO: LTI is deprecated
  */
 const EDX_LTI_CONSUMER_OAUTH = {
     key: 'xh0rSz5O03-richreview.cornellx.edu',

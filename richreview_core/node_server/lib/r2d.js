@@ -217,14 +217,6 @@ User.cache = (function(){
   return pub;
 } ( ));
 
-/**
- * this is redundant
- * TODO: test and delete
- */
-/*User.prototype.isExist = function(id){
-  return RedisClient.EXISTS('usr:'+id);
-};*/
-
 User.prototype.findById = function(id){
   return new Promise((resolve, reject) => {
     try {
@@ -302,13 +294,15 @@ User.prototype.create = function(id, email,
         'last_name',     last_name
       );
     })
+    /*
+    // TODO: email_user_lookup is deprecated
     .then(function() {
       return RedisClient.HMSET(
         'email_user_lookup',
         email,
         'usr:'+id
       );
-    })
+    })*/
     /** Manage invitations to this user **/
     .then(function() {
       return RedisClient.LRANGE('inv:'+email, 0, -1)

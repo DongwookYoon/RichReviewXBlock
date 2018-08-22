@@ -387,8 +387,8 @@ describe("spec", function() {
 
   beforeEach(function () { });
 
-  after(function (done) {
-    RedisClient.quit().finally(done);
+  after(function () {
+    return RedisClient.quit();
 
   });
 

@@ -130,11 +130,11 @@ function setupStaticPages(){
         express.static(path.resolve(__dirname, env.path.temp_pdfs), { maxAge: 30*1000 })
     );
 
-    /*app.use(
+    app.use(
         '/CDN',
         express.static(path.resolve(__dirname, 'cdn'), { maxAge: 30*1000 })
 
-    );*/
+    );
 }
 
 // render error logs

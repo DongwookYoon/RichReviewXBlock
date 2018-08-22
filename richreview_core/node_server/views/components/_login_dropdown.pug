@@ -1,0 +1,24 @@
+li(class = ((cur_page === "account" || cur_page === "login") && user === undefined) ? "active" : "")
+    a(href="/login_ubc", role="button") UBC CWL Login
+li.dropdown(class = ((cur_page === "account" || cur_page === "login") && user === undefined) ? "active" : "")
+    a.dropdown-toggle(id="loginDropdown", role="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true")
+        |
+        span.caret
+    ul.dropdown-menu(aria-labelledby="loginDropdown")
+        li other auth methods
+        li.divider(role="separator")
+        li
+            a(href="/login_pilot") Pilot Login
+        li
+            a(href="/login_google") Google Login
+        li
+            a(href="/login_cornell") Cornell Login
+if user !== undefined
+    li
+        a(href="/account")
+            i.fa.fa-user
+            | &nbsp#{user.nick}
+    li
+        a(href="/logout")
+            i.fa.fa-sign-out
+            | &nbspLogout

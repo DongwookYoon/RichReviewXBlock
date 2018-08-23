@@ -6,6 +6,7 @@
 
 // import npm modules
 const Promise = require("promise"); // jshint ignore:line
+const assert  = require("chai").assert;
 
 // import libraries
 const js_utils = require('./js_utils');
@@ -14,7 +15,9 @@ const RedisClient = require('./redis_client').RedisClient;
 const redis_utils = require('./redis_client').util;
 const util = require('../util');
 
+// constants
 const USERID_EMAIL_TABLE = "userid_email_table";
+const AUTH_TYPES = ["UBC_CWL", "Pilot", "Cornell", "Google"];
 
 /*
  * User
@@ -40,22 +43,49 @@ const USERID_EMAIL_TABLE = "userid_email_table";
  *
  * userid is also added to email_user_lookup as a hash field (deprecated)
  * user ID and email will be linked in the userid_email_table
+ * Please see db_schema.md for fun details
+ */
+
+/**
+ * @class UserOptions
+ * @member {string} [auth_type]  - is
+ * @member {{ password_hash: string, salt: string }} [auth]
+ * @member {boolean} [is_admin]  -
+ * @member {string} [first_name] -
+ * @member {string} [last_name]  -
+ * @member {string} [sid]        - student ID
+ */
+
+/**
+ *
+ * @param {string} id
+ * @param {string} nickname
+ * @param {string} email
+ * @param {UserOptions|null} [options]
+ * @constructor
  */
 const User = function(id, nickname, email,
                       /** new fields **/
-                      auth_type, password_hash, salt, is_admin, sid, first_name, last_name
+                      options
                       /****************/) {
   this.id = id;
   this.nick = nickname;
   this.email = email;
-  if(auth_type) this.auth_type = auth_type;
-  if(password_hash) {
-    this.password_hash = password_hash;
-    this.salt          = salt;
-    this.is_admin      = is_admin;
-    this.sid           = sid;
-    this.first_name    = first_name;
-    this.last_name     = last_name;
+  if(options) {
+    // auth_type, password_hash, salt, sid, first_name, last_name
+    if(options.auth_type && (AUTH_TYPES.includes(options.auth_type)))
+      this.auth_type = options.auth_type;
+    /*
+    // As of now, internal passwords are unsupported. Additionally it is not a good idea to expose auth inside User objects so we can most likely just delete these
+    if(options.auth) {
+      this.password_hash = options.auth.password_hash;
+      this.salt = options.auth.salt;
+    }
+    */
+    if(options.is_admin) this.is_admin = options.is_admin;
+    if(options.sid) this.sid = options.sid;
+    if(options.first_name) this.first_name = options.first_name;
+    if(options.last_name) this.last_name = options.last_name;
   }
 };
 
@@ -73,6 +103,9 @@ const User = function(id, nickname, email,
  * AddGroupToUser - add a group with groupid_n to user with userid_n
  * RemoveGroupFromUser - remove a group groupid_n from user with userid_n
  * GetGroupNs - get group ids from user with userid_n
+ *
+ * TODO: User should not use prototype if it doesn't need to access internal data.
+ * TODO: convert User to ES6 class
  */
 
 /**
@@ -81,22 +114,19 @@ const User = function(id, nickname, email,
  * @param {string} first_name
  * @param {string} last_name
  * @return {Promise.<User>}
+ *
  */
 User.prototype.updateDetails = function(sid, first_name, last_name) {
-  if(this.password_hash) {
-    const user_key = "usr:"+this.id;
-    return RedisClient.HMSET(
-      user_key,
-      "sid", sid,
-      "first_name", first_name,
-      "last_name", last_name
-    )
-      .then((b) => {
-        return User.cache.loadFromDb(this.id);
-      });
-  } else {
-    return Promise.reject("Cannot update an old version of the user");
-  }
+  const user_key = "usr:"+this.id;
+  return RedisClient.HMSET(
+    user_key,
+    "sid", sid,
+    "first_name", first_name,
+    "last_name", last_name
+  )
+    .then((b) => {
+      return User.cache.loadFromDb(this.id);
+    });
 };
 
 /**
@@ -131,9 +161,8 @@ User.prototype.getSignedUp = function(){
  * @function loadFromDb
  * @function get
  */
-User.cache = (function(){
+User.cache = (function() {
   let pub = {};
-
   let cache = {};
 
   /**
@@ -165,11 +194,29 @@ User.cache = (function(){
    * create a User from redis server's user with the same id, and save it in the cache as value with id as the key
    * @arg    id - the user's id on redis
    * @return User
+   *
+   * TODO: test and delet comments
    */
   pub.loadFromDb = function(id) {
     return RedisClient.HGETALL("usr:"+id)
-      .then(function(result) {
-          if (result.password_hash) {
+      .then(result => {
+
+        /*
+        // As of now, internal passwords are unsupported. Additionally it is not a good idea to expose auth inside Express
+        if(result.password_hash) {
+          assert.property(result, "salt");
+          result.auth.password_hash = result.password_hash;
+          result.auth.salt = result.salt;
+        }*/
+
+        cache[id] = new User(
+          id,
+          result.nick,
+          result.email,
+          result
+        );
+
+          /*if (result.password_hash) {
             cache[id] = new User(
               id,
               result.nick,
@@ -187,7 +234,7 @@ User.cache = (function(){
               result.nick,
               result.email
             );
-          }
+          }*/
           return cache[id];
         }
       );
@@ -238,7 +285,8 @@ User.prototype.findById = function(id){
  * @param  {string} email - email of user to find
  * @return {Promise.<User>} - promise for the user of that email
  *
- * TODO: now updated to use use redis_utils.GraphGet test method
+ * TODO: make method use AUTH_TYPES instead of internal keys
+ * TODO: now updated to use use redis_utils.GraphGet test method; test method
  */
 User.prototype.findByEmail = function(email) {
   const get_priority = (IDs) => {
@@ -302,20 +350,31 @@ User.prototype.findByEmail = function(email) {
  *
  * TODO: should prevent create() from creating user if user already exists(?)
  *
- * @param id
- * @param email
- * @param password_hash
- * @param salt            // TODO: enforce
- * @param is_admin
- * @param sid
- * @param first_name
- * @param last_name
+ * @param {string} id
+ * @param {string} email
+ * @param {UserOptions|null} [options]
  * @return {Promise.<User>}
  */
 User.prototype.create = function(id, email,
-                                 /** new fields **/
-                                 password_hash, salt, is_admin, sid, first_name, last_name
-                                 /****************/) {
+    /** new fields **/
+    options
+    /****************/) {
+  let sss = null;
+  if(options) { // auth_type, password_hash, salt, sid, first_name, last_name
+    sss = [ ];
+    if(options.auth_type && (AUTH_TYPES.includes(options.auth_type)))
+      sss.push("auth_type", options.auth_type);
+    // As of now, internal passwords are unsupported.
+    if(options.auth)
+      sss.push(
+        "password_hash", options.auth.password_hash,
+        "salt", options.auth.salt
+      );
+    if(options.is_admin)   sss.push("is_admin", options.is_admin);
+    if(options.sid)        sss.push("sid", options.sid);
+    if(options.first_name) sss.push("first_name", options.first_name);
+    if(options.last_name)  sss.push("last_name", options.last_name);
+  }
 
   var groupids = [];
 
@@ -326,10 +385,12 @@ User.prototype.create = function(id, email,
     'groupNs', '[]'
   )
     .then((b) => {
+      if(sss) return RedisClient.HMSET.bind(null, "usr:"+id).apply(null, sss);
+      /* // TODO: test and delete comments
       if(!password_hash) {
         util.logger("USER CREATE", "is not UBC study");
         return null;
-      } // else
+      }
       util.logger("USER CREATE", "is UBC study; setting password, etc");
       return RedisClient.HMSET(
         'usr:'+id,
@@ -339,10 +400,13 @@ User.prototype.create = function(id, email,
         'sid',           sid,
         'first_name',    first_name,
         'last_name',     last_name
-      );
+      );*/
+    })
+    .then(() => {
+      return redis_utils.GraphSet(USERID_EMAIL_TABLE, "usr:"+id, email);
     })
     /*
-    // TODO: email_user_lookup is deprecated
+    // TODO: email_user_lookup is deprecated; test and delete comments
     .then(function() {
       return RedisClient.HMSET(
         'email_user_lookup',
@@ -388,7 +452,8 @@ User.prototype.create = function(id, email,
  * TODO: should delete user's assignments
  * TODO: should remove user from cache
  */
-User.deleteUserByEmail = (email) => {
+User.deleteUser = (usr_str) => {
+//User.deleteUserByEmail = (email) => {
 
   /**
    * delete the group in redis
@@ -455,6 +520,16 @@ User.deleteUserByEmail = (email) => {
       });
   };
 
+  const deleteOrRemoveGroups = (usr_str, groupID_n_arr_str) => {
+    if(groupID_n_arr_str) {
+      const groupID_n_arr = JSON.parse(groupID_n_arr_str);
+      const promises = groupID_n_arr.map(deleteOrRemoveGroup.bind(null, usr_str));
+      return Promise.all(promises);
+    } else {
+      return null;
+    }
+  };
+
   /**
    * removes the group in the document and then delete the document
    * Base this on DeleteDocument function in dbs.js; first delete doc groups, then delete the doc.
@@ -504,7 +579,7 @@ User.deleteUserByEmail = (email) => {
   /**
    * Delete all the documents user created
    * @param {String} usr_str - has form usr:[userID_n]
-   * @returns {Promise<Array<Number>>} - array of numbers {0,1} for successful or not
+   * @returns {Promise.<number[]>} - array of numbers {0,1} for successful or not
    */
   const deleteDocs = (usr_str) => {
     return RedisClient.KEYS("doc:*")
@@ -516,67 +591,54 @@ User.deleteUserByEmail = (email) => {
   };
 
   /**
+   * Delete pilot user plugin
+   * @param {string} usr_str - has form usr:[userID_n]
+   * @returns {Promise.<number>} - {0,1} for successful or not
+   */
+  const deletePilot = (usr_str) => {
+    return RedisClient.HGET(usr_str, "email")
+      .then((email) => {
+        if(/@pilot.study$/.test(email)) {
+          return RedisClient.DEL("pilot:"+email);
+        }
+      })
+  };
+
+  /**
    * Performs all steps of deleting user given a usr:[userID_n]
    * 1) remove user from all groups; and delete groups created by user
    * 2) remove docs user created
-   * 3) delete the user in redis
-   * 4) delete the user in email_user_lookup
-   * 5) delete the user in pilot_study_lookup
-   * 6) delete the user entry pilot:[email]
+   * 3) delete the user entry pilot:[email]
+   * 4) delete user in userid_email_table
+   * 5) delete the user in redis
+
    * @param {String} usr_str - string of form usr:[userID_n]; user to delete
-   * @return {Promise<Number>} - 1 if RedisClient.DEL() succeeds, 0 otherwise
+   * @return {Promise}
    *
+   * TODO: after creating MyClass...
    * TODO: should delete user from course (active/blocked/instructor)
    * TODO: should delete user's assignments
    */
-  const deleteUser = (usr_str) => {
-    return RedisClient.HGET(usr_str, "groupNs")
-      .then((groupID_n_arr_str) => {
-        // 1) remove user from any groups; and delete groups created by user
-        const groupID_n_arr = JSON.parse(groupID_n_arr_str);
-        const promises = groupID_n_arr.map(deleteOrRemoveGroup.bind(null, usr_str));
-        return Promise.all(promises);
-      })
-      .then((bArr) => {
-        // 2) remove docs user created
-        return deleteDocs(usr_str);
-      })
-      .then((bArr) => {
-        // 3) delete the user in redis
-        util.debug("deleting user in redis");
-        return RedisClient.DEL(usr_str);
-        //return true;
-      })
-      .then((a) => {
-        // 4) delete user in userid_email_table
-      })
-      /* TODO: deprecated
-      .then((a) => {
-        // 4) delete the user in email_user_lookup
-        util.debug("deleting entry in email_user_lookup");
-        return RedisClient.HDEL('email_user_lookup', email);
-        //return true;
-      })*/
-      /* TODO: deprecated
-      .then((a) => {
-        // 5) delete the user in pilot_study_lookup
-        util.debug("deleting entry in pilot_study_lookup");
-        return RedisClient.HDEL('pilot_study_lookup', email);
-        //return true;
-      })*/
-      .then((a) => {
-        // 6) delete the user entry pilot:[email]
-        util.debug("calling DEL pilot:"+email);
-        return RedisClient.DEL("pilot:"+email);
-        //return true;
-      })
-      // TODO: should delete user from course (active/blocked/instructor)
-      // TODO: should delete user's assignments
-      .catch((err) => {
-        util.error(err);
-      });
-  };
+  //const deleteUser = (usr_str) => { };
+  if(!/^usr:/.test(usr_str)) usr_str = "usr:"+usr_str;
+  return RedisClient.HGET(usr_str, "groupNs")
+    // 1) remove user from any groups; and delete groups created by user
+    .then(deleteOrRemoveGroups.bind(null, usr_str))
+    // 2) remove docs user created
+    .then(deleteDocs.bind(null, usr_str))
+    // 3) delete the user in redis
+    .then(deletePilot.bind(null, usr_str))
+    // 4) delete user in userid_email_table
+    .then(redis_utils.GraphDel.bind(null, USERID_EMAIL_TABLE, user_str))
+    // 5) delete the user entry pilot:[email]
+    .then(RedisClient.bind(null, usr_str))
+    // TODO: should delete user from course (active/blocked/instructor)
+    // TODO: should delete user's assignments
+    .catch((err) => {
+      util.error(err);
+    });
 
+  /* TODO: test and delete
   return RedisClient.HGET('email_user_lookup', email)
     .then((usr_str) => {
       util.debug("in User.prototype.deleteByEmail");
@@ -589,7 +651,7 @@ User.deleteUserByEmail = (email) => {
     })
     .catch(function(err) {
       util.error(err);
-    });
+    });*/
 };
 
 User.prototype.updateNick = function(id, newnick){
@@ -603,22 +665,29 @@ User.prototype.updateNick = function(id, newnick){
   );
 };
 
-// TODO: fix this for pilot study
-User.prototype.syncEmail = function(user, newemail){
+/**
+ * @param user
+ * @param newEmail
+ * @returns {Promise}
+ *
+ * NOTE: this function is deprecated
+ * TODO: update to use with userid_email_table
+ */
+User.prototype.syncEmail = function(user, newEmail){
   return new Promise(function(resolve, reject){
-    if(user.email === newemail){
+    if(user.email === newEmail){
       return resolve(user);
     }
     else{
       return RedisClient.HMSET(
         'usr:' + user.id,
         'email',
-        newemail
+        newEmail
       ).then(
         function(){
           return RedisClient.HMSET(
             'email_user_lookup',
-            newemail,
+            newEmail,
             'usr:'+user.id
           );
         }

@@ -34,18 +34,19 @@ Previously we used a table named `user_email_lookup` which forces RichReview to 
 userid is a sha1 hash with salt from netid
 
 @type    hash / class
-@member {string} nick  - nickname
-@member {string} email - email of user
-@member {string|Array<string>} groupNs - array of groupid user is in
+@member {string} nick             - nickname
+@member {string} email            - email of user
+@member {string|string[]} groupNs - array of groupid user is in
 
-@member {string} [auth_type] - is one of "UBC_CWL", "Pilot", "Cornell", or "Google" representing the auth strategy and user affiliation. Please update when there is a new auth strategy
-@member {string} [password_hash] - made from irreversible sha1 hash with salt from netid
-@member {string} [salt]          -
+@member {string} [auth_type]      - is one of "UBC_CWL", "Pilot", "Cornell", or "Google" representing the auth strategy and user affiliation. Please update when there is a new auth strategy
+@member {string} [password_hash]  - made from irreversible sha1 hash with salt from netid
+@member {string} [salt]           -
+@member {boolean} [is_admin]      - is user admin; used for superuser actions
+@member {string} [auth_level]     - Deprecated. Is one of "student", "instructor", or "admin"; refers to security level in terms of access to functionality (delete, doc creation, etc); also affects routing.
 
-@member {string} [auth_level] - is one of "student", "instructor", or "admin"; refers to security level in terms of access to functionality (delete, doc creation, etc); also affects routing.
-@member {string} [first_name] - the first name of user
-@member {string} [last_name]  - the last name of user
-@member {string} [sid]        - the student id of user
+@member {string} [first_name]     - the first name of user
+@member {string} [last_name]      - the last name of user
+@member {string} [sid]            - the student id of user
 
 ## Course
 

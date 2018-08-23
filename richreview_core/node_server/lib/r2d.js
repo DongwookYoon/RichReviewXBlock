@@ -11,7 +11,10 @@ const Promise = require("promise"); // jshint ignore:line
 const js_utils = require('./js_utils');
 const redisClient = require('./redis_client').redisClient;
 const RedisClient = require('./redis_client').RedisClient;
+const redis_utils = require('./redis_client').util;
 const util = require('../util');
+
+const USERID_EMAIL_TABLE = "userid_email_table";
 
 /*
  * User
@@ -35,15 +38,17 @@ const util = require('../util');
  * @member first_name    {string} optional - the first name of user
  * @member last_name     {string} optional - the last name of user
  *
- * userid is also added to email_user_lookup as a hash field
+ * userid is also added to email_user_lookup as a hash field (deprecated)
+ * user ID and email will be linked in the userid_email_table
  */
 const User = function(id, nickname, email,
                       /** new fields **/
-                      password_hash, salt, is_admin, sid, first_name, last_name
+                      auth_type, password_hash, salt, is_admin, sid, first_name, last_name
                       /****************/) {
   this.id = id;
   this.nick = nickname;
   this.email = email;
+  if(auth_type) this.auth_type = auth_type;
   if(password_hash) {
     this.password_hash = password_hash;
     this.salt          = salt;
@@ -229,12 +234,54 @@ User.prototype.findById = function(id){
 };
 
 /**
- * Get a promise to the User object from given email
+ * Get a promise to the User object from given email. Priority to Users that are CWL, then Cornell, then Google, etc...
  * @param  {string} email - email of user to find
  * @return {Promise.<User>} - promise for the user of that email
+ *
+ * TODO: now updated to use use redis_utils.GraphGet test method
  */
-User.prototype.findByEmail = function(email){
+User.prototype.findByEmail = function(email) {
+  const get_priority = (IDs) => {
+    util.debug(`findByEmail: email ${email} corr. to multiple IDs, now choosing ID`);
+
+    const priority = {
+      UBC_CWL: [ ],
+      Cornell: [ ],
+      Google: [ ],
+      Pilot: [ ],
+      other: [ ],
+      unknown: [ ]
+    };
+    const promises = IDs.map((ID, index) => {
+      return RedisClient.HGET(ID, "auth_type")
+        .then(authType => {
+          if(authType) {
+            if(Object.keys(priority).includes(authType)) { priority[authType].push(ID); }
+            else { priority.other.push(ID); }
+          } else { priority.unknown.push(ID); }
+        });
+    });
+    return Promise.all(promises)
+      .then(() => {
+        if(priority.cwl.length > 1) { return priority.cwl[0]; }
+        else if(priority.cornell.length > 1) { return priority.cornell[0]; }
+        else if(priority.google.length > 1) { return priority.google[0]; }
+        else if(priority.other.length > 1) { return priority.other[0]; }
+        else{ return priority.unknown[0]; }
+      })
+  };
+
   if(js_utils.validateEmail(email)){
+    return redis_utils.GraphGet(USERID_EMAIL_TABLE, email)
+      .then(IDs => {
+        if(IDs.length === 1) { return IDs[0]; }
+        else if(IDs.length > 1) {
+          return get_priority(IDs);
+        }
+        else { return null; }
+      });
+
+    /* // TODO: email_user_lookup is deprecated, delete comment
     return RedisClient.HGET('email_user_lookup', email)
       .then((id) => {
           if(id) {
@@ -243,7 +290,7 @@ User.prototype.findByEmail = function(email){
             return null;
           }
         }
-      );
+      );*/
   } else {
     return Promise.resolve(null);
   }
@@ -333,6 +380,8 @@ User.prototype.create = function(id, email,
  * Completely delete the user corresponding to the email including all groups and documents that user made.
  * !!! This function should not to be used by client !!!
  * @param email {string} - the email of user to delete
+ *
+ * TODO: since users can have multiple accounts assoc. the same email, we must delete user by ID, NOT email
  *
  * TODO: test thoroughly
  * TODO: should delete user from course (active/blocked/instructor)
@@ -499,17 +548,22 @@ User.deleteUserByEmail = (email) => {
         //return true;
       })
       .then((a) => {
+        // 4) delete user in userid_email_table
+      })
+      /* TODO: deprecated
+      .then((a) => {
         // 4) delete the user in email_user_lookup
         util.debug("deleting entry in email_user_lookup");
         return RedisClient.HDEL('email_user_lookup', email);
         //return true;
-      })
+      })*/
+      /* TODO: deprecated
       .then((a) => {
         // 5) delete the user in pilot_study_lookup
         util.debug("deleting entry in pilot_study_lookup");
         return RedisClient.HDEL('pilot_study_lookup', email);
         //return true;
-      })
+      })*/
       .then((a) => {
         // 6) delete the user entry pilot:[email]
         util.debug("calling DEL pilot:"+email);

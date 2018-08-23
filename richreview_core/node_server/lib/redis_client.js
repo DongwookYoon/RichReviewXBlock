@@ -151,6 +151,12 @@ exports.util = (function () {
         });
     };
 
+  /**
+   *
+   * @param {string} graph
+   * @param {string} val
+   * @returns {string[]} the members associated with val
+   */
     pub.GraphGet = function(graph, val) {
       return RedisClient.HGET(graph, val)
         .then((members) => {
@@ -165,6 +171,17 @@ exports.util = (function () {
           }
         });
     };
+
+  /**
+   *
+   */
+  pub.GraphExists = function(graph, val) {
+    return RedisClient.HGET(graph, val)
+      .then((members) => {
+        if(members) { return true; }
+        else { return false; }
+      });
+  };
 
   /**
    *

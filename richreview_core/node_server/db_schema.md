@@ -38,7 +38,7 @@ userid is a sha1 hash with salt from netid
 @member {string} email - email of user
 @member {string|Array<string>} groupNs - array of groupid user is in
 
-@member {string} [auth_type] - is one of "UBC CWL", "Pilot", "Cornell", or "Google" representing the auth strategy and user affiliation
+@member {string} [auth_type] - is one of "UBC_CWL", "Pilot", "Cornell", or "Google" representing the auth strategy and user affiliation. Please update when there is a new auth strategy
 @member {string} [password_hash] - made from irreversible sha1 hash with salt from netid
 @member {string} [salt]          -
 

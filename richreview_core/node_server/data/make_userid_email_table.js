@@ -2,10 +2,7 @@
  *
  */
 
-const js_utils     = require('../lib/js_utils');
 const RedisClient  = require('../lib/redis_client').RedisClient;
-const redisClient  = require('../lib/redis_client').redisClient;
-const R2D          = require('../lib/r2d');
 const redis_utils  = require('../lib/redis_client').util;
 const util        = require('../util');
 

@@ -1,3 +1,8 @@
+# Auth strategies
+
+There will be various auth strategies with priorities
+
+
 # UBC Study
 
 These are the (new) redis database models for UBC courses

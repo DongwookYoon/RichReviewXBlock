@@ -36,7 +36,7 @@ const makeOldID = function(key) {
 };
 
 /**
- * findUserByID() and findUserByEmail() extend R2D.User.prototype.findByEmail() and R2D.User.prototype.findById() by adding plugins to the user object. This allows RichReview to easily be portable to other institutions.
+ * findUserByID() and findUserByEmail() extend R2D.User.findByEmail() and R2D.User.prototype.findById() by adding plugins to the user object. This allows RichReview to easily be portable to other institutions.
  *
  */
 
@@ -58,14 +58,14 @@ const findUserByID = (id) => {
 };
 
 /**
- * Extends R2D.User.prototype.findByEmail by adding
+ * Extends R2D.User.findByEmail by adding
  *
  * @param {string} email - of form [id]@pilot.study
  *
  * TODO: findUserByEmail is deprecated; use will result in program breaking changes
  */
 const findUserByEmail = (email) => {
-  return R2D.User.prototype.findByEmail(email)
+  return R2D.User.findByEmail(email)
   /*******add project specific pluggins******/
     .then((user) => {
       return pilotHandler.plugPilot(user);
@@ -110,7 +110,7 @@ exports.CornellStrategyCB = function(profile, done) {
       if(user) {
         return user;
       } else {
-        return R2D.User.prototype.create(
+        return R2D.User.create(
           makeCornellUserID(profile),
           profile.upn
         );
@@ -144,7 +144,7 @@ exports.googleStrategyCB = (accessToken, refreshToken, profile, done) => {
             return R2D.User.prototype.syncEmail(user, email);
           });
       } else {
-        return R2D.User.prototype.create(profile.id, email);
+        return R2D.User.create(profile.id, email);
       }
     })
     .then((user) => {

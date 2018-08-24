@@ -198,7 +198,7 @@ var AddNewGroup = function(req, res){
 /**
  * Shift press
  *
- * NOTE: R2D.User.prototype.findByEmail is deprecated
+ * NOTE: R2D.User.findByEmail is deprecated
  * NOTE: R2D Functionality only accepts IDs now.
  */
 var AddNewGroupAdvanced = function(req, res){
@@ -216,7 +216,7 @@ var AddNewGroupAdvanced = function(req, res){
             Promise.all(
                 d.instructors.concat(d.students).map((item) => {
                     return R2D.User.prototype.findById(item);
-                    //return R2D.User.prototype.findByEmail(item);
+                    //return R2D.User.findByEmail(item);
                 })
             ).then((results) => {
                 if(results.every(function(item){return item !== null;})){

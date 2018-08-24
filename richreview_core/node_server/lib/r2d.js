@@ -17,7 +17,8 @@ const util = require('../util');
 
 // constants
 const USERID_EMAIL_TABLE = "userid_email_table";
-const AUTH_TYPES = ["UBC_CWL", "Pilot", "Cornell", "Google"];
+// TODO: put this in a global location like env.js
+const AUTH_TYPES = ["UBC_CWL", "Internal", "Pilot", "Cornell", "Google"];
 
 /*
  * User
@@ -75,13 +76,11 @@ const User = function(id, nickname, email,
     // auth_type, password_hash, salt, sid, first_name, last_name
     if(options.auth_type && (AUTH_TYPES.includes(options.auth_type)))
       this.auth_type = options.auth_type;
-    /*
-    // As of now, internal passwords are unsupported. Additionally it is not a good idea to expose auth inside User objects so we can most likely just delete these
+    // As of now, internal passwords are note entirely supported.
     if(options.auth) {
       this.password_hash = options.auth.password_hash;
       this.salt = options.auth.salt;
     }
-    */
     if(options.is_admin) this.is_admin = options.is_admin;
     if(options.sid) this.sid = options.sid;
     if(options.first_name) this.first_name = options.first_name;
@@ -105,7 +104,6 @@ const User = function(id, nickname, email,
  * GetGroupNs - get group ids from user with userid_n
  *
  * TODO: User should not use prototype if it doesn't need to access internal data.
- * TODO: convert User to ES6 class
  */
 
 /**
@@ -201,13 +199,13 @@ User.cache = (function() {
     return RedisClient.HGETALL("usr:"+id)
       .then(result => {
 
-        /*
-        // As of now, internal passwords are unsupported. Additionally it is not a good idea to expose auth inside Express
+        // As of now, internal passwords are not entirely supported.
+        // Additionally it is not a good idea to expose auth inside Express
         if(result.password_hash) {
           assert.property(result, "salt");
           result.auth.password_hash = result.password_hash;
           result.auth.salt = result.salt;
-        }*/
+        }
 
         cache[id] = new User(
           id,
@@ -288,7 +286,13 @@ User.prototype.findById = function(id){
  * TODO: make method use AUTH_TYPES instead of internal keys
  * TODO: now updated to use use redis_utils.GraphGet test method; test method
  */
-User.prototype.findByEmail = function(email) {
+User.findByEmail = function(email) {
+
+  /**
+   * @param {string[]} IDs - non-empty array of IDs.
+   * @returns {Promise}
+   *
+   */
   const get_priority = (IDs) => {
     util.debug(`findByEmail: email ${email} corr. to multiple IDs, now choosing ID`);
 
@@ -355,16 +359,13 @@ User.prototype.findByEmail = function(email) {
  * @param {UserOptions|null} [options]
  * @return {Promise.<User>}
  */
-User.prototype.create = function(id, email,
-    /** new fields **/
-    options
-    /****************/) {
+User.create = function(id, email, /* new field */ options) {
   let sss = null;
   if(options) { // auth_type, password_hash, salt, sid, first_name, last_name
     sss = [ ];
     if(options.auth_type && (AUTH_TYPES.includes(options.auth_type)))
       sss.push("auth_type", options.auth_type);
-    // As of now, internal passwords are unsupported.
+    // As of now, internal passwords are not entirely supported.
     if(options.auth)
       sss.push(
         "password_hash", options.auth.password_hash,
@@ -443,7 +444,8 @@ User.prototype.create = function(id, email,
 /**
  * Completely delete the user corresponding to the email including all groups and documents that user made.
  * !!! This function should not to be used by client !!!
- * @param email {string} - the email of user to delete
+ * @param usr_str {string} - the redis key rep. user to delete; can be user id or form usr:[id]
+ * @returns {Promise}
  *
  * TODO: since users can have multiple accounts assoc. the same email, we must delete user by ID, NOT email
  *
@@ -506,6 +508,7 @@ User.deleteUser = (usr_str) => {
    */
   const deleteOrRemoveGroup = (usr_str, groupID_n) => {
     const grp_str = "grp:"+groupID_n;
+    util.logger("deleteUser", grp_str);
     return RedisClient.HGET(grp_str, "userid_n")
       .then((userid_n) => {
         const usr_of_grp = "usr:"+userid_n;
@@ -521,6 +524,7 @@ User.deleteUser = (usr_str) => {
   };
 
   const deleteOrRemoveGroups = (usr_str, groupID_n_arr_str) => {
+    util.logger("deleteUser", "delete or remove groups");
     if(groupID_n_arr_str) {
       const groupID_n_arr = JSON.parse(groupID_n_arr_str);
       const promises = groupID_n_arr.map(deleteOrRemoveGroup.bind(null, usr_str));
@@ -619,7 +623,6 @@ User.deleteUser = (usr_str) => {
    * TODO: should delete user from course (active/blocked/instructor)
    * TODO: should delete user's assignments
    */
-  //const deleteUser = (usr_str) => { };
   if(!/^usr:/.test(usr_str)) usr_str = "usr:"+usr_str;
   return RedisClient.HGET(usr_str, "groupNs")
     // 1) remove user from any groups; and delete groups created by user
@@ -629,9 +632,9 @@ User.deleteUser = (usr_str) => {
     // 3) delete the user in redis
     .then(deletePilot.bind(null, usr_str))
     // 4) delete user in userid_email_table
-    .then(redis_utils.GraphDel.bind(null, USERID_EMAIL_TABLE, user_str))
+    .then(redis_utils.GraphDel.bind(null, USERID_EMAIL_TABLE, usr_str))
     // 5) delete the user entry pilot:[email]
-    .then(RedisClient.bind(null, usr_str))
+    .then(RedisClient.DEL.bind(null, usr_str))
     // TODO: should delete user from course (active/blocked/instructor)
     // TODO: should delete user's assignments
     .catch((err) => {
@@ -777,11 +780,9 @@ const Group = (function(manager, name, creationDate) {
             'creationTime', creationTime,
             'name', 'Group created at ' + js_utils.FormatDateTimeMilisec(creationTime),
             'users', '{"invited":[],"participating":[]}',
-            function(err, resp){
-              if(err){if(err){reject(err);}}
-              else{
-                resolve(groupid);
-              }
+            function(err, resp) {
+              if(err) { reject(err); }
+              else { resolve(groupid); }
             }
           );
         }
@@ -837,36 +838,62 @@ const Group = (function(manager, name, creationDate) {
     );
   };
 
+  /**
+   * Invite a user to a group by user's email. If user already exists in RichReview then add user to the group, otherwise create an invite.
+   * @param {string} groupid_n - group to invite
+   * @param {string} email
+   * @returns {Promise}
+   *
+   * NOTE: when using User.findByEmail(), we prioritize by user AUTH_TYPE
+   * For example, if a @gmail.com email is associated with a UBC_CWL and Google account, then we only invite the user of the UBC_CWL account.
+   * TODO: now using GraphGet() and USERID_EMAIL_TABLE; test method
+   */
   pub_grp.InviteUser = function(groupid_n, email){
-    util.debug("inviting " + email + " to " + groupid_n);
-    return RedisClient.HEXISTS('email_user_lookup', email).then(
-      function(is_exist){
-        if(is_exist){ // when the user already signed up and can be found on the system
-          var userid_n = '';
-          return RedisClient.HGET('email_user_lookup', email).then(
-            function(userid){
-              return pub_grp.connectUserAndGroup(groupid_n, userid.substring(4));
-            }
-          );
+    const userExists = (user) => {
+      return pub_grp.connectUserAndGroup(groupid_n, user.id.substring(4));
+    };
+    const userDoesNotExist = (user) => {
+      return pub_grp.AddEmailToInvited(groupid_n, email)
+        .then(() => {
+          util.debug(`creating invitation for ${email}`);
+          return RedisClient.RPUSH(`inv:${email}`, `grp:${groupid_n}`);
+        });
+    };
+    util.debug(`inviting a user of email ${email} to group ${groupid_n}`);
+    return User.findByEmail(email)
+      .then((user) => {
+        if(user) {
+          return userExists(user);
+        } else {
+          return userDoesNotExist();
         }
-        else{ // when the user is not on the system yet
-          return pub_grp.AddEmailToInvited(groupid_n, email).then(
-            function(){
+      });
+    /*
+    // TODO: email_user_lookup is deprecated. Test function then delete
+    return RedisClient.HEXISTS('email_user_lookup', email)
+      .then((is_exist) => {
+        // when the user already signed up and can be found on the system
+        if(is_exist) {
+          return RedisClient.HGET('email_user_lookup', email)
+            .then(function(userid) {
+              return pub_grp.connectUserAndGroup(groupid_n, userid.substring(4));
+            });
+        // when the user is not on the system yet
+        } else {
+          return pub_grp.AddEmailToInvited(groupid_n, email)
+            .then(() => {
               util.debug("adding " + email + " to invited");
               return RedisClient.RPUSH('inv:'+email, 'grp:'+groupid_n);
-            }
-          );
+            });
         }
-      }
-    );
+      });*/
   };
 
   pub_grp.connectUserAndGroup = function(groupid_n, userid_n){
-    return pub_grp.AddUserToParticipating(groupid_n, userid_n).then(
-      function(){
+    return pub_grp.AddUserToParticipating(groupid_n, userid_n)
+      .then(function() {
         return User.prototype.AddGroupToUser(userid_n, groupid_n);
-      }
-    );
+      });
   };
 
   pub_grp.connectGroupAndMultipleUsers = function(groupid_n, l_userid_n){
@@ -1055,18 +1082,15 @@ const Group = (function(manager, name, creationDate) {
   };
 
   pub_grp.AddEmailToInvited = function(groupid_n, email){
-    return RedisClient.HGET('grp:' + groupid_n, 'users').then(
-      function(usersStr){
-        var users = JSON.parse(usersStr);
+    return RedisClient.HGET('grp:' + groupid_n, 'users')
+      .then(function(usersStr) {
+        let users = JSON.parse(usersStr);
         if( users.invited.indexOf(email) === -1 ){
           users.invited.push(email);
           return RedisClient.HSET('grp:' + groupid_n, 'users', JSON.stringify(users));
         }
-        else{
-          throw 'that user is already in the invitation list.';
-        }
-      }
-    );
+        else { throw `user of ${email} is already in the invitation list`; }
+      });
   };
 
   pub_grp.CancelInvited = function(groupid_n, email){

@@ -95,7 +95,9 @@ describe("spec", function() {
     const graph = "TestGraph";
     const a = "a"; const b = "b"; const c = "c"; const d = "d";
 
-    /*return Promise.all([
+    /*
+    // TODO: Graph functions are not atomic; add atomic functionality
+    return Promise.all([
       redis_utils.GraphSet(graph, a, b),
       redis_utils.GraphSet(graph, a, c),
       redis_utils.GraphSet(graph, a, d),

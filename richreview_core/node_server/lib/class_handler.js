@@ -40,31 +40,36 @@ const encryptPassword = (password, salt) => {
 };
 
 /**
- * A wrapper to create user according to UBC study.
+ * A wrapper to create user according to Internal study.
  *
  * If password is shorter than 8 characters then reject.
  *
  * Note: this should not be used in conjunction with CWL login
- * Note: R2D.User.prototype.findByEmail is deprecated
- * TODO: remove R2D.User.prototype.findByEmail
+ * Note: R2D.User.findByEmail is deprecated
+ * TODO: remove R2D.User.findByEmail
  */
 const createUser = (email, password) => {
+  const id = makeID(email);
+
   const go = () => {
     util.logger("ADMIN UBC STUDY","creating user "+email);
     util.logger("ADMIN UBC STUDY","making ID");
-    const id = makeID(email);
-    util.logger("ADMIN UBC STUDY","making salt");
+
+    util.logger("ADMIN UBC STUDY","making options");
     const salt = makeSalt();
-    util.logger("ADMIN UBC STUDY","making password hash");
-    const password_hash = encryptPassword(password, salt);
-    const is_admin = false;
-    const sid = "";
-    const first_name = "";
-    const last_name = "";
+    const options = {
+      auth_type: "Internal",
+      auth: {
+        password_hash: encryptPassword(password, salt),
+        salt:          salt
+      },
+      is_admin: false,
+      first_name: "",
+      last_name: "",
+      sid: ""
+    };
     util.logger("ADMIN UBC STUDY","calling R2D User create()");
-    return R2D.User.prototype.create(
-      id, email, password_hash, salt, is_admin, sid, first_name, last_name
-    );
+    return R2D.User.create(id, email, options);
   };
 
   util.logger("ADMIN UBC STUDY","checking email is valid");
@@ -78,10 +83,11 @@ const createUser = (email, password) => {
   }
 
   util.logger("ADMIN UBC STUDY","check if user already exists");
-  return R2D.User.prototype.findByEmail(email)
+  //return R2D.User.findByEmail(email)
+  return R2D.User.prototype.findById(id)
     .then((user) => {
       if(user) {
-        throw "user "+email+" already exists";
+        throw new Error(`user ${email} already exists`);
       } else {
         return go();
       }

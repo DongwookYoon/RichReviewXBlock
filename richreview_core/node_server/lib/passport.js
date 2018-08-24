@@ -96,7 +96,7 @@ const googleStrategyCB = (accessToken, refreshToken, profile, done) => {
                         return R2D.User.prototype.syncEmail(user, email);
                     });
             } else {
-                return R2D.User.prototype.create(profile.id, email);
+                return R2D.User.create(profile.id, email);
             }
         })
         .then((user) => {

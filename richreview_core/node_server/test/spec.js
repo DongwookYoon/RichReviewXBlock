@@ -82,12 +82,34 @@ function someTests() {
   });
 }
 
-function specModel() {
-  it("ClassHandler: User: create user jflask", (done) => {
+describe("spec", function() {
+
+  before(function () {
+    js_utils     = require('../lib/js_utils');
+    RedisClient  = require('../lib/redis_client').RedisClient;
+    R2D          = require('../lib/r2d');
+    redis_utils  = require('../lib/redis_client').util;
+    PilotHandler = require('../lib/pilot_handler');
+    ClassHandler = require('../lib/class_handler');
+    Course       = require('../lib/Course');
+  });
+
+  beforeEach(function () { });
+
+  after(function () {
+    return RedisClient.quit();
+
+  });
+
+  afterEach(function () { });
+
+  // someTests();
+
+  it("ClassHandler: User: create user jflask", () => {
     const email = "jflask@ubc.ca";
     const password = "test_password_123";
     util.testl("user's id is " + ClassHandler.makeID(email));
-    ClassHandler.createUser("jflask@ubc.ca", password)
+    return ClassHandler.createUser("jflask@ubc.ca", password)
       .then((user) => {
         expect(user.email).to.equal("jflask@ubc.ca");
         const id = ClassHandler.makeID(email);
@@ -96,20 +118,17 @@ function specModel() {
       .then((user_obj) => {
         expect(user_obj.email).to.equal("jflask@ubc.ca");
         expect(user_obj.nick).to.equal("jflask");
-        return null;
       })
       .catch((err) => {
         util.error(err);
         assert.fail();
-        return null;
-      })
-      .finally(done);
+      });
   });
 
-  it("ClassHandler: User: validate jflask", (done) => {
+  it("ClassHandler: User: validate jflask", () => {
     const email = "jflask@ubc.ca";
     const password = "test_password_123";
-    R2D.User.prototype.findByEmail(email)
+    return R2D.User.findByEmail(email)
       .then((user) => {
         try {
           const b = ClassHandler.validatePassword(user, password);
@@ -118,19 +137,27 @@ function specModel() {
         } catch(err) {
           assert.fail();
         }
-        return null;
+        const id = ClassHandler.makeID(email);
+        return R2D.User.prototype.findById(id);
+      })
+      .then((user) => {
+        try {
+          const b = ClassHandler.validatePassword(user, password);
+          expect(b).to.equal(true);
+          util.testl("validation successful");
+        } catch(err) {
+          assert.fail();
+        }
       })
       .catch((err) => {
         util.error(err);
         assert.fail();
-        return null;
-      })
-      .finally(done);
+      });
   });
 
-  it("User: update jflask", (done) => {
+  it("User: update jflask", () => {
     const email = "jflask@ubc.ca";
-    R2D.User.prototype.findByEmail(email)
+    return R2D.User.findByEmail(email)
       .then((user) => {
         return user.updateDetails("1234567890","Jonathan","Flask");
       })
@@ -197,7 +224,7 @@ function specModel() {
     const argl = emails.map((email) => { return [email, password]; });
     js_utils.promiseLoopApply(ClassHandler.createUser, argl)
       .then(bArr => {
-        return emails.map(User.prototype.findByEmail);
+        return emails.map(User.findByEmail);
       })
       .then(users => {
         users.forEach((user, index) => {
@@ -329,11 +356,11 @@ function specModel() {
     const emails = nicks.map(nick => { return nick+"@ubc.ca"; });
     const ids = emails.map(ClassHandler.makeID);
     const user_keys = ids.map(id => { return "usr:"+id; });
-    console.log(JSON.stringify(user_keys,null,"\t"));
+    //console.log(JSON.stringify(user_keys,null,"\t"));
     /*****************************/
-    js_utils.promiseLoop(R2D.User.deleteUserByEmail, emails)
+    js_utils.promiseLoop(R2D.User.deleteUser, user_keys)
       .then(bArr => {
-        return emails.map(User.prototype.findByEmail);
+        return emails.map(User.findByEmail);
       })
       .then(bArr => {
         expect(bArr).to.deep.equal([null,null,null,null]);
@@ -350,14 +377,15 @@ function specModel() {
 
   it("ClassHandler: User: delete jflask", (done) => {
     const email = "jflask@ubc.ca";
-    R2D.User.deleteUserByEmail(email)
+    const id = ClassHandler.makeID(email);
+    //R2D.User.deleteUserByEmail(email)
+    R2D.User.deleteUser(id)
       .then((b) => {
 
-        return R2D.User.prototype.findByEmail(email);
+        return R2D.User.findByEmail(email);
       })
       .then((u) => {
         expect(u).to.equal(null);
-        const id = ClassHandler.makeID(email);
         return redis_utils.keyExists("usr:"+id);
       })
       .then((b) => {
@@ -371,31 +399,5 @@ function specModel() {
       })
       .finally(done);
   });
-}
-
-describe("spec", function() {
-
-  before(function () {
-    js_utils     = require('../lib/js_utils');
-    RedisClient  = require('../lib/redis_client').RedisClient;
-    R2D          = require('../lib/r2d');
-    redis_utils  = require('../lib/redis_client').util;
-    PilotHandler = require('../lib/pilot_handler');
-    ClassHandler = require('../lib/class_handler');
-    Course       = require('../lib/Course');
-  });
-
-  beforeEach(function () { });
-
-  after(function () {
-    return RedisClient.quit();
-
-  });
-
-  afterEach(function () { });
-
-  // someTests();
-
-  specModel();
 
 });

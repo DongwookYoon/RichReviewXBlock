@@ -100,7 +100,7 @@ const createPilotUser = function(id_str, password, category, isAdmin) {
                 util.logger("IMPORT_PILOT_STUDY", "create a new R2D.User");
                 //const hashed_userid = js_utils.generateSaltedSha1(userid, env.sha1_salt.netid).substring(0, 21);
                 const hashed_userid = lib_utils.makePilotUserID(userid);
-                return R2D.User.prototype.create(hashed_userid, userid)
+                return R2D.User.create(hashed_userid, userid)
                 /*.then(function (user) {
                     // 3) set pilot_study_lookup
                     // util.logger("IMPORT_PILOT_STUDY","set pilot_study_lookup");

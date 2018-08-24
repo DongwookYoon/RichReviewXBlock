@@ -8,10 +8,13 @@
 const node_util = require('util');
 const redis = require('redis');
 const assert     = require('chai').assert;
+var AsyncLock = require('async-lock');
 
 // import libraries
 const env = require('./env');
 const util = require('../util');
+
+const lock = new AsyncLock();
 
 /**
  * switch redis client dependent on host
@@ -100,7 +103,9 @@ exports.util = (function () {
 
     /**
      * Graph is a bidirectional data structure implemented using hashes and stringified lists
-     * Each node in a graph can be queried (GraphGet) to find the nodes the node is adjacent to
+     * Each node in a graph can be queried (GraphGet) to find the nodes the node is adjacent to it
+     *
+     *
      */
   const isStringArr = (str) => {
     return /]$/.test(str) && /^\[/.test(str);
@@ -112,7 +117,7 @@ exports.util = (function () {
    * @param val1
    * @param val2
    * @returns {Promise}
-   * WARNING: GraphSet is NOT atomic and should only be called one at time
+   * WARNING: GraphSet is NOT atomic
    * TODO: make GraphSet atomic
    * (https://www.npmjs.com/package/redlock)
    */
@@ -123,6 +128,7 @@ exports.util = (function () {
        * @param {string} p - the value to put in o
        * @returns {string} - a string or stringified array containing p
        */
+
       const mmk = (o, p) => {
         if(o) {
           if(isStringArr(o)) {

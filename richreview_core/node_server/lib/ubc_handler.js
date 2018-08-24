@@ -28,7 +28,7 @@ const UBCsamlStrategyCB = (profile, done) => {
       } else {
         const email  = profile.email;
         const new_id = profile["urn:oid:1.3.6.1.4.1.60.1.7.1"];
-        return R2D.User.prototype.create(new_id, email);
+        return R2D.User.create(new_id, email);
       }
     })
     .then(user => {

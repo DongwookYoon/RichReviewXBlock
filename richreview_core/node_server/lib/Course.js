@@ -15,7 +15,10 @@ const util = require('../util');
 
 const assert = require('chai').assert;
 
-/*
+
+
+/**
+ * In redis
  * Course ( `course:<course-dept>:<course-number>` )
  *
  * course properties ( `course:<course-dept>:<course-number>:prop` )
@@ -46,6 +49,10 @@ const Course = function(dept, number, is_active, name) {
   this.name = name;
 };
 
+/**
+ * Course cache
+ * @constuctor
+ */
 Course.cache = (function () {
   let cache = {};
   const pub = {};
@@ -96,8 +103,10 @@ Course.cache = (function () {
     return cache.hasOwnProperty(course_key);
   };
 
-  pub.populate()
-    .catch((err) => { util.error(err) });
+  // WARNING: Race condition
+  // TODO: change impl of initial populate
+  /*pub.populate()
+    .catch((err) => { util.error(err) });*/
 
   return pub;
 } ( ));
@@ -272,7 +281,7 @@ Course.prototype.getBlockedStudents = function() {
 
 /**
  *
- * @return {Promise.<{ blocked: Array.<User>, active: Array.<User> }>} - the students of the course
+ * @return {Promise.<{ blocked: User[], active: User[]}>} - the students of the course by blocked and active students
  */
 Course.prototype.getStudents = function () {
   const cb = (instr_id) => {
@@ -298,6 +307,10 @@ Course.prototype.getStudents = function () {
       if(blockedStudents.length > 0) { students.blocked = blockedStudents; }
       return students;
     })
+};
+
+Course.readAttributes = () => {
+  // STUB
 };
 
 module.exports = Course;

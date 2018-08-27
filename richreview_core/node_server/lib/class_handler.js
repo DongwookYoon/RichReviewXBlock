@@ -45,32 +45,16 @@ const encryptPassword = (password, salt) => {
  * If password is shorter than 8 characters then reject.
  *
  * Note: this should not be used in conjunction with CWL login
- * Note: R2D.User.findByEmail is deprecated
- * TODO: remove R2D.User.findByEmail
+ */
+
+/**
+ * Creates a new user for the Internal Study
+ * @param email
+ * @param password
+ * @returns {Promise.<User>}
  */
 const createUser = (email, password) => {
   const id = makeID(email);
-
-  const go = () => {
-    util.logger("ADMIN UBC STUDY","creating user "+email);
-    util.logger("ADMIN UBC STUDY","making ID");
-
-    util.logger("ADMIN UBC STUDY","making options");
-    const salt = makeSalt();
-    const options = {
-      auth_type: "Internal",
-      auth: {
-        password_hash: encryptPassword(password, salt),
-        salt:          salt
-      },
-      is_admin: false,
-      first_name: "",
-      last_name: "",
-      sid: ""
-    };
-    util.logger("ADMIN UBC STUDY","calling R2D User create()");
-    return R2D.User.create(id, email, options);
-  };
 
   util.logger("ADMIN UBC STUDY","checking email is valid");
   if(!js_utils.validateEmail(email)) {
@@ -83,15 +67,23 @@ const createUser = (email, password) => {
   }
 
   util.logger("ADMIN UBC STUDY","check if user already exists");
-  //return R2D.User.findByEmail(email)
-  return R2D.User.prototype.findById(id)
-    .then((user) => {
-      if(user) {
-        throw new Error(`user ${email} already exists`);
-      } else {
-        return go();
-      }
-    });
+  if(R2D.User.cache.exists(id)) {
+    return Promise.reject("user already exists");
+  }
+
+  util.logger("ADMIN UBC STUDY","setting up options");
+  const salt = makeSalt();
+  const password_hash = encryptPassword(password, salt);
+  const options = {
+    auth_type: "Internal",
+    auth: { password_hash, salt },
+    is_admin: false,
+    first_name: "",
+    last_name: "",
+    sid: ""
+  };
+  util.logger("ADMIN UBC STUDY","calling R2D User create()");
+  return R2D.User.create(id, email, options);
 };
 
 /**

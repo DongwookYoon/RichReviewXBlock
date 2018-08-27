@@ -12,7 +12,6 @@ const lib_utils = require('./lib_utils');
 const R2D = require('./r2d.js');
 const LtiEngine = require('./lti_engine.js');
 const pilotHandler = require('./pilot_handler.js');
-const UBCHandler   = require('./ubc_handler');
 
 util.start("          passport SAML Strategy");
 const SAMLStrategy = require('passport-saml').Strategy;
@@ -63,7 +62,7 @@ const UBCsamlStrategy = new SAMLStrategy(
     logoutUrl: env.ubc.idp_config.logoutUrl,
     logoutCallbackUrl: env.ubc.idp_config.logoutCallbackUrl
   },
-  UBCHandler.UBCsamlStrategyCB
+  lib_utils.UBCsamlStrategyCB
 );
 
 util.logger("PASSPORT", "use SAML2 auth for UBC");

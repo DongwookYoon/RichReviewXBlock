@@ -21,32 +21,21 @@ let PilotHandler = null;
 let ClassHandler = null;
 let Course       = null;
 
-const testUser = {
-  "issuer": "https://authentication.ubc.ca",
-  "sessionIndex": "_c98a80bc526723f25ff47438cf601e44",
-  "nameID": "AAdzZWNyZXQx8mtuVkyqyATy6s/Fe7vZ0U3bI6lVf6bllXdWfrPfZLNkwneWryRG4KRBeUQM5WIs2GUTsNoZl+MhBa4kgkpY5JGA7xTJz/KwnaeVv0arw3AebjtqxwxgHA==",
-  "nameIDFormat": "urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
-  "nameQualifier": "https://authentication.ubc.ca",
-  "spNameQualifier": "sp_richreview_ubc",
-  "urn:oid:1.3.6.1.4.1.60.1.7.1": "91429aad-53ca-4a87-91ac-6a9ca309480b",
-  "urn:oid:0.9.2342.19200300.100.1.1": "es334567",
-  "urn:oid:0.9.2342.19200300.100.1.3": "test@ubc.ca",
-  "urn:oid:2.16.840.1.113730.3.1.241": "IAM Application Test Test Student",
-  "urn:oid:2.5.4.42": "IAM Application Test",
-  "urn:mace:dir:attribute-def:ubcEduStudentNumber": "33456781",
-  "urn:oid:2.5.4.4": "Test Student",
-  "urn:oid:2.16.840.1.113719.1.1.4.1.25": [
-  "cn=chin_141_002_2018w_instructor,ou=richreview.net,ou=applications,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca",
-  "cn=korn_102_001_2018w,ou=richreview.net,ou=applications,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca"
-],
-  "mail": "test@ubc.ca",
-  "email": "test@ubc.ca"
-};
-
-const runSpec = () => {
+const runCount = () => {
 
   /**
    * Simply counts the types of users in RichReview. Does not assert anything.
+   *
+   * Currently this is the count
+   * {
+   *   "cornell": {
+   *   	"adfs": 214, // Assuming Cornell auth
+   *   	"not_adfs": 21 // Cornell emails that don't seem like they were created in the Cornell Auth
+   *   },
+   *   "google": 24,
+   *   "pilot": 58,
+   *   "other": 27
+   * }
    */
   it("count users", (done) => {
     const COUNT = {
@@ -93,7 +82,7 @@ const runSpec = () => {
   });
 };
 
-describe("specUBC", function() {
+describe("", function() {
 
   before(function () {
     js_utils     = require('../lib/js_utils');
@@ -116,5 +105,7 @@ describe("specUBC", function() {
 
   afterEach(function () { });
 
-  runSpec();
+  // runCount();
+
+
 });

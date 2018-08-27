@@ -1,5 +1,5 @@
 /**
- * Authentication specific utilities
+ * A script to store general authentication utilities
  *
  * TODO: change file name to something more suitable
  *
@@ -44,12 +44,7 @@ const makeOldID = function(key) {
  * @param {string} id
  */
 const findUserByID = (id) => {
-  return R2D.User.prototype.findById(id)
-  /*********cannot find user with id*********/
-    .catch((err) => {
-      util.debug(`in findById(): ID ${id} not found`);
-      return null;
-    })
+  return R2D.User.findByID(id)
   /*******add project specific pluggins******/
     .then((user) => {
       return pilotHandler.plugPilot(user);
@@ -61,8 +56,6 @@ const findUserByID = (id) => {
  * Extends R2D.User.findByEmail by adding
  *
  * @param {string} email - of form [id]@pilot.study
- *
- * TODO: findUserByEmail is deprecated; use will result in program breaking changes
  */
 const findUserByEmail = (email) => {
   return R2D.User.findByEmail(email)
@@ -152,6 +145,50 @@ exports.googleStrategyCB = (accessToken, refreshToken, profile, done) => {
     })
     .catch(done);
 };
+
+{/**************************************/
+  // uid - CWL login name of the account holder authenticating.
+  const uid = "urn:oid:0.9.2342.19200300.100.1.1";
+  // mail - email address of account holder. The value is derived from following sources (in order of precedence): HR business email address, SIS email address, Email address entered when registering for CWL account
+  const mail = "urn:oid:0.9.2342.19200300.100.1.3";
+  // displayName is the preferred name of the CWL user
+  const displayName = "urn:oid:2.16.840.1.113730.3.1.241";
+  // givenName - first name of UBC Student, UBC Faculty, UBC Staff, Guest, Basic CWL account holders.
+  const givenName = "urn:oid:2.5.4.42";
+  // sn - the last name, aka surname, of UBC Student, UBC Faculty, UBC Staff, Guest, Basic CWL account holders.
+  const sn = "urn:oid:2.5.4.4";
+  // user's student number
+  const ubcEduStudentNumber = "urn:mace:dir:attribute-def:ubcEduStudentNumber";
+  // ubcEduPersistentID - the UBC Persistent Identifier; unique per User, per Service. Deactivation available if Security incidence arises for generation of new value.
+  const ubcEduPersistentID = "urn:oid:1.3.6.1.4.1.60.1.7.1";
+  // groupMembership - ELDAP group memberships for groupOfUniqueName groups.
+  const groupMembership = "urn:oid:2.16.840.1.113719.1.1.4.1.25";
+  exports.UBCsamlStrategyCB = (profile, done) => {
+    util.debug(JSON.stringify(profile));
+
+    findUserByID(profile[ubcEduPersistentID])
+      .then(function(user) {
+        if(user) {
+          return user;
+        } else {
+          const email  = profile[mail];
+          const id = profile[ubcEduPersistentID];
+          const options = {
+            sid: profile[ubcEduStudentNumber],
+            display_name: profile[displayName],
+            first_name: profile[givenName],
+            last_name: profile[sn],
+            auth_type: "UBC_CWL"
+          };
+          return R2D.User.create(id, email, options);
+        }
+      })
+      .then(user => {
+        done(null, user);
+      })
+      .catch(done);
+  };
+}/**************************************/
 
 exports.genSHA1Salt     = genSHA1Salt;
 exports.makeOldID       = makeOldID;

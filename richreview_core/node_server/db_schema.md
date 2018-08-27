@@ -49,6 +49,7 @@ userid is a sha1 hash with salt from netid
 @member {boolean} [is_admin]      - is user admin; used for superuser actions
 @member {string} [auth_level]     - Deprecated. Is one of "student", "instructor", or "admin"; refers to security level in terms of access to functionality (delete, doc creation, etc); also affects routing.
 
+@member {string} [display_name]   - the preferred name of the user
 @member {string} [first_name]     - the first name of user
 @member {string} [last_name]      - the last name of user
 @member {string} [sid]            - the student id of user

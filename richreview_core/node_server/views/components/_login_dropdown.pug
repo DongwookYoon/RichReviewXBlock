@@ -1,4 +1,4 @@
-- should_show_login = ((cur_page === "account" || cur_page === "login") && !user)
+- should_show_login = (cur_page !== "account" && cur_page !== "login" && !user)
 if should_show_login
     li
         a(href="/login_ubc", role="button") UBC CWL Login

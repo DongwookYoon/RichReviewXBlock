@@ -204,7 +204,9 @@ exports.googleStrategyCB = (accessToken, refreshToken, profile, done) => {
         else { return makeUBCUser(profile); }
       })
       .then(user => {
-        // TODO:
+        user.saml = { };
+        user.saml.nameID = profile.nameID;
+        user.saml.nameIDFormat = profile.nameIDFormat;
         done(null, user);
       })
       .catch(done);

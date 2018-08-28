@@ -14,7 +14,7 @@ exports.logout = function(req, res) {
 
     /******************/
     if(req.user.auth_type) console.log(req.user.auth_type);
-    /******************/  
+    /******************/
 
     req.logout();
     req.flash('success', 'You are now logged out');

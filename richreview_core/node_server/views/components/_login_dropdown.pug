@@ -2,7 +2,7 @@
 if should_show_login
     li
         a(href="/login_ubc", role="button") UBC CWL Login
-    li.dropdown(class = ((cur_page === "account" || cur_page === "login") && user === undefined) ? "active" : "")
+    li.dropdown
         a.dropdown-toggle(id="loginDropdown", role="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true")
             |
             span.caret
@@ -15,7 +15,7 @@ if should_show_login
                 a(href="/login_google") Google Login
             li
                 a(href="/login_cornell") Cornell Login
-if !user
+if user
     li
         a(href="/account")
             i.fa.fa-user

@@ -9,21 +9,6 @@ exports.about = function (req, res) {
     res.render('_pages_about', {cur_page: 'About', user: req.user });
 };
 
-exports.logout = function(req, res) {
-    js_utils.logUserAction(req, 'logging out...');
-
-    /******************/
-    if(req.user.auth_type) console.log(req.user.auth_type);
-    /******************/
-
-    req.logout();
-    req.flash('success', 'You are now logged out');
-    res.redirect(
-        'https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue='+
-        process.env.HOST_URL
-    );
-};
-
 exports.input_test = function(req, res){
     req.session.latestUrl = req.originalUrl;
     res.render("input_test", {user: req.user});

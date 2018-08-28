@@ -33,7 +33,7 @@ const authController     = require('../controllers/authController');
 router.get('',                _pages.about);
 router.get('/',                _pages.about);
 router.get('/about',           _pages.about);
-router.get('/logout',          _pages.logout);
+router.get('/logout',          authController.logOutSAML);
 router.get('/input_test',      _pages.input_test);
 router.get('/admin',           _pages.admin);
 router.get('/downloader',      _downloader.dn);

@@ -167,3 +167,5 @@ passport.use(
         }
     )
 );*/
+
+exports.UBCsamlStrategy = UBCsamlStrategy;

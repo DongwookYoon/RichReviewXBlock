@@ -14,6 +14,8 @@ var Redlock = require('redlock');
 const env = require('./env');
 const util = require('../util');
 
+util.start("importing redis_client");
+
 /**
  * switch redis client dependent on host
  */

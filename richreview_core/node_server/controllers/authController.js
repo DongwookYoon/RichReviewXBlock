@@ -24,6 +24,8 @@ exports.isLoggedIn = (req, res, next) => {
 exports.logOutSAML = (req, res, next) => {
   js_utils.logUserAction(req, 'logging out of SAML...');
   if(req.user) {
+    req.user.nameID = req.user.saml.nameID;
+    req.user.nameIDFormat = req.user.saml.nameIDFormat;
     return UBCsamlStrategy.logout(req, (err, uri) => {
       //res.redirect(uri);
       return next();

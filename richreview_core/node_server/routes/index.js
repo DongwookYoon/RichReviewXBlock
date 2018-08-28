@@ -22,8 +22,8 @@ const dataviewer         = require('../controllers/dataviewer');
 const dbs                = require('../controllers/dbs');
 const resources          = require('../controllers/resources');
 const course             = require('../controllers/course');
-const bluemix_stt_auth   = require('../controllers/bluemix_stt_auth');
-const lti                = require('../controllers/lti');
+//const bluemix_stt_auth   = require('../controllers/bluemix_stt_auth');
+//const lti                = require('../controllers/lti');
 const pilotController    = require('../controllers/pilotController');
 const authController     = require('../controllers/authController');
 
@@ -46,14 +46,14 @@ router.get('/dataviewer',      dataviewer.get);
 router.get('/account',         authController.isLoggedIn, account.get);
 router.get('/resources',       resources.get);
 router.get('/math2220_sp2016', authController.isLoggedIn, course.get);
-router.get('/bluemix_stt_auth',bluemix_stt_auth.get);
-router.get('/lti_entry',       lti.get_entry);
-router.get('/lti_failure',     lti.get_failure);
-router.get('/lti_admin',       authController.isLoggedIn, lti.get_admin);
-router.get('/lti_survey',      lti.get_survey);
-router.get('/lti_observe',     lti.get_observe);
-router.get('/lti_discuss_rr',  lti.get_discuss_rr);
-router.get('/lti_discuss_bb',  lti.get_discuss_bb);
+//router.get('/bluemix_stt_auth',bluemix_stt_auth.get);
+//router.get('/lti_entry',       lti.get_entry);
+//router.get('/lti_failure',     lti.get_failure);
+//router.get('/lti_admin',       authController.isLoggedIn, lti.get_admin);
+//router.get('/lti_survey',      lti.get_survey);
+//router.get('/lti_observe',     lti.get_observe);
+//router.get('/lti_discuss_rr',  lti.get_discuss_rr);
+//router.get('/lti_discuss_bb',  lti.get_discuss_bb);
 router.get('/synclog',         _pages.getSyncLog);
 
 /******************************/
@@ -66,9 +66,9 @@ router.post('/upload',     upload.post);
 router.post('/support',    support.post);
 router.post('/resources',  resources.post);
 router.post('/course',     course.post);
-router.post('/lti_dbs',    lti.post_dbs);
-router.post('/lti_survey', lti.post_survey);
-router.post('/lti_discuss_bb', lti.post_bb);
+//router.post('/lti_dbs',    lti.post_dbs);
+//router.post('/lti_survey', lti.post_survey);
+//router.post('/lti_discuss_bb', lti.post_bb);
 
 /****************************/
 /** routes for pilot study **/
@@ -205,7 +205,7 @@ router.post('/login_pilot',
         res.redirect(req.session.latestUrl || '/');
     });
 
-router.post(
+/*router.post(
     '/login_lti',
     passport.authenticate(
         'lti',
@@ -216,6 +216,6 @@ router.post(
             failureFlash: true
         }
     )
-);
+);*/
 
 module.exports = router;

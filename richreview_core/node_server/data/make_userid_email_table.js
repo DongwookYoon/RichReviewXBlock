@@ -23,6 +23,7 @@ redis_utils.keyExists(TABLE)
     return Promise.all(promises);
   })
   .then(() => {
+    util.printer(`MAKE ${TABLE}`, `Done.`);
     return RedisClient.quit();
   })
   .catch(err => {

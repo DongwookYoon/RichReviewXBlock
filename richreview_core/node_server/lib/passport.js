@@ -10,7 +10,7 @@ const passport  = require('passport');
 const env = require('./env.js');
 const lib_utils = require('./lib_utils');
 const R2D = require('./r2d.js');
-const LtiEngine = require('./lti_engine.js');
+//const LtiEngine = require('./lti_engine.js');
 const pilotHandler = require('./pilot_handler.js');
 
 util.start("          passport SAML Strategy");
@@ -32,22 +32,22 @@ passport.serializeUser(function(user, done){
     done(null, user.id);
 });
 
-passport.deserializeUser(function(id, done){
-    LtiEngine.UserMgr.getById(id)
-        .catch(function(err) {
-            return lib_utils.findUserByID(id);
-        }
-    ).then(
-        function(user){
-            done(null, user);
-            return null;
-        }
-    ).catch(
-        function(err){
-            console.error(err);
-            done(null, null);
-        }
-    );
+passport.deserializeUser(function(id, done) {
+  /*
+  // TODO: LtiEngine is deprecated
+  LtiEngine.UserMgr.getById(id)
+    .catch(function(err) {
+      return lib_utils.findUserByID(id);
+    })*/
+  return lib_utils.findUserByID(id)
+    .then((user) => {
+      done(null, user);
+      return null;
+    })
+    .catch((err) => {
+      util.error(err);
+      done(null, null);
+    });
 });
 
 /**
@@ -135,6 +135,7 @@ passport.use(new LocalStrategy(
  *
  * TODO: LTI is deprecated
  */
+/*
 const EDX_LTI_CONSUMER_OAUTH = {
     key: 'xh0rSz5O03-richreview.cornellx.edu',
     secret: 'sel0Luv73Q'
@@ -165,4 +166,4 @@ passport.use(
             );
         }
     )
-);
+);*/

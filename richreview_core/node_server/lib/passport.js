@@ -25,8 +25,8 @@ const wsfedsaml2 = require('../passport-azure-ad').WsfedStrategy;
 util.start("          passport-local strategy");
 const LocalStrategy = require('passport-local').Strategy;
 
-util.start("          passport-lti");
-const LtiStrategy = require('passport-lti');
+//util.start("          passport-lti");
+//const LtiStrategy = require('passport-lti');
 
 passport.serializeUser(function(user, done){
     done(null, user.id);

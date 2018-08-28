@@ -8,23 +8,25 @@ const UBCsamlStrategy = require('../lib/passport').UBCsamlStrategy;
 
 const util = require("../util");
 
+/**
+ * Check if user is logged in and redirects user if not.
+ */
 exports.isLoggedIn = (req, res, next) => {
-  // check if the user is authenticated
   if(req.isAuthenticated()) {
     return next();
   }
-
   util.debug("user is not logged in!");
-  // to-do make a flash message
   req.flash('error', 'You are not logged in');
+  // TODO: change login redirect
   res.redirect('/login_pilot');
 };
 
-exports.logOutSAML = (req, res) => {
+exports.logOutSAML = (req, res, next) => {
   js_utils.logUserAction(req, 'logging out of SAML...');
   if(req.user) {
-    UBCsamlStrategy.logout(req, (err, uri) => {
-      res.redirect(uri);
+    return UBCsamlStrategy.logout(req, (err, uri) => {
+      //res.redirect(uri);
+      return next();
     });
   } else {
     res.redirect('/');

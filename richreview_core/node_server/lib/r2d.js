@@ -421,7 +421,7 @@ User.create = function(id, email, /* new field */ options) {
       return js_utils.promiseLoopApply(Group.CancelInvited, argl);
     })
     /*************************************/
-    .then(function(){
+    .then(function() {
       return User.cache.loadFromDb(id);
     });
 };

@@ -6,6 +6,9 @@
  * created by Colin
  */
 
+// import npm modules
+const assert = require('chai').assert;
+
 // import libraries
 const js_utils = require('./js_utils.js');
 const RedisClient = require('./redis_client').RedisClient;
@@ -13,9 +16,41 @@ const redis_utils = require('./redis_client').util;
 const R2D = require('./r2d');
 const util = require('../util');
 
-const assert = require('chai').assert;
 
+/**
+ * Index to contain all ELDAP course groups
+ * TODO: store in a global location like env.js
+ */
+const COURSE_INDEX = {
+  CHIN_141_002_2018W: {
+    INSTRUCTOR: "chin_141_002_2018w_instructor",
+    STUDENT: "chin_141_002_2018w"
+  },
+  KORN_102_001_2018W: {
+    INSTRUCTOR: "korn_102_001_2018w_instructor",
+    STUDENT: "korn_102_001_2018w"
+  }
+};
 
+// A list of all ELDAP course groups
+const COURSE_INDEX_LIST = (() => {
+  const acc  = [ ];
+  const recurse = (o) => {
+    const keys = Object.keys(o);
+    keys.forEach((key) => {
+      if(o[key] instanceof Object) {
+        recurse(o[key])
+      } else { // is a string
+        acc.push(o[key]);
+      }
+    });
+  };
+  recurse(COURSE_INDEX);
+  return acc;
+})( );
+
+exports.COURSE_INDEX = COURSE_INDEX;
+exports.COURSE_INDEX_LIST = COURSE_INDEX_LIST;
 
 /**
  * In redis
@@ -36,11 +71,11 @@ const assert = require('chai').assert;
 /**
  * Course class to manage school courses, instructors, and student registration+access level
  *
+ * @constructor
  * @param dept {string}
  * @param number {string}
  * @param is_active {boolean} - whether the course is active or disabled
  * @param name {string}
- * @constructor
  */
 const Course = function(dept, number, is_active, name) {
   this.dept = dept;
@@ -51,7 +86,7 @@ const Course = function(dept, number, is_active, name) {
 
 /**
  * Course cache
- * @constuctor
+ * @constructor
  */
 Course.cache = (function () {
   let cache = {};
@@ -112,7 +147,7 @@ Course.cache = (function () {
 } ( ));
 
 /**
- *
+ * @static
  * @param course_dept
  * @param course_nbr
  * @param course_name
@@ -141,6 +176,8 @@ Course.createCourse = (course_dept, course_nbr, course_name) => {
 };
 
 /**
+ * Deletes this course. Removes it from cache and redis.
+ * @memberOf Course
  * TODO: delete assignments assoc. with course
  * TODO: uncouple groups when deleting assignments
  */
@@ -165,6 +202,7 @@ Course.prototype.delete = function() {
 /**
  * Add instructor to course
  * @param {User} user - the instructor to add
+ * @memberOf Course
  */
 Course.prototype.addInstructor = function(user) {
   const course_instructors_key = "course:"+this.dept+":"+this.number+":instructors";
@@ -309,8 +347,32 @@ Course.prototype.getStudents = function () {
     })
 };
 
-Course.readAttributes = () => {
-  // STUB
+const getAttribute = (ss) => {
+  const regex = /cn=[a-zA-Z0-9_]+/i;
+  const result = regex.exec(ss);
+  if(result) {
+    return (result[0]).substring(3);
+  } else {
+    return null;
+  }
+};
+
+const getCourseGroupIDs = (profile) => {
+  assert.property(profile, groupMembership, "profile does not have groupMembership attribute");
+  assert.instanceOf(profile[groupMembership], Array, "profile[groupMembership] is not an array");
+  let courseGroupIDs = (profile[groupMembership]).map((group_str) => {
+    return getAttribute(group_str);
+  });
+  return courseGroupIDs.filter((courseGroupID) => { return !!courseGroupID });
+};
+
+/**
+ * TODO: finish
+ * @param user
+ */
+Course.plugCourse = (user) => {
+  /*if(!user)*/ return Promise.resolve(user);
+
 };
 
 module.exports = Course;

@@ -1,16 +1,19 @@
 /**
- * A script to store general authentication utilities
- *
+ * A script to store general authentication utilities.
  * TODO: change file name to something more suitable
  *
  * by Colin
  */
 
+// import npm modules
 const crypto = require("crypto");
+const assert = require("chai").assert;
 
-const pilotHandler = require("./pilot_handler");
-const R2D          = require("./r2d");
+// import libraries
 const env          = require("./env");
+const PilotHandler = require("./pilot_handler");
+const R2D          = require("./r2d");
+const Course       = require("./Course");
 
 const util = require("../util");
 
@@ -36,49 +39,38 @@ const makeOldID = function(key) {
 };
 
 /**
- * findUserByID() and findUserByEmail() extend R2D.User.findByEmail() and R2D.User.prototype.findById() by adding plugins to the user object. This allows RichReview to easily be portable to other institutions.
- *
+ * findUserByID() and findUserByEmail() extend R2D.User.findByEmail() and R2D.User.findById() by adding plugins to the User object. This allows RichReview to open to extension when ported to other institutions.
  */
 
 /**
+ * Adds specific pluggins.
+ * Current plugins are:
+ *  - PilotHandler.plugPilot - attaches pilot specific metadata for Pilot users
+ *  - Course.plugCourses     - attaches courses the user is registered to
+ * @param {User|null} user
+ * @returns {Promise.<User|null>}
+ */
+const findUserCallback = (user) => {
+  return PilotHandler.plugPilot(user)
+    .then(Course.plugCourses);
+};
+
+/**
+ * Extends R2D.User.findByID by adding plugins if available
  * @param {string} id
+ * @returns {Promise.<User|null>}
  */
 const findUserByID = (id) => {
-  return R2D.User.findByID(id)
-  /*******add project specific pluggins******/
-    .then((user) => {
-      return pilotHandler.plugPilot(user);
-    });
-  /******************************************/
+  return R2D.User.findByID(id).then(findUserCallback);
 };
 
 /**
- * Extends R2D.User.findByEmail by adding
- *
- * @param {string} email - of form [id]@pilot.study
+ * Extends R2D.User.findByEmail by adding plugins if available. See comments for R2D.User.findByEmail() for more details.
+ * @param {string} email
+ * @returns {Promise.<User|null>}
  */
 const findUserByEmail = (email) => {
-  return R2D.User.findByEmail(email)
-  /*******add project specific pluggins******/
-    .then((user) => {
-      return pilotHandler.plugPilot(user);
-    });
-  /******************************************/
-};
-
-
-/**
- * Method to find Cornell user
- * @param {Object} profile
- * @returns {User|null}
- */
-const findCornellUser = (profile) => {
-  const ID = makeOldID(profile.upn);
-  return findUserByID(ID);
-};
-
-const makeCornellUserID = (profile) => {
-  return makeOldID(profile.upn);
+  return R2D.User.findByEmail(email).then(findUserCallback);
 };
 
 /**
@@ -88,6 +80,25 @@ const makeCornellUserID = (profile) => {
  * @member {string[]} role - profile attributes
  * @member {string} displayName - this display name
  */
+
+/**
+ * Find Cornell user given Cornell profile
+ * @param {CornellProfile} profile
+ * @returns {Promise.<User|null>}
+ */
+const findCornellUser = (profile) => {
+  const ID = makeOldID(profile.upn);
+  return findUserByID(ID);
+};
+
+/**
+ * Create an ID from a Cornell user
+ * @param {CornellProfile} profile
+ * @returns {string} the ID
+ */
+const makeCornellUserID = (profile) => {
+  return makeOldID(profile.upn);
+};
 
 /**
  * Callback for use with wsfed SAML 2.0 to login using Cornell NetID
@@ -140,9 +151,7 @@ exports.googleStrategyCB = (accessToken, refreshToken, profile, done) => {
         return R2D.User.create(profile.id, email);
       }
     })
-    .then((user) => {
-      done(null, user);
-    })
+    .then((user) => { done(null, user); })
     .catch(done);
 };
 
@@ -163,27 +172,39 @@ exports.googleStrategyCB = (accessToken, refreshToken, profile, done) => {
   const ubcEduPersistentID = "urn:oid:1.3.6.1.4.1.60.1.7.1";
   // groupMembership - ELDAP group memberships for groupOfUniqueName groups.
   const groupMembership = "urn:oid:2.16.840.1.113719.1.1.4.1.25";
-  exports.UBCsamlStrategyCB = (profile, done) => {
-    util.debug(JSON.stringify(profile));
 
+  const makeUBCUser = (profile) => {
+    const email  = profile[mail];
+    const id = profile[ubcEduPersistentID];
+    const options = {
+      sid: profile[ubcEduStudentNumber],
+      display_name: profile[displayName],
+      first_name: profile[givenName],
+      last_name: profile[sn],
+      auth_type: "UBC_CWL"
+    };
+    return R2D.User.create(id, email, options)
+      .then((user) => {
+        assert.instanceOf(user, R2D.User, "UBCsamlStrategyCB: user is an R2D.User");
+        // Call findfindUserByID() again to get plugins
+        return findUserByID(user.id);
+      });
+  };
+
+  /**
+   * Callback strategy for UBC IDPv3 SAML Authentication. Strategy will either find a user corr. to the ID in the profile if it exists, or create a new user if it does not.
+   * @param {Object} profile - the CWL account holder's profile returned after successful CWL login.
+   * @param {function} done - callback for passport
+   */
+  exports.UBCsamlStrategyCB = (profile, done) => {
+    util.debug(JSON.stringify(profile, null, '\t'));
     findUserByID(profile[ubcEduPersistentID])
-      .then(function(user) {
-        if(user) {
-          return user;
-        } else {
-          const email  = profile[mail];
-          const id = profile[ubcEduPersistentID];
-          const options = {
-            sid: profile[ubcEduStudentNumber],
-            display_name: profile[displayName],
-            first_name: profile[givenName],
-            last_name: profile[sn],
-            auth_type: "UBC_CWL"
-          };
-          return R2D.User.create(id, email, options);
-        }
+      .then((user) => {
+        if(user) { return user; }
+        else { return makeUBCUser(profile); }
       })
       .then(user => {
+        // TODO:
         done(null, user);
       })
       .catch(done);

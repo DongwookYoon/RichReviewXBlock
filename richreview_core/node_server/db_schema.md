@@ -1,7 +1,13 @@
 # Auth strategies
 
-There will be various auth strategies with priorities
+There are various auth strategies to log into RichReview:
 
+- UBC_CWL - user logs in through UBC CWL authentication page
+- Internal - user logs in through RichReview directly by entering their username and password. RichReview authenticates the user be validating user's password with stored password (hashed w/ salt).
+- Pilot - User logs in through RichReview directly by entering their username and password. Pilot users should be phased out and future developers should use the 'Internal' authentication.
+    + The passwords of pilot users are not hashed
+    + Users cannot create their own account. This can only be done through a course administrator.
+- Google - user logs in through the Google authentication page.
 
 # UBC Study
 
@@ -33,22 +39,38 @@ We use a Bipartite graph called the `userid_email_table` to lookup between email
 
 To set up the `userid_email_table` we use the script in `./data/make_userid_email_table.js`
 
-Previously we used a table named `user_email_lookup` which forces RichReview to use a unique ID for each email.
+Previously we used a table named `user_email_lookup` which forces RichReview to use a unique ID for each email. This is deprecated.
 
-**User** ( `usr:<userid>` )
-userid is a sha1 hash with salt from netid
+#### User in Redis
 
-@type    hash / class
+`usr:<userid>` is a hash.
+userid is the generated differently depending on the. See [auth strategies](#auth-strategies) for more details. The keys in the redis hash are identical to those in User. 
+
+nick
+email
+groupNs
+[auth_type]
+[password_hash]
+[salt]
+[is_admin]
+[auth_level]
+[display_name]
+[first_name]
+[last_name]
+[sid]
+
+#### User in NodeJS
+
+`User` is an object stored in `R2D.User.cache`
+@class User
 @member {string} nick             - nickname
 @member {string} email            - email of user
 @member {string|string[]} groupNs - array of groupid user is in
-
 @member {string} [auth_type]      - is one of "UBC_CWL", "Pilot", "Cornell", or "Google" representing the auth strategy and user affiliation. Please update when there is a new auth strategy
 @member {string} [password_hash]  - made from irreversible sha1 hash with salt from netid
 @member {string} [salt]           -
 @member {boolean} [is_admin]      - is user admin; used for superuser actions
 @member {string} [auth_level]     - Deprecated. Is one of "student", "instructor", or "admin"; refers to security level in terms of access to functionality (delete, doc creation, etc); also affects routing.
-
 @member {string} [display_name]   - the preferred name of the user
 @member {string} [first_name]     - the first name of user
 @member {string} [last_name]      - the last name of user
@@ -66,9 +88,7 @@ userid is a sha1 hash with salt from netid
 ## Course users
 
 **course instructor** ( `course:<course-dept>:<course-number>:instructors` ) is of type set containing the userid of instructors of course
-
 **course active students** ( `course:<course-dept>:<course-number>:students:active` ) is of type set containing the userid of active students of course
-
 **course blocked students** ( `course:<course-dept>:<course-number>:students:blocked` ) is of type set containing the userid of blocked students of course
 
 ## Assignment

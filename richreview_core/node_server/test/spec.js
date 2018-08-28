@@ -441,7 +441,7 @@ describe("UBC", function() {
           expect(b).to.be.false;
         })
         .catch((err) => {
-          util.error(err);
+          util.teste(err);
           assert.fail();
         });
     });
@@ -483,8 +483,11 @@ describe("UBC", function() {
       "urn:mace:dir:attribute-def:ubcEduStudentNumber": testProfileAttr.sid, // sid
       "urn:oid:2.5.4.4": testProfileAttr.last_name, // last name
       "urn:oid:2.16.840.1.113719.1.1.4.1.25": [
-        "cn=chin_141_002_2018w_instructor,ou=richreview.net,ou=applications,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca",
-        "cn=korn_102_001_2018w,ou=richreview.net,ou=applications,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca"
+        "ou=richreview.net,ou=applications,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca",
+        "ou=richreview.net,cn=chin_141_002_2018w_instructor,ou=applications,cn=korn_102_001_2018w,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca",
+        "ou=richreview.net,ou=applications,cn=korn_102_001_2018w,ou=cpsc-ubcv,cn=chin_141_002_2018w_instructor,ou=clients,dc=id,dc=ubc,dc=ca",
+        "cn=CPSC_110_001_2018w_instructor,ou=richreview.net,ou=applications,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca",
+        "ou=richreview.net,ou=applications,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca,cn=CPSC_420_001_2018w"
       ], // group_attributes
       "mail": "test@ubc.ca",
       "email": "test@ubc.ca"
@@ -499,6 +502,45 @@ describe("UBC", function() {
       expect(u.auth_type).to.equal(testProfileAttr.auth_type);
       expect(u.nick).to.equal(testProfileAttr.nick);
     };
+
+    it("Course: read group attributes", () => {
+      const regex = /cn=[a-zA-Z0-9_]+/i;
+      const getAttribute = (ss) => {
+        const regex = /cn=[a-zA-Z0-9_]+/i;
+        const result = regex.exec(ss);
+        if(result) {
+          return (result[0]).substring(3);
+        } else {
+          return null;
+        }
+      };
+      const ss = testProfile[groupMembership];
+      let result = regex.exec(ss[0]);
+      expect(result).to.be.null;
+      expect(getAttribute(ss[0])).to.be.null;
+      result = regex.exec(ss[1]);
+      expect(result).to.deep.equal(["cn=chin_141_002_2018w_instructor"]);
+      expect(getAttribute(ss[1])).to.equal("chin_141_002_2018w_instructor");
+      result = regex.exec(ss[2]);
+      expect(result).to.deep.equal(["cn=korn_102_001_2018w"]);
+      expect(getAttribute(ss[2])).to.equal("korn_102_001_2018w");
+
+      const getCourseGroupIDs = (profile) => {
+        assert.property(profile, groupMembership, "profile does not have groupMembership attribute");
+        assert.instanceOf(profile[groupMembership], Array, "profile[groupMembership] is not an array");
+        let courseGroupIDs = (profile[groupMembership]).map((group_str) => {
+          return getAttribute(group_str);
+        });
+        return courseGroupIDs.filter((courseGroupID) => { return !!courseGroupID });
+      };
+      result = getCourseGroupIDs(testProfile);
+      expect(result).to.have.members([
+        'chin_141_002_2018w_instructor',
+        'korn_102_001_2018w',
+        'CPSC_110_001_2018w_instructor',
+        'CPSC_420_001_2018w'
+      ]);
+    });
 
     it("User: create fhirst from testProfile", () => {
       return new Promise((resolve) => {
@@ -531,10 +573,12 @@ describe("UBC", function() {
           validateUserDetails(user_obj);
         })
         .catch((err) => {
-          util.error(err);
+          util.teste(err);
           assert.fail(err);
         });
     });
+
+    // TODO: test lib_utils.UBCsamlStrategyCB() does not recreate user if run a second time.
 
     it("User: delete fhirst", () => {
       return R2D.User.deleteUser(testID)
@@ -553,8 +597,8 @@ describe("UBC", function() {
           expect(b).to.be.false;
         })
         .catch((err) => {
-          util.error(err);
-          assert.fail();
+          util.teste(err);
+          assert.fail(err);
         });
     });
   });

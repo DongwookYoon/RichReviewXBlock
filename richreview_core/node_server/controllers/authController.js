@@ -20,12 +20,10 @@ exports.isLoggedIn = (req, res, next) => {
 };
 
 exports.testMe = (req, res, next) => {
-  if (req.isAuthenticated()) {
-    return next();
-  }
   util.debug(Object.keys(req));
-  util.debug(Object.keys(req.user));
-  req.flash('info', `${}`);
+  if(req.user) util.debug(Object.keys(req.user));
+  if(req.session) util.debug(Object.keys(req.session));
+  //req.flash('info', `${}`);
 
   return next();
 };
@@ -39,7 +37,7 @@ exports.samlLogout = (req, res, next) => {
     req.user.nameID = req.user.saml.nameID;
     req.user.nameIDFormat = req.user.saml.nameIDFormat;
     const strategy = passport._strategy('saml');
-    strategy.logout(req, function(error, requestUrl) {
+    strategy.logout(req, (error, requestUrl) => {
       if(error) util.error(`Can't generate log out url: ${error}`);
       util.debug(requestUrl);
     });
@@ -47,6 +45,10 @@ exports.samlLogout = (req, res, next) => {
     if(err) util.error(`Exception on URL: ${err}`);
   }
   req.logout();
+  req.session.destroy(function (err) {
+      if(err) util.error(`Session cannot be destroyed: ${err}`);
+      res.redirect('/');
+  });
   res.redirect('/');
 };
 

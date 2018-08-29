@@ -29,7 +29,7 @@ exports.testMe = (req, res, next) => {
 };
 
 /**
- * TODO: delete the session upon logout
+ *
  */
 exports.samlLogout = (req, res, next) => {
   js_utils.logUserAction(req, 'logging out of SAML...');
@@ -49,7 +49,6 @@ exports.samlLogout = (req, res, next) => {
       if(err) util.error(`Session cannot be destroyed: ${err}`);
       res.redirect('/');
   });
-  res.redirect('/');
 };
 
 exports.logout = function(req, res) {

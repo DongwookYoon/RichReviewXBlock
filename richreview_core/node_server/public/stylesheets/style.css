@@ -83,6 +83,22 @@ a:active {
 }
 
 /*****************************/
+/**         Navbar          **/
+/*****************************/
+
+.cwl_login_button {
+    background: #FFFFFF url("/img/CWL_login_button.png") no-repeat top left;
+    background-position: 45px 6px;
+    width: 135px;
+    height: 41px;
+}
+
+.cwl_login_link {
+    display: block;
+    width: 41px;
+}
+
+/*****************************/
 /**     Flash Messages      **/
 /*****************************/
 

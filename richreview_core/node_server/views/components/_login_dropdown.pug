@@ -1,13 +1,14 @@
 - should_show_login = (cur_page !== "account" && cur_page !== "login" && !user)
 if should_show_login
     li
-        a(href="/login_ubc", role="button") UBC CWL Login
+        a.cwl_login_button(href="/login_ubc", role="button") UBC&nbsp
     li.dropdown
         a.dropdown-toggle(id="loginDropdown", role="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true")
             |
             span.caret
         ul.dropdown-menu(aria-labelledby="loginDropdown")
-            li other auth methods
+            li
+                p other auth methods
             li.divider(role="separator")
             li
                 a(href="/login_pilot") Pilot Login

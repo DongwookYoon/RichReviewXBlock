@@ -19,50 +19,36 @@ exports.isLoggedIn = (req, res, next) => {
   res.redirect('/');
 };
 
+exports.testMe = (req, res, next) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  util.debug(Object.keys(req));
+  util.debug(Object.keys(req.user));
+  req.flash('info', `${}`);
+
+  return next();
+};
+
 /**
- * TODO: call UBC SAML auth as well as logout
+ * TODO: delete the session upon logout
  */
 exports.samlLogout = (req, res, next) => {
   js_utils.logUserAction(req, 'logging out of SAML...');
-  /*if(req.user) {
+  try {
     req.user.nameID = req.user.saml.nameID;
     req.user.nameIDFormat = req.user.saml.nameIDFormat;
-    return UBCsamlStrategy.logout(req, (err, uri) => {
-      //res.redirect(uri);
-      return next();
-    });
-  } else {
-    res.redirect('/');
-  }*/
-  try {
     const strategy = passport._strategy('saml');
     strategy.logout(req, function(error, requestUrl) {
-      if(error) console.log(`Can't generate log out url: ${err}`);
+      if(error) util.error(`Can't generate log out url: ${error}`);
+      util.debug(requestUrl);
     });
   } catch(err) {
-    if(err) console.log(`Exception on URL: ${err}`);
+    if(err) util.error(`Exception on URL: ${err}`);
   }
   req.logout();
   res.redirect('/');
 };
-
-/*function samlLogout(req, res) {
-  try {
-    const strategy = passport._strategy('saml');
-    strategy.logout(req, function(error, requestUrl) {
-      if(error) console.log(`Can't generate log out url: ${err}`);
-      req.logOut();
-      // passport-saml is not removing the session.
-      delete req.session.passport;
-      res.redirect(requestUrl);
-    });
-  } catch(err) {
-    if(err) console.log(`Exception on URL: ${err}`);
-    req.logOut();
-    delete req.session.passport;
-    res.redirect('/auth/saml');
-  }
-}*/
 
 exports.logout = function(req, res) {
   js_utils.logUserAction(req, 'logging out...');

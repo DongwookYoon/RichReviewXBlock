@@ -30,10 +30,10 @@ const authController     = require('../controllers/authController');
 /*****************************/
 /** routes for get requests **/
 /*****************************/
-router.get('',                _pages.about);
+router.get('',                 _pages.about);
 router.get('/',                _pages.about);
 router.get('/about',           _pages.about);
-router.get('/logout',          authController.logOutSAML, authController.logout);
+router.get('/logout_saml',     authController.isLoggedIn, authController.samlLogout);
 router.get('/input_test',      _pages.input_test);
 router.get('/admin',           _pages.admin);
 router.get('/downloader',      _downloader.dn);

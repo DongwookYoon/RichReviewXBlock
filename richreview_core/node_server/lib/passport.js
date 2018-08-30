@@ -82,7 +82,7 @@ passport.use(CornellStrategy);
 /**
  * use strategy OAuth2.0 with Google ID
  */
-const googleStrategyCB = (accessToken, refreshToken, profile, done) => {
+/*const googleStrategyCB = (accessToken, refreshToken, profile, done) => {
     console.log(JSON.stringify(profile, null, '\t'));
     const email = profile.emails.length !== 0 ? profile.emails[0].value : '';
     const b = R2D.User.cache.exists(profile.id);
@@ -102,21 +102,19 @@ const googleStrategyCB = (accessToken, refreshToken, profile, done) => {
             done(null, user);
         })
         .catch(done);
-};
+};*/
 
 util.logger("PASSPORT", "use Google Strategy / 0Auth2.0 with Google+ API");
 const redirect_uri = process.env.NODE_ENV === "development" ?
     env.google_oauth.redirect_uris[1] : env.google_oauth.redirect_uris[0];
-passport.use(
-    new GoogleStrategy(
-        {
-            clientID: env.google_oauth.client_id,
-            clientSecret: env.google_oauth.client_secret,
-            callbackURL: redirect_uri,
-        },
-        googleStrategyCB
-    )
+const googleStrategy = new GoogleStrategy({
+    clientID: env.google_oauth.client_id,
+    clientSecret: env.google_oauth.client_secret,
+    callbackURL: redirect_uri,
+  },
+  lib_utils.googleStrategyCB
 );
+passport.use(googleStrategy);
 
 /**
  * use Local Strategy as a passport strategy in app.js

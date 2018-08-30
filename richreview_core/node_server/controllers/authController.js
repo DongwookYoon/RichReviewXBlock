@@ -27,7 +27,7 @@ exports.testMe = (req, res, next) => {
 };
 
 /**
- *
+ * Send request to (UBC's) IDP to log out of CWL. If user did not log into
  */
 exports.samlLogout = (req, res) => {
   js_utils.logUserAction(req, 'logging out of SAML...');
@@ -41,6 +41,7 @@ exports.samlLogout = (req, res) => {
         res.redirect('/logout');
       }
       util.debug(requestUrl);
+      req.logout();
       res.redirect(requestUrl);
     });
   } catch(err) {

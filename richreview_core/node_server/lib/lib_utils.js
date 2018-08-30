@@ -1,6 +1,6 @@
 /**
  * A script to store general authentication utilities.
- * TODO: change file name to something more suitable
+ * TODO: change file name to something more suitable like auth.js
  *
  * by Colin
  */
@@ -139,15 +139,14 @@ exports.googleStrategyCB = (accessToken, refreshToken, profile, done) => {
   console.log(JSON.stringify(profile, null, '\t'));
   const email = profile.emails.length !== 0 ? profile.emails[0].value : '';
   const b = R2D.User.cache.exists(profile.id);
-  new Promise.resolve(b)
-  //R2D.User.prototype.isExist(profile.id)
-    .then((is_exist) => {
-      if(is_exist) {
-        return findUserByID(profile.id)
-          .then((user) => {
-            return R2D.User.prototype.syncEmail(user, email);
-          });
+  R2D.User.findByID(profile.id)
+    .then((user) => {
+      if(user) {
+        // since WARNING: user_email_lookup is deprecated, syncEmail() does not work.
+        // TODO: fix syncEmail
+        return R2D.User.prototype.syncEmail(user, email);
       } else {
+        util.debug(`user with email ${email} does not exist; making new user`);
         return R2D.User.create(profile.id, email);
       }
     })

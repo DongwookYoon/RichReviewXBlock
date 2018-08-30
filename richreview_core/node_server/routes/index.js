@@ -186,7 +186,8 @@ router.get(
     passport.authenticate( 'google', { scope:['email'] } )
 );
 
-router.post(
+// TODO: now OAth2 callback needs to be reached through a GET command instead of a POST command. Why?
+router.get(
     '/login-oauth2-return',
     passport.authenticate( 'google', { failureRedirect: '/login_google' } ),
     function(req, res) {

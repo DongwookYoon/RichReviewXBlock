@@ -349,7 +349,6 @@ User.findByID = function(id) {
    * @param  {string} email - email of user to find
    * @return {Promise.<User|null>} - promise for the user of that email
    * NOTE: This function originally got only one user with email instead of searching for the 'right' one. This function is provided to interface with older code.
-   * TODO: make method use AUTH_TYPES instead of internal keys
    * TODO: now updated to use use redis_utils.GraphGet test method; test method
    */
   User.findByEmail = function(email) {

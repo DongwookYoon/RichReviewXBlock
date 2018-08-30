@@ -128,23 +128,17 @@ var webAppSync = (function(){
 const runServer = () => {
     const app = require('../app');
 
-    let httpsPort = null;
-    let httpPort = null;
-
-    if (process.env.NODE_ENV === 'production') {
-        httpsPort = 443;
-        httpPort = 80;
-    } else{ // on localhost
-        httpsPort = 8001;
-        httpPort = 8002;
-    }
-
     process.setMaxListeners(0);
 
-    app.https.set('port', process.env.PORT || httpsPort);
-    app.http.set('port', process.env.PORT || httpPort);
+    const HTTPS_PORT = env.node_config.HTTPS_PORT || 8001;
+    const HTTP_PORT = env.node_config.HTTP_PORT  || 8002;
+    app.https.set('port', HTTPS_PORT);
+    app.http.set('port', HTTP_PORT);
 
-    require('http').createServer(app.http).listen(
+    require('http').createServer(function(req, res) {
+        res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
+        res.end();
+    }).listen(
         app.http.get('port'),
         function () {
             util.start("listening on HTTP port: " + app.http.get('port'));

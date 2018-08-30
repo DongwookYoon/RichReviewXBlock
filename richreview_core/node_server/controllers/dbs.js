@@ -195,7 +195,15 @@ var AddNewGroup = function(req, res){
     }
 };
 
+/**
+ * Shift press
+ *
+ * NOTE: R2D.User.findByEmail is deprecated
+ * NOTE: R2D Functionality only accepts IDs now.
+ */
 var AddNewGroupAdvanced = function(req, res){
+    console.log("DEBUG: in AddNewGroupAdvanced");
+    console.log("DEBUG: "+JSON.stringify(Object.keys(req.body)));
     if(js_utils.identifyUser(req, res)){
         let d;
         let user_students = [];
@@ -206,8 +214,9 @@ var AddNewGroupAdvanced = function(req, res){
                 throw "invalid format";
             }
             Promise.all(
-                d.instructors.concat(d.students).map((item)=>{
-                    return R2D.User.prototype.findByEmail(item);
+                d.instructors.concat(d.students).map((item) => {
+                    return R2D.User.prototype.findById(item);
+                    //return R2D.User.findByEmail(item);
                 })
             ).then((results) => {
                 if(results.every(function(item){return item !== null;})){
@@ -607,6 +616,7 @@ var GetRrrJson = function(req, res){
 };
 
 exports.post = function(req, res){
+    console.log("DEBUG: "+JSON.stringify(Object.keys(req.body))+" "+req.query.op);
     switch(req.query['op']){
         case "GetMyself":
             GetMyself(req, res);

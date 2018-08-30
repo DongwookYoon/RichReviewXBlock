@@ -10,7 +10,7 @@ const path = require('path');
 const util     = require('../util');
 const file_utils = require('../lib/file_utils');
 
-
+util.start("importing env");
 
 exports.admin_list = [
     '116730002901619859123'

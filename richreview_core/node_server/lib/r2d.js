@@ -6,12 +6,21 @@
 
 // import npm modules
 const Promise = require("promise"); // jshint ignore:line
+const assert  = require("chai").assert;
 
 // import libraries
 const js_utils = require('./js_utils');
 const redisClient = require('./redis_client').redisClient;
 const RedisClient = require('./redis_client').RedisClient;
+const redis_utils = require('./redis_client').util;
 const util = require('../util');
+
+// constants
+const USERID_EMAIL_TABLE = "userid_email_table";
+// TODO: put this in a global location like env.js
+const AUTH_TYPES = ["UBC_CWL", "Internal", "Pilot", "Cornell", "Google"];
+const AUTH_TYPES_OTHER = "other";
+const AUTH_TYPES_UNKN  = "unknown";
 
 /*
  * User
@@ -21,36 +30,69 @@ const util = require('../util');
  * User ( `usr:<userid>` )
  * userid is a sha1 hash with salt from netid
  *
- * @type    hash / class
- * @member id       {string} the userid (sha1 hash with salt from netid)
- * @member nick     {string} - nickname
- * @member email    {string} required - email of user
- * @member groupNs  {string|Array<string>} required - array of groupid user is in
+ * @class User
+ * @typeof Object
+ * @member {string} nick             - nickname
+ * @member {string} email            - email of user
+ * @member {string|string[]} groupNs - array of groupid user is in
+ * @member {string} [auth_type]      - is one of "UBC_CWL", "Pilot", "Cornell", "Google", etc representing the auth strategy and user affiliation. The complete list is in AUTH_TYPES. Please update when there is a new auth strategy.
+ * @member {string} [password_hash]  - made from irreversible sha1 hash with salt from netid
+ * @member {string} [salt]           -
+ * @member {boolean} [is_admin]      - is user admin; used for superuser actions
+ * @member {string} [auth_level]     - Deprecated. Is one of "student", "instructor", or "admin"; refers to security level in terms of access to functionality (delete, doc creation, etc); also affects routing.
+ * @member {string} [display_name]   - the preferred name of the user
+ * @member {string} [first_name]     - the first name of user
+ * @member {string} [last_name]      - the last name of user
+ * @member {string} [sid]            - the student id of user
  *
- * UBC study has additional fields
- * @member password_hash {string} - made from irreversible sha1 hash with salt from netid
- * @member salt          {string} - random generated string for password salt
- * @member is_admin      {boolean} - if admin then can access experimental/super functionality (delete users, view password hashes, etc); also affects routing.
- * @member sid           {string} optional - the student id of user
- * @member first_name    {string} optional - the first name of user
- * @member last_name     {string} optional - the last name of user
+ * userid is also added to email_user_lookup as a hash field (deprecated)
+ * user ID and email will be linked in the userid_email_table
+ * TODO: currently userid_email_table stores IDs with the part `usr:`; it is best if we remove the `usr:`.
+ * Please see db_schema.md for for details
+ */
+
+/**
+ * Options
  *
- * userid is also added to email_user_lookup as a hash field
+ * @class UserOptions
+ * @member {string} [auth_type]  - is
+ * @member {{ password_hash: string, salt: string }} [auth]
+ * @member {boolean} [is_admin]  -
+ * @member {string} [display_name] -
+ * @member {string} [first_name] -
+ * @member {string} [last_name]  -
+ * @member {string} [sid]        - student ID
+ */
+
+/**
+ *
+ * @param {string} id
+ * @param {string} nickname
+ * @param {string} email
+ * @param {UserOptions|null} [options]
+ * @constructor
  */
 const User = function(id, nickname, email,
                       /** new fields **/
-                      password_hash, salt, is_admin, sid, first_name, last_name
+                      options
                       /****************/) {
   this.id = id;
   this.nick = nickname;
   this.email = email;
-  if(password_hash) {
-    this.password_hash = password_hash;
-    this.salt          = salt;
-    this.is_admin      = is_admin;
-    this.sid           = sid;
-    this.first_name    = first_name;
-    this.last_name     = last_name;
+  if(options) {
+    // auth_type, password_hash, salt, sid, first_name, last_name
+    if(options.auth_type && (AUTH_TYPES.includes(options.auth_type)))
+      this.auth_type = options.auth_type;
+    // As of now, internal passwords are not entirely supported.
+    if(options.auth) {
+      this.password_hash = options.auth.password_hash;
+      this.salt = options.auth.salt;
+    }
+    if(options.is_admin) this.is_admin = options.is_admin;
+    if(options.sid) this.sid = options.sid;
+    if(options.display_name) this.display_name = options.display_name;
+    if(options.first_name) this.first_name = options.first_name;
+    if(options.last_name) this.last_name = options.last_name;
   }
 };
 
@@ -68,30 +110,35 @@ const User = function(id, nickname, email,
  * AddGroupToUser - add a group with groupid_n to user with userid_n
  * RemoveGroupFromUser - remove a group groupid_n from user with userid_n
  * GetGroupNs - get group ids from user with userid_n
+ *
+ * TODO: User should not use prototype if it doesn't need to access internal data, or called from User object instance
  */
 
 /**
  * Update user's SID, first name and last name
  * @param {string} sid
+ * @param {string} display_name
  * @param {string} first_name
  * @param {string} last_name
  * @return {Promise.<User>}
  */
-User.prototype.updateDetails = function(sid, first_name, last_name) {
-  if(this.password_hash) {
-    const user_key = "usr:"+this.id;
-    return RedisClient.HMSET(
-      user_key,
-      "sid", sid,
-      "first_name", first_name,
-      "last_name", last_name
-    )
-      .then((b) => {
-        return User.cache.loadFromDb(this.id);
-      });
-  } else {
-    return Promise.reject("Cannot update an old version of the user");
-  }
+User.prototype.updateDetails = function(sid, display_name, first_name, last_name) {
+  const sss = [ ];
+  if(sid)          sss.push("sid", sid);
+  if(display_name) sss.push("display_name", display_name);
+  if(first_name)   sss.push("first_name", first_name);
+  if(last_name)    sss.push("last_name", last_name);
+  /* // TODO: test and delete code
+  return RedisClient.HMSET(
+    user_key,
+    "sid", sid,
+    "first_name", first_name,
+    "last_name", last_name
+  )*/
+  return RedisClient.HMSET.bind(null, `usr:${this.id}`).apply(null, sss)
+    .then((b) => {
+      return User.cache.loadFromDb(this.id);
+    });
 };
 
 /**
@@ -100,106 +147,97 @@ User.prototype.updateDetails = function(sid, first_name, last_name) {
  * usr is of form { email, groupNs, nick, id }
  * @return {Array.<User>}
  */
-User.prototype.getSignedUp = function(){
-  return RedisClient.KEYS('usr:*').then(
-    function(keys){
+User.prototype.getSignedUp = function() {
+  return RedisClient.KEYS('usr:*')
+    .then(function(keys) {
       return Promise.all(
-        keys.map(function(key){
+        keys.map(function(key) {
           return RedisClient.HGETALL(key);
         })
-      ).then(
-        function(usrs){
+      )
+        .then(function(usrs) {
           for(var i = 0, l = usrs.length; i < l; ++i){
             usrs[i].id = keys[i];
           }
           return usrs;
-        }
-      );
-    }
-  );
+        });
+    });
 };
 
 /**
- * the cache in the User. Say if we had `var sally = new User(...)` then `sally.cache.get(some_id)` gives us Promise<User> corr to some_id
- *
+ * Cache contains in dynamic memory User objects for all RichReview users.
  * @function populate
  * @function loadFromDb
  * @function get
+ * @function exists
+ * // WARNING: populate causes a race condition because it does not wait until.
+ * // TODO: instead have one call of User.cache.populate() in App.js instead of during initiation of User.cache
  */
-User.cache = (function(){
-  let pub = {};
-
-  let cache = {};
+User.cache = (function() {
+  let pub = { };
+  let cache = { };
 
   /**
    * create an array of User from the users in the redis server
-   * @return Array<User>
+   * @returns {Array.<User>}
    */
   pub.populate = function() {
-    return RedisClient.KEYS("usr:*").then(
-      function(userids){
-        return Promise.all(
-          userids.map(function(userid) {
-            return pub.loadFromDb(userid.substring(4));
-          })
-        );
-      }
-    ).then(
-      (users) => {
-        util.logger('ConellID', 'users populated: ' + Object.keys(cache).length + ' users');
+    cache = { };
+    return RedisClient.KEYS("usr:*")
+      .then(function(userids) {
+        const promises = userids.map(function(userid) {
+          return pub.loadFromDb(userid.substring(4));
+        });
+        return Promise.all(promises);
+      })
+      .then((users) => {
+        util.start(`${Object.keys(cache).length} users populated in cache`);
         return users;
-      }
-    ).catch(
-      function(err){
-        util.error(err);
-      }
-    );
+      })
+      .catch(util.error);
   };
 
   /**
    * create a User from redis server's user with the same id, and save it in the cache as value with id as the key
    * @arg    id - the user's id on redis
-   * @return User
+   * @returns {Promise.<User>}
    */
   pub.loadFromDb = function(id) {
     return RedisClient.HGETALL("usr:"+id)
-      .then(function(result) {
-          if (result.password_hash) {
-            cache[id] = new User(
-              id,
-              result.nick,
-              result.email,
-              result.password_hash,
-              result.salt,
-              result.is_admin,
-              result.sid,
-              result.first_name,
-              result.last_name
-            );
-          } else {
-            cache[id] = new User(
-              id,
-              result.nick,
-              result.email
-            );
-          }
-          return cache[id];
+      .then(result => {
+
+        // As of now, internal passwords are not entirely supported.
+        if(result.password_hash) {
+          assert.property(result, "salt", "result has password_hash but no salt");
+          result.auth = {
+            password_hash: result.password_hash,
+            salt: result.salt
+          };
+        }
+
+        cache[id] = new User(
+          id,
+          result.nick,
+          result.email,
+          result
+        );
+        return cache[id];
         }
       );
   };
 
   /**
    * return a user in the cache
-   * @throws "there are no users with ID"
-   * @arg    {string} id      - ID of user to get
-   * @return {Promise.<User>} - user with the ID
+   * @param {string} id - ID of user to get
+   * @return {User} - user with the ID
+   * @throws when there are no users with ID
    */
   pub.get = function(id) {
-    if(pub.exists(id)){
+    if(pub.exists(id)) {
       return cache[id];
     }
-    else{
-      throw "there are no users with ID "+id;
+    else {
+      throw new Error(`there are no users with ID ${id}`);
     }
   };
 
@@ -212,20 +250,19 @@ User.cache = (function(){
     return cache.hasOwnProperty(id);
   };
 
+  // WARNING: populate causes a race condition because it does not wait until.
+  // TODO: instead have one call of User.cache.populate() in App.js instead of during initiation of User.cache
   pub.populate();
 
   return pub;
 } ( ));
 
 /**
- * this is redundant
- * TODO: test and delete
+ * Legacy verions of User.findById() instance function. Kept for compatibility.
+ * @param {string} id - the ID of the user to search
+ * @returns {Promise.<User|null>}
  */
-/*User.prototype.isExist = function(id){
-  return RedisClient.EXISTS('usr:'+id);
-};*/
-
-User.prototype.findById = function(id){
+User.prototype.findById = function(id) {
   return new Promise((resolve, reject) => {
     try {
       const user = User.cache.get(id);
@@ -237,46 +274,117 @@ User.prototype.findById = function(id){
 };
 
 /**
- * Get a promise to the User object from given email
- * @param  {string} email - email of user to find
- * @return {Promise.<User>} - promise for the user of that email
+ * Find a user by their ID
+ * @param {string} id - the ID of the user to search
+ * @returns {Promise.<User|null>}
  */
-User.prototype.findByEmail = function(email){
-  if(js_utils.validateEmail(email)){
-    return RedisClient.HGET('email_user_lookup', email)
-      .then((id) => {
-          if(id) {
-            return User.cache.get(id.substring(4));
-          } else {
-            return null;
-          }
-        }
-      );
-  } else {
+User.findByID = function(id) {
+  try {
+    const user = User.cache.get(id);
+    return Promise.resolve(user);
+  } catch(err) {
     return Promise.resolve(null);
   }
 };
 
+{/***********************************/
+  const getAuthType = (user) => {
+    if(user.auth_type) {
+      if(AUTH_TYPES.includes(user.auth_type)) return user.auth_type;
+      else return AUTH_TYPES_OTHER;
+    } else return AUTH_TYPES_UNKN;
+  };
+
+  const getID = (usr_str) => {
+    return usr_str.substring(4);
+  };
+
+  const makeUsers = (usr_strs) => {
+    if(usr_strs.length === 0) return Promise.resolve({ });
+    else if(usr_strs.length === 1) {
+      const user  = User.cache.get(getID(usr_strs[0]));
+      return { [getAuthType(user)]: [user] }
+    } // else
+    const users = { };
+    usr_strs.forEach((usr_str) => {
+      const user = User.cache.get(getID(usr_str));
+      const authType = getAuthType(user);
+      if(users.hasOwnProperty(authType)) users[authType].push(user);
+      else users[authType] = [user];
+    });
+    return users;
+  };
+
+  /**
+   * Gets all users associated with given email, categorized by auth_type.
+   * @param email
+   * @returns {Promise.<Object.<string,string[]>>} A promise to an object with auth_type as keys, and a array of User as values
+   */
+  User.getWithEmailByAuthType = (email) => {
+    if(js_utils.validateEmail(email)) {
+      return redis_utils.GraphGet(USERID_EMAIL_TABLE, email)
+        .then(makeUsers);
+    } else {
+      return Promise.resolve({ });
+    }
+  };
+}/***********************************/
+
+{/***********************************/
+  const selectUser = (users) => {
+    const auth_types = Object.keys(users);
+    if (auth_types.length === 0) return null;
+    else if (auth_types.length === 1) return (users[auth_types[0]])[0];
+    else {
+      for(let i = 0; i < AUTH_TYPES.length; i++)
+        if(auth_types.includes(AUTH_TYPES[i]))
+          return (users[AUTH_TYPES[i]])[0];
+      if(auth_types.includes(AUTH_TYPES_OTHER)) return (users[AUTH_TYPES_OTHER])[0];
+      return (users[AUTH_TYPES_UNKN])[0];
+    }
+  };
+
+  /**
+   * Get a promise to the User object from given email. Priority to Users that are CWL, then Cornell, then Google, etc...
+   * @param  {string} email - email of user to find
+   * @return {Promise.<User|null>} - promise for the user of that email
+   * NOTE: This function originally got only one user with email instead of searching for the 'right' one. This function is provided to interface with older code.
+   * TODO: make method use AUTH_TYPES instead of internal keys
+   * TODO: now updated to use use redis_utils.GraphGet test method; test method
+   */
+  User.findByEmail = function(email) {
+
+    return User.getWithEmailByAuthType(email)
+      .then(selectUser);
+  };
+}/***********************************/
+
 /**
  * Creates a new user in redis and caches user to User.cache
  * Additionally it consumes invites to add new user to groups it is invited to
- *
- * TODO: should prevent create() from creating user if user already exists(?)
- *
- * @param id
- * @param email
- * @param password_hash
- * @param salt            // TODO: enforce
- * @param is_admin
- * @param sid
- * @param first_name
- * @param last_name
+ * @param {string} id
+ * @param {string} email
+ * @param {UserOptions|null} [options]
  * @return {Promise.<User>}
  */
-User.prototype.create = function(id, email,
-                                 /** new fields **/
-                                 password_hash, salt, is_admin, sid, first_name, last_name
-                                 /****************/) {
+User.create = function(id, email, /* new field */ options) {
+  let sss = null;
+  if(options) { // auth_type, password_hash, salt, sid, first_name, last_name
+    sss = [ ];
+    if(options.auth_type && (AUTH_TYPES.includes(options.auth_type)))
+      sss.push("auth_type", options.auth_type);
+    // As of now, internal passwords are not entirely supported.
+    if(options.auth)
+      sss.push(
+        "password_hash", options.auth.password_hash,
+        "salt", options.auth.salt
+      );
+    if(options.is_admin)   sss.push("is_admin", options.is_admin);
+    if(options.sid)        sss.push("sid", options.sid);
+    if(options.display_name) sss.push("display_name", options.display_name);
+    if(options.first_name) sss.push("first_name", options.first_name);
+    if(options.last_name)  sss.push("last_name", options.last_name);
+  }
 
   var groupids = [];
 
@@ -287,27 +395,10 @@ User.prototype.create = function(id, email,
     'groupNs', '[]'
   )
     .then((b) => {
-      if(!password_hash) {
-        util.logger("USER CREATE", "is not UBC study");
-        return null;
-      } // else
-      util.logger("USER CREATE", "is UBC study; setting password, etc");
-      return RedisClient.HMSET(
-        'usr:'+id,
-        'password_hash', password_hash,
-        'salt',          salt,
-        'is_admin',      is_admin,
-        'sid',           sid,
-        'first_name',    first_name,
-        'last_name',     last_name
-      );
+      if(sss) return RedisClient.HMSET.bind(null, "usr:"+id).apply(null, sss);
     })
-    .then(function() {
-      return RedisClient.HMSET(
-        'email_user_lookup',
-        email,
-        'usr:'+id
-      );
+    .then(() => {
+      return redis_utils.GraphSet(USERID_EMAIL_TABLE, "usr:"+id, email);
     })
     /** Manage invitations to this user **/
     .then(function() {
@@ -323,14 +414,14 @@ User.prototype.create = function(id, email,
       });
       return js_utils.promiseLoopApply(Group.connectUserAndGroup, argl);
     })
-    .then(function(){
+    .then(function() {
       var argl = groupids.map(function(groupid){
         return [groupid.substring(4), email];
       });
       return js_utils.promiseLoopApply(Group.CancelInvited, argl);
     })
     /*************************************/
-    .then(function(){
+    .then(function() {
       return User.cache.loadFromDb(id);
     });
 };
@@ -338,14 +429,13 @@ User.prototype.create = function(id, email,
 /**
  * Completely delete the user corresponding to the email including all groups and documents that user made.
  * !!! This function should not to be used by client !!!
- * @param email {string} - the email of user to delete
- *
+ * @param usr_str {string} - the redis key rep. user to delete; can be user id or form usr:[id]
+ * @returns {Promise}
  * TODO: test thoroughly
  * TODO: should delete user from course (active/blocked/instructor)
  * TODO: should delete user's assignments
- * TODO: should remove user from cache
  */
-User.deleteUserByEmail = (email) => {
+User.deleteUser = (usr_str) => {
 
   /**
    * delete the group in redis
@@ -353,7 +443,7 @@ User.deleteUserByEmail = (email) => {
    * @returns {Promise<Number>} - 1 if Group.DeleteGroup() succeeds, 0 otherwise
    */
   const deleteGroup = (grp_str) => {
-    util.debug("in deleteGroup "+grp_str);
+    util.logger("deleteUser", `deleteGroup grp_str=${grp_str}`);
     let groupID_n = null;
     try {
       groupID_n = grp_str.substring(4);
@@ -398,6 +488,7 @@ User.deleteUserByEmail = (email) => {
    */
   const deleteOrRemoveGroup = (usr_str, groupID_n) => {
     const grp_str = "grp:"+groupID_n;
+    util.logger("deleteUser", `deleteOrRemoveGroup grp_str=${grp_str}`);
     return RedisClient.HGET(grp_str, "userid_n")
       .then((userid_n) => {
         const usr_of_grp = "usr:"+userid_n;
@@ -412,6 +503,17 @@ User.deleteUserByEmail = (email) => {
       });
   };
 
+  const deleteOrRemoveGroups = (usr_str, groupID_n_arr_str) => {
+    util.logger("deleteUser", "delete or remove groups");
+    if(groupID_n_arr_str) {
+      const groupID_n_arr = JSON.parse(groupID_n_arr_str);
+      const promises = groupID_n_arr.map(deleteOrRemoveGroup.bind(null, usr_str));
+      return Promise.all(promises);
+    } else {
+      return null;
+    }
+  };
+
   /**
    * removes the group in the document and then delete the document
    * Base this on DeleteDocument function in dbs.js; first delete doc groups, then delete the doc.
@@ -419,7 +521,7 @@ User.deleteUserByEmail = (email) => {
    * @returns {Promise<Number>} - 1 if Doc.DeleteDocFromRedis(docID_n) succeeds, 0 otherwise
    */
   const deleteDoc = (doc_str) => {
-    util.debug("in deleteDoc "+doc_str);
+    util.logger("deleteUser", `deleteDoc doc_str=${doc_str}`);
     let docID_n = null;
     try {
       docID_n = doc_str.substring(4);
@@ -446,6 +548,7 @@ User.deleteUserByEmail = (email) => {
    */
   const deleteDocIfUsers = (usr_str, doc_str) => {
     // util.debug("deleteDocIfUsers " +usr_str+" "+doc_str);
+    if(!doc_str) console.log("!doc_str");
     return RedisClient.HGET(doc_str,"userid_n")
       .then((userid_n) => {
         const usr_of_doc = "usr:"+userid_n;
@@ -461,7 +564,7 @@ User.deleteUserByEmail = (email) => {
   /**
    * Delete all the documents user created
    * @param {String} usr_str - has form usr:[userID_n]
-   * @returns {Promise<Array<Number>>} - array of numbers {0,1} for successful or not
+   * @returns {Promise.<number[]>} - array of numbers {0,1} for successful or not
    */
   const deleteDocs = (usr_str) => {
     return RedisClient.KEYS("doc:*")
@@ -473,73 +576,56 @@ User.deleteUserByEmail = (email) => {
   };
 
   /**
+   * Delete pilot user plugin
+   * @param {string} usr_str - has form usr:[userID_n]
+   * @returns {Promise.<number>} - {0,1} for successful or not
+   */
+  const deletePilot = (usr_str) => {
+    return RedisClient.HGET(usr_str, "email")
+      .then((email) => {
+        if(/@pilot.study$/.test(email)) {
+          return RedisClient.DEL("pilot:"+email);
+        }
+      })
+  };
+
+  /**
    * Performs all steps of deleting user given a usr:[userID_n]
    * 1) remove user from all groups; and delete groups created by user
    * 2) remove docs user created
-   * 3) delete the user in redis
-   * 4) delete the user in email_user_lookup
-   * 5) delete the user in pilot_study_lookup
-   * 6) delete the user entry pilot:[email]
+   * 3) delete the user entry pilot:[email]
+   * 4) delete user in userid_email_table
+   * 5) delete the user in redis
+
    * @param {String} usr_str - string of form usr:[userID_n]; user to delete
-   * @return {Promise<Number>} - 1 if RedisClient.DEL() succeeds, 0 otherwise
+   * @return {Promise}
    *
+   * TODO: after creating MyClass...
    * TODO: should delete user from course (active/blocked/instructor)
    * TODO: should delete user's assignments
    */
-  const deleteUser = (usr_str) => {
-    return RedisClient.HGET(usr_str, "groupNs")
-      .then((groupID_n_arr_str) => {
-        // 1) remove user from any groups; and delete groups created by user
-        const groupID_n_arr = JSON.parse(groupID_n_arr_str);
-        const promises = groupID_n_arr.map(deleteOrRemoveGroup.bind(null, usr_str));
-        return Promise.all(promises);
-      })
-      .then((bArr) => {
-        // 2) remove docs user created
-        return deleteDocs(usr_str);
-      })
-      .then((bArr) => {
-        // 3) delete the user in redis
-        util.debug("deleting user in redis");
-        return RedisClient.DEL(usr_str);
-        //return true;
-      })
-      .then((a) => {
-        // 4) delete the user in email_user_lookup
-        util.debug("deleting entry in email_user_lookup");
-        return RedisClient.HDEL('email_user_lookup', email);
-        //return true;
-      })
-      .then((a) => {
-        // 5) delete the user in pilot_study_lookup
-        util.debug("deleting entry in pilot_study_lookup");
-        return RedisClient.HDEL('pilot_study_lookup', email);
-        //return true;
-      })
-      .then((a) => {
-        // 6) delete the user entry pilot:[email]
-        util.debug("calling DEL pilot:"+email);
-        return RedisClient.DEL("pilot:"+email);
-        //return true;
-      })
-      // TODO: should delete user from course (active/blocked/instructor)
-      // TODO: should delete user's assignments
-      .catch((err) => {
-        util.error(err);
-      });
-  };
-
-  return RedisClient.HGET('email_user_lookup', email)
-    .then((usr_str) => {
-      util.debug("in User.prototype.deleteByEmail");
-      util.debug(usr_str);
-      if(usr_str) {
-        return deleteUser(usr_str);
-      } else {
-        throw "No user has this email";
-      }
+  if(!/^usr:/.test(usr_str)) usr_str = "usr:"+usr_str;
+  return RedisClient.HGET(usr_str, "groupNs")
+    // 1) remove user from any groups; and delete groups created by user
+    .then(deleteOrRemoveGroups.bind(null, usr_str))
+    // 2) remove docs user created
+    .then(deleteDocs.bind(null, usr_str))
+    // 3) delete the user in redis
+    .then(deletePilot.bind(null, usr_str))
+    // 4) delete user in userid_email_table
+    .then(redis_utils.GraphDel.bind(null, USERID_EMAIL_TABLE, usr_str))
+    // 5) delete the user entry pilot:[email]
+    .then(() => {
+      util.logger("deleteUser", `deleting ${usr_str}`);
+      return RedisClient.DEL(usr_str);
     })
-    .catch(function(err) {
+    // TODO: should delete user from course (active/blocked/instructor)
+    // TODO: should delete user's assignments
+    .then((b) => {
+      util.logger("deleteUser", `repopulating cache`);
+      return User.cache.populate();
+    })
+    .catch((err) => {
       util.error(err);
     });
 };
@@ -555,22 +641,29 @@ User.prototype.updateNick = function(id, newnick){
   );
 };
 
-// TODO: fix this for pilot study
-User.prototype.syncEmail = function(user, newemail){
+/**
+ * @param user
+ * @param newEmail
+ * @returns {Promise}
+ *
+ * WARNING: this function is broken
+ * TODO: update to use with userid_email_table
+ */
+User.prototype.syncEmail = function(user, newEmail){
   return new Promise(function(resolve, reject){
-    if(user.email === newemail){
+    if(user.email === newEmail){
       return resolve(user);
     }
     else{
       return RedisClient.HMSET(
         'usr:' + user.id,
         'email',
-        newemail
+        newEmail
       ).then(
         function(){
           return RedisClient.HMSET(
             'email_user_lookup',
-            newemail,
+            newEmail,
             'usr:'+user.id
           );
         }
@@ -595,15 +688,15 @@ User.prototype.syncEmail = function(user, newemail){
 };
 
 User.prototype.AddGroupToUser = function(userid_n, groupid_n){
-  return RedisClient.HGET("usr:"+userid_n, "groupNs").then( // get group of the user
-    function(groupNsStr){
+  return RedisClient.HGET("usr:"+userid_n, "groupNs")
+    // get group of the user
+    .then(function(groupNsStr) {
       var groupNsObj = JSON.parse(groupNsStr);
       var idx = groupNsObj.indexOf(groupid_n);
-      if(idx < 0){
+      if(idx < 0) {
         groupNsObj.push(groupid_n);
         return RedisClient.HSET("usr:"+userid_n, "groupNs", JSON.stringify(groupNsObj));
-      }
-      else{
+      } else {
         throw 'this user is already a member of the group';
       }
     }
@@ -625,11 +718,10 @@ User.prototype.RemoveGroupFromUser = function(userid_n, groupid_n){
 };
 
 User.prototype.GetGroupNs = function(userid_n, cb){
-  return RedisClient.HGET("usr:"+userid_n, "groupNs").then(
-    function(groupNsStr){
+  return RedisClient.HGET("usr:"+userid_n, "groupNs")
+    .then(function(groupNsStr) {
       return JSON.parse(groupNsStr);
-    }
-  );
+    });
 };
 
 /*
@@ -660,11 +752,9 @@ const Group = (function(manager, name, creationDate) {
             'creationTime', creationTime,
             'name', 'Group created at ' + js_utils.FormatDateTimeMilisec(creationTime),
             'users', '{"invited":[],"participating":[]}',
-            function(err, resp){
-              if(err){if(err){reject(err);}}
-              else{
-                resolve(groupid);
-              }
+            function(err, resp) {
+              if(err) { reject(err); }
+              else { resolve(groupid); }
             }
           );
         }
@@ -720,36 +810,62 @@ const Group = (function(manager, name, creationDate) {
     );
   };
 
+  /**
+   * Invite a user to a group by user's email. If user already exists in RichReview then add user to the group, otherwise create an invite.
+   * @param {string} groupid_n - group to invite
+   * @param {string} email
+   * @returns {Promise}
+   *
+   * NOTE: when using User.findByEmail(), we prioritize by user AUTH_TYPE
+   * For example, if a @gmail.com email is associated with a UBC_CWL and Google account, then we only invite the user of the UBC_CWL account.
+   * TODO: now using GraphGet() and USERID_EMAIL_TABLE; test method
+   */
   pub_grp.InviteUser = function(groupid_n, email){
-    util.debug("inviting " + email + " to " + groupid_n);
-    return RedisClient.HEXISTS('email_user_lookup', email).then(
-      function(is_exist){
-        if(is_exist){ // when the user already signed up and can be found on the system
-          var userid_n = '';
-          return RedisClient.HGET('email_user_lookup', email).then(
-            function(userid){
-              return pub_grp.connectUserAndGroup(groupid_n, userid.substring(4));
-            }
-          );
+    const userExists = (user) => {
+      return pub_grp.connectUserAndGroup(groupid_n, user.id.substring(4));
+    };
+    const userDoesNotExist = (user) => {
+      return pub_grp.AddEmailToInvited(groupid_n, email)
+        .then(() => {
+          util.debug(`creating invitation for ${email}`);
+          return RedisClient.RPUSH(`inv:${email}`, `grp:${groupid_n}`);
+        });
+    };
+    util.debug(`inviting a user of email ${email} to group ${groupid_n}`);
+    return User.findByEmail(email)
+      .then((user) => {
+        if(user) {
+          return userExists(user);
+        } else {
+          return userDoesNotExist();
         }
-        else{ // when the user is not on the system yet
-          return pub_grp.AddEmailToInvited(groupid_n, email).then(
-            function(){
+      });
+    /*
+    // TODO: email_user_lookup is deprecated. Test function then delete
+    return RedisClient.HEXISTS('email_user_lookup', email)
+      .then((is_exist) => {
+        // when the user already signed up and can be found on the system
+        if(is_exist) {
+          return RedisClient.HGET('email_user_lookup', email)
+            .then(function(userid) {
+              return pub_grp.connectUserAndGroup(groupid_n, userid.substring(4));
+            });
+        // when the user is not on the system yet
+        } else {
+          return pub_grp.AddEmailToInvited(groupid_n, email)
+            .then(() => {
               util.debug("adding " + email + " to invited");
               return RedisClient.RPUSH('inv:'+email, 'grp:'+groupid_n);
-            }
-          );
+            });
         }
-      }
-    );
+      });*/
   };
 
   pub_grp.connectUserAndGroup = function(groupid_n, userid_n){
-    return pub_grp.AddUserToParticipating(groupid_n, userid_n).then(
-      function(){
+    return pub_grp.AddUserToParticipating(groupid_n, userid_n)
+      .then(function() {
         return User.prototype.AddGroupToUser(userid_n, groupid_n);
-      }
-    );
+      });
   };
 
   pub_grp.connectGroupAndMultipleUsers = function(groupid_n, l_userid_n){
@@ -776,9 +892,8 @@ const Group = (function(manager, name, creationDate) {
   };
 
   pub_grp.GetDocObjByGroupId = function(groupid_n){
-    return RedisClient.HGET("grp:"+groupid_n, "docid").then(
-      RedisClient.HGETALL
-    );
+    return RedisClient.HGET("grp:"+groupid_n, "docid")
+      .then(RedisClient.HGETALL);
   };
 
   pub_grp.PopulateParticipantObjs = function(groupObj){
@@ -863,8 +978,9 @@ const Group = (function(manager, name, creationDate) {
   }; // end DeleteGroup
 
   pub_grp.DeleteGroupFromDoc = function(groupid_n, docid_n){
-    return RedisClient.HGET("doc:"+docid_n, 'groups').then( // get group list of doc
-      function(groupsStr) {
+    return RedisClient.HGET("doc:"+docid_n, 'groups')
+      // get group list of doc
+      .then(function(groupsStr) {
         var groupsObj = JSON.parse(groupsStr);
         var idx = groupsObj.indexOf("grp:"+groupid_n);
         if (idx < 0) {
@@ -885,18 +1001,17 @@ const Group = (function(manager, name, creationDate) {
   };
 
   pub_grp.Delete = function(userid_n, docid, groupid, cb){
-    redisClient.HGET(docid, 'groups', function(err, groupsStr){
+    redisClient.HGET(docid, 'groups', function(err, groupsStr) {
       var groupsObj = JSON.parse(groupsStr);
       var index = groupsObj.indexOf(groupid);
       if (index < 0) {
         cb("group not exist in doc",null);
-      }
-      else{
+      } else {
         groupsObj.splice(index, 1);
-        redisClient.HSET(docid, "groups", JSON.stringify(groupsObj), function(err){
-          if(err){cb(err);}
-          else{
-            redisClient.DEL(groupid, function(err, resp){
+        redisClient.HSET(docid, "groups", JSON.stringify(groupsObj), function(err) {
+          if(err){ cb(err); }
+          else {
+            redisClient.DEL(groupid, function(err, resp) {
               cb(err, resp);
             });
           }
@@ -938,18 +1053,15 @@ const Group = (function(manager, name, creationDate) {
   };
 
   pub_grp.AddEmailToInvited = function(groupid_n, email){
-    return RedisClient.HGET('grp:' + groupid_n, 'users').then(
-      function(usersStr){
-        var users = JSON.parse(usersStr);
+    return RedisClient.HGET('grp:' + groupid_n, 'users')
+      .then(function(usersStr) {
+        let users = JSON.parse(usersStr);
         if( users.invited.indexOf(email) === -1 ){
           users.invited.push(email);
           return RedisClient.HSET('grp:' + groupid_n, 'users', JSON.stringify(users));
         }
-        else{
-          throw 'that user is already in the invitation list.';
-        }
-      }
-    );
+        else { throw `user of ${email} is already in the invitation list`; }
+      });
   };
 
   pub_grp.CancelInvited = function(groupid_n, email){

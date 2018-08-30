@@ -1,4 +1,5 @@
 ﻿doctype html
+
 html
     head
         meta(charset='utf-8')
@@ -11,7 +12,7 @@ html
         meta(http-equiv="X-UA-Compatible" content="IE=edge")
         meta(name="viewport" content="width=device-width, height=device-height, initial-scale=1")
         title= title
-        link(rel='shortcut icon' href=cdn_endpoint+'/favicon.ico' type='image/x-icon')
+        link(rel='shortcut icon' href="/img/favicon.ico" type='image/x-icon')
         link(rel='stylesheet', href=cdn_endpoint+'/lib/bootstrap-3.2.0-dist/css/bootstrap.min.css')
         link(rel='stylesheet', href='/stylesheets/style.css')
         link(rel='stylesheet', href=cdn_endpoint+'/lib/font-awesome-4.6.3/css/font-awesome.min.css')
@@ -52,20 +53,7 @@ html
                             a(href="/support")
                                 | Support
                     ul.nav.navbar-nav.navbar-right
-                        li(class = (cur_page === "account" || cur_page === "login") ? "active" : "")
-                            if user === undefined
-                                a(href="/login_pilot")
-                                    i.fa.fa-sign-in
-                                    |&nbspPilot Login
-                            else
-                                a(href="/account")
-                                    i.fa.fa-user
-                                    |&nbsp#{user.nick}
-                        if user !== undefined
-                            li
-                                a(href="/logout")
-                                    i.fa.fa-sign-out
-                                    |&nbspLogout
+                        include components/_login_dropdown
 
         .content_table
             .content_header

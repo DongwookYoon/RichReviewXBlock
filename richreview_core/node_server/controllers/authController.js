@@ -3,16 +3,66 @@
  *
  * created by Colin
  */
+const js_utils        = require('../lib/js_utils');
+const passport        = require('passport');
+//const UBCsamlStrategy = require('../lib/passport').UBCsamlStrategy;
+const util            = require("../util");
 
-const util = require("../util");
-
+/**
+ * Check if user is logged in and redirects user if not.
+ */
 exports.isLoggedIn = (req, res, next) => {
-    // check if the user is authenticated
-    if(req.isAuthenticated()) {
-        return next();
-    }
+  if(req.isAuthenticated()) {
+    return next();
+  }
+  req.flash('error', 'You are not logged in');
+  res.redirect('/');
+};
 
-    util.debug("user is not logged in!");
-    // to-do make a flash message
-    res.redirect('/login_pilot');
+exports.testMe = (req, res, next) => {
+  util.debug(Object.keys(req));
+  if(req.user) util.debug(`user keys: ${JSON.stringify(Object.keys(req.user))}`);
+  if(req.session) util.debug(`session keys: ${JSON.stringify(Object.keys(req.session))}`);
+  return next();
+};
+
+/**
+ * Send request to (UBC's) IDP to log out of CWL. If user did not log into
+ */
+exports.samlLogout = (req, res) => {
+  js_utils.logUserAction(req, 'logging out of SAML...');
+  try {
+    req.user.nameID = req.user.saml.nameID;
+    req.user.nameIDFormat = req.user.saml.nameIDFormat;
+    const strategy = passport._strategy('saml');
+    strategy.logout(req, (error, requestUrl) => {
+      if(error) {
+        util.error(`Can't generate log out url: ${error}`);
+        res.redirect('/logout');
+      }
+      util.debug(requestUrl);
+      req.logout();
+      res.redirect(requestUrl);
+    });
+  } catch(err) {
+    if(err) util.error(`Exception on URL: ${err}`);
+    res.redirect('/logout');
+  }
+  //req.logout();
+  /*req.session.destroy(function (err) {
+      if(err) util.error(`Session cannot be destroyed: ${err}`);
+      res.redirect('/');
+  });*/
+};
+
+exports.logout = function(req, res) {
+  js_utils.logUserAction(req, 'logging out...');
+  req.logout();
+  req.flash('success', 'You are now logged out');
+  /*
+  // NOTE: that since logging out of Google will affect the account sessions of all other Google apps. It is better for users to disconnect from Google through an actual Google app instead of RichReview.
+  res.redirect(
+    'https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue='+process.env.HOST_URL
+  );*/
+  res.redirect('/');
 };

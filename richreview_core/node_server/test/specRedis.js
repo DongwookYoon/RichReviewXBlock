@@ -13,11 +13,9 @@ let RedisClient  = null;
 let R2D          = null;
 let redis_utils  = null;
 
-function run_tests() {
+describe("spec Redis", function() {
 
-}
-
-describe("spec", function() {
+  const graph = "TestGraph";
 
   before(function () {
     js_utils     = require('../lib/js_utils');
@@ -29,12 +27,227 @@ describe("spec", function() {
   beforeEach(function () { });
 
   after(function () {
-    RedisClient.quit();
+    return RedisClient.quit();
+  });
+
+  afterEach(function () {
+    return RedisClient.DEL(graph);
+  });
+
+  it("test simple graph", function() {
+
+    const a = "a"; const b = "b"; const c = "c";
+
+    return redis_utils.GraphSet(graph, a, b)
+      .then(() => {
+        return Promise.all([
+          redis_utils.GraphGet(graph, a),
+          redis_utils.GraphGet(graph, b)
+        ]);
+      })
+      .then(([aArr, bArr]) => {
+        expect(aArr).to.deep.equal(["b"]);
+        expect(bArr).to.deep.equal(["a"]);
+        return redis_utils.GraphSet(graph, a, c);
+      })
+      .then(() => {
+        return Promise.all([
+          redis_utils.GraphGet(graph, a),
+          redis_utils.GraphGet(graph, c),
+          redis_utils.GraphGet(graph, b)
+        ]);
+      })
+      .then(([aArr, cArr, bArr]) => {
+        expect(aArr).to.deep.equal(["b","c"]);
+        expect(cArr).to.deep.equal(["a"]);
+        expect(bArr).to.deep.equal(["a"]);
+        return redis_utils.GraphSet(graph, a, b);
+      })
+      .then(() => {
+        return Promise.all([
+          redis_utils.GraphGet(graph, a),
+          redis_utils.GraphGet(graph, c),
+          redis_utils.GraphGet(graph, b)
+        ]);
+      })
+      .then(([aArr, cArr, bArr]) => {
+        expect(aArr).to.deep.equal(["b","c"]);
+        expect(cArr).to.deep.equal(["a"]);
+        expect(bArr).to.deep.equal(["a"]);
+        return redis_utils.GraphDel(graph, a);
+      })
+      .then(() => {
+        return RedisClient.HKEYS(graph);
+      })
+      .then((ll) => {
+        expect(ll).to.deep.equal([]);
+      })
+      .catch(err => {
+        util.error(err); assert.fail(err);
+      });
+  });
+
+  it("test graph w/ multiple connections", function() {
+    const graph = "TestGraph";
+    const a = "a"; const b = "b"; const c = "c"; const d = "d";
+
+    return redis_utils.GraphSet(graph, a, b)
+      .then(() => {return redis_utils.GraphSet(graph, a, c); })
+      .then(() => {return redis_utils.GraphSet(graph, a, d); })
+      .then(() => {return redis_utils.GraphSet(graph, b, c); })
+      .then(() => {return redis_utils.GraphSet(graph, b, d); })
+      .then(() => {return redis_utils.GraphSet(graph, c, d); })
+      .then(() => {
+        return Promise.all([
+          redis_utils.GraphGet(graph, a),
+          redis_utils.GraphGet(graph, b),
+          redis_utils.GraphGet(graph, c),
+          redis_utils.GraphGet(graph, d)
+        ]);
+      })
+      .then(([aArr, bArr, cArr, dArr]) => {
+        expect(aArr).to.have.members(["b", "c", "d"]);
+        expect(bArr).to.have.members(["a", "c", "d"]);
+        expect(cArr).to.have.members(["a", "b", "d"]);
+        expect(dArr).to.have.members(["a", "b", "c"]);
+        return redis_utils.GraphDel(graph, a);
+      })
+      .then(() => {
+        return RedisClient.HKEYS(graph);
+      })
+      .then((keys) => {
+        expect(keys).to.have.members(["b", "c", "d"]);
+        return Promise.all([
+          redis_utils.GraphGet(graph, b),
+          redis_utils.GraphGet(graph, c),
+          redis_utils.GraphGet(graph, d)
+        ]);
+      })
+      .then(([bArr, cArr, dArr]) => {
+        expect(bArr).to.have.members(["c", "d"]);
+        expect(cArr).to.have.members(["b", "d"]);
+        expect(dArr).to.have.members(["b", "c"]);
+        return redis_utils.GraphDel(graph, b);
+      })
+      .then(() => {
+        return RedisClient.HKEYS(graph);
+      })
+      .then((keys) => {
+        expect(keys).to.have.members(["c", "d"]);
+        return Promise.all([
+          redis_utils.GraphGet(graph, c),
+          redis_utils.GraphGet(graph, d)
+        ]);
+      })
+      .then(([cArr, dArr]) => {
+        expect(cArr).to.have.members(["d"]);
+        expect(dArr).to.have.members(["c"]);
+      })
+      .catch((err) => {
+        util.error(err);
+        assert.fail(err);
+      });
 
   });
 
-  afterEach(function () { });
+  it("test graph functionality is atomic", function() {
+    const a = "a"; const b = "b"; const c = "c";
+    const d = "d"; const e = "e"; const f = "f";
 
-  run_tests();
+    return Promise.all([
+      redis_utils.GraphSet(graph, a, b),
+      redis_utils.GraphSet(graph, a, c),
+      redis_utils.GraphSet(graph, a, d),
+      redis_utils.GraphSet(graph, a, e),
+      redis_utils.GraphSet(graph, b, c),
+      redis_utils.GraphSet(graph, b, d),
+      redis_utils.GraphSet(graph, b, e),
+      redis_utils.GraphSet(graph, c, d),
+      redis_utils.GraphSet(graph, c, e),
+      redis_utils.GraphSet(graph, f, a),
+      redis_utils.GraphSet(graph, f, b),
+      redis_utils.GraphSet(graph, f, c),
+      redis_utils.GraphSet(graph, f, d),
+      redis_utils.GraphSet(graph, f, e)
+
+    ])
+      .then(() => {
+        return Promise.all([
+          RedisClient.HKEYS(graph),
+          redis_utils.GraphGet(graph, a),
+          redis_utils.GraphGet(graph, b),
+          redis_utils.GraphGet(graph, c),
+          redis_utils.GraphGet(graph, d),
+          redis_utils.GraphGet(graph, e),
+          redis_utils.GraphGet(graph, f)
+        ]);
+      })
+      .then(([keys, aArr, bArr, cArr, dArr, eArr, fArr]) => {
+        expect(keys).to.have.members(["a", "b", "c", "d", "e", "f"]);
+        expect(aArr).to.have.members(["b", "c", "d", "e", "f"]);
+        expect(bArr).to.have.members(["a", "c", "d", "e", "f"]);
+        expect(cArr).to.have.members(["a", "b", "d", "e", "f"]);
+        expect(dArr).to.have.members(["a", "b", "c", "f"]);
+        expect(eArr).to.have.members(["a", "b", "c", "f"]);
+        expect(fArr).to.have.members(["a", "b", "c", "d", "e"]);
+        return Promise.all([
+          redis_utils.GraphDel(graph, a),
+          redis_utils.GraphDel(graph, c),
+          redis_utils.GraphDel(graph, e)
+        ]);
+      })
+      .then(() => {
+        return Promise.all([
+          RedisClient.HKEYS(graph),
+          redis_utils.GraphGet(graph, b),
+          redis_utils.GraphGet(graph, d),
+          redis_utils.GraphGet(graph, f)
+        ]);
+      })
+      .then(([keys, bArr, dArr, fArr]) => {
+        expect(keys).to.have.members(["b", "d", "f"]);
+        expect(bArr).to.have.members(["d", "f"]);
+        expect(dArr).to.have.members(["b", "f"]);
+        expect(fArr).to.have.members(["b", "d"]);
+      })
+      .catch((err) => {
+        util.error(err);
+        assert.fail(err);
+      });
+  });
+
+  it("test graph add identical; GraphExists", function() {
+    const a = "a"; const b = "b"; const c = "c";
+    return redis_utils.GraphSet(graph, a, a)
+      .then(() => {
+        return Promise.all([
+          redis_utils.GraphExists(graph, a),
+          redis_utils.GraphGet(graph, a)
+        ]);
+      })
+      .then(([exists, aArr]) => {
+        expect(exists).to.be.false;
+        expect(aArr).to.deep.equal([]);
+        return Promise.all([
+          redis_utils.GraphSet(graph, a, b),
+          redis_utils.GraphSet(graph, a, c),
+          redis_utils.GraphSet(graph, b, c),
+        ]);
+      })
+      .then(() => {
+        return Promise.all([
+          redis_utils.GraphExists(graph, a),
+          redis_utils.GraphExists(graph, b),
+          redis_utils.GraphExists(graph, c)
+        ]);
+      })
+      .then((exArr) =>{
+        expect(exArr).to.deep.equal([true, true, true]);
+      })
+      .catch((err) => {
+        util.error(err);
+        assert.fail(err);
+      });
+  });
 
 });

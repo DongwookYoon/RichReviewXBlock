@@ -85,4 +85,10 @@ describe("miscellaneous tests", function() {
       })
       .finally(done);
   });
+
+  it("assertions", () => {
+    const test = { prop: 0 };
+    assert.property(test, 'prop');
+
+  });
 });

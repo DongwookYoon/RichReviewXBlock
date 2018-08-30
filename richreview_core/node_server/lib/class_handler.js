@@ -40,29 +40,21 @@ const encryptPassword = (password, salt) => {
 };
 
 /**
- * A wrapper to create user according to UBC study.
+ * A wrapper to create user according to Internal study.
  *
  * If password is shorter than 8 characters then reject.
- * Note that we d
+ *
+ * Note: this should not be used in conjunction with CWL login
+ */
+
+/**
+ * Creates a new user for the Internal Study
+ * @param email
+ * @param password
+ * @returns {Promise.<User>}
  */
 const createUser = (email, password) => {
-  const go = () => {
-    util.logger("ADMIN UBC STUDY","creating user "+email);
-    util.logger("ADMIN UBC STUDY","making ID");
-    const id = makeID(email);
-    util.logger("ADMIN UBC STUDY","making salt");
-    const salt = makeSalt();
-    util.logger("ADMIN UBC STUDY","making password hash");
-    const password_hash = encryptPassword(password, salt);
-    const is_admin = false;
-    const sid = "";
-    const first_name = "";
-    const last_name = "";
-    util.logger("ADMIN UBC STUDY","calling R2D User create()");
-    return R2D.User.prototype.create(
-      id, email, password_hash, salt, is_admin, sid, first_name, last_name
-    );
-  };
+  const id = makeID(email);
 
   util.logger("ADMIN UBC STUDY","checking email is valid");
   if(!js_utils.validateEmail(email)) {
@@ -75,14 +67,23 @@ const createUser = (email, password) => {
   }
 
   util.logger("ADMIN UBC STUDY","check if user already exists");
-  return R2D.User.prototype.findByEmail(email)
-    .then((user) => {
-      if(user) {
-        throw "user "+email+" already exists";
-      } else {
-        return go();
-      }
-    });
+  if(R2D.User.cache.exists(id)) {
+    return Promise.reject("user already exists");
+  }
+
+  util.logger("ADMIN UBC STUDY","setting up options");
+  const salt = makeSalt();
+  const password_hash = encryptPassword(password, salt);
+  const options = {
+    auth_type: "Internal",
+    auth: { password_hash, salt },
+    is_admin: false,
+    first_name: "",
+    last_name: "",
+    sid: ""
+  };
+  util.logger("ADMIN UBC STUDY","calling R2D User create()");
+  return R2D.User.create(id, email, options);
 };
 
 /**

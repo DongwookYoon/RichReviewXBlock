@@ -27,9 +27,9 @@ const RedisStore = require('connect-redis')(session);
 
 // import libraries
 util.start("importing libraries");
-const env = require('./lib/env.js');
-const LtiEngine = require('./lib/lti_engine.js');
-const redis_client = require('./lib/redis_client.js');
+const env = require('./lib/env');
+//const LtiEngine = require('./lib/lti_engine.js');
+const redis_client = require('./lib/redis_client');
 
 util.start("importing controllers");
 const routes    = require('./routes/index');
@@ -82,7 +82,7 @@ app.use((req, res, next) => {
     next();
 });
 
-util.start("switch lti for user if needed(?)");
+/*util.start("switch lti for user if needed(?)");
 app.use((req, res, next) => {
     if(req.user instanceof LtiEngine.User) {
         if( (req.url !== '/bluemix_stt_auth' && req.url.substring(0, 5) !== '/lti_') && req.method !== 'POST'){
@@ -90,7 +90,7 @@ app.use((req, res, next) => {
         }
     }
     next();
-});
+});*/
 
 util.start("setting up routes");
 app.use('/', routes);
@@ -130,11 +130,11 @@ function setupStaticPages(){
         express.static(path.resolve(__dirname, env.path.temp_pdfs), { maxAge: 30*1000 })
     );
 
-    /*app.use(
+    app.use(
         '/CDN',
         express.static(path.resolve(__dirname, 'cdn'), { maxAge: 30*1000 })
 
-    );*/
+    );
 }
 
 // render error logs

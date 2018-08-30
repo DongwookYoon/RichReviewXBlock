@@ -83,6 +83,28 @@ a:active {
 }
 
 /*****************************/
+/**         Navbar          **/
+/*****************************/
+
+.cwl_login_button {
+    background: #FFF url("/img/CWL_login_button.png") no-repeat top left;
+    background-position: 45px 6px;
+    width: 135px;
+    height: 41px;
+}
+
+.dropdown-menu > li > p {
+    display: block;
+    padding: 3px 20px;
+    margin-bottom: 0;
+    clear: both;
+    font-weight: normal;
+    line-height: 1.42857143;
+    color: #333;
+    white-space: nowrap;
+}
+
+/*****************************/
 /**     Flash Messages      **/
 /*****************************/
 

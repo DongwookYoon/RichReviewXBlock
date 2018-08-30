@@ -12,6 +12,7 @@ const js_utils    = require('./js_utils');
 const env         = require('./env');
 const R2D         = require('./r2d');
 const RedisClient = require('./redis_client').RedisClient;
+const redis_utils = require('./redis_client').util;
 const lib_utils   = require('./lib_utils');
 const util        = require('../util');
 
@@ -73,7 +74,8 @@ const makeUserID = function(id_str) {
  */
 const userExists = function(userid) {
     //return RedisClient.HEXISTS("pilot_study_lookup", userid);
-    return RedisClient.EXISTS("pilot:"+userid);
+    //return RedisClient.EXISTS("pilot:"+userid);
+    return redis_utils.keyExists("pilot:"+userid);
 };
 
 /**
@@ -96,8 +98,9 @@ const createPilotUser = function(id_str, password, category, isAdmin) {
             } else {
                 // 2) create a new R2D.User
                 util.logger("IMPORT_PILOT_STUDY", "create a new R2D.User");
-                const hashed_userid = js_utils.generateSaltedSha1(userid, env.sha1_salt.netid).substring(0, 21);
-                return R2D.User.prototype.create(hashed_userid, userid)
+                //const hashed_userid = js_utils.generateSaltedSha1(userid, env.sha1_salt.netid).substring(0, 21);
+                const hashed_userid = lib_utils.makePilotUserID(userid);
+                return R2D.User.create(hashed_userid, userid)
                 /*.then(function (user) {
                     // 3) set pilot_study_lookup
                     // util.logger("IMPORT_PILOT_STUDY","set pilot_study_lookup");
@@ -285,6 +288,7 @@ const manageUserInfo = (email, first_name, last_name, sid) => {
 };
 
 const retrieveUserDetail = (pilot_key) => {
+    util.debug(pilot_key);
     const email = pilot_key.substring(6);
     return RedisClient.HMGET(
         "pilot:"+pilot_key,
@@ -311,43 +315,46 @@ const retrieveUserDetail = (pilot_key) => {
  *
  */
 const plugPilot = (user) => {
-    return new Promise((fulfill) => {
-        RedisClient.EXISTS("pilot:"+user.email)
-            .then((b) => {
-                if(b === 1) {
-                    return retrieveUserDetail(user.email)
-                        .then((pilot_user) => {
-                            user.pilot = pilot_user;
-                            fulfill(user);
-                        });
-                } else {
-                    fulfill(user);
-                }
-            })
-            .catch((err) => {
-                fulfill(user);
-            });
-    });
+    if(!user) {
+        return Promise.resolve(user);
+    }
 
+    const attachUserDetail = (user) => {
+        return retrieveUserDetail(user.email)
+            .then((pilot_user) => {
+                user.pilot = pilot_user;
+                return user;
+            });
+    };
+
+    return userExists(user.email)
+        .then((exists) => {
+            if(exists) {
+                return attachUserDetail(user)
+            } else {
+                return user;
+            }
+        });
 };
 
 /**
  * callback for Passport Local Strategy
  *
- *
+ * NOTE: lib_utils.findUserByEmail is deprecated. Now using lib_utils.findUserByID
+ * TODO: test changes and delete comments
  */
 const localStrategyCB = (id_str, password, done) => {
     let userid = makeUserID(id_str);
-
     util.logger("localStrategyCB", "logging in "+userid+"...");
-
     util.logger("localStrategyCB", "get user Password");
     confirmUserIsActive(userid)
         .then(getUserPassword)
         .then(function(user_password) {
             if(password === user_password) {
-                util.logger("localStrategyCB", "makeR2DUser");
-                return lib_utils.findUserByEmail(userid);
+                util.logger("localStrategyCB", "getR2DUser");
+                //const hashed_id = js_utils.generateSaltedSha1(userid, env.sha1_salt.netid).substring(0, 21);
+                return lib_utils.findPilotUser(userid);
+                // return lib_utils.findUserByEmail(userid);
             } else {
                 throw "password does not match";
             }
@@ -360,9 +367,7 @@ const localStrategyCB = (id_str, password, done) => {
         .catch(function(err) {
             util.error(err);
             done(null, false);
-
         });
-
 };
 
 /*const sanityCheckPilot = () => {

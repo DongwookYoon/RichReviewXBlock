@@ -14,8 +14,9 @@ exports.start = function(stmt) {
     console.log("["+d()+"] "+stmt);
 };
 
-exports.error = function(stmt) {
-    console.error("["+d()+"]<ERR>: "+stmt);
+exports.error = function(err) {
+  if(err instanceof Error) { err = `${err.code}: ${err.message}`; }
+  console.error("["+d()+"]<ERR>: "+err);
 };
 
 exports.logger = function(type, stmt) {

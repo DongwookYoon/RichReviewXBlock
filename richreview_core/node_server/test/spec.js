@@ -9,6 +9,7 @@ const expect     = require('chai').expect;
 const assert     = require('chai').assert;
 
 let js_utils     = null;
+let lib_utils    = null;
 let RedisClient  = null;
 let R2D          = null;
 let redis_utils  = null;
@@ -16,148 +17,7 @@ let PilotHandler = null;
 let ClassHandler = null;
 let Course       = null;
 
-function someTests() {
-  it("test redis 1", (done) => {
-    RedisClient.SET("mykey", "v")
-      .then((b) => {
-        util.debug("after set");
-        util.debug(b);
-        util.debug(typeof b);
-        return RedisClient.GET("mykey");
-      })
-      .then((a) => {
-        util.debug("after get");
-        util.debug(a);
-        util.debug(typeof a);
-        return RedisClient.DEL("mykey");
-      })
-      .then((b) => {
-        util.debug("after delete");
-        util.debug(b);
-        util.debug(typeof b);
-        expect(1).to.equal(1);
-        done();
-      })
-      .catch((err) => {
-        assert.fail();
-      });
-  });
-
-  it("test redis 2", () => {
-    return RedisClient.KEYS("doc:*") // this is array
-      .then((keys) => {
-        const promises =keys.map((key) => {
-          return RedisClient.HGET(key,"userid_n")
-            .then((userid_n) => {
-              if(userid_n === "1534dbb7f370135c7df06") {
-                util.debug("hit");
-              }
-              return 0;
-            });
-        });
-        return Promise.all(promises);
-      });
-  });
-
-  it("js_utils.validateEmail(email)", () => {
-    let b = null;
-    b = js_utils.validateEmail("test@pilot.study");
-    expect(b).to.deep.equal(true);
-    b = js_utils.validateEmail("test@edx.org");
-    expect(b).to.deep.equal(true);
-    b = js_utils.validateEmail("test@cornell.edu");
-    expect(b).to.deep.equal(true);
-    b = js_utils.validateEmail("test@edx.org");
-    expect(b).to.deep.equal(true);
-    b = js_utils.validateEmail("@cornell.edutest");
-    expect(b).to.deep.equal(false);
-    b = js_utils.validateEmail("testcornell.edu");
-    expect(b).to.deep.equal(false);
-    b = js_utils.validateEmail("@cornell.edu");
-    expect(b).to.deep.equal(false);
-    b = js_utils.validateEmail("test@alumni.ubc.ca");
-    expect(b).to.deep.equal(true);
-    b = js_utils.validateEmail("test@ubc.ca");
-    expect(b).to.deep.equal(true);
-  });
-}
-
-function specModel() {
-  it("ClassHandler: User: create user jflask", (done) => {
-    const email = "jflask@ubc.ca";
-    const password = "test_password_123";
-    util.testl("user's id is " + ClassHandler.makeID(email));
-    ClassHandler.createUser("jflask@ubc.ca", password)
-      .then((user) => {
-        expect(user.email).to.equal("jflask@ubc.ca");
-        const id = ClassHandler.makeID(email);
-        return RedisClient.HGETALL("usr:"+id);
-      })
-      .then((user_obj) => {
-        expect(user_obj.email).to.equal("jflask@ubc.ca");
-        expect(user_obj.nick).to.equal("jflask");
-        return null;
-      })
-      .catch((err) => {
-        util.error(err);
-        assert.fail();
-        return null;
-      })
-      .finally(done);
-  });
-
-  it("ClassHandler: User: validate jflask", (done) => {
-    const email = "jflask@ubc.ca";
-    const password = "test_password_123";
-    R2D.User.prototype.findByEmail(email)
-      .then((user) => {
-        try {
-          const b = ClassHandler.validatePassword(user, password);
-          expect(b).to.equal(true);
-          util.testl("validation successful");
-        } catch(err) {
-          assert.fail();
-        }
-        return null;
-      })
-      .catch((err) => {
-        util.error(err);
-        assert.fail();
-        return null;
-      })
-      .finally(done);
-  });
-
-  it("User: update jflask", (done) => {
-    const email = "jflask@ubc.ca";
-    R2D.User.prototype.findByEmail(email)
-      .then((user) => {
-        return user.updateDetails("1234567890","Jonathan","Flask");
-      })
-      .then((user) => {
-        util.testl(user.sid+" "+user.first_name+" "+user.last_name);
-        expect(user.sid).to.equal("1234567890");
-        expect(user.first_name).to.equal("Jonathan");
-        expect(user.last_name).to.equal("Flask");
-        util.testl("details are updated in cache");
-        const user_key = "usr:"+user.id;
-        return RedisClient.HGETALL(user_key);
-      })
-      .then((usr_obj) => {
-        expect(usr_obj.sid).to.equal("1234567890");
-        expect(usr_obj.first_name).to.equal("Jonathan");
-        expect(usr_obj.last_name).to.equal("Flask");
-        util.testl("details are updated in redis");
-        return null;
-      })
-      .catch((err) => {
-        util.error(err);
-        assert.fail();
-        return null;
-      })
-      .finally(done);
-  });
-
+function gggo() {
   it("Course: make CPSC 437D", (done) => {
     const course_dept = "cpsc";
     const course_nbr  = "437d";
@@ -197,7 +57,7 @@ function specModel() {
     const argl = emails.map((email) => { return [email, password]; });
     js_utils.promiseLoopApply(ClassHandler.createUser, argl)
       .then(bArr => {
-        return emails.map(User.prototype.findByEmail);
+        return emails.map(User.findByEmail);
       })
       .then(users => {
         users.forEach((user, index) => {
@@ -329,11 +189,11 @@ function specModel() {
     const emails = nicks.map(nick => { return nick+"@ubc.ca"; });
     const ids = emails.map(ClassHandler.makeID);
     const user_keys = ids.map(id => { return "usr:"+id; });
-    console.log(JSON.stringify(user_keys,null,"\t"));
+    //console.log(JSON.stringify(user_keys,null,"\t"));
     /*****************************/
-    js_utils.promiseLoop(R2D.User.deleteUserByEmail, emails)
+    js_utils.promiseLoop(R2D.User.deleteUser, user_keys)
       .then(bArr => {
-        return emails.map(User.prototype.findByEmail);
+        return emails.map(User.findByEmail);
       })
       .then(bArr => {
         expect(bArr).to.deep.equal([null,null,null,null]);
@@ -347,55 +207,399 @@ function specModel() {
       })
       .finally(done);
   });
-
-  it("ClassHandler: User: delete jflask", (done) => {
-    const email = "jflask@ubc.ca";
-    R2D.User.deleteUserByEmail(email)
-      .then((b) => {
-
-        return R2D.User.prototype.findByEmail(email);
-      })
-      .then((u) => {
-        expect(u).to.equal(null);
-        const id = ClassHandler.makeID(email);
-        return redis_utils.keyExists("usr:"+id);
-      })
-      .then((b) => {
-        expect(b).to.be.false;
-        return null;
-      })
-      .catch((err) => {
-        util.error(err);
-        assert.fail();
-        return null;
-      })
-      .finally(done);
-  });
 }
 
-describe("spec", function() {
+describe("UBC", function() {
 
   before(function () {
     js_utils     = require('../lib/js_utils');
+    lib_utils    = require('../lib/lib_utils');
     RedisClient  = require('../lib/redis_client').RedisClient;
     R2D          = require('../lib/r2d');
     redis_utils  = require('../lib/redis_client').util;
     PilotHandler = require('../lib/pilot_handler');
     ClassHandler = require('../lib/class_handler');
     Course       = require('../lib/Course');
+    return R2D.User.cache.populate();
   });
 
   beforeEach(function () { });
 
-  after(function (done) {
-    RedisClient.quit().finally(done);
+  after(function () {
+    return RedisClient.quit();
 
   });
 
   afterEach(function () { });
 
-  // someTests();
+  describe("#Validation", function() {
+    it("test redis 1", (done) => {
+      RedisClient.SET("mykey", "v")
+        .then((b) => {
+          util.debug("after set");
+          util.debug(b);
+          util.debug(typeof b);
+          return RedisClient.GET("mykey");
+        })
+        .then((a) => {
+          util.debug("after get");
+          util.debug(a);
+          util.debug(typeof a);
+          return RedisClient.DEL("mykey");
+        })
+        .then((b) => {
+          util.debug("after delete");
+          util.debug(b);
+          util.debug(typeof b);
+          expect(1).to.equal(1);
+          done();
+        })
+        .catch((err) => {
+          assert.fail();
+        });
+    });
 
-  specModel();
+    it("test redis 2", () => {
+      return RedisClient.KEYS("doc:*") // this is array
+        .then((keys) => {
+          const promises =keys.map((key) => {
+            return RedisClient.HGET(key,"userid_n")
+              .then((userid_n) => {
+                if(userid_n === "1534dbb7f370135c7df06") {
+                  util.debug("hit");
+                }
+                return 0;
+              });
+          });
+          return Promise.all(promises);
+        });
+    });
 
+    it("js_utils.validateEmail(email)", () => {
+      let b = null;
+      b = js_utils.validateEmail("test@pilot.study");
+      expect(b).to.deep.equal(true);
+      b = js_utils.validateEmail("test@edx.org");
+      expect(b).to.deep.equal(true);
+      b = js_utils.validateEmail("test@cornell.edu");
+      expect(b).to.deep.equal(true);
+      b = js_utils.validateEmail("test@edx.org");
+      expect(b).to.deep.equal(true);
+      b = js_utils.validateEmail("@cornell.edutest");
+      expect(b).to.deep.equal(false);
+      b = js_utils.validateEmail("testcornell.edu");
+      expect(b).to.deep.equal(false);
+      b = js_utils.validateEmail("@cornell.edu");
+      expect(b).to.deep.equal(false);
+      b = js_utils.validateEmail("test@alumni.ubc.ca");
+      expect(b).to.deep.equal(true);
+      b = js_utils.validateEmail("test@ubc.ca");
+      expect(b).to.deep.equal(true);
+    });
+  });
+
+  describe("#Models", function() {
+
+    // someTests();
+
+    it("ClassHandler: User: create user jflask", () => {
+      const email = "jflask@ubc.ca";
+      const password = "test_password_123";
+      const auth_type = "Internal";
+      // usr:a2bd1e849f82599bc97f903216ab2f000da959ef
+      const id = ClassHandler.makeID(email);
+      //util.testl("user's id is " + id);
+      const check = (u) => {
+        expect(u.email).to.equal(email);
+        expect(u.auth_type).to.equal(auth_type);
+        expect(u.nick).to.equal("jflask");
+      };
+      return ClassHandler.createUser(email, password)
+        .then((user) => {
+          expect(user).to.be.an.instanceOf(R2D.User);
+          check(user);
+          const b = ClassHandler.validatePassword(user, password);
+          expect(b).to.equal(true);
+          return RedisClient.HGETALL(`usr:${id}`);
+        })
+        // User is in redis
+        .then((user_obj) => {
+          check(user_obj);
+          const b = ClassHandler.validatePassword(
+            { password_hash: user_obj.password_hash, salt: user_obj.salt },
+            password
+          );
+          expect(b).to.equal(true);
+          return R2D.User.cache.get(id);
+        })
+        // User is in cache
+        .then((user) => {
+          expect(user).to.be.an.instanceOf(R2D.User);
+          check(user);
+          const b = ClassHandler.validatePassword(user, password);
+          expect(b).to.equal(true);
+        })
+        .catch((err) => {
+          util.error(err);
+          assert.fail(err);
+        });
+    });
+
+    it("ClassHandler: User: update jflask", () => {
+      const email = "jflask@ubc.ca";
+      const sid = "1234567890";
+      const displayName = "Buggy Jordan";
+      const firstName = "Jonathan";
+      const lastName = "Flask";
+      const auth_type = "Internal";
+      const id = ClassHandler.makeID(email);
+      const user = R2D.User.cache.get(id);
+      expect(user).to.be.an.instanceOf(R2D.User);
+      /*********************************************/
+      const check = (u) => {
+        expect(u.sid).to.equal(sid);
+        expect(u.display_name).to.equal(displayName);
+        expect(u.first_name).to.equal(firstName);
+        expect(u.last_name).to.equal(lastName);
+        expect(u.email).to.equal(email);
+        expect(u.auth_type).to.equal(auth_type);
+        expect(u.nick).to.equal("jflask");
+      };
+      /*********************************************/
+      return user.updateDetails(sid, displayName, firstName, lastName)
+        .then((user) => {
+          expect(user).to.be.an.instanceOf(R2D.User);
+          check(user);
+          return RedisClient.HGETALL(`usr:${id}`);
+        })
+        .then((usr_obj) => {
+          check(usr_obj);
+          util.testl("details are updated in redis");
+        })
+        .catch((err) => {
+          util.error(err);
+          assert.fail(err);
+        });
+    });
+
+    it("R2D: User: getter functions get jflask", () => {
+      // console.log("HERE");
+      // console.log(JSON.stringify(user, null, '\t'));
+      const email = "jflask@ubc.ca";
+      const sid = "1234567890";
+      const displayName = "Buggy Jordan";
+      const firstName = "Jonathan";
+      const lastName = "Flask";
+      const auth_type = "Internal";
+      const id = ClassHandler.makeID(email);
+      const check = (u) => {
+        expect(u.id).to.equal(id);
+        expect(u.sid).to.equal(sid);
+        expect(u.display_name).to.equal(displayName);
+        expect(u.first_name).to.equal(firstName);
+        expect(u.last_name).to.equal(lastName);
+        expect(u.email).to.equal(email);
+        expect(u.auth_type).to.equal(auth_type);
+        expect(u.nick).to.equal("jflask");
+      };
+      return R2D.User.getWithEmailByAuthType(email)
+        .then(users => {
+          expect(users).to.have.property(auth_type);
+          const user = (users[auth_type])[0];
+          expect(user).to.be.an.instanceOf(R2D.User);
+          check(user);
+          return R2D.User.findByEmail(email);
+        })
+        .then(user => {
+          expect(user).to.be.an.instanceOf(R2D.User);
+          check(user);
+        })
+        .catch((err) => {
+          util.error(err);
+          assert.fail(err);
+        });
+    });
+
+    //gggo();
+
+    it("ClassHandler: User: delete jflask", () => {
+      const email = "jflask@ubc.ca";
+      const id = ClassHandler.makeID(email);
+      return R2D.User.deleteUser(id)
+        .then((b) => {
+          return R2D.User.findByID(id);
+        })
+        .then((u) => {
+          expect(u).to.equal(null);
+          return redis_utils.keyExists(`usr:${id}`);
+        })
+        .then((b) => {
+          expect(b).to.be.false;
+          return redis_utils.GraphExists("userid_email_table", `usr:${id}`);
+        })
+        .then((b) => {
+          expect(b).to.be.false;
+        })
+        .catch((err) => {
+          util.teste(err);
+          assert.fail();
+        });
+    });
+  });
+
+  describe("#CWL", function() {
+
+    const uid = "urn:oid:0.9.2342.19200300.100.1.1";
+    const mail = "urn:oid:0.9.2342.19200300.100.1.3";
+    const displayName = "urn:oid:2.16.840.1.113730.3.1.241";
+    const givenName = "urn:oid:2.5.4.42";
+    const sn = "urn:oid:2.5.4.4";
+    const ubcEduPersistentID = "urn:oid:1.3.6.1.4.1.60.1.7.1";
+    const groupMembership = "urn:oid:2.16.840.1.113719.1.1.4.1.25";
+
+    const testProfileAttr = {
+      sid: "33456781",
+      display_name: "Frank Hirst",
+      first_name: "Frank",
+      last_name: "Hirst",
+      email: "fhirst@ubc.ca",
+      auth_type: "UBC_CWL",
+      nick: "fhirst"
+    };
+
+    const testID = "32r9r0io4-234h23n-12342ref3-esfq33r2";
+    const testProfile = {
+      "issuer": "https://authentication.ubc.ca",
+      "sessionIndex": "_c98a80bc526723f25ff47438cf601e44",
+      "nameID": "AAdzZWNyZXQx8mtuVkyqyATy6s/Fe7vZ0U3bI6lVf6bllXdWfrPfZLNkwneWryRG4KRBeUQM5WIs2GUTsNoZl+MhBa4kgkpY5JGA7xTJz/KwnaeVv0arw3AebjtqxwxgHA==",
+      "nameIDFormat": "urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
+      "nameQualifier": "https://authentication.ubc.ca",
+      "spNameQualifier": "sp_richreview_ubc",
+      "urn:oid:1.3.6.1.4.1.60.1.7.1": testID, // ubcEduPersistentID
+      "urn:oid:0.9.2342.19200300.100.1.1": "es334567",    // CWL login
+      "urn:oid:0.9.2342.19200300.100.1.3": testProfileAttr.email, // email
+      "urn:oid:2.16.840.1.113730.3.1.241": testProfileAttr.display_name, // displayName
+      "urn:oid:2.5.4.42": testProfileAttr.first_name, // first_name
+      "urn:mace:dir:attribute-def:ubcEduStudentNumber": testProfileAttr.sid, // sid
+      "urn:oid:2.5.4.4": testProfileAttr.last_name, // last name
+      "urn:oid:2.16.840.1.113719.1.1.4.1.25": [
+        "ou=richreview.net,ou=applications,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca",
+        "ou=richreview.net,cn=chin_141_002_2018w_instructor,ou=applications,cn=korn_102_001_2018w,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca",
+        "ou=richreview.net,ou=applications,cn=korn_102_001_2018w,ou=cpsc-ubcv,cn=chin_141_002_2018w_instructor,ou=clients,dc=id,dc=ubc,dc=ca",
+        "cn=CPSC_110_001_2018w_instructor,ou=richreview.net,ou=applications,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca",
+        "ou=richreview.net,ou=applications,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca,cn=CPSC_420_001_2018w"
+      ], // group_attributes
+      "mail": "test@ubc.ca",
+      "email": "test@ubc.ca"
+    };
+
+    const validateUserDetails = (u) => {
+      expect(u.sid).to.equal(testProfileAttr.sid);
+      expect(u.display_name).to.equal(testProfileAttr.display_name);
+      expect(u.first_name).to.equal(testProfileAttr.first_name);
+      expect(u.last_name).to.equal(testProfileAttr.last_name);
+      expect(u.email).to.equal(testProfileAttr.email);
+      expect(u.auth_type).to.equal(testProfileAttr.auth_type);
+      expect(u.nick).to.equal(testProfileAttr.nick);
+    };
+
+    it("Course: read group attributes", () => {
+      const regex = /cn=[a-zA-Z0-9_]+/i;
+      const getAttribute = (ss) => {
+        const regex = /cn=[a-zA-Z0-9_]+/i;
+        const result = regex.exec(ss);
+        if(result) {
+          return (result[0]).substring(3);
+        } else {
+          return null;
+        }
+      };
+      const ss = testProfile[groupMembership];
+      let result = regex.exec(ss[0]);
+      expect(result).to.be.null;
+      expect(getAttribute(ss[0])).to.be.null;
+      result = regex.exec(ss[1]);
+      expect(result).to.deep.equal(["cn=chin_141_002_2018w_instructor"]);
+      expect(getAttribute(ss[1])).to.equal("chin_141_002_2018w_instructor");
+      result = regex.exec(ss[2]);
+      expect(result).to.deep.equal(["cn=korn_102_001_2018w"]);
+      expect(getAttribute(ss[2])).to.equal("korn_102_001_2018w");
+
+      const getCourseGroupIDs = (profile) => {
+        assert.property(profile, groupMembership, "profile does not have groupMembership attribute");
+        assert.instanceOf(profile[groupMembership], Array, "profile[groupMembership] is not an array");
+        let courseGroupIDs = (profile[groupMembership]).map((group_str) => {
+          return getAttribute(group_str);
+        });
+        return courseGroupIDs.filter((courseGroupID) => { return !!courseGroupID });
+      };
+      result = getCourseGroupIDs(testProfile);
+      expect(result).to.have.members([
+        'chin_141_002_2018w_instructor',
+        'korn_102_001_2018w',
+        'CPSC_110_001_2018w_instructor',
+        'CPSC_420_001_2018w'
+      ]);
+    });
+
+    it("User: create fhirst from testProfile", () => {
+      return new Promise((resolve) => {
+        const checkPoint = (err, user) => {
+          if(err) {
+            util.teste(err);
+            assert.fail(err);
+          }
+          expect(user).to.be.an.instanceOf(R2D.User);
+          validateUserDetails(user);
+          resolve();
+        };
+        lib_utils.UBCsamlStrategyCB(testProfile, checkPoint)
+      });
+    });
+
+    it("User: getter functions get fhirst", () => {
+      return R2D.User.findByID(testID)
+        .then(user => {
+          expect(user).to.be.an.instanceOf(R2D.User);
+          validateUserDetails(user);
+          return R2D.User.findByEmail(testProfileAttr.email);
+        })
+        .then(user => {
+          expect(user).to.be.an.instanceOf(R2D.User);
+          validateUserDetails(user);
+          return RedisClient.HGETALL(`usr:${testID}`);
+        })
+        .then(user_obj => {
+          validateUserDetails(user_obj);
+        })
+        .catch((err) => {
+          util.teste(err);
+          assert.fail(err);
+        });
+    });
+
+    // TODO: test lib_utils.UBCsamlStrategyCB() does not recreate user if run a second time.
+
+    it("User: delete fhirst", () => {
+      return R2D.User.deleteUser(testID)
+        .then((b) => {
+          return R2D.User.findByID(testID);
+        })
+        .then((u) => {
+          expect(u).to.equal(null);
+          return redis_utils.keyExists(`usr:${testID}`);
+        })
+        .then((b) => {
+          expect(b).to.be.false;
+          return redis_utils.GraphExists("userid_email_table", `usr:${testID}`);
+        })
+        .then((b) => {
+          expect(b).to.be.false;
+        })
+        .catch((err) => {
+          util.teste(err);
+          assert.fail(err);
+        });
+    });
+  });
 });

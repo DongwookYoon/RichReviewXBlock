@@ -1,4 +1,44 @@
 
+exports.mockCWLUsers = {
+  cchen795: {
+    "issuer": "https://authentication.ubc.ca",
+    "sessionIndex":"_72ed488569357c8fb6ae0c69c36ba008",
+    "nameID":"AAdzZWNyZXQxw00LRH1/YXBn+t/C0UJd7708ljmwU2WMyigk9LcQNS+JGPTPX1wCTkgYoETu5UqrPfsDZfV2x6QBJVwCw3YmTT2vulYLclmocdH2PNKiY2UDfgn55g5WDw==",
+    "nameIDFormat":"urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
+    "nameQualifier":"https://authentication.ubc.ca",
+    "spNameQualifier":"sp_richreview_ubc",
+    "urn:oid:1.3.6.1.4.1.60.1.7.1":"cdcb9536-6005-4e93-853f-b17d564d9ecc",
+    "urn:oid:0.9.2342.19200300.100.1.1":"cchen795",
+    "urn:oid:0.9.2342.19200300.100.1.3":"cchen795@gmail.com",
+    "urn:oid:2.16.840.1.113730.3.1.241":"Chi-Wei Chen",
+    "urn:oid:2.5.4.42":"Chi-Wei",
+    "urn:mace:dir:attribute-def:ubcEduStudentNumber":"54573167",
+    "urn:oid:2.5.4.4":"Chen",
+    "urn:oid:2.16.840.1.113719.1.1.4.1.25": [
+    "cn=admins,ou=richreview.net,ou=applications,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca",
+    "cn=coursetest,ou=richreview.net,ou=applications,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca",
+    "cn=KORN_102_001_2018W,ou=KORN,ou=UBC,ou=ACADEMIC,dc=id,dc=ubc,dc=ca"
+    ],
+    "mail": "cchen795@gmail.com",
+    "email": "cchen795@gmail.com"
+  },
+  bwiser: {
+    "issuer": "https://authentication.ubc.ca",
+    "nameQualifier":"https://authentication.ubc.ca",
+    "spNameQualifier":"sp_richreview_ubc",
+    "urn:oid:1.3.6.1.4.1.60.1.7.1":"cdcb9536-6005-4e93-853f-b17d564d9ecc",
+    "urn:oid:0.9.2342.19200300.100.1.1":"bwiser", // nickname
+    "urn:oid:0.9.2342.19200300.100.1.3":"bwiser@cs.ubc.ca", // email
+    "urn:oid:2.16.840.1.113730.3.1.241":"Bill Wiser", // full name
+    "urn:oid:2.5.4.42":"Bill", // first name
+    "urn:oid:2.5.4.4":"Wiser", // last name
+    "urn:oid:2.16.840.1.113719.1.1.4.1.25": [
+      "cn=coursetest,ou=richreview.net,ou=applications,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca",
+      "cn=KORN_102_001_2018W,ou=KORN,ou=UBC,ou=​INSTRUCTOR,dc=id,dc=ubc,dc=ca"
+    ],
+    "email":"bwiser@cs.ubc.ca", // email
+  }
+};
 
 exports.mockUsers = {
   // usr:4bb6974cd5

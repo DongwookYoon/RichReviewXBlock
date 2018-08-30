@@ -20,9 +20,17 @@ exports.isLoggedIn = (req, res, next) => {
 };
 
 exports.testMe = (req, res, next) => {
+  /* test request user and sessions
   util.debug(Object.keys(req));
   if(req.user) util.debug(`user keys: ${JSON.stringify(Object.keys(req.user))}`);
-  if(req.session) util.debug(`session keys: ${JSON.stringify(Object.keys(req.session))}`);
+  if(req.session) util.debug(`session keys: ${JSON.stringify(Object.keys(req.session))}`);*/
+  /* // test flash messages
+  req.flash("error", "test error");
+  req.flash("error", "test another error");
+  req.flash("warning", "test warning");
+  req.flash("success", "test success");
+  req.flash("success", "test more success");
+  req.flash("info", "test info");*/
   return next();
 };
 

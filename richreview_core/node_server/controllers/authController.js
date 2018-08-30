@@ -59,7 +59,9 @@ exports.logout = function(req, res) {
   js_utils.logUserAction(req, 'logging out...');
   req.logout();
   req.flash('success', 'You are now logged out');
-  /*res.redirect(
+  /*
+  // NOTE: that since logging out of Google will affect the account sessions of all other Google apps. It is better for users to disconnect from Google through an actual Google app instead of RichReview.
+  res.redirect(
     'https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue='+process.env.HOST_URL
   );*/
   res.redirect('/');

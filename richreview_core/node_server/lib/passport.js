@@ -82,28 +82,6 @@ passport.use(CornellStrategy);
 /**
  * use strategy OAuth2.0 with Google ID
  */
-/*const googleStrategyCB = (accessToken, refreshToken, profile, done) => {
-    console.log(JSON.stringify(profile, null, '\t'));
-    const email = profile.emails.length !== 0 ? profile.emails[0].value : '';
-    const b = R2D.User.cache.exists(profile.id);
-    new Promise.resolve(b)
-    //R2D.User.prototype.isExist(profile.id)
-        .then((is_exist) => {
-            if(is_exist) {
-                return lib_utils.findUserByID(profile.id)
-                    .then((user) => {
-                        return R2D.User.prototype.syncEmail(user, email);
-                    });
-            } else {
-                return R2D.User.create(profile.id, email);
-            }
-        })
-        .then((user) => {
-            done(null, user);
-        })
-        .catch(done);
-};*/
-
 util.logger("PASSPORT", "use Google Strategy / 0Auth2.0 with Google+ API");
 const redirect_uri = process.env.NODE_ENV === "development" ?
     env.google_oauth.redirect_uris[1] : env.google_oauth.redirect_uris[0];

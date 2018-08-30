@@ -100,6 +100,15 @@ util.start("setting up error log");
 setErrLog();
 
 util.start("using redirect http middleware");
+// all http request will be redirected to https
+function redirectHttp(){
+  /** redirect all http requests to https */
+  let app_http = express.createServer();
+  app_http.get("*", function (req, res) {
+    res.redirect("https://" + req.headers.host + req.path);
+  });
+  return app_http;
+}
 let app_http = redirectHttp();
 
 /******************************************/
@@ -168,16 +177,6 @@ function setErrLog() {
             }
         });
     }
-}
-
-// all http request will be redirected to https
-function redirectHttp(){
-    /** redirect all http requests to https */
-    let app_http = express();
-    app_http.get("*", function (req, res) {
-        res.redirect("https://" + req.headers.host + req.path);
-    });
-    return app_http;
 }
 
 /******************************************/

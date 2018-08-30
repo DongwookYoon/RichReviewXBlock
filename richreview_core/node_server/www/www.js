@@ -130,15 +130,10 @@ const runServer = () => {
 
     process.setMaxListeners(0);
 
-    const HTTPS_PORT = env.node_config.HTTPS_PORT || 8001;
-    const HTTP_PORT = env.node_config.HTTP_PORT  || 8002;
-    app.https.set('port', HTTPS_PORT);
-    app.http.set('port', HTTP_PORT);
+    app.https.set('port', env.node_config.HTTPS_PORT || 8001);
+    app.http.set('port',  env.node_config.HTTP_PORT  || 8002);
 
-    require('http').createServer(function(req, res) {
-        res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
-        res.end();
-    }).listen(
+    require('http').createServer(app.http).listen(
         app.http.get('port'),
         function () {
             util.start("listening on HTTP port: " + app.http.get('port'));

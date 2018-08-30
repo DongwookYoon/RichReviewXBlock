@@ -30,11 +30,11 @@ const authController     = require('../controllers/authController');
 /*****************************/
 /** routes for get requests **/
 /*****************************/
-router.get('',                 authController.testMe, _pages.about);
-router.get('/',                authController.testMe, _pages.about);
-router.get('/about',           authController.testMe, _pages.about);
+router.get('',                 _pages.about);
+router.get('/',                _pages.about);
+router.get('/about',           _pages.about);
 router.get('/logout_saml',     authController.isLoggedIn, authController.samlLogout);
-router.get('/logout',          authController.logout);
+router.get('/logout',          authController.isLoggedIn, authController.logout);
 router.get('/input_test',      _pages.input_test);
 router.get('/admin',           _pages.admin);
 router.get('/downloader',      _downloader.dn);
@@ -74,7 +74,7 @@ router.post('/course',     course.post);
 /****************************/
 /** routes for pilot study **/
 /****************************/
-router.get('/login_pilot', pilotController.pilot_login_page);
+router.get('/login_pilot', authController.isNotLoggedIn, pilotController.pilot_login_page);
 router.get('/pilot_admin',
     authController.isLoggedIn,
     pilotController.auth_pilot_admin,
@@ -147,6 +147,7 @@ router.get(
  */
 router.get(
   '/login_ubc',
+  authController.isNotLoggedIn,
   passport.authenticate(
     'saml',
     { failureRedirect: '/login_ubc', failureFlash: true }),
@@ -168,6 +169,7 @@ router.post(
 
 router.get(
     '/login_cornell',
+    authController.isNotLoggedIn,
     passport.authenticate('wsfed-saml2', { failureRedirect: '/login_cornell', failureFlash: true }),
     function(req, res) {
         res.redirect(req.session.latestUrl || '/');
@@ -183,6 +185,7 @@ router.post('/login_cornell_return',
 
 router.get(
     '/login_google',
+    authController.isNotLoggedIn,
     passport.authenticate( 'google', { scope:['email'] } )
 );
 

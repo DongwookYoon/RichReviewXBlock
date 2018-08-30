@@ -19,6 +19,17 @@ exports.isLoggedIn = (req, res, next) => {
   res.redirect('/');
 };
 
+/**
+ * Check if no user is logged in and redirects user if otherwise.
+ */
+exports.isNotLoggedIn = (req, res, next) => {
+  if(!req.isAuthenticated()) {
+    return next();
+  }
+  req.flash('error', "You cannot be logged in to perform this action");
+  res.redirect('/');
+};
+
 exports.testMe = (req, res, next) => {
   /* test request user and sessions
   util.debug(Object.keys(req));
@@ -35,7 +46,7 @@ exports.testMe = (req, res, next) => {
 };
 
 /**
- * Send request to (UBC's) IDP to log out of CWL. If user did not log into
+ * Send request to (UBC's) IDP to log out of CWL. If user did not login using SAML, then redirect to default logout.
  */
 exports.samlLogout = (req, res) => {
   js_utils.logUserAction(req, 'logging out of SAML...');
@@ -63,6 +74,9 @@ exports.samlLogout = (req, res) => {
   });*/
 };
 
+/**
+ * Log out the user
+ */
 exports.logout = function(req, res) {
   js_utils.logUserAction(req, 'logging out...');
   req.logout();

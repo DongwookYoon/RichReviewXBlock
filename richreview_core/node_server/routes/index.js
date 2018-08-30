@@ -34,6 +34,7 @@ router.get('',                 authController.testMe, _pages.about);
 router.get('/',                authController.testMe, _pages.about);
 router.get('/about',           authController.testMe, _pages.about);
 router.get('/logout_saml',     authController.isLoggedIn, authController.samlLogout);
+router.get('/logout',          authController.logout);
 router.get('/input_test',      _pages.input_test);
 router.get('/admin',           _pages.admin);
 router.get('/downloader',      _downloader.dn);

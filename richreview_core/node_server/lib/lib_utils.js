@@ -49,16 +49,17 @@ const makeOldID = function(key) {
  *  - Course.plugCourses     - attaches courses the user is registered to
  * @param {User|null} user
  * @returns {Promise.<User|null>}
+ * TODO: phase out
  */
 const findUserCallback = (user) => {
-  return PilotHandler.plugPilot(user)
-    .then(Course.plugCourses);
+  return PilotHandler.plugPilot(user);
 };
 
 /**
  * Extends R2D.User.findByID by adding plugins if available
  * @param {string} id
  * @returns {Promise.<User|null>}
+ * TODO: phase out
  */
 const findUserByID = (id) => {
   return R2D.User.findByID(id).then(findUserCallback);
@@ -68,6 +69,7 @@ const findUserByID = (id) => {
  * Extends R2D.User.findByEmail by adding plugins if available. See comments for R2D.User.findByEmail() for more details.
  * @param {string} email
  * @returns {Promise.<User|null>}
+ * TODO: phase out
  */
 const findUserByEmail = (email) => {
   return R2D.User.findByEmail(email).then(findUserCallback);
@@ -144,7 +146,8 @@ exports.googleStrategyCB = (accessToken, refreshToken, profile, done) => {
       if(user) {
         // since WARNING: user_email_lookup is deprecated, syncEmail() does not work.
         // TODO: fix syncEmail
-        return R2D.User.prototype.syncEmail(user, email);
+        //return R2D.User.prototype.syncEmail(user, email);
+        return user.syncEmail(email);
       } else {
         util.debug(`user with email ${email} does not exist; making new user`);
         return R2D.User.create(profile.id, email);
@@ -203,9 +206,12 @@ exports.googleStrategyCB = (accessToken, refreshToken, profile, done) => {
         else { return makeUBCUser(profile); }
       })
       .then(user => {
-        user.saml = { };
+        user.saml = {};
         user.saml.nameID = profile.nameID;
         user.saml.nameIDFormat = profile.nameIDFormat;
+        return Course.plugCourse(user, profile);
+      })
+      .then(user => {
         done(null, user);
       })
       .catch(done);

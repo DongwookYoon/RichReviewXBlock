@@ -366,13 +366,21 @@ const getCourseGroupIDs = (profile) => {
   return courseGroupIDs.filter((courseGroupID) => { return !!courseGroupID });
 };
 
+const enrollUser = (user, profile) => {
+
+}
+
 /**
  * TODO: finish
  * @param user
  */
-Course.plugCourse = (user) => {
-  /*if(!user)*/ return Promise.resolve(user);
+Course.plugCourse = (user, profile) => {
+  if(!user) return Promise.resolve(null);
+  const courseGroupIDs = getCourseGroupIDs(profile);
+  const promises = courseGroupIDs.map((courseGroupID) => {
 
+  });
+  return user;
 };
 
 module.exports = Course;

@@ -1,13 +1,17 @@
 # Auth strategies
 
-There are various auth strategies to log into RichReview:
+There are various authentication strategies to log into RichReview:
 
 - UBC_CWL - user logs in through UBC CWL authentication page
+    + Registration is automatic: the first time a user logs in using CWL, a new account is created, which the user will use for subsequent logins.
 - Internal - user logs in through RichReview directly by entering their username and password. RichReview authenticates the user be validating user's password with stored password (hashed w/ salt).
 - Pilot - User logs in through RichReview directly by entering their username and password. Pilot users should be phased out and future developers should use the 'Internal' authentication.
     + The passwords of pilot users are not hashed
     + Users cannot create their own account. This can only be done through a course administrator.
 - Google - user logs in through the Google authentication page.
+    + Registration is automatic
+
+No two authentication strategies share the same user accounts in RichReview. 
 
 # UBC Study
 
@@ -15,23 +19,23 @@ These are the (new) redis database models for UBC courses
 
 ## CWL Account Holder
 
-@typedef {Object} CWLProfile
-@member {string} issuer - should be "https://authentication.ubc.ca"
-@member {string} sessionIndex
-@member {string} nameID
-@member {string} nameIDFormat
-@member {string} nameQualifier
-@member {string} spNameQualifier - should be "https://authentication.ubc.ca"
-@member {string} sessionIndex - should be sp_***_ubc
-@member {string} urn:oid:1.3.6.1.4.1.60.1.7.1
-@member {string} urn:oid:0.9.2342.19200300.100.1.1 - the CWL login name
-@member {string} urn:oid:0.9.2342.19200300.100.1.3
-@member {string} urn:oid:2.5.4.42
-@member {string} urn:mace:dir:attribute-def:ubcEduStudentNumber
-@member {string} urn:oid:2.5.4.4
-@member {string} urn:oid:2.16.840.1.113719.1.1.4.1.25 - the group attributes
-@member {string} mail
-@member {string} email
+@typedef {Object} CWLProfile  
+@member {string} issuer - should be "https://authentication.ubc.ca"  
+@member {string} sessionIndex  
+@member {string} nameID  
+@member {string} nameIDFormat  
+@member {string} nameQualifier  
+@member {string} spNameQualifier - should be "https://authentication.ubc.ca"  
+@member {string} sessionIndex - should be sp_***_ubc  
+@member {string} urn:oid:1.3.6.1.4.1.60.1.7.1  
+@member {string} urn:oid:0.9.2342.19200300.100.1.1 - the CWL login name  
+@member {string} urn:oid:0.9.2342.19200300.100.1.3  
+@member {string} urn:oid:2.5.4.42  
+@member {string} urn:mace:dir:attribute-def:ubcEduStudentNumber  
+@member {string} urn:oid:2.5.4.4  
+@member {string} urn:oid:2.16.840.1.113719.1.1.4.1.25 - the group attributes  
+@member {string} mail  
+@member {string} email  
 
 ## User ID and email referencing
 
@@ -44,20 +48,20 @@ Previously we used a table named `user_email_lookup` which forces RichReview to 
 #### User in Redis
 
 `usr:<userid>` is a hash.
-userid is the generated differently depending on the. See [auth strategies](#auth-strategies) for more details. The keys in the redis hash are identical to those in User. 
+userid is the generated differently depending on the. See [auth strategies](#auth-strategies) for more details. The keys in the redis hash are identical to those in User. See [User in NodeJS](#User-in-NodeJS) for more details.
 
-nick
-email
-groupNs
-[auth_type]
-[password_hash]
-[salt]
-[is_admin]
-[auth_level]
-[display_name]
-[first_name]
-[last_name]
-[sid]
+nick  
+email  
+groupNs  
+[auth_type]  
+[password_hash]  
+[salt]  
+[is_admin]  
+[auth_level]  
+[display_name]  
+[first_name]  
+[last_name]  
+[sid]  
 
 #### User in NodeJS
 
@@ -80,10 +84,10 @@ groupNs
 
 **Course** ( `course:<course-dept>:<course-number>` )
 
-**course properties** ( `course:<course-dept>:<course-number>:prop` )
-@type hash / class
-@member course_is_active {boolean} - true if course is active, false otherwise
-@member name  {string} - name of the course; defaults to `<course-dept> <course-number>`
+**course properties** ( `course:<course-dept>:<course-number>:prop` )  
+@type hash / class  
+@member course_is_active {boolean} - true if course is active, false otherwise  
+@member name  {string} - name of the course; defaults to `<course-dept> <course-number>`  
 
 ## Course users
 

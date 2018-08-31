@@ -47,7 +47,7 @@ const AUTH_TYPES_UNKN  = "unknown";
  *
  * userid is also added to email_user_lookup as a hash field (deprecated)
  * user ID and email will be linked in the userid_email_table
- * TODO: currently userid_email_table stores IDs with the part `usr:`; it is best if we remove the `usr:`.
+ * TODO: currently userid_email_table stores IDs with the part `usr:`; it is best if we remove the `usr:` to make userid_email_table easier to use with functions that only require ID.
  * Please see db_schema.md for for details
  */
 
@@ -111,7 +111,7 @@ const User = function(id, nickname, email,
  * RemoveGroupFromUser - remove a group groupid_n from user with userid_n
  * GetGroupNs - get group ids from user with userid_n
  *
- * TODO: User should not use prototype if it doesn't need to access internal data, or called from User object instance
+ * NOTE: User should not use prototype if it doesn't need to access internal data, or called from User object instance
  */
 
 /**
@@ -641,15 +641,26 @@ User.prototype.updateNick = function(id, newnick){
 };
 
 /**
- * @param user
  * @param newEmail
  * @returns {Promise}
  *
  * WARNING: this function is broken
- * TODO: update to use with userid_email_table
+ * TODO: update to use with userid_email_table; test
  */
-User.prototype.syncEmail = function(user, newEmail){
-  return new Promise(function(resolve, reject){
+User.prototype.syncEmail = function(newEmail){
+  if(this.email === newEmail) return Promise.resolve(this);
+  const that = this;
+  that.email = newEmail;
+  return redis_utils.GraphSet(that.id, newEmail)
+    .then(() => {
+      return redis_utils.GraphDel(that.id, email)
+    })
+    .then(() => {
+      return RedisClient.HSET(`usr:${this.id}`, "email", newEmail);
+    })
+    .then(() => { return that; });
+
+  /*return new Promise(function(resolve, reject){
     if(user.email === newEmail){
       return resolve(user);
     }
@@ -683,7 +694,7 @@ User.prototype.syncEmail = function(user, newEmail){
         }
       ).catch(reject);
     }
-  });
+  });*/
 };
 
 User.prototype.AddGroupToUser = function(userid_n, groupid_n){

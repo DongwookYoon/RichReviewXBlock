@@ -38,7 +38,7 @@ var webAppSync = (function(){
     pub.run = function() {
         util.start("doing web-app sync");
         return getBlobStorageHash()
-            .then(function(storage_hash){
+            .then(function(storage_hash) {
                 var local_hash = getLocalFileHash(getLocalFileList());
                 if(local_hash === storage_hash){
                     return;

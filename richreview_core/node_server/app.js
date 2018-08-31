@@ -103,7 +103,7 @@ util.start("using redirect http middleware");
 // all http request will be redirected to https
 function redirectHttp(){
   /** redirect all http requests to https */
-  let app_http = express.createServer();
+  let app_http = express();
   app_http.get("*", function (req, res) {
     res.redirect("https://" + req.headers.host + req.path);
   });

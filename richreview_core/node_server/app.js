@@ -94,12 +94,23 @@ app.use((req, res, next) => {
     next();
 });
 
+// all www request will be permanantly redirected to non-www
+app.get('*', function(req, res, next) {
+    if (req.headers.host.match(/^www/) !== null ){
+        res.redirect('https://' + req.headers.host.replace(/^www\./, '') + req.url, 301);
+    }
+    else{
+        next();
+    }
+});
+
 util.start("setting up routes");
 app.use('/', routes);
 app.use('/api', apiRoutes);
 
 util.start("setting up error log");
 setErrLog();
+
 
 util.start("using redirect http middleware");
 let app_http = redirectHttp();

@@ -9,18 +9,18 @@ const Promise = require("promise"); // jshint ignore:line
 const assert  = require("chai").assert;
 
 // import libraries
-const js_utils = require('./js_utils');
+const js_utils    = require('./js_utils');
 const redisClient = require('./redis_client').redisClient;
 const RedisClient = require('./redis_client').RedisClient;
 const redis_utils = require('./redis_client').util;
-const util = require('../util');
+const env         = require("./env");
+const util        = require('../util');
 
 // constants
-const USERID_EMAIL_TABLE = "userid_email_table";
-// TODO: put this in a global location like env.js
-const AUTH_TYPES = ["UBC_CWL", "Internal", "Pilot", "Cornell", "Google"];
-const AUTH_TYPES_OTHER = "other";
-const AUTH_TYPES_UNKN  = "unknown";
+const USERID_EMAIL_TABLE = env.USERID_EMAIL_TABLE; 
+const AUTH_TYPES = env.AUTH_TYPES;
+const AUTH_TYPES_OTHER = env.AUTH_TYPE.OTHER;
+const AUTH_TYPES_UNKN  = env.AUTH_TYPE.UNKN;
 
 /*
  * User
@@ -113,6 +113,15 @@ const User = function(id, nickname, email,
  *
  * NOTE: User should not use prototype if it doesn't need to access internal data, or called from User object instance
  */
+
+User.getUserid = (id) => {
+  if(/^usr:/.test(id)) return id;
+  else return `usr:${id}`;
+};
+
+User.prototype.getUserid = function() {
+  return `usr:${this.id}`;
+};
 
 /**
  * Update user's SID, first name and last name
@@ -659,42 +668,6 @@ User.prototype.syncEmail = function(newEmail){
       return RedisClient.HSET(`usr:${this.id}`, "email", newEmail);
     })
     .then(() => { return that; });
-
-  /*return new Promise(function(resolve, reject){
-    if(user.email === newEmail){
-      return resolve(user);
-    }
-    else{
-      return RedisClient.HMSET(
-        'usr:' + user.id,
-        'email',
-        newEmail
-      ).then(
-        function(){
-          return RedisClient.HMSET(
-            'email_user_lookup',
-            newEmail,
-            'usr:'+user.id
-          );
-        }
-      ).then(
-        function(){
-          return RedisClient.HDEL(
-            'email_user_lookup',
-            user.email
-          );
-        }
-      ).then(
-        function(){
-          return User.cache.loadFromDb(user.id);
-        }
-      ).then(
-        function(user){
-          resolve(user);
-        }
-      ).catch(reject);
-    }
-  });*/
 };
 
 User.prototype.AddGroupToUser = function(userid_n, groupid_n){
@@ -748,7 +721,7 @@ const Group = (function(manager, name, creationDate) {
    */
   var pub_grp = {};
 
-  pub_grp.CreateNewGroup = function(userid_n, docid, creationTime){
+  pub_grp.CreateNewGroup = function(userid_n, docid, creationTime) {
     return new Promise(function(resolve, reject){
       var groupid = "grp:"+userid_n+"_"+creationTime;
       redisClient.EXISTS(groupid, function(err, resp){

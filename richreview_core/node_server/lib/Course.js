@@ -7,81 +7,178 @@
  */
 
 // import npm modules
-const assert = require('chai').assert;
+const assert = require("chai").assert;
 
 // import libraries
-const js_utils = require('./js_utils.js');
-const RedisClient = require('./redis_client').RedisClient;
-const redis_utils = require('./redis_client').util;
-const R2D = require('./r2d');
-const util = require('../util');
+const js_utils    = require("./js_utils");
+const RedisClient = require("./redis_client").RedisClient;
+const redis_utils = require("./redis_client").util;
+const R2D         = require("./r2d");
+const env         = require("./env");
+const util        = require("../util");
 
+const USERID_COURSE_TABLE = "userid_course_table";
 
 /**
- * Index to contain all ELDAP course groups
- * TODO: store in a global location like env.js
+ * Currently, Course is only used for UBC, using the UBC CWL auth. Course information will be stored in Redis as crs:ubc:*
  */
-const COURSE_INDEX = {
-  CHIN_141_002_2018W: {
-    INSTRUCTOR: "chin_141_002_2018w_instructor",
-    STUDENT: "chin_141_002_2018w"
-  },
-  KORN_102_001_2018W: {
-    INSTRUCTOR: "korn_102_001_2018w_instructor",
-    STUDENT: "korn_102_001_2018w"
-  }
-};
-
-// A list of all ELDAP course groups
-const COURSE_INDEX_LIST = (() => {
-  const acc  = [ ];
-  const recurse = (o) => {
-    const keys = Object.keys(o);
-    keys.forEach((key) => {
-      if(o[key] instanceof Object) {
-        recurse(o[key])
-      } else { // is a string
-        acc.push(o[key]);
-      }
-    });
-  };
-  recurse(COURSE_INDEX);
-  return acc;
-})( );
-
-exports.COURSE_INDEX = COURSE_INDEX;
-exports.COURSE_INDEX_LIST = COURSE_INDEX_LIST;
 
 /**
- * In redis
- * Course ( `course:<course-dept>:<course-number>` )
- *
- * course properties ( `course:<course-dept>:<course-number>:prop` )
- * @type hash / class
- * @member is_active {boolean} - true if course is active, false otherwise
- * @member name  {string} - name of the course; defaults to `<course-dept> <course-number>`
- *
- * course instructors ( `course:<course-dept>:<course-number>:instructors` ) is of type set containing the userid of instructors of course
- *
- * course active students ( `course:<course-dept>:<course-number>:students:active` ) is of type set containing the userid of active students of course
- *
- * course blocked students ( `course:<course-dept>:<course-number>:students:blocked` ) is of type set containing the userid of blocked students of course
+ * In Redis
+ * Course (`crs:<institution>:<course-group>:prop`) is a hash with keys:
+ * course_group, is_active, institution, [dept], [number], [section], [year], [title]
+ * 
+ * 
+ * 
+ * Active students can view the class and assignments. Blocked students cannot view anything.
+ * 
+ * course instructors (`crs:<institution>:<course-group>:instructors`) is a set containing strings that are user IDs of instructors.
+ * 
+ * course active students (`crs:<institution>:<course-group>:students:active`) is a set containing the user IDs of active students of course.
+ * 
+ * course blocked students (`crs:<institution>:<course-group>:students:blocked`) is a set containing the user IDs of blocked students of course.
+ */
+
+/**
+ * In NodeJS
+ * @class Course
+ * @member {string} course_group - the unique ID that identifies the course; this ID can be forwarded by ELDAP to CWL user profile in CWL auth callback.
+ * @member {boolean} is_active   - true if the course is active (i.e. is showable in the front-end view); false otherwise.
+ * @member {string} institution  - the course institution (i.e. ubc)
+ * @member {string} [dept]       - the course department (i.e. cpsc)
+ * @member {string} [number]     - the course number  (i.e. 210)
+ * @member {string} [section]    - the course section (i.e. 001)
+ * @member {string} [year]       - the year the course is held (i.e. 2018W)
+ * @member {string} [title]      - the course title   (i.e. Software Construction)
+ * @member {Set.<User>} instructors  - a list of instuctors
+ * @member {Set.<User>} active_students  - a list of active students 
+ * @member {Set.<User>} blocked_students - a list of blocked students
+ * 
+ * NOTE: course_group, institution, dept, number, section, year should be case insensitive
+ */
+
+/**
+ * @class CourseOptions
+ * @member {{ dept: string, number: string, section: string, year: string }} [detail]
+ * @member {string} [title]
  */
 
 /**
  * Course class to manage school courses, instructors, and student registration+access level
- *
  * @constructor
- * @param dept {string}
- * @param number {string}
- * @param is_active {boolean} - whether the course is active or disabled
- * @param name {string}
+ * @param {string} course_group
+ * @param {boolean|string} is_active
+ * @param {string} institution
+ * @param {CourseOptions|null} options
  */
-const Course = function(dept, number, is_active, name) {
-  this.dept = dept;
-  this.number = number;
-  this.is_active = is_active;
-  this.name = name;
+const Course = function(course_group, is_active, institution, options) {
+  this.course_group = course_group;
+  this.is_active    = is_active;
+  this.institution  = institution;
+  this.instructors      = new Set();
+  this.active_students  = new Set();
+  this.blocked_students = new Set();
+  if(options) {
+    if(options.detail) {
+      this.dept    = options.detail.dept;
+      this.number  = options.detail.number;
+      this.section = options.detail.section;
+      this.year    = options.detail.year;
+    }
+    if(options.title) this.title = options.title;
+  }
+};
+
+/**
+ * Course Methods
+ * 
+ * Instance methods (prototype):
+ * getPropKey
+ * getInstructorKey
+ * getActiveStudentKey
+ * getBlockedStudentKey
+ * loadInstructors
+ * loadActiveStudents
+ * loadBlockedStudents
+ * 
+ * 
+ * 
+ */
+
+Course.getPropKey = (institution, course_group) => {
+  return `crs:${institution}:${course_group}:prop`;
+};
+
+/**
+ * Get the Redis key for the properties of this course.
+ * @returns {string}
+ */
+Course.prototype.getPropKey = function() {
+  return `crs:${this.institution}:${this.course_group}:prop`;
+};
+
+Course.getInstructorKey = (institution, course_group) => {
+  return `crs:${institution}:${course_group}:instructors`;
+};
+
+/**
+ * Get the Redis key for the instructor set of this course.
+ * @returns {*}
+ */
+Course.prototype.getInstructorKey = function() {
+  return `crs:${this.institution}:${this.course_group}:instructors`;
+};
+
+Course.getActiveStudentKey = (institution, course_group) => {
+  return `crs:${institution}:${course_group}:student:active`;
+};
+
+Course.prototype.getActiveStudentKey = function() {
+  return `crs:${this.institution}:${this.course_group}:student:active`;
+};
+
+Course.getBlockedStudentKey = (institution, course_group) => {
+  return `crs:${institution}:${course_group}:student:blocked`;
+};
+
+Course.prototype.getBlockedStudentKey = function() {
+  return `crs:${this.institution}:${this.course_group}:student:blocked`;
+};
+
+Course.prototype.loadInstructors = function() {
+  return RedisClient.SMEMBERS(this.getInstructorKey())
+    .then(instructorIDs => {
+      this.instructors = new Set();
+      instructorIDs.forEach((instructorID) => {
+        assert(R2D.User.cache.exists(instructorID), "loadInstructors: instructor ID is in cache");
+        const instructor = R2D.User.cache.get(instructorID);
+        this.instructors.add(instructor);
+      });
+    });
+};
+
+Course.prototype.loadActiveStudents = function() {
+  return RedisClient.SMEMBERS(this.getActiveStudentKey())
+    .then(activeStudentIDs => {
+      this.active_students = new Set();
+      activeStudentIDs.forEach((activeStudentID) => {
+        assert(R2D.User.cache.exists(activeStudentID), "loadActiveStudents: active student ID is in cache");
+        const active_student = R2D.User.cache.get(activeStudentID);
+        this.active_students.add(active_student);
+      });
+    });
+};
+
+Course.prototype.loadBlockedStudents = function() {
+  return RedisClient.SMEMBERS(this.getBlockedStudentKey())
+    .then(blockedStudentIDs => {
+      this.blocked_students = new Set();
+      blockedStudentIDs.forEach((blockedStudentID) => {
+        assert(R2D.User.cache.exists(blockedStudentID), "loadBlockedStudents: blocked student ID is in cache");
+        const blocked_student = R2D.User.cache.get(blockedStudentID);
+        this.blocked_students.add(blocked_student);
+      });
+    });
 };
 
 /**
@@ -89,62 +186,98 @@ const Course = function(dept, number, is_active, name) {
  * @constructor
  */
 Course.cache = (function () {
+
+  /**
+   * @typedef {string} CacheKey - the key of course cache has the form <institution>:<group_group>
+   */
+  
+  /**
+   * @type {Object.<CacheKey, Course>} - cache of Course objects
+   */
   let cache = {};
+  
   const pub = {};
 
+  const makeCacheKey = (institution, course_group) => `${institution}:${course_group}`;
+  
+  /**
+   * Implementation to load a course from Redis, add it to cache, then return it.
+   * @param {string} course_key - has form crs:<institution>:<group_group>:prop
+   * @returns {Promise.<Course>}
+   */
   const loadFromDBInternal = (course_key) => {
     return RedisClient.HGETALL(course_key)
-      .then((course_prop) => {
-        const course_arr = course_key.split(':');
-        const course_dept = course_arr[1];
-        const course_nbr = course_arr[2];
-        const is_active = (course_prop.is_active === "true");
-        cache[course_key] = new Course(
-          course_dept, course_nbr, is_active, course_prop.name
+      .then((course_obj) => {
+        const cache_key = makeCacheKey(course_obj.institution, course_obj.course_group);
+        const is_active   = (course_prop.is_active === "true");
+        cache[cache_key] = new Course(
+          course_obj.course_group, is_active, course_obj.institution, course_obj
         );
-        return cache[course_key];
+        return Promise.all([
+          cache[cache_key].loadInstructors(),
+          cache[cache_key].loadActiveStudents(),
+          cache[cache_key].loadBlockedStudents()
+        ]).then(() => { return cache[cache_key]; });
       });
   };
 
-  pub.loadFromDB = (course_dept, course_nbr) => {
-    const course_key = "course:"+course_dept+":"+course_nbr+":prop";
-    return loadFromDBInternal(course_key);
+  /**
+   * Client to load a course from Redis, add it to cache, then return it.
+   * @returns {*}
+   */
+  pub.loadFromDB = (institution, course_group) => {
+    return loadFromDBInternal(Course.getPropKey(institution, course_group));
   };
 
+  
   pub.populate = () => {
     cache = { };
-    return RedisClient.KEYS("course:*:*:prop")
+    return RedisClient.KEYS("crs:*:*:prop")
       .then((course_keys) => {
         const promises = course_keys.map(loadFromDBInternal);
         return Promise.all(promises);
       })
       .then((courses) => {
-        util.logger("Course", courses.length+" courses loaded");
+        util.logger("Course", `${courses.length} courses loaded`);
         return null;
-      })
+      });
   };
 
-  pub.get = (course_dept, course_nbr) => {
-    const course_key = "course:"+course_dept+":"+course_nbr+":prop";
-    if(pub.exists(course_dept, course_nbr)) {
-      return cache[course_key];
+  /**
+   * Gets a course belonging to given institution and course group.
+   * @param {string} institution 
+   * @param {string} course_group
+   * @returns {Course}
+   * @throws if course no course belonging to given institution and course group exists
+   */
+  pub.get = (institution, course_group) => {
+    const cache_key = makeCacheKey(institution, course_group);
+    if(cache.hasOwnProperty(cache_key)) {
+      return cache[cache_key];
     } else {
-      throw course_dept+" "+course_nbr+" does not exist";
+      throw new Error(`Course for ${institution} ${course_group} does not exist`);
     }
   };
 
-  pub.exists = (course_dept, course_nbr) => {
-    const course_key = "course:"+course_dept+":"+course_nbr+":prop";
-    return cache.hasOwnProperty(course_key);
+  /**
+   * Returns true if a course belonging to given institution and course group exists, false if otherwise.
+   * @param {string} institution
+   * @param {string} course_group
+   * @returns {boolean}
+   */
+  pub.exists = (institution, course_group) => {
+    const cache_key = makeCacheKey(institution, course_group);
+    return cache.hasOwnProperty(cache_key);
   };
-
-  // WARNING: Race condition
-  // TODO: change impl of initial populate
-  /*pub.populate()
-    .catch((err) => { util.error(err) });*/
 
   return pub;
 } ( ));
+
+/**
+ * WARNING: Race condition
+ * TODO: change call of initial populate
+ */
+Course.cache.populate();
 
 /**
  * @static
@@ -152,6 +285,7 @@ Course.cache = (function () {
  * @param course_nbr
  * @param course_name
  * @return {Promise.<Course>}
+ * TODO: update implementation and test
  */
 Course.createCourse = (course_dept, course_nbr, course_name) => {
   const flag = /^[a-zA-Z0-9]+$/.test(course_dept) && /^[a-zA-Z0-9]+$/.test(course_nbr);
@@ -178,6 +312,7 @@ Course.createCourse = (course_dept, course_nbr, course_name) => {
 /**
  * Deletes this course. Removes it from cache and redis.
  * @memberOf Course
+ * TODO: update implementation and test
  * TODO: delete assignments assoc. with course
  * TODO: uncouple groups when deleting assignments
  */
@@ -200,187 +335,195 @@ Course.prototype.delete = function() {
 };
 
 /**
- * Add instructor to course
- * @param {User} user - the instructor to add
+ * Add instructor to course, then return instructor
  * @memberOf Course
+ * @param {User} user - the instructor to add
+ * @returns {Promise.<User>}
+ * TODO: update implementation and test
  */
 Course.prototype.addInstructor = function(user) {
-  const course_instructors_key = "course:"+this.dept+":"+this.number+":instructors";
-  return redis_utils.isMember(course_instructors_key, user.id)
-    .then((b) => {
-      if(b) {
-        throw "instructor is already instructing";
-      } else {
-        return RedisClient.SADD(course_instructors_key, user.id);
-      }
-    })
-    .catch((err) => {
-      util.error(err);
-    });
-};
-
-/**
- * Get instructors of course
- * @return {Array.<User>}
- */
-Course.prototype.getInstructors = function() {
-  const cb = (instr_id) => {
-    return R2D.User.prototype.findById(instr_id);
-  };
-
-  const course_instr_key = "course:"+this.dept+":"+this.number+":instructors";
-  return RedisClient.SMEMBERS(course_instr_key)
-    .then((instr_ids) => {
-      const promises = instr_ids.map(cb);
-      return Promise.all(promises);
-    });
-};
-
-Course.prototype.isEnrolled = function(user) {
-  const _key = "course:"+this.dept+":"+this.number+":students";
-  const course_actv_key = _key+":active";
-  const course_blkd_key = _key+":blocked";
-  const promise1 = redis_utils.isMember(course_actv_key, user.id);
-  const promise2 = redis_utils.isMember(course_blkd_key, user.id);
-  return Promise.all([promise1, promise2])
-    .then((bArr) => {
-      assert.strictEqual(bArr[0] && bArr[1], false);
-      return bArr.includes(true);
-    })
-};
-
-/**
- * Adds student iff it is not in students:blocked and students:active sets
- * @param {User} user - the student to add
- */
-Course.prototype.addStudent = function(user) {
-  const course_blkd_key = "course:"+this.dept+":"+this.number+":students:blocked";
-  return Course.prototype.isEnrolled(user)
-    .then((b) => {
-      if(b) {
-        throw "student is already enrolled"
-      } else {
-        return RedisClient.SADD(course_blkd_key, user.id);
-      }
-    });
-};
-
-Course.prototype.activateStudent = function(user) {
-  const _key = "course:"+this.dept+":"+this.number+":students";
-  const course_actv_key = _key+":active";
-  const course_blkd_key = _key+":blocked";
-  return Course.prototype.isEnrolled(user)
-    .then((b) => {
-      if(b) {
-        return RedisClient.SREM(course_blkd_key, user.id);
-      } else {
-        throw "can't activate, student is not enrolled"
-      }
-    })
-    .then((b) => {
-      return RedisClient.SADD(course_actv_key, user.id);
-    })
-};
-
-Course.prototype.blockStudent = function(user) {
-
-};
-
-Course.prototype.getActiveStudents = function() {
-  const cb = (instr_id) => {
-    return R2D.User.prototype.findById(instr_id);
-  };
-
-  const course_actv_key = "course:"+this.dept+":"+this.number+":students:active";
-  return RedisClient.SMEMBERS(course_actv_key)
-    .then((instr_ids) => {
-      const promises = instr_ids.map(cb);
-      return Promise.all(promises);
-    });
-};
-
-/**
- * Get blocked students from course
- * @return {Promise.<Array.<User>>}
- * @throws
- */
-Course.prototype.getBlockedStudents = function() {
-  const cb = (instr_id) => {
-    return R2D.User.prototype.findById(instr_id);
-  };
-
-  const course_blkd_key = "course:"+this.dept+":"+this.number+":students:blocked";
-  return RedisClient.SMEMBERS(course_blkd_key)
-    .then((instr_ids) => {
-      const promises = instr_ids.map(cb);
-      return Promise.all(promises);
-    });
-};
-
-/**
- *
- * @return {Promise.<{ blocked: User[], active: User[]}>} - the students of the course by blocked and active students
- */
-Course.prototype.getStudents = function () {
-  const cb = (instr_id) => {
-    return R2D.User.prototype.findById(instr_id);
-  };
-
-  const promises = [
-    Course.prototype.getActiveStudents(),
-    Course.prototype.getBlockedStudents()
-  ];
-  return Promise.all(promises)
-    .then((twoArr) => {
-      const promise1 = twoArr[0].map(cb);
-      const promise2 = twoArr[1].map(cb);
-      const promise = [ Promise.all(promise1), Promise.all(promise2) ];
-      return Promise.all(promise);
-    })
-    .then((twoArr) => {
-      const students = { };
-      const activeStudents  = twoArr[0];
-      const blockedStudents = twoArr[1];
-      if(activeStudents.length  > 0) { students.active = activeStudents; }
-      if(blockedStudents.length > 0) { students.blocked = blockedStudents; }
-      return students;
-    })
-};
-
-const getAttribute = (ss) => {
-  const regex = /cn=[a-zA-Z0-9_]+/i;
-  const result = regex.exec(ss);
-  if(result) {
-    return (result[0]).substring(3);
-  } else {
-    return null;
+  if(this.instructors.has(user)) return Promise.resolve(user);
+  else {
+    return RedisClient.SADD(this.getInstructorKey(), user.id)
+      .then(() => {
+        this.instructors.add(user);
+        return user;
+      });
   }
 };
 
-const getCourseGroupIDs = (profile) => {
-  assert.property(profile, groupMembership, "profile does not have groupMembership attribute");
-  assert.instanceOf(profile[groupMembership], Array, "profile[groupMembership] is not an array");
-  let courseGroupIDs = (profile[groupMembership]).map((group_str) => {
-    return getAttribute(group_str);
-  });
-  return courseGroupIDs.filter((courseGroupID) => { return !!courseGroupID });
+/**
+ * Adds student if and only if it is not already a (blocked or active) student in the course; returns the student
+ * @memberOf Course
+ * @param {User} user - the student to add
+ * @returns {Promise.<User>}
+ */
+Course.prototype.addStudent = function(user) {
+  if(this.blocked_students.has(user) || this.active_students.has(user)) return Promise.resolve(user);
+  else {
+    return RedisClient.SADD(this.getBlockedStudentKey(), user.id)
+      .then(() => {
+        this.blocked_students.add(user);
+      });
+  }
 };
-
-const enrollUser = (user, profile) => {
-
-}
 
 /**
- * TODO: finish
- * @param user
+ * Get a list of instructors of course
+ * @return {Array.<User>}
  */
-Course.plugCourse = (user, profile) => {
-  if(!user) return Promise.resolve(null);
-  const courseGroupIDs = getCourseGroupIDs(profile);
-  const promises = courseGroupIDs.map((courseGroupID) => {
-
-  });
-  return user;
+Course.prototype.getInstructors = function() {
+  return Array.from(this.instructors);
 };
+
+/**
+ * Get a list of course students by blocked and active categories
+ * @return {Promise.<{ blocked: User[], active: User[]}>}
+ */
+Course.prototype.getStudents = function () {
+  return {
+    blocked: Array.from(this.blocked_students),
+    active:  Array.from(this.active_students)
+  }
+};
+
+Course.prototype.isStudent = function(user) {
+  return this.blocked_students.has(user) || this.active_students.has(user);
+};
+
+{/*******************************************/
+  const activateStudentInternal = function(user) {
+    if(!this.blocked_students.has(user)) return Promise.resolve(null);
+    const that = this;
+    return RedisClient.SDEL(that.getBlockedStudentKey(), user.id)
+      .then(() => {
+        that.blocked_students.delete(user);
+        return RedisClient.SADD(that.getActiveStudentKey(), user.id);
+      })
+      .then(() => { that.active_students.add(user); });
+  };
+
+  /**
+   * Make a blocked student active if the student is blocked in the course
+   * @param {User} user
+   * @returns {Promise}
+   * NOTE: this function is atomic so it's possible to activate/block users concurrently
+   */
+  Course.prototype.activateStudent = function(user) {
+    return redis_utils.makeAtomic(this, activateStudentInternal)(user);
+  };
+}/*******************************************/
+
+{/*******************************************/
+  const blockStudentInternal = function(user) {
+    if(!this.active_students.has(user)) return Promise.resolve(null);
+    const that = this;
+    return RedisClient.SDEL(that.getActiveStudentKey(), user.id)
+      .then(() => {
+        that.active_students.delete(user);
+        return RedisClient.SADD(that.getBlockedStudentKey(), user.id);
+      })
+      .then(() => { that.blocked_students.add(user); });
+  };
+
+  /**
+   * Block an active student if the student is active in the course
+   * @param {User} user
+   * @returns {Promise}
+   * NOTE: this function is atomic so it's possible to activate/block users concurrently
+   */
+  Course.prototype.blockStudent = function(user) {
+    return redis_utils.makeAtomic(this, blockStudentInternal)(user);
+  };
+}/*******************************************/
+
+{/*******************************************/
+
+  /**
+   * Return the keyword in the group attribute (lower case'd) that follows the 'cn=' if it exists; null otherwise.
+   * @param {string} ss - the group attribute to search
+   * @returns {string|null}
+   */
+  const getAttribute = (ss) => {
+    const regex = /cn=[a-zA-Z0-9_]+/i;
+    const result = regex.exec(ss);
+    if(result) {
+      return (result[0]).substring(3).toLocaleLowerCase();
+    } else {
+      return null;
+    }
+  };
+
+  /**
+   * Get a list of all keywords in the group attributes
+   * @param profile
+   * @returns {string[]}
+   */
+  const getCourseGroupIDs = (profile) => {
+    if(!profile.hasOwnProperty(env.UBC.CWL.ATTRIBUTE.groupMembership)) return [ ];
+    assert.instanceOf(profile[env.UBC.CWL.ATTRIBUTE.groupMembership], Array, "profile[groupMembership] is an array");
+    let courseGroupIDs = (profile[env.UBC.CWL.ATTRIBUTE.groupMembership]).map((group_str) => {
+      return getAttribute(group_str);
+    });
+    return courseGroupIDs.filter((courseGroupID) => { return !!courseGroupID });
+  };
+
+  /**
+   * If user is not enrolled then enroll the user to the course
+   * @param {User} user
+   * @param {string} institution
+   * @param {string} course_group
+   * @param {boolean} [isInstructor]
+   * @returns {Promise}
+   */
+  const enrollUser = (user, institution, course_group, isInstructor) => {
+    assert(
+      Course.cache.exists(institution, course_group),
+      `enrollUser: ${course_key} does not exist (did you remember to run the creation script?)`
+    );
+    const course = Course.cache.get(institution, course_group);
+    if(isInstructor) return course.addInstructor(user);
+    else return course.addStudent(user);
+  };
+
+  /**
+   * For all group attributes in profile that corr. to RichReview courses, enroll the user to the course.
+   * @param {User} user
+   * @param {CWLProfile} profile
+   * @returns {Promise}
+   */
+  const enrollUserHandler = (user, profile) => {
+    const courseGroupIDs = getCourseGroupIDs(profile);
+    const promises = courseGroupIDs.map((courseGroupID) => {
+      switch(courseGroupID) {
+        case env.UBC.CWL.ATTRIBUTE.GROUP.CHIN_141_002_2018W:
+        case env.UBC.CWL.ATTRIBUTE.GROUP.KORN_102_001_2018W:
+          return enrollUser(user, env.INSTITUTION.UBC, courseGroupID);
+        case env.UBC.CWL.ATTRIBUTE.GROUP.CHIN_141_002_2018W_INSTRUCTOR:
+          return enrollUser(user, env.INSTITUTION.UBC, env.UBC.CWL.ATTRIBUTE.GROUP.CHIN_141_002_2018W, true);
+        case env.UBC.CWL.ATTRIBUTE.GROUP.KORN_102_001_2018W_INSTRUCTOR:
+          return enrollUser(user, env.INSTITUTION.UBC, env.UBC.CWL.ATTRIBUTE.GROUP.KORN_102_001_2018W, true);
+        default:
+          return null;
+      }
+    });
+    return Promise.all(promises);
+  };
+
+  /**
+   * Add user's ID to courses in Redis, update course cache, and add courses to user.
+   * @param {User} user
+   * @param {CWLProfile} profile
+   * @returns {Promise.<User|null>}
+   */
+  Course.plugCourse = (user, profile) => {
+
+    // if there is no user then return
+    if(!user) return Promise.resolve(null);
+
+    return enrollUserHandler(user, profile)
+      .then(() => { return user; });
+  };
+}
 
 module.exports = Course;

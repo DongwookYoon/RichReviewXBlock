@@ -209,7 +209,7 @@ function gggo() {
   });
 }
 
-describe("UBC", function() {
+describe("RichReview", function() {
 
   before(function () {
     js_utils     = require('../lib/js_utils');
@@ -446,6 +446,114 @@ describe("UBC", function() {
         });
     });
   });
+  
+  describe("#Google", function() {
+
+    const testProfileAttr = {
+      display_name: "James Randi",
+      first_name: "Randi",
+      last_name: "Randi",
+      email: "jrandi@gmail.com",
+      auth_type: "Google",
+      nick: "jrandi"
+    };
+    const testID = 100009382999999999999;
+    const testProfile = {
+      "id": testID,
+      "displayName": testProfileAttr.display_name,
+      "name": {
+        "familyName": testProfileAttr.last_name,
+        "givenName": testProfileAttr.first_name
+      },
+      "emails": [{
+          "value": testProfileAttr.email,
+          "type": "account"
+      }],
+      "photos": [{
+          "value": "https://upload.wikimedia.org/wikipedia/commons/b/b4/JPEG_example_JPG_RIP_100.jpg"
+      }],
+      "gender": "male",
+      "provider": "google",
+      "_raw": "THIS INFO IS NOT RELEVANT",
+      "_json": {
+        "kind": "plus#person",
+        "etag": "\"AAAAAAAAAAAAAAAAAAAAAAAAAAA/aaaaaaaaaaaaaaaaaaaaaaaaaaa\"",
+        "gender": "male",
+        "emails": [{
+            "value": testProfileAttr.email,
+            "type": "account"
+        }],
+        "objectType": "person",
+        "id": testID,
+        "displayName": testProfileAttr.display_name,
+        "name": {
+          "familyName": testProfileAttr.last_name,
+          "givenName": testProfileAttr.first_name
+        },
+        "url": `https://plus.google.com/${testID}`,
+        "image": {
+          "url": "https://upload.wikimedia.org/wikipedia/commons/b/b4/JPEG_example_JPG_RIP_100.jpg",
+          "isDefault": true
+        },
+        "isPlusUser": true,
+        "circledByCount": 9,
+        "verified": false
+      }
+    };
+
+    const validateUserDetails = (u) => {
+      // user detail autofill not done.
+      // expect(u.display_name).to.equal(testProfileAttr.display_name);
+      // expect(u.first_name).to.equal(testProfileAttr.first_name);
+      // expect(u.last_name).to.equal(testProfileAttr.last_name);
+      expect(u.id).to.equal(testID);
+      expect(u.email).to.equal(testProfileAttr.email);
+      expect(u.auth_type).to.equal(testProfileAttr.auth_type);
+      expect(u.nick).to.equal(testProfileAttr.nick);
+    };
+    
+    it("auth: User: create jrandi from testProfile", () => {
+      return new Promise(resolve => {
+        const checkPoint = (err, user) => {
+          if(err) {
+            util.teste(err);
+            assert.fail(err);
+          }
+          expect(user).to.be.an.instanceOf(R2D.User);
+          validateUserDetails(user);
+          resolve();
+        };
+        lib_utils.googleStrategyCB(null, null, testProfile, checkPoint);
+      });
+    }); // END auth: User: create jrandi from testProfile
+    
+    it("auth: User: test googleStrategyCB emailSync", () => {
+      testProfileAttr.email = "invisible@gmail.com";
+      
+    });
+
+    it("User: delete jrandi", () => {
+      return R2D.User.deleteUser(testID)
+        .then((b) => {
+          return R2D.User.findByID(testID);
+        })
+        .then((u) => {
+          expect(u).to.equal(null);
+          return redis_utils.keyExists(`usr:${testID}`);
+        })
+        .then((b) => {
+          expect(b).to.be.false;
+          return redis_utils.GraphExists("userid_email_table", `usr:${testID}`);
+        })
+        .then((b) => {
+          expect(b).to.be.false;
+        })
+        .catch((err) => {
+          util.teste(err);
+          assert.fail(err);
+        });
+    }); // END User: delete jrandi
+  }); // END #Google
 
   describe("#CWL", function() {
 
@@ -456,7 +564,7 @@ describe("UBC", function() {
     const sn = "urn:oid:2.5.4.4";
     const ubcEduPersistentID = "urn:oid:1.3.6.1.4.1.60.1.7.1";
     const groupMembership = "urn:oid:2.16.840.1.113719.1.1.4.1.25";
-
+    
     const testProfileAttr = {
       sid: "33456781",
       display_name: "Frank Hirst",
@@ -492,6 +600,12 @@ describe("UBC", function() {
       "mail": "test@ubc.ca",
       "email": "test@ubc.ca"
     };
+
+    // 20190831 Anthony set up 4 accounts.
+    // chin_141_002_2018w
+    // chin_141_002_2018w_instructor
+    // korn_102_001_2018w
+    // korn_102_001_2018w_instructor
 
     const validateUserDetails = (u) => {
       expect(u.sid).to.equal(testProfileAttr.sid);
@@ -579,6 +693,7 @@ describe("UBC", function() {
     });
 
     // TODO: test lib_utils.UBCsamlStrategyCB() does not recreate user if run a second time.
+    // TODO: test syncEmail()
 
     it("User: delete fhirst", () => {
       return R2D.User.deleteUser(testID)
@@ -600,6 +715,6 @@ describe("UBC", function() {
           util.teste(err);
           assert.fail(err);
         });
-    });
+    }); // END User: delete fhirst
   });
 });

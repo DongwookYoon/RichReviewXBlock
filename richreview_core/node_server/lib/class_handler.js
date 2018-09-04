@@ -10,7 +10,7 @@ const env = require('./env');
 const js_utils = require('./js_utils');
 const util = require('../util');
 
-const dummyData = require('../data/dummy_data');
+const dummyData = require('../scripts/dummy_data');
 
 /******************/
 /** user methods **/

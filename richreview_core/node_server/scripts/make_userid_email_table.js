@@ -1,5 +1,7 @@
 /**
- *
+ * Create the userid_email_table using emails and IDs from the email_user_lookup.
+ * 
+ * by Colin
  */
 
 const RedisClient  = require('../lib/redis_client').RedisClient;

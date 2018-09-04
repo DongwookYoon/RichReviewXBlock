@@ -47,26 +47,19 @@ Previously we used a table named `user_email_lookup` which forces RichReview to 
 
 #### User in Redis
 
-`usr:<userid>` is a hash.
-userid is the generated differently depending on the. See [auth strategies](#auth-strategies) for more details. The keys in the redis hash are identical to those in User. See [User in NodeJS](#User-in-NodeJS) for more details.
+User (`usr:<userid>`) is a hash.
+userid is the generated differently and can be dependent on the authentication type. Cornell first-time authentication will hash the user using using crypto. Google accounts use the profile ID provided by the Google+ omnibus account. UBC 
+ CWL accounts use the eduPersistantID provided by IAM. See [auth strategies](#auth-strategies) for more details. The keys in the redis hash are identical to those in User (square-bracketed variables are optional): 
 
-nick  
-email  
-groupNs  
-[auth_type]  
-[password_hash]  
-[salt]  
-[is_admin]  
-[auth_level]  
-[display_name]  
-[first_name]  
-[last_name]  
-[sid]  
+nick, email, groupNs, [auth_type], [password_hash], [salt], [is_admin], [auth_level], [display_name], [first_name], [last_name], [sid].
+
+See [User in NodeJS](#User-in-NodeJS) for more details.
 
 #### User in NodeJS
 
 `User` is an object stored in `R2D.User.cache`
 @class User
+@member {string} id               - the ID of the user in RichReview
 @member {string} nick             - nickname
 @member {string} email            - email of user
 @member {string|string[]} groupNs - array of groupid user is in
@@ -82,18 +75,36 @@ groupNs
 
 ## Course
 
-**Course** ( `course:<course-dept>:<course-number>` )
 
-**course properties** ( `course:<course-dept>:<course-number>:prop` )  
-@type hash / class  
-@member course_is_active {boolean} - true if course is active, false otherwise  
-@member name  {string} - name of the course; defaults to `<course-dept> <course-number>`  
+#### Course in Redis
 
-## Course users
+Course (`crs:<institution>:<course-group>:prop`) is a hash with keys:
+course_group, is_active, institution, [dept], [number], [section], [year], [title]
 
-**course instructor** ( `course:<course-dept>:<course-number>:instructors` ) is of type set containing the userid of instructors of course
-**course active students** ( `course:<course-dept>:<course-number>:students:active` ) is of type set containing the userid of active students of course
-**course blocked students** ( `course:<course-dept>:<course-number>:students:blocked` ) is of type set containing the userid of blocked students of course
+Active students can view the class and assignments. Blocked students cannot view anything.
+
+course instructors (`crs:<institution>:<course-group>:instructors`) is a set containing strings that are user IDs of instructors.
+
+course active students (`crs:<institution>:<course-group>:students:active`) is a set containing the user IDs of active students of course.
+
+course blocked students (`crs:<institution>:<course-group>:students:blocked`) is a set containing the user IDs of blocked students of course.
+
+#### Course in NodeJS
+
+@class Course  
+@member {string} course_group - the unique ID that identifies the course; this ID can be forwarded by ELDAP to CWL user profile in CWL auth callback.  
+@member {boolean} is_active   - true if the course is active (i.e. is showable in the front-end view); false otherwise.  
+@member {string} institution  - the course institution (i.e. ubc)  
+@member {string} [dept]       - the course department (i.e. cpsc)  
+@member {string} [number]     - the course number  (i.e. 210)  
+@member {string} [section]    - the course section (i.e. 001)  
+@member {string} [year]       - the year the course is held (i.e. 2018W)  
+@member {string} [title]      - the course title   (i.e. Software Construction)  
+@member {User[]} instructors  - a list of instuctors  
+@member {User[]} active_students  - a list of active students   
+@member {User[]} blocked_students - a list of blocked students  
+
+NOTE: course_group, institution, dept, number, section, year should be case insensitive
 
 ## Assignment
 

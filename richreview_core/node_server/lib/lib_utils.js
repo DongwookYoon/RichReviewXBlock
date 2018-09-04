@@ -137,27 +137,86 @@ exports.makePilotUserID = (profile) => {
   return makeOldID(profile.upn);
 };
 
-exports.googleStrategyCB = (accessToken, refreshToken, profile, done) => {
-  console.log(JSON.stringify(profile, null, '\t'));
-  const email = profile.emails.length !== 0 ? profile.emails[0].value : '';
-  const b = R2D.User.cache.exists(profile.id);
-  R2D.User.findByID(profile.id)
-    .then((user) => {
-      if(user) {
-        // since WARNING: user_email_lookup is deprecated, syncEmail() does not work.
-        // TODO: fix syncEmail
-        //return R2D.User.prototype.syncEmail(user, email);
-        return user.syncEmail(email);
-      } else {
-        util.debug(`user with email ${email} does not exist; making new user`);
-        return R2D.User.create(profile.id, email);
-      }
-    })
-    .then((user) => { done(null, user); })
-    .catch(done);
-};
+{/**************************************/
+  /**
+   * @typedef {Object} GoogleProfile
+   * @member {string} id
+   * @member {string} displayName
+   * @member {{familyName: string, givenName: string}} name
+   * @member {{value: string, type: string}[]}  emails
+   * @member {{value: string}[]} photos
+   * @member {string} gender
+   * @member {string} provider
+   * @member {string} _raw
+   * @member {Object} _json
+   */
+  
+  /**
+   * Helper for googleStrategyCB and wrapper for R2D User.create()
+   * @param {GoogleProfile} profile
+   * @returns {Promise<User>}
+   */
+  const makeGoogleUser = (profile) => {
+    const id      = profile.id;
+    const email   = profile.emails[0].value;
+    const options = {
+      /*
+      display_name: profile.displayName,
+      first_name: profile.name.givenName,
+      last_name: profile.name.familyName,*/
+      auth_type: "Google"
+    };
+    return R2D.User.create(id, email, options);
+  };
+  
+  /**
+   * Callback for Google OAth2.0 Authentication strategy. Strategy will either find a user corr. to the ID in the profile if it exists, or create a new user if it does not. If email is different from ID, then syncs the email in the user model and userid_email_table.
+   * @param accessToken
+   * @param refreshToken
+   * @param {GoogleProfile} profile - the Google account holder's profile returned after successful login.
+   * @param {function} done - callback for passport
+   */
+  exports.googleStrategyCB = (accessToken, refreshToken, profile, done) => {
+    console.log(JSON.stringify(profile, null, '\t'));
+    assert.isAtLeast(profile.emails.length, 1, "googleStrategyCB profile has at least one gmail");
+    const email = profile.emails[0].value;
+    R2D.User.findByID(profile.id)
+      .then((user) => {
+        if(user) {
+          // since WARNING: user_email_lookup is deprecated, syncEmail() does not work.
+          // TODO: fix syncEmail
+          return user.syncEmail(email);
+        } else {
+          util.debug(`user with email ${email} does not exist; making new user`);
+          return makeGoogleUser(profile);
+        }
+      })
+      .then((user) => { done(null, user); })
+      .catch(done);
+  };
+}/**************************************/
 
 {/**************************************/
+  /**
+   * @typedef {Object} CWLProfile
+   * @member {string} issuer - should be "https://authentication.ubc.ca"
+   * @member {string} sessionIndex
+   * @member {string} nameID - the SAML nameID
+   * @member {string} nameIDFormat - the SAML nameID format
+   * @member {string} nameQualifier
+   * @member {string} spNameQualifier - should be "https://authentication.ubc.ca"
+   * @member {string} sessionIndex - should be sp_***_ubc
+   * @member {string} urn:oid:1.3.6.1.4.1.60.1.7.1 - ubcEduPersistentID
+   * @member {string} urn:oid:0.9.2342.19200300.100.1.1 - uid; the CWL login name
+   * @member {string} urn:oid:0.9.2342.19200300.100.1.3 - mail
+   * @member {string} urn:oid:2.5.4.42 - givenName
+   * @member {string} urn:mace:dir:attribute-def:ubcEduStudentNumber - ubcEduStudentNumber
+   * @member {string} urn:oid:2.5.4.4 - sn
+   * @member {string} urn:oid:2.16.840.1.113719.1.1.4.1.25 - groupMembership
+   * @member {string} mail
+   * @member {string} email
+   */
+  
   // uid - CWL login name of the account holder authenticating.
   const uid = "urn:oid:0.9.2342.19200300.100.1.1";
   // mail - email address of account holder. The value is derived from following sources (in order of precedence): HR business email address, SIS email address, Email address entered when registering for CWL account
@@ -175,6 +234,11 @@ exports.googleStrategyCB = (accessToken, refreshToken, profile, done) => {
   // groupMembership - ELDAP group memberships for groupOfUniqueName groups.
   const groupMembership = "urn:oid:2.16.840.1.113719.1.1.4.1.25";
 
+  /**
+   * Helper for UBCsamlStrategyCB and wrapper for R2D User.create()
+   * @param {CWLProfile} profile
+   * @returns {Promise.<User>}
+   */
   const makeUBCUser = (profile) => {
     const email  = profile[mail];
     const id = profile[ubcEduPersistentID];
@@ -188,13 +252,18 @@ exports.googleStrategyCB = (accessToken, refreshToken, profile, done) => {
     return R2D.User.create(id, email, options)
       .then((user) => {
         assert.instanceOf(user, R2D.User, "UBCsamlStrategyCB: user is an R2D.User");
-        // Call findfindUserByID() again to get plugins
-        return findUserByID(user.id);
+        user.saml = {};
+        user.saml.nameID = profile.nameID;
+        user.saml.nameIDFormat = profile.nameIDFormat;
+        return Course.plugCourse(user, profile);
       });
   };
 
   /**
-   * Callback strategy for UBC IDPv3 SAML Authentication. Strategy will either find a user corr. to the ID in the profile if it exists, or create a new user if it does not.
+   * Callback strategy for UBC IDPv3 SAML Authentication. Strategy will either find a user corr. to the ID in the profile if it exists, or create a new user if it does not. Additionally:
+   *      - If email is different from ID, then syncs the email in the user model and userid_email_table.
+   *      - Sets up SAML properties to use by UBC SLO.
+   *      - Adds user to courses in RichReview that the user is enrolled in.
    * @param {Object} profile - the CWL account holder's profile returned after successful CWL login.
    * @param {function} done - callback for passport
    */
@@ -204,12 +273,6 @@ exports.googleStrategyCB = (accessToken, refreshToken, profile, done) => {
       .then((user) => {
         if(user) { return user; }
         else { return makeUBCUser(profile); }
-      })
-      .then(user => {
-        user.saml = {};
-        user.saml.nameID = profile.nameID;
-        user.saml.nameIDFormat = profile.nameIDFormat;
-        return Course.plugCourse(user, profile);
       })
       .then(user => {
         done(null, user);

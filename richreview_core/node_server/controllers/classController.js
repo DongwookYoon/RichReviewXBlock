@@ -5,7 +5,7 @@
  */
 
 const util = require('../util');
-const dummyData = require('../data/dummy_data');
+const dummyData = require('../scripts/dummy_data');
 const class_handler = require('../lib/class_handler');
 
 /**

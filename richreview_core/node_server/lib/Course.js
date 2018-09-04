@@ -92,6 +92,9 @@ const Course = function(course_group, is_active, institution, options) {
 /**
  * Course Methods
  * 
+ * Static methods:
+ * create
+ * 
  * Instance methods (prototype):
  * getPropKey
  * getInstructorKey
@@ -100,50 +103,47 @@ const Course = function(course_group, is_active, institution, options) {
  * loadInstructors
  * loadActiveStudents
  * loadBlockedStudents
+ * delete
  * 
- * 
- * 
+ * TODO: more functions
+ * removeStudent
+ * removeInstructor
+ * activate
+ * deactivate
  */
 
-Course.getPropKey = (institution, course_group) => {
-  return `crs:${institution}:${course_group}:prop`;
-};
+Course.prototype.getInstitution = function() { return this.institution.toLocaleLowerCase(); };
+Course.prototype.getCourseGroup = function() { return this.course_group.toLocaleLowerCase(); };
 
-/**
- * Get the Redis key for the properties of this course.
- * @returns {string}
- */
-Course.prototype.getPropKey = function() {
-  return `crs:${this.institution}:${this.course_group}:prop`;
-};
+{/***************************************/
+  const getKey = (institution, course_group) => `crs:${institution.toLocaleLowerCase()}:${course_group.toLocaleLowerCase()}`;
+  /**
+   * Get the Redis keys for course with given institution and course_group
+   * @function Course.{get__Key}
+   * @param {string} institution
+   * @param {string} course_group
+   * @returns {string}
+   */
+  Course.getPropKey = (institution, course_group) => `${getKey(institution, course_group)}:prop`;
+  Course.getInstructorKey = (institution, course_group) => `${getKey(institution, course_group)}:instructors`;
+  Course.getActiveStudentKey = (institution, course_group) => `${getKey(institution, course_group)}:student:active`;
+  Course.getBlockedStudentKey = (institution, course_group) =>`${getKey(institution, course_group)}:student:blocked`;
+}/***************************************/
 
-Course.getInstructorKey = (institution, course_group) => {
-  return `crs:${institution}:${course_group}:instructors`;
-};
-
-/**
- * Get the Redis key for the instructor set of this course.
- * @returns {*}
- */
-Course.prototype.getInstructorKey = function() {
-  return `crs:${this.institution}:${this.course_group}:instructors`;
-};
-
-Course.getActiveStudentKey = (institution, course_group) => {
-  return `crs:${institution}:${course_group}:student:active`;
-};
-
-Course.prototype.getActiveStudentKey = function() {
-  return `crs:${this.institution}:${this.course_group}:student:active`;
-};
-
-Course.getBlockedStudentKey = (institution, course_group) => {
-  return `crs:${institution}:${course_group}:student:blocked`;
-};
-
-Course.prototype.getBlockedStudentKey = function() {
-  return `crs:${this.institution}:${this.course_group}:student:blocked`;
-};
+{/***************************************/
+  const getKey = function() {
+    return `crs:${this.getInstitution()}:${this.getCourseGroup()}`
+  };
+  /**
+   * Get the Redis key for the properties of this course.
+   * @function Course.prototype.{get__Key}
+   * @returns {string}
+   */
+  Course.prototype.getPropKey = function() { return `${getKey.call(this)}:prop`; };
+  Course.prototype.getInstructorKey = function() { return `${getKey.call(this)}:instructors`; };
+  Course.prototype.getActiveStudentKey = function() { return `${getKey.call(this)}:student:active`; };
+  Course.prototype.getBlockedStudentKey = function() { return `${getKey.call(this)}:student:blocked`; };
+}/***************************************/
 
 Course.prototype.loadInstructors = function() {
   return RedisClient.SMEMBERS(this.getInstructorKey())
@@ -209,7 +209,7 @@ Course.cache = (function () {
     return RedisClient.HGETALL(course_key)
       .then((course_obj) => {
         const cache_key = makeCacheKey(course_obj.institution, course_obj.course_group);
-        const is_active   = (course_prop.is_active === "true");
+        const is_active   = (course_obj.is_active === "true");
         cache[cache_key] = new Course(
           course_obj.course_group, is_active, course_obj.institution, course_obj
         );
@@ -239,7 +239,6 @@ Course.cache = (function () {
       })
       .then((courses) => {
         util.logger("Course", `${courses.length} courses loaded`);
-        return null;
       });
   };
 
@@ -275,61 +274,77 @@ Course.cache = (function () {
 
 /**
  * WARNING: Race condition
- * TODO: change call of initial populate
+ * TODO: change call of initial populate; I suggest putting this call in www.js
  */
 Course.cache.populate();
 
 /**
+ * 
+ */
+
+/**
+ * @class CourseOptions
+ * @member {{ dept: string, number: string, section: string, year: string }} [detail]
+ * @member {string} [title]
+ */
+
+/**
+ * Creates a new course in Redis, adds it to cache, and sets the course as inactive
  * @static
- * @param course_dept
- * @param course_nbr
- * @param course_name
+ * @param {string} institution
+ * @param {string} course_group
+ * @param {CourseOptions} options
  * @return {Promise.<Course>}
  * TODO: update implementation and test
  */
-Course.createCourse = (course_dept, course_nbr, course_name) => {
-  const flag = /^[a-zA-Z0-9]+$/.test(course_dept) && /^[a-zA-Z0-9]+$/.test(course_nbr);
-  if (!flag) {
-    return Promise.reject("course dept or course name should only contain letters and numbers");
+Course.create = (institution, course_group, options) => {
+  const flag = /^[a-zA-Z0-9_\-]+$/.test(institution) && /^[a-zA-Z0-9_\-]+$/.test(course_group);
+  if (!flag)
+    return Promise.reject("course dept or course name should only contain letters, numbers, '-', and '_'");
+  institution = institution.toLocaleLowerCase();
+  course_group  = course_group.toLocaleLowerCase();
+  if (Course.cache.exists(institution, course_group)) {
+    util.logger("Course.create", `${institution}:${course_group} already exists`)
+    return Promise.resolve(null);
   }
-  course_dept = course_dept.toLowerCase();
-  course_nbr  = course_nbr.toLowerCase();
-  if (Course.cache.exists(course_dept, course_nbr)) {
-    return Promise.reject("course already exists");
+  let sss = null;
+  if(options) {
+    sss = [ ];
+    if(options.detail) sss.push(
+        "dept", options.detail.dept, "number", options.detail.number, 
+        "section", options.detail.section, "year", options.detail.section,
+      );
+    if(options.title) sss.push("title", options.title);
   }
-  const course_key = "course:"+course_dept+":"+course_nbr+":prop";
   return RedisClient.HMSET(
-    course_key,
-    "name", course_name,
-    "course_is_active", false
+    Course.getPropKey(),
+    "course_group", course_group,
+    "is_active", false,
+    "institution", institution
   )
     .then((b) => {
-      util.logger("Course", course_nbr+" "+course_name+": "+course_name+" created");
-      return Course.cache.loadFromDB(course_dept, course_nbr);
-    });
+      if(sss) return RedisClient.HMSET.bind(null, Course.getPropKey()).apply(null, sss);
+    })
+    .then(() => { return Course.cache.loadFromDB(institution, course_group); });
 };
 
 /**
  * Deletes this course. Removes it from cache and redis.
  * @memberOf Course
  * TODO: update implementation and test
+ * 
+ * Tasks when adding assignment functionality
  * TODO: delete assignments assoc. with course
  * TODO: uncouple groups when deleting assignments
  */
 Course.prototype.delete = function() {
-  const _key = "course:"+this.dept+":"+this.number;
-  const course_key = _key+":prop";
-  const course_instructors_key = _key+":instructors";
-  const course_active_students_key = _key+":students:active";
-  const course_blocked_students_key = _key+":students:blocked";
-  const promises = [
-    RedisClient.DEL(course_key),
-    RedisClient.DEL(course_instructors_key),
-    RedisClient.DEL(course_active_students_key),
-    RedisClient.DEL(course_blocked_students_key)
-  ];
-  return Promise.all(promises)
-    .then((bArr) => {
+  return Promise.all([
+    RedisClient.DEL(this.getPropKey()),
+    RedisClient.DEL(this.getBlockedStudentKey()),
+    RedisClient.DEL(this.getActiveStudentKey()),
+    RedisClient.DEL(this.getInstructorKey())
+  ])
+    .then(() => {
       return Course.cache.populate();
     });
 };
@@ -479,7 +494,7 @@ Course.prototype.isStudent = function(user) {
   const enrollUser = (user, institution, course_group, isInstructor) => {
     assert(
       Course.cache.exists(institution, course_group),
-      `enrollUser: ${course_key} does not exist (did you remember to run the creation script?)`
+      `enrollUser: course ${institution} ${course_group} does not exist (did you remember to run the creation script?)`
     );
     const course = Course.cache.get(institution, course_group);
     if(isInstructor) return course.addInstructor(user);

@@ -17,6 +17,9 @@ let PilotHandler = null;
 let ClassHandler = null;
 let Course       = null;
 
+/**
+ * Outdated functions
+ */
 function gggo() {
   it("Course: make CPSC 437D", (done) => {
     const course_dept = "cpsc";
@@ -220,7 +223,10 @@ describe("RichReview", function() {
     PilotHandler = require('../lib/pilot_handler');
     ClassHandler = require('../lib/class_handler');
     Course       = require('../lib/Course');
-    return R2D.User.cache.populate();
+    return R2D.User.cache.populate()
+      .then(() => {
+        return Course.cache.populate();
+      });
   });
 
   beforeEach(function () { });
@@ -617,6 +623,9 @@ describe("RichReview", function() {
       expect(u.nick).to.equal(testProfileAttr.nick);
     };
 
+    /**
+     * Function to test that group attribute reading implementation is good.
+     */
     it("Course: read group attributes", () => {
       const regex = /cn=[a-zA-Z0-9_]+/i;
       const getAttribute = (ss) => {

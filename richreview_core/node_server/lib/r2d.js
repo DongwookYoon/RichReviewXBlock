@@ -114,7 +114,7 @@ const User = function(id, nickname, email,
  * NOTE: User should not use prototype if it doesn't need to access internal data, or called from User object instance
  */
 
-User.getUserid = (id) => {
+User.makeUserid = (id) => {
   if(/^usr:/.test(id)) return id;
   else return `usr:${id}`;
 };
@@ -137,13 +137,6 @@ User.prototype.updateDetails = function(sid, display_name, first_name, last_name
   if(display_name) sss.push("display_name", display_name);
   if(first_name)   sss.push("first_name", first_name);
   if(last_name)    sss.push("last_name", last_name);
-  /* // TODO: test and delete code
-  return RedisClient.HMSET(
-    user_key,
-    "sid", sid,
-    "first_name", first_name,
-    "last_name", last_name
-  )*/
   return RedisClient.HMSET.bind(null, `usr:${this.id}`).apply(null, sss)
     .then((b) => {
       return User.cache.loadFromDb(this.id);
@@ -179,8 +172,8 @@ User.prototype.getSignedUp = function() {
  * @function loadFromDb
  * @function get
  * @function exists
- * // WARNING: populate causes a race condition because it does not wait until.
- * // TODO: instead have one call of User.cache.populate() in App.js instead of during initiation of User.cache
+ * WARNING: populate causes a race condition
+ * TODO: change call of initial populate; I suggest putting this call in www.js
  */
 User.cache = (function() {
   let pub = { };
@@ -259,8 +252,8 @@ User.cache = (function() {
     return cache.hasOwnProperty(id);
   };
 
-  // WARNING: populate causes a race condition because it does not wait until.
-  // TODO: instead have one call of User.cache.populate() in App.js instead of during initiation of User.cache
+  // WARNING: populate causes a race condition
+  // TODO: change call of initial populate; I suggest putting this call in www.js
   pub.populate();
 
   return pub;
@@ -721,6 +714,13 @@ const Group = (function(manager, name, creationDate) {
    */
   var pub_grp = {};
 
+  /**
+   * 
+   * @param userid_n
+   * @param docid
+   * @param creationTime
+   * @returns {Promise}
+   */
   pub_grp.CreateNewGroup = function(userid_n, docid, creationTime) {
     return new Promise(function(resolve, reject){
       var groupid = "grp:"+userid_n+"_"+creationTime;

@@ -104,7 +104,7 @@ course blocked students (`crs:<institution>:<course-group>:students:blocked`) is
 @member {User[]} active_students  - a list of active students   
 @member {User[]} blocked_students - a list of blocked students  
 
-NOTE: course_group, institution, dept, number, section, year should be case insensitive
+NOTE: course_group, institution, dept, number, section, year should be made lower case but search of the query of these variables should be case insensitive
 
 ## Assignment
 

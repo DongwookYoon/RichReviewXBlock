@@ -156,9 +156,10 @@ const runServer = () => {
 };
 
 if(process.env.NODE_ENV === 'production') {
-    webAppSync.run().then(() => {
+    webAppSync.run()
+      .then(() => {
         runServer();
-    });
+      });
 } else {
     util.start("skipping web-app sync");
     runServer();

@@ -34,12 +34,10 @@ const AUTH_TYPES_UNKN  = env.AUTH_TYPE.UNKN;
  * @typeof Object
  * @member {string} nick             - nickname
  * @member {string} email            - email of user
- * @member {string|string[]} groupNs - array of groupid user is in
  * @member {string} [auth_type]      - is one of "UBC_CWL", "Pilot", "Cornell", "Google", etc representing the auth strategy and user affiliation. The complete list is in AUTH_TYPES. Please update when there is a new auth strategy.
  * @member {string} [password_hash]  - made from irreversible sha1 hash with salt from netid
  * @member {string} [salt]           -
  * @member {boolean} [is_admin]      - is user admin; used for superuser actions
- * @member {string} [auth_level]     - Deprecated. Is one of "student", "instructor", or "admin"; refers to security level in terms of access to functionality (delete, doc creation, etc); also affects routing.
  * @member {string} [display_name]   - the preferred name of the user
  * @member {string} [first_name]     - the first name of user
  * @member {string} [last_name]      - the last name of user
@@ -114,12 +112,10 @@ const User = function(id, nickname, email,
  * NOTE: User should not use prototype if it doesn't need to access internal data, or called from User object instance
  */
 
-User.makeUserid = (id) => {
-  if(/^usr:/.test(id)) return id;
-  else return `usr:${id}`;
-};
+User.makeUserKey = (str) => /^usr:/.test(str) ? str : `usr:${str}`;
+User.extractID = (str) => /^usr:/.test(str) ? str.substring(4) : str;
 
-User.prototype.getUserid = function() {
+User.prototype.getUserKey = function() {
   return `usr:${this.id}`;
 };
 
@@ -176,7 +172,16 @@ User.prototype.getSignedUp = function() {
  * TODO: change call of initial populate; I suggest putting this call in www.js
  */
 User.cache = (function() {
+  
   let pub = { };
+
+  /**
+   * @typedef {string} UserCacheKey - the user ID (without the 'usr:').
+   */
+  
+  /**
+   * @type {Object<UserCacheKey, User>}
+   */
   let cache = { };
 
   /**
@@ -324,7 +329,7 @@ User.findByID = function(id) {
    */
   User.getWithEmailByAuthType = (email) => {
     if(js_utils.validateEmail(email)) {
-      return redis_utils.GraphGet(USERID_EMAIL_TABLE, email)
+      return redis_utils.GraphGet(env.USERID_EMAIL_TABLE, email)
         .then(makeUsers);
     } else {
       return Promise.resolve({ });
@@ -351,10 +356,8 @@ User.findByID = function(id) {
    * @param  {string} email - email of user to find
    * @return {Promise.<User|null>} - promise for the user of that email
    * NOTE: This function originally got only one user with email instead of searching for the 'right' one. This function is provided to interface with older code.
-   * TODO: now updated to use use redis_utils.GraphGet test method; test method
    */
   User.findByEmail = function(email) {
-
     return User.getWithEmailByAuthType(email)
       .then(selectUser);
   };
@@ -399,7 +402,7 @@ User.create = function(id, email, /* new field */ options) {
       if(sss) return RedisClient.HMSET.bind(null, "usr:"+id).apply(null, sss);
     })
     .then(() => {
-      return redis_utils.GraphSet(USERID_EMAIL_TABLE, "usr:"+id, email);
+      return redis_utils.GraphSet(env.USERID_EMAIL_TABLE, "usr:"+id, email);
     })
     /** Manage invitations to this user **/
     .then(function() {
@@ -424,210 +427,6 @@ User.create = function(id, email, /* new field */ options) {
     /*************************************/
     .then(function() {
       return User.cache.loadFromDb(id);
-    });
-};
-
-/**
- * Completely delete the user corresponding to the email including all groups and documents that user made.
- * !!! This function should not to be used by client !!!
- * @param usr_str {string} - the redis key rep. user to delete; can be user id or form usr:[id]
- * @returns {Promise}
- * TODO: test thoroughly
- * TODO: should delete user from course (active/blocked/instructor)
- * TODO: should delete user's assignments
- */
-User.deleteUser = (usr_str) => {
-
-  /**
-   * delete the group in redis
-   * @param {String} grp_str - of form grp:[groupID_n]; the group to delete
-   * @returns {Promise<Number>} - 1 if Group.DeleteGroup() succeeds, 0 otherwise
-   */
-  const deleteGroup = (grp_str) => {
-    util.logger("deleteUser", `deleteGroup grp_str=${grp_str}`);
-    let groupID_n = null;
-    try {
-      groupID_n = grp_str.substring(4);
-    } catch(err) {
-      util.error("in deleteGroup "+err);
-    }
-
-    return RedisClient.HGET(grp_str, "docid")
-      .then((docid) => {
-        const docID_n = docid.substring(4);
-        util.debug("Group.DeleteGroup("+groupID_n+","+docID_n+")");
-        return Group.DeleteGroup(groupID_n, docID_n);
-        // return true;
-      });
-  };
-
-  /**
-   * Remove the user from the group
-   * @param {String} usr_str   - of form usr:[userID_n]; the user to remove
-   * @param {String} groupID_n - the group to remove
-   * @returns {Promise<Number>} - 1 if Group.RemoveUserFromGroup() succeeds, 0 otherwise
-   */
-  const removeUser = (usr_str, groupID_n) => {
-    let userID_n = null;
-    try {
-      userID_n = usr_str.substring(4);
-    } catch(err) {
-      util.error("in removeUser " + err);
-    }
-    util.debug("Group.RemoveUserFromGroup("+groupID_n+", "+userID_n+")");
-    return Group.RemoveUserFromGroup(groupID_n, userID_n);
-    //return true;
-  };
-
-  /**
-   * Delete the group if user created the group, otherwise remove user from the group
-   * 1) remove user from all groups made by other people
-   * 2) delete group made by user
-   * @param {String} usr_str   - of form usr:[userID_n]; user to detach
-   * @param {String} groupID_n - group to consider
-   * @returns {Promise<Number>} - 1 if successful, 0 otherwise
-   */
-  const deleteOrRemoveGroup = (usr_str, groupID_n) => {
-    const grp_str = "grp:"+groupID_n;
-    util.logger("deleteUser", `deleteOrRemoveGroup grp_str=${grp_str}`);
-    return RedisClient.HGET(grp_str, "userid_n")
-      .then((userid_n) => {
-        const usr_of_grp = "usr:"+userid_n;
-        //util.debug("usr_str="+usr_str+"; usr_of_grp="+usr_of_grp);
-        if (usr_str === usr_of_grp) {
-          util.debug("user owns this group");
-          return deleteGroup(grp_str);
-        } else {
-          util.debug("group is owned by someone else");
-          return removeUser(usr_str, groupID_n);
-        }
-      });
-  };
-
-  const deleteOrRemoveGroups = (usr_str, groupID_n_arr_str) => {
-    util.logger("deleteUser", "delete or remove groups");
-    if(groupID_n_arr_str) {
-      const groupID_n_arr = JSON.parse(groupID_n_arr_str);
-      const promises = groupID_n_arr.map(deleteOrRemoveGroup.bind(null, usr_str));
-      return Promise.all(promises);
-    } else {
-      return null;
-    }
-  };
-
-  /**
-   * removes the group in the document and then delete the document
-   * Base this on DeleteDocument function in dbs.js; first delete doc groups, then delete the doc.
-   * @param {String} doc_str - has form doc:[docID_n]
-   * @returns {Promise<Number>} - 1 if Doc.DeleteDocFromRedis(docID_n) succeeds, 0 otherwise
-   */
-  const deleteDoc = (doc_str) => {
-    util.logger("deleteUser", `deleteDoc doc_str=${doc_str}`);
-    let docID_n = null;
-    try {
-      docID_n = doc_str.substring(4);
-    } catch(err) {
-      util.error("in deleteDoc "+err);
-    }
-    return Doc.GetDocGroups(docID_n)
-      .then((groups) => {
-        const promises = groups.map(deleteGroup);
-        return Promise.all(promises);
-      })
-      .then((bArr) => {
-        util.debug("Doc.DeleteDocFromRedis("+docID_n+")");
-        return Doc.DeleteDocFromRedis(docID_n);
-        //return true;
-      });
-  };
-
-  /**
-   * If the document has a userid_n that corresponds with usr_str (i.e. document is created by user), then delete it
-   * @param {String} usr_str - has form usr:[userID_n]
-   * @param {String} doc_str - has form doc:[docID_n]
-   * @returns {Promise<Number>} - 1 if successful, 0 otherwise
-   */
-  const deleteDocIfUsers = (usr_str, doc_str) => {
-    // util.debug("deleteDocIfUsers " +usr_str+" "+doc_str);
-    if(!doc_str) console.log("!doc_str");
-    return RedisClient.HGET(doc_str,"userid_n")
-      .then((userid_n) => {
-        const usr_of_doc = "usr:"+userid_n;
-        if(usr_str === usr_of_doc) {
-          util.debug("deleting "+doc_str);
-          return deleteDoc(doc_str);
-        } else {
-          return 0;
-        }
-      });
-  };
-
-  /**
-   * Delete all the documents user created
-   * @param {String} usr_str - has form usr:[userID_n]
-   * @returns {Promise.<number[]>} - array of numbers {0,1} for successful or not
-   */
-  const deleteDocs = (usr_str) => {
-    return RedisClient.KEYS("doc:*")
-    // checked that RedisClient.KEYS() returns an array
-      .then((doc_str_arr) => {
-        const promises = doc_str_arr.map(deleteDocIfUsers.bind(null, usr_str));
-        return Promise.all(promises);
-      });
-  };
-
-  /**
-   * Delete pilot user plugin
-   * @param {string} usr_str - has form usr:[userID_n]
-   * @returns {Promise.<number>} - {0,1} for successful or not
-   */
-  const deletePilot = (usr_str) => {
-    return RedisClient.HGET(usr_str, "email")
-      .then((email) => {
-        if(/@pilot.study$/.test(email)) {
-          return RedisClient.DEL("pilot:"+email);
-        }
-      })
-  };
-
-  /**
-   * Performs all steps of deleting user given a usr:[userID_n]
-   * 1) remove user from all groups; and delete groups created by user
-   * 2) remove docs user created
-   * 3) delete the user entry pilot:[email]
-   * 4) delete user in userid_email_table
-   * 5) delete the user in redis
-
-   * @param {String} usr_str - string of form usr:[userID_n]; user to delete
-   * @return {Promise}
-   *
-   * TODO: after creating MyClass...
-   * TODO: should delete user from course (active/blocked/instructor)
-   * TODO: should delete user's assignments
-   */
-  if(!/^usr:/.test(usr_str)) usr_str = "usr:"+usr_str;
-  return RedisClient.HGET(usr_str, "groupNs")
-    // 1) remove user from any groups; and delete groups created by user
-    .then(deleteOrRemoveGroups.bind(null, usr_str))
-    // 2) remove docs user created
-    .then(deleteDocs.bind(null, usr_str))
-    // 3) delete the user in redis
-    .then(deletePilot.bind(null, usr_str))
-    // 4) delete user in userid_email_table
-    .then(redis_utils.GraphDel.bind(null, USERID_EMAIL_TABLE, usr_str))
-    // 5) delete the user entry pilot:[email]
-    .then(() => {
-      util.logger("deleteUser", `deleting ${usr_str}`);
-      return RedisClient.DEL(usr_str);
-    })
-    // TODO: should delete user from course (active/blocked/instructor)
-    // TODO: should delete user's assignments
-    .then((b) => {
-      util.logger("deleteUser", `repopulating cache`);
-      return User.cache.populate();
-    })
-    .catch((err) => {
-      util.error(err);
     });
 };
 
@@ -663,20 +462,22 @@ User.prototype.syncEmail = function(newEmail){
     .then(() => { return that; });
 };
 
+/**
+ * Adds group ID to user with given user ID
+ * @param {string} userid_n - the ID of the group
+ * @param {string} groupid_n -
+ * @returns {Promise}
+ */
 User.prototype.AddGroupToUser = function(userid_n, groupid_n){
-  return RedisClient.HGET("usr:"+userid_n, "groupNs")
-    // get group of the user
+  return RedisClient.HGET(User.makeUserKey(userid_n), "groupNs")
     .then(function(groupNsStr) {
-      var groupNsObj = JSON.parse(groupNsStr);
-      var idx = groupNsObj.indexOf(groupid_n);
-      if(idx < 0) {
+      const groupNsObj = JSON.parse(groupNsStr);
+      if(groupNsObj.includes(groupid_n)) throw 'this user is already a member of the group';
+      else {
         groupNsObj.push(groupid_n);
-        return RedisClient.HSET("usr:"+userid_n, "groupNs", JSON.stringify(groupNsObj));
-      } else {
-        throw 'this user is already a member of the group';
+        return RedisClient.HSET(User.makeUserKey(userid_n), "groupNs", JSON.stringify(groupNsObj));
       }
-    }
-  );
+    });
 };
 
 User.prototype.RemoveGroupFromUser = function(userid_n, groupid_n){
@@ -693,10 +494,17 @@ User.prototype.RemoveGroupFromUser = function(userid_n, groupid_n){
     );
 };
 
-User.prototype.GetGroupNs = function(userid_n, cb){
+User.GetGroupNs = function(userid_n, cb){
   return RedisClient.HGET("usr:"+userid_n, "groupNs")
     .then(function(groupNsStr) {
       return JSON.parse(groupNsStr);
+    });
+};
+
+User.prototype.getGroupIDs = function() {
+  return RedisClient.HGET(this.getUserKey(), "groupNs")
+    .then(function(str) {
+      return JSON.parse(str);
     });
 };
 
@@ -712,40 +520,60 @@ const Group = (function(manager, name, creationDate) {
    name
    users {"invited":[noname@gmail.com], "participating":[user:1902839014]}
    */
-  var pub_grp = {};
+  var pub = {};
 
+  pub.getGroupKey = (userID, creationTime) => `grp:${userID}_${creationTime}`;
+  
   /**
-   * 
-   * @param userid_n
-   * @param docid
-   * @param creationTime
+   * Create a new group in Redis with key grp:<userID>_<creationTime>, set document ID, creation time, default name. New group has no invited or participating users.
+   * @param {string} userID - the ID of the user to add
+   * @param {string} docKey - the key of the document in Redis (has form 'doc:<docID>')
+   * @param {string} creationTime
    * @returns {Promise}
    */
-  pub_grp.CreateNewGroup = function(userid_n, docid, creationTime) {
+  pub.CreateNewGroup = function(userID, docKey, creationTime) {
+    var groupKey = pub.getGroupKey(userID, creationTime);
+    return redis_utils.keyExists(groupKey)
+      .then(exists => {
+        if(exists) throw "grp already exist";
+        else RedisClient.HMSET(
+          groupKey,
+          "userid_n",     userID,
+          "docid",        docKey,
+          "creationTime", creationTime,
+          "name",         `Group created at ${js_utils.FormatDateTimeMilisec(creationTime)}`,
+          "users",        JSON.stringify({invited: [], participating: []})
+        );
+      })
+      .then(() => {
+        return groupKey;
+      });
+    
+    /*
+    // TODO: test and delete code
     return new Promise(function(resolve, reject){
-      var groupid = "grp:"+userid_n+"_"+creationTime;
-      redisClient.EXISTS(groupid, function(err, resp){
+      redisClient.EXISTS(groupKey, function(err, resp){
         if(err){reject(err);}
         else if(resp === 1) {reject('grp already exist');}
         else{
           redisClient.HMSET(
-            groupid,
-            'userid_n', userid_n,
-            'docid', docid,
+            groupKey,
+            'userid_n', userID,
+            'docid', docID,
             'creationTime', creationTime,
             'name', 'Group created at ' + js_utils.FormatDateTimeMilisec(creationTime),
             'users', '{"invited":[],"participating":[]}',
             function(err, resp) {
               if(err) { reject(err); }
-              else { resolve(groupid); }
+              else { resolve(groupKey); }
             }
           );
         }
       });
-    });
+    });*/
   };
 
-  pub_grp.GetById = function(groupid, cb){
+  pub.GetById = function(groupid, cb){
     redisClient.HGETALL(groupid, function(err, groupObj){
       if(err !== null || groupObj === null){cb(err);}
       else{
@@ -756,7 +584,7 @@ const Group = (function(manager, name, creationDate) {
     });
   };
 
-  pub_grp.GetGroupObj_Promise = function(groupid){
+  pub.GetGroupObj_Promise = function(groupid){
     return RedisClient.HGETALL(groupid).then(
       function(groupObj){
         groupObj.id = groupid;
@@ -774,7 +602,7 @@ const Group = (function(manager, name, creationDate) {
    * invited, participating are ids of users
    * @return grps
    */
-  pub_grp.getAll = function(){
+  pub.getAll = function(){
     return RedisClient.KEYS('grp:*').then(
       function(keys){
         return Promise.all(
@@ -803,12 +631,12 @@ const Group = (function(manager, name, creationDate) {
    * For example, if a @gmail.com email is associated with a UBC_CWL and Google account, then we only invite the user of the UBC_CWL account.
    * TODO: now using GraphGet() and USERID_EMAIL_TABLE; test method
    */
-  pub_grp.InviteUser = function(groupid_n, email){
+  pub.InviteUser = function(groupid_n, email){
     const userExists = (user) => {
-      return pub_grp.connectUserAndGroup(groupid_n, user.id.substring(4));
+      return pub.connectUserAndGroup(groupid_n, user.id.substring(4));
     };
     const userDoesNotExist = (user) => {
-      return pub_grp.AddEmailToInvited(groupid_n, email)
+      return pub.AddEmailToInvited(groupid_n, email)
         .then(() => {
           util.debug(`creating invitation for ${email}`);
           return RedisClient.RPUSH(`inv:${email}`, `grp:${groupid_n}`);
@@ -844,17 +672,23 @@ const Group = (function(manager, name, creationDate) {
       });*/
   };
 
-  pub_grp.connectUserAndGroup = function(groupid_n, userid_n){
-    return pub_grp.AddUserToParticipating(groupid_n, userid_n)
+  /**
+   * 
+   * @param groupid_n
+   * @param userid_n
+   * @returns {Promise}
+   */
+  pub.connectUserAndGroup = function(groupid_n, userid_n){
+    return pub.AddUserToParticipating(groupid_n, userid_n)
       .then(function() {
         return User.prototype.AddGroupToUser(userid_n, groupid_n);
       });
   };
 
-  pub_grp.connectGroupAndMultipleUsers = function(groupid_n, l_userid_n){
+  pub.connectGroupAndMultipleUsers = function(groupid_n, l_userid_n){
     return (function loop(i){
       if(i < l_userid_n.length) {
-        return pub_grp.AddUserToParticipating(groupid_n, l_userid_n[i]).then(
+        return pub.AddUserToParticipating(groupid_n, l_userid_n[i]).then(
           function () {
             return User.prototype.AddGroupToUser(l_userid_n[i], groupid_n);
           }
@@ -870,16 +704,16 @@ const Group = (function(manager, name, creationDate) {
     })(0);
   };
 
-  pub_grp.GetDocIdByGroupId = function(groupid_n){
+  pub.GetDocIdByGroupId = function(groupid_n){
     return RedisClient.HGET("grp:"+groupid_n, "docid");
   };
 
-  pub_grp.GetDocObjByGroupId = function(groupid_n){
+  pub.GetDocObjByGroupId = function(groupid_n){
     return RedisClient.HGET("grp:"+groupid_n, "docid")
       .then(RedisClient.HGETALL);
   };
 
-  pub_grp.PopulateParticipantObjs = function(groupObj){
+  pub.PopulateParticipantObjs = function(groupObj){
     return new Promise(function (resolve, reject) {
       var argl = [];
       for(var i = 0; i < groupObj.users.participating.length; ++i){
@@ -906,7 +740,7 @@ const Group = (function(manager, name, creationDate) {
    * @param groupid_n - the id of the group to delete
    * @param docid_n   - the id of the document containing the group
    */
-  pub_grp.DeleteGroup = function(groupid_n, docid_n) {
+  pub.DeleteGroup = function(groupid_n, docid_n) {
 
     /**
      * remove user from group and group from user
@@ -954,13 +788,13 @@ const Group = (function(manager, name, creationDate) {
     return Promise.all([
       promiseToRemoveGroupFromInvitee,
       promiseToDetachUserAndGroup
-    ]).then(function(bArry) {
+    ]).then(function() {
       util.debug("finished removing from invitee and detach");
       return Group.DeleteGroupFromDoc(groupid_n, docid_n);
     });
   }; // end DeleteGroup
 
-  pub_grp.DeleteGroupFromDoc = function(groupid_n, docid_n){
+  pub.DeleteGroupFromDoc = function(groupid_n, docid_n){
     return RedisClient.HGET("doc:"+docid_n, 'groups')
       // get group list of doc
       .then(function(groupsStr) {
@@ -983,7 +817,7 @@ const Group = (function(manager, name, creationDate) {
     );
   };
 
-  pub_grp.Delete = function(userid_n, docid, groupid, cb){
+  pub.Delete = function(userid_n, docid, groupid, cb){
     redisClient.HGET(docid, 'groups', function(err, groupsStr) {
       var groupsObj = JSON.parse(groupsStr);
       var index = groupsObj.indexOf(groupid);
@@ -1003,17 +837,17 @@ const Group = (function(manager, name, creationDate) {
     });
   };
 
-  pub_grp.Rename = function(group_id, new_name){
+  pub.Rename = function(group_id, new_name){
     return RedisClient.HSET(group_id, 'name', new_name);
   };
 
-  pub_grp.SetUsersByObj = function(groupid, usersobj, cb){
+  pub.SetUsersByObj = function(groupid, usersobj, cb){
     redisClient.HSET(groupid, "users", JSON.stringify(usersobj), function(err, resp){
       cb(err, resp);
     });
   };
 
-  pub_grp.GetNumUsers = function(groupid, cb){
+  pub.GetNumUsers = function(groupid, cb){
     redisClient.HGET(groupid, "users", function(err, usersStr){
       if(err){
         cb(err, null);
@@ -1027,15 +861,19 @@ const Group = (function(manager, name, creationDate) {
     });
   };
 
-  pub_grp.GetUsersFromGroup = function(groupid_n){
-    return RedisClient.HGET("grp:"+groupid_n, "users").then(
-      function(usersStr){
-        return JSON.parse(usersStr);
-      }
-    );
+  /**
+   * Get all user IDs from given group, categorized as invited or participating
+   * @param {string} groupID - the ID of the group to get users from
+   * @returns {Promise.<{invited: string[], participating: string[]}>}
+   */
+  pub.GetUsersFromGroup = function(groupID) {
+    return RedisClient.HGET(`grp:${groupID}`, "users")
+      .then((str) => {
+        return JSON.parse(str);
+      });
   };
 
-  pub_grp.AddEmailToInvited = function(groupid_n, email){
+  pub.AddEmailToInvited = function(groupid_n, email){
     return RedisClient.HGET('grp:' + groupid_n, 'users')
       .then(function(usersStr) {
         let users = JSON.parse(usersStr);
@@ -1047,7 +885,7 @@ const Group = (function(manager, name, creationDate) {
       });
   };
 
-  pub_grp.CancelInvited = function(groupid_n, email){
+  pub.CancelInvited = function(groupid_n, email){
     return RedisClient.HGET('grp:' + groupid_n, 'users').then(
       function(usersStr){
         var users = JSON.parse(usersStr);
@@ -1067,12 +905,11 @@ const Group = (function(manager, name, creationDate) {
     );
   };
 
-  pub_grp.AddUserToParticipating = function(groupid_n, userid_n){
-    return RedisClient.HGET("grp:"+groupid_n, "users").then(
-      function(usersStr) {
+  pub.AddUserToParticipating = function(groupid_n, userid_n){
+    return RedisClient.HGET("grp:"+groupid_n, "users")
+      .then(function(usersStr) {
         var users = JSON.parse(usersStr);
         if(users === null){throw 'invalid group id';}
-
         var i = users.participating.indexOf(userid_n);
         if(users.participating.length === 5){
           throw 'there are already maximum number (5) of users in this group.';
@@ -1086,7 +923,7 @@ const Group = (function(manager, name, creationDate) {
     );
   };
 
-  pub_grp.RemoveUserFromGroup = function(groupid_n, userid_n){
+  pub.RemoveUserFromGroup = function(groupid_n, userid_n){
     return RedisClient.HGET("grp:"+groupid_n, "users").then( // get group's user list
       function(usersStr){
         var usersObj = JSON.parse(usersStr);
@@ -1100,7 +937,7 @@ const Group = (function(manager, name, creationDate) {
     );
   };
 
-  pub_grp.GetViewerUrl = function(groupid_n, cb){
+  pub.GetViewerUrl = function(groupid_n, cb){
     redisClient.HGET("grp:"+groupid_n, 'docid', function(err, docid){
       if(err){cb(err);}
       else{
@@ -1115,7 +952,7 @@ const Group = (function(manager, name, creationDate) {
     });
   };
 
-  return pub_grp;
+  return pub;
 })();
 
 /*

@@ -1,13 +1,15 @@
 /**
- *
+ * tests for R2D.User, Course, Course enrollment, GoogleStrategy callback, UBC SAML Strategy callback
  *
  * created by Colin
  */
 
-const util       = require('../util');
-const expect     = require('chai').expect;
-const assert     = require('chai').assert;
+const expect     = require("chai").expect;
+const assert     = require("chai").assert;
+const node_util  = require("util");
 
+const env        = require("../lib/env");
+const util       = require("../util");
 let js_utils     = null;
 let lib_utils    = null;
 let RedisClient  = null;
@@ -16,6 +18,8 @@ let redis_utils  = null;
 let PilotHandler = null;
 let ClassHandler = null;
 let Course       = null;
+let User         = null;
+let Group        = null;
 
 /**
  * Outdated functions
@@ -215,14 +219,17 @@ function gggo() {
 describe("RichReview", function() {
 
   before(function () {
-    js_utils     = require('../lib/js_utils');
-    lib_utils    = require('../lib/lib_utils');
-    RedisClient  = require('../lib/redis_client').RedisClient;
-    R2D          = require('../lib/r2d');
-    redis_utils  = require('../lib/redis_client').util;
-    PilotHandler = require('../lib/pilot_handler');
-    ClassHandler = require('../lib/class_handler');
-    Course       = require('../lib/Course');
+    js_utils     = require("../lib/js_utils");
+    RedisClient  = require("../lib/redis_client").RedisClient;
+    redis_utils  = require("../lib/redis_client").util;
+    R2D          = require("../lib/r2d");
+    require("../lib/Model");
+    Course       = require("../lib/Course");
+    User         = require("../lib/r2d").User;
+    Group         = require("../lib/r2d").Group;
+    lib_utils    = require("../lib/lib_utils");
+    PilotHandler = require("../lib/pilot_handler");
+    ClassHandler = require("../lib/class_handler");
     return R2D.User.cache.populate()
       .then(() => {
         return Course.cache.populate();
@@ -233,54 +240,11 @@ describe("RichReview", function() {
 
   after(function () {
     return RedisClient.quit();
-
   });
 
   afterEach(function () { });
 
-  describe("#Validation", function() {
-    it("test redis 1", (done) => {
-      RedisClient.SET("mykey", "v")
-        .then((b) => {
-          util.debug("after set");
-          util.debug(b);
-          util.debug(typeof b);
-          return RedisClient.GET("mykey");
-        })
-        .then((a) => {
-          util.debug("after get");
-          util.debug(a);
-          util.debug(typeof a);
-          return RedisClient.DEL("mykey");
-        })
-        .then((b) => {
-          util.debug("after delete");
-          util.debug(b);
-          util.debug(typeof b);
-          expect(1).to.equal(1);
-          done();
-        })
-        .catch((err) => {
-          assert.fail();
-        });
-    });
-
-    it("test redis 2", () => {
-      return RedisClient.KEYS("doc:*") // this is array
-        .then((keys) => {
-          const promises =keys.map((key) => {
-            return RedisClient.HGET(key,"userid_n")
-              .then((userid_n) => {
-                if(userid_n === "1534dbb7f370135c7df06") {
-                  util.debug("hit");
-                }
-                return 0;
-              });
-          });
-          return Promise.all(promises);
-        });
-    });
-
+  describe.only("#Validation", function() {
     it("js_utils.validateEmail(email)", () => {
       let b = null;
       b = js_utils.validateEmail("test@pilot.study");
@@ -304,156 +268,214 @@ describe("RichReview", function() {
     });
   });
 
-  describe("#Models", function() {
-
-    // someTests();
-
-    it("ClassHandler: User: create user jflask", () => {
-      const email = "jflask@ubc.ca";
-      const password = "test_password_123";
-      const auth_type = "Internal";
-      // usr:a2bd1e849f82599bc97f903216ab2f000da959ef
-      const id = ClassHandler.makeID(email);
-      //util.testl("user's id is " + id);
-      const check = (u) => {
-        expect(u.email).to.equal(email);
-        expect(u.auth_type).to.equal(auth_type);
-        expect(u.nick).to.equal("jflask");
+  describe.only("#Model", function() {
+    describe("Group", function() {
+      const test = {
+        userID: "testingAuserBbbbbbbbbb",
+        email: "testing@email.com",
+        user: null,
+        docKey: "doc:testingAdocBbbbbbbbbbbbbbb_1337",
+        creationTime: "1337"
       };
-      return ClassHandler.createUser(email, password)
-        .then((user) => {
-          expect(user).to.be.an.instanceOf(R2D.User);
-          check(user);
-          const b = ClassHandler.validatePassword(user, password);
-          expect(b).to.equal(true);
-          return RedisClient.HGETALL(`usr:${id}`);
-        })
-        // User is in redis
-        .then((user_obj) => {
-          check(user_obj);
-          const b = ClassHandler.validatePassword(
-            { password_hash: user_obj.password_hash, salt: user_obj.salt },
-            password
-          );
-          expect(b).to.equal(true);
-          return R2D.User.cache.get(id);
-        })
-        // User is in cache
-        .then((user) => {
-          expect(user).to.be.an.instanceOf(R2D.User);
-          check(user);
-          const b = ClassHandler.validatePassword(user, password);
-          expect(b).to.equal(true);
-        })
-        .catch((err) => {
-          util.error(err);
-          assert.fail(err);
-        });
+      test.groupID  = `${test.userID}_${test.creationTime}`;
+      test.groupKey = `grp:${test.groupID}`;
+      
+      before("initialize user", function() {
+        return User.create(test.userID, test.email)
+          .then((user) => { test.user = user; })
+      });
+      
+      after("destroy user", function() {
+        // delete doesn't work because group does not belong to a doc
+        // return User.deleteUser(test.user.id);
+        return Promise.all([
+          RedisClient.DEL(test.groupKey),
+          RedisClient.DEL(test.user.getUserKey())
+        ]);
+      });
+      
+      it("create a one group", function () {
+        return Group.CreateNewGroup(test.user.id, test.docKey, test.creationTime)
+          .then(groupKey => {
+            expect(groupKey).to.equal(test.groupKey);
+            return RedisClient.HGETALL(groupKey);
+          })
+          .then(groupObj => {
+            expect(groupObj).to.exist;
+            expect(groupObj.userid_n).to.equal(test.user.id);
+            expect(groupObj.docid).to.equal(test.docKey);
+            expect(groupObj.creationTime).to.equal(test.creationTime);
+            util.test.log(groupObj.creationTime);
+            expect(JSON.parse(groupObj.users)).to.deep.equal({invited: [], participating: []});
+          });
+      });
+      
+      it("connectUserAndGroup", function () {
+        return Group.connectUserAndGroup(test.groupID, test.user.id)
+          .then(() => {
+            return test.user.getGroupIDs();
+          })
+          .then((groupIDs) => {
+            expect(groupIDs).to.deep.equal([test.groupID]);
+            return Group.GetUsersFromGroup(test.groupID);
+          })
+          .then((users) => {
+            expect(users).to.have.property("invited");
+            expect(users).to.have.property("participating");
+            expect(users.invited).to.deep.equal([ ]);
+            expect(users.participating).to.deep.equal([test.userID]);
+          });
+      });
     });
+    
+    describe("User", function() {
+      it("ClassHandler: User: create user jflask", () => {
+        const email = "jflask@ubc.ca";
+        const password = "test_password_123";
+        const auth_type = "Internal";
+        // usr:a2bd1e849f82599bc97f903216ab2f000da959ef
+        const id = ClassHandler.makeID(email);
+        //util.testl("user's id is " + id);
+        const check = (u) => {
+          expect(u.email).to.equal(email);
+          expect(u.auth_type).to.equal(auth_type);
+          expect(u.nick).to.equal("jflask");
+        };
+        return ClassHandler.createUser(email, password)
+          .then((user) => {
+            expect(user).to.be.an.instanceOf(R2D.User);
+            check(user);
+            const b = ClassHandler.validatePassword(user, password);
+            expect(b).to.equal(true);
+            return RedisClient.HGETALL(`usr:${id}`);
+          })
+          // User is in redis
+          .then((user_obj) => {
+            check(user_obj);
+            const b = ClassHandler.validatePassword(
+              { password_hash: user_obj.password_hash, salt: user_obj.salt },
+              password
+            );
+            expect(b).to.equal(true);
+            return R2D.User.cache.get(id);
+          })
+          // User is in cache
+          .then((user) => {
+            expect(user).to.be.an.instanceOf(R2D.User);
+            check(user);
+            const b = ClassHandler.validatePassword(user, password);
+            expect(b).to.equal(true);
+          })
+          .catch((err) => {
+            util.error(err);
+            assert.fail(err);
+          });
+      });
 
-    it("ClassHandler: User: update jflask", () => {
-      const email = "jflask@ubc.ca";
-      const sid = "1234567890";
-      const displayName = "Buggy Jordan";
-      const firstName = "Jonathan";
-      const lastName = "Flask";
-      const auth_type = "Internal";
-      const id = ClassHandler.makeID(email);
-      const user = R2D.User.cache.get(id);
-      expect(user).to.be.an.instanceOf(R2D.User);
-      /*********************************************/
-      const check = (u) => {
-        expect(u.sid).to.equal(sid);
-        expect(u.display_name).to.equal(displayName);
-        expect(u.first_name).to.equal(firstName);
-        expect(u.last_name).to.equal(lastName);
-        expect(u.email).to.equal(email);
-        expect(u.auth_type).to.equal(auth_type);
-        expect(u.nick).to.equal("jflask");
-      };
-      /*********************************************/
-      return user.updateDetails(sid, displayName, firstName, lastName)
-        .then((user) => {
-          expect(user).to.be.an.instanceOf(R2D.User);
-          check(user);
-          return RedisClient.HGETALL(`usr:${id}`);
-        })
-        .then((usr_obj) => {
-          check(usr_obj);
-          util.testl("details are updated in redis");
-        })
-        .catch((err) => {
-          util.error(err);
-          assert.fail(err);
-        });
-    });
+      it("ClassHandler: User: update jflask", () => {
+        const email = "jflask@ubc.ca";
+        const sid = "1234567890";
+        const displayName = "Buggy Jordan";
+        const firstName = "Jonathan";
+        const lastName = "Flask";
+        const auth_type = "Internal";
+        const id = ClassHandler.makeID(email);
+        const user = R2D.User.cache.get(id);
+        expect(user).to.be.an.instanceOf(R2D.User);
+        /*********************************************/
+        const check = (u) => {
+          expect(u.sid).to.equal(sid);
+          expect(u.display_name).to.equal(displayName);
+          expect(u.first_name).to.equal(firstName);
+          expect(u.last_name).to.equal(lastName);
+          expect(u.email).to.equal(email);
+          expect(u.auth_type).to.equal(auth_type);
+          expect(u.nick).to.equal("jflask");
+        };
+        /*********************************************/
+        return user.updateDetails(sid, displayName, firstName, lastName)
+          .then((user) => {
+            expect(user).to.be.an.instanceOf(R2D.User);
+            check(user);
+            return RedisClient.HGETALL(`usr:${id}`);
+          })
+          .then((usr_obj) => {
+            check(usr_obj);
+            util.testl("details are updated in redis");
+          })
+          .catch((err) => {
+            util.error(err);
+            assert.fail(err);
+          });
+      });
 
-    it("R2D: User: getter functions get jflask", () => {
-      // console.log("HERE");
-      // console.log(JSON.stringify(user, null, '\t'));
-      const email = "jflask@ubc.ca";
-      const sid = "1234567890";
-      const displayName = "Buggy Jordan";
-      const firstName = "Jonathan";
-      const lastName = "Flask";
-      const auth_type = "Internal";
-      const id = ClassHandler.makeID(email);
-      const check = (u) => {
-        expect(u.id).to.equal(id);
-        expect(u.sid).to.equal(sid);
-        expect(u.display_name).to.equal(displayName);
-        expect(u.first_name).to.equal(firstName);
-        expect(u.last_name).to.equal(lastName);
-        expect(u.email).to.equal(email);
-        expect(u.auth_type).to.equal(auth_type);
-        expect(u.nick).to.equal("jflask");
-      };
-      return R2D.User.getWithEmailByAuthType(email)
-        .then(users => {
-          expect(users).to.have.property(auth_type);
-          const user = (users[auth_type])[0];
-          expect(user).to.be.an.instanceOf(R2D.User);
-          check(user);
-          return R2D.User.findByEmail(email);
-        })
-        .then(user => {
-          expect(user).to.be.an.instanceOf(R2D.User);
-          check(user);
-        })
-        .catch((err) => {
-          util.error(err);
-          assert.fail(err);
-        });
-    });
+      it("R2D: User: getter functions get jflask", () => {
+        // console.log("HERE");
+        // console.log(JSON.stringify(user, null, '\t'));
+        const email = "jflask@ubc.ca";
+        const sid = "1234567890";
+        const displayName = "Buggy Jordan";
+        const firstName = "Jonathan";
+        const lastName = "Flask";
+        const auth_type = "Internal";
+        const id = ClassHandler.makeID(email);
+        const check = (u) => {
+          expect(u.id).to.equal(id);
+          expect(u.sid).to.equal(sid);
+          expect(u.display_name).to.equal(displayName);
+          expect(u.first_name).to.equal(firstName);
+          expect(u.last_name).to.equal(lastName);
+          expect(u.email).to.equal(email);
+          expect(u.auth_type).to.equal(auth_type);
+          expect(u.nick).to.equal("jflask");
+        };
+        return R2D.User.getWithEmailByAuthType(email)
+          .then(users => {
+            expect(users).to.have.property(auth_type);
+            const user = (users[auth_type])[0];
+            expect(user).to.be.an.instanceOf(R2D.User);
+            check(user);
+            return R2D.User.findByEmail(email);
+          })
+          .then(user => {
+            expect(user).to.be.an.instanceOf(R2D.User);
+            check(user);
+          })
+          .catch((err) => {
+            util.error(err);
+            assert.fail(err);
+          });
+      });
 
-    //gggo();
+      //gggo();
 
-    it("ClassHandler: User: delete jflask", () => {
-      const email = "jflask@ubc.ca";
-      const id = ClassHandler.makeID(email);
-      return R2D.User.deleteUser(id)
-        .then((b) => {
-          return R2D.User.findByID(id);
-        })
-        .then((u) => {
-          expect(u).to.equal(null);
-          return redis_utils.keyExists(`usr:${id}`);
-        })
-        .then((b) => {
-          expect(b).to.be.false;
-          return redis_utils.GraphExists("userid_email_table", `usr:${id}`);
-        })
-        .then((b) => {
-          expect(b).to.be.false;
-        })
-        .catch((err) => {
-          util.teste(err);
-          assert.fail();
-        });
+      it("ClassHandler: User: delete jflask", () => {
+        const email = "jflask@ubc.ca";
+        const id = ClassHandler.makeID(email);
+        return R2D.User.deleteUser(id)
+          .then((b) => {
+            return R2D.User.findByID(id);
+          })
+          .then((u) => {
+            expect(u).to.equal(null);
+            return redis_utils.keyExists(`usr:${id}`);
+          })
+          .then((b) => {
+            expect(b).to.be.false;
+            return redis_utils.GraphExists("userid_email_table", `usr:${id}`);
+          })
+          .then((b) => {
+            expect(b).to.be.false;
+          })
+          .catch((err) => {
+            util.teste(err);
+            assert.fail();
+          });
+      });
     });
   });
   
-  describe("#Google", function() {
+  describe.only("#Google", function() {
 
     const testProfileAttr = {
       display_name: "James Randi",
@@ -561,7 +583,7 @@ describe("RichReview", function() {
     }); // END User: delete jrandi
   }); // END #Google
 
-  describe("#CWL", function() {
+  describe.only("#CWL", function() {
 
     const uid = "urn:oid:0.9.2342.19200300.100.1.1";
     const mail = "urn:oid:0.9.2342.19200300.100.1.3";
@@ -570,8 +592,10 @@ describe("RichReview", function() {
     const sn = "urn:oid:2.5.4.4";
     const ubcEduPersistentID = "urn:oid:1.3.6.1.4.1.60.1.7.1";
     const groupMembership = "urn:oid:2.16.840.1.113719.1.1.4.1.25";
-    
-    const testProfileAttr = {
+
+    const testID = "32r9r0io4-234h23n-12342ref3-esfq33r2";
+    const testAttribute = {
+      id: testID,
       sid: "33456781",
       display_name: "Frank Hirst",
       first_name: "Frank",
@@ -580,8 +604,6 @@ describe("RichReview", function() {
       auth_type: "UBC_CWL",
       nick: "fhirst"
     };
-
-    const testID = "32r9r0io4-234h23n-12342ref3-esfq33r2";
     const testProfile = {
       "issuer": "https://authentication.ubc.ca",
       "sessionIndex": "_c98a80bc526723f25ff47438cf601e44",
@@ -591,15 +613,15 @@ describe("RichReview", function() {
       "spNameQualifier": "sp_richreview_ubc",
       "urn:oid:1.3.6.1.4.1.60.1.7.1": testID, // ubcEduPersistentID
       "urn:oid:0.9.2342.19200300.100.1.1": "es334567",    // CWL login
-      "urn:oid:0.9.2342.19200300.100.1.3": testProfileAttr.email, // email
-      "urn:oid:2.16.840.1.113730.3.1.241": testProfileAttr.display_name, // displayName
-      "urn:oid:2.5.4.42": testProfileAttr.first_name, // first_name
-      "urn:mace:dir:attribute-def:ubcEduStudentNumber": testProfileAttr.sid, // sid
-      "urn:oid:2.5.4.4": testProfileAttr.last_name, // last name
+      "urn:oid:0.9.2342.19200300.100.1.3": testAttribute.email, // email
+      "urn:oid:2.16.840.1.113730.3.1.241": testAttribute.display_name, // displayName
+      "urn:oid:2.5.4.42": testAttribute.first_name, // first_name
+      "urn:mace:dir:attribute-def:ubcEduStudentNumber": testAttribute.sid, // sid
+      "urn:oid:2.5.4.4": testAttribute.last_name, // last name
       "urn:oid:2.16.840.1.113719.1.1.4.1.25": [
         "ou=richreview.net,ou=applications,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca",
-        "ou=richreview.net,cn=chin_141_002_2018w_instructor,ou=applications,cn=korn_102_001_2018w,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca",
-        "ou=richreview.net,ou=applications,cn=korn_102_001_2018w,ou=cpsc-ubcv,cn=chin_141_002_2018w_instructor,ou=clients,dc=id,dc=ubc,dc=ca",
+        `ou=richreview.net,cn=${env.UBC.CWL.ATTRIBUTE.GROUP.CHIN_141_002_2018W_INSTRUCTOR},ou=applications,cn=korn_102_001_2018w,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca`,
+        `ou=richreview.net,ou=applications,cn=${env.UBC.CWL.ATTRIBUTE.GROUP.KORN_102_001_2018W},ou=cpsc-ubcv,cn=chin_141_002_2018w_instructor,ou=clients,dc=id,dc=ubc,dc=ca`,
         "cn=CPSC_110_001_2018w_instructor,ou=richreview.net,ou=applications,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca",
         "ou=richreview.net,ou=applications,ou=cpsc-ubcv,ou=clients,dc=id,dc=ubc,dc=ca,cn=CPSC_420_001_2018w"
       ], // group_attributes
@@ -614,13 +636,42 @@ describe("RichReview", function() {
     // korn_102_001_2018w_instructor
 
     const validateUserDetails = (u) => {
-      expect(u.sid).to.equal(testProfileAttr.sid);
-      expect(u.display_name).to.equal(testProfileAttr.display_name);
-      expect(u.first_name).to.equal(testProfileAttr.first_name);
-      expect(u.last_name).to.equal(testProfileAttr.last_name);
-      expect(u.email).to.equal(testProfileAttr.email);
-      expect(u.auth_type).to.equal(testProfileAttr.auth_type);
-      expect(u.nick).to.equal(testProfileAttr.nick);
+      expect(u.sid).to.equal(testAttribute.sid);
+      expect(u.display_name).to.equal(testAttribute.display_name);
+      expect(u.first_name).to.equal(testAttribute.first_name);
+      expect(u.last_name).to.equal(testAttribute.last_name);
+      expect(u.email).to.equal(testAttribute.email);
+      expect(u.auth_type).to.equal(testAttribute.auth_type);
+      expect(u.nick).to.equal(testAttribute.nick);
+    };
+    
+    const validateEnrollment = (user) => {
+      // korn_102_001_2018w
+      const c1 = Course.cache.getCourses.withStudent(user);
+      // chin_141_002_2018w_instructor
+      const c2 = Course.cache.getCourses.withInstructor(user);
+      expect(c1).to.have.lengthOf(1);
+      expect(c2).to.have.lengthOf(1);
+      expect(c1[0].getInstitution()).to.equal(env.INSTITUTION.UBC.toLocaleLowerCase());
+      expect(c1[0].getCourseGroup()).to.equal(env.COURSE_GROUP.KORN_102_001_2018W);
+      expect(c2[0].getInstitution()).to.equal(env.INSTITUTION.UBC.toLocaleLowerCase());
+      expect(c2[0].getCourseGroup()).to.equal(env.COURSE_GROUP.CHIN_141_002_2018W);
+      return Promise.all([
+        RedisClient.SMEMBERS(Course.getBlockedStudentKey(env.INSTITUTION.UBC, env.COURSE_GROUP.KORN_102_001_2018W)),
+        RedisClient.SMEMBERS(Course.getInstructorKey(env.INSTITUTION.UBC, env.COURSE_GROUP.CHIN_141_002_2018W))
+      ])
+        .then(([blockedStudentIDs, instructorIDs]) => {
+          expect(blockedStudentIDs).to.have.lengthOf(1);
+          expect(instructorIDs).to.have.lengthOf(1);
+          expect(blockedStudentIDs[0]).to.equal(user.id);
+          expect(instructorIDs[0]).to.equal(user.id);
+          util.testl("validateEnrollment: DONE");
+          return user;
+        })
+        .catch(err => {
+          util.teste(err);
+          assert.fail(err);
+        });
     };
 
     /**
@@ -665,6 +716,44 @@ describe("RichReview", function() {
       ]);
     });
 
+    /**
+     * Courses exists and there are no users enrolled in the course
+     */
+    it("initialization", () => {
+      const course_existing = [
+        Course.cache.exists(env.INSTITUTION.UBC, env.COURSE_GROUP.CHIN_141_002_2018W),
+        Course.cache.exists(env.INSTITUTION.UBC, env.COURSE_GROUP.KORN_102_001_2018W)
+      ];
+      expect(course_existing).to.deep.equal([true,true]);
+      const course_users = [
+        Course.cache.get(env.INSTITUTION.UBC, env.COURSE_GROUP.CHIN_141_002_2018W).instructors.size,
+        Course.cache.get(env.INSTITUTION.UBC, env.COURSE_GROUP.CHIN_141_002_2018W).blocked_students.size,
+        Course.cache.get(env.INSTITUTION.UBC, env.COURSE_GROUP.CHIN_141_002_2018W).active_students.size,
+        Course.cache.get(env.INSTITUTION.UBC, env.COURSE_GROUP.KORN_102_001_2018W).instructors.size,
+        Course.cache.get(env.INSTITUTION.UBC, env.COURSE_GROUP.KORN_102_001_2018W).blocked_students.size,
+        Course.cache.get(env.INSTITUTION.UBC, env.COURSE_GROUP.KORN_102_001_2018W).active_students.size
+      ];
+      expect(course_users).to.deep.equal([0,0,0,0,0,0]);
+      return Promise.all([
+        redis_utils.keyExists(Course.getInstructorKey(env.INSTITUTION.UBC, env.COURSE_GROUP.CHIN_141_002_2018W)),
+        redis_utils.keyExists(Course.getBlockedStudentKey(env.INSTITUTION.UBC, env.COURSE_GROUP.CHIN_141_002_2018W)),
+        redis_utils.keyExists(Course.getActiveStudentKey(env.INSTITUTION.UBC, env.COURSE_GROUP.CHIN_141_002_2018W)),
+        redis_utils.keyExists(Course.getInstructorKey(env.INSTITUTION.UBC, env.COURSE_GROUP.KORN_102_001_2018W)),
+        redis_utils.keyExists(Course.getBlockedStudentKey(env.INSTITUTION.UBC, env.COURSE_GROUP.KORN_102_001_2018W)),
+        redis_utils.keyExists(Course.getActiveStudentKey(env.INSTITUTION.UBC, env.COURSE_GROUP.KORN_102_001_2018W))
+      ])
+        .then(exArr => {
+          expect(exArr).to.deep.equal([false,false,false,false,false,false]);
+          return redis_utils.keyExists(R2D.User.makeUserKey(testID));
+        }).then((exists) => {
+          expect(exists).to.be.false;
+        })
+        .catch((err) => {
+          util.teste(err);
+          assert.fail(err);
+        });
+    });
+
     it("User: create fhirst from testProfile", () => {
       return new Promise((resolve) => {
         const checkPoint = (err, user) => {
@@ -674,7 +763,7 @@ describe("RichReview", function() {
           }
           expect(user).to.be.an.instanceOf(R2D.User);
           validateUserDetails(user);
-          resolve();
+          validateEnrollment(user).then(resolve);
         };
         lib_utils.UBCsamlStrategyCB(testProfile, checkPoint)
       });
@@ -685,7 +774,7 @@ describe("RichReview", function() {
         .then(user => {
           expect(user).to.be.an.instanceOf(R2D.User);
           validateUserDetails(user);
-          return R2D.User.findByEmail(testProfileAttr.email);
+          return R2D.User.findByEmail(testAttribute.email);
         })
         .then(user => {
           expect(user).to.be.an.instanceOf(R2D.User);
@@ -697,6 +786,31 @@ describe("RichReview", function() {
         })
         .catch((err) => {
           util.teste(err);
+          assert.fail(err);
+        });
+    });
+    
+    it("call UBCsamlStrategyCB twice gets same user", function() {
+      const testGroupID = "testingAgroupBbbbbbbbbbbbbbb";
+      const UBCsamlStrategyCBAsync = node_util.promisify(lib_utils.UBCsamlStrategyCB);
+      return R2D.User.prototype.AddGroupToUser(testID, testGroupID)
+        .then(() => {
+          return UBCsamlStrategyCBAsync(testProfile);
+        })
+        .then((user) => {
+          expect(user).to.be.an.instanceOf(R2D.User);
+          validateUserDetails(user);
+          return validateEnrollment(user);
+        })
+        .then((user) => {
+          return user.getGroupIDs();
+        })
+        .then(groupIDs => {
+          expect(groupIDs).to.deep.equal([testGroupID]);
+          return R2D.User.prototype.RemoveGroupFromUser(testID, testGroupID)
+        })
+        .catch((err) => {
+          util.test.error(err);
           assert.fail(err);
         });
     });

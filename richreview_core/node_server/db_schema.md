@@ -1,3 +1,18 @@
+# Module dependencies
+
+NodeJS cannot support circular dependencies. That means we cannot have a module with class A that depends on a module with class B, that depends on a module with class A. Both classes A and B must be in the same module. 
+
+ - Currently User, Group, and Doc are stored inside r2d.js , and they can't be put in separate modules because they are 
+ - currently Model.js solves this by extending existing models that require.
+
+Currently we have the following models ('<= (...)' represents the model's dependencies):
+
+RedisClient <= ( )  
+User   <= (Group, RedisClient)  
+Group  <= (User,  RedisClient)  
+Doc    <= (Group, RedisClient)  
+Course <= (User,  RedisClient)  
+
 # Auth strategies
 
 There are various authentication strategies to log into RichReview:
@@ -51,7 +66,9 @@ User (`usr:<userid>`) is a hash.
 userid is the generated differently and can be dependent on the authentication type. Cornell first-time authentication will hash the user using using crypto. Google accounts use the profile ID provided by the Google+ omnibus account. UBC 
  CWL accounts use the eduPersistantID provided by IAM. See [auth strategies](#auth-strategies) for more details. The keys in the redis hash are identical to those in User (square-bracketed variables are optional): 
 
-nick, email, groupNs, [auth_type], [password_hash], [salt], [is_admin], [auth_level], [display_name], [first_name], [last_name], [sid].
+nick, email, groupNs, [auth_type], [password_hash], [salt], [is_admin],  [display_name], [first_name], [last_name], [sid].
+
+groupNs - a strigified array of groupid for groups the user is in
 
 See [User in NodeJS](#User-in-NodeJS) for more details.
 
@@ -62,7 +79,6 @@ See [User in NodeJS](#User-in-NodeJS) for more details.
 @member {string} id               - the ID of the user in RichReview
 @member {string} nick             - nickname
 @member {string} email            - email of user
-@member {string|string[]} groupNs - array of groupid user is in
 @member {string} [auth_type]      - is one of "UBC_CWL", "Pilot", "Cornell", or "Google" representing the auth strategy and user affiliation. Please update when there is a new auth strategy
 @member {string} [password_hash]  - made from irreversible sha1 hash with salt from netid
 @member {string} [salt]           -

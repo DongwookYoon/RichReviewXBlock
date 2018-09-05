@@ -104,12 +104,12 @@ const Course = function(course_group, is_active, institution, options) {
  * loadActiveStudents
  * loadBlockedStudents
  * delete
- * 
- * TODO: more functions
  * removeStudent
  * removeInstructor
  * activate
  * deactivate
+ * 
+ * TODO: populate methods
  */
 
 Course.prototype.getInstitution = function() { return this.institution.toLocaleLowerCase(); };
@@ -174,7 +174,7 @@ Course.prototype.loadBlockedStudents = function() {
     .then(blockedStudentIDs => {
       this.blocked_students = new Set();
       blockedStudentIDs.forEach((blockedStudentID) => {
-        assert(R2D.User.cache.exists(blockedStudentID), "loadBlockedStudents: blocked student ID is in cache");
+        assert(R2D.User.cache.exists(blockedStudentID), "loadBlockedStudents: blocked student ID is in User.cache");
         const blocked_student = R2D.User.cache.get(blockedStudentID);
         this.blocked_students.add(blocked_student);
       });
@@ -188,18 +188,18 @@ Course.prototype.loadBlockedStudents = function() {
 Course.cache = (function () {
 
   /**
-   * @typedef {string} CacheKey - the key of course cache has the form <institution>:<group_group>
+   * @typedef {string} CourseCacheKey - the key of course cache has the form <institution>:<group_group>
    */
   
   /**
-   * @type {Object.<CacheKey, Course>} - cache of Course objects
+   * @type {Object.<CourseCacheKey, Course>} - cache of Course objects
    */
   let cache = {};
-  
+
   const pub = {};
 
   const makeCacheKey = (institution, course_group) => `${institution}:${course_group}`;
-  
+
   /**
    * Implementation to load a course from Redis, add it to cache, then return it.
    * @param {string} course_key - has form crs:<institution>:<group_group>:prop
@@ -228,7 +228,6 @@ Course.cache = (function () {
   pub.loadFromDB = (institution, course_group) => {
     return loadFromDBInternal(Course.getPropKey(institution, course_group));
   };
-
   
   pub.populate = () => {
     cache = { };
@@ -244,7 +243,7 @@ Course.cache = (function () {
 
   /**
    * Gets a course belonging to given institution and course group.
-   * @param {string} institution 
+   * @param {string} institution
    * @param {string} course_group
    * @returns {Course}
    * @throws if course no course belonging to given institution and course group exists
@@ -269,6 +268,55 @@ Course.cache = (function () {
     return cache.hasOwnProperty(cache_key);
   };
 
+  /**
+   *
+   * @returns {{institution: string, course_group: string}[]}
+   */
+  pub.getCourses = {
+    /**
+     * Get all courses with given user (student or instructor)
+     * @param {User} user
+     * @returns {Course[]}
+     */
+    withUser: (user) => {
+      return Object.keys(cache).reduce(
+        (courses, key) => {
+          if(cache[key].isUser(user)) courses.push(cache[key]);
+          return courses;
+        },
+        [ ]
+      );
+    },
+    /**
+     * Get all courses with given user as instructor
+     * @param {User} user
+     * @returns {Course[]}
+     */
+    withInstructor: (user) => {
+      return Object.keys(cache).reduce(
+        (courses, key) => {
+          if(cache[key].isInstructor(user)) courses.push(cache[key]);
+          return courses;
+        }, 
+        [ ]
+      );
+    },
+    /**
+     * Get all courses with given user as student
+     * @param {User} user
+     * @returns {Course[]}
+     */
+    withStudent: (user) => {
+      return Object.keys(cache).reduce(
+        (courses, key) => {
+          if(cache[key].isStudent(user)) courses.push(cache[key]);
+          return courses;
+        },
+        [ ]
+      );
+    }
+  };
+
   return pub;
 } ( ));
 
@@ -277,10 +325,6 @@ Course.cache = (function () {
  * TODO: change call of initial populate; I suggest putting this call in www.js
  */
 Course.cache.populate();
-
-/**
- * 
- */
 
 /**
  * @class CourseOptions
@@ -350,6 +394,24 @@ Course.prototype.delete = function() {
 };
 
 /**
+ * Set the course to active in Redis and update itself in cache
+ */
+Course.prototype.activate = function() {
+  const that = this;
+  return RedisClient.HSET(that.getPropKey(), "is_active", true)
+    .then(() => { that.is_active = true; });
+};
+
+/**
+ * Set the course to not-active in Redis and update itself in cache
+ */
+Course.prototype.deactivate = function() {
+  const that = this;
+  return RedisClient.HSET(that.getPropKey(), "is_active", false)
+    .then(() => { that.is_active = false; });
+};
+
+/**
  * Add instructor to course, then return instructor
  * @memberOf Course
  * @param {User} user - the instructor to add
@@ -402,9 +464,11 @@ Course.prototype.getStudents = function () {
   }
 };
 
-Course.prototype.isStudent = function(user) {
-  return this.blocked_students.has(user) || this.active_students.has(user);
-};
+Course.prototype.isUser = function(user) { return this.instructors.has(user) || this.blocked_students.has(user) || this.active_students.has(user); };
+Course.prototype.isInstructor = function(user) { return this.instructors.has(user) };
+Course.prototype.isStudent = function(user) { return this.blocked_students.has(user) || this.active_students.has(user); };
+Course.prototype.isActiveStudent = function(user) { return this.active_students.has(user); };
+Course.prototype.isBlockedStudent = function(user) { return this.blocked_students.has(user); };
 
 {/*******************************************/
   const activateStudentInternal = function(user) {
@@ -451,6 +515,49 @@ Course.prototype.isStudent = function(user) {
     return redis_utils.makeAtomic(this, blockStudentInternal)(user);
   };
 }/*******************************************/
+
+/**
+ * 
+ * @param {User} user - the user to remove
+ * @returns {boolean} true if there is a user removed; false otherwise
+ */
+Course.prototype.removeUser = function(user) {
+  const that = this;
+  return Promise.all([
+    RedisClient.SREM(that.getBlockedStudentKey(), user.id),
+    RedisClient.SREM(that.getActiveStudentKey(),  user.id),
+    RedisClient.SREM(that.getInstructorKey(),     user.id)
+  ]).then(() => { 
+    return that.active_students.delete(user) || 
+           that.blocked_students.delete(user) ||
+           that.instructors.delete(user);
+  });
+};
+
+/**
+ * 
+ * @param {User} user - the user to remove
+ * @returns {boolean} true if there is a user removed; false otherwise
+ */
+Course.prototype.removeStudent = function(user) {
+  const that = this;
+  return Promise.all([
+    RedisClient.SREM(that.getBlockedStudentKey(), user.id),
+    RedisClient.SREM(that.getActiveStudentKey(),  user.id)
+  ]).then(() => { return that.active_students.delete(user) || that.blocked_students.delete(user); });
+};
+
+/**
+ *
+ * @param {User} user - the user to remove
+ * @returns {boolean} true if there is a user removed; false otherwise
+ */
+Course.prototype.removeInstructor = function(user) {
+  const that = this;
+  return Promise.all([
+    RedisClient.SREM(that.getInstructorKey(), user.id)
+  ]).then(() => { return that.instructors.delete(user); });
+};
 
 {/*******************************************/
 

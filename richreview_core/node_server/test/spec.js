@@ -244,7 +244,7 @@ describe("RichReview", function() {
 
   afterEach(function () { });
 
-  describe.only("#Validation", function() {
+  describe("#Validation", function() {
     it("js_utils.validateEmail(email)", () => {
       let b = null;
       b = js_utils.validateEmail("test@pilot.study");
@@ -266,9 +266,17 @@ describe("RichReview", function() {
       b = js_utils.validateEmail("test@ubc.ca");
       expect(b).to.deep.equal(true);
     });
+
+    it("Unmutable", function() {
+      const propKey = Course.getPropKey("UBC", "test_100_001_2018W");
+      expect(propKey).to.equal("crs:ubc:test_100_001_2018w:prop");
+      const propInstrKey = Course.getInstructorKey("UBC", "test_100_001_2018W");
+      expect(propInstrKey).to.equal("crs:ubc:test_100_001_2018w:instructors");
+    });
   });
 
   describe.only("#Model", function() {
+    
     describe("Group", function() {
       const test = {
         userID: "testingAuserBbbbbbbbbb",
@@ -324,6 +332,140 @@ describe("RichReview", function() {
             expect(users).to.have.property("participating");
             expect(users.invited).to.deep.equal([ ]);
             expect(users.participating).to.deep.equal([test.userID]);
+          });
+      });
+    });
+    
+    describe.only("Course", function() {
+      /**
+       * 
+       * @type Object
+       * @property {Course} course
+       * @property {User}   user
+       */
+      const test = {
+        user: null,
+        userID: "testingAuserBbbbbbbbbb",
+        email: "testing@email.com",
+        course: null,
+        institution: "UBC",
+        institutionL: "ubc",
+        course_group: "test_100_001_2018w",
+        dept: "test",
+        number: "100",
+        section: "001",
+        year: "2018w",
+        title: "Test Course"
+      };
+      test.coursePropKey = `crs:${test.institutionL}:${test.course_group}:prop`;
+      test.courseInstructorsKey = `crs:${test.institutionL}:${test.course_group}:instructors`;
+      test.courseActiveStudentsKey = `crs:${test.institutionL}:${test.course_group}:students:blocked`;
+      test.courseBlockedStudentsKey = `crs:${test.institutionL}:${test.course_group}:students:active`;
+
+      before("initialize user", function() {
+        return User.create(test.userID, test.email)
+          .then((user) => {
+            assert.instanceOf(user, User);
+            test.user = user; 
+          });
+      });
+
+      after("destroy user", function() {
+        return User.deleteUser(test.user.id);
+      });
+      
+      const validateCourse = (c) => {
+        expect(c.institution).to.be.equal(test.institutionL);
+        expect(c.course_group).to.be.equal(test.course_group);
+        expect(c.dept).to.be.equal(test.dept);
+        expect(c.number).to.be.equal(test.number);
+        expect(c.section).to.be.equal(test.section);
+        expect(c.year).to.be.equal(test.year);
+        expect(c.title).to.be.equal(test.title);
+      };
+      
+      it("create courses", function() {
+        return Course.create(
+          test.institution, 
+          test.course_group, 
+          { 
+            detail: { dept: test.dept, number: test.number, section: test.section, year: test.year },
+            title: test.title
+          }
+        )
+          .then(course => {
+            test.course = course;
+            validateCourse(course);
+            expect(course.getPropKey()).to.be.equal(test.coursePropKey);
+            return RedisClient.HGETALL(course.getPropKey());
+          })
+          .then(courseObj => {
+            validateCourse(courseObj);
+          });
+      });
+      
+      it("add+activate user to course", function() {
+        return test.course.addStudent(test.user)
+          .then(() => {
+            // course get
+            const students = test.course.getStudents();
+            util.test.log(JSON.stringify(students));
+            expect(students).to.have.property("blocked");
+            expect(students.blocked).to.deep.equal([test.user]);
+            expect(test.course.isStudent(test.user)).to.be.true;
+            expect(test.course.isBlockedStudent(test.user)).to.be.true;
+            expect(test.course.isActiveStudent(test.user)).to.be.false;
+            // course cache
+            const courses = Course.cache.getCourses.withStudent(test.user);
+            expect(courses).to.deep.equal([test.course]);
+            expect(Course.cache.exists(test.institution, test.course_group)).to.be.true;
+            expect(Course.cache.get(test.institution, test.course_group)).to.equal(test.course);
+            return Promise.all([
+              RedisClient.SMEMBERS(test.course.getBlockedStudentKey()),
+              redis_utils.keyExists(test.course.getActiveStudentKey())
+            ])
+          })
+          .then(([blocked_student_IDs, exists]) => {
+            expect(blocked_student_IDs).to.deep.equal([test.userID]);
+            expect(exists).to.be.false;
+            return test.course.activateStudent(test.user);
+          })
+          .then(() => {
+            // course get
+            const students = test.course.getStudents();
+            util.test.log(JSON.stringify(students));
+            expect(students).to.have.property("active");
+            expect(students.active).to.deep.equal([test.user]);
+            expect(test.course.isStudent(test.user)).to.be.true;
+            expect(test.course.isBlockedStudent(test.user)).to.be.false;
+            expect(test.course.isActiveStudent(test.user)).to.be.true;
+            return Promise.all([
+              RedisClient.SMEMBERS(test.course.getActiveStudentKey()),
+              redis_utils.keyExists(test.course.getBlockedStudentKey())
+            ])
+          })
+          .then(([active_student_IDs, exists]) => {
+            expect(active_student_IDs).to.deep.equal([test.userID]);
+            expect(exists).to.be.false;
+          })
+      });
+      
+      it("remove user from Redis", function() {
+        return test.course.removeStudent(test.user);
+      });
+      
+      it("delete course", function() {
+        return test.course.delete()
+          .then(() => {
+            return Promise.all([
+              redis_utils.keyExists(test.coursePropKey),
+              redis_utils.keyExists(test.courseInstructorsKey),
+              redis_utils.keyExists(test.courseBlockedStudentsKey),
+              redis_utils.keyExists(test.courseActiveStudentsKey)
+            ])
+              .then(exArr => {
+                expect(exArr).to.deep.equal([false, false, false, false]);
+              })
           });
       });
     });
@@ -475,7 +617,7 @@ describe("RichReview", function() {
     });
   });
   
-  describe.only("#Google", function() {
+  describe("#Google", function() {
 
     const testProfileAttr = {
       display_name: "James Randi",
@@ -583,13 +725,14 @@ describe("RichReview", function() {
     }); // END User: delete jrandi
   }); // END #Google
 
-  describe.only("#CWL", function() {
+  describe("#CWL", function() {
 
     const uid = "urn:oid:0.9.2342.19200300.100.1.1";
     const mail = "urn:oid:0.9.2342.19200300.100.1.3";
     const displayName = "urn:oid:2.16.840.1.113730.3.1.241";
     const givenName = "urn:oid:2.5.4.42";
     const sn = "urn:oid:2.5.4.4";
+    const ubcEduStudentNumber = "urn:mace:dir:attribute-def:ubcEduStudentNumber";
     const ubcEduPersistentID = "urn:oid:1.3.6.1.4.1.60.1.7.1";
     const groupMembership = "urn:oid:2.16.840.1.113719.1.1.4.1.25";
 
@@ -790,7 +933,7 @@ describe("RichReview", function() {
         });
     });
     
-    it("call UBCsamlStrategyCB twice gets same user", function() {
+    it("call UBCsamlStrategyCB twice does not overwrite user", function() {
       const testGroupID = "testingAgroupBbbbbbbbbbbbbbb";
       const UBCsamlStrategyCBAsync = node_util.promisify(lib_utils.UBCsamlStrategyCB);
       return R2D.User.prototype.AddGroupToUser(testID, testGroupID)
@@ -814,9 +957,32 @@ describe("RichReview", function() {
           assert.fail(err);
         });
     });
-
-    // TODO: test lib_utils.UBCsamlStrategyCB() does not recreate user if run a second time.
-    // TODO: test syncEmail()
+    
+    it("User syncEmail", function () {
+      const testGroupID = "testingAgroupBbbbbbbbbbbbbbb";
+      const UBCsamlStrategyCBAsync = node_util.promisify(lib_utils.UBCsamlStrategyCB);
+      testProfile[env.UBC.CWL.ATTRIBUTE.ubcEduStudentNumber] = "000";
+      return R2D.User.prototype.AddGroupToUser(testID, testGroupID)
+        .then(() => {
+          return UBCsamlStrategyCBAsync(testProfile);
+        })
+        .then(user => {
+          expect(user).to.be.an.instanceOf(R2D.User);
+          validateUserDetails(user);
+          return validateEnrollment(user);
+        })
+        .then((user) => {
+          return user.getGroupIDs();
+        })
+        .then(groupIDs => {
+          expect(groupIDs).to.deep.equal([testGroupID]);
+          return R2D.User.prototype.RemoveGroupFromUser(testID, testGroupID)
+        })
+        .catch((err) => {
+          util.test.error(err);
+          assert.fail(err);
+        });
+    });
 
     it("User: delete fhirst", () => {
       return R2D.User.deleteUser(testID)

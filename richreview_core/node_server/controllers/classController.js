@@ -8,108 +8,17 @@ const util = require('../util');
 const dummyData = require('../scripts/dummy_data');
 const class_handler = require('../lib/class_handler');
 
-/**
- * MyClass App
- *
- * If User.level=student then just fetch that student's details
- * If User.level=instructor then get instructor's courses and return all students in those courses
- * If User.level=admin then fetch all students
- * If User.level=undefined then return empty array
- */
+const Course = require("../lib/Course");
 
 /**
- * Get UBCUser from redis server
- * TODO: make this part of User
- * @param userid {string}
- * @returns {Promise<User>}
- */
-const getUserFromRedis = (user_key) => {
-  // corr. User.cache.
-  const user = dummyData.mockUsers[user_key];
-  user.id = user_key;
-  user.password = undefined;
-  return Promise.resolve(user);
-};
-
-/**
- * send a response to all the courses user has access to
- * TODO: auth_level is deprecated; make one general routing for all users
+ * 
  */
 exports.getCourses = (req, res) => {
-
-  const getCoursesAsStudent = (userid, user) => {
-    return []; // stub
-  };
-
-  /**
-   * Get all course keys, then get each list of instructor from course key, then, pick out which course key has user_key in list.
-   */
-  const getCoursesAsInstructor = (user_key, user) => {
-    /**
-     *
-     * cb1 and cb2 corr to redis commands
-     * sismember course:<course-dept>:<course-nbr>:instructors <course_key>
-     * TODO: remove instructors
-     */
-    const cb1 = (course_key) => {
-      return class_handler.getCourseInstructorList(course_key)
-        .then((instructors) => {
-          return { id: course_key, instructors };
-        });
-    };
-
-    const cb2 = (course_obj) => {
-      util.debug(user_key);
-      return course_obj.instructors.includes(user_key);
-    };
-
-    const cb3 = (course_obj_init) => {
-      return class_handler.getCourseProperties(course_obj_init.id)
-        .then((course_obj) => {
-          course_obj.id = course_obj_init.id;
-          return course_obj;
-        });
-    };
-
-    return class_handler.getCourseKeysFromRedis()
-      .then((course_keys) => {
-        const promises = course_keys.map(cb1);
-        return Promise.all(promises);
-      })
-      .then((course_objs) => {
-        return course_objs.filter(cb2);
-      })
-      .then((course_objs) => {
-        const promises = course_objs.map(cb3);
-        return Promise.all(promises);
-      });
-  };
-
-  const getCoursesAsAdmin = (user_key, user) => {
-    return []; // stub
-  };
-
-  // TODO: properly get user
-  // const userid = req.user.id;
-  const userid = "c90a80ff67"; // to test instructor
-
-  const user_key = "usr:"+userid;
-  getUserFromRedis(user_key).then((user) => {
-      // TODO: case for user.auth_level == undefined
-      switch(user.auth_level) {
-        case "admin":
-          return getCoursesAsAdmin(user_key, user);
-        case "instructor":
-          return getCoursesAsInstructor(user_key, user);
-        case "student":
-          return getCoursesAsStudent(user_key, user);
-        default:
-          // TODO: do something about this case
-          throw "in getUBCUserFromRedis; invalid auth_level";
-      }
-    }).then((course_objs) => {
-      res.send(course_objs);
-    });
+  //if(!req.user) 
+  const courses = Course.cache.getCourses.withUser(req.user);
+  /*const result = courses.map((course) => {
+    
+  });*/
 };
 
 exports.getUsersFromCourse = (req, res) => {

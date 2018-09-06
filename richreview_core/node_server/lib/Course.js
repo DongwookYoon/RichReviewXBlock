@@ -17,8 +17,6 @@ const R2D         = require("./r2d");
 const env         = require("./env");
 const util        = require("../util");
 
-const USERID_COURSE_TABLE = "userid_course_table";
-
 /**
  * Currently, Course is only used for UBC, using the UBC CWL auth. Course information will be stored in Redis as crs:ubc:*
  */
@@ -51,9 +49,9 @@ const USERID_COURSE_TABLE = "userid_course_table";
  * @member {string} [year]       - the year the course is held (i.e. 2018W)
  * @member {string} [title]      - the course title   (i.e. Software Construction)
  * @member {Set.<User>} instructors  - a list of instuctors
- * @member {Set.<User>} active_students  - a list of active students 
+ * @member {Set.<User>} active_students  - a list of active students
  * @member {Set.<User>} blocked_students - a list of blocked students
- * 
+ *
  * NOTE: course_group, institution, dept, number, section, year should be case insensitive
  */
 
@@ -94,6 +92,7 @@ const Course = function(course_group, is_active, institution, options) {
  * 
  * Static methods:
  * create
+ * plugCourse
  * 
  * Instance methods (prototype):
  * getPropKey
@@ -198,7 +197,7 @@ Course.cache = (function () {
 
   const pub = {};
 
-  const makeCacheKey = (institution, course_group) => `${institution}:${course_group}`;
+  const makeCacheKey = (institution, course_group) => `${institution.toLocaleLowerCase()}:${course_group.toLocaleLowerCase()}`;
 
   /**
    * Implementation to load a course from Redis, add it to cache, then return it.
@@ -208,8 +207,10 @@ Course.cache = (function () {
   const loadFromDBInternal = (course_key) => {
     return RedisClient.HGETALL(course_key)
       .then((course_obj) => {
+        if(!course_obj) throw new Error(`${course_key} does not exist`);
         const cache_key = makeCacheKey(course_obj.institution, course_obj.course_group);
         const is_active   = (course_obj.is_active === "true");
+        course_obj.detail = course_obj;
         cache[cache_key] = new Course(
           course_obj.course_group, is_active, course_obj.institution, course_obj
         );
@@ -348,7 +349,7 @@ Course.create = (institution, course_group, options) => {
   institution = institution.toLocaleLowerCase();
   course_group  = course_group.toLocaleLowerCase();
   if (Course.cache.exists(institution, course_group)) {
-    util.logger("Course.create", `${institution}:${course_group} already exists`)
+    util.logger("Course.create", `${institution}:${course_group} already exists`);
     return Promise.resolve(null);
   }
   let sss = null;
@@ -356,20 +357,54 @@ Course.create = (institution, course_group, options) => {
     sss = [ ];
     if(options.detail) sss.push(
         "dept", options.detail.dept, "number", options.detail.number, 
-        "section", options.detail.section, "year", options.detail.section,
+        "section", options.detail.section, "year", options.detail.year,
       );
     if(options.title) sss.push("title", options.title);
   }
   return RedisClient.HMSET(
-    Course.getPropKey(),
+    Course.getPropKey(institution, course_group),
     "course_group", course_group,
     "is_active", false,
     "institution", institution
   )
     .then((b) => {
-      if(sss) return RedisClient.HMSET.bind(null, Course.getPropKey()).apply(null, sss);
+      if(sss) return RedisClient.HMSET.bind(null, Course.getPropKey(institution, course_group)).apply(null, sss);
     })
-    .then(() => { return Course.cache.loadFromDB(institution, course_group); });
+    .then(() => {
+      return Course.cache.loadFromDB(institution, course_group); 
+    });
+};
+
+/**
+ *
+ * @function
+ * @memberOf Course
+ * @param {string} dept
+ * @param {string} number
+ * @param {string} section
+ * @param {string} year
+ * @param {string} [title]
+ * TODO: finish and test
+ */
+Course.prototype.setDetail = function(dept, number, section, year, title) {
+  const that = this;
+  dept = dept.toLocaleLowerCase(); number = number.toLocaleLowerCase();
+  section = section.toLocaleLowerCase(); year = year.toLocaleLowerCase();
+  const sss = [
+    "dept",    dept, 
+    "number",  number, 
+    "section", section, 
+    "year",    year
+  ];
+  if(title) {
+    title = title.toLocaleLowerCase();
+    sss.push("title", title);
+  }
+  return RedisClient.HMSET.bind(null, that.getPropKey()).apply(null, sss)
+    .then(() => {
+      that.dept = dept; that.number = number; that.section = section; that.year = year;
+      if(title) that.title = title;
+    });
 };
 
 /**
@@ -474,7 +509,7 @@ Course.prototype.isBlockedStudent = function(user) { return this.blocked_student
   const activateStudentInternal = function(user) {
     if(!this.blocked_students.has(user)) return Promise.resolve(null);
     const that = this;
-    return RedisClient.SDEL(that.getBlockedStudentKey(), user.id)
+    return RedisClient.SREM(that.getBlockedStudentKey(), user.id)
       .then(() => {
         that.blocked_students.delete(user);
         return RedisClient.SADD(that.getActiveStudentKey(), user.id);
@@ -497,7 +532,7 @@ Course.prototype.isBlockedStudent = function(user) { return this.blocked_student
   const blockStudentInternal = function(user) {
     if(!this.active_students.has(user)) return Promise.resolve(null);
     const that = this;
-    return RedisClient.SDEL(that.getActiveStudentKey(), user.id)
+    return RedisClient.SREM(that.getActiveStudentKey(), user.id)
       .then(() => {
         that.active_students.delete(user);
         return RedisClient.SADD(that.getBlockedStudentKey(), user.id);

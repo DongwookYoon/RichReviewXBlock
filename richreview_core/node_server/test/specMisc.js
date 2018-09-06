@@ -21,6 +21,11 @@ describe("miscellaneous tests", function() {
   after(function () { });
 
   afterEach(function () { });
+  
+  it("toLocaleLowerCase", function() {
+    const str = "ASDF";
+    expect(str.toLocaleLowerCase()).to.equal("asdf");
+  });
 
   it("test promise loop apply", (done) => {
     const testFn = (a) => {

@@ -25,6 +25,7 @@ if user
         a(href="/account")
             i.fa.fa-user
             | &nbsp#{user.nick}
+            include _auth_indicator
     li
         a(href="/logout_saml")
             i.fa.fa-sign-out

@@ -78,6 +78,9 @@ app.use((req, res, next) => {
     res.locals.cdn_endpoint = env.azure_config.cdn.endpoint;
     res.locals.host_url     = env.node_config.HOST_URL;
     res.locals.flashes = req.flash();
+    res.locals.helper = {
+        AUTH_TYPE: env.AUTH_TYPE
+    };
     res.locals.user = req.user || null;
     next();
 });

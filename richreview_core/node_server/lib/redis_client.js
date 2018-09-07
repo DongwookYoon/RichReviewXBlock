@@ -6,13 +6,13 @@
 
 // import npm modules
 const node_util = require('util');
-const redis = require('redis');
-const assert     = require('chai').assert;
-var Redlock = require('redlock');
+const redis     = require('redis');
+const assert    = require('chai').assert;
+var Redlock     = require('redlock');
 
 // import libraries
-const env = require('./env');
-const util = require('../util');
+const env       = require('./env');
+const util      = require('../util');
 
 util.start("importing redis_client");
 
@@ -20,27 +20,18 @@ util.start("importing redis_client");
  * switch redis client dependent on host
  */
 let redisClient = null;
-
-if(process.env.NODE_ENV === 'production') {
-  if(process.env.HOSTNAME === env.node_config.RICHREVIEW_CA_VM) {
-    util.start("using redis cache for RichReview CA VM");
-    redisClient = redis.createClient(
-      env.redis_config.redis_cache.port,
-      env.redis_config.redis_cache.hostname,
-      {
-        auth_pass: env.redis_config.redis_cache.access_key,
-        tls: {
-            servername: env.redis_config.redis_cache.hostname
-        }
+if(env.node_config.ENV === "production") {
+  util.start("using redis cache for RichReview CA VM");
+  redisClient = redis.createClient(
+    env.redis_config.redis_cache.port,
+    env.redis_config.redis_cache.hostname,
+    {
+      auth_pass: env.redis_config.redis_cache.access_key,
+      tls: {
+        servername: env.redis_config.redis_cache.hostname
       }
-    );
-  } else if(process.env.HOSTNAME === env.node_config.RICHREVIEW_VM) {
-    util.start("using remote redis server for RichReview VM");
-    redisClient = redis.createClient(env.redis_config.port, env.redis_config.url);
-    redisClient.auth(env.redis_config.auth);
-  } else {
-      util.error("cannot create redis client: unknown production environment");
-  }
+    }
+  );
 } else {
   util.start("using local redis server");
   redisClient = redis.createClient(env.redis_config.port);

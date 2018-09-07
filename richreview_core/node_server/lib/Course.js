@@ -234,6 +234,7 @@ Course.cache = (function () {
     cache = { };
     return RedisClient.KEYS("crs:*:*:prop")
       .then((course_keys) => {
+        util.debug(JSON.stringify(course_keys));
         const promises = course_keys.map(loadFromDBInternal);
         return Promise.all(promises);
       })

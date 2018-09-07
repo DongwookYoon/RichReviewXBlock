@@ -32,7 +32,7 @@ class UserPanel extends React.Component {
   };
   
   buildInstructorCards() {
-    if (UserPanel.nonEmptyArray(this.props.users.instuctors)) {
+    if (UserPanel.nonEmptyArray(this.props.users.instructors)) {
       return (
         <div className="user-panel-instructors">
           Instructors

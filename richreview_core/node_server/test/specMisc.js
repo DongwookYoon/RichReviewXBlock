@@ -21,6 +21,11 @@ describe("miscellaneous tests", function() {
   after(function () { });
 
   afterEach(function () { });
+  
+  it("toLocaleLowerCase", function() {
+    const str = "ASDF";
+    expect(str.toLocaleLowerCase()).to.equal("asdf");
+  });
 
   it("test promise loop apply", (done) => {
     const testFn = (a) => {
@@ -89,6 +94,113 @@ describe("miscellaneous tests", function() {
   it("assertions", () => {
     const test = { prop: 0 };
     assert.property(test, 'prop');
+    const val = 0;
+    assert.isAtLeast(val, 1, "is at least 1");
 
+  });
+  
+  it("function wrapper", () => {
+    const flag = {
+      begin: false,
+      checkpoint: false,
+      end: false
+    };
+    
+    const makeWrapper = (thisArg, fn) => {
+      return function() {
+        flag.begin = true;
+        const result = fn.apply(thisArg, arguments);
+        flag.end = true;
+        return result;
+      };
+    };
+    
+    function MyClass(a, b) {
+      this.a = a; this.b = b;
+    }
+    
+    MyClass.prototype.myFunction = function(c, d) {
+      flag.checkpoint = true;
+      return this.a * this.b * c * d;
+    };
+    
+    expect(flag.begin).to.be.false;
+    expect(flag.checkpoint).to.be.false;
+    expect(flag.end).to.be.false;
+    
+    const myClass = new MyClass(2, 3);
+    const myWrapperFunction = makeWrapper(myClass, myClass.myFunction);
+
+    expect(flag.begin).to.be.false;
+    expect(flag.checkpoint).to.be.false;
+    expect(flag.end).to.be.false;
+    
+    expect(myWrapperFunction(4, 5)).to.equal(120);
+
+    expect(flag.begin).to.be.true;
+    expect(flag.checkpoint).to.be.true;
+    expect(flag.end).to.be.true;
+  });
+  
+  it("async function wrapper", () => {
+    const flag = {
+      begin: false,
+      checkpoint: false,
+      end: false
+    };
+
+    const makeAsyncWrapper = (thisArg, fn) => {
+      const endCall = (res) => {
+        return new Promise(resolve => {
+          flag.end = true;
+          resolve(res);
+        });
+      };
+      
+      
+      const beginCall = () => {
+        return new Promise(resolve => {
+          flag.begin = true;
+          resolve(endCall); 
+        });
+      };
+      
+      return function() {
+        const myArguments = arguments;
+        return beginCall()
+          .then(endCall => {
+            return fn.apply(thisArg, myArguments)
+              .then(endCall);
+          });
+      }; // END function
+    };
+
+    function MyClass(a, b) {
+      this.a = a; this.b = b;
+    }
+
+    MyClass.prototype.myFunction = function(c, d) {
+      flag.checkpoint = true;
+      return Promise.resolve(this.a * this.b * c * d);
+    };
+
+    expect(flag.begin).to.be.false;
+    expect(flag.checkpoint).to.be.false;
+    expect(flag.end).to.be.false;
+
+    const myClass = new MyClass(2, 3);
+    const myWrapperFunction = makeAsyncWrapper(myClass, myClass.myFunction);
+
+    expect(flag.begin).to.be.false;
+    expect(flag.checkpoint).to.be.false;
+    expect(flag.end).to.be.false;
+
+    return myWrapperFunction(4, 5)
+      .then(res => {
+        expect(res).to.equal(120);
+        expect(flag.begin).to.be.true;
+        expect(flag.checkpoint).to.be.true;
+        expect(flag.end).to.be.true;
+      });
   });
 });

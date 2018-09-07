@@ -249,5 +249,70 @@ describe("spec Redis", function() {
         assert.fail(err);
       });
   });
+  
+  /*it("test GraphSet is commutative", function() {
+    const a = "a"; const b = "b"; const c = "c";
+    const graph1 = "TestGraph1"; const graph2 = "TestGraph2";
+    return redis_utils.GraphSet(graph1, a, b)
+      .then(() => {
+        return Promise.all([
+          redis_utils.GraphExists(graph, a),
+          redis_utils.GraphGet(graph, a)
+        ]);
+      })
+      .then(([exists, aArr]) => {
+        expect(exists).to.be.true;
+        expect(aArr).to.deep.equal([b]);
+        return 
+      })
+      .catch((err) => {
+        util.error(err);
+        assert.fail(err);
+      });
+  });*/
+  
+  it("test makeAtomic", () => {
+    const key = "test";
+    const compare = [
+      0,3,9,21,45,93,189,381,765,1533,3069,6141,12285,24573,49149,98301,
+      196605,393213,786429,1572861,3145725,6291453,12582909,25165821,50331645
+    ];
+    function MyClass(a) { this.a = a; }
+    MyClass.prototype.dd = function(b) {
+      const that = this;
+      return RedisClient.GET(key)
+        .then(str => {
+          const arr = JSON.parse(str);
+          const val = (arr[arr.length - 1] * b) + that.a;
+          arr.push(val);
+          str = JSON.stringify(arr);
+          return RedisClient.SET(key, str);
+        });
+    };
+    const myClass = new MyClass(3);
+    const cc = redis_utils.makeAtomic(myClass, myClass.dd);
+    return RedisClient.SET(key, JSON.stringify([0]))
+      .then(() => {
+        return Promise.all([
+          cc(2), cc(2), cc(2), cc(2), cc(2), cc(2),
+          cc(2), cc(2), cc(2), cc(2), cc(2), cc(2),
+          cc(2), cc(2), cc(2), cc(2), cc(2), cc(2),
+          cc(2), cc(2), cc(2), cc(2), cc(2), cc(2)
+        ]);
+      })
+      .then(() => {
+        return RedisClient.GET(key);
+      })
+      .then((str) => {
+        const arr = JSON.parse(str);
+        expect(arr).to.deep.equal(compare);
+        return RedisClient.DEL(key);
+      })
+      .catch((err) => {
+        util.error(err);
+        assert.fail(err);
+      });
+    
+  });
 
 });

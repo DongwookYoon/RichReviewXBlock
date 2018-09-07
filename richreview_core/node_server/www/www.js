@@ -38,7 +38,7 @@ var webAppSync = (function(){
     pub.run = function() {
         util.start("doing web-app sync");
         return getBlobStorageHash()
-            .then(function(storage_hash){
+            .then(function(storage_hash) {
                 var local_hash = getLocalFileHash(getLocalFileList());
                 if(local_hash === storage_hash){
                     return;
@@ -128,21 +128,10 @@ var webAppSync = (function(){
 const runServer = () => {
     const app = require('../app');
 
-    let httpsPort = null;
-    let httpPort = null;
-
-    if (process.env.NODE_ENV === 'production') {
-        httpsPort = 443;
-        httpPort = 80;
-    } else{ // on localhost
-        httpsPort = 8001;
-        httpPort = 8002;
-    }
-
     process.setMaxListeners(0);
 
-    app.https.set('port', process.env.PORT || httpsPort);
-    app.http.set('port', process.env.PORT || httpPort);
+    app.https.set('port', env.node_config.HTTPS_PORT || 8001);
+    app.http.set('port',  env.node_config.HTTP_PORT  || 8002);
 
     require('http').createServer(app.http).listen(
         app.http.get('port'),
@@ -167,9 +156,10 @@ const runServer = () => {
 };
 
 if(process.env.NODE_ENV === 'production') {
-    webAppSync.run().then(() => {
+    webAppSync.run()
+      .then(() => {
         runServer();
-    });
+      });
 } else {
     util.start("skipping web-app sync");
     runServer();

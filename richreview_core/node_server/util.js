@@ -27,6 +27,18 @@ exports.printer = function(type, stmt) {
   console.log("<"+type+">: "+stmt);
 };
 
+exports.print = function(s, stmt) {
+  console.log(stmt ? `<${s}>: ${stmt}` : s);
+};
+
+exports.test = {
+  log: (stmt) => { console.log("<TEST>: "+stmt); },
+  error: (err) => {
+    if(err instanceof Error) { err = `${err.code}: ${err.message}`; }
+    console.log("<ERR>: "+err);
+  }
+};
+
 exports.testl = function(stmt) {
     console.log("<TEST>: "+stmt);
 };

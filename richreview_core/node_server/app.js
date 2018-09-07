@@ -78,6 +78,9 @@ app.use((req, res, next) => {
     res.locals.cdn_endpoint = env.azure_config.cdn.endpoint;
     res.locals.host_url     = env.node_config.HOST_URL;
     res.locals.flashes = req.flash();
+    res.locals.helper = {
+        AUTH_TYPE: env.AUTH_TYPE
+    };
     res.locals.user = req.user || null;
     next();
 });
@@ -100,6 +103,15 @@ util.start("setting up error log");
 setErrLog();
 
 util.start("using redirect http middleware");
+// all http request will be redirected to https
+function redirectHttp(){
+  /** redirect all http requests to https */
+  let app_http = express();
+  app_http.get("*", function (req, res) {
+    res.redirect("https://" + req.headers.host + req.path);
+  });
+  return app_http;
+}
 let app_http = redirectHttp();
 
 /******************************************/
@@ -168,16 +180,6 @@ function setErrLog() {
             }
         });
     }
-}
-
-// all http request will be redirected to https
-function redirectHttp(){
-    /** redirect all http requests to https */
-    let app_http = express();
-    app_http.get("*", function (req, res) {
-        res.redirect("https://" + req.headers.host + req.path);
-    });
-    return app_http;
 }
 
 /******************************************/

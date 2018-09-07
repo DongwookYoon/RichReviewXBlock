@@ -72,7 +72,7 @@ const runCount = () => {
             COUNT.pilot++;
           } else {
             COUNT.other++;
-            //console.log(`${email} usr:${lib_utils.makeOldID(email)} ==? ${values[index]}`);
+            console.log(`${email} usr:${lib_utils.makeOldID(email)} ==? ${values[index]}`);
           }
           //expect("usr:"+lib_utils.makeOldID(email)).to.deep.equal(values[index]);
         });
@@ -105,7 +105,7 @@ describe("", function() {
 
   afterEach(function () { });
 
-  // runCount();
+  runCount();
 
 
 });

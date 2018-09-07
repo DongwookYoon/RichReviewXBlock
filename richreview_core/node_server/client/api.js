@@ -7,12 +7,12 @@ export const fetchCourses = () => {
     .then(resp => resp.data);
 };
 
-export const fetchCourseUsers = (key) => {
-  return axios.get(`/api/class/fetch_course_users/${key}`)
+export const fetchCourseUsers = (institution, course_group) => {
+  return axios.get(`/api/class/fetch_users?op=ForCourse&institution=${institution}&course_group=${course_group}`)
     .then(resp => resp.data);
 };
 
-export const fetchCourseAssignments = (key) => {
+/*export const fetchCourseAssignments = (key) => {
   return axios.get(`/api/class/fetch_course_assignments/${key}`)
     .then(resp => resp.data);
-};
+};*/

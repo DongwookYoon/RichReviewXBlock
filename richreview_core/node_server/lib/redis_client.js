@@ -6,13 +6,13 @@
 
 // import npm modules
 const node_util = require('util');
-const redis = require('redis');
-const assert     = require('chai').assert;
-var Redlock = require('redlock');
+const redis     = require('redis');
+const assert    = require('chai').assert;
+var Redlock     = require('redlock');
 
 // import libraries
-const env = require('./env');
-const util = require('../util');
+const env       = require('./env');
+const util      = require('../util');
 
 util.start("importing redis_client");
 
@@ -20,27 +20,18 @@ util.start("importing redis_client");
  * switch redis client dependent on host
  */
 let redisClient = null;
-
-if(process.env.NODE_ENV === 'production') {
-  if(process.env.HOSTNAME === env.node_config.RICHREVIEW_CA_VM) {
-    util.start("using redis cache for RichReview CA VM");
-    redisClient = redis.createClient(
-      env.redis_config.redis_cache.port,
-      env.redis_config.redis_cache.hostname,
-      {
-        auth_pass: env.redis_config.redis_cache.access_key,
-        tls: {
-            servername: env.redis_config.redis_cache.hostname
-        }
+if(env.node_config.ENV === "production") {
+  util.start("using redis cache for RichReview CA VM");
+  redisClient = redis.createClient(
+    env.redis_config.redis_cache.port,
+    env.redis_config.redis_cache.hostname,
+    {
+      auth_pass: env.redis_config.redis_cache.access_key,
+      tls: {
+        servername: env.redis_config.redis_cache.hostname
       }
-    );
-  } else if(process.env.HOSTNAME === env.node_config.RICHREVIEW_VM) {
-    util.start("using remote redis server for RichReview VM");
-    redisClient = redis.createClient(env.redis_config.port, env.redis_config.url);
-    redisClient.auth(env.redis_config.auth);
-  } else {
-      util.error("cannot create redis client: unknown production environment");
-  }
+    }
+  );
 } else {
   util.start("using local redis server");
   redisClient = redis.createClient(env.redis_config.port);
@@ -101,11 +92,65 @@ exports.util = (function () {
   };
 
   /**
+   * Multipurpose locking mechanism for use by redis_utils.lock()
+   * @type {Redlock}
+   */
+  const genLock = new Redlock( [redisClient], {
+    driftFactor: 0.01,
+    retryCount:  10,
+    retryDelay:  200,
+    retryJitter:  200
+  });
+  const genLockResource = 'lock:gen';
+  var genLockTTL = 1000;
+  
+  /**
+   * Makes a given function atomic.
+   * @param {Object} thisArg - the argument to pass as this
+   * @param {function} fn - the function to wrap with a lock
+   * @returns {function} the atomic version of the function
+   * TODO: test this function
+   */
+  pub.makeAtomic = (thisArg, fn) => {
+    return function() {
+      const myArguments = arguments;
+      return genLock.lock(genLockResource, genLockTTL)
+        .then(lock => {
+          return fn.apply(thisArg, myArguments)
+            .then((res) => { 
+              return lock.unlock().then(() => { return res });
+            });
+        });
+    }
+  };
+
+  /**
    * Graph is a bidirectional data structure implemented using hashes and stringified lists
+   * Graph contains nodes and a list of the nodes that are adjacent to each node.
    * Each node in a graph can be queried (GraphGet) to find the nodes the node is adjacent to it
+   * 
+   * Example: suppose these are the nodes in the graph: A, B, C. 
+   * A is connected to B; B is connected to C. Then in Redis,
+   * 
+   * Graph
+   *  - A: [ B ]
+   *  - B: [ A, C ]
+   *  - C: [ B ]
    *
-   * The graph is primarily used to create a table that maps emails to user IDs that can be queryable
-   *
+   * Calling GraphGet gives me on B gives me [ A, C ]; calling GraphSet on A and C changes the graph into:
+   * 
+   * Graph
+   *  - A: [ B, C ]
+   *  - B: [ A, C ]
+   *  - C: [ A, B ]
+   *  
+   *  Calling GraphDel on B changes the graph into:
+   *  
+   *  Graph
+   *  - A: [ C ]
+   *  - C: [ A ]
+   * 
+   * The graph is primarily used to create a table that maps emails to user IDs that can be queryable.
    */
 
   /**
@@ -175,10 +220,10 @@ exports.util = (function () {
   }/*********************/
 
   /**
-   *
+   * Gets a list of all the nodes adjacent to val
    * @param {string} graph
    * @param {string} val
-   * @returns {string[]} the members associated with val
+   * @returns {string[]} all the nodes adjacent to val
    */
     pub.GraphGet = function(graph, val) {
       return RedisClient.HGET(graph, val)
@@ -194,9 +239,12 @@ exports.util = (function () {
           }
         });
     };
-
+    
   /**
-   *
+   * True if a node is in the graph
+   * @param {string} graph
+   * @param {string} val
+   * @returns {Promise.<boolean>}
    */
   pub.GraphExists = function(graph, val) {
     return RedisClient.HGET(graph, val)
@@ -207,7 +255,7 @@ exports.util = (function () {
 
   {/** initializing GraphDel **/
     const remove_from_list = (graph, member, val) => {
-      const exceptionMsg = `GraphDel: graph ${graph} is not consistent`;
+      const exceptionMsg = `GraphDel: graph ${graph} is consistent`;
       return RedisClient.HGET(graph, member)
         .then((o) => {
           assert.isOk(o, exceptionMsg);

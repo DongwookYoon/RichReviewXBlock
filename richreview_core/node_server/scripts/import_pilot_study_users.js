@@ -2,8 +2,6 @@
  * Import usernames and passwords for pilot study
  *
  * Created by Colin
- *
- * TODO: deprecate this file and use backdoor instead
  */
 
 const Promise    = require('promise'); // jshint ignore:line

@@ -33,6 +33,9 @@ const makeTestUser = (userAttribute) => {
       if(err instanceof Error && err.message === "user already exists") {
         util.logger("make courses", `user with ${userAttribute.email} already exists; getting user`);
         return User.findByEmail(userAttribute.email);
+      } else {
+        util.error(err);
+        throw err;
       }
     })
     .then(user => {

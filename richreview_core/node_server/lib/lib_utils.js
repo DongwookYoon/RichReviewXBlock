@@ -249,14 +249,7 @@ exports.makePilotUserID = (profile) => {
       last_name: profile[sn],
       auth_type: "UBC_CWL"
     };
-    return R2D.User.create(id, email, options)
-      .then((user) => {
-        assert.instanceOf(user, R2D.User, "UBCsamlStrategyCB: user is an R2D.User");
-        user.saml = {};
-        user.saml.nameID = profile.nameID;
-        user.saml.nameIDFormat = profile.nameIDFormat;
-        return Course.plugCourse(user, profile);
-      });
+    return R2D.User.create(id, email, options);
   };
 
   /**
@@ -273,6 +266,13 @@ exports.makePilotUserID = (profile) => {
       .then((user) => {
         if(user) { return user; }
         else { return makeUBCUser(profile); }
+      })
+      .then((user) => {
+        assert.instanceOf(user, R2D.User, "UBCsamlStrategyCB: user is an R2D.User");
+        user.saml = {};
+        user.saml.nameID = profile.nameID;
+        user.saml.nameIDFormat = profile.nameIDFormat;
+        return Course.plugCourse(user, profile);
       })
       .then(user => {
         done(null, user);

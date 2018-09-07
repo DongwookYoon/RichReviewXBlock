@@ -84,7 +84,7 @@ const setAuthType = ({id, email, auth_type}) => {
  */
 const dryRun = ({id, email, auth_type}) => {
   if(auth_type) {
-    util.printer("MARK", `id=${id} email=${email} auth_type=${auth_type}`);
+    util.printer("MARK", `(dry run) id=${id} email=${email} auth_type=${auth_type}`);
   }
 };
 

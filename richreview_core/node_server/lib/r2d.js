@@ -17,7 +17,6 @@ const env         = require("./env");
 const util        = require('../util');
 
 // constants
-const USERID_EMAIL_TABLE = env.USERID_EMAIL_TABLE; 
 const AUTH_TYPES = env.AUTH_TYPES;
 const AUTH_TYPES_OTHER = env.AUTH_TYPE.OTHER;
 const AUTH_TYPES_UNKN  = env.AUTH_TYPE.UNKN;
@@ -442,10 +441,9 @@ User.prototype.updateNick = function(id, newnick){
 };
 
 /**
- * @param newEmail
+ * Change the email of a user to the new email 
+ * @param {string} newEmail - the new email to change to
  * @returns {Promise}
- *
- * WARNING: this function is broken
  */
 User.prototype.syncEmail = function(newEmail){
   if(this.email === newEmail) return Promise.resolve(this);
@@ -505,6 +503,19 @@ User.prototype.getGroupIDs = function() {
     .then(function(str) {
       return JSON.parse(str);
     });
+};
+
+User.prototype.send = function() {
+  const result = {
+    id: this.id,
+    nick: this.nick,
+    email: this.email
+  };
+  if(this.sid)          result.sid = this.sid;
+  if(this.display_name) result.display_name = this.display_name;
+  if(this.first_name)   result.first_name = this.first_name;
+  if(this.last_name)    result.last_name = this.last_name;
+  return result;
 };
 
 /*

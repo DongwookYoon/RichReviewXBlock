@@ -22,10 +22,12 @@ class CoursePanel extends React.Component {
       }
     );*/
     return this.props.courses.map(course => {
+      const kk = `${course.institution}:${course.course_group}`;
+      const open = () => this.props.selectCourse(course.institution, course.course_group);
       return (
-        <div id={course.course_group} key={course.course_group} className={"course-card"}>
-          <h2>{course.title}</h2>
-          <p>{course.institution} {course.dept} {course.number} {course.section} {course.year}</p>
+        <div id={kk} key={kk} className={"course-card"}>
+          <p>{course.title}</p>
+          <button onClick={open}>{course.institution} {course.dept} {course.number} {course.section} {course.year}</button>
         </div>
     );
     });

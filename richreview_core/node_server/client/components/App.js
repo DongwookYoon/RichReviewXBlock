@@ -12,8 +12,13 @@ class App extends React.Component {
 
     this.state = {
       courses: [ ],
-      users:   { },
-      asgmt_grps:  [ ],
+      users:   {
+        students: {
+          blocked: [ ],
+          active:  [ ]
+        },
+        instructors: [ ]
+      },
       view: ""
     };
 
@@ -28,12 +33,14 @@ class App extends React.Component {
       });
   }
 
-  selectCourse(key) {
-    /*api.fetchCourseUsers(key)
+  selectCourse(institution, course_group) {
+    api.fetchCourseUsers(institution, course_group)
       .then((users) => {
+        console.log(JSON.stringify(users));
         this.setState({ users });
       });
-    api.fetchCourseAssignments(key)
+    
+    /*api.fetchCourseAssignments(key)
       .then((asgmt_grps) => {
         this.setState({ asgmt_grps });
       });*/
@@ -50,6 +57,9 @@ class App extends React.Component {
             <CoursePanel
               courses={this.state.courses}
               selectCourse={this.selectCourse}
+            />
+            <UserPanel
+              users={this.state.users}
             />
           </div>
         </div>

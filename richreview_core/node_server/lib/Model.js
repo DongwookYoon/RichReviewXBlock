@@ -30,7 +30,6 @@ const util        = require("../util");
  * !!! This function should not to be used by client !!!
  * @param usr_str {string} - the redis key rep. user to delete; can be user id or form usr:[id]
  * @returns {Promise}
- * TODO: test thoroughly
  * TODO: should delete user's assignments
  */
 User.deleteUser = (usr_str) => {
@@ -298,7 +297,7 @@ InternalStudy.createUser = (email, password) => {
 
   util.logger("ADMIN UBC STUDY","check if user already exists");
   if(User.cache.exists(id)) {
-    return Promise.reject("user already exists");
+    return Promise.reject(new Error("user already exists"));
   }
 
   util.logger("ADMIN UBC STUDY","setting up options");

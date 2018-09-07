@@ -80,8 +80,45 @@ const UBC = {
   }
 };
 
+/**
+ * 
+ * @type {{ATTRIBUTE: {USERS: Object[], GROUP: Object}}}
+ */
 const TEST = {
   ATTRIBUTE: {
+    /**
+     * Test users are created in `scripts/make_courses.js`
+     * WARNING: For demonstration only. These users' passwords are viewable by the public.
+     */
+    USERS: [
+      {
+        nick: "tester1",
+        email: "tester1@test.com",
+        password: "whitepearl",
+        sid: "9999",
+        display_name: "Tester Tom",
+        first_name: "Tester",
+        last_name: "Tom"
+      },
+      {
+        nick: "tester2",
+        email: "tester2@test.com",
+        password: "blackonyx",
+        sid: "8888",
+        display_name: "Tester James",
+        first_name: "Tester",
+        last_name: "James"
+      },
+      {
+        nick: "tester3",
+        email: "tester3@test.com",
+        password: "goldcopper",
+        sid: "7777",
+        display_name: "Tester Sam",
+        first_name: "Tester",
+        last_name: "Sam"
+      }
+    ],
     GROUP: {
       TEST_112_001_2019W: "test_112_001_2019w"
     }
@@ -136,6 +173,7 @@ exports.COURSE_GROUP_DETAIL = {
   }
 };
 
+exports.TEST = TEST;
 exports.UBC = UBC;
 exports.COURSE_GROUP = COURSE_GROUP;
 

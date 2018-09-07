@@ -403,7 +403,7 @@ exports.identifyUser = function(req, res){
  */
 exports.validateEmail = (email) => {
     const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    const matchesDomain = (email) => /(@(([a-zA-Z0-9])*\.)?ubc.ca$)|(@pilot.study$)|(@gmail.com$)|(@cornell.edu$)|(@edx.org$)/g.test(email);
+    const matchesDomain = (email) => /(@(([a-zA-Z0-9])*\.)?ubc.ca$)|(@pilot.study$)|(@gmail.com$)|(@cornell.edu$)|(@edx.org$)|(@test.com$)/g.test(email);
 
     return re.test(email) && matchesDomain(email);
 };

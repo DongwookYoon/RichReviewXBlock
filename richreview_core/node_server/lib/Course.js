@@ -476,6 +476,7 @@ Course.prototype.addStudent = function(user) {
     return RedisClient.SADD(this.getBlockedStudentKey(), user.id)
       .then(() => {
         this.blocked_students.add(user);
+        return user;
       });
   }
 };
@@ -595,15 +596,15 @@ Course.prototype.removeInstructor = function(user) {
 };
 
 /**
- * Used for controller to pass information to client.
+ * Used for controller to pass (non-user) information to client.
  * @returns {Object}
  */
 Course.prototype.send = function() {
   const result = { 
     institution: this.institution, is_active: this.is_active, course_group: this.course_group,
-    active_students: [...this.active_students].map((user) => user.id),
+    /*active_students: [...this.active_students].map((user) => user.id),
     blocked_students: [...this.blocked_students].map((user) => user.id),
-    instructors: [...this.instructors].map((user) => user.id)
+    instructors: [...this.instructors].map((user) => user.id)*/
   };
   if(this.dept) {
     result.dept = this.dept;
@@ -613,6 +614,18 @@ Course.prototype.send = function() {
   }
   if(this.title) result.title = this.title;
   return result;
+};
+
+/**
+ * Used for controller to pass user information to client
+ */
+Course.prototype.sendUsers = function() {
+  const instructorAttributes = this.getInstructors().map(instrutor => instrutor.send());
+  const students = this.getStudents();
+  const studentAttributes = { };
+  studentAttributes.blocked = students.blocked.map(student => student.send());
+  studentAttributes.active = students.active.map(student => student.send());
+  return { instructors: instructorAttributes, students: studentAttributes };
 };
 
 {/*******************************************/

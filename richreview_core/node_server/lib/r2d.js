@@ -446,7 +446,6 @@ User.prototype.updateNick = function(id, newnick){
  * @returns {Promise}
  *
  * WARNING: this function is broken
- * TODO: update to use with userid_email_table; test
  */
 User.prototype.syncEmail = function(newEmail){
   if(this.email === newEmail) return Promise.resolve(this);

@@ -46,7 +46,6 @@ exports.pilot_admin = (req, res) => {
 };
 
 
-
 exports.mgmt_acct = (req, res) => {
     const email    = req.params.email;
     const req_user_email = req.user.email;

@@ -23,19 +23,20 @@ class App extends React.Component {
   componentDidMount() {
     api.fetchCourses()
       .then((courses) => {
+        console.log(JSON.stringify(courses));
         this.setState({ courses });
       });
   }
 
   selectCourse(key) {
-    api.fetchCourseUsers(key)
+    /*api.fetchCourseUsers(key)
       .then((users) => {
         this.setState({ users });
       });
     api.fetchCourseAssignments(key)
       .then((asgmt_grps) => {
         this.setState({ asgmt_grps });
-      });
+      });*/
   }
 
   render() {
@@ -49,13 +50,6 @@ class App extends React.Component {
             <CoursePanel
               courses={this.state.courses}
               selectCourse={this.selectCourse}
-            />
-            <UserPanel
-              users={this.state.users}
-            />
-            <AssignmentPanel
-              users={this.state.users}
-              asgmt_grps={this.state.asgmt_grps}
             />
           </div>
         </div>

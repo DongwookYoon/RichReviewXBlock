@@ -7,6 +7,7 @@ export const fetchCourses = () => {
     .then(resp => resp.data);
 };
 
+/*
 export const fetchCourseUsers = (key) => {
   return axios.get(`/api/class/fetch_course_users/${key}`)
     .then(resp => resp.data);
@@ -15,4 +16,4 @@ export const fetchCourseUsers = (key) => {
 export const fetchCourseAssignments = (key) => {
   return axios.get(`/api/class/fetch_course_assignments/${key}`)
     .then(resp => resp.data);
-};
+};*/

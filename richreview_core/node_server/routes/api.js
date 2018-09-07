@@ -11,9 +11,9 @@ const classController = require('../controllers/classController');
 
 // TODO: make an auth to prevent unauthorized access!!!
 router.get('/class/fetch_courses', classController.getCourses);
-router.get('/class/fetch_course_users/:course_key',
+/*router.get('/class/fetch_course_users/:course_key',
   classController.getUsersFromCourse);
 router.get('/class/fetch_course_assignments/:course_key',
-  classController.getAssignmentsFromCourse);
+  classController.getAssignmentsFromCourse);*/
 
 module.exports = router;

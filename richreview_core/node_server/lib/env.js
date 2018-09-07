@@ -38,6 +38,15 @@ exports.AUTH_TYPES = [
   AUTH_TYPE.GOOGLE
 ];
 
+// Constants for (university) institutions
+const INSTITUTION = {
+  UBC: "UBC",
+  CORNELL: "Cornell",
+  TEST: "Test"
+};
+
+exports.INSTITUTION = INSTITUTION;
+
 /**
  * UBC constants
  */
@@ -71,12 +80,60 @@ const UBC = {
   }
 };
 
+const TEST = {
+  ATTRIBUTE: {
+    GROUP: {
+      TEST_112_001_2019W: "test_112_001_2019w"
+    }
+  }
+};
+
 /**
  * Index to contain all course groups
  */
 const COURSE_GROUP = {
+  TEST_112_001_2019W: TEST.ATTRIBUTE.GROUP.TEST_112_001_2019W,
   CHIN_141_002_2018W: UBC.CWL.ATTRIBUTE.GROUP.CHIN_141_002_2018W,
   KORN_102_001_2018W: UBC.CWL.ATTRIBUTE.GROUP.KORN_102_001_2018W
+};
+
+/**
+ * Index of course group details to use in the creation script `scripts/make_courses.js`
+ */
+exports.COURSE_GROUP_DETAIL = {
+  [TEST.ATTRIBUTE.GROUP.TEST_112_001_2019W]: {
+    course_group: TEST.ATTRIBUTE.GROUP.TEST_112_001_2019W,
+    institution: "test",
+    detail: {
+      dept: "TEST",
+      number: "112",
+      section: "001",
+      year: "2019W"
+    },
+    title: "Test Course"
+  },
+  [UBC.CWL.ATTRIBUTE.GROUP.CHIN_141_002_2018W]: {
+    course_group: UBC.CWL.ATTRIBUTE.GROUP.CHIN_141_002_2018W,
+    institution: INSTITUTION.UBC,
+    detail: {
+      dept: "CHIN",
+      number: "141",
+      section: "002",
+      year: "2018W"
+    },
+    title: "Chinese I"
+  },
+  [UBC.CWL.ATTRIBUTE.GROUP.KORN_102_001_2018W]: {
+    course_group: UBC.CWL.ATTRIBUTE.GROUP.KORN_102_001_2018W,
+    institution: INSTITUTION.UBC,
+    detail: {
+    dept: "KORN",
+      number: "102",
+      section: "001",
+      year: "2018W"
+    },
+    title: "Korean I"
+  }
 };
 
 exports.UBC = UBC;
@@ -89,12 +146,6 @@ exports.COURSE_GROUP = COURSE_GROUP;
 exports.COURSE_GROUPS = (() => {
   return Object.keys(COURSE_GROUP).map(k => { return COURSE_GROUP[k]; });
 });
-
-// Constants for (university) institutions
-exports.INSTITUTION = {
-  UBC: "UBC",
-  CORNELL: "Cornell"
-};
 
 exports.admin_list = [
     '116730002901619859123'

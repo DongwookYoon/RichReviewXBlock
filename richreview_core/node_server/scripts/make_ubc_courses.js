@@ -9,29 +9,21 @@
 const assert      = require('chai').assert;
 
 // import library
+const env         = require('../lib/env');
 const RedisClient = require('../lib/redis_client').RedisClient;
 const redis_utils = require('../lib/redis_client').util;
-const env         = require('../lib/env');
+const Course      = require("../lib/Course");
+
 const util        = require('../util');
 
-const course_group_prop_keys = [ ];
-const course_groups = [ ];
-
-// TODO: update env variables here
-
-
-env.COURSE_GROUPS.forEach(course_group => {
-  course_groups.push(course_group);
-  course_group_prop_keys.push(`crs:ubc:${course_group}:prop`);
-});
-
-RedisClient.KEYS("crs:ubc:*:prop")
+Course.cache.populate()
+  .then(() => {
+    return RedisClient.KEYS("crs:ubc:*:prop");
+  })
   .then((keys) => {
-    const promises = course_group_prop_keys.map((course_group_prop_key, index) => {
-      if(!keys.includes(course_group_prop_key)) {
-        return RedisClient.HMSET(course_group_prop_key, "course_group", course_groups[index], "is_active", true, "institution", "UBC");
-      }
-      else return null;
+    const promises = Object.keys(env.COURSE_GROUP_DETAIL).map(key => {
+      const o = env.COURSE_GROUP_DETAIL[key];
+      return Course.create(o.institution, o.course_group, o);
     });
     return Promise.all(promises);
   })

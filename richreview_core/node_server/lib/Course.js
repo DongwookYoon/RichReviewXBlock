@@ -594,6 +594,27 @@ Course.prototype.removeInstructor = function(user) {
   ]).then(() => { return that.instructors.delete(user); });
 };
 
+/**
+ * Used for controller to pass information to client.
+ * @returns {Object}
+ */
+Course.prototype.send = function() {
+  const result = { 
+    institution: this.institution, is_active: this.is_active, course_group: this.course_group,
+    active_students: [...this.active_students].map((user) => user.id),
+    blocked_students: [...this.blocked_students].map((user) => user.id),
+    instructors: [...this.instructors].map((user) => user.id)
+  };
+  if(this.dept) {
+    result.dept = this.dept;
+    result.number = this.number;
+    result.section = this.section;
+    result.year = this.year
+  }
+  if(this.title) result.title = this.title;
+  return result;
+};
+
 {/*******************************************/
 
   /**

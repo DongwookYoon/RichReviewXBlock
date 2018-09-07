@@ -15,206 +15,206 @@ let lib_utils    = null;
 let RedisClient  = null;
 let R2D          = null;
 let redis_utils  = null;
-let PilotHandler = null;
-let ClassHandler = null;
 let Course       = null;
 let User         = null;
 let Group        = null;
+let Model        = null;
+let InternalStudy = null;
 
 /**
  * Outdated functions
  */
-function gggo() {
-  it("Course: make CPSC 437D", (done) => {
-    const course_dept = "cpsc";
-    const course_nbr  = "437d";
-    const course_key  = "course:"+course_dept+":"+course_nbr+":prop";
-    const course_name = "Video game design";
-    Course.createCourse(course_dept, course_nbr, course_name)
-      .then((course) => {
-        util.testl(course.dept+" "+course.number+": "+course.name);
-        util.testl(course.is_active ? "is active" : "is blocked");
-        expect(course.dept).to.equal(course_dept);
-        expect(course.number).to.equal(course_nbr);
-        expect(course.name).to.equal(course_name);
-        expect(course.is_active).to.equal(false);
-        util.testl("course has been added to cache");
-        return RedisClient.HGETALL(course_key);
-      })
-      .then((course_obj) => {
-        expect(course_obj).to.deep.equals({name:course_name,course_is_active:"false"});
-        util.testl("course has been added to redis");
-        return null;
-      })
-      .catch((err) => {
-        util.error(err);
-        assert.fail();
-        return null;
-      })
-      .finally(done);
-  });
-
-  it("ClassHandler: create userBatch1", (done) => {
-    const nicks = ["amoore", "gfleming", "jdoe", "btorrace"];
-    const emails = nicks.map(nick => { return nick+"@ubc.ca"; });
-    const ids = emails.map(ClassHandler.makeID);
-    const user_keys = ids.map(id => { return "usr:"+id; });
-    const password = "test_password_123";
-    console.log(JSON.stringify(user_keys,null,"\t"));
-    const argl = emails.map((email) => { return [email, password]; });
-    js_utils.promiseLoopApply(ClassHandler.createUser, argl)
-      .then(bArr => {
-        return emails.map(User.findByEmail);
-      })
-      .then(users => {
-        users.forEach((user, index) => {
-          expect(user.email).to.equal(emails[index]);
-        });
-        return user_keys.map(redis_utils.keyExists);
-      })
-      .then(bArr => {
-        expect(bArr).to.deep.equal([true,true,true,true]);
-        return user_keys.map(RedisClient.HGETALL);
-      })
-      .then(user_objs => {
-        console.log(JSON.stringify(user_objs,null,"\t"));
-        user_objs.forEach((user_obj, index) => {
-          expect(user_obj.email).to.equal(emails[index]);
-          expect(user_obj.nick).to.equal(nicks[index]);
-        });
-      })
-      .finally(done);
-  });
-
-  it("ClassHandler, add jflask as instructor of CPSC 437D", (done) => {
-    const course_dept  = "cpsc";
-    const course_nbr   = "437d";
-    const jflask_email = "jflask@ubc.ca";
-    const jflask__id   = ClassHandler.makeID(jflask_email);
-    let course = null;
-    let jflask = null;
-    try {
-      course = Course.cache.get(course_dept, course_nbr);
-      jflask = R2D.User.cache.get(jflask__id)
-    } catch(err) {
-      util.error(err);
-      assert.fail(err);
-      done();
-    }
-    course.addInstructor(jflask)
-      .then((b) => {
-        return course.getInstructors();
-      })
-      .then((instrs)=> {
-        assert.isArray(instrs);
-        expect(instrs).to.have.lengthOf(1);
-        const jflaskQ = instrs[0];
-        expect(jflaskQ.email).to.equal(jflask_email);
-        return null;
-      })
-      .catch((err) => {
-        util.error(err);
-        assert.fail();
-        return null;
-      })
-      .finally(done);
-  });
-
-  it("Course: add userBatch1 to students", (done) => {
-    const nicks = ["amoore", "gfleming", "jdoe", "btorrace"];
-    const emails = nicks.map(nick => { return nick+"@ubc.ca"; });
-    const ids = emails.map(ClassHandler.makeID);
-    const course_dept = "cpsc";
-    const course_nbr  = "437d";
-    const _key = "course:"+course_dept+":"+course_nbr;
-    let course = null;
-    let students = null;
-    try {
-      course = Course.cache.get(course_dept, course_nbr);
-      students = ids.map(User.cache.get);
-    } catch(err) { assert.fail(err); } // TODO: fail?
-    const promises = students.map(course.addStudent); // add to blocked students
-    Promise.all(promises)
-      .then(bArr => {
-        return course.getStudents();
-      })
-      .then(students => {
-        students.to.have.property("blocked");
-        students.to.not.have.property("active");
-        console.log(JSON.stringify(students.blocked));
-      })
-      .catch(err => {
-        assert.fail(err);
-      })
-      .finally(done);
-  });
-
-  it("Course: delete CPSC 437D", (done) => {
-    const course_dept = "cpsc";
-    const course_nbr  = "437d";
-    const _key = "course:"+course_dept+":"+course_nbr;
-    const course_key                  = _key+":prop";
-    const course_instructors_key      = _key+":instructors";
-    const course_active_students_key  = _key+":students:active";
-    const course_blocked_students_key = _key+":students:blocked";
-    let course = null;
-    try {
-      course = Course.cache.get(course_dept, course_nbr);
-    } catch(err) {
-      util.error(err);
-      assert.fail();
-      done();
-    }
-    course.delete()
-      .then((bArr) => {
-        const b = Course.cache.exists(course_dept, course_nbr);
-        expect(b).to.be.false;
-        util.testl("CPSC 437D removed from cache");
-        const promises = [
-          redis_utils.keyExists(course_key),
-          redis_utils.keyExists(course_instructors_key),
-          redis_utils.keyExists(course_active_students_key),
-          redis_utils.keyExists(course_blocked_students_key)
-        ];
-        return Promise.all(promises);
-      })
-      .then((bArr) => {
-        expect(bArr).to.deep.equal([false,false,false,false]);
-        util.testl("CPSC 437D removed from redis");
-        return null;
-      })
-      .catch((err) => {
-        util.error(err);
-        assert.fail();
-        return null;
-      })
-      .finally(done);
-  });
-
-  it("ClassHandler: delete userBatch1", (done) => {
-    const nicks = ["amoore", "gfleming", "jdoe", "btorrace"];
-    const emails = nicks.map(nick => { return nick+"@ubc.ca"; });
-    const ids = emails.map(ClassHandler.makeID);
-    const user_keys = ids.map(id => { return "usr:"+id; });
-    //console.log(JSON.stringify(user_keys,null,"\t"));
-    /*****************************/
-    js_utils.promiseLoop(R2D.User.deleteUser, user_keys)
-      .then(bArr => {
-        return emails.map(User.findByEmail);
-      })
-      .then(bArr => {
-        expect(bArr).to.deep.equal([null,null,null,null]);
-        return user_keys.map(redis_utils.keyExists);
-      })
-      .then(bArr => {
-        expect(bArr).to.deep.equal([false,false,false,false]);
-      })
-      .catch(err => {
-        assert.fail(err);
-      })
-      .finally(done);
-  });
-}
+// function gggo() {
+//   it("Course: make CPSC 437D", (done) => {
+//     const course_dept = "cpsc";
+//     const course_nbr  = "437d";
+//     const course_key  = "course:"+course_dept+":"+course_nbr+":prop";
+//     const course_name = "Video game design";
+//     Course.createCourse(course_dept, course_nbr, course_name)
+//       .then((course) => {
+//         util.testl(course.dept+" "+course.number+": "+course.name);
+//         util.testl(course.is_active ? "is active" : "is blocked");
+//         expect(course.dept).to.equal(course_dept);
+//         expect(course.number).to.equal(course_nbr);
+//         expect(course.name).to.equal(course_name);
+//         expect(course.is_active).to.equal(false);
+//         util.testl("course has been added to cache");
+//         return RedisClient.HGETALL(course_key);
+//       })
+//       .then((course_obj) => {
+//         expect(course_obj).to.deep.equals({name:course_name,course_is_active:"false"});
+//         util.testl("course has been added to redis");
+//         return null;
+//       })
+//       .catch((err) => {
+//         util.error(err);
+//         assert.fail();
+//         return null;
+//       })
+//       .finally(done);
+//   });
+// 
+//   it("ClassHandler: create userBatch1", (done) => {
+//     const nicks = ["amoore", "gfleming", "jdoe", "btorrace"];
+//     const emails = nicks.map(nick => { return nick+"@ubc.ca"; });
+//     const ids = emails.map(ClassHandler.makeID);
+//     const user_keys = ids.map(id => { return "usr:"+id; });
+//     const password = "test_password_123";
+//     console.log(JSON.stringify(user_keys,null,"\t"));
+//     const argl = emails.map((email) => { return [email, password]; });
+//     js_utils.promiseLoopApply(ClassHandler.createUser, argl)
+//       .then(bArr => {
+//         return emails.map(User.findByEmail);
+//       })
+//       .then(users => {
+//         users.forEach((user, index) => {
+//           expect(user.email).to.equal(emails[index]);
+//         });
+//         return user_keys.map(redis_utils.keyExists);
+//       })
+//       .then(bArr => {
+//         expect(bArr).to.deep.equal([true,true,true,true]);
+//         return user_keys.map(RedisClient.HGETALL);
+//       })
+//       .then(user_objs => {
+//         console.log(JSON.stringify(user_objs,null,"\t"));
+//         user_objs.forEach((user_obj, index) => {
+//           expect(user_obj.email).to.equal(emails[index]);
+//           expect(user_obj.nick).to.equal(nicks[index]);
+//         });
+//       })
+//       .finally(done);
+//   });
+// 
+//   it("ClassHandler, add jflask as instructor of CPSC 437D", (done) => {
+//     const course_dept  = "cpsc";
+//     const course_nbr   = "437d";
+//     const jflask_email = "jflask@ubc.ca";
+//     const jflask__id   = ClassHandler.makeID(jflask_email);
+//     let course = null;
+//     let jflask = null;
+//     try {
+//       course = Course.cache.get(course_dept, course_nbr);
+//       jflask = R2D.User.cache.get(jflask__id)
+//     } catch(err) {
+//       util.error(err);
+//       assert.fail(err);
+//       done();
+//     }
+//     course.addInstructor(jflask)
+//       .then((b) => {
+//         return course.getInstructors();
+//       })
+//       .then((instrs)=> {
+//         assert.isArray(instrs);
+//         expect(instrs).to.have.lengthOf(1);
+//         const jflaskQ = instrs[0];
+//         expect(jflaskQ.email).to.equal(jflask_email);
+//         return null;
+//       })
+//       .catch((err) => {
+//         util.error(err);
+//         assert.fail();
+//         return null;
+//       })
+//       .finally(done);
+//   });
+// 
+//   it("Course: add userBatch1 to students", (done) => {
+//     const nicks = ["amoore", "gfleming", "jdoe", "btorrace"];
+//     const emails = nicks.map(nick => { return nick+"@ubc.ca"; });
+//     const ids = emails.map(ClassHandler.makeID);
+//     const course_dept = "cpsc";
+//     const course_nbr  = "437d";
+//     const _key = "course:"+course_dept+":"+course_nbr;
+//     let course = null;
+//     let students = null;
+//     try {
+//       course = Course.cache.get(course_dept, course_nbr);
+//       students = ids.map(User.cache.get);
+//     } catch(err) { assert.fail(err); } // TODO: fail?
+//     const promises = students.map(course.addStudent); // add to blocked students
+//     Promise.all(promises)
+//       .then(bArr => {
+//         return course.getStudents();
+//       })
+//       .then(students => {
+//         students.to.have.property("blocked");
+//         students.to.not.have.property("active");
+//         console.log(JSON.stringify(students.blocked));
+//       })
+//       .catch(err => {
+//         assert.fail(err);
+//       })
+//       .finally(done);
+//   });
+// 
+//   it("Course: delete CPSC 437D", (done) => {
+//     const course_dept = "cpsc";
+//     const course_nbr  = "437d";
+//     const _key = "course:"+course_dept+":"+course_nbr;
+//     const course_key                  = _key+":prop";
+//     const course_instructors_key      = _key+":instructors";
+//     const course_active_students_key  = _key+":students:active";
+//     const course_blocked_students_key = _key+":students:blocked";
+//     let course = null;
+//     try {
+//       course = Course.cache.get(course_dept, course_nbr);
+//     } catch(err) {
+//       util.error(err);
+//       assert.fail();
+//       done();
+//     }
+//     course.delete()
+//       .then((bArr) => {
+//         const b = Course.cache.exists(course_dept, course_nbr);
+//         expect(b).to.be.false;
+//         util.testl("CPSC 437D removed from cache");
+//         const promises = [
+//           redis_utils.keyExists(course_key),
+//           redis_utils.keyExists(course_instructors_key),
+//           redis_utils.keyExists(course_active_students_key),
+//           redis_utils.keyExists(course_blocked_students_key)
+//         ];
+//         return Promise.all(promises);
+//       })
+//       .then((bArr) => {
+//         expect(bArr).to.deep.equal([false,false,false,false]);
+//         util.testl("CPSC 437D removed from redis");
+//         return null;
+//       })
+//       .catch((err) => {
+//         util.error(err);
+//         assert.fail();
+//         return null;
+//       })
+//       .finally(done);
+//   });
+// 
+//   it("ClassHandler: delete userBatch1", (done) => {
+//     const nicks = ["amoore", "gfleming", "jdoe", "btorrace"];
+//     const emails = nicks.map(nick => { return nick+"@ubc.ca"; });
+//     const ids = emails.map(ClassHandler.makeID);
+//     const user_keys = ids.map(id => { return "usr:"+id; });
+//     //console.log(JSON.stringify(user_keys,null,"\t"));
+//     /*****************************/
+//     js_utils.promiseLoop(R2D.User.deleteUser, user_keys)
+//       .then(bArr => {
+//         return emails.map(User.findByEmail);
+//       })
+//       .then(bArr => {
+//         expect(bArr).to.deep.equal([null,null,null,null]);
+//         return user_keys.map(redis_utils.keyExists);
+//       })
+//       .then(bArr => {
+//         expect(bArr).to.deep.equal([false,false,false,false]);
+//       })
+//       .catch(err => {
+//         assert.fail(err);
+//       })
+//       .finally(done);
+//   });
+// }
 
 describe("RichReview", function() {
 
@@ -223,13 +223,12 @@ describe("RichReview", function() {
     RedisClient  = require("../lib/redis_client").RedisClient;
     redis_utils  = require("../lib/redis_client").util;
     R2D          = require("../lib/r2d");
-    require("../lib/Model");
+    Model        = require("../lib/Model"); // need to call to create method User.deleteUser
+    InternalStudy = require("../lib/Model").InternalStudy;
     Course       = require("../lib/Course");
     User         = require("../lib/r2d").User;
     Group         = require("../lib/r2d").Group;
     lib_utils    = require("../lib/lib_utils");
-    PilotHandler = require("../lib/pilot_handler");
-    ClassHandler = require("../lib/class_handler");
     return R2D.User.cache.populate()
       .then(() => {
         return Course.cache.populate();
@@ -267,7 +266,7 @@ describe("RichReview", function() {
       expect(b).to.deep.equal(true);
     });
 
-    it("Unmutable", function() {
+    it("Immutables", function() {
       const propKey = Course.getPropKey("UBC", "test_100_001_2018W");
       expect(propKey).to.equal("crs:ubc:test_100_001_2018w:prop");
       const propInstrKey = Course.getInstructorKey("UBC", "test_100_001_2018W");
@@ -275,7 +274,7 @@ describe("RichReview", function() {
     });
   });
 
-  describe.only("#Model", function() {
+  describe("#Model", function() {
     
     describe("Group", function() {
       const test = {
@@ -336,7 +335,7 @@ describe("RichReview", function() {
       });
     });
     
-    describe.only("Course", function() {
+    describe("Course", function() {
       /**
        * 
        * @type Object
@@ -451,7 +450,18 @@ describe("RichReview", function() {
       });
       
       it("remove user from Redis", function() {
-        return test.course.removeStudent(test.user);
+        return test.course.removeStudent(test.user)
+          .then((removed) => {
+            expect(removed).to.be.true;
+            expect(test.course.getStudents()).to.deep.equal({ blocked:[ ], active:[ ] });
+            return Promise.all([
+              redis_utils.keyExists(test.course.getBlockedStudentKey()),
+              redis_utils.keyExists(test.course.getActiveStudentKey())
+            ]);
+          })
+          .then(exArr => {
+            expect(exArr).to.deep.equal([false,false]);
+          });
       });
       
       it("delete course", function() {
@@ -471,30 +481,30 @@ describe("RichReview", function() {
     });
     
     describe("User", function() {
-      it("ClassHandler: User: create user jflask", () => {
+      it("InternalStudy: User: create user jflask", () => {
         const email = "jflask@ubc.ca";
         const password = "test_password_123";
         const auth_type = "Internal";
         // usr:a2bd1e849f82599bc97f903216ab2f000da959ef
-        const id = ClassHandler.makeID(email);
+        const id = Model.makeID(email);
         //util.testl("user's id is " + id);
         const check = (u) => {
           expect(u.email).to.equal(email);
           expect(u.auth_type).to.equal(auth_type);
           expect(u.nick).to.equal("jflask");
         };
-        return ClassHandler.createUser(email, password)
+        return InternalStudy.createUser(email, password)
           .then((user) => {
             expect(user).to.be.an.instanceOf(R2D.User);
             check(user);
-            const b = ClassHandler.validatePassword(user, password);
+            const b = InternalStudy.validatePassword(user, password);
             expect(b).to.equal(true);
             return RedisClient.HGETALL(`usr:${id}`);
           })
           // User is in redis
           .then((user_obj) => {
             check(user_obj);
-            const b = ClassHandler.validatePassword(
+            const b = InternalStudy.validatePassword(
               { password_hash: user_obj.password_hash, salt: user_obj.salt },
               password
             );
@@ -505,7 +515,7 @@ describe("RichReview", function() {
           .then((user) => {
             expect(user).to.be.an.instanceOf(R2D.User);
             check(user);
-            const b = ClassHandler.validatePassword(user, password);
+            const b = InternalStudy.validatePassword(user, password);
             expect(b).to.equal(true);
           })
           .catch((err) => {
@@ -514,14 +524,14 @@ describe("RichReview", function() {
           });
       });
 
-      it("ClassHandler: User: update jflask", () => {
+      it("InternalStudy: User: update jflask", () => {
         const email = "jflask@ubc.ca";
         const sid = "1234567890";
         const displayName = "Buggy Jordan";
         const firstName = "Jonathan";
         const lastName = "Flask";
         const auth_type = "Internal";
-        const id = ClassHandler.makeID(email);
+        const id = Model.makeID(email);
         const user = R2D.User.cache.get(id);
         expect(user).to.be.an.instanceOf(R2D.User);
         /*********************************************/
@@ -560,7 +570,7 @@ describe("RichReview", function() {
         const firstName = "Jonathan";
         const lastName = "Flask";
         const auth_type = "Internal";
-        const id = ClassHandler.makeID(email);
+        const id = Model.makeID(email);
         const check = (u) => {
           expect(u.id).to.equal(id);
           expect(u.sid).to.equal(sid);
@@ -591,9 +601,9 @@ describe("RichReview", function() {
 
       //gggo();
 
-      it("ClassHandler: User: delete jflask", () => {
+      it("InternalStudy: User: delete jflask", () => {
         const email = "jflask@ubc.ca";
-        const id = ClassHandler.makeID(email);
+        const id = Model.makeID(email);
         return R2D.User.deleteUser(id)
           .then((b) => {
             return R2D.User.findByID(id);

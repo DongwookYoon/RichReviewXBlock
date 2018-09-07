@@ -8,16 +8,22 @@
  * by Colin
  */
 
+const crypto      = require("crypto");
+
 const env         = require("./env");
+const js_utils    = require("./js_utils");
 const RedisClient = require("./redis_client").RedisClient;
 const redis_utils = require("./redis_client").util;
-// const R2D = require("./r2d");
 const User        = require("./r2d").User;
 const Group       = require("./r2d").Group;
 const Doc         = require("./r2d").Doc;
 const Course      = require("./Course");
 
 const util        = require("../util");
+
+/******************************/
+/**      Extending User      **/
+/******************************/
 
 /**
  * Completely delete the user corresponding to the email including all groups and documents that user made.
@@ -233,3 +239,96 @@ User.deleteUser = (usr_str) => {
       util.error(err);
     });
 };
+
+/******************************/
+/**      Auth Utilities      **/
+/******************************/
+
+/**
+ *
+ * @param email
+ */
+const makeID = (email) => {
+  let hmac = crypto.createHmac('sha1', env.sha1_salt.netid);
+  hmac.update(email, 'utf8');
+  return hmac.digest('hex').toLowerCase();
+};
+
+const makeSalt = () => {
+  return crypto.randomBytes(64).toString('hex');
+};
+
+/**
+ *
+ * @param password {string} - a string that is at least 8 characters in length
+ * @param salt {string}
+ */
+const encryptPassword = (password, salt) => {
+  return crypto.createHmac('sha1', salt).update(password, 'utf8').digest('hex');
+};
+
+exports.makeID = makeID;
+
+/******************************/
+/**      Internal user       **/
+/******************************/
+
+const InternalStudy = { };
+
+/**
+ * A wrapper to create user according to Internal study.
+ * If password is shorter than 8 characters then reject.
+ * @param email
+ * @param password
+ * @returns {Promise.<User>}
+ * NOTE: this should not be used in conjunction with CWL login
+ */
+InternalStudy.createUser = (email, password) => {
+  const id = makeID(email);
+
+  util.logger("ADMIN UBC STUDY","checking email is valid");
+  if(!js_utils.validateEmail(email)) {
+    return Promise.reject("bad email");
+  }
+
+  util.logger("ADMIN UBC STUDY","checking password is valid");
+  if(!util.isString(password) || password.length < 8) {
+    return Promise.reject("bad password");
+  }
+
+  util.logger("ADMIN UBC STUDY","check if user already exists");
+  if(User.cache.exists(id)) {
+    return Promise.reject("user already exists");
+  }
+
+  util.logger("ADMIN UBC STUDY","setting up options");
+  const salt = makeSalt();
+  const password_hash = encryptPassword(password, salt);
+  const options = {
+    auth_type: "Internal",
+    auth: { password_hash, salt },
+    is_admin: false,
+    first_name: "",
+    last_name: "",
+    sid: ""
+  };
+  util.logger("ADMIN UBC STUDY","calling User.create()");
+  return User.create(id, email, options);
+};
+
+/**
+ *
+ * @param user
+ * @param password
+ * @throws {string} - user does not have stored password
+ * @return {boolean} true if password is correct, false otherwise
+ */
+InternalStudy.validatePassword = (user, password) => {
+  if(!user.password_hash || !user.salt) {
+    throw "user does not have stored password";
+  }
+
+  return user.password_hash === encryptPassword(password, user.salt);
+};
+
+exports.InternalStudy = InternalStudy; 

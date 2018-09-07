@@ -653,8 +653,12 @@ Course.prototype.sendUsers = function() {
    */
   const getCourseGroupIDs = (profile) => {
     if(!profile.hasOwnProperty(env.UBC.CWL.ATTRIBUTE.groupMembership)) return [ ];
-    assert.instanceOf(profile[env.UBC.CWL.ATTRIBUTE.groupMembership], Array, "profile[groupMembership] is an array");
-    let courseGroupIDs = (profile[env.UBC.CWL.ATTRIBUTE.groupMembership]).map((group_str) => {
+    let groupMembership = null;
+    if(util.isString(profile[env.UBC.CWL.ATTRIBUTE.groupMembership]))
+      groupMembership = [profile[env.UBC.CWL.ATTRIBUTE.groupMembership]];
+    else groupMembership = profile[env.UBC.CWL.ATTRIBUTE.groupMembership];
+    // assert.instanceOf(profile[env.UBC.CWL.ATTRIBUTE.groupMembership], Array, "profile[groupMembership] is an array");
+    let courseGroupIDs = groupMembership.map((group_str) => {
       return getAttribute(group_str);
     });
     return courseGroupIDs.filter((courseGroupID) => { return !!courseGroupID });

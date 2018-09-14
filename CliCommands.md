@@ -1,8 +1,10 @@
+# CLI Commands
 
+Go here to read [about the scripts](#about-the-scripts), or here for a [Brief tutorial](#brief-tutorial) on Linux CLI.
 
 ## About the scripts
 
-Script to start Node server `stop_node.sh`
+Script to start RichReview `rrrun.sh`
 
 ```bash
 #!/bin/bash
@@ -85,15 +87,6 @@ screen -dmS mupla -L -Logfile ~/log_django.txt bash -c "cd ~/RichReviewXBlock/mu
 sleep 1
 screen -S mupla -X colon "logfile flush 0^M"
 
-```
-
-Script to start RichReview `rrrun.sh`
-
-```bash
-#!/bin/bash
-
-~/restart_django.sh
-~/restart_node.sh
 ```
 
 ## Brief tutorial

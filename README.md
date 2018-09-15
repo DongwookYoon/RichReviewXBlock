@@ -286,9 +286,23 @@ You can run these jobs independently or use the Cron Job app to trigger them per
 
 Go to `utils/backup_server` and run `setup.sh`.
 
-### Test RichReview
+### Create a startup script
 
-You're finally done! You can test RichReview straight from the VM.
+To create a system startup script for RichReview, this stackoverflow answer is a good guide (https://unix.stackexchange.com/a/47715).  In this case, our script is `/home/rr_admin/rrrun.sh`. You can ignore the part of the guide that explains `ExecStop`. The content of the `richreview.service` file should be:
+
+```
+[Unit]
+Description=Start RichReview
+
+[Service]
+Type=oneshot
+ExecStart=/home/rr_admin/rrrun.sh
+
+[Install]
+WantedBy=multi-user.target
+```
+`Type=oneshot` means that systemd (daemon) will execute `rrrun.sh` then quit after the `rrrun.sh` script finishes.  
+`WantedBy=multi-user.target` means that this service (that runs `rrrun.sh`) will only start after root services / processes have started.  
 
 ## License
 

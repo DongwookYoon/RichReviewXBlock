@@ -368,8 +368,17 @@
                     // webkit shim
                     window.AudioContext = window.AudioContext || window.webkitAudioContext;
                     navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.mediaDevices.getUserMedia;
-
+                    
                     audio_context = new AudioContext;
+                    
+                    // Prevent: The AudioContext was not allowed to start.
+                    // It must be resumed (or created) after a user gesture on the page.
+                    document.documentElement.addEventListener(
+                        "mousedown", function(){
+                            if (audio_context.state !== 'running') {
+                                audio_context.resume();
+                            }})
+                    // Ends
 
                 } catch (e) {
                     reject(new Error("No web audio support in this browser"));

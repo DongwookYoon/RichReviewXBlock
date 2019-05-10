@@ -12,13 +12,7 @@
           "
         >
           Title: {{ a.title }} Points: {{ a.points }} Due:
-          {{ new Date(a.due_date).toDateString() }} at
-          {{
-            new Date(a.due_date).getHours() > 12
-              ? new Date(a.due_date).getHours() - 12
-              : new Date(a.due_date).getHours()
-          }}:{{ ('0' + new Date(a.due_date).getMinutes()).slice(-2) }}
-          {{ new Date(a.due_date).getHours() >= 12 ? 'pm' : 'am' }}
+          {{ formate_date(a.due_date) }}
         </div>
       </div>
       <h2 @click="$router.push(`/courses/${$route.params.course_id}/users`)">

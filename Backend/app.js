@@ -12,6 +12,7 @@ var courseRouter = require('./routes/course');
 var assignmentRouter = require('./routes/assignment');
 var userRouter = require('./routes/user');
 var loginRouter = require('./routes/login');
+var groupRouter = require('./routes/group');
 
 
 
@@ -48,6 +49,7 @@ app.use('/login', loginRouter);
 app.use('/courses', courseRouter);
 app.use('/courses/:course_id/assignments', assignmentRouter);
 app.use('/courses/:course_id/users', userRouter);
+app.use('/courses/:course_id/groups', groupRouter);
 
 
 

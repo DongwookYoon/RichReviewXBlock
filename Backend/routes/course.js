@@ -31,12 +31,13 @@ router.get('/', async function(req, res, next) {
 router.get('/:course_id', async function(req, res, next) {
     console.log("Get request for course with id: " + req.params.course_id);
 
-    let user_id = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
 
     let course_database_handler = await CourseDatabaseHandler.get_instance();
 
     try {
-        let course = await course_database_handler.get_course(user_id, req.params.course_id);
+        let course = await course_database_handler.get_course(user_key, course_key);
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(course));
     } catch (e) {

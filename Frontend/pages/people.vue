@@ -1,6 +1,14 @@
 <template>
-  <div>
-    <h1>People</h1>
+  <div class="container">
+    <h1>People:</h1>
+    <div v-for="(user_list, position) in users" :key="position">
+      <li v-for="user in user_list" :key="user.key">
+        {{ user.name }} - {{ position }}
+      </li>
+    </div>
+    <h1 @click="$router.push(`/courses/${$route.params.course_id}/groups`)">
+      Groups
+    </h1>
   </div>
 </template>
 
@@ -21,12 +29,16 @@ export default {
       .then(res => {
         console.log(res.data)
         return {
-          assignments: res.data.assignments
+          users: {
+            instructor: res.data.instructors,
+            ta: res.data.tas,
+            student: res.data.students
+          }
         }
       })
       .catch(e => {
         console.log(e)
-        return { assignments: [] }
+        return { users: {} }
       })
   }
 }

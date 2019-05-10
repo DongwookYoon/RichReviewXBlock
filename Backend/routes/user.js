@@ -12,8 +12,17 @@ router.get('/', async function(req, res, next) {
     console.log("Get request for all people in course with id: " + req.params.course_id);
 
     let user_database_handler = await UserDatabaseHandler.get_instance();
-    let users = await user_database_handler.get_all_course_users(KeyDictionary.key_dictionary['course'] + req.params.course_id);
-    res.sendStatus(501);
+
+    try {
+        let users = await user_database_handler.get_all_course_users(KeyDictionary.key_dictionary['course'] +
+            req.params.course_id);
+
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(users));
+    } catch (e) {
+        console.log(e);
+        res.send(500);
+    }
 });
 
 

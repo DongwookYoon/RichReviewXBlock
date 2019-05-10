@@ -7,6 +7,8 @@ import dashboard from './pages/dashboard'
 import course from './pages/course'
 import assignment from './pages/assignment'
 import people from './pages/people'
+import groups from './pages/groups'
+import group from './pages/group'
 
 Vue.use(Router)
 
@@ -41,6 +43,14 @@ export function createRouter() {
       {
         path: '/courses/:course_id/users',
         component: people
+      },
+      {
+        path: '/courses/:course_id/groups',
+        component: groups
+      },
+      {
+        path: '/courses/:course_id/groups/:group_id',
+        component: group
       }
     ]
   })

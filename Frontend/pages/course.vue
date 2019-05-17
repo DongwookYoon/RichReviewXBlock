@@ -12,13 +12,26 @@
           "
         >
           Title: {{ a.title }} Points: {{ a.points }} Due:
-          {{ formate_date(a.due_date) }}
+          {{ format_date(a.due_date) }}
         </div>
       </div>
-      <h2 @click="$router.push(`/courses/${$route.params.course_id}/users`)">
+      <button
+        @click="$router.push(`/courses/${$route.params.course_id}/users`)"
+      >
         People
-      </h2>
+      </button>
     </div>
+    <button
+      v-if="permissions === 'ta' || permissions === 'instructor'"
+      @click="
+        $router.push(`/courses/${$route.params.course_id}/assignments/new`)
+      "
+    >
+      + Assignment
+    </button>
+    <button @click="$router.push(`/courses/${$route.params.course_id}/grades`)">
+      Grades
+    </button>
   </div>
 </template>
 
@@ -39,12 +52,13 @@ export default {
       .then(res => {
         console.log(res.data)
         return {
-          assignments: res.data.assignments
+          assignments: res.data.assignments,
+          permissions: res.data.permissions
         }
       })
       .catch(e => {
         console.log(e)
-        return { assignments: [] }
+        return { assignments: [], permissions: undefined }
       })
   }
 }

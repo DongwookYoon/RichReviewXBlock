@@ -1,14 +1,30 @@
 <template>
   <div class="container">
     <h1>Groups:</h1>
-    <div v-for="g in groups" :key="g.key">
-      <div
+    <button
+      @click="$router.push(`/courses/${$route.params.course_id}/groups/new`)"
+    >
+      + Group
+    </button>
+    <h2>Active Groups:</h2>
+    <div v-for="g in active_course_groups" :key="g.key">
+      <li
         @click="
           $router.push(`/courses/${$route.params.course_id}/groups/${g.id}`)
         "
       >
         {{ g.name }}
-      </div>
+      </li>
+    </div>
+    <h2>Inactive Groups:</h2>
+    <div v-for="g in inactive_course_groups" :key="g.key">
+      <li
+        @click="
+          $router.push(`/courses/${$route.params.course_id}/groups/${g.id}`)
+        "
+      >
+        {{ g.name }}
+      </li>
     </div>
   </div>
 </template>
@@ -29,11 +45,14 @@ export default {
       })
       .then(res => {
         console.log(res.data)
-        return { groups: res.data }
+        return {
+          active_course_groups: res.data.active_course_groups,
+          inactive_course_groups: res.data.inactive_course_groups
+        }
       })
       .catch(e => {
         console.log(e)
-        return { groups: [] }
+        return { active_course_groups: [], inactive_course_groups: [] }
       })
   }
 }

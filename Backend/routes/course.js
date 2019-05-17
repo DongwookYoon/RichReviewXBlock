@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 const CourseDatabaseHandler = require("../bin/CourseDatabaseHandler");
+const UserDatabaseHandler = require("../bin/UserDatabaseHandler");
 const KeyDictionary = require("../bin/KeyDictionary");
 
 /*
@@ -35,11 +36,16 @@ router.get('/:course_id', async function(req, res, next) {
     let course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
 
     let course_database_handler = await CourseDatabaseHandler.get_instance();
+    let user_db_handler = await UserDatabaseHandler.get_instance();
 
     try {
-        let course = await course_database_handler.get_course(user_key, course_key);
+        let data = await course_database_handler.get_course(user_key, course_key);
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+
+        data['permissions'] = permissions;
+
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify(course));
+        res.end(JSON.stringify(data));
     } catch (e) {
         console.warn(e);
         res.sendStatus(500);

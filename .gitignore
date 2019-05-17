@@ -61,3 +61,7 @@ utils/backup_server/node_modules/
 #pdf_batch data
 utils/pdf_batch/data/
 utils/backup/down/
+
+#Backend
+Backend/node-modules/
+Backend/ssl/

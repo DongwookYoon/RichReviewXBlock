@@ -13,7 +13,7 @@ var assignmentRouter = require('./routes/assignment');
 var userRouter = require('./routes/user');
 var loginRouter = require('./routes/login');
 var groupRouter = require('./routes/group');
-
+var gradesRouter = require('./routes/grades');
 
 
 var app = express();
@@ -36,6 +36,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "*");
+    res.header('Access-Control-Allow-Methods', 'POST, PUT, GET, OPTIONS, DELETE');
     next();
 });
 
@@ -50,6 +51,7 @@ app.use('/courses', courseRouter);
 app.use('/courses/:course_id/assignments', assignmentRouter);
 app.use('/courses/:course_id/users', userRouter);
 app.use('/courses/:course_id/groups', groupRouter);
+app.use('/courses/:course_id/grades', gradesRouter);
 
 
 

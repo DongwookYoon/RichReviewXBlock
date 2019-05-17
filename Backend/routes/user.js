@@ -26,6 +26,26 @@ router.get('/', async function(req, res, next) {
 });
 
 
+router.get('/permissions', async function(req, res, next) {
+    console.log("Get request for user with id: " + req.params.user_id);
+
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
+
+    let user_db_handler = await UserDatabaseHandler.get_instance();
+
+    try {
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ permissions: permissions }));
+    } catch (e) {
+        console.warn(e);
+        res.sendStatus(500);
+    }
+});
+
+
+
 /*
  ** GET a user
  * TODO: view user

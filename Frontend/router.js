@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import Vue from 'vue'
 import Router from 'vue-router'
 
@@ -9,6 +10,11 @@ import assignment from './pages/assignment'
 import people from './pages/people'
 import groups from './pages/groups'
 import group from './pages/group'
+import edit_assignment from './pages/edit_assignment'
+import new_assignment from './pages/new_assignment'
+import grades from './pages/grades'
+import new_group from './pages/new_group'
+import assignment_submissions from './pages/assignment_submissions'
 
 Vue.use(Router)
 
@@ -37,6 +43,10 @@ export function createRouter() {
         component: course
       },
       {
+        path: '/courses/:course_id/assignments/new',
+        component: new_assignment
+      },
+      {
         path: '/courses/:course_id/assignments/:assignment_id',
         component: assignment
       },
@@ -49,8 +59,24 @@ export function createRouter() {
         component: groups
       },
       {
+        path: '/courses/:course_id/groups/new',
+        component: new_group
+      },
+      {
         path: '/courses/:course_id/groups/:group_id',
         component: group
+      },
+      {
+        path: '/courses/:course_id/assignments/:assignment_id/edit',
+        component: edit_assignment
+      },
+      {
+        path: '/courses/:course_id/grades',
+        component: grades
+      },
+      {
+        path: '/courses/:course_id/assignments/:assignment_id/submissions',
+        component: assignment_submissions
       }
     ]
   })

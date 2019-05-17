@@ -7,8 +7,9 @@
         s.assignment.points
       }}
       -
-      {{ formate_date(s.submission.submission_time) }}
+      {{ format_date(s.submission.submission_time) }}
     </div>
+    <button @click="delete_group()">Delete</button>
   </div>
 </template>
 
@@ -39,6 +40,28 @@ export default {
         console.log(e)
         return { test: {} }
       })
+  },
+  methods: {
+    delete_group() {
+      axios
+        .delete(
+          `http://localhost:3000/courses/${
+            this.$route.params.course_id
+          }/groups/${this.$route.params.group_id}`,
+          {
+            headers: {
+              Authorization: this.$auth.user.sub
+            }
+          }
+        )
+        .then(res => {
+          this.$router.push(`/courses/${this.$route.params.course_id}/groups`)
+        })
+        .catch(e => {
+          console.log(e)
+          this.$router.push(`/courses/${this.$route.params.course_id}/groups`)
+        })
+    }
   }
 }
 </script>

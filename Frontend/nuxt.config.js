@@ -37,7 +37,7 @@ export default {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: ['./plugins/DateFormatter'],
+  plugins: ['./plugins/DateHelper'],
 
   /*
    ** Nuxt.js modules

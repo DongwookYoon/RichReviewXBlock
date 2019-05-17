@@ -6,3 +6,5 @@ class NotAuthorizedError extends Error {
         this.name = 'NotAuthorizedError';
     }
 }
+
+module.exports = NotAuthorizedError;

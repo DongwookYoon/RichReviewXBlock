@@ -22,9 +22,13 @@
     "cross-env": "^5.2.0",
     "es6-promise": "^4.2.6",
     "gsap": "^2.1.2",
+    "luxon": "^1.13.2",
     "nuxt": "^2.6.3",
+    "vue": "latest",
+    "vue-date-pick": "^1.1.0",
+    "vue-datetime": "^1.0.0-beta.10",
     "vuex": "^3.1.0",
-    "vue": "latest"
+    "weekstart": "^1.0.0"
   },
   "devDependencies": {
     "nodemon": "^1.18.9",

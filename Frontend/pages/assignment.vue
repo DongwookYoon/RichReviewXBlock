@@ -149,12 +149,8 @@ export default {
             }
           }
         )
-        .then(function() {
-          this.$router.push(
-            `/courses/${this.$route.params.course_id}/assignments/${
-              this.$route.params.assignment_id
-            }`
-          )
+        .then(() => {
+          this.$router.push(`/courses/${this.$route.params.course_id}`)
         })
         .catch(function() {
           console.warn('Error submitting assignment')

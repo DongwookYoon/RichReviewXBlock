@@ -6,6 +6,8 @@ const AssignmentDatabaseHandler = require('../bin/AssignmentDatabaseHandler');
 const UserDatabaseHandler = require('../bin/UserDatabaseHandler');
 const DocumentUploadHandler = require('../bin/DocumentUploadHandler');
 const DocumentDatabaseHandler = require('../bin/DocumentDatabaseHandler');
+const GroupDatabaseHandler = require('../bin/GroupDatabaseHandler');
+const SubmissionDatabaseHandler = require('../bin/SubmissionDatabaseHandler');
 const KeyDictionary = require('../bin/KeyDictionary');
 
 /*
@@ -165,7 +167,6 @@ router.post('/:assignment_id/submissions', async function(req, res, next) {
     console.log('Assignment submission!');
 
     let user_id = req.headers.authorization;
-    let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
     let assignment_key = KeyDictionary.key_dictionary['assignment'] + req.params['assignment_id'];
 
     let form = new formidable.IncomingForm();
@@ -176,13 +177,32 @@ router.post('/:assignment_id/submissions', async function(req, res, next) {
         }
 
         let document_upload_handler = await DocumentUploadHandler.get_instance();
+        let document_db_handler = await DocumentDatabaseHandler.get_instance();
+        let group_db_handler = await GroupDatabaseHandler.get_instance();
+        let user_db_handler = await UserDatabaseHandler.get_instance();
+        let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
+        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
 
         try {
+            // Upload pdf to azure
             let context = await document_upload_handler.upload_documents(files);
 
-            let document_db_handler = DocumentDatabaseHandler.get_instance();
+            // Add doc and grp to redis
+            let doc_key = await document_db_handler.create_doc(user_id, context.container);
+            let group_key = await group_db_handler.create_group(user_id, doc_key);
+            await document_db_handler.add_group_to_doc(doc_key, group_key);
+            let user_key = KeyDictionary.key_dictionary['user'] + user_id;
+            await user_db_handler.add_group_to_user(user_key, group_key);
 
+            // Associate group with submission
+            let submission_key = await assignment_db_handler.get_users_submission_key(user_key, assignment_key);
 
+            if (submission_key === undefined)
+                res.sendStatus(400);
+
+            await submission_db_handler.add_group_to_submission(submission_key, group_key);
+
+            res.sendStatus(200);
         } catch (e) {
             console.warn(e);
             res.sendStatus(400);

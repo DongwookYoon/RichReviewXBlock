@@ -63,7 +63,8 @@ utils/pdf_batch/data/
 utils/backup/down/
 
 #Backend
-Backend/node-modules/
-Backend/ssl/
+node-modules/
+ssl/
+
 
 Backend/node_modules/

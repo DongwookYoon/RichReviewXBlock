@@ -8,13 +8,14 @@ import dashboard from './pages/dashboard'
 import course from './pages/course'
 import assignment from './pages/assignment'
 import people from './pages/people'
-import groups from './pages/groups'
-import group from './pages/group'
+import course_groups from './pages/course_groups'
+import course_group from './pages/course_group'
 import edit_assignment from './pages/edit_assignment'
 import new_assignment from './pages/new_assignment'
 import grades from './pages/grades'
-import new_group from './pages/new_group'
+import new_course_group from './pages/new_course_group'
 import assignment_submissions from './pages/assignment_submissions'
+import viewer from './pages/viewer'
 
 Vue.use(Router)
 
@@ -55,16 +56,16 @@ export function createRouter() {
         component: people
       },
       {
-        path: '/courses/:course_id/groups',
-        component: groups
+        path: '/courses/:course_id/course_groups',
+        component: course_groups
       },
       {
-        path: '/courses/:course_id/groups/new',
-        component: new_group
+        path: '/courses/:course_id/course_groups/new',
+        component: new_course_group
       },
       {
-        path: '/courses/:course_id/groups/:group_id',
-        component: group
+        path: '/courses/:course_id/course_groups/:group_id',
+        component: course_group
       },
       {
         path: '/courses/:course_id/assignments/:assignment_id/edit',
@@ -77,6 +78,10 @@ export function createRouter() {
       {
         path: '/courses/:course_id/assignments/:assignment_id/submissions',
         component: assignment_submissions
+      },
+      {
+        path: '/courses/:course_id/viewer',
+        component: viewer
       }
     ]
   })

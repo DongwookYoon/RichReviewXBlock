@@ -1,0 +1,94 @@
+var express = require('express');
+var router = express.Router({mergeParams: true});
+const CourseGroupDatabaseHandler = require('../bin/CourseGroupDatabaseHandler');
+const KeyDictionary = require('../bin/KeyDictionary');
+
+
+router.get('/', async function(req, res, next) {
+    console.log("Get request for all groups in course with id: " + req.params.course_id);
+
+    let course_group_db_handler = await CourseGroupDatabaseHandler.get_instance();
+
+    try {
+        let groups = await course_group_db_handler.get_all_course_groups(KeyDictionary.key_dictionary['course'] + req.params.course_id);
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(groups));
+    } catch (e) {
+        console.log(e);
+        res.sendStatus(500);
+    }
+});
+
+router.get("/:group_id", async function (req, res, next){
+
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let course_group_key = KeyDictionary.key_dictionary['course_group'] + req.params.group_id;
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
+
+    let course_group_db_handler = await CourseGroupDatabaseHandler.get_instance();
+
+    try {
+        let groups = await course_group_db_handler.get_course_group(user_key, course_group_key, course_key);
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(groups));
+    } catch (e) {
+        console.log(e);
+        res.sendStatus(500);
+    }
+});
+
+router.put("/", function (req, res, next){
+    res.sendStatus(403);
+});
+
+router.put("/:group_id", function (req, res, next){
+    res.sendStatus(501);
+});
+
+router.post("/", async function (req, res, next){
+    let course_group_db_handler = await CourseGroupDatabaseHandler.get_instance();
+
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
+    let group_data = req.body.group_data;
+
+    try {
+        await course_group_db_handler.create_course_group(user_key, course_key, group_data);
+        res.sendStatus(200);
+    } catch (e) {
+        console.warn(e);
+        if (e.name === 'NotAuthorizedError')
+            res.sendStatus(401);
+        else
+            res.sendStatus(500);
+    }
+});
+
+router.post("/:group_id", function (req, res, next){
+    res.sendStatus(403);
+});
+
+router.delete("/", function (req, res, next){
+    res.sendStatus(403);
+});
+
+router.delete("/:group_id", async function (req, res, next){
+    let course_group_db_handler = await CourseGroupDatabaseHandler.get_instance();
+
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
+    let course_group_key = KeyDictionary.key_dictionary['course_group'] + req.params['group_id'];
+
+    try {
+        await course_group_db_handler.delete_course_group(user_key, course_key, course_group_key);
+        res.sendStatus(200);
+    } catch (e) {
+        console.warn(e);
+        if (e.name === 'NotAuthorizedError')
+            res.sendStatus(401);
+        else
+            res.sendStatus(500);
+    }
+});
+
+module.exports = router;

@@ -12,8 +12,10 @@ var courseRouter = require('./routes/course');
 var assignmentRouter = require('./routes/assignment');
 var userRouter = require('./routes/user');
 var loginRouter = require('./routes/login');
-var groupRouter = require('./routes/group');
+var course_groupRouter = require('./routes/course_group');
 var gradesRouter = require('./routes/grades');
+var groupRouter = require('./routes/group');
+var dbsRouter = require('./routes/dbs');
 
 
 var app = express();
@@ -46,12 +48,14 @@ app.use(function(req, res, next) {
  ** Set routers
  */
 app.use('/', indexRouter);
+app.use('/dbs', dbsRouter);
 app.use('/login', loginRouter);
 app.use('/courses', courseRouter);
 app.use('/courses/:course_id/assignments', assignmentRouter);
 app.use('/courses/:course_id/users', userRouter);
-app.use('/courses/:course_id/groups', groupRouter);
+app.use('/courses/:course_id/course_groups', course_groupRouter);
 app.use('/courses/:course_id/grades', gradesRouter);
+app.use('/courses/:course_id/groups', groupRouter);
 
 
 

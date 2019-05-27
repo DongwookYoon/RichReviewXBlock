@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div>
     <div class="assignments">
       <h1>Assignments:</h1>
       <div v-for="a in assignments" :key="a.key" class="assignments">

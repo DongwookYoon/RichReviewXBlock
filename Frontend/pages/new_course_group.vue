@@ -14,7 +14,9 @@
       </div>
       <button @click="count++">+</button>
       <button
-        @click="$router.push(`/courses/${$route.params.course_id}/groups`)"
+        @click="
+          $router.push(`/courses/${$route.params.course_id}/course_groups`)
+        "
       >
         Cancel
       </button>
@@ -78,7 +80,7 @@ export default {
         .post(
           `http://localhost:3000/courses/${
             this.$route.params.course_id
-          }/groups`,
+          }/course_groups`,
           { group_data: this.group_data },
           {
             headers: {
@@ -87,7 +89,9 @@ export default {
           }
         )
         .then(() => {
-          this.$router.push(`/courses/${this.$route.params.course_id}/groups`)
+          this.$router.push(
+            `/courses/${this.$route.params.course_id}/course_groups`
+          )
         })
         .catch(e => {
           console.log(e)

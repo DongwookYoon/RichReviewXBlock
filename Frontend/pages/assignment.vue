@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div>
     <h1>Assignment Page</h1>
     <div>{{ assignment }}</div>
     <button

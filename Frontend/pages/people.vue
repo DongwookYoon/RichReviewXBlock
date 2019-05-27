@@ -1,12 +1,14 @@
 <template>
-  <div class="container">
+  <div>
     <h1>People:</h1>
     <div v-for="(user_list, position) in users" :key="position">
       <li v-for="user in user_list" :key="user.key">
         {{ user.name }} - {{ position }}
       </li>
     </div>
-    <h1 @click="$router.push(`/courses/${$route.params.course_id}/groups`)">
+    <h1
+      @click="$router.push(`/courses/${$route.params.course_id}/course_groups`)"
+    >
       Groups
     </h1>
   </div>

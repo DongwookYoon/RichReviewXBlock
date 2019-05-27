@@ -1,8 +1,10 @@
 <template>
-  <div class="container">
+  <div>
     <h1>Groups:</h1>
     <button
-      @click="$router.push(`/courses/${$route.params.course_id}/groups/new`)"
+      @click="
+        $router.push(`/courses/${$route.params.course_id}/course_groups/new`)
+      "
     >
       + Group
     </button>
@@ -10,7 +12,9 @@
     <div v-for="g in active_course_groups" :key="g.key">
       <li
         @click="
-          $router.push(`/courses/${$route.params.course_id}/groups/${g.id}`)
+          $router.push(
+            `/courses/${$route.params.course_id}/course_groups/${g.id}`
+          )
         "
       >
         {{ g.name }}
@@ -20,7 +24,9 @@
     <div v-for="g in inactive_course_groups" :key="g.key">
       <li
         @click="
-          $router.push(`/courses/${$route.params.course_id}/groups/${g.id}`)
+          $router.push(
+            `/courses/${$route.params.course_id}/course_groups/${g.id}`
+          )
         "
       >
         {{ g.name }}
@@ -35,14 +41,19 @@
 import axios from 'axios'
 
 export default {
-  name: 'Groups',
+  name: 'CourseGroups',
   asyncData(context) {
     return axios
-      .get(`http://localhost:3000/courses/${context.params.course_id}/groups`, {
-        headers: {
-          Authorization: context.app.$auth.user.sub
+      .get(
+        `http://localhost:3000/courses/${
+          context.params.course_id
+        }/course_groups`,
+        {
+          headers: {
+            Authorization: context.app.$auth.user.sub
+          }
         }
-      })
+      )
       .then(res => {
         console.log(res.data)
         return {

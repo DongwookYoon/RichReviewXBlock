@@ -93,6 +93,30 @@ router.get('/:assignment_id/edit', async function(req, res, next) {
 });
 
 
+router.get('/:assignment_id/submissions', async function(req, res, next) {
+
+    console.log("Get request for assignment with id: " + req.params.assignment_id);
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
+    let assignment_key = KeyDictionary.key_dictionary['assignment'] + req.params['assignment_id'];
+
+    let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
+
+    try {
+
+        let submissions = await assignment_db_handler.get_assignment_submisions(user_key, course_key, assignment_key);
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ submissions }));
+    } catch (e) {
+        console.warn(e);
+        if (e.name === 'NotAuthorizedError')
+            res.sendStatus(401);
+        else
+            res.sendStatus(500);
+    }
+});
+
+
 
 /*
  ** PUT to all course assignments, do not need this

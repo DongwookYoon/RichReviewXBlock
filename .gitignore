@@ -65,3 +65,5 @@ utils/backup/down/
 #Backend
 Backend/node-modules/
 Backend/ssl/
+
+Backend/node_modules/

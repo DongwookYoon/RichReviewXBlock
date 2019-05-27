@@ -1,6 +1,10 @@
 <template>
-  <div class="container">
+  <div>
     <h1>{{ group.name }}</h1>
+    <h1>Members:</h1>
+    <div v-for="u in group.users" :key="u.key">
+      <li>{{ u.display_name }}</li>
+    </div>
     <h1>Submissions:</h1>
     <div v-for="s in submitters" :key="s.key">
       {{ s.assignment.title }} - {{ s.submission.mark }}/{{
@@ -19,13 +23,13 @@
 import axios from 'axios'
 
 export default {
-  name: 'Group',
+  name: 'CourseGroup',
   asyncData(context) {
     return axios
       .get(
-        `http://localhost:3000/courses/${context.params.course_id}/groups/${
-          context.params.group_id
-        }`,
+        `http://localhost:3000/courses/${
+          context.params.course_id
+        }/course_groups/${context.params.group_id}`,
         {
           headers: {
             Authorization: context.app.$auth.user.sub
@@ -47,7 +51,7 @@ export default {
         .delete(
           `http://localhost:3000/courses/${
             this.$route.params.course_id
-          }/groups/${this.$route.params.group_id}`,
+          }/course_groups/${this.$route.params.group_id}`,
           {
             headers: {
               Authorization: this.$auth.user.sub
@@ -55,11 +59,15 @@ export default {
           }
         )
         .then(res => {
-          this.$router.push(`/courses/${this.$route.params.course_id}/groups`)
+          this.$router.push(
+            `/courses/${this.$route.params.course_id}/course_groups`
+          )
         })
         .catch(e => {
           console.log(e)
-          this.$router.push(`/courses/${this.$route.params.course_id}/groups`)
+          this.$router.push(
+            `/courses/${this.$route.params.course_id}/course_groups`
+          )
         })
     }
   }

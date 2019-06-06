@@ -1,18 +1,25 @@
 var express = require('express');
 var router = express.Router({mergeParams: true});
 const CourseGroupDatabaseHandler = require('../bin/CourseGroupDatabaseHandler');
+const UserDatabaseHandler = require('../bin/UserDatabaseHandler');
 const KeyDictionary = require('../bin/KeyDictionary');
 
 
 router.get('/', async function(req, res, next) {
     console.log("Get request for all groups in course with id: " + req.params.course_id);
 
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
+
     let course_group_db_handler = await CourseGroupDatabaseHandler.get_instance();
+    let user_db_handler = await UserDatabaseHandler.get_instance();
 
     try {
-        let groups = await course_group_db_handler.get_all_course_groups(KeyDictionary.key_dictionary['course'] + req.params.course_id);
+        let groups = await course_group_db_handler.get_all_course_groups(course_key);
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify(groups));
+        res.end(JSON.stringify({ groups: groups, permissions: permissions} ));
     } catch (e) {
         console.log(e);
         res.sendStatus(500);
@@ -26,9 +33,12 @@ router.get("/:group_id", async function (req, res, next){
     let course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
 
     let course_group_db_handler = await CourseGroupDatabaseHandler.get_instance();
+    let user_db_handler = await UserDatabaseHandler.get_instance();
 
     try {
         let groups = await course_group_db_handler.get_course_group(user_key, course_group_key, course_key);
+        groups.permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(groups));
     } catch (e) {

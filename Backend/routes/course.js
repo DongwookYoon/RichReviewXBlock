@@ -27,7 +27,6 @@ router.get('/', async function(req, res, next) {
 
 /*
  ** GET a course
- * TODO: view a single user's courses
  */
 router.get('/:course_id', async function(req, res, next) {
     console.log("Get request for course with id: " + req.params.course_id);
@@ -64,7 +63,6 @@ router.put('/', function(req, res, next) {
 
 /*
  ** PUT to course, replaces the course
- * TODO: replaces a course
  */
 router.put('/:course_id', function(req, res, next) {
     console.log("Put request for course with id: " + req.params.course_id);
@@ -75,7 +73,6 @@ router.put('/:course_id', function(req, res, next) {
 
 /*
  ** POST to all courses
- * TODO: permission level to add a course
  */
 router.post('/', function(req, res, next) {
     res.sendStatus(501);
@@ -101,7 +98,6 @@ router.delete('/', function(req, res, next) {
 
 /*
  ** DELETE a course
- * TODO: delete a course
  */
 router.delete('/:course_id', function(req, res, next) {
     console.log("Delete request for course with id: " + req.params.course_id);

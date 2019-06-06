@@ -87,6 +87,31 @@
         ></datetime>
         <label @click="until_date = ''">X</label>
       </div>
+      <div v-if="assignment_data.type === 'comment_submission'">
+        <div class="large-12 medium-12 small-12 cell">
+          <label
+            >Files
+            <input
+              id="files"
+              ref="files"
+              type="file"
+              multiple
+              @change="handleFileUpload()"
+            />
+          </label>
+        </div>
+        <div class="large-12 medium-12 small-12 cell">
+          <div v-for="(file, key) in files" :key="key" class="file-listing">
+            {{ file.name }}
+            <span class="remove-file" @click="removeFile(key)">Remove</span>
+          </div>
+        </div>
+        <br />
+        <div class="large-12 medium-12 small-12 cell">
+          <button @click="addFiles()">Add Files</button>
+        </div>
+        <br />
+      </div>
       <button @click="save()">Save</button>
       <button @click="$router.push(`/courses/${$route.params.course_id}/`)">
         Cancel
@@ -97,7 +122,7 @@
 
 <script>
 /* eslint-disable no-console,vue/no-unused-components */
-
+import https from 'https'
 import { Datetime } from 'vue-datetime'
 import 'vue-datetime/dist/vue-datetime.css'
 import axios from 'axios'
@@ -122,19 +147,23 @@ export default {
         available_date: '',
         until_date: '',
         type: 'document_submission'
-      }
+      },
+      files: []
     }
   },
   asyncData(context) {
     return axios
       .get(
-        `http://localhost:3000/courses/${
+        `https://localhost:3000/courses/${
           context.params.course_id
         }/users/permissions`,
         {
           headers: {
             Authorization: context.app.$auth.user.sub
-          }
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
         }
       )
       .then(res => {
@@ -150,27 +179,86 @@ export default {
   },
   methods: {
     save() {
-      axios
-        .post(
-          `http://localhost:3000/courses/${
-            this.$route.params.course_id
-          }/assignments`,
-          { assignment_data: this.assignment_data },
-          {
-            headers: {
-              Authorization: this.$auth.user.sub
+      if (this.assignment_data.type === 'comment_submission') {
+        const formData = new FormData()
+        for (let i = 0; i < this.files.length; i++) {
+          const file = this.files[i]
+          formData.append('files[' + i + ']', file)
+        }
+
+        formData.append('assignment_data', JSON.stringify(this.assignment_data))
+
+        axios
+          .post(
+            `https://localhost:3000/courses/${
+              this.$route.params.course_id
+            }/assignments/comment_submission_assignment`,
+            formData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: this.$auth.user.sub
+              },
+              httpsAgent: new https.Agent({
+                rejectUnauthorized: false
+              })
             }
-          }
-        )
-        .then(() => {
-          this.$router.push(`/courses/${this.$route.params.course_id}`)
-        })
-        .catch(e => {
-          console.log(e)
-        })
+          )
+          .then(() => {
+            this.$router.push(`/courses/${this.$route.params.course_id}`)
+          })
+          .catch(e => {
+            console.log(e)
+          })
+      } else {
+        axios
+          .post(
+            `https://localhost:3000/courses/${
+              this.$route.params.course_id
+            }/assignments/document_submission_assignment`,
+            { assignment_data: this.assignment_data },
+            {
+              headers: {
+                Authorization: this.$auth.user.sub
+              },
+              httpsAgent: new https.Agent({
+                rejectUnauthorized: false
+              })
+            }
+          )
+          .then(() => {
+            this.$router.push(`/courses/${this.$route.params.course_id}`)
+          })
+          .catch(e => {
+            console.log(e)
+          })
+      }
+    },
+    addFiles() {
+      this.$refs.files.click()
+    },
+    removeFile(key) {
+      this.files.splice(key, 1)
+    },
+    handleFileUpload() {
+      const uploadedFiles = this.$refs.files.files
+
+      for (let i = 0; i < uploadedFiles.length; i++) {
+        this.files.push(uploadedFiles[i])
+      }
     }
   }
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+input[type='file'] {
+  position: absolute;
+  top: -500px;
+}
+span.remove-file {
+  color: red;
+  cursor: pointer;
+  float: right;
+}
+</style>

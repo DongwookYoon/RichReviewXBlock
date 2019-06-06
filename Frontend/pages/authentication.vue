@@ -5,6 +5,7 @@
 <script>
 /* eslint-disable no-console */
 
+import https from 'https'
 import axios from 'axios'
 
 export default {
@@ -15,9 +16,17 @@ export default {
   methods: {
     login() {
       axios
-        .post('http://localhost:3000/login', {
-          auth: this.$auth.user
-        })
+        .post(
+          'https://localhost:3000/login',
+          {
+            auth: this.$auth.user
+          },
+          {
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false
+            })
+          }
+        )
         .then(() => {
           this.$router.replace('/dashboard')
         })

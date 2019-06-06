@@ -13,13 +13,18 @@
       -
       {{ format_date(s.submission.submission_time) }}
     </div>
-    <button @click="delete_group()">Delete</button>
+    <button
+      v-if="permissions === 'instructor' || permissions === 'ta'"
+      @click="delete_group()"
+    >
+      Delete
+    </button>
   </div>
 </template>
 
 <script>
 /* eslint-disable no-console */
-
+import https from 'https'
 import axios from 'axios'
 
 export default {
@@ -27,18 +32,24 @@ export default {
   asyncData(context) {
     return axios
       .get(
-        `http://localhost:3000/courses/${
+        `https://localhost:3000/courses/${
           context.params.course_id
         }/course_groups/${context.params.group_id}`,
         {
           headers: {
             Authorization: context.app.$auth.user.sub
-          }
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
         }
       )
       .then(res => {
-        console.log(res.data)
-        return { group: res.data.group, submitters: res.data.submitters }
+        return {
+          permissions: res.data.permissions,
+          group: res.data.group,
+          submitters: res.data.submitters
+        }
       })
       .catch(e => {
         console.log(e)
@@ -49,13 +60,16 @@ export default {
     delete_group() {
       axios
         .delete(
-          `http://localhost:3000/courses/${
+          `https://localhost:3000/courses/${
             this.$route.params.course_id
           }/course_groups/${this.$route.params.group_id}`,
           {
             headers: {
               Authorization: this.$auth.user.sub
-            }
+            },
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false
+            })
           }
         )
         .then(res => {

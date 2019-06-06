@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console,camelcase */
 /**
  * Created by Dongwook on 10/18/2014.
  */
@@ -57,10 +57,12 @@
 
         if (err.custom_msg) {
           console.error(err.custom_msg + '\n' + detail)
-          alert(err.custom_msg)
+          // alert(err.custom_msg)
+          location.reload()
         } else {
           console.error(msg + '\n' + detail)
-          prompt(msg, detail)
+          // prompt(msg, detail)
+          location.reload()
         }
       }
     }
@@ -425,6 +427,25 @@
       })
     }
 
+    pub.getUploadSas = function(msg) {
+      return new Promise(function(resolve, reject) {
+        const url = r2.ctx.serve_dbs_url + 'dbs/getuploadsas'
+        $.ajax({
+          type: 'GET',
+          url: url,
+          data: msg,
+          timeout: 5000, // in milliseconds
+          success: function(data) {
+            console.log({ data })
+            resolve(data)
+          },
+          error: function(err) {
+            reject(err)
+          }
+        })
+      })
+    }
+
     pub.putBlobWithSas = function(url, sas, blob) {
       return new Promise(function(resolve, reject) {
         const blob_reader = new FileReader()
@@ -513,7 +534,7 @@
     }
 
     pub.jqueryInsert = function($target, $elem, idx) {
-      const idx_last = $target.children().size()
+      var idx_last = $target.children().length
       $target.append($elem)
       if (idx < idx_last) {
         $target

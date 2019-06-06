@@ -1,12 +1,21 @@
+import fs from 'fs'
+import path from 'path'
 import pkg from './package'
 
 export default {
   mode: 'universal',
-
   /*
    ** Server settings
    */
   server: {
+    https: {
+      key: fs.readFileSync(
+        path.resolve(__dirname, 'ssl', 'richreview_net.key')
+      ),
+      cert: fs.readFileSync(
+        path.resolve(__dirname, 'ssl', 'richreview_net.crt')
+      )
+    },
     port: 8000, // default: 3000
     host: '127.0.0.1' // default: localhost
   },
@@ -21,13 +30,31 @@ export default {
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { hid: 'description', name: 'description', content: pkg.description }
     ],
-    link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }]
+    link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
+    script: [
+      {
+        src:
+          'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js'
+      },
+      {
+        src: 'https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'
+      },
+      {
+        src:
+          'https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js'
+      },
+      {
+        src:
+          'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/js/bootstrap.min.js'
+      },
+      { src: '/viewer_helper.js', mode: 'client', body: true }
+    ]
   },
 
   /*
    ** Customize the progress-bar color
    */
-  loading: { color: '#fff' },
+  loading: './components/loading-icon.vue',
 
   /*
    ** Global CSS
@@ -46,7 +73,6 @@ export default {
     // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
     '@nuxtjs/auth',
-    'bootstrap-vue/nuxt',
     '@nuxtjs/router'
   ],
 

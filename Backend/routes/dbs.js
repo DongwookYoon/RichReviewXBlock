@@ -8,6 +8,7 @@ const GroupDatabaseHandler = require("../bin/GroupDatabaseHandler");
 const CmdDatabaseHandler = require("../bin/CmdDatabaseHandler");
 const LogDatabaseHandler = require("../bin/LogDatabaseHandler");
 const KeyDictionary = require("../bin/KeyDictionary");
+const AzureHandler = require("../bin/AzureHandler");
 
 /*
  ** GET all courses
@@ -78,6 +79,24 @@ router.get('/getgroupdata/:group_id', async function(req, res, next) {
 
 
 
+router.get('/getuploadsas', async function (req, res, next) {
+
+    let azure_handler = await AzureHandler.get_instance();
+    let file_name = `audio/${req.query.fname}.wav`;
+    file_name = file_name.replace(':', '_');
+
+    let sas = azure_handler.get_sas('data', file_name, 300);
+
+    let data = {
+        sas: sas,
+        url: `${azure_handler.BLOB_HOST}data/${file_name}`
+    };
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(data));
+});
+
+
+
 router.put('/', function(req, res, next) {
     res.sendStatus(403);
 });
@@ -95,6 +114,9 @@ router.post('/downloadcmds', async function(req, res, next) {
         let resp = {};
 
         let cmd_data = await cmd_db_handler.get_cmd_data(cmd_key, req.body.cmds_downloaded_n);
+
+        cmd_data = cmd_db_handler.filter_deleted_cmds(cmd_data);
+        cmd_data = cmd_db_handler.filter_edited_cmds(cmd_data);
 
         resp.cmds = cmd_data;
 
@@ -120,11 +142,18 @@ router.post('/downloadcmds', async function(req, res, next) {
 
 
 router.post('/webapplogs', async function(req, res, next) {
+
     let log_db_handler = await LogDatabaseHandler.get_instance();
     let log_key = 'log:' + req.body.group_n;
-    console.log(req.body);
+    let logs = JSON.parse(req.body.logs);
+
     try {
-        // todo finish updating logs
+
+        if (Array.isArray(logs))
+            await log_db_handler.update_logs(log_key, logs);
+        else
+            await log_db_handler.update_log(log_key, JSON.stringify(logs));
+
         res.sendStatus(200);
 
     } catch (e) {
@@ -156,6 +185,7 @@ router.post('/uploadcmd', async function(req, res, next) {
             res.sendStatus(500);
     }
 });
+
 
 
 router.delete('/', function(req, res, next) {

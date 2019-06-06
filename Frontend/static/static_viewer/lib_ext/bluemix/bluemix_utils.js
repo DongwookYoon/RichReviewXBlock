@@ -1,12 +1,11 @@
-/* eslint-disable camelcase,no-unused-vars */
 /**
  * Created by Dongwook on 1/16/2016, based on Venkat's.
  */
 
-const bluemix_stt = (function(bluemix_stt) {
+var bluemix_stt = (function(bluemix_stt) {
   'use strict'
 
-  const AUTH_URL = window.location.origin + '/bluemix_stt_auth'
+  const AUTH_URL = 'https://localhost:3000/bluemix_stt_auth'
 
   /**
    * Initialize the publish/subscribe system utils is going to use.
@@ -58,7 +57,7 @@ const bluemix_stt = (function(bluemix_stt) {
       if ('withCredentials' in xhr) {
         // "withCredentials" only exists on XMLHTTPRequest2 objects.
         xhr.open('GET', AUTH_URL, true)
-        xhr.withCredentials = true
+        //xhr.withCredentials = true
         xhr.responseType = 'text'
       }
       xhr.onreadystatechange = function() {

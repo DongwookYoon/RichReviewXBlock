@@ -20,7 +20,7 @@
 // start message
 'use strict'
 
-const bluemix_stt = (function(bluemix_stt) {
+var bluemix_stt = (function(bluemix_stt) {
   // Initialize closure, which holds maximum getAuthInfo call count
   bluemix_stt.socket = {}
 

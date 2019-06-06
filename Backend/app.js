@@ -16,6 +16,7 @@ var course_groupRouter = require('./routes/course_group');
 var gradesRouter = require('./routes/grades');
 var groupRouter = require('./routes/group');
 var dbsRouter = require('./routes/dbs');
+var bluemixRouter = require('./routes/bluemix_stt_auth');
 
 
 var app = express();
@@ -50,6 +51,7 @@ app.use(function(req, res, next) {
 app.use('/', indexRouter);
 app.use('/dbs', dbsRouter);
 app.use('/login', loginRouter);
+app.use('/bluemix_stt_auth', bluemixRouter);
 app.use('/courses', courseRouter);
 app.use('/courses/:course_id/assignments', assignmentRouter);
 app.use('/courses/:course_id/users', userRouter);

@@ -12,9 +12,13 @@ function loadRichReview(r2_ctx, env, cdn_endpoint) {
     r2.env = env
     r2.cdn_endpoint = cdn_endpoint
     warnIE()
-    loadJsScript('/load.js', 'js').then(function() {
-      r2.loadApp(null)
-    })
+    loadJsScript('/load.js', 'js')
+      .then(function() {
+        r2.loadApp(null)
+      })
+      .then(() => {
+        resizePageBody()
+      })
   })((window.r2 = window.r2 || {}))
 }
 

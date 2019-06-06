@@ -2,7 +2,15 @@
   <div>
     <h1>Submissions</h1>
     <div v-for="s in submissions" :key="s.key">
-      <li>
+      <li
+        @click="
+          s.link !== ''
+            ? $router.push(
+                `/courses/${$route.params.course_id}/viewer?${s.link}`
+              )
+            : null
+        "
+      >
         {{ s.submitter_name }} - {{ s.submission_status }} - {{ s.mark }}/{{
           s.points
         }}
@@ -14,6 +22,7 @@
 <script>
 /* eslint-disable no-console */
 
+import https from 'https'
 import axios from 'axios'
 
 export default {
@@ -21,13 +30,16 @@ export default {
   asyncData(context) {
     return axios
       .get(
-        `http://localhost:3000/courses/${
+        `https://localhost:3000/courses/${
           context.params.course_id
         }/assignments/${context.params.assignment_id}/submissions`,
         {
           headers: {
             Authorization: context.app.$auth.user.sub
-          }
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
         }
       )
       .then(res => {

@@ -32,7 +32,48 @@
     >
       View Submissions
     </button>
-    <div v-if="permissions === 'student'">
+    <div
+      v-if="
+        viewer_link !== '' &&
+          assignment.type === 'comment_submission' &&
+          permissions === 'student'
+      "
+    >
+      <h2
+        @click="
+          $router.push(
+            `/courses/${$route.params.course_id}/viewer?${viewer_link}`
+          )
+        "
+      >
+        Click here to start annotating the document
+      </h2>
+    </div>
+    <div
+      v-if="
+        viewer_link !== '' &&
+          assignment.type === 'document_submission' &&
+          permissions === 'student'
+      "
+    >
+      <h2
+        @click="
+          $router.push(
+            `/courses/${$route.params.course_id}/viewer?${viewer_link}`
+          )
+        "
+      >
+        View current submission
+      </h2>
+    </div>
+    <div
+      v-if="
+        assignment.type === 'document_submission' &&
+          (permissions === 'student' &&
+            (viewer_link === '' ||
+              (viewer_link !== '' && assignment.allow_multiple_submissions)))
+      "
+    >
       <div class="large-12 medium-12 small-12 cell">
         <label
           >Files
@@ -66,6 +107,7 @@
 <script>
 /* eslint-disable no-console */
 
+import https from 'https'
 import axios from 'axios'
 
 export default {
@@ -73,13 +115,16 @@ export default {
   asyncData(context) {
     return axios
       .get(
-        `http://localhost:3000/courses/${
+        `https://localhost:3000/courses/${
           context.params.course_id
         }/assignments/${context.params.assignment_id}`,
         {
           headers: {
             Authorization: context.app.$auth.user.sub
-          }
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
         }
       )
       .then(res => {
@@ -87,25 +132,34 @@ export default {
         return {
           permissions: res.data.permissions,
           assignment: res.data.assignment,
+          viewer_link: res.data.link,
           files: []
         }
       })
       .catch(e => {
         console.log(e)
-        return { assignment: {}, permissions: undefined, files: [] }
+        return {
+          assignment: {},
+          permissions: undefined,
+          files: [],
+          viewer_link: ''
+        }
       })
   },
   methods: {
     delete_assignment() {
       axios
         .delete(
-          `http://localhost:3000/courses/${
+          `https://localhost:3000/courses/${
             this.$route.params.course_id
           }/assignments/${this.$route.params.assignment_id}`,
           {
             headers: {
               Authorization: this.$auth.user.sub
-            }
+            },
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false
+            })
           }
         )
         .then(res => {
@@ -138,15 +192,20 @@ export default {
 
       axios
         .post(
-          `http://localhost:3000/courses/${
+          `https://localhost:3000/courses/${
             this.$route.params.course_id
-          }/assignments/${this.$route.params.assignment_id}/submissions`,
+          }/assignments/${
+            this.$route.params.assignment_id
+          }/document_submissions`,
           formData,
           {
             headers: {
               'Content-Type': 'multipart/form-data',
               Authorization: this.$auth.user.sub
-            }
+            },
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false
+            })
           }
         )
         .then(() => {

@@ -20,7 +20,7 @@ router.get('/:group_id', async function(req, res, next) {
 
     try {
         let viewer_data = await group_db_handler.get_data_for_viewer(user_key, course_key, group_key);
-        viewer_data['r2_ctx']['serve_dbs_url'] = `http://${req.headers.host}/`;
+        viewer_data['r2_ctx']['serve_dbs_url'] = `https://${req.headers.host}/`;
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(viewer_data));
     } catch (e) {

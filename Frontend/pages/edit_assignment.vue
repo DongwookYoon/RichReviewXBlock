@@ -95,6 +95,7 @@
 
 <script>
 /* eslint-disable no-console */
+import https from 'https'
 import { Datetime } from 'vue-datetime'
 import 'vue-datetime/dist/vue-datetime.css'
 import axios from 'axios'
@@ -108,13 +109,16 @@ export default {
     console.log({ context })
     return axios
       .get(
-        `http://localhost:3000/courses/${
+        `https://localhost:3000/courses/${
           context.params.course_id
         }/assignments/${context.params.assignment_id}/edit`,
         {
           headers: {
             Authorization: context.app.$auth.user.sub
-          }
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
         }
       )
       .then(res => {
@@ -151,14 +155,17 @@ export default {
     edit() {
       axios
         .put(
-          `http://localhost:3000/courses/${
+          `https://localhost:3000/courses/${
             this.$route.params.course_id
           }/assignments/${this.$route.params.assignment_id}`,
           { edits: this.edits },
           {
             headers: {
               Authorization: this.$auth.user.sub
-            }
+            },
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false
+            })
           }
         )
         .then(() => {

@@ -1,48 +1,87 @@
 <template>
-  <div class="container">
-    <div class="courses">
-      <h1>Enrolments:</h1>
-      <div v-for="e in enrolments" :key="e.key" class="enrolments">
-        <div class="course card" @click="$router.push(`courses/${e.id}`)">
-          {{ e.title }}
+  <div id="dashboard">
+    <Header />
+    <div id="content">
+      <div id="courses">
+        <div v-for="e in enrolments" :key="e.key" class="enrolments">
+          <course-card
+            :title="e.title"
+            :description="e.description"
+            role="Student"
+            :assignment_count="e.assignments.length"
+            :link="`courses/${e.id}`"
+            class="course-card"
+          ></course-card>
+        </div>
+        <div v-for="e in taing" :key="e.key" class="taing">
+          <course-card
+            :title="e.title"
+            :description="e.description"
+            role="TA"
+            :assignment_count="e.assignments.length"
+            :link="`courses/${e.id}`"
+          ></course-card>
+        </div>
+        <div v-for="e in instructing" :key="e.key" class="instructing">
+          <course-card
+            :title="e.title"
+            :description="e.description"
+            role="Instructor"
+            :assignment_count="e.assignments.length"
+            :link="`courses/${e.id}`"
+          ></course-card>
         </div>
       </div>
-      <h1>TAing:</h1>
-      <div v-for="e in taing" :key="e.key" class="taing">
-        <div class="course card" @click="$router.push(`courses/${e.id}`)">
-          {{ e.title }}
-        </div>
-      </div>
-      <h1>Instructing:</h1>
-      <div v-for="e in instructing" :key="e.key" class="instructing">
-        <div class="course card" @click="$router.push(`courses/${e.id}`)">
-          {{ e.title }}
+      <div id="upcoming-assignments">
+        <p id="upcoming-assignments-title">Upcoming Assignments:</p>
+        <hr />
+        <p v-if="assignments.length === 0" id="no-assignments">
+          No upcoming assignments
+        </p>
+        <div v-for="a in assignments" :key="a.key" class="assignments">
+          <upcoming-assignment
+            :title="a.title"
+            :status="a.submission_status"
+            :late="a.late"
+            :link="`courses/${a.course_id}/assignments/${a.assignment_id}`"
+          ></upcoming-assignment>
         </div>
       </div>
     </div>
+    <Footer />
   </div>
 </template>
 
 <script>
 /* eslint-disable require-await,no-unused-vars,no-console,prettier/prettier,no-undef,camelcase */
 
+import https from 'https'
 import axios from 'axios'
+import Footer from '../components/footer'
+import Header from '../components/Header'
+import CourseCard from '../components/course-card'
+import UpcomingAssignment from '../components/upcoming-assignment'
 
 export default {
+  components: { UpcomingAssignment, CourseCard, Header, Footer },
   asyncData(context) {
-    console.log({ test: context.app.$auth.user })
+    console.log(context)
     return axios
-      .get(`http://localhost:3000/courses`, {
+      .get(`https://localhost:3000/courses`, {
         headers: {
           Authorization: context.app.$auth.user.sub
-        }
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
       })
       .then(res => {
         console.log(res.data)
         return {
           enrolments: res.data.enrolments,
           taing: res.data.taing,
-          instructing: res.data.teaching
+          instructing: res.data.teaching,
+          assignments: res.data.assignments
         }
       })
       .catch(e => {
@@ -50,7 +89,8 @@ export default {
         return {
           enrolments: [],
           taing: [],
-          instructors: []
+          instructing: [],
+          assignments: []
         }
       })
   }
@@ -58,34 +98,46 @@ export default {
 </script>
 
 <style>
-.container {
-  margin: 0 auto;
-  min-height: 100vh;
+#content {
+  width: 100%;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
 }
 
-.title {
-  font-family: 'Quicksand', 'Source Sans Pro', -apple-system, BlinkMacSystemFont,
-    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  display: block;
-  font-weight: 300;
-  font-size: 100px;
-  color: #35495e;
-  letter-spacing: 1px;
+#courses {
+  display: grid;
+  margin-top: 5%;
+  margin-left: 5%;
+  grid-template-columns: 20vw 20vw 20vw;
+  grid-column-gap: 1vw;
+  grid-row-gap: 6vh;
+  max-width: 60%;
 }
 
-.subtitle {
-  font-weight: 300;
-  font-size: 42px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
+#upcoming-assignments {
+  position: absolute;
+  right: 0;
+  display: inline-block;
+  width: 25%;
+  margin-top: 4.5%;
+  margin-left: 4%;
+  font-size: 2.5vh;
+  color: #0c2343;
 }
 
-.links {
-  padding-top: 15px;
+#upcoming-assignments-title {
+  font-size: 3vh;
+  margin: 0;
+}
+
+#no-assignments {
+  color: #535353;
+}
+
+hr {
+  height: 1px;
+  margin-top: 0;
+  margin-bottom: 0;
+  background-color: #0c2343;
+  margin-right: 10%;
 }
 </style>

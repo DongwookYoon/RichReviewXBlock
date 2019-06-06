@@ -51,6 +51,7 @@
 
     /** update the scene */
     function update() {
+
       r2App.asyncErr.sync()
 
       r2App.cur_time = new Date().getTime()

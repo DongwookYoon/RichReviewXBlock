@@ -194,7 +194,7 @@ const r2Sync = (function() {
     var uploadAudioBlob = function(aid, cmd_to_update) {
       const annot = r2App.annots[aid]
       return r2.util
-        .postToDbsServer('GetUploadSas', {
+        .getUploadSas({
           fname: annot.GetUsername() + '_' + annot.GetId()
         })
         .then(function(resp) {

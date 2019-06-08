@@ -35,7 +35,7 @@
             >
               Published
             </th>
-            <th id="group-header">
+            <th id="group-header-title">
               Group Assignment
             </th>
             <th id="due-header">Due</th>
@@ -171,7 +171,7 @@ thead {
   padding-right: 7vw;
 }
 
-#group-header {
+#group-header-title {
   padding-right: 7vw;
 }
 

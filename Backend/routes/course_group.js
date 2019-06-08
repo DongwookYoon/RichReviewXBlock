@@ -60,10 +60,40 @@ router.post("/", async function (req, res, next){
 
     let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
     let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
-    let group_data = req.body.group_data;
+    let course_group_data = req.body;
 
     try {
-        await course_group_db_handler.create_course_group(user_key, course_key, group_data);
+        for (let course_group of course_group_data) {
+            let course_group_key = KeyDictionary.key_dictionary['course_group'] + course_group['id'];
+
+            course_group['members'] = course_group['members'].map((user) => {
+               return KeyDictionary.key_dictionary['user'] + user.id;
+            });
+
+            if (course_group['id'].startsWith('placeholder') && !course_group['deleted'])
+                await course_group_db_handler.create_course_group(user_key, course_key, {
+                    name: course_group.group_name,
+                    users: course_group['members'] });
+
+            else if (!course_group['id'].startsWith('placeholder') && course_group['deleted'])
+                await course_group_db_handler.delete_course_group(user_key,
+                    course_key, course_group_key);
+
+            else if (!course_group['id'].startsWith('placeholder')) {
+                await course_group_db_handler.set_course_group_data(course_group_key, 'name', course_group['group_name']);
+
+                let users = course_group['members'].map((user) => {
+                    if (!user.includes(KeyDictionary.key_dictionary['user']))
+                        return KeyDictionary.key_dictionary['user'] + user;
+                    else
+                        return user
+                });
+
+                await course_group_db_handler.set_course_group_data(course_group_key, 'users',
+                    JSON.stringify(users));
+            }
+        }
+
         res.sendStatus(200);
     } catch (e) {
         console.warn(e);

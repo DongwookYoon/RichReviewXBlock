@@ -29,7 +29,7 @@ function warnIE() {
     const re = new RegExp('MSIE ([0-9]{1,}[.0-9]{0,})')
     if (re.exec(ua) != null) old_ie = parseFloat(RegExp.$1)
   }
-  const ie11 = /rv:11.0/i.test(navigator.userAgent)
+  const ie11 = /rv:11.0/i.expand(navigator.userAgent)
   if (old_ie !== -1 || ie11) {
     // detect ie
     alert(

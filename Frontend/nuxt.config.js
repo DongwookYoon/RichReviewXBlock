@@ -64,7 +64,7 @@ export default {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: ['./plugins/DateHelper'],
+  plugins: ['./plugins/DateHelper', '~plugins/vue-js-modal'],
 
   /*
    ** Nuxt.js modules

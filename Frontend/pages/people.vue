@@ -55,7 +55,7 @@
     </div>
     <div v-if="!people_tab" id="groups">
       <table>
-        <thead id="group-header">
+        <thead id="group-header-title">
           <tr>
             <th id="group-name-header">Name</th>
             <th id="active-header">Active</th>

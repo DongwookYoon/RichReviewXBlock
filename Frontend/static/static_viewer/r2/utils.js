@@ -297,7 +297,7 @@
             return cookieValue
           }
           if (
-            !(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))
+            !(/^http:.*/.expand(settings.url) || /^https:.*/.expand(settings.url))
           ) {
             // Only send the token to relative URLs i.e. locally.
             xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'))

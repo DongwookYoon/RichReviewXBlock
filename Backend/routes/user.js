@@ -38,6 +38,53 @@ router.get('/', async function(req, res, next) {
 });
 
 
+/*
+ ** GET all unassigned course users
+ */
+router.get('/unassigned', async function(req, res, next) {
+    console.log("Get request for all people in course with id: " + req.params.course_id);
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
+
+    let user_db_handler = await UserDatabaseHandler.get_instance();
+    let course_group_db_handler = await CourseGroupDatabaseHandler.get_instance();
+    let course_db_handler = await CourseDatabaseHandler.get_instance();
+
+    try {
+        let unassigned_students = await course_group_db_handler.get_all_course_users_unassigned_to_a_course_group(course_key);
+
+        let groups = await course_group_db_handler.get_all_course_groups(course_key);
+
+        for (let group_type in groups) {
+            let active_or_inactive_groups = groups[group_type];
+
+            for (let group of active_or_inactive_groups) {
+                group['members'] = group['members'].map((member) => {
+                    return {id: member['id'], name: member['display_name']}
+                });
+
+            }
+        }
+
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+
+        let course_data = await course_db_handler.get_course_data(course_key);
+
+        let data = {
+            unassigned_students: unassigned_students,
+            groups: groups,
+            permissions: permissions,
+            course_title: course_data['title'] };
+
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(data));
+    } catch (e) {
+        console.log(e);
+        res.send(500);
+    }
+});
+
+
 router.get('/permissions', async function(req, res, next) {
     console.log("Get request for user with id: " + req.params.user_id);
 

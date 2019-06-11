@@ -80,9 +80,9 @@ router.get('/:assignment_id', async function(req, res, next) {
 
         let link = '';
 
-        if (submission_data['current_group'] && submission_data['current_group'] !== '') {
-            let group_id = submission_data['current_group'].replace(KeyDictionary.key_dictionary['group'], '');
-            let group_data = await group_db_handler.get_group_data(submission_data['current_group']);
+        if (submission_data['group'] && submission_data['group'] !== '') {
+            let group_id = submission_data['group'].replace(KeyDictionary.key_dictionary['group'], '');
+            let group_data = await group_db_handler.get_group_data(submission_data['group']);
 
             let doc_id = group_data['docid'].replace(KeyDictionary.key_dictionary['document'], '');
             let doc_data = await doc_db_handler.get_doc_data(group_data['docid']);
@@ -299,7 +299,9 @@ router.post('/:assignment_id/document_submissions', async function(req, res, nex
             // Add doc and grp to redis
             let doc_key = await document_db_handler.create_doc(user_id, context.container);
             let group_key = await group_db_handler.create_group(user_id, doc_key);
+
             await document_db_handler.add_group_to_doc(doc_key, group_key);
+
             let user_key = KeyDictionary.key_dictionary['user'] + user_id;
             await user_db_handler.add_group_to_user(user_key, group_key);
 
@@ -310,9 +312,7 @@ router.post('/:assignment_id/document_submissions', async function(req, res, nex
                 res.sendStatus(400);
 
             await group_db_handler.add_submission_to_group(group_key, submission_key);
-            await submission_db_handler.add_group_to_submission(submission_key, group_key);
-            await submission_db_handler.set_submission_data(submission_key, 'submission_status', 'Submitted');
-
+            await submission_db_handler.add_group_to_document_submission(submission_key, group_key);
 
             // Add tas and instructors to the group
             let tas_and_instructors = await course_db_handler.get_course_tas_and_instructors(course_key);
@@ -337,9 +337,10 @@ router.post('/:assignment_id/document_submissions', async function(req, res, nex
 
 
 
-router.post('/comment_submissions', async function(req, res, next) {
+router.post('/:assignment_id/comment_submissions', async function(req, res, next) {
     let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
     let group_key = KeyDictionary.key_dictionary['group'] + req.body.groupid;
+    let assignment_key = KeyDictionary.key_dictionary['assignment'] + req.params['assignment_id'];
 
     let group_db_handler = await GroupDatabaseHandler.get_instance();
     let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
@@ -360,7 +361,8 @@ router.post('/comment_submissions', async function(req, res, next) {
             return;
         }
 
-        await submission_db_handler.set_submission_status_to_submitted(submission_key);
+        // await submission_db_handler.set_submission_status_to_submitted(submission_key);
+        await submission_db_handler.submit_comment_submission(submission_key, group_key);
 
         res.sendStatus(200);
 
@@ -389,6 +391,50 @@ router.delete('/:assignment_id', async function(req, res, next) {
     let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
     let assignment_key = KeyDictionary.key_dictionary['assignment'] + req.params['assignment_id'];
 
+    let user_db_handler = await UserDatabaseHandler.get_instance();
+    let course_db_handler = await CourseDatabaseHandler.get_instance();
+
+    try {
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+
+        if (permissions !== 'instructor' && permissions !== 'ta')
+            res.sendStatus(401);
+
+        await course_db_handler.move_assignment_to_deleted_assignments(course_key, assignment_key);
+
+        res.sendStatus(200);
+    } catch (e) {
+        console.warn(e);
+        if (e.name === 'NotAuthorizedError')
+            res.sendStatus(401);
+        else
+            res.sendStatus(500);
+    }
+    // let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
+    //
+    // try {
+    //     await assignment_db_handler.delete_assignment(user_key, course_key, assignment_key);
+    //     res.sendStatus(200);
+    //
+    // } catch (e) {
+    //     console.warn(e);
+    //     if (e.name === 'NotAuthorizedError')
+    //         res.sendStatus(401);
+    //     else
+    //         res.sendStatus(500);
+    // }
+});
+
+
+/*
+ ** DELETE a course assignment
+ */
+router.delete('/:assignment_id/permanently', async function(req, res, next) {
+    console.log("Delete request for assignment with id: " + req.params.assignment_id);
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
+    let assignment_key = KeyDictionary.key_dictionary['assignment'] + req.params['assignment_id'];
+
     let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
 
     try {
@@ -403,6 +449,5 @@ router.delete('/:assignment_id', async function(req, res, next) {
             res.sendStatus(500);
     }
 });
-
 
 module.exports = router;

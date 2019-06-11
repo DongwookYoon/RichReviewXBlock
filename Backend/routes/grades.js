@@ -11,9 +11,18 @@ router.get('/', async function(req, res, next) {
     let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
 
     let grades_db_handler = await GradesDatabaseHandler.get_instance();
+    let user_db_handler = await UserDatabaseHandler.get_instance();
 
     try {
-        let grades = await grades_db_handler.get_course_grades(user_key, course_key);
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+
+        let grades = {};
+
+        if (permissions === 'instructor' || permissions === 'ta')
+            grades = await grades_db_handler.get_all_course_grades(user_key, course_key);
+        else if (permissions === 'student')
+            grades = await grades_db_handler.get_student_grades(user_key, course_key);
+
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(grades));
     } catch (e) {

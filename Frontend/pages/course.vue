@@ -1,6 +1,18 @@
 <template>
   <div>
     <Header />
+    <div id="options">
+      <img
+        v-if="permissions === 'instructor' || permissions === 'ta'"
+        id="more-options"
+        src="/delete.png"
+        @click="
+          $router.push(
+            `/courses/${$route.params.course_id}/deleted-assignments`
+          )
+        "
+      />
+    </div>
     <div id="content">
       <div id="sidebar">
         <p
@@ -27,7 +39,7 @@
       <table id="assignments">
         <thead id="assignments-header">
           <tr>
-            <th>Name</th>
+            <th id="name-header">Name</th>
             <th v-if="permissions === 'student'" id="status-header">Status</th>
             <th
               v-if="permissions === 'ta' || permissions === 'instructor'"
@@ -137,10 +149,16 @@ thead {
   display: flex;
 }
 
+#more-options {
+  margin-left: 93vw;
+  margin-top: 4vh;
+  margin-bottom: -7vh;
+}
+
 #sidebar {
   font-size: 3.5vh;
   color: #0c2343;
-  margin-top: 25vh;
+  margin-top: 20vh;
   margin-right: 5vw;
   margin-left: 2vw;
   min-width: 12vw;
@@ -165,10 +183,15 @@ thead {
   font-size: 2.5vh;
 }
 
+#name-header {
+  width: 30vw;
+}
+
 #status-header,
 #published-header {
   text-align: center;
   padding-right: 7vw;
+  width: 23vw;
 }
 
 #group-header-title {
@@ -180,8 +203,7 @@ thead {
 }
 
 .assignment-title {
-  min-width: 20vw;
-  max-width: 30vw;
+  width: 30vw;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -190,8 +212,7 @@ thead {
 
 .assignment-status,
 .assignment-published {
-  min-width: 15vw;
-  max-width: 25vw;
+  width: 23vw;
   text-align: center;
   padding-right: 7vw;
 }

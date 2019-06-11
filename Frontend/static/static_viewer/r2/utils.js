@@ -58,11 +58,11 @@
         if (err.custom_msg) {
           console.error(err.custom_msg + '\n' + detail)
           // alert(err.custom_msg)
-          location.reload()
+          //location.reload()
         } else {
           console.error(msg + '\n' + detail)
           // prompt(msg, detail)
-          location.reload()
+          //location.reload()
         }
       }
     }
@@ -297,7 +297,7 @@
             return cookieValue
           }
           if (
-            !(/^http:.*/.expand(settings.url) || /^https:.*/.expand(settings.url))
+            !(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))
           ) {
             // Only send the token to relative URLs i.e. locally.
             xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'))

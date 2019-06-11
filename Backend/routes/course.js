@@ -38,8 +38,8 @@ router.get('/:course_id', async function(req, res, next) {
     let user_db_handler = await UserDatabaseHandler.get_instance();
 
     try {
-        let data = await course_database_handler.get_course(user_key, course_key);
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+        let data = await course_database_handler.get_course(user_key, course_key);
 
         data['permissions'] = permissions;
 
@@ -51,6 +51,32 @@ router.get('/:course_id', async function(req, res, next) {
     }
 });
 
+router.get('/:course_id/deleted-assignments', async function(req, res, next) {
+    console.log("Get request for course with id: " + req.params.course_id);
+
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
+
+    let course_database_handler = await CourseDatabaseHandler.get_instance();
+    let user_db_handler = await UserDatabaseHandler.get_instance();
+
+    try {
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+
+        if (permissions !== 'instructor' && permissions !== 'ta')
+            res.sendStatus(401);
+
+        let data = await course_database_handler.get_deleted_course_assignments(user_key, course_key);
+
+        data['permissions'] = permissions;
+
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(data));
+    } catch (e) {
+        console.warn(e);
+        res.sendStatus(500);
+    }
+});
 
 
 /*
@@ -86,6 +112,31 @@ router.post('/:course_id', function(req, res, next) {
     res.sendStatus(403);
 });
 
+
+router.post('/:course_id/deleted-assignments/restore', async function(req, res, next) {
+    console.log("Get request for course with id: " + req.params.course_id);
+
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
+    let assignment_key = KeyDictionary.key_dictionary['assignment'] + req.body.id;
+
+    let course_database_handler = await CourseDatabaseHandler.get_instance();
+    let user_db_handler = await UserDatabaseHandler.get_instance();
+
+    try {
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+
+        if (permissions !== 'instructor' && permissions !== 'ta')
+            res.sendStatus(401);
+
+        await course_database_handler.restore_deleted_course_assignment(course_key, assignment_key);
+
+        res.sendStatus(200);
+    } catch (e) {
+        console.warn(e);
+        res.sendStatus(500);
+    }
+});
 
 
 /*

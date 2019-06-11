@@ -25,7 +25,12 @@
         </tr>
       </tbody>
     </table>
-    <button @click="downloadGrades">Download Grades</button>
+    <button
+      v-if="permissions === 'instructor' || permissions === 'ta'"
+      @click="downloadGrades"
+    >
+      Download Grades
+    </button>
   </div>
 </template>
 
@@ -54,14 +59,16 @@ export default {
         console.log(res.data)
         return {
           students: res.data.grades,
-          assignments: res.data.assignments
+          assignments: res.data.assignments,
+          permissions: res.data.permissions
         }
       })
       .catch(e => {
         console.log(e)
         return {
           students: [],
-          assignments: []
+          assignments: [],
+          permissions: ''
         }
       })
   },

@@ -40,6 +40,7 @@ export default {
         }
       )
       .then(res => {
+        console.log(res.data)
         const assignment_data = res.data.assignment
         const submission_data = res.data.submission
 
@@ -47,7 +48,10 @@ export default {
           ? true
           : submission_data.submission_time === ''
 
-        return { show_submit_button: show_submit_button }
+        return {
+          show_submit_button: show_submit_button,
+          assignment_id: assignment_data.id
+        }
       })
       .catch(e => {
         console.warn(e)
@@ -91,7 +95,7 @@ export default {
         .post(
           `https://localhost:3000/courses/${
             this.$route.params.course_id
-          }/assignments/comment_submissions`,
+          }/assignments/${this.assignment_id}/comment_submissions`,
           {
             access_code: this.$route.query.access_code,
             docid: this.$route.query.docid,

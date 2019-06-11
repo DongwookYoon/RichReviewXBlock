@@ -26,7 +26,7 @@
           $router.push(`/courses/${$route.params.course_id}/course_groups/new`)
         "
       >
-        + Group
+        Edit Groups
       </p>
     </div>
     <div v-if="people_tab" id="people">

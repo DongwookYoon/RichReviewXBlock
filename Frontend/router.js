@@ -16,6 +16,7 @@ import grades from './pages/grades'
 import new_course_group from './pages/new_course_group'
 import assignment_submissions from './pages/assignment_submissions'
 import viewer from './pages/viewer'
+import grader from './pages/grader'
 import deleted_assignments from './pages/deleted_assignments'
 
 Vue.use(Router)
@@ -87,6 +88,11 @@ export function createRouter() {
       {
         path: '/courses/:course_id/viewer',
         component: viewer
+      },
+      {
+        path:
+          '/courses/:course_id/assignments/:assignment_id/submissions/:submission_id/grader',
+        component: grader
       }
     ]
   })

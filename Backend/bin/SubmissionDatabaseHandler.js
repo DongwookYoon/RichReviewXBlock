@@ -122,6 +122,24 @@ class SubmissionDatabaseHandler {
     }
 
 
+    async get_submission_owner (submission_key) {
+        let submitter_db_hanlder = await SubmitterDatabaseHandler.get_instance();
+
+        let submission_data = await this.get_submission_data(submission_key);
+
+        let submitter_data = await submitter_db_hanlder.get_submitter_data(submission_data['submitter']);
+
+        if (submitter_data['course_group'] !== '') {
+            let course_group_db_handler = await CourseGroupDatabaseHandler.get_instance();
+            let course_group_data = await course_group_db_handler.get_course_group_data(submitter_data['course_group']);
+            return course_group_data['name'];
+        }
+
+        let user_db_handler = await UserDatabaseHandler.get_instance();
+        let user_data = await user_db_handler.get_user_data(submitter_data['members'][0]);
+        return { name: user_data['display_name'], key: submitter_data['members'][0] };
+    }
+
 
     get_largest_submission_key () {
         return new Promise((resolve, reject) => {

@@ -245,6 +245,7 @@ thead {
 #group-name-header,
 .group-name {
   margin-right: 5vw;
+  width: 33vw;
 }
 
 #course-header,
@@ -253,19 +254,12 @@ thead {
 .active {
   margin-right: 5vw;
   text-align: left;
-}
-
-.user-name,
-.group-name {
-  width: 33vw;
-}
-
-.course-title,
-.active {
   width: 23vw;
 }
 
+#role-header,
 .role,
+#user-count-header,
 .user-count {
   width: 15vw;
 }

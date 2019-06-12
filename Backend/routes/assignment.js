@@ -75,28 +75,48 @@ router.get('/:assignment_id', async function(req, res, next) {
 
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
-        let submission_key = await assignment_db_handler.get_users_submission_key(user_key, assignment_key);
-        let submission_data = await submission_db_handler.get_submission_data(submission_key);
+        let data = {};
 
-        let link = '';
+        if (permissions === 'instructor' || permissions === 'ta') {
+            let submission_data = await assignment_db_handler.get_first_assignment_submission_link_and_id(user_key, assignment_key);
+            data = {
+                permissions: permissions,
+                assignment: assignment_data,
+                grader_link: submission_data.link,
+                grader_submission_id: submission_data.id,
+                link: ''
+            };
 
-        if (submission_data['group'] && submission_data['group'] !== '') {
-            let group_id = submission_data['group'].replace(KeyDictionary.key_dictionary['group'], '');
-            let group_data = await group_db_handler.get_group_data(submission_data['group']);
+        } else if (permissions === 'student') {
+            // TODO this link is for students, should split into student / instructor specific functions
+            let submission_key = await assignment_db_handler.get_users_submission_key(user_key, assignment_key);
 
-            let doc_id = group_data['docid'].replace(KeyDictionary.key_dictionary['document'], '');
-            let doc_data = await doc_db_handler.get_doc_data(group_data['docid']);
+            let link = '';
 
-            let access_code = doc_data['pdfid'];
+            if (submission_key) {
+                let submission_data = await submission_db_handler.get_submission_data(submission_key);
 
-            link = `access_code=${access_code}&docid=${doc_id}&groupid=${group_id}`;
+                if (submission_data['group'] && submission_data['group'] !== '') {
+                    let group_id = submission_data['group'].replace(KeyDictionary.key_dictionary['group'], '');
+                    let group_data = await group_db_handler.get_group_data(submission_data['group']);
+
+                    let doc_id = group_data['docid'].replace(KeyDictionary.key_dictionary['document'], '');
+                    let doc_data = await doc_db_handler.get_doc_data(group_data['docid']);
+
+                    let access_code = doc_data['pdfid'];
+
+                    link = `access_code=${access_code}&docid=${doc_id}&groupid=${group_id}`;
+                }
+            }
+
+            data = {
+                permissions: permissions,
+                assignment: assignment_data,
+                grader_link: '',
+                link: link
+            };
+
         }
-
-        let data = {
-            permissions: permissions,
-            assignment: assignment_data,
-            link: link
-        };
 
         if (data === {})
             res.sendStatus(401);
@@ -166,6 +186,41 @@ router.get('/:assignment_id/submissions', async function(req, res, next) {
 });
 
 
+
+router.get('/:assignment_id/grader/:submission_id', async function(req, res, next) {
+
+    console.log("Get request for assignment with id: " + req.params.assignment_id);
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
+    let assignment_key = KeyDictionary.key_dictionary['assignment'] + req.params['assignment_id'];
+    let submission_id = req.params['submission_id'];
+    let submission_key = KeyDictionary.key_dictionary['submission'] + req.params['submission_id'];
+
+    let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
+    let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
+
+    try {
+
+        let previous_submission_link_and_id = await assignment_db_handler.get_previous_assignment_submission_link(user_key, assignment_key, submission_id);
+        let name_and_key = await submission_db_handler.get_submission_owner(submission_key);
+        let next_submission_link_and_id = await assignment_db_handler.get_next_assignment_submission_link(user_key, assignment_key, submission_id);
+        let submission_data = await submission_db_handler.get_submission_data(submission_key);
+
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+            previous_submission_link_and_id,
+            name: name_and_key.name,
+            student_key: name_and_key.key,
+            next_submission_link_and_id,
+            submission_data }));
+    } catch (e) {
+        console.warn(e);
+        if (e.name === 'NotAuthorizedError')
+            res.sendStatus(401);
+        else
+            res.sendStatus(500);
+    }
+});
 
 /*
  ** PUT to all course assignments, do not need this

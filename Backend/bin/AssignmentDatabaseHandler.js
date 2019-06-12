@@ -384,6 +384,79 @@ class AssignmentDatabaseHandler {
 
 
 
+    async get_assignment_submission_links_and_id (user_key, assignment_key) {
+        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
+        let group_db_handler = await GroupDatabaseHandler.get_instance();
+        let doc_db_handler = await DocumentDatabaseHandler.get_instance();
+
+        let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+        let submissions = assignment_data['submissions'];
+
+        let submissions_data = await submission_db_handler.get_all_submissions(submissions);
+
+        let submissions_links_and_id = [];
+
+        for (let submission_data of submissions_data) {
+            if (submission_data['group'] && submission_data['group'] !== '') {
+                let group_id = submission_data['group'].replace(KeyDictionary.key_dictionary['group'], '');
+                let group_data = await group_db_handler.get_group_data(submission_data['group']);
+
+                let doc_id = group_data['docid'].replace(KeyDictionary.key_dictionary['document'], '');
+                let doc_data = await doc_db_handler.get_doc_data(group_data['docid']);
+
+                let access_code = doc_data['pdfid'];
+
+                submissions_links_and_id.push({
+                    link: `access_code=${access_code}&docid=${doc_id}&groupid=${group_id}`,
+                    id: submission_data['id']
+                });
+            }
+        }
+
+        return submissions_links_and_id;
+    }
+
+
+    async get_first_assignment_submission_link_and_id (user_key, assignment_key) {
+        let submissions_links_and_ids = await this.get_assignment_submission_links_and_id(user_key, assignment_key);
+
+        if (submissions_links_and_ids.length > 0)
+            return submissions_links_and_ids[0];
+
+        return { link: '', id: '' };
+    }
+
+
+
+    async get_previous_assignment_submission_link (user_key, assignment_key, submission_id) {
+        let submissions_links_and_ids = await this.get_assignment_submission_links_and_id(user_key, assignment_key);
+
+        for(let i = 0; i < submissions_links_and_ids.length; i++) {
+            if (submissions_links_and_ids[i].id === submission_id && i > 0)
+                return submissions_links_and_ids[i - 1];
+        }
+        return { link: '', id: '' };
+    }
+
+
+
+    async get_next_assignment_submission_link (user_key, assignment_key, submission_id) {
+        let submissions_links_and_ids = await this.get_assignment_submission_links_and_id(user_key, assignment_key);
+        let found = false;
+
+        for (let submissions_link_and_id of submissions_links_and_ids) {
+            if(found)
+                return submissions_link_and_id;
+
+            if (submissions_link_and_id.id === submission_id)
+                found = true;
+        }
+
+        return { link: '', id: '' };
+    }
+
+
+
     async get_individual_assignment_submission_name (user_key) {
         let user_db_handler = await UserDatabaseHandler.get_instance();
         let user_data = await user_db_handler.get_user_data(user_key);

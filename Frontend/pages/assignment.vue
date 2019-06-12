@@ -1,5 +1,6 @@
 <template>
   <div>
+    <Header />
     <h1>Assignment Page</h1>
     <div>{{ assignment }}</div>
     <button
@@ -31,6 +32,21 @@
       "
     >
       View Submissions
+    </button>
+    <button
+      v-if="permissions === 'instructor' || permissions === 'ta'"
+      @click="
+        grader_link !== ''
+          ? $router.push(
+              `/courses/${$route.params.course_id}/assignments/${
+                $route.params.assignment_id
+              }/submissions/${grader_submission_id}/grader?${grader_link}`
+            )
+          : $router.push(`/courses/${$route.params.course_id}/`)
+      "
+    >
+      <!--todo if no grader link, redirect to no submissions page-->
+      Grader
     </button>
     <div
       v-if="
@@ -101,6 +117,7 @@
         <button @click="submitAssignment()">Submit</button>
       </div>
     </div>
+    <Footer />
   </div>
 </template>
 
@@ -109,9 +126,12 @@
 
 import https from 'https'
 import axios from 'axios'
+import Header from '../components/Header'
+import Footer from '../components/footer'
 
 export default {
   name: 'Assignment',
+  components: { Footer, Header },
   asyncData(context) {
     return axios
       .get(
@@ -133,7 +153,9 @@ export default {
           permissions: res.data.permissions,
           assignment: res.data.assignment,
           viewer_link: res.data.link,
-          files: []
+          files: [],
+          grader_link: res.data.grader_link,
+          grader_submission_id: res.data.grader_submission_id
         }
       })
       .catch(e => {
@@ -142,7 +164,9 @@ export default {
           assignment: {},
           permissions: undefined,
           files: [],
-          viewer_link: ''
+          viewer_link: '',
+          grader_link: '',
+          grader_submission_id: ''
         }
       })
   },

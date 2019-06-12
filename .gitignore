@@ -67,3 +67,12 @@ ssl/
 
 
 Backend/node_modules/
+
+
+#Frontend
+.nuxt/
+.idea/
+node_modules/
+!.eslintrc.js
+!.prettierrc
+

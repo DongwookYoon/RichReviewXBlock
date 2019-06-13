@@ -1,5 +1,5 @@
 <template>
-  <div class="upcoming-assignment" @click="$router.push(`${link}`)">
+  <div class="upcoming-assignment" @click="go_to_assignment(link)">
     <img
       v-if="status === 'Not Submitted'"
       class="assignment-incomplete-icon"
@@ -39,6 +39,9 @@ export default {
       type: String,
       default: ''
     }
+  },
+  go_to_assignment(link) {
+    this.$router.push(`${link}`)
   }
 }
 </script>

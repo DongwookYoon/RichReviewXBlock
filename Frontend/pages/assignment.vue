@@ -5,13 +5,7 @@
     <div>{{ assignment }}</div>
     <button
       v-if="permissions === 'instructor' || permissions === 'ta'"
-      @click="
-        $router.push(
-          `/courses/${$route.params.course_id}/assignments/${
-            $route.params.assignment_id
-          }/edit`
-        )
-      "
+      @click="go_to_edit_assignment"
     >
       Edit
     </button>
@@ -23,29 +17,14 @@
     </button>
     <button
       v-if="permissions === 'instructor' || permissions === 'ta'"
-      @click="
-        $router.push(
-          `/courses/${$route.params.course_id}/assignments/${
-            $route.params.assignment_id
-          }/submissions`
-        )
-      "
+      @click="got_to_submissions"
     >
       View Submissions
     </button>
     <button
       v-if="permissions === 'instructor' || permissions === 'ta'"
-      @click="
-        grader_link !== ''
-          ? $router.push(
-              `/courses/${$route.params.course_id}/assignments/${
-                $route.params.assignment_id
-              }/submissions/${grader_submission_id}/grader?${grader_link}`
-            )
-          : $router.push(`/courses/${$route.params.course_id}/`)
-      "
+      @click="go_to_grader"
     >
-      <!--todo if no grader link, redirect to no submissions page-->
       Grader
     </button>
     <div
@@ -55,13 +34,7 @@
           permissions === 'student'
       "
     >
-      <h2
-        @click="
-          $router.push(
-            `/courses/${$route.params.course_id}/viewer?${viewer_link}`
-          )
-        "
-      >
+      <h2 @click="go_to_viewer">
         Click here to start annotating the document
       </h2>
     </div>
@@ -72,13 +45,7 @@
           permissions === 'student'
       "
     >
-      <h2
-        @click="
-          $router.push(
-            `/courses/${$route.params.course_id}/viewer?${viewer_link}`
-          )
-        "
-      >
+      <h2 @click="go_to_current_submission">
         View current submission
       </h2>
     </div>
@@ -122,7 +89,7 @@
 </template>
 
 <script>
-/* eslint-disable no-console */
+/* eslint-disable no-console,camelcase */
 
 import https from 'https'
 import axios from 'axios'
@@ -171,6 +138,55 @@ export default {
       })
   },
   methods: {
+    go_to_edit_assignment() {
+      this.$router.push(
+        `/courses/${this.$route.params.course_id}/assignments/${
+          this.$route.params.assignment_id
+        }/edit`
+      )
+    },
+    got_to_submissions() {
+      this.$router.push(
+        `/courses/${this.$route.params.course_id}/assignments/${
+          this.$route.params.assignment_id
+        }/submissions`
+      )
+    },
+    go_to_grader() {
+      // todo if no grader link, redirect to no submissions page
+      this.grader_link !== ''
+        ? this.$router.push(
+            `/courses/${this.$route.params.course_id}/assignments/${
+              this.$route.params.assignment_id
+            }/submissions/${this.grader_submission_id}/grader?${
+              this.grader_link
+            }`
+          )
+        : this.$router.push(`/courses/${this.$route.params.course_id}/`)
+    },
+    go_to_viewer() {
+      this.$router.push(
+        `/courses/${this.$route.params.course_id}/viewer?${this.viewer_link}`
+      )
+    },
+    go_to_current_submission() {
+      this.$router.push(
+        `/courses/${this.$route.params.course_id}/viewer?${this.viewer_link}`
+      )
+    },
+    addFiles() {
+      this.$refs.files.click()
+    },
+    removeFile(key) {
+      this.files.splice(key, 1)
+    },
+    handleFileUpload() {
+      const uploadedFiles = this.$refs.files.files
+
+      for (let i = 0; i < uploadedFiles.length; i++) {
+        this.files.push(uploadedFiles[i])
+      }
+    },
     delete_assignment() {
       axios
         .delete(
@@ -193,19 +209,6 @@ export default {
           console.log(e)
           this.$router.push(`/courses/${this.$route.params.course_id}/`)
         })
-    },
-    addFiles() {
-      this.$refs.files.click()
-    },
-    removeFile(key) {
-      this.files.splice(key, 1)
-    },
-    handleFileUpload() {
-      const uploadedFiles = this.$refs.files.files
-
-      for (let i = 0; i < uploadedFiles.length; i++) {
-        this.files.push(uploadedFiles[i])
-      }
     },
     submitAssignment() {
       const formData = new FormData()

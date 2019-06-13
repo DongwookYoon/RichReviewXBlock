@@ -23,6 +23,8 @@ router.get('/', async function(req, res, next) {
         else if (permissions === 'student')
             grades = await grades_db_handler.get_student_grades(user_key, course_key);
 
+        grades['permissions'] = permissions;
+
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(grades));
     } catch (e) {

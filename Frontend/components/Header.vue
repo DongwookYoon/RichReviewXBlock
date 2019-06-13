@@ -1,8 +1,8 @@
 <template>
   <header id="header">
     <!-- Logo design by Allison Chiang: acchiang98@gmail.com -->
-    <img id="logo" src="/logo.png" @click="$router.push('/dashboard')" />
-    <p id="header-dashboard" @click="$router.push('/dashboard')">Dashboard</p>
+    <img id="logo" src="/logo.png" @click="go_to_dashboard" />
+    <p id="header-dashboard" @click="go_to_dashboard">Dashboard</p>
     <p id="header-courses">Courses</p>
     <p id="header-assignments">Assignments</p>
     <p id="header-groups">Groups</p>
@@ -15,6 +15,9 @@
 export default {
   name: 'Header',
   methods: {
+    go_to_dashboard() {
+      this.$router.push('/dashboard')
+    },
     async logout() {
       await this.$auth.logout()
       this.$router.push('/')

@@ -1,6 +1,6 @@
 <template>
   <footer id="footer">
-    <p id="footer-title" @click="$router.push('/dashboard')">RichReview</p>
+    <p id="footer-title" @click="go_to_dashboard">RichReview</p>
     <p id="footer-copyright">© Dongwook Yoon</p>
     <p id="footer-about">About</p>
   </footer>
@@ -8,7 +8,12 @@
 
 <script>
 export default {
-  name: 'Footer'
+  name: 'Footer',
+  methods: {
+    go_to_dashboard() {
+      this.$router.push('/dashboard')
+    }
+  }
 }
 </script>
 

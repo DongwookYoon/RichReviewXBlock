@@ -113,7 +113,7 @@
         <br />
       </div>
       <button @click="save()">Save</button>
-      <button @click="$router.push(`/courses/${$route.params.course_id}/`)">
+      <button @click="go_to_course">
         Cancel
       </button>
     </div>
@@ -178,6 +178,9 @@ export default {
       })
   },
   methods: {
+    go_to_course() {
+      this.$router.push(`/courses/${this.$route.params.course_id}/`)
+    },
     save() {
       if (this.assignment_data.type === 'comment_submission') {
         const formData = new FormData()

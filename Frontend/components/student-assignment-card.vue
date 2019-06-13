@@ -1,5 +1,5 @@
 <template>
-  <div class="assignment-card" @click="$router.push(`${link}`)">
+  <div class="assignment-card" @click="go_to_assignment(link)">
     <p class="assignment-title">
       {{ title }}
     </p>
@@ -55,6 +55,11 @@ export default {
     link: {
       type: String,
       default: ''
+    }
+  },
+  methods: {
+    go_to_assignment(link) {
+      this.$router.push(`${link}`)
     }
   }
 }

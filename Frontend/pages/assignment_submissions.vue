@@ -2,15 +2,7 @@
   <div>
     <h1>Submissions</h1>
     <div v-for="s in submissions" :key="s.key">
-      <li
-        @click="
-          s.link !== ''
-            ? $router.push(
-                `/courses/${$route.params.course_id}/viewer?${s.link}`
-              )
-            : null
-        "
-      >
+      <li @click="go_to_submission(s.link)">
         {{ s.submitter_name }} - {{ s.submission_status }} - {{ s.mark }}/{{
           s.points
         }}
@@ -50,6 +42,14 @@ export default {
         console.log(e)
         return { expand: {} }
       })
+  },
+  methods: {
+    go_to_submission(link) {
+      if (link !== '')
+        this.$router.push(
+          `/courses/${this.$route.params.course_id}/viewer?${link}`
+        )
+    }
   }
 }
 </script>

@@ -119,6 +119,7 @@ class GradesDatabaseHandler {
 
                 assignment_grade['assignment_id'] = assignment['id'];
                 assignment_grade['title'] = assignment['title'];
+                assignment_grade['points'] = assignment['points'];
                 student_grades['grades'].push(assignment_grade);
             }
 
@@ -152,9 +153,9 @@ class GradesDatabaseHandler {
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
         if (permissions !== 'instructor' && permissions !== 'ta')
-            return await this.get_user_course_grades(user_key);
+            return await this.get_all_course_grades(user_key);
 
-        let grade_data = await this.get_course_grades(user_key, course_key);
+        let grade_data = await this.get_all_course_grades(user_key, course_key);
         let grades = grade_data['grades'];
 
         let data = [];
@@ -162,7 +163,7 @@ class GradesDatabaseHandler {
         for (let grade of grades) {
             let student_grades = {};
 
-            student_grades['name'] = grade['name'];
+            student_grades['Student Name'] = grade['name'];
 
             for (let assignment of grade['grades']) {
                 let mark = '';
@@ -175,7 +176,7 @@ class GradesDatabaseHandler {
                 if (assignment['late'])
                     mark = `${mark} - late`;
 
-                let assignment_title = `${assignment['assignment_title']} - Out of ${assignment['points']}`;
+                let assignment_title = `${assignment['title']} - Out of ${assignment['points']}`;
 
                 student_grades[assignment_title] = mark;
             }

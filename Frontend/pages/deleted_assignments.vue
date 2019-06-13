@@ -3,23 +3,15 @@
     <Header />
     <div id="content">
       <div id="sidebar">
-        <p
-          id="people"
-          @click="$router.push(`/courses/${$route.params.course_id}/users`)"
-        >
+        <p id="people" @click="go_to_people">
           People
         </p>
-        <p
-          id="grades"
-          @click="$router.push(`/courses/${$route.params.course_id}/grades`)"
-        >
+        <p id="grades" @click="go_to_grades">
           Grades
         </p>
         <p
           v-if="permissions === 'ta' || permissions === 'instructor'"
-          @click="
-            $router.push(`/courses/${$route.params.course_id}/assignments/new`)
-          "
+          @click="go_to_new_assignment"
         >
           + Assignment
         </p>
@@ -35,13 +27,7 @@
         <tbody class="assignments-body">
           <tr v-for="a in assignments" :key="a.key" class="assignment-row">
             <td class="assignment-title">
-              <p
-                @click="
-                  $router.push(
-                    `/courses/${$route.params.course_id}/assignments/${a.id}`
-                  )
-                "
-              >
+              <p @click="go_to_assignment(a.id)">
                 {{ a.title }}
               </p>
             </td>
@@ -97,6 +83,22 @@ export default {
       })
   },
   methods: {
+    go_to_people() {
+      this.$router.push(`/courses/${this.$route.params.course_id}/users`)
+    },
+    go_to_grades() {
+      this.$router.push(`/courses/${this.$route.params.course_id}/grades`)
+    },
+    go_to_new_assignment() {
+      this.$router.push(
+        `/courses/${this.$route.params.course_id}/assignments/new`
+      )
+    },
+    go_to_assignment(id) {
+      this.$router.push(
+        `/courses/${this.$route.params.course_id}/assignments/${id}`
+      )
+    },
     restore(id) {
       console.log(id)
       axios

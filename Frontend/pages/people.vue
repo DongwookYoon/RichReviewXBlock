@@ -21,10 +21,8 @@
         v-if="
           !people_tab && (permissions === 'instructor' || permissions === 'ta')
         "
-        id="new-group-button"
-        @click="
-          $router.push(`/courses/${$route.params.course_id}/course_groups/new`)
-        "
+        id="edit-group-button"
+        @click="go_to_edit_groups"
       >
         Edit Groups
       </p>
@@ -70,11 +68,7 @@
             v-for="group in group_list"
             :key="group.key"
             class="group-row"
-            @click="
-              $router.push(
-                `/courses/${$route.params.course_id}/course_groups/${group.id}`
-              )
-            "
+            @click="go_to_group(group.id)"
           >
             <td>
               <p class="group-name">{{ group.name }}</p>
@@ -148,6 +142,16 @@ export default {
       })
   },
   methods: {
+    go_to_edit_groups() {
+      this.$router.push(
+        `/courses/${this.$route.params.course_id}/course_groups/new`
+      )
+    },
+    go_to_group(id) {
+      this.$router.push(
+        `/courses/${this.$route.params.course_id}/course_groups/${id}`
+      )
+    },
     changeToPeopleTab() {
       this.people_tab = true
     },
@@ -189,7 +193,7 @@ thead {
 #people-button,
 #divider,
 #group-button,
-#new-group-button {
+#edit-group-button {
   font-size: 2.5vh;
   margin-right: 1vw;
 }
@@ -202,7 +206,7 @@ thead {
   margin-right: 65vw;
 }
 
-#new-group-button {
+#edit-group-button {
   color: white;
   background-color: #0c2343;
   padding-left: 0.5vw;

@@ -78,15 +78,7 @@
         <label @click="edits.until_date = ''">X</label>
       </div>
       <button @click="edit()">Save</button>
-      <button
-        @click="
-          $router.push(
-            `/courses/${$route.params.course_id}/assignments/${
-              $route.params.assignment_id
-            }`
-          )
-        "
-      >
+      <button @click="go_to_assignment">
         Cancel
       </button>
     </div>
@@ -152,6 +144,13 @@ export default {
       })
   },
   methods: {
+    go_to_assignment() {
+      this.$router.push(
+        `/courses/${this.$route.params.course_id}/assignments/${
+          this.$route.params.assignment_id
+        }`
+      )
+    },
     edit() {
       axios
         .put(

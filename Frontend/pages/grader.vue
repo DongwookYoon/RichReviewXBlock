@@ -1,7 +1,9 @@
 <template>
   <div id="test">
     <div id="top-bar">
-      <p id="assignment-title" @click="to_assignment">{{ assignment_title }}</p>
+      <p id="assignment-title" @click="go_to_assignment">
+        {{ assignment_title }}
+      </p>
       <input
         id="mark-input"
         :placeholder="[[mark !== '' ? mark : '']]"
@@ -136,7 +138,7 @@ export default {
       })
   },
   methods: {
-    to_assignment() {
+    go_to_assignment() {
       this.$router.push(
         `/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id

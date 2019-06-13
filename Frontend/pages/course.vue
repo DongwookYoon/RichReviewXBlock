@@ -6,32 +6,20 @@
         v-if="permissions === 'instructor' || permissions === 'ta'"
         id="more-options"
         src="/delete.png"
-        @click="
-          $router.push(
-            `/courses/${$route.params.course_id}/deleted-assignments`
-          )
-        "
+        @click="go_to_deleted_assignments"
       />
     </div>
     <div id="content">
       <div id="sidebar">
-        <p
-          id="people"
-          @click="$router.push(`/courses/${$route.params.course_id}/users`)"
-        >
+        <p id="people" @click="go_to_people">
           People
         </p>
-        <p
-          id="grades"
-          @click="$router.push(`/courses/${$route.params.course_id}/grades`)"
-        >
+        <p id="grades" @click="go_to_grades">
           Grades
         </p>
         <p
           v-if="permissions === 'ta' || permissions === 'instructor'"
-          @click="
-            $router.push(`/courses/${$route.params.course_id}/assignments/new`)
-          "
+          @click="go_to_new_assignment"
         >
           + Assignment
         </p>
@@ -39,7 +27,7 @@
       <table id="assignments">
         <thead id="assignments-header">
           <tr>
-            <th id="name-header">Name</th>
+            <th id="name-header">Assignment Name</th>
             <th v-if="permissions === 'student'" id="status-header">Status</th>
             <th
               v-if="permissions === 'ta' || permissions === 'instructor'"
@@ -58,11 +46,7 @@
             v-for="a in assignments"
             :key="a.key"
             class="assignment-row"
-            @click="
-              $router.push(
-                `/courses/${$route.params.course_id}/assignments/${a.id}`
-              )
-            "
+            @click="go_to_assignment(a.id)"
           >
             <td class="assignment-title">{{ a.title }}</td>
             <td v-if="permissions === 'student'" class="assignment-status">
@@ -121,6 +105,29 @@ export default {
         console.log(e)
         return { assignments: [], permissions: undefined }
       })
+  },
+  methods: {
+    go_to_deleted_assignments() {
+      this.$router.push(
+        `/courses/${this.$route.params.course_id}/deleted-assignments`
+      )
+    },
+    go_to_people() {
+      this.$router.push(`/courses/${this.$route.params.course_id}/users`)
+    },
+    go_to_grades() {
+      this.$router.push(`/courses/${this.$route.params.course_id}/grades`)
+    },
+    go_to_new_assignment() {
+      this.$router.push(
+        `/courses/${this.$route.params.course_id}/assignments/new`
+      )
+    },
+    go_to_assignment(id) {
+      this.$router.push(
+        `/courses/${this.$route.params.course_id}/assignments/${id}`
+      )
+    }
   }
 }
 </script>

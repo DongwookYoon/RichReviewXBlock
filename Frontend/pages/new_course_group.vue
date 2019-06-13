@@ -39,7 +39,7 @@
       <div id="groups">
         <div id="group-header">
           <p id="group-header-title">Groups</p>
-          <p id="new-group-button" @click="newGroup">+ Group</p>
+          <p id="edit-group-button" @click="newGroup">+ Group</p>
           <p id="save-button" @click="save">Save</p>
         </div>
         <hr id="group-hr" />
@@ -153,6 +153,7 @@ export default {
       }
       await this.permanently_delete_group(id)
 
+      // todo this is the disabled inactive course group functionality
       // const members = data.members
       // const inactive = data.inactive
       // const id = data.id
@@ -338,7 +339,7 @@ p {
 }
 
 #automatic-groups-button,
-#new-group-button,
+#edit-group-button,
 #save-button,
 #modal-continue-button,
 #modal-cancel-button {
@@ -361,7 +362,7 @@ p {
   background-color: #595959;
 }
 
-#new-group-button {
+#edit-group-button {
   margin-right: 1vw;
 }
 

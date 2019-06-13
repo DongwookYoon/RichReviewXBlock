@@ -1,5 +1,5 @@
 <template>
-  <div class="course-card" @click="$router.push(`${link}`)">
+  <div class="course-card" @click="go_to_course(link)">
     <!--<p class="course-title">{{ title }}</p>-->
     <v-clamp class="course-title" autoresize :max-lines="1">
       {{ title }}</v-clamp
@@ -48,6 +48,11 @@ export default {
     link: {
       type: String,
       default: ''
+    }
+  },
+  methods: {
+    go_to_course(link) {
+      this.$router.push(`${link}`)
     }
   }
 }

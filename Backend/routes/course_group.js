@@ -131,4 +131,24 @@ router.delete("/:group_id", async function (req, res, next){
     }
 });
 
+
+router.delete("/:group_id/permanently", async function (req, res, next){
+    let course_group_db_handler = await CourseGroupDatabaseHandler.get_instance();
+
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
+    let course_group_key = KeyDictionary.key_dictionary['course_group'] + req.params['group_id'];
+
+    try {
+        await course_group_db_handler.delete_course_group_permanently(user_key, course_key, course_group_key);
+        res.sendStatus(200);
+    } catch (e) {
+        console.warn(e);
+        if (e.name === 'NotAuthorizedError')
+            res.sendStatus(401);
+        else
+            res.sendStatus(500);
+    }
+});
+
 module.exports = router;

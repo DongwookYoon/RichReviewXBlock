@@ -11,7 +11,11 @@
       <p id="slash">/</p>
       <p id="points">{{ points }}</p>
       <p id="prev-arrow" @click="prev_student">Previous</p>
-      <p id="student-name">{{ name }}</p>
+      <select id="student-select" v-model="selected" @change="change_student">
+        <option v-for="s of submissions_list" :key="s.key" :value="s.key">
+          {{ s.name }}
+        </option>
+      </select>
       <p id="next-arrow" @click="next_student">Next</p>
     </div>
     <no-ssr>
@@ -52,6 +56,20 @@ export default {
       }
     )
 
+    const submissions_res = await axios.get(
+      `https://localhost:3000/courses/${context.params.course_id}/assignments/${
+        context.params.assignment_id
+      }/grader`,
+      {
+        headers: {
+          Authorization: context.app.$auth.user.sub
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+
     const grader_res = await axios.get(
       `https://localhost:3000/courses/${context.params.course_id}/assignments/${
         context.params.assignment_id
@@ -66,8 +84,11 @@ export default {
       }
     )
 
-    console.log(grader_res.data)
+    console.log(submissions_res.data)
     const assignment_data = assignment_res.data.assignment
+    const submissions_list = submissions_res.data.submission_links_and_id
+
+    const selected = grader_res.data.student_key
 
     return {
       assignment_title: assignment_data.title,
@@ -78,7 +99,9 @@ export default {
       student_key: grader_res.data.student_key,
       next_link: grader_res.data.next_submission_link_and_id.link,
       next_id: grader_res.data.next_submission_link_and_id.id,
-      mark: grader_res.data.submission_data.mark
+      mark: grader_res.data.submission_data.mark,
+      submissions_list: submissions_list,
+      selected: selected
     }
   },
   mounted: function() {
@@ -134,6 +157,16 @@ export default {
         }/submissions/${this.next_id}/grader?${this.next_link}`
       )
     },
+    change_student() {
+      for (const submission of this.submissions_list) {
+        if (submission.key === this.selected)
+          this.$router.push(
+            `/courses/${this.$route.params.course_id}/assignments/${
+              this.$route.params.assignment_id
+            }/submissions/${submission.id}/grader?${submission.link}`
+          )
+      }
+    },
     updateGrade(event) {
       const mark = event.target.value
 
@@ -181,7 +214,6 @@ p {
 
 #assignment-title,
 #prev-arrow,
-#student-name,
 #next-arrow,
 #mark-input,
 #slash,
@@ -201,7 +233,7 @@ p {
   margin-top: 0.75vh;
   text-align: right;
   margin-right: 1vw;
-  color: black;
+  color: #0c2343;
 }
 
 #slash {
@@ -213,8 +245,15 @@ p {
 }
 
 #prev-arrow,
-#student-name {
+#student-select {
   margin-right: 2vw;
+}
+
+#student-select {
+  color: #0c2343;
+  font-size: 2vh;
+  height: 95%;
+  margin-top: 0.75vh;
 }
 
 body {

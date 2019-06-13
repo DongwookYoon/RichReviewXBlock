@@ -43,15 +43,41 @@
           <p id="save-button" @click="save">Save</p>
         </div>
         <hr id="group-hr" />
+        <p
+          v-if="course_groups.active_course_groups.length > 0"
+          id="active-course-groups"
+        >
+          Active Course Groups:
+        </p>
         <div
           v-for="g in course_groups.active_course_groups"
           :key="g.id"
           @click="change_expand(`group-${g.id}`)"
         >
           <course-group-card
+            :id="g.id"
             :ref="'group-' + g.id"
             :passed_name="g.name"
             :members="g.members"
+          ></course-group-card>
+        </div>
+        <p
+          v-if="course_groups.inactive_course_groups.length > 0"
+          id="inactive-course-groups"
+        >
+          Deleted Course Groups:
+        </p>
+        <div
+          v-for="g in course_groups.inactive_course_groups"
+          :key="g.id"
+          @click="change_expand(`group-${g.id}`)"
+        >
+          <course-group-card
+            :id="g.id"
+            :ref="'group-' + g.id"
+            :passed_name="g.name"
+            :members="g.members"
+            :inactive="true"
           ></course-group-card>
         </div>
       </div>
@@ -119,12 +145,25 @@ export default {
       })
   },
   created: function() {
-    EventBus.$on('delete-group', members => {
-      console.log(members)
-      console.log('Called')
+    EventBus.$on('delete-group', async data => {
+      const members = data.members
+      const id = data.id
       for (const member of members) {
         this.unassigned_students.push(member)
       }
+      await this.permanently_delete_group(id)
+
+      // const members = data.members
+      // const inactive = data.inactive
+      // const id = data.id
+      //
+      // if (inactive) {
+      //   await this.permanently_delete_group(id)
+      // } else {
+      //   for (const member of members) {
+      //     this.unassigned_students.push(member)
+      //   }
+      // }
     })
   },
   methods: {
@@ -181,6 +220,21 @@ export default {
         }
       }
       this.hide()
+    },
+    async permanently_delete_group(id) {
+      await axios.delete(
+        `https://localhost:3000/courses/${
+          this.$route.params.course_id
+        }/course_groups/${id}/permanently`,
+        {
+          headers: {
+            Authorization: this.$auth.user.sub
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+      )
     },
     save() {
       const all_group_data = []
@@ -337,5 +391,22 @@ p {
 
 .student:hover {
   background-color: #f5f5f5;
+}
+
+#active-course-groups,
+#inactive-course-groups {
+  font-size: 2.5vh;
+  color: #0c2343;
+  width: 15vw;
+  margin-bottom: 1vh;
+}
+
+#active-course-groups {
+  margin-bottom: 1vh;
+}
+
+#inactive-course-groups {
+  margin-top: 3vh;
+  margin-bottom: 1vh;
 }
 </style>

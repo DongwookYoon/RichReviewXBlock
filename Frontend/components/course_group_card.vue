@@ -42,6 +42,14 @@ export default {
       default: () => {
         return []
       }
+    },
+    inactive: {
+      type: Boolean,
+      default: false
+    },
+    id: {
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -67,7 +75,11 @@ export default {
     },
     delete_group() {
       this.deleted = true
-      EventBus.$emit('delete-group', this.members)
+      EventBus.$emit('delete-group', {
+        members: this.members,
+        inactive: this.inactive,
+        id: this.id
+      })
     },
     get_data() {
       return {

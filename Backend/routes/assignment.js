@@ -186,6 +186,38 @@ router.get('/:assignment_id/submissions', async function(req, res, next) {
 });
 
 
+router.get('/:assignment_id/grader', async function(req, res, next) {
+
+    console.log("Get request for assignment with id: " + req.params.assignment_id);
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let assignment_key = KeyDictionary.key_dictionary['assignment'] + req.params['assignment_id'];
+    let submission_key = KeyDictionary.key_dictionary['submission'] + req.params['submission_id'];
+
+    let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
+    let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
+
+    try {
+
+        let submission_links_and_id = await assignment_db_handler.get_assignment_submission_links_and_id(user_key, assignment_key);
+
+        submission_links_and_id = await Promise.all(submission_links_and_id.map(async (submission_link_and_id) => {
+            let submission_key = KeyDictionary.key_dictionary['submission'] + submission_link_and_id['id'];
+           let submission_owner = await submission_db_handler.get_submission_owner(submission_key);
+           submission_link_and_id['name'] = submission_owner['name'];
+           submission_link_and_id['key'] = submission_owner['key'];
+           return submission_link_and_id;
+        }));
+
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ submission_links_and_id }));
+    } catch (e) {
+        console.warn(e);
+        if (e.name === 'NotAuthorizedError')
+            res.sendStatus(401);
+        else
+            res.sendStatus(500);
+    }
+});
 
 router.get('/:assignment_id/grader/:submission_id', async function(req, res, next) {
 

@@ -295,7 +295,7 @@ class CourseDatabaseHandler {
 
 
 
-    async remove_course_group_from_course (course_key, course_group_key) {
+    async deactivate_course_group (course_key, course_group_key) {
         let course_data = await this.get_course_data(course_key);
         let active_course_groups = course_data['active_course_groups'];
         let inactive_course_groups = course_data['inactive_course_groups'];
@@ -308,6 +308,19 @@ class CourseDatabaseHandler {
 
         await this.set_course_data(course_key, 'active_course_groups', JSON.stringify(active_course_groups));
         await this.set_course_data(course_key, 'inactive_course_groups', JSON.stringify(inactive_course_groups));
+    }
+
+
+    async permanently_delete_course_group (course_key, course_group_key) {
+        let course_data = await this.get_course_data(course_key);
+        let inactive_course_groups = course_data['inactive_course_groups'];
+
+        inactive_course_groups = inactive_course_groups.filter((inactive_key) => {
+            return inactive_key !== course_group_key;
+        });
+
+        await this.set_course_data(course_key, 'inactive_course_groups', JSON.stringify(inactive_course_groups));
+
     }
 
 

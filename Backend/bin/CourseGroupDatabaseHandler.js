@@ -247,7 +247,28 @@ class CourseGroupDatabaseHandler {
             throw new NotAuthorizedError('You are not authorized to delete a course group');
 
         let course_db_handler = await CourseDatabaseHandler.get_instance();
-        await course_db_handler.remove_course_group_from_course(course_key, course_group_key);
+        await course_db_handler.deactivate_course_group(course_key, course_group_key);
+    }
+
+
+
+    async delete_course_group_permanently (user_key, course_key, course_group_key) {
+        let user_db_handler = await UserDatabaseHandler.get_instance();
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+
+        if (permissions !== 'ta' && permissions !== 'instructor')
+            throw new NotAuthorizedError('You are not authorized to delete a course group');
+
+        let course_db_handler = await CourseDatabaseHandler.get_instance();
+        await course_db_handler.permanently_delete_course_group(course_key, course_group_key);
+
+        await this.db_handler.client.del(course_group_key, (error, result) => {
+            if (error) {
+                console.log(error);
+                throw error;
+            }
+            console.log('DEL result -> ' + result);
+        });
     }
 }
 

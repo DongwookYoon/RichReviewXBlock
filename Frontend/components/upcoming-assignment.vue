@@ -66,6 +66,7 @@ export default {
 }
 
 .upcoming-assignment {
+  cursor: pointer;
   display: flex;
   align-items: center;
   margin-right: 50px;

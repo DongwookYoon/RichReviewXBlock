@@ -33,7 +33,7 @@ router.get('/', async function(req, res, next) {
         res.end(JSON.stringify(data));
     } catch (e) {
         console.log(e);
-        res.send(500);
+        res.sendStatus(500);
     }
 });
 
@@ -80,7 +80,7 @@ router.get('/unassigned', async function(req, res, next) {
         res.end(JSON.stringify(data));
     } catch (e) {
         console.log(e);
-        res.send(500);
+        res.sendStatus(500);
     }
 });
 

@@ -19,6 +19,7 @@
         </p>
         <p
           v-if="permissions === 'ta' || permissions === 'instructor'"
+          id="new-assignment"
           @click="go_to_new_assignment"
         >
           + Assignment
@@ -160,6 +161,7 @@ thead {
   margin-left: 93vw;
   margin-top: 4vh;
   margin-bottom: -7vh;
+  cursor: pointer;
 }
 
 #sidebar {
@@ -172,8 +174,10 @@ thead {
 }
 
 #people,
-#grades {
+#grades,
+#new-assignment {
   margin-bottom: 5vh;
+  cursor: pointer;
 }
 
 #assignments {
@@ -207,6 +211,10 @@ thead {
 
 #due-header {
   text-align: center;
+}
+
+.assignment-row {
+  cursor: pointer;
 }
 
 .assignment-title {

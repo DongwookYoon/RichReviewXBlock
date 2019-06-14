@@ -198,12 +198,17 @@ thead {
   margin-right: 1vw;
 }
 
+#people-button {
+  cursor: pointer;
+}
+
 #divider {
   color: #0c2343;
 }
 
 #group-button {
   margin-right: 65vw;
+  cursor: pointer;
 }
 
 #edit-group-button {
@@ -212,6 +217,7 @@ thead {
   padding-left: 0.5vw;
   padding-right: 0.5vw;
   border-radius: 0.5vw;
+  cursor: pointer;
 }
 
 #people,
@@ -228,6 +234,11 @@ thead {
 #user-count-header {
   font-size: 2.5vh;
   color: #0c2343;
+}
+
+.user-row,
+.group-row {
+  cursor: pointer;
 }
 
 .user-name,

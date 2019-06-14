@@ -149,7 +149,12 @@ class SubmissionDatabaseHandler {
                     reject(error);
                 }
                 console.log('KEY result -> ' + result);
-                resolve(result.length);
+                result = result.map((key) => {
+                    return parseInt(key.replace(KeyDictionary.key_dictionary['submission'], ''));
+                });
+                result.push(0);
+                result.sort();
+                resolve(result[result.length - 1]);
             });
         })
     }

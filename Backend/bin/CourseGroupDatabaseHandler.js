@@ -221,7 +221,12 @@ class CourseGroupDatabaseHandler {
                     reject(error);
                 }
                 console.log('KEY result -> ' + result);
-                resolve(result.length);
+                result = result.map((key) => {
+                    return parseInt(key.replace(KeyDictionary.key_dictionary['course_group'], ''));
+                });
+                result.push(0);
+                result.sort();
+                resolve(result[result.length - 1]);
             });
         })
     }
@@ -258,6 +263,14 @@ class CourseGroupDatabaseHandler {
 
         if (permissions !== 'ta' && permissions !== 'instructor')
             throw new NotAuthorizedError('You are not authorized to delete a course group');
+
+        let course_group_data = await this.get_course_group_data(course_group_key);
+
+        console.log(course_group_data);
+
+        for (let member_key of course_group_data['users']) {
+            await user_db_handler.remove_course_group_from_user(member_key, course_group_key);
+        }
 
         let course_db_handler = await CourseDatabaseHandler.get_instance();
         await course_db_handler.permanently_delete_course_group(course_key, course_group_key);

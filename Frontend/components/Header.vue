@@ -45,6 +45,7 @@ export default {
   text-align: left;
   padding-left: 5%;
   height: 5vh;
+  cursor: pointer;
 }
 
 #header {

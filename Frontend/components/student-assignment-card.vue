@@ -67,6 +67,7 @@ export default {
 
 <style scoped>
 .assignment-card {
+  cursor: pointer;
   display: grid;
   grid-template-columns: 22vw 18vw 12vw 17vw;
   font-size: 2.5vh;

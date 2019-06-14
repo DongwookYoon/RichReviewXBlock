@@ -242,7 +242,7 @@ export default {
       for (const group_id of this.group_ids) {
         const group_data = this.$refs[`group-${group_id}`][0].get_data()
         group_data.id = group_id
-        all_group_data.push(group_data)
+        if (!group_data.deleted) all_group_data.push(group_data)
       }
       console.log(all_group_data)
       axios
@@ -351,6 +351,7 @@ p {
   padding-right: 0.5vw;
   margin-top: 0.33vh;
   margin-bottom: 0.33vh;
+  cursor: pointer;
 }
 
 #modal-continue-button {
@@ -388,6 +389,7 @@ p {
   padding-bottom: 0.5vh;
   padding-left: 1vw;
   width: 40.5vw;
+  cursor: pointer;
 }
 
 .student:hover {

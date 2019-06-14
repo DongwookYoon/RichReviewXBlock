@@ -30,6 +30,7 @@ export default {
 #footer-title {
   text-align: left;
   padding-left: 1vw;
+  cursor: pointer;
 }
 
 #footer-about {

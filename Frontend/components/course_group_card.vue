@@ -101,6 +101,10 @@ p {
   background-color: #f5f5f5;
 }
 
+.course_group_card {
+  cursor: pointer;
+}
+
 .group-options {
   display: flex;
 }

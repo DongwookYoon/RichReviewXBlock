@@ -235,6 +235,17 @@ class UserDatabaseHandler {
 
         await this.set_user_data(user_key, 'submitters', JSON.stringify(submitters));
     }
+
+
+    async remove_course_group_from_user (user_key, course_group_key) {
+        let user_data = await this.get_user_data(user_key);
+        let course_groups = user_data['course_groups'];
+        course_groups = course_groups.filter(course_group => {
+            return course_group !== course_group_key;
+        });
+
+        await this.set_user_data(user_key, 'course_groups', JSON.stringify(course_groups));
+    }
 }
 
 module.exports = UserDatabaseHandler;

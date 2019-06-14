@@ -62,6 +62,11 @@ router.post("/", async function (req, res, next){
     let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
     let course_group_data = req.body;
 
+    if (course_group_data.length === 0) {
+        res.sendStatus(200);
+        return;
+    }
+
     try {
         for (let course_group of course_group_data) {
             let course_group_key = KeyDictionary.key_dictionary['course_group'] + course_group['id'];

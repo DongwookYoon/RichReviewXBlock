@@ -33,7 +33,12 @@ class DocumentUploadHandler {
             await this.upload_document(uuid, file);
         }
 
-        await this.merge_pdfs({url:'http://127.0.0.1:5000/mupla_serve/', form:{mode:"MergePdfs",uuid:uuid}});
+        try {
+            await this.merge_pdfs({url: 'http://127.0.0.1:5000/mupla_serve/', form: {mode: "MergePdfs", uuid: uuid}});
+        } catch(e) {
+            console.warn(e);
+            throw new RichReviewError('Unable to connect to MUPLA server');
+        }
         let context = await this.upload_pdf_to_azure(uuid);
 
         let mupla_handler = await MuplaHandler.get_instance();

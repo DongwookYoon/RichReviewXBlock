@@ -6,3 +6,5 @@ class RichReviewError extends Error {
         this.name = 'RichReviewError';
     }
 }
+
+module.exports = RichReviewError;

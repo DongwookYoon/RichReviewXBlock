@@ -100,26 +100,12 @@ class AssignmentDatabaseHandler {
 
     async create_comment_submission_assignment (user_key, course_key, assignment_data, files) {
 
-        let assignment_key = await this.create_assignment(course_key, assignment_data);
-
         let document_upload_handler = await DocumentUploadHandler.get_instance();
         let document_db_handler = await DocumentDatabaseHandler.get_instance();
         let group_db_handler = await GroupDatabaseHandler.get_instance();
         let user_db_handler = await UserDatabaseHandler.get_instance();
         let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
         let submitter_db_handler = await SubmitterDatabaseHandler.get_instance();
-
-        let submission_keys = [];
-
-        if (!assignment_data['group_assignment']) {
-            submission_keys = await submission_db_handler.create_submission_for_each_user_and_return_keys(course_key,
-                assignment_key);
-
-        } else {
-            submission_keys = await submission_db_handler.create_submission_for_each_course_group_and_return_keys(course_key,
-                assignment_key);
-        }
-
 
         // Upload pdf to azure
         let main_context = await document_upload_handler.upload_documents(files);
@@ -131,7 +117,21 @@ class AssignmentDatabaseHandler {
         await document_db_handler.add_group_to_doc(main_doc_key, main_group_key);
         await user_db_handler.add_group_to_user(user_key, main_group_key);
 
+        let assignment_key = await this.create_assignment(course_key, assignment_data);
+
         await this.set_assignment_data(assignment_key, 'group', main_group_key);
+
+
+        let submission_keys = [];
+
+        if (!assignment_data['group_assignment']) {
+            submission_keys = await submission_db_handler.create_submission_for_each_user_and_return_keys(course_key,
+                assignment_key);
+
+        } else {
+            submission_keys = await submission_db_handler.create_submission_for_each_course_group_and_return_keys(course_key,
+                assignment_key);
+        }
 
 
         for (let submission_key of submission_keys) {

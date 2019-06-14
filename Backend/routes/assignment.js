@@ -333,10 +333,12 @@ router.post('/comment_submission_assignment', async function(req, res, next) {
 
     let form = new formidable.IncomingForm();
     await form.parse(req, async function(err, fields, files) {
-        if (err) {
-            console.war(err);
+        if (err || (Object.entries(files).length === 0 && files.constructor === Object)) {
+            console.warn(err);
             res.sendStatus(400);
+            return;
         }
+
 
         try {
 
@@ -366,9 +368,10 @@ router.post('/:assignment_id/document_submissions', async function(req, res, nex
 
     let form = new formidable.IncomingForm();
     await form.parse(req, async function(err, fields, files) {
-        if (err) {
-            console.war(err);
+        if (err || (Object.entries(files).length === 0 && files.constructor === Object)) {
+            console.warn(err);
             res.sendStatus(400);
+            return;
         }
 
         let document_upload_handler = await DocumentUploadHandler.get_instance();
@@ -381,7 +384,14 @@ router.post('/:assignment_id/document_submissions', async function(req, res, nex
 
         try {
             // Upload pdf to azure
-            let context = await document_upload_handler.upload_documents(files);
+            let context;
+            try {
+                context = await document_upload_handler.upload_documents(files);
+            } catch(e) {
+                console.warn(e);
+                res.sendStatus(500);
+                return;
+            }
 
             // Add doc and grp to redis
             let doc_key = await document_db_handler.create_doc(user_id, context.container);

@@ -110,6 +110,7 @@ class GradesDatabaseHandler {
             let student_grades = {};
             student_grades['name'] = student.name;
             student_grades['grades'] = [];
+            student_grades['student_key'] = KeyDictionary.key_dictionary['user'] + student.id;
 
             let student_key = KeyDictionary.key_dictionary['user'] + student.id;
 

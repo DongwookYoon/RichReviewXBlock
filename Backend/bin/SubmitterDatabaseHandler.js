@@ -121,7 +121,9 @@ class SubmitterDatabaseHandler {
                     return parseInt(key.replace(KeyDictionary.key_dictionary['submitter'], ''));
                 });
                 result.push(0);
-                result.sort();
+                result.sort((a, b) => {
+                    return a - b;
+                });
                 resolve(result[result.length - 1]);
             });
         })

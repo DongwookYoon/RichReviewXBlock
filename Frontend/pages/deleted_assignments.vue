@@ -171,6 +171,10 @@ thead {
   background-color: #f5f5f5;
 }
 
+.assignment-row {
+  cursor: pointer;
+}
+
 #content {
   width: 100%;
   height: 100%;

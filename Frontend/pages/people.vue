@@ -184,6 +184,10 @@ thead {
   border-bottom: 1px solid #0c2343;
 }
 
+table {
+  margin-bottom: 5vh;
+}
+
 #tab-buttons {
   display: flex;
   margin-left: 10vw;

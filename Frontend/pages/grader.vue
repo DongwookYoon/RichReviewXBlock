@@ -12,13 +12,15 @@
       />
       <p id="slash">/</p>
       <p id="points">{{ points }}</p>
-      <p id="prev-arrow" @click="prev_student">Previous</p>
+      <p v-if="prev_link !== ''" id="prev-arrow" @click="prev_student">
+        Previous
+      </p>
       <select id="student-select" v-model="selected" @change="change_student">
         <option v-for="s of submissions_list" :key="s.key" :value="s.key">
           {{ s.name }}
         </option>
       </select>
-      <p id="next-arrow" @click="next_student">Next</p>
+      <p v-if="next_link !== ''" id="next-arrow" @click="next_student">Next</p>
     </div>
     <no-ssr>
       <body>
@@ -86,7 +88,7 @@ export default {
       }
     )
 
-    console.log(submissions_res.data)
+    console.log(grader_res.data)
     const assignment_data = assignment_res.data.assignment
     const submissions_list = submissions_res.data.submission_links_and_id
 
@@ -256,6 +258,7 @@ p {
   font-size: 2vh;
   height: 95%;
   margin-top: 0.75vh;
+  cursor: pointer;
 }
 
 body {

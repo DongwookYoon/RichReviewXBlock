@@ -184,7 +184,9 @@ class AssignmentDatabaseHandler {
                     return parseInt(key.replace(KeyDictionary.key_dictionary['assignment'], ''));
                 });
                 result.push(0);
-                result.sort();
+                result.sort((a, b) => {
+                    return a - b;
+                });
                 resolve(result[result.length - 1]);
             });
         })

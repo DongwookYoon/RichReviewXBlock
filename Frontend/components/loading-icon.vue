@@ -76,7 +76,11 @@ export default {
     start() {
       this.loading = true
     },
-    finish() {
+    sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms))
+    },
+    async finish() {
+      await this.sleep(500)
       this.loading = false
     }
   }
@@ -91,7 +95,7 @@ export default {
   height: 100%;
   text-align: center;
   background-color: rgba(255, 255, 255, 0.97);
-  z-index: 1;
+  z-index: 99999;
 }
 
 #loading-icon {

@@ -55,32 +55,24 @@ import StudentAssignmentCard from '../components/student-assignment-card'
 export default {
   name: 'DeletedAssignments',
   components: { Footer, Header, StudentAssignmentCard },
-  asyncData(context) {
-    return axios
-      .get(
-        `https://localhost:3000/courses/${
-          context.params.course_id
-        }/deleted-assignments`,
-        {
-          headers: {
-            Authorization: context.app.$auth.user.sub
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        }
-      )
-      .then(res => {
-        console.log(res.data)
-        return {
-          assignments: res.data.assignments,
-          permissions: res.data.permissions
-        }
-      })
-      .catch(e => {
-        console.log(e)
-        return { assignments: [], permissions: undefined }
-      })
+  async asyncData(context) {
+    const res = await axios.get(
+      `https://localhost:3000/courses/${
+        context.params.course_id
+      }/deleted-assignments`,
+      {
+        headers: {
+          Authorization: context.app.$auth.user.sub
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+    return {
+      assignments: res.data.assignments,
+      permissions: res.data.permissions
+    }
   },
   methods: {
     go_to_people() {
@@ -99,55 +91,42 @@ export default {
         `/courses/${this.$route.params.course_id}/assignments/${id}`
       )
     },
-    restore(id) {
-      console.log(id)
-      axios
-        .post(
-          `https://localhost:3000/courses/${
-            this.$route.params.course_id
-          }/deleted-assignments/restore`,
-          { id: id },
-          {
-            headers: {
-              Authorization: this.$auth.user.sub
-            },
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          }
-        )
-        .then(() => {
-          this.assignments = this.assignments.filter(assignment => {
-            return assignment.id !== id
+    async restore(id) {
+      await axios.post(
+        `https://localhost:3000/courses/${
+          this.$route.params.course_id
+        }/deleted-assignments/restore`,
+        { id: id },
+        {
+          headers: {
+            Authorization: this.$auth.user.sub
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
           })
-        })
-        .catch(e => {
-          console.log(e)
-        })
+        }
+      )
+      this.assignments = this.assignments.filter(assignment => {
+        return assignment.id !== id
+      })
     },
-    deleteAssignment(id) {
-      axios
-        .delete(
-          `https://localhost:3000/courses/${
-            this.$route.params.course_id
-          }/assignments/${id}/permanently`,
-          {
-            headers: {
-              Authorization: this.$auth.user.sub
-            },
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          }
-        )
-        .then(() => {
-          this.assignments = this.assignments.filter(assignment => {
-            return assignment.id !== id
+    async deleteAssignment(id) {
+      await axios.delete(
+        `https://localhost:3000/courses/${
+          this.$route.params.course_id
+        }/assignments/${id}/permanently`,
+        {
+          headers: {
+            Authorization: this.$auth.user.sub
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
           })
-        })
-        .catch(e => {
-          console.log(e)
-        })
+        }
+      )
+      this.assignments = this.assignments.filter(assignment => {
+        return assignment.id !== id
+      })
     }
   }
 }

@@ -26,6 +26,26 @@ router.get('/', async function(req, res, next) {
     }
 });
 
+
+
+router.get('/all_user_course_groups', async function(req, res, next) {
+    console.log("Get request for all groups in course with id: " + req.params.course_id);
+
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let course_group_db_handler = await CourseGroupDatabaseHandler.get_instance();
+
+    try {
+        let course_groups = await course_group_db_handler.get_all_user_course_groups(user_key);
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(course_groups));
+    } catch (e) {
+        console.log(e);
+        res.sendStatus(500);
+    }
+});
+
+
+
 router.get("/:group_id", async function (req, res, next){
 
     let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;

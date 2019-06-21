@@ -18,6 +18,9 @@ import assignment_submissions from './pages/assignment_submissions'
 import viewer from './pages/viewer'
 import grader from './pages/grader'
 import deleted_assignments from './pages/deleted_assignments'
+import all_user_assignments from './pages/all_user_assignments'
+import all_user_groups from './pages/all_user_groups'
+import all_user_grades from './pages/all_user_grades'
 
 Vue.use(Router)
 
@@ -40,6 +43,18 @@ export function createRouter() {
       {
         path: '/dashboard',
         component: dashboard
+      },
+      {
+        path: '/all-assignments',
+        component: all_user_assignments
+      },
+      {
+        path: '/all-groups',
+        component: all_user_groups
+      },
+      {
+        path: '/all-grades',
+        component: all_user_grades
       },
       {
         path: '/courses/:course_id',

@@ -29,60 +29,44 @@ import axios from 'axios'
 
 export default {
   name: 'CourseGroup',
-  asyncData(context) {
-    return axios
-      .get(
+  async asyncData(context) {
+    const res = await axios.get(
+      `https://localhost:3000/courses/${
+        context.params.course_id
+      }/course_groups/${context.params.group_id}`,
+      {
+        headers: {
+          Authorization: context.app.$auth.user.sub
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+    return {
+      permissions: res.data.permissions,
+      group: res.data.group,
+      submitters: res.data.submitters
+    }
+  },
+  methods: {
+    async delete_group() {
+      await axios.delete(
         `https://localhost:3000/courses/${
-          context.params.course_id
-        }/course_groups/${context.params.group_id}`,
+          this.$route.params.course_id
+        }/course_groups/${this.$route.params.group_id}`,
         {
           headers: {
-            Authorization: context.app.$auth.user.sub
+            Authorization: this.$auth.user.sub
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false
           })
         }
       )
-      .then(res => {
-        return {
-          permissions: res.data.permissions,
-          group: res.data.group,
-          submitters: res.data.submitters
-        }
-      })
-      .catch(e => {
-        console.log(e)
-        return { expand: {} }
-      })
-  },
-  methods: {
-    delete_group() {
-      axios
-        .delete(
-          `https://localhost:3000/courses/${
-            this.$route.params.course_id
-          }/course_groups/${this.$route.params.group_id}`,
-          {
-            headers: {
-              Authorization: this.$auth.user.sub
-            },
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          }
-        )
-        .then(res => {
-          this.$router.push(
-            `/courses/${this.$route.params.course_id}/course_groups`
-          )
-        })
-        .catch(e => {
-          console.log(e)
-          this.$router.push(
-            `/courses/${this.$route.params.course_id}/course_groups`
-          )
-        })
+      this.$router.push(
+        `/courses/${this.$route.params.course_id}/course_groups`
+      )
     }
   }
 }

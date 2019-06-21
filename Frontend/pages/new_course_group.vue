@@ -101,48 +101,32 @@ import CourseGroupCard from '../components/course_group_card'
 export default {
   name: 'NewGroup',
   components: { Footer, Header, draggable, CourseGroupCard },
-  asyncData(context) {
-    return axios
-      .get(
-        `https://localhost:3000/courses/${
-          context.params.course_id
-        }/users/unassigned`,
-        {
-          headers: {
-            Authorization: context.app.$auth.user.sub
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        }
-      )
-      .then(res => {
-        console.log(res.data)
-        console.log(res.data.groups)
-        const group_ids = []
-        for (const group of res.data.groups.active_course_groups) {
-          group_ids.push(group.id)
-        }
-        return {
-          unassigned_students: res.data.unassigned_students,
-          course_groups: res.data.groups,
-          permissions: res.data.permissions,
-          group_ids: group_ids,
-          show_modal: false,
-          students_per_group: ''
-        }
-      })
-      .catch(e => {
-        console.log(e)
-        return {
-          unassigned_students: [],
-          course_groups: {},
-          permissions: '',
-          group_ids: [],
-          show_modal: false,
-          students_per_group: ''
-        }
-      })
+  async asyncData(context) {
+    const res = await axios.get(
+      `https://localhost:3000/courses/${
+        context.params.course_id
+      }/users/unassigned`,
+      {
+        headers: {
+          Authorization: context.app.$auth.user.sub
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+    const group_ids = []
+    for (const group of res.data.groups.active_course_groups) {
+      group_ids.push(group.id)
+    }
+    return {
+      unassigned_students: res.data.unassigned_students,
+      course_groups: res.data.groups,
+      permissions: res.data.permissions,
+      group_ids: group_ids,
+      show_modal: false,
+      students_per_group: ''
+    }
   },
   created: function() {
     EventBus.$on('delete-group', async data => {
@@ -237,7 +221,7 @@ export default {
         }
       )
     },
-    save() {
+    async save() {
       const all_group_data = []
       for (const group_id of this.group_ids) {
         const group_data = this.$refs[`group-${group_id}`][0].get_data()
@@ -245,27 +229,21 @@ export default {
         if (!group_data.deleted) all_group_data.push(group_data)
       }
       console.log(all_group_data)
-      axios
-        .post(
-          `https://localhost:3000/courses/${
-            this.$route.params.course_id
-          }/course_groups`,
-          all_group_data,
-          {
-            headers: {
-              Authorization: this.$auth.user.sub
-            },
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          }
-        )
-        .then(() => {
-          window.location.reload(true)
-        })
-        .catch(e => {
-          console.warn(e)
-        })
+      await axios.post(
+        `https://localhost:3000/courses/${
+          this.$route.params.course_id
+        }/course_groups`,
+        all_group_data,
+        {
+          headers: {
+            Authorization: this.$auth.user.sub
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+      )
+      window.location.reload(true)
     }
   }
 }

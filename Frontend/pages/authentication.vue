@@ -14,26 +14,19 @@ export default {
     this.login()
   },
   methods: {
-    login() {
-      axios
-        .post(
-          'https://localhost:3000/login',
-          {
-            auth: this.$auth.user
-          },
-          {
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          }
-        )
-        .then(() => {
-          this.$router.replace('/dashboard')
-        })
-        .catch(e => {
-          console.log(e)
-          this.$router.replace('/login')
-        })
+    async login() {
+      await axios.post(
+        'https://localhost:3000/login',
+        {
+          auth: this.$auth.user
+        },
+        {
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+      )
+      this.$router.replace('/dashboard')
     }
   }
 }

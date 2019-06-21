@@ -172,6 +172,13 @@ class SubmitterDatabaseHandler {
 
         return false;
     }
+
+
+
+    async is_course_group_owner_of_submitter (course_group_key, submitter_key) {
+        let submitter_data = await this.get_submitter_data(submitter_key);
+        return course_group_key === submitter_data['course_group'];
+    }
 }
 
 module.exports = SubmitterDatabaseHandler;

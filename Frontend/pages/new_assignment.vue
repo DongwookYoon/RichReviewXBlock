@@ -151,37 +151,29 @@ export default {
       files: []
     }
   },
-  asyncData(context) {
-    return axios
-      .get(
-        `https://localhost:3000/courses/${
-          context.params.course_id
-        }/users/permissions`,
-        {
-          headers: {
-            Authorization: context.app.$auth.user.sub
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        }
-      )
-      .then(res => {
-        console.log(res.data)
-        return {
-          permissions: res.data.permissions
-        }
-      })
-      .catch(e => {
-        console.log(e)
-        return { permissions: undefined }
-      })
+  async asyncData(context) {
+    const res = await axios.get(
+      `https://localhost:3000/courses/${
+        context.params.course_id
+      }/users/permissions`,
+      {
+        headers: {
+          Authorization: context.app.$auth.user.sub
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+    return {
+      permissions: res.data.permissions
+    }
   },
   methods: {
     go_to_course() {
       this.$router.push(`/courses/${this.$route.params.course_id}/`)
     },
-    save() {
+    async save() {
       if (this.assignment_data.type === 'comment_submission') {
         const formData = new FormData()
         for (let i = 0; i < this.files.length; i++) {
@@ -191,50 +183,38 @@ export default {
 
         formData.append('assignment_data', JSON.stringify(this.assignment_data))
 
-        axios
-          .post(
-            `https://localhost:3000/courses/${
-              this.$route.params.course_id
-            }/assignments/comment_submission_assignment`,
-            formData,
-            {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-                Authorization: this.$auth.user.sub
-              },
-              httpsAgent: new https.Agent({
-                rejectUnauthorized: false
-              })
-            }
-          )
-          .then(() => {
-            this.$router.push(`/courses/${this.$route.params.course_id}`)
-          })
-          .catch(e => {
-            console.log(e)
-          })
+        await axios.post(
+          `https://localhost:3000/courses/${
+            this.$route.params.course_id
+          }/assignments/comment_submission_assignment`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              Authorization: this.$auth.user.sub
+            },
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false
+            })
+          }
+        )
+        this.$router.push(`/courses/${this.$route.params.course_id}`)
       } else {
-        axios
-          .post(
-            `https://localhost:3000/courses/${
-              this.$route.params.course_id
-            }/assignments/document_submission_assignment`,
-            { assignment_data: this.assignment_data },
-            {
-              headers: {
-                Authorization: this.$auth.user.sub
-              },
-              httpsAgent: new https.Agent({
-                rejectUnauthorized: false
-              })
-            }
-          )
-          .then(() => {
-            this.$router.push(`/courses/${this.$route.params.course_id}`)
-          })
-          .catch(e => {
-            console.log(e)
-          })
+        await axios.post(
+          `https://localhost:3000/courses/${
+            this.$route.params.course_id
+          }/assignments/document_submission_assignment`,
+          { assignment_data: this.assignment_data },
+          {
+            headers: {
+              Authorization: this.$auth.user.sub
+            },
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false
+            })
+          }
+        )
+        this.$router.push(`/courses/${this.$route.params.course_id}`)
       }
     },
     addFiles() {

@@ -97,51 +97,42 @@ export default {
   components: {
     datetime: Datetime
   },
-  asyncData(context) {
-    console.log({ context })
-    return axios
-      .get(
-        `https://localhost:3000/courses/${
-          context.params.course_id
-        }/assignments/${context.params.assignment_id}/edit`,
-        {
-          headers: {
-            Authorization: context.app.$auth.user.sub
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        }
-      )
-      .then(res => {
-        console.log(res.data)
-        return {
-          edits: {
-            title: res.data.title,
-            description: res.data.description,
-            points: res.data.points,
-            display_grade_as: res.data.display_grade_as,
-            count_toward_final_grade: res.data.count_toward_final_grade,
-            allow_multiple_submissions: res.data.allow_multiple_submissions,
-            group_assignment: res.data.group_assignment,
-            hidden: res.data.hidden,
-            due_date: context.app.is_date(res.data.due_date)
-              ? new Date(res.data.due_date).toISOString()
-              : '',
-            available_date: context.app.is_date(res.data.available_date)
-              ? new Date(res.data.available_date).toISOString()
-              : '',
-            until_date: context.app.is_date(res.data.until_date)
-              ? new Date(res.data.until_date).toISOString()
-              : ''
-          },
-          permissions: res.data.permissions
-        }
-      })
-      .catch(e => {
-        console.log(e)
-        return { permissions: undefined }
-      })
+  async asyncData(context) {
+    const res = await axios.get(
+      `https://localhost:3000/courses/${context.params.course_id}/assignments/${
+        context.params.assignment_id
+      }/edit`,
+      {
+        headers: {
+          Authorization: context.app.$auth.user.sub
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+    return {
+      edits: {
+        title: res.data.title,
+        description: res.data.description,
+        points: res.data.points,
+        display_grade_as: res.data.display_grade_as,
+        count_toward_final_grade: res.data.count_toward_final_grade,
+        allow_multiple_submissions: res.data.allow_multiple_submissions,
+        group_assignment: res.data.group_assignment,
+        hidden: res.data.hidden,
+        due_date: context.app.is_date(res.data.due_date)
+          ? new Date(res.data.due_date).toISOString()
+          : '',
+        available_date: context.app.is_date(res.data.available_date)
+          ? new Date(res.data.available_date).toISOString()
+          : '',
+        until_date: context.app.is_date(res.data.until_date)
+          ? new Date(res.data.until_date).toISOString()
+          : ''
+      },
+      permissions: res.data.permissions
+    }
   },
   methods: {
     go_to_assignment() {
@@ -151,32 +142,26 @@ export default {
         }`
       )
     },
-    edit() {
-      axios
-        .put(
-          `https://localhost:3000/courses/${
-            this.$route.params.course_id
-          }/assignments/${this.$route.params.assignment_id}`,
-          { edits: this.edits },
-          {
-            headers: {
-              Authorization: this.$auth.user.sub
-            },
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          }
-        )
-        .then(() => {
-          this.$router.push(
-            `/courses/${this.$route.params.course_id}/assignments/${
-              this.$route.params.assignment_id
-            }`
-          )
-        })
-        .catch(e => {
-          console.log(e)
-        })
+    async edit() {
+      await axios.put(
+        `https://localhost:3000/courses/${
+          this.$route.params.course_id
+        }/assignments/${this.$route.params.assignment_id}`,
+        { edits: this.edits },
+        {
+          headers: {
+            Authorization: this.$auth.user.sub
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+      )
+      this.$router.push(
+        `/courses/${this.$route.params.course_id}/assignments/${
+          this.$route.params.assignment_id
+        }`
+      )
     }
   }
 }

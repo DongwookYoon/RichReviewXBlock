@@ -44,33 +44,25 @@ import axios from 'axios'
 
 export default {
   name: 'CourseGroups',
-  asyncData(context) {
-    return axios
-      .get(
-        `https://localhost:3000/courses/${
-          context.params.course_id
-        }/course_groups`,
-        {
-          headers: {
-            Authorization: context.app.$auth.user.sub
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        }
-      )
-      .then(res => {
-        console.log(res.data)
-        return {
-          permissions: res.data.permissions,
-          active_course_groups: res.data.groups.active_course_groups,
-          inactive_course_groups: res.data.groups.inactive_course_groups
-        }
-      })
-      .catch(e => {
-        console.log(e)
-        return { active_course_groups: [], inactive_course_groups: [] }
-      })
+  async asyncData(context) {
+    const res = await axios.get(
+      `https://localhost:3000/courses/${
+        context.params.course_id
+      }/course_groups`,
+      {
+        headers: {
+          Authorization: context.app.$auth.user.sub
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+    return {
+      permissions: res.data.permissions,
+      active_course_groups: res.data.groups.active_course_groups,
+      inactive_course_groups: res.data.groups.inactive_course_groups
+    }
   }
 }
 </script>

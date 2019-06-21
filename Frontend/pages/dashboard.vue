@@ -40,7 +40,7 @@
         </p>
         <div v-for="a in assignments" :key="a.key" class="assignments">
           <upcoming-assignment
-            :title="a.title"
+            :title="a.title.toString()"
             :status="a.submission_status"
             :late="a.late"
             :link="`courses/${a.course_id}/assignments/${a.assignment_id}`"
@@ -64,9 +64,8 @@ import UpcomingAssignment from '../components/upcoming-assignment'
 
 export default {
   components: { UpcomingAssignment, CourseCard, Header, Footer },
-  asyncData(context) {
-    console.log(context)
-    return axios
+  async asyncData(context) {
+    const res = await axios
       .get(`https://localhost:3000/courses`, {
         headers: {
           Authorization: context.app.$auth.user.sub
@@ -75,24 +74,12 @@ export default {
           rejectUnauthorized: false
         })
       })
-      .then(res => {
-        console.log(res.data)
-        return {
-          enrolments: res.data.enrolments,
-          taing: res.data.taing,
-          instructing: res.data.teaching,
-          assignments: res.data.assignments
-        }
-      })
-      .catch(e => {
-        console.log(e)
-        return {
-          enrolments: [],
-          taing: [],
-          instructing: [],
-          assignments: []
-        }
-      })
+    return {
+      enrolments: res.data.enrolments,
+      taing: res.data.taing,
+      instructing: res.data.teaching,
+      assignments: res.data.assignments
+    }
   }
 }
 </script>

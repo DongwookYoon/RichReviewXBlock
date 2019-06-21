@@ -3,10 +3,9 @@
     <!-- Logo design by Allison Chiang: acchiang98@gmail.com -->
     <img id="logo" src="/logo.png" @click="go_to_dashboard" />
     <p id="header-dashboard" @click="go_to_dashboard">Dashboard</p>
-    <p id="header-courses">Courses</p>
-    <p id="header-assignments">Assignments</p>
-    <p id="header-groups">Groups</p>
-    <p id="header-grades">Grades</p>
+    <p id="header-assignments" @click="go_to_all_assignments">Assignments</p>
+    <p id="header-groups" @click="go_to_all_groups">Groups</p>
+    <p id="header-grades" @click="go_to_all_grades">Grades</p>
     <p id="header-logout" @click="logout">Logout</p>
   </header>
 </template>
@@ -18,6 +17,15 @@ export default {
     go_to_dashboard() {
       this.$router.push('/dashboard')
     },
+    go_to_all_assignments() {
+      this.$router.push('/all-assignments')
+    },
+    go_to_all_groups() {
+      this.$router.push('/all-groups')
+    },
+    go_to_all_grades() {
+      this.$router.push('/all-grades')
+    },
     async logout() {
       await this.$auth.logout()
       this.$router.push('/')
@@ -28,15 +36,15 @@ export default {
 
 <style scoped>
 #header-dashboard,
-#header-courses,
 #header-assignments,
 #header-groups,
 #header-grades,
 #header-logout {
-  width: 14%;
+  width: 18%;
   font-size: 3.25vh;
   display: table-cell;
   vertical-align: middle;
+  cursor: pointer;
 }
 
 #logo {

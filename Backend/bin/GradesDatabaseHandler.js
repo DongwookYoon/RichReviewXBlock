@@ -20,6 +20,58 @@ class GradesDatabaseHandler {
 
 
 
+    async get_all_user_grades (user_key) {
+        let user_db_handler = await UserDatabaseHandler.get_instance();
+        let submitter_db_handler = await SubmitterDatabaseHandler.get_instance();
+        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
+        let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
+
+        let user_data = await user_db_handler.get_user_data(user_key);
+
+        let grades = [];
+
+        for (let submitter_key of user_data['submitters']) {
+            let submitter_data = await submitter_db_handler.get_submitter_data(submitter_key);
+            let submission_key = submitter_data['submission'];
+            let submission_data = await submission_db_handler.get_submission_data(submission_key);
+            let assignment_key = submission_data['assignment'];
+            let assignment_data = await assignment_db_handler.get_assignment_data(user_key, assignment_key);
+            let course_id = assignment_data['course'].replace(KeyDictionary.key_dictionary['course'], '');
+
+            let late = false;
+
+            if (assignment_data['due_date'] !== '') {
+                let due_date = new Date(assignment_data['due_date']);
+                let now = new Date();
+
+                if (submission_data['submission_status'] === 'Not Submitted' &&
+                    now - due_date > 0)
+                    late = true;
+
+                if (submission_data['submission_status'] === 'Submitted' &&
+                    new Date(submission_data['submission_time']) - due_date > 0)
+                    late = true;
+            }
+
+            if (!assignment_data['hidden']) {
+                grades.push({
+                    course_id: course_id,
+                    assignment_id: assignment_data['id'],
+                    assignment: assignment_data['title'],
+                    submission_status: submission_data['submission_status'],
+                    mark: submission_data['mark'],
+                    points: assignment_data['points'],
+                    late: late
+                })
+            }
+        }
+
+        return grades;
+    }
+
+
+
+
     async get_assignment_grade (user_key, assignment_key) {
         let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
         let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
@@ -145,6 +197,24 @@ class GradesDatabaseHandler {
         let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
         await submission_db_handler.update_submission_grade(submission_key, mark)
     }
+
+
+
+    async update_course_group_grade_for_assignment (user_key, course_group_key, assignment_key, course_key, mark) {
+
+        let user_db_handler = await UserDatabaseHandler.get_instance();
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+
+        if (permissions !== 'instructor' && permissions !== 'ta')
+            throw new NotAuthorizedError('You are not authorized to edit grades');
+
+        let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
+        let submission_key = await assignment_db_handler.get_course_groups_submission_key(user_key, course_group_key, assignment_key);
+
+        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
+        await submission_db_handler.update_submission_grade(submission_key, mark)
+    }
+
 
 
 

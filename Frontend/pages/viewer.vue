@@ -24,47 +24,67 @@ if (process.client) {
 
 export default {
   name: 'Viewer',
-  asyncData(context) {
-    return axios
-      .get(
-        `https://localhost:3000/courses/${
-          context.params.course_id
-        }/assignments/comment_submissions/${context.query.groupid}`,
-        {
-          headers: {
-            Authorization: context.app.$auth.user.sub
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        }
-      )
-      .then(res => {
-        console.log(res.data)
-        const assignment_data = res.data.assignment
-        const submission_data = res.data.submission
+  async asyncData(context) {
+    const res = await axios.get(
+      `https://localhost:3000/courses/${
+        context.params.course_id
+      }/assignments/comment_submissions/${context.query.groupid}`,
+      {
+        headers: {
+          Authorization: context.app.$auth.user.sub
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+    const assignment_data = res.data.assignment
+    const submission_data = res.data.submission
 
-        const show_submit_button = assignment_data.allow_multiple_submissions
-          ? true
-          : submission_data.submission_time === ''
+    const show_submit_button = assignment_data.allow_multiple_submissions
+      ? true
+      : submission_data.submission_time === ''
 
-        return {
-          show_submit_button: show_submit_button,
-          assignment_id: assignment_data.id
-        }
-      })
-      .catch(e => {
-        console.warn(e)
-        return { show_submit_button: false }
-      })
+    return {
+      show_submit_button: show_submit_button,
+      assignment_id: assignment_data.id
+    }
   },
-  mounted: function() {
-    console.log(this.$route)
-    axios
-      .get(
+  mounted: async function() {
+    const res = await axios.get(
+      `https://localhost:3000/courses/${this.$route.params.course_id}/groups/${
+        this.$route.query.groupid
+      }`,
+      {
+        headers: {
+          Authorization: this.$auth.user.sub
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+    const r2_ctx = res.data.r2_ctx
+    r2_ctx.auth = this.$auth.user
+    const cdn_endpoint = res.data.cdn_endpoint
+
+    loadRichReview(
+      encodeURIComponent(JSON.stringify(r2_ctx)),
+      'development',
+      cdn_endpoint
+    )
+  },
+  methods: {
+    async submit() {
+      await axios.post(
         `https://localhost:3000/courses/${
           this.$route.params.course_id
-        }/groups/${this.$route.query.groupid}`,
+        }/assignments/${this.assignment_id}/comment_submissions`,
+        {
+          access_code: this.$route.query.access_code,
+          docid: this.$route.query.docid,
+          groupid: this.$route.query.groupid
+        },
         {
           headers: {
             Authorization: this.$auth.user.sub
@@ -74,48 +94,7 @@ export default {
           })
         }
       )
-      .then(res => {
-        const r2_ctx = res.data.r2_ctx
-        r2_ctx.auth = this.$auth.user
-        const cdn_endpoint = res.data.cdn_endpoint
-
-        loadRichReview(
-          encodeURIComponent(JSON.stringify(r2_ctx)),
-          'development',
-          cdn_endpoint
-        )
-      })
-      .catch(e => {
-        console.log(e)
-      })
-  },
-  methods: {
-    submit() {
-      axios
-        .post(
-          `https://localhost:3000/courses/${
-            this.$route.params.course_id
-          }/assignments/${this.assignment_id}/comment_submissions`,
-          {
-            access_code: this.$route.query.access_code,
-            docid: this.$route.query.docid,
-            groupid: this.$route.query.groupid
-          },
-          {
-            headers: {
-              Authorization: this.$auth.user.sub
-            },
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          }
-        )
-        .then(() => {
-          this.$router.push(`/courses/${this.$route.params.course_id}`)
-        })
-        .catch(function(e) {
-          console.warn(e)
-        })
+      this.$router.push(`/courses/${this.$route.params.course_id}`)
     }
   }
 }

@@ -10,21 +10,26 @@
       />
     </div>
     <div id="content">
-      <div id="sidebar">
-        <p id="people" @click="go_to_people">
-          People
-        </p>
-        <p id="grades" @click="go_to_grades">
-          Grades
-        </p>
-        <p
-          v-if="permissions === 'ta' || permissions === 'instructor'"
-          id="new-assignment"
-          @click="go_to_new_assignment"
-        >
-          + Assignment
-        </p>
-      </div>
+      <sidebar
+        :title="title"
+        :description="description"
+        :permissions="permissions"
+      />
+      <!--<div id="sidebar">-->
+      <!--<p id="people" @click="go_to_people">-->
+      <!--People-->
+      <!--</p>-->
+      <!--<p id="grades" @click="go_to_grades">-->
+      <!--Grades-->
+      <!--</p>-->
+      <!--<p-->
+      <!--v-if="permissions === 'ta' || permissions === 'instructor'"-->
+      <!--id="new-assignment"-->
+      <!--@click="go_to_new_assignment"-->
+      <!--&gt;-->
+      <!--+ Assignment-->
+      <!--</p>-->
+      <!--</div>-->
       <div id="assignments-div">
         <table id="assignments">
           <thead id="assignments-header">
@@ -78,54 +83,42 @@
 </template>
 
 <script>
-/* eslint-disable no-console,vue/no-unused-components */
+/* eslint-disable no-console,vue/no-unused-components,camelcase */
 
 import https from 'https'
 import axios from 'axios'
 import Header from '../components/Header'
 import Footer from '../components/footer'
 import StudentAssignmentCard from '../components/student-assignment-card'
+import Sidebar from '../components/sidebar'
 
 export default {
   name: 'Course',
-  components: { Footer, Header, StudentAssignmentCard },
-  asyncData(context) {
-    return axios
-      .get(`https://localhost:3000/courses/${context.params.course_id}`, {
+  components: { Sidebar, Footer, Header, StudentAssignmentCard },
+  async asyncData(context) {
+    const course_res = await axios.get(
+      `https://localhost:3000/courses/${context.params.course_id}`,
+      {
         headers: {
           Authorization: context.app.$auth.user.sub
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
         })
-      })
-      .then(res => {
-        console.log(res.data)
-        return {
-          assignments: res.data.assignments,
-          permissions: res.data.permissions
-        }
-      })
-      .catch(e => {
-        console.log(e)
-        return { assignments: [], permissions: undefined }
-      })
+      }
+    )
+    console.log(course_res.data)
+    return {
+      assignments: course_res.data.assignments,
+      permissions: course_res.data.permissions,
+      title: course_res.data.course.title,
+      description: course_res.data.course.description
+    }
   },
   methods: {
     go_to_deleted_assignments() {
       this.$router.push(
         `/courses/${this.$route.params.course_id}/deleted-assignments`
-      )
-    },
-    go_to_people() {
-      this.$router.push(`/courses/${this.$route.params.course_id}/users`)
-    },
-    go_to_grades() {
-      this.$router.push(`/courses/${this.$route.params.course_id}/grades`)
-    },
-    go_to_new_assignment() {
-      this.$router.push(
-        `/courses/${this.$route.params.course_id}/assignments/new`
       )
     },
     go_to_assignment(id) {
@@ -172,21 +165,21 @@ table {
   cursor: pointer;
 }
 
-#sidebar {
-  font-size: 3.5vh;
-  color: #0c2343;
-  margin-top: 20vh;
-  margin-right: 5vw;
-  margin-left: 2vw;
-  min-width: 12vw;
-}
+/*#sidebar {*/
+/*font-size: 3.5vh;*/
+/*color: #0c2343;*/
+/*margin-top: 20vh;*/
+/*margin-right: 5vw;*/
+/*margin-left: 2vw;*/
+/*min-width: 12vw;*/
+/*}*/
 
-#people,
-#grades,
-#new-assignment {
-  margin-bottom: 5vh;
-  cursor: pointer;
-}
+/*#people,*/
+/*#grades,*/
+/*#new-assignment {*/
+/*margin-bottom: 5vh;*/
+/*cursor: pointer;*/
+/*}*/
 
 #assignments {
   font-size: 2vh;

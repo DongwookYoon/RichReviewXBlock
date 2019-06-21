@@ -42,94 +42,72 @@ import axios from 'axios'
 
 export default {
   name: 'Grades',
-  asyncData(context) {
-    return axios
-      .get(
-        `https://localhost:3000/courses/${context.params.course_id}/grades`,
+  async asyncData(context) {
+    const res = await axios.get(
+      `https://localhost:3000/courses/${context.params.course_id}/grades`,
+      {
+        headers: {
+          Authorization: context.app.$auth.user.sub
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+    return {
+      students: res.data.grades,
+      assignments: res.data.assignments,
+      permissions: res.data.permissions
+    }
+  },
+  methods: {
+    async updateGrade(student_key, assignment_id, event) {
+      const mark = event.target.value
+
+      await axios.put(
+        `https://localhost:3000/courses/${
+          this.$route.params.course_id
+        }/grades/${assignment_id}`,
+        {
+          student_key: student_key,
+          mark: mark
+        },
         {
           headers: {
-            Authorization: context.app.$auth.user.sub
+            Authorization: this.$auth.user.sub
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false
           })
         }
       )
-      .then(res => {
-        console.log(res.data)
-        return {
-          students: res.data.grades,
-          assignments: res.data.assignments,
-          permissions: res.data.permissions
-        }
-      })
-      .catch(e => {
-        console.log(e)
-        return {
-          students: [],
-          assignments: [],
-          permissions: ''
-        }
-      })
-  },
-  methods: {
-    updateGrade(student_key, assignment_id, event) {
-      const mark = event.target.value
-
-      axios
-        .put(
-          `https://localhost:3000/courses/${
-            this.$route.params.course_id
-          }/grades/${assignment_id}`,
-          {
-            student_key: student_key,
-            mark: mark
-          },
-          {
-            headers: {
-              Authorization: this.$auth.user.sub
-            },
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          }
-        )
-        .catch(e => {
-          console.log(e)
-        })
     },
-    downloadGrades() {
-      axios
-        .get(
-          `https://localhost:3000/courses/${
-            this.$route.params.course_id
-          }/grades/csv`,
-          {
-            headers: {
-              Authorization: this.$auth.user.sub
-            },
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          }
-        )
-        .then(res => {
-          console.log(res.data)
-          const grades = XLSX.utils.json_to_sheet(res.data)
+    async downloadGrades() {
+      const res = await axios.get(
+        `https://localhost:3000/courses/${
+          this.$route.params.course_id
+        }/grades/csv`,
+        {
+          headers: {
+            Authorization: this.$auth.user.sub
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+      )
 
-          // A workbook is the name given to an Excel file
-          const wb = XLSX.utils.book_new() // make Workbook of Excel
+      const grades = XLSX.utils.json_to_sheet(res.data)
 
-          // add Worksheet to Workbook
-          // Workbook contains one or more worksheets
-          XLSX.utils.book_append_sheet(wb, grades, 'grades') // sheetAName is name of Worksheet
+      // A workbook is the name given to an Excel file
+      const wb = XLSX.utils.book_new() // make Workbook of Excel
 
-          // export Excel file
-          XLSX.writeFile(wb, 'grades.xlsx') // name of the file is 'book.xlsx'
-        })
-        .catch(e => {
-          console.log(e)
-        })
+      // add Worksheet to Workbook
+      // Workbook contains one or more worksheets
+      XLSX.utils.book_append_sheet(wb, grades, 'grades') // sheetAName is name of Worksheet
+
+      // export Excel file
+      XLSX.writeFile(wb, 'grades.xlsx') // name of the file is 'book.xlsx'
     }
   }
 }

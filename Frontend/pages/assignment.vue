@@ -22,7 +22,10 @@
       View Submissions
     </button>
     <button
-      v-if="permissions === 'instructor' || permissions === 'ta'"
+      v-if="
+        (permissions === 'instructor' || permissions === 'ta') &&
+          grader_link !== ''
+      "
       @click="go_to_grader"
     >
       Grader
@@ -99,43 +102,29 @@ import Footer from '../components/footer'
 export default {
   name: 'Assignment',
   components: { Footer, Header },
-  asyncData(context) {
-    return axios
-      .get(
-        `https://localhost:3000/courses/${
-          context.params.course_id
-        }/assignments/${context.params.assignment_id}`,
-        {
-          headers: {
-            Authorization: context.app.$auth.user.sub
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        }
-      )
-      .then(res => {
-        console.log(res.data)
-        return {
-          permissions: res.data.permissions,
-          assignment: res.data.assignment,
-          viewer_link: res.data.link,
-          files: [],
-          grader_link: res.data.grader_link,
-          grader_submission_id: res.data.grader_submission_id
-        }
-      })
-      .catch(e => {
-        console.log(e)
-        return {
-          assignment: {},
-          permissions: undefined,
-          files: [],
-          viewer_link: '',
-          grader_link: '',
-          grader_submission_id: ''
-        }
-      })
+  async asyncData(context) {
+    const res = await axios.get(
+      `https://localhost:3000/courses/${context.params.course_id}/assignments/${
+        context.params.assignment_id
+      }`,
+      {
+        headers: {
+          Authorization: context.app.$auth.user.sub
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+
+    return {
+      permissions: res.data.permissions,
+      assignment: res.data.assignment,
+      viewer_link: res.data.link,
+      files: [],
+      grader_link: res.data.grader_link,
+      grader_submission_id: res.data.grader_submission_id
+    }
   },
   methods: {
     go_to_edit_assignment() {
@@ -153,24 +142,19 @@ export default {
       )
     },
     go_to_grader() {
-      // todo if no grader link, redirect to no submissions page
-      this.grader_link !== ''
-        ? this.$router.push(
-            `/courses/${this.$route.params.course_id}/assignments/${
-              this.$route.params.assignment_id
-            }/submissions/${this.grader_submission_id}/grader?${
-              this.grader_link
-            }`
-          )
-        : this.$router.push(`/courses/${this.$route.params.course_id}/`)
+      window.open(
+        `/courses/${this.$route.params.course_id}/assignments/${
+          this.$route.params.assignment_id
+        }/submissions/${this.grader_submission_id}/grader?${this.grader_link}`
+      )
     },
     go_to_viewer() {
-      this.$router.push(
+      window.open(
         `/courses/${this.$route.params.course_id}/viewer?${this.viewer_link}`
       )
     },
     go_to_current_submission() {
-      this.$router.push(
+      window.open(
         `/courses/${this.$route.params.course_id}/viewer?${this.viewer_link}`
       )
     },
@@ -187,60 +171,46 @@ export default {
         this.files.push(uploadedFiles[i])
       }
     },
-    delete_assignment() {
-      axios
-        .delete(
-          `https://localhost:3000/courses/${
-            this.$route.params.course_id
-          }/assignments/${this.$route.params.assignment_id}`,
-          {
-            headers: {
-              Authorization: this.$auth.user.sub
-            },
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          }
-        )
-        .then(res => {
-          this.$router.push(`/courses/${this.$route.params.course_id}/`)
-        })
-        .catch(e => {
-          console.log(e)
-          this.$router.push(`/courses/${this.$route.params.course_id}/`)
-        })
+    async delete_assignment() {
+      await axios.delete(
+        `https://localhost:3000/courses/${
+          this.$route.params.course_id
+        }/assignments/${this.$route.params.assignment_id}`,
+        {
+          headers: {
+            Authorization: this.$auth.user.sub
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+      )
+      this.$router.push(`/courses/${this.$route.params.course_id}/`)
     },
-    submitAssignment() {
+    async submitAssignment() {
       const formData = new FormData()
       for (let i = 0; i < this.files.length; i++) {
         const file = this.files[i]
         formData.append('files[' + i + ']', file)
       }
 
-      axios
-        .post(
-          `https://localhost:3000/courses/${
-            this.$route.params.course_id
-          }/assignments/${
-            this.$route.params.assignment_id
-          }/document_submissions`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              Authorization: this.$auth.user.sub
-            },
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          }
-        )
-        .then(() => {
-          this.$router.push(`/courses/${this.$route.params.course_id}`)
-        })
-        .catch(function() {
-          console.warn('Error submitting assignment')
-        })
+      await axios.post(
+        `https://localhost:3000/courses/${
+          this.$route.params.course_id
+        }/assignments/${this.$route.params.assignment_id}/document_submissions`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: this.$auth.user.sub
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+      )
+
+      this.$router.push(`/courses/${this.$route.params.course_id}`)
     }
   }
 }

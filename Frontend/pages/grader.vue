@@ -108,36 +108,29 @@ export default {
       selected: selected
     }
   },
-  mounted: function() {
-    console.log(this.$route)
-    axios
-      .get(
-        `https://localhost:3000/courses/${
-          this.$route.params.course_id
-        }/groups/${this.$route.query.groupid}`,
-        {
-          headers: {
-            Authorization: this.$auth.user.sub
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        }
-      )
-      .then(res => {
-        const r2_ctx = res.data.r2_ctx
-        r2_ctx.auth = this.$auth.user
-        const cdn_endpoint = res.data.cdn_endpoint
+  mounted: async function() {
+    const res = await axios.get(
+      `https://localhost:3000/courses/${this.$route.params.course_id}/groups/${
+        this.$route.query.groupid
+      }`,
+      {
+        headers: {
+          Authorization: this.$auth.user.sub
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+    const r2_ctx = res.data.r2_ctx
+    r2_ctx.auth = this.$auth.user
+    const cdn_endpoint = res.data.cdn_endpoint
 
-        loadRichReview(
-          encodeURIComponent(JSON.stringify(r2_ctx)),
-          'development',
-          cdn_endpoint
-        )
-      })
-      .catch(e => {
-        console.log(e)
-      })
+    loadRichReview(
+      encodeURIComponent(JSON.stringify(r2_ctx)),
+      'development',
+      cdn_endpoint
+    )
   },
   methods: {
     go_to_assignment() {
@@ -171,30 +164,26 @@ export default {
           )
       }
     },
-    updateGrade(event) {
+    async updateGrade(event) {
       const mark = event.target.value
 
-      axios
-        .put(
-          `https://localhost:3000/courses/${
-            this.$route.params.course_id
-          }/grades/${this.$route.params.assignment_id}`,
-          {
-            student_key: this.student_key,
-            mark: mark
+      await axios.put(
+        `https://localhost:3000/courses/${
+          this.$route.params.course_id
+        }/grades/${this.$route.params.assignment_id}`,
+        {
+          student_key: this.student_key,
+          mark: mark
+        },
+        {
+          headers: {
+            Authorization: this.$auth.user.sub
           },
-          {
-            headers: {
-              Authorization: this.$auth.user.sub
-            },
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          }
-        )
-        .catch(e => {
-          console.log(e)
-        })
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+      )
     }
   }
 }
@@ -228,7 +217,7 @@ p {
 
 #assignment-title {
   margin-left: 1vw;
-  margin-right: 33vw;
+  width: 40vw;
 }
 
 #mark-input {
@@ -245,7 +234,7 @@ p {
 }
 
 #points {
-  margin-right: 25vw;
+  width: 33vw;
 }
 
 #prev-arrow,

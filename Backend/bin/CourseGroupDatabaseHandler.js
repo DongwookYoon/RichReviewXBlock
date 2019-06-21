@@ -52,6 +52,30 @@ class CourseGroupDatabaseHandler {
 
 
 
+    async get_all_user_course_groups (user_key) {
+        let user_db_handler = await UserDatabaseHandler.get_instance();
+        let course_db_handler = await CourseDatabaseHandler.get_instance();
+
+        let user_data = await user_db_handler.get_user_data(user_key);
+        let course_groups = [];
+
+        for (let course_group_key of user_data['course_groups']) {
+            let course_group_data = await this.get_course_group_data(course_group_key);
+            let course_data = await course_db_handler.get_course_data(course_group_data['course']);
+
+            course_groups.push({
+                course_group_id: course_group_data['id'],
+                course_id: course_data['id'],
+                name: course_group_data['name'],
+                course: course_data['title']
+            })
+        }
+
+        return course_groups;
+    }
+
+
+
     async get_all_course_group_users (course_group_key) {
 
         let user_db_handler = await UserDatabaseHandler.get_instance();

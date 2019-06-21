@@ -194,6 +194,82 @@ class AssignmentDatabaseHandler {
 
 
 
+    async get_all_assignments_visible_to_user (user_key) {
+        let user_db_handler = await UserDatabaseHandler.get_instance();
+        let course_db_handler = await CourseDatabaseHandler.get_instance();
+        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
+
+        let user_data = await user_db_handler.get_user_data(user_key);
+
+        let enrolments = await course_db_handler.get_user_courses(user_key);
+        let assignments = [];
+        for (let enrolment of enrolments['enrolments']) {
+            for (let assignment_key of enrolment['assignments']) {
+                let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+                let submission_key = await this.get_users_submission_key(user_key, assignment_key);
+                let submission_data = await submission_db_handler.get_submission_data(submission_key);
+
+                if (await AssignmentDatabaseHandler.user_has_permission_to_view(user_key, assignment_data)) {
+                    assignments.push({
+                        course_id: enrolment['id'],
+                        assignment_id: assignment_data['id'],
+                        course: enrolment['title'],
+                        title: assignment_data['title'],
+                        submission_status: submission_data['submission_status'],
+                        mark: submission_data['mark'],
+                        points: assignment_data['points'],
+                        role: 'Student'
+                    })
+                }
+            }
+        }
+
+        for (let enrolment of enrolments['taing']) {
+            for (let assignment_key of enrolment['assignments']) {
+                let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+                let submission_key = await this.get_users_submission_key(user_key, assignment_key);
+                let submission_data = await submission_db_handler.get_submission_data(submission_key);
+
+                if (await AssignmentDatabaseHandler.user_has_permission_to_view(user_key, assignment_data)) {
+                    assignments.push({
+                        course_id: enrolment['id'],
+                        assignment_id: assignment_data['id'],
+                        course: enrolment['title'],
+                        title: assignment_data['title'],
+                        submission_status: submission_data['submission_status'],
+                        mark: submission_data['mark'],
+                        points: assignment_data['points'],
+                        role: 'Ta'
+                    })
+                }
+            }
+        }
+
+        for (let enrolment of enrolments['teaching']) {
+            for (let assignment_key of enrolment['assignments']) {
+                let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+                let submission_key = await this.get_users_submission_key(user_key, assignment_key);
+                let submission_data = await submission_db_handler.get_submission_data(submission_key);
+
+                if (await AssignmentDatabaseHandler.user_has_permission_to_view(user_key, assignment_data)) {
+                    assignments.push({
+                        course_id: enrolment['id'],
+                        assignment_id: assignment_data['id'],
+                        course: enrolment['title'],
+                        title: assignment_data['title'],
+                        submission_status: submission_data['submission_status'],
+                        mark: submission_data['mark'],
+                        points: assignment_data['points'],
+                        role: 'Instructor'
+                    })
+                }
+            }
+        }
+        return assignments;
+    }
+
+
+
     async get_all_users_upcoming_assignments (user_key) {
 
         let user_db_handler = await UserDatabaseHandler.get_instance();
@@ -380,7 +456,8 @@ class AssignmentDatabaseHandler {
                 submission_status: submission_data['submission_status'],
                 group: submission_data['current_submission'],
                 late: late,
-                link: link
+                link: link,
+                submission_id: submission_data['id']
             };
 
             assignment_submissions.push(assignment_submission);
@@ -487,6 +564,23 @@ class AssignmentDatabaseHandler {
 
         for (let submission_key of submissions) {
             if (await submission_db_handler.is_user_owner_of_submission(user_key, submission_key))
+                return submission_key;
+        }
+
+        return undefined;
+    }
+
+
+
+
+    async get_course_groups_submission_key (user_key, course_group_key, assignment_key) {
+        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
+
+        let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+        let submissions = assignment_data['submissions'];
+
+        for (let submission_key of submissions) {
+            if (await submission_db_handler.is_course_group_owner_of_submission(course_group_key, submission_key))
                 return submission_key;
         }
 

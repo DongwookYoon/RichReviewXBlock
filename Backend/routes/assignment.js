@@ -20,6 +20,24 @@ router.get('/', function(req, res, next) {
 });
 
 
+
+router.get('/all_user_assignments', async function(req, res, next) {
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+
+    let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
+
+    try {
+        let all_assignments = await assignment_db_handler.get_all_assignments_visible_to_user(user_key);
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(all_assignments))
+    } catch (e) {
+        console.warn(e);
+        res.sendStatus(500);
+    }
+});
+
+
+
 router.get('/comment_submissions/:groupid', async function(req, res, next) {
     let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
     let group_key = KeyDictionary.key_dictionary['group'] + req.params.groupid;
@@ -191,7 +209,6 @@ router.get('/:assignment_id/grader', async function(req, res, next) {
     console.log("Get request for assignment with id: " + req.params.assignment_id);
     let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
     let assignment_key = KeyDictionary.key_dictionary['assignment'] + req.params['assignment_id'];
-    let submission_key = KeyDictionary.key_dictionary['submission'] + req.params['submission_id'];
 
     let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
     let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
@@ -202,10 +219,10 @@ router.get('/:assignment_id/grader', async function(req, res, next) {
 
         submission_links_and_id = await Promise.all(submission_links_and_id.map(async (submission_link_and_id) => {
             let submission_key = KeyDictionary.key_dictionary['submission'] + submission_link_and_id['id'];
-           let submission_owner = await submission_db_handler.get_submission_owner(submission_key);
-           submission_link_and_id['name'] = submission_owner['name'];
-           submission_link_and_id['key'] = submission_owner['key'];
-           return submission_link_and_id;
+            let submission_owner = await submission_db_handler.get_submission_owner(submission_key);
+            submission_link_and_id['name'] = submission_owner['name'];
+            submission_link_and_id['key'] = submission_owner['key'];
+            return submission_link_and_id;
         }));
 
         res.setHeader('Content-Type', 'application/json');

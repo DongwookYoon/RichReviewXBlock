@@ -132,7 +132,7 @@ class SubmissionDatabaseHandler {
         if (submitter_data['course_group'] !== '') {
             let course_group_db_handler = await CourseGroupDatabaseHandler.get_instance();
             let course_group_data = await course_group_db_handler.get_course_group_data(submitter_data['course_group']);
-            return course_group_data['name'];
+            return { name: course_group_data['name'], key: submitter_data['course_group'] };
         }
 
         let user_db_handler = await UserDatabaseHandler.get_instance();
@@ -318,6 +318,16 @@ class SubmissionDatabaseHandler {
         let submitter_key = submission_data['submitter'];
 
         return await submitter_db_handler.is_user_owner_of_submitter(user_key, submitter_key);
+    }
+
+
+    async is_course_group_owner_of_submission (course_group_key, submission_key) {
+        let submitter_db_handler = await SubmitterDatabaseHandler.get_instance();
+
+        let submission_data = await this.get_submission_data(submission_key);
+        let submitter_key = submission_data['submitter'];
+
+        return await submitter_db_handler.is_course_group_owner_of_submitter(course_group_key, submitter_key);
     }
 }
 

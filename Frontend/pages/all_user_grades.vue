@@ -1,16 +1,35 @@
 <template>
-  <div>
-    <Header />
-    <div>
-      <div
-        v-for="g in grades_data"
-        :key="g.key"
-        class="grade"
-        @click="go_to_assignment(g.course_id, g.assignment_id)"
-      >
-        <p>{{ g.assignment }}</p>
-        <p>{{ g.submission_status }}</p>
-        <p>{{ g.mark }} / {{ g.points }}</p>
+  <div id="all-grades">
+    <sidebar />
+    <div id="content">
+      <div id="all-grades-header">
+        <p id="all-grades-text">All Grades</p>
+        <hr />
+      </div>
+      <div id="grades">
+        <table id="grades-table">
+          <thead id="grades-header">
+            <tr>
+              <th id="assignment-header">Assignment</th>
+              <th id="status-header">Status</th>
+              <th id="mark-header">Mark</th>
+              <th id="course-header">Course</th>
+            </tr>
+          </thead>
+          <tbody class="grades-body">
+            <tr
+              v-for="g in grades"
+              :key="g.key"
+              class="grade-row"
+              @click="go_to_assignment(g.course_id, g.assignment_id)"
+            >
+              <td class="grade-assignment">{{ g.assignment }}</td>
+              <td class="grade-status">{{ g.submission_status }}</td>
+              <td class="grade-mark">{{ g.mark }}/{{ g.points }}</td>
+              <td class="grade-course">{{ g.course }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
     <Footer />
@@ -18,15 +37,16 @@
 </template>
 
 <script>
-/* eslint-disable no-unused-vars,camelcase */
+/* eslint-disable no-unused-vars,camelcase,no-undef,no-console */
 
 import https from 'https'
 import axios from 'axios'
-import Header from '../components/Header'
 import Footer from '../components/footer'
+import Sidebar from '../components/dashboard_sidebar'
+
 export default {
   name: 'AllUserGrades',
-  components: { Footer, Header },
+  components: { Sidebar, Footer },
   async asyncData(context) {
     const res = await axios.get(
       `https://localhost:3000/courses/0/grades/all_user_grades`,
@@ -40,9 +60,10 @@ export default {
       }
     )
 
-    const grades_data = res.data
+    const grades = res.data
+    console.log(grades)
     return {
-      grades_data
+      grades
     }
   },
   methods: {
@@ -54,11 +75,88 @@ export default {
 </script>
 
 <style scoped>
+@import '../node_modules/bootstrap/dist/css/bootstrap.css';
+
 p {
   margin-right: 5vw;
 }
 
-.grade {
+td {
+  padding-top: 1vh;
+  padding-bottom: 1vh;
+}
+
+table {
+  margin-bottom: 5vh;
+}
+
+hr {
+  width: 60vw;
+}
+
+#all-grades {
   display: flex;
+}
+
+#content {
+  display: block;
+  margin-left: 5vw;
+  margin-top: 10vh;
+}
+
+.grade-row:hover {
+  background-color: #f5f5f5;
+}
+
+#all-grades-header {
+  font-size: 3vh;
+  color: #0c2343;
+}
+
+#grades-table {
+  font-size: 2vh;
+  color: #0c2343;
+  margin-top: 5vh;
+}
+
+#grades-header {
+  font-size: 2.75vh;
+  padding-right: 3vw;
+}
+
+.grades-body {
+  font-size: 2.5vh;
+}
+
+#assignment-header {
+  width: 25vw;
+}
+
+#status-header {
+  padding-right: 10vw;
+}
+
+#mark-header {
+  padding-right: 10vw;
+}
+
+.grade-row {
+  cursor: pointer;
+}
+
+.grade-assignment {
+  width: 25vw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 5vw;
+}
+
+.grade-status {
+  padding-right: 10vw;
+}
+
+.grade-mark {
+  padding-right: 10vw;
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <div id="dashboard">
-    <Header />
+    <sidebar />
     <div id="content">
       <div id="courses">
         <div v-for="e in enrolments" :key="e.key" class="enrolments">
@@ -58,12 +58,12 @@
 import https from 'https'
 import axios from 'axios'
 import Footer from '../components/footer'
-import Header from '../components/Header'
 import CourseCard from '../components/course-card'
 import UpcomingAssignment from '../components/upcoming-assignment'
+import Sidebar from '../components/dashboard_sidebar'
 
 export default {
-  components: { UpcomingAssignment, CourseCard, Header, Footer },
+  components: { Sidebar, UpcomingAssignment, CourseCard, Footer },
   async asyncData(context) {
     const res = await axios
       .get(`https://localhost:3000/courses`, {
@@ -80,11 +80,35 @@ export default {
       instructing: res.data.teaching,
       assignments: res.data.assignments
     }
+  },
+  methods: {
+    go_to_dashboard() {
+      this.$router.push('/dashboard')
+    },
+    go_to_all_assignments() {
+      this.$router.push('/all-assignments')
+    },
+    go_to_all_groups() {
+      this.$router.push('/all-groups')
+    },
+    go_to_all_grades() {
+      this.$router.push('/all-grades')
+    },
+    async logout() {
+      await this.$auth.logout()
+      this.$router.push('/')
+    }
   }
 }
 </script>
 
 <style>
+@import '../node_modules/bootstrap/dist/css/bootstrap.css';
+
+#dashboard {
+  display: flex;
+}
+
 #content {
   width: 100%;
   display: flex;
@@ -93,7 +117,7 @@ export default {
 #courses {
   display: grid;
   margin-top: 5%;
-  margin-left: 5%;
+  margin-left: 4%;
   grid-template-columns: 20vw 20vw 20vw;
   grid-column-gap: 1vw;
   grid-row-gap: 6vh;
@@ -104,7 +128,7 @@ export default {
   position: absolute;
   right: 0;
   display: inline-block;
-  width: 25%;
+  width: 20%;
   margin-top: 4.5%;
   margin-left: 4%;
   font-size: 2.5vh;

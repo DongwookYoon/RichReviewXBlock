@@ -25,6 +25,7 @@ class GradesDatabaseHandler {
         let submitter_db_handler = await SubmitterDatabaseHandler.get_instance();
         let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
         let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
+        let course_db_handler = await CourseDatabaseHandler.get_instance();
 
         let user_data = await user_db_handler.get_user_data(user_key);
 
@@ -37,6 +38,9 @@ class GradesDatabaseHandler {
             let assignment_key = submission_data['assignment'];
             let assignment_data = await assignment_db_handler.get_assignment_data(user_key, assignment_key);
             let course_id = assignment_data['course'].replace(KeyDictionary.key_dictionary['course'], '');
+
+            let course_key = KeyDictionary.key_dictionary['course'] + course_id;
+            let course_data = await course_db_handler.get_course_data(course_key);
 
             let late = false;
 
@@ -58,6 +62,7 @@ class GradesDatabaseHandler {
                     course_id: course_id,
                     assignment_id: assignment_data['id'],
                     assignment: assignment_data['title'],
+                    course: course_data['title'],
                     submission_status: submission_data['submission_status'],
                     mark: submission_data['mark'],
                     points: assignment_data['points'],

@@ -1,5 +1,5 @@
 <template>
-  <div id="test">
+  <div>
     <div id="top-bar">
       <p id="assignment-title" @click="go_to_assignment">
         {{ assignment_title }}

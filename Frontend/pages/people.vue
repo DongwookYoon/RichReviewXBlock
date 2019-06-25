@@ -1,94 +1,99 @@
 <template>
   <div>
-    <Header />
-    <div id="tab-buttons">
-      <p
-        id="people-button"
-        :style="{ color: people_tab ? '#0c2343' : 'grey' }"
-        @click="changeToPeopleTab"
-      >
-        People
-      </p>
-      <p id="divider">|</p>
-      <p
-        id="group-button"
-        :style="{ color: people_tab ? 'grey' : '#0c2343' }"
-        @click="changeToGroupsTab"
-      >
-        Groups
-      </p>
-      <p
-        v-if="
-          !people_tab && (permissions === 'instructor' || permissions === 'ta')
-        "
-        id="edit-group-button"
-        @click="go_to_edit_groups"
-      >
-        Edit Groups
-      </p>
-    </div>
-    <div v-if="people_tab" id="people">
-      <table>
-        <thead id="people-header">
-          <tr>
-            <th id="name-header">Name</th>
-            <th id="course-header">Course</th>
-            <th id="role-header">Role</th>
-          </tr>
-        </thead>
-        <tbody v-for="(user_list, role) in users" :key="role">
-          <tr v-for="user in user_list" :key="user.key" class="user-row">
-            <td>
-              <p class="user-name">{{ user.name }}</p>
-            </td>
-            <td>
-              <p class="course-title">{{ course_title }}</p>
-            </td>
-            <td>
-              <p class="role">{{ role }}</p>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div v-if="!people_tab" id="groups">
-      <table>
-        <thead id="group-header-title">
-          <tr>
-            <th id="group-name-header">Name</th>
-            <th id="active-header">Active</th>
-            <th id="user-count-header">Users</th>
-          </tr>
-        </thead>
-        <tbody
-          v-for="(group_list, groupe_type) in course_groups"
-          :key="groupe_type"
-        >
-          <tr
-            v-for="group in group_list"
-            :key="group.key"
-            class="group-row"
-            @click="go_to_group(group.id)"
+    <div id="people-page">
+      <course-sidebar :people="true" />
+      <div id="content">
+        <div id="tab-buttons">
+          <p
+            id="people-button"
+            :style="{ color: people_tab ? '#0c2343' : 'grey' }"
+            @click="changeToPeopleTab"
           >
-            <td>
-              <p class="group-name">{{ group.name }}</p>
-            </td>
-            <td>
-              <p class="active">
-                {{ groupe_type === 'active_course_groups' ? 'Yes' : 'No' }}
-              </p>
-            </td>
-            <td>
-              <p v-if="group.member_count === 1" class="user-count">
-                {{ group.member_count }} student
-              </p>
-              <p v-if="group.member_count !== 1" class="user-count">
-                {{ group.member_count }} students
-              </p>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            People
+          </p>
+          <p id="divider">|</p>
+          <p
+            id="group-button"
+            :style="{ color: people_tab ? 'grey' : '#0c2343' }"
+            @click="changeToGroupsTab"
+          >
+            Groups
+          </p>
+          <p
+            v-if="
+              !people_tab &&
+                (permissions === 'instructor' || permissions === 'ta')
+            "
+            id="edit-group-button"
+            @click="go_to_edit_groups"
+          >
+            Edit Groups
+          </p>
+        </div>
+        <div v-if="people_tab" id="people">
+          <table>
+            <thead id="people-header">
+              <tr>
+                <th id="name-header">Name</th>
+                <th id="course-header">Course</th>
+                <th id="role-header">Role</th>
+              </tr>
+            </thead>
+            <tbody v-for="(user_list, role) in users" :key="role">
+              <tr v-for="user in user_list" :key="user.key" class="user-row">
+                <td>
+                  <p class="user-name">{{ user.name }}</p>
+                </td>
+                <td>
+                  <p class="course-title">{{ course_title }}</p>
+                </td>
+                <td>
+                  <p class="role">{{ role }}</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-if="!people_tab" id="groups">
+          <table>
+            <thead id="group-header-title">
+              <tr>
+                <th id="group-name-header">Name</th>
+                <th id="active-header">Active</th>
+                <th id="user-count-header">Users</th>
+              </tr>
+            </thead>
+            <tbody
+              v-for="(group_list, groupe_type) in course_groups"
+              :key="groupe_type"
+            >
+              <tr
+                v-for="group in group_list"
+                :key="group.key"
+                class="group-row"
+                @click="go_to_group(group.id)"
+              >
+                <td>
+                  <p class="group-name">{{ group.name }}</p>
+                </td>
+                <td>
+                  <p class="active">
+                    {{ groupe_type === 'active_course_groups' ? 'Yes' : 'No' }}
+                  </p>
+                </td>
+                <td>
+                  <p v-if="group.member_count === 1" class="user-count">
+                    {{ group.member_count }} student
+                  </p>
+                  <p v-if="group.member_count !== 1" class="user-count">
+                    {{ group.member_count }} students
+                  </p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
     <Footer />
   </div>
@@ -99,12 +104,12 @@
 
 import https from 'https'
 import axios from 'axios'
-import Header from '../components/Header'
 import Footer from '../components/footer'
+import CourseSidebar from '../components/course_sidebar'
 
 export default {
   name: 'People',
-  components: { Footer, Header },
+  components: { CourseSidebar, Footer },
   asyncData(context) {
     return axios
       .get(`https://localhost:3000/courses/${context.params.course_id}/users`, {
@@ -163,6 +168,8 @@ export default {
 </script>
 
 <style scoped>
+@import '../node_modules/bootstrap/dist/css/bootstrap.css';
+
 p {
   margin: 0;
 }
@@ -188,9 +195,18 @@ table {
   margin-bottom: 5vh;
 }
 
+#people-page {
+  display: flex;
+}
+
+#content {
+  display: block;
+  margin-top: 5vh;
+}
+
 #tab-buttons {
   display: flex;
-  margin-left: 10vw;
+  margin-left: 7vw;
   margin-top: 6vh;
 }
 
@@ -211,7 +227,7 @@ table {
 }
 
 #group-button {
-  margin-right: 65vw;
+  margin-right: 48vw;
   cursor: pointer;
 }
 
@@ -226,7 +242,7 @@ table {
 
 #people,
 #groups {
-  margin-left: 10vw;
+  margin-left: 7vw;
   margin-top: 2vh;
 }
 
@@ -264,7 +280,7 @@ table {
 #group-name-header,
 .group-name {
   margin-right: 5vw;
-  width: 33vw;
+  width: 25vw;
 }
 
 #course-header,
@@ -273,13 +289,13 @@ table {
 .active {
   margin-right: 5vw;
   text-align: left;
-  width: 23vw;
+  width: 20vw;
 }
 
 #role-header,
 .role,
 #user-count-header,
 .user-count {
-  width: 15vw;
+  width: 10vw;
 }
 </style>

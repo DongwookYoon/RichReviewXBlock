@@ -1,5 +1,8 @@
 <template>
   <div class="container">
+    <b-alert v-model="showDismissibleAlert" variant="danger" dismissible>
+      One or more files is required for a comment submission assignment.
+    </b-alert>
     <h1 v-if="permissions !== 'instructor' && permissions !== 'ta'">401</h1>
     <div
       v-if="permissions === 'ta' || permissions === 'instructor'"
@@ -148,7 +151,8 @@ export default {
         until_date: '',
         type: 'document_submission'
       },
-      files: []
+      files: [],
+      showDismissibleAlert: false
     }
   },
   async asyncData(context) {
@@ -175,6 +179,10 @@ export default {
     },
     async save() {
       if (this.assignment_data.type === 'comment_submission') {
+        if (this.files.length === 0) {
+          this.showDismissibleAlert = true
+          return
+        }
         const formData = new FormData()
         for (let i = 0; i < this.files.length; i++) {
           const file = this.files[i]
@@ -235,6 +243,12 @@ export default {
 </script>
 
 <style scoped>
+@import '../node_modules/bootstrap/dist/css/bootstrap.css';
+
+#file-alert {
+  width: 50%;
+}
+
 input[type='file'] {
   position: absolute;
   top: -500px;

@@ -34,7 +34,5 @@ export default {
 </script>
 
 <style scoped>
-.text-center {
-  alignment: center;
-}
+@import '../node_modules/bootstrap/dist/css/bootstrap.css';
 </style>

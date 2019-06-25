@@ -195,19 +195,13 @@ class AssignmentDatabaseHandler {
 
 
     async get_all_assignments_visible_to_user (user_key) {
-        let user_db_handler = await UserDatabaseHandler.get_instance();
         let course_db_handler = await CourseDatabaseHandler.get_instance();
-        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
-
-        let user_data = await user_db_handler.get_user_data(user_key);
 
         let enrolments = await course_db_handler.get_user_courses(user_key);
         let assignments = [];
         for (let enrolment of enrolments['enrolments']) {
             for (let assignment_key of enrolment['assignments']) {
                 let assignment_data = await this.get_assignment_data(user_key, assignment_key);
-                let submission_key = await this.get_users_submission_key(user_key, assignment_key);
-                let submission_data = await submission_db_handler.get_submission_data(submission_key);
 
                 if (await AssignmentDatabaseHandler.user_has_permission_to_view(user_key, assignment_data)) {
                     assignments.push({
@@ -215,9 +209,8 @@ class AssignmentDatabaseHandler {
                         assignment_id: assignment_data['id'],
                         course: enrolment['title'],
                         title: assignment_data['title'],
-                        submission_status: submission_data['submission_status'],
-                        mark: submission_data['mark'],
-                        points: assignment_data['points'],
+                        due: assignment_data['due_date'],
+                        group_assignment: assignment_data['group_assignment'],
                         role: 'Student'
                     })
                 }
@@ -227,8 +220,6 @@ class AssignmentDatabaseHandler {
         for (let enrolment of enrolments['taing']) {
             for (let assignment_key of enrolment['assignments']) {
                 let assignment_data = await this.get_assignment_data(user_key, assignment_key);
-                let submission_key = await this.get_users_submission_key(user_key, assignment_key);
-                let submission_data = await submission_db_handler.get_submission_data(submission_key);
 
                 if (await AssignmentDatabaseHandler.user_has_permission_to_view(user_key, assignment_data)) {
                     assignments.push({
@@ -236,9 +227,8 @@ class AssignmentDatabaseHandler {
                         assignment_id: assignment_data['id'],
                         course: enrolment['title'],
                         title: assignment_data['title'],
-                        submission_status: submission_data['submission_status'],
-                        mark: submission_data['mark'],
-                        points: assignment_data['points'],
+                        due: assignment_data['due_date'],
+                        group_assignment: assignment_data['group_assignment'],
                         role: 'Ta'
                     })
                 }
@@ -248,8 +238,6 @@ class AssignmentDatabaseHandler {
         for (let enrolment of enrolments['teaching']) {
             for (let assignment_key of enrolment['assignments']) {
                 let assignment_data = await this.get_assignment_data(user_key, assignment_key);
-                let submission_key = await this.get_users_submission_key(user_key, assignment_key);
-                let submission_data = await submission_db_handler.get_submission_data(submission_key);
 
                 if (await AssignmentDatabaseHandler.user_has_permission_to_view(user_key, assignment_data)) {
                     assignments.push({
@@ -257,9 +245,8 @@ class AssignmentDatabaseHandler {
                         assignment_id: assignment_data['id'],
                         course: enrolment['title'],
                         title: assignment_data['title'],
-                        submission_status: submission_data['submission_status'],
-                        mark: submission_data['mark'],
-                        points: assignment_data['points'],
+                        due: assignment_data['due_date'],
+                        group_assignment: assignment_data['group_assignment'],
                         role: 'Instructor'
                     })
                 }

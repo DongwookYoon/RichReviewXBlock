@@ -93,6 +93,8 @@ export default {
 </script>
 
 <style scoped>
+@import '../node_modules/bootstrap/dist/css/bootstrap.css';
+
 p {
   margin: 0;
 }
@@ -119,7 +121,7 @@ p {
 }
 
 .active-group {
-  width: 30vw;
+  width: 25vw;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -35,6 +35,8 @@ export default {
 </script>
 
 <style scoped>
+@import '../node_modules/bootstrap/dist/css/bootstrap.css';
+
 #header-dashboard,
 #header-assignments,
 #header-groups,

@@ -73,8 +73,14 @@ export default {
     // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
     '@nuxtjs/auth',
-    '@nuxtjs/router'
+    '@nuxtjs/router',
+    'bootstrap-vue/nuxt'
   ],
+
+  bootstrapVue: {
+    bootstrapCSS: false, // Or `css: false`
+    bootstrapVueCSS: false // Or `bvCSS: false`
+  },
 
   /*
    ** Axios module configuration

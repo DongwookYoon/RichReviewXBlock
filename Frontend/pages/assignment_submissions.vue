@@ -37,14 +37,17 @@ export default {
   },
   methods: {
     go_to_submission(submission_id, link) {
-      window.open(
-        `/courses/${this.$route.params.course_id}/assignments/${
-          this.$route.params.assignment_id
-        }/submissions/${submission_id}/grader?${link}`
-      )
+      if (link !== '')
+        window.open(
+          `/courses/${this.$route.params.course_id}/assignments/${
+            this.$route.params.assignment_id
+          }/submissions/${submission_id}/grader?${link}`
+        )
     }
   }
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+@import '../node_modules/bootstrap/dist/css/bootstrap.css';
+</style>

@@ -66,6 +66,8 @@ export default {
 </script>
 
 <style scoped>
+@import '../node_modules/bootstrap/dist/css/bootstrap.css';
+
 .assignment-card {
   cursor: pointer;
   display: grid;

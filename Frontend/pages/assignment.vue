@@ -1,6 +1,9 @@
 <template>
   <div>
     <Header />
+    <b-alert v-model="showDismissibleAlert" variant="danger" dismissible>
+      One or more files is required for a submission.
+    </b-alert>
     <h1>Assignment Page</h1>
     <div>{{ assignment }}</div>
     <button
@@ -102,6 +105,11 @@ import Footer from '../components/footer'
 export default {
   name: 'Assignment',
   components: { Footer, Header },
+  data: function() {
+    return {
+      showDismissibleAlert: false
+    }
+  },
   async asyncData(context) {
     const res = await axios.get(
       `https://localhost:3000/courses/${context.params.course_id}/assignments/${
@@ -188,6 +196,10 @@ export default {
       this.$router.push(`/courses/${this.$route.params.course_id}/`)
     },
     async submitAssignment() {
+      if (this.files.length === 0) {
+        this.showDismissibleAlert = true
+        return
+      }
       const formData = new FormData()
       for (let i = 0; i < this.files.length; i++) {
         const file = this.files[i]
@@ -217,6 +229,8 @@ export default {
 </script>
 
 <style scoped>
+@import '../node_modules/bootstrap/dist/css/bootstrap.css';
+
 input[type='file'] {
   position: absolute;
   top: -500px;

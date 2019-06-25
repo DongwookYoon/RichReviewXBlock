@@ -1,84 +1,88 @@
 <template>
   <div>
-    <Header />
-    <div id="options">
-      <img
-        v-if="permissions === 'instructor' || permissions === 'ta'"
-        id="more-options"
-        src="/delete.png"
-        @click="go_to_deleted_assignments"
-      />
-    </div>
-    <div id="content">
-      <sidebar
-        :title="title"
-        :description="description"
-        :permissions="permissions"
-      />
-      <!--<div id="sidebar">-->
-      <!--<p id="people" @click="go_to_people">-->
-      <!--People-->
-      <!--</p>-->
-      <!--<p id="grades" @click="go_to_grades">-->
-      <!--Grades-->
-      <!--</p>-->
-      <!--<p-->
-      <!--v-if="permissions === 'ta' || permissions === 'instructor'"-->
-      <!--id="new-assignment"-->
-      <!--@click="go_to_new_assignment"-->
-      <!--&gt;-->
-      <!--+ Assignment-->
-      <!--</p>-->
-      <!--</div>-->
-      <div id="assignments-div">
-        <table id="assignments">
-          <thead id="assignments-header">
-            <tr>
-              <th id="name-header">Assignment Name</th>
-              <th v-if="permissions === 'student'" id="status-header">
-                Status
-              </th>
-              <th
-                v-if="permissions === 'ta' || permissions === 'instructor'"
-                id="published-header"
+    <div id="course">
+      <course-sidebar :assignments="true" />
+      <div id="content">
+        <div id="options">
+          <p
+            v-if="permissions === 'ta' || permissions === 'instructor'"
+            id="new-assignment"
+            @click="go_to_new_assignment"
+          >
+            + Assignment
+          </p>
+          <img
+            v-if="permissions === 'instructor' || permissions === 'ta'"
+            id="garbage-icon"
+            src="/delete.png"
+            @click="go_to_deleted_assignments"
+          />
+        </div>
+        <!--<div id="sidebar">-->
+        <!--<p id="people" @click="go_to_people">-->
+        <!--People-->
+        <!--</p>-->
+        <!--<p id="grades" @click="go_to_grades">-->
+        <!--Grades-->
+        <!--</p>-->
+        <!--<p-->
+        <!--v-if="permissions === 'ta' || permissions === 'instructor'"-->
+        <!--id="new-assignment"-->
+        <!--@click="go_to_new_assignment"-->
+        <!--&gt;-->
+        <!--+ Assignment-->
+        <!--</p>-->
+        <!--</div>-->
+        <div id="assignments-div">
+          <table id="assignments">
+            <thead id="assignments-header">
+              <tr>
+                <th id="name-header">Assignment Name</th>
+                <th v-if="permissions === 'student'" id="status-header">
+                  Status
+                </th>
+                <th
+                  v-if="permissions === 'ta' || permissions === 'instructor'"
+                  id="published-header"
+                >
+                  Published
+                </th>
+                <th id="group-header-title">
+                  Group Assignment
+                </th>
+                <th id="due-header">Due</th>
+              </tr>
+            </thead>
+            <tbody class="assignments-body">
+              <tr
+                v-for="a in assignments"
+                :key="a.key"
+                class="assignment-row"
+                @click="go_to_assignment(a.id)"
               >
-                Published
-              </th>
-              <th id="group-header-title">
-                Group Assignment
-              </th>
-              <th id="due-header">Due</th>
-            </tr>
-          </thead>
-          <tbody class="assignments-body">
-            <tr
-              v-for="a in assignments"
-              :key="a.key"
-              class="assignment-row"
-              @click="go_to_assignment(a.id)"
-            >
-              <td class="assignment-title">{{ a.title }}</td>
-              <td v-if="permissions === 'student'" class="assignment-status">
-                {{ a.submission.submission_status }}
-              </td>
-              <td
-                v-if="permissions === 'ta' || permissions === 'instructor'"
-                class="assignment-published"
-              >
-                {{ a.hidden ? 'No' : 'Yes' }}
-              </td>
-              <td class="assignment-group">
-                {{ a.group_assignment ? 'Yes' : 'No' }}
-              </td>
-              <td class="assignment-due">
-                {{ a.due_date !== '' ? format_date(a.due_date) : '-' }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                <td class="assignment-title">{{ a.title }}</td>
+                <td v-if="permissions === 'student'" class="assignment-status">
+                  {{ a.submission.submission_status }}
+                </td>
+                <td
+                  v-if="permissions === 'ta' || permissions === 'instructor'"
+                  class="assignment-published"
+                >
+                  {{ a.hidden ? 'No' : 'Yes' }}
+                </td>
+                <td class="assignment-group">
+                  {{ a.group_assignment ? 'Yes' : 'No' }}
+                </td>
+                <td class="assignment-due">
+                  {{ a.due_date !== '' ? format_date(a.due_date) : '-' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+      <Footer />
     </div>
-    <Footer />
   </div>
 </template>
 
@@ -90,11 +94,12 @@ import axios from 'axios'
 import Header from '../components/Header'
 import Footer from '../components/footer'
 import StudentAssignmentCard from '../components/student-assignment-card'
-import Sidebar from '../components/sidebar'
+import Sidebar from '../components/dashboard_sidebar'
+import CourseSidebar from '../components/course_sidebar'
 
 export default {
   name: 'Course',
-  components: { Sidebar, Footer, Header, StudentAssignmentCard },
+  components: { CourseSidebar, Sidebar, Footer, Header, StudentAssignmentCard },
   async asyncData(context) {
     const course_res = await axios.get(
       `https://localhost:3000/courses/${context.params.course_id}`,
@@ -116,6 +121,11 @@ export default {
     }
   },
   methods: {
+    go_to_new_assignment() {
+      this.$router.push(
+        `/courses/${this.$route.params.course_id}/assignments/new`
+      )
+    },
     go_to_deleted_assignments() {
       this.$router.push(
         `/courses/${this.$route.params.course_id}/deleted-assignments`
@@ -131,6 +141,8 @@ export default {
 </script>
 
 <style scoped>
+@import '../node_modules/bootstrap/dist/css/bootstrap.css';
+
 p {
   margin: 0;
 }
@@ -152,34 +164,37 @@ table {
   background-color: #f5f5f5;
 }
 
-#content {
-  width: 100%;
-  height: 100%;
+#course {
   display: flex;
 }
 
-#more-options {
-  margin-left: 93vw;
+#content {
+  display: block;
+  margin-left: 7vw;
+  margin-top: 5vh;
+}
+
+#options {
+  margin-left: 61vw;
   margin-top: 4vh;
   margin-bottom: -7vh;
+  display: flex;
+}
+
+#garbage-icon {
   cursor: pointer;
 }
 
-/*#sidebar {*/
-/*font-size: 3.5vh;*/
-/*color: #0c2343;*/
-/*margin-top: 20vh;*/
-/*margin-right: 5vw;*/
-/*margin-left: 2vw;*/
-/*min-width: 12vw;*/
-/*}*/
-
-/*#people,*/
-/*#grades,*/
-/*#new-assignment {*/
-/*margin-bottom: 5vh;*/
-/*cursor: pointer;*/
-/*}*/
+#new-assignment {
+  margin-right: 1vw;
+  background-color: #0c2343;
+  font-size: 2.5vh;
+  color: white;
+  padding-left: 0.5vw;
+  padding-right: 0.5vw;
+  border-radius: 0.5vh;
+  cursor: pointer;
+}
 
 #assignments {
   font-size: 2vh;
@@ -196,14 +211,14 @@ table {
 }
 
 #name-header {
-  width: 30vw;
+  width: 25vw;
 }
 
 #status-header,
 #published-header {
   text-align: center;
   padding-right: 7vw;
-  width: 23vw;
+  width: 18vw;
 }
 
 #group-header-title {
@@ -219,7 +234,7 @@ table {
 }
 
 .assignment-title {
-  width: 30vw;
+  width: 25vw;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -228,7 +243,7 @@ table {
 
 .assignment-status,
 .assignment-published {
-  width: 23vw;
+  width: 18vw;
   text-align: center;
   padding-right: 7vw;
 }

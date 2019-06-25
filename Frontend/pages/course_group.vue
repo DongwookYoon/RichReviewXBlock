@@ -72,4 +72,6 @@ export default {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+@import '../node_modules/bootstrap/dist/css/bootstrap.css';
+</style>

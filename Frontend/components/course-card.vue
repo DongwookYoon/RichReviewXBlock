@@ -59,6 +59,8 @@ export default {
 </script>
 
 <style scoped>
+@import '../node_modules/bootstrap/dist/css/bootstrap.css';
+
 .course-title,
 .course-description,
 .course-role,
@@ -108,12 +110,11 @@ export default {
 .course-card {
   margin-top: 0;
   /*margin-bottom: 5vh;*/
-  margin-left: 5vh;
-
+  margin-left: 2vw;
   background-color: #e8e8e8;
-  min-width: 15vw;
   min-height: 20vh;
   max-height: 25vh;
+  width: 17vw;
   position: relative;
   break-inside: avoid-column;
   border-radius: 0.5vh;

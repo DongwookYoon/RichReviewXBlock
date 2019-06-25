@@ -1,36 +1,39 @@
 <template>
-  <div>
-    <table>
-      <thead>
-        <tr>
-          <th>Student</th>
-          <th v-for="a in assignments" :key="a.key">
-            <div>
-              {{ a.title }}
-            </div>
-            <div class="points">Out of {{ a.points }}</div>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="s in students" :key="s.key">
-          <td>{{ s.name }}</td>
-          <td v-for="g in s.grades" :key="g.key">
-            <input
-              :placeholder="[[g.mark !== '' ? g.mark : g.submission_status]]"
-              type="text"
-              @change="updateGrade(s.student_key, g.assignment_id, $event)"
-            />
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <button
-      v-if="permissions === 'instructor' || permissions === 'ta'"
-      @click="downloadGrades"
-    >
-      Download Grades
-    </button>
+  <div id="grades">
+    <course-sidebar :grades="true" />
+    <div id="content">
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th v-for="a in assignments" :key="a.key">
+              <div>
+                {{ a.title }}
+              </div>
+              <div class="points">Out of {{ a.points }}</div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="s in students" :key="s.key">
+            <td>{{ s.name }}</td>
+            <td v-for="g in s.grades" :key="g.key">
+              <input
+                :placeholder="[[g.mark !== '' ? g.mark : g.submission_status]]"
+                type="text"
+                @change="updateGrade(s.student_key, g.assignment_id, $event)"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button
+        v-if="permissions === 'instructor' || permissions === 'ta'"
+        @click="downloadGrades"
+      >
+        Download Grades
+      </button>
+    </div>
   </div>
 </template>
 
@@ -39,9 +42,11 @@
 import https from 'https'
 import XLSX from 'xlsx'
 import axios from 'axios'
+import CourseSidebar from '../components/course_sidebar'
 
 export default {
   name: 'Grades',
+  components: { CourseSidebar },
   async asyncData(context) {
     const res = await axios.get(
       `https://localhost:3000/courses/${context.params.course_id}/grades`,
@@ -114,6 +119,8 @@ export default {
 </script>
 
 <style scoped>
+@import '../node_modules/bootstrap/dist/css/bootstrap.css';
+
 body {
   font-family: Helvetica Neue, Arial, sans-serif;
   font-size: 14px;
@@ -147,6 +154,16 @@ th,
 td {
   min-width: 120px;
   padding: 10px 20px;
+}
+
+#grades {
+  display: flex;
+}
+
+#content {
+  display: block;
+  margin-top: 10vh;
+  margin-left: 7vw;
 }
 
 .points {

@@ -47,6 +47,8 @@ export default {
 </script>
 
 <style scoped>
+@import '../node_modules/bootstrap/dist/css/bootstrap.css';
+
 .assignment-incomplete-icon,
 .assignment-title {
   margin: 0;

@@ -8,6 +8,7 @@ const DocumentUploadHandler = require('../bin/DocumentUploadHandler');
 const DocumentDatabaseHandler = require('../bin/DocumentDatabaseHandler');
 const GroupDatabaseHandler = require('../bin/GroupDatabaseHandler');
 const SubmissionDatabaseHandler = require('../bin/SubmissionDatabaseHandler');
+const SubmitterDatabaseHandler = require('../bin/SubmitterDatabaseHandler');
 const CourseDatabaseHandler = require('../bin/CourseDatabaseHandler');
 const KeyDictionary = require('../bin/KeyDictionary');
 
@@ -397,6 +398,7 @@ router.post('/:assignment_id/document_submissions', async function(req, res, nex
         let user_db_handler = await UserDatabaseHandler.get_instance();
         let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
         let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
+        let submitter_db_handler = await SubmitterDatabaseHandler.get_instance();
         let course_db_handler = await CourseDatabaseHandler.get_instance();
 
         try {
@@ -417,10 +419,21 @@ router.post('/:assignment_id/document_submissions', async function(req, res, nex
             await document_db_handler.add_group_to_doc(doc_key, group_key);
 
             let user_key = KeyDictionary.key_dictionary['user'] + user_id;
-            await user_db_handler.add_group_to_user(user_key, group_key);
 
             // Associate group with submission
             let submission_key = await assignment_db_handler.get_users_submission_key(user_key, assignment_key);
+
+            let submission_data = await submission_db_handler.get_submission_data(submission_key);
+            let submitter_key = await submission_data['submitter'];
+            let submitter_data = await submitter_db_handler.get_submitter_data(submitter_key);
+
+            for (let member of submitter_data['members']) {
+                if (member !== user_key) {
+                    await user_db_handler.add_group_to_user(member, group_key);
+                    member = member.replace(KeyDictionary.key_dictionary['user'], '');
+                    await group_db_handler.add_user_to_group(member, group_key);
+                }
+            }
 
             if (submission_key === undefined)
                 res.sendStatus(400);

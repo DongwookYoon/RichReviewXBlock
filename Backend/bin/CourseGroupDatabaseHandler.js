@@ -67,7 +67,8 @@ class CourseGroupDatabaseHandler {
                 course_group_id: course_group_data['id'],
                 course_id: course_data['id'],
                 name: course_group_data['name'],
-                course: course_data['title']
+                course: course_data['title'],
+                members: course_group_data['users'].length
             })
         }
 

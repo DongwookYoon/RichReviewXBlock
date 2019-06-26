@@ -1,93 +1,147 @@
 <template>
-  <div>
-    <Header />
+  <div id="assignment">
+    <course-sidebar />
     <b-alert v-model="showDismissibleAlert" variant="danger" dismissible>
       One or more files is required for a submission.
     </b-alert>
-    <h1>Assignment Page</h1>
-    <div>{{ assignment }}</div>
-    <button
-      v-if="permissions === 'instructor' || permissions === 'ta'"
-      @click="go_to_edit_assignment"
-    >
-      Edit
-    </button>
-    <button
-      v-if="permissions === 'instructor' || permissions === 'ta'"
-      @click="delete_assignment()"
-    >
-      Delete
-    </button>
-    <button
-      v-if="permissions === 'instructor' || permissions === 'ta'"
-      @click="got_to_submissions"
-    >
-      View Submissions
-    </button>
-    <button
-      v-if="
-        (permissions === 'instructor' || permissions === 'ta') &&
-          grader_link !== ''
-      "
-      @click="go_to_grader"
-    >
-      Grader
-    </button>
-    <div
-      v-if="
-        viewer_link !== '' &&
-          assignment.type === 'comment_submission' &&
-          permissions === 'student'
-      "
-    >
-      <h2 @click="go_to_viewer">
-        Click here to start annotating the document
-      </h2>
-    </div>
-    <div
-      v-if="
-        viewer_link !== '' &&
-          assignment.type === 'document_submission' &&
-          permissions === 'student'
-      "
-    >
-      <h2 @click="go_to_current_submission">
-        View current submission
-      </h2>
-    </div>
-    <div
-      v-if="
-        assignment.type === 'document_submission' &&
-          (permissions === 'student' &&
-            (viewer_link === '' ||
-              (viewer_link !== '' && assignment.allow_multiple_submissions)))
-      "
-    >
-      <div class="large-12 medium-12 small-12 cell">
-        <label
-          >Files
-          <input
-            id="files"
-            ref="files"
-            type="file"
-            multiple
-            @change="handleFileUpload()"
-          />
-        </label>
-      </div>
-      <div class="large-12 medium-12 small-12 cell">
-        <div v-for="(file, key) in files" :key="key" class="file-listing">
-          {{ file.name }}
-          <span class="remove-file" @click="removeFile(key)">Remove</span>
+    <div id="content">
+      <div id="assignment-header">
+        <p id="assignment-title">{{ assignment.title }}</p>
+        <div
+          v-if="
+            (permissions === 'instructor' || permissions === 'ta') &&
+              grader_link !== ''
+          "
+          id="assignment-controls"
+        >
+          <p id="edit-button" @click="go_to_edit_assignment">Edit</p>
+          <p id="submissions-button" @click="got_to_submissions">Submissions</p>
+          <p id="grader-button" @click="go_to_grader">Grader</p>
+          <p id="delete-button" @click="delete_assignment">Delete</p>
         </div>
       </div>
-      <br />
-      <div class="large-12 medium-12 small-12 cell">
-        <button @click="addFiles()">Add Files</button>
+      <hr />
+      <div id="assignment-details">
+        <div class="assignment-details-row">
+          <div id="due-date-div">
+            <p id="due-header">Due</p>
+            <p id="due-date">
+              {{
+                assignment.due_date === ' '
+                  ? ''
+                  : format_date(assignment.due_date)
+              }}
+            </p>
+          </div>
+          <div id="points-div">
+            <p id="points-header">Points</p>
+            <p id="points">{{ assignment.points }}</p>
+          </div>
+        </div>
+        <div class="assignment-details-row">
+          <div id="available-div">
+            <p id="available-header">Available</p>
+            <p id="available-date">
+              {{
+                assignment.available_date === ''
+                  ? ' '
+                  : format_date(assignment.available_date)
+              }}
+            </p>
+            <p
+              v-if="
+                assignment.available_date !== '' || assignment.until_date !== ''
+              "
+              id="available-divider"
+            >
+              -
+            </p>
+            <p id="until-date">
+              {{
+                assignment.until_date === ''
+                  ? ' '
+                  : format_date(assignment.until_date)
+              }}
+            </p>
+          </div>
+        </div>
+        <div class="assignment-details-row">
+          <div id="group-assignment-div">
+            <p id="group-assignment-header">Group Assignment</p>
+            <p id="group-assignment">
+              {{ assignment.group_assignment === true ? 'Yes' : 'No' }}
+            </p>
+          </div>
+          <div id="multiple-submissions-div">
+            <p id="multiple-submissions-header">Multiple Submissions Allowed</p>
+            <p id="multiple-submissions">
+              {{
+                assignment.allow_multiple_submissions === true ? 'Yes' : 'No'
+              }}
+            </p>
+          </div>
+        </div>
       </div>
-      <br />
-      <div class="large-12 medium-12 small-12 cell">
-        <button @click="submitAssignment()">Submit</button>
+      <hr />
+      <p id="assignment-description">{{ assignment.description }}</p>
+      <div
+        v-if="
+          viewer_link !== '' &&
+            assignment.type === 'comment_submission' &&
+            permissions === 'student'
+        "
+      >
+        <h2 @click="go_to_viewer">
+          Click here to start annotating the document
+        </h2>
+      </div>
+      <div
+        v-if="
+          viewer_link !== '' &&
+            assignment.type === 'document_submission' &&
+            permissions === 'student'
+        "
+      >
+        <h2 @click="go_to_current_submission">
+          View current submission
+        </h2>
+      </div>
+      <div
+        v-if="
+          assignment.type === 'document_submission' &&
+            (permissions === 'student' &&
+              (viewer_link === '' ||
+                (viewer_link !== '' && assignment.allow_multiple_submissions)))
+        "
+      >
+        <div class="large-12 medium-12 small-12 cell">
+          <label
+            >Files
+            <input
+              id="files"
+              ref="files"
+              type="file"
+              multiple
+              @change="handleFileUpload()"
+            />
+          </label>
+        </div>
+        <div class="large-12 medium-12 small-12 cell">
+          <div v-for="(file, key) in files" :key="key" class="file-listing">
+            {{ file.name }}
+            <span class="remove-file" @click="removeFile(key)">Remove</span>
+          </div>
+        </div>
+        <br />
+        <div class="large-12 medium-12 small-12 cell">
+          <button @click="addFiles()">Add Files</button>
+        </div>
+        <br />
+        <div class="large-12 medium-12 small-12 cell">
+          <p v-if="files.length > 0" @click="submitAssignment()">
+            Submit
+          </p>
+        </div>
       </div>
     </div>
     <Footer />
@@ -99,12 +153,12 @@
 
 import https from 'https'
 import axios from 'axios'
-import Header from '../components/Header'
 import Footer from '../components/footer'
+import CourseSidebar from '../components/course_sidebar'
 
 export default {
   name: 'Assignment',
-  components: { Footer, Header },
+  components: { CourseSidebar, Footer },
   data: function() {
     return {
       showDismissibleAlert: false
@@ -124,6 +178,8 @@ export default {
         })
       }
     )
+
+    console.log(res.data)
 
     return {
       permissions: res.data.permissions,
@@ -239,5 +295,100 @@ span.remove-file {
   color: red;
   cursor: pointer;
   float: right;
+}
+
+hr {
+  width: 60vw;
+}
+
+#assignment {
+  display: flex;
+}
+
+#content {
+  display: block;
+  margin-left: 7vw;
+  margin-top: 5vh;
+}
+
+#assignment-header,
+#assignment-controls {
+  display: flex;
+}
+
+#edit-button,
+#submissions-button,
+#grader-button,
+#delete-button {
+  font-size: 2vh;
+  background-color: #0c2343;
+  border-radius: 0.5vh;
+  color: white;
+  padding-right: 0.5vw;
+  padding-left: 0.5vw;
+  padding-top: 0.5vh;
+  margin-bottom: 0;
+}
+
+#edit-button,
+#submissions-button,
+#grader-button {
+  margin-right: 0.5vw;
+}
+
+#assignment-title {
+  font-size: 3vh;
+  color: #0c2343;
+  margin-right: 36vw;
+  margin-bottom: 0;
+}
+
+.assignment-details-row {
+  display: flex;
+}
+
+#due-date-div,
+#points-div,
+#available-div,
+#group-assignment-div,
+#multiple-submissions-div {
+  display: flex;
+  color: #0c2343;
+}
+
+#due-header,
+#points-header,
+#available-header,
+#group-assignment-header,
+#multiple-submissions-header {
+  font-weight: bold;
+  margin-right: 0.5vw;
+  font-size: 2vh;
+}
+
+#due-date,
+#group-assignment {
+  margin-right: 2vw;
+}
+
+#due-date,
+#points,
+#available-date,
+#available-divider,
+#group-assignment,
+#multiple-submissions {
+  font-size: 2vh;
+}
+
+#available-divider {
+  margin-left: 0.5vw;
+  margin-right: 0.5vw;
+}
+
+#group-assignment-header,
+#group-assignment,
+#multiple-submissions-header,
+#multiple-submissions {
+  margin-bottom: 0;
 }
 </style>

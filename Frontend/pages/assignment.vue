@@ -113,9 +113,9 @@
                 (viewer_link !== '' && assignment.allow_multiple_submissions)))
         "
       >
-        <div class="large-12 medium-12 small-12 cell">
-          <label
-            >Files
+        <div id="files-div">
+          <div class="large-12 medium-12 small-12 cell">
+            <label id="files-label">Files </label>
             <input
               id="files"
               ref="files"
@@ -123,21 +123,25 @@
               multiple
               @change="handleFileUpload()"
             />
-          </label>
-        </div>
-        <div class="large-12 medium-12 small-12 cell">
-          <div v-for="(file, key) in files" :key="key" class="file-listing">
-            {{ file.name }}
-            <span class="remove-file" @click="removeFile(key)">Remove</span>
           </div>
+          <div class="large-12 medium-12 small-12 cell">
+            <div v-for="(file, key) in files" :key="key" class="file-listing">
+              <p class="file">{{ file.name }}</p>
+              <p class="remove-file" @click="removeFile(key)">Remove</p>
+            </div>
+          </div>
+          <br />
+          <div class="large-12 medium-12 small-12 cell">
+            <p id="add-files-button" @click="addFiles()">Add Files</p>
+          </div>
+          <br />
         </div>
-        <br />
         <div class="large-12 medium-12 small-12 cell">
-          <button @click="addFiles()">Add Files</button>
-        </div>
-        <br />
-        <div class="large-12 medium-12 small-12 cell">
-          <p v-if="files.length > 0" @click="submitAssignment()">
+          <p
+            v-if="files.length > 0"
+            id="submit-button"
+            @click="submitAssignment()"
+          >
             Submit
           </p>
         </div>
@@ -290,11 +294,6 @@ input[type='file'] {
   position: absolute;
   top: -500px;
 }
-span.remove-file {
-  color: red;
-  cursor: pointer;
-  float: right;
-}
 
 hr {
   width: 60vw;
@@ -390,5 +389,49 @@ hr {
 #multiple-submissions-header,
 #multiple-submissions {
   margin-bottom: 0;
+}
+
+#files-div {
+  margin-top: 7vh;
+}
+
+#files-label {
+  font-size: 2vh;
+}
+
+.file-listing {
+  display: flex;
+}
+
+.file {
+  width: 10vw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 1vw 0 0;
+}
+
+.remove-file {
+  color: red;
+  cursor: pointer;
+}
+
+#add-files-button {
+  color: white;
+  background-color: #0c2343;
+  border-radius: 0.5vh;
+  width: 5vw;
+  text-align: center;
+  cursor: pointer;
+}
+
+#submit-button {
+  border-radius: 0.5vh;
+  cursor: pointer;
+  color: white;
+  background-color: #0c2343;
+  width: 5vw;
+  font-size: 2.5vh;
+  text-align: center;
 }
 </style>

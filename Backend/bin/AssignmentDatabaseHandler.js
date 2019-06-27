@@ -441,6 +441,7 @@ class AssignmentDatabaseHandler {
                 points: assignment_data['points'],
                 mark: submission_data['mark'],
                 submission_status: submission_data['submission_status'],
+                submission_time: submission_data['submission_time'],
                 group: submission_data['current_submission'],
                 late: late,
                 link: link,

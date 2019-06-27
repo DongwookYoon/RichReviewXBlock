@@ -8,15 +8,14 @@
       <div id="assignment-header">
         <p id="assignment-title">{{ assignment.title }}</p>
         <div
-          v-if="
-            (permissions === 'instructor' || permissions === 'ta') &&
-              grader_link !== ''
-          "
+          v-if="permissions === 'instructor' || permissions === 'ta'"
           id="assignment-controls"
         >
           <p id="edit-button" @click="go_to_edit_assignment">Edit</p>
           <p id="submissions-button" @click="got_to_submissions">Submissions</p>
-          <p id="grader-button" @click="go_to_grader">Grader</p>
+          <p v-if="grader_link !== ''" id="grader-button" @click="go_to_grader">
+            Grader
+          </p>
           <p id="delete-button" @click="delete_assignment">Delete</p>
         </div>
       </div>
@@ -328,6 +327,7 @@ hr {
   padding-left: 0.5vw;
   padding-top: 0.5vh;
   margin-bottom: 0;
+  height: 4.25vh;
 }
 
 #edit-button,

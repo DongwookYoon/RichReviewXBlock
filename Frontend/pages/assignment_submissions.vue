@@ -1,13 +1,40 @@
 <template>
-  <div>
-    <h1>Submissions</h1>
-    <div v-for="s in submissions" :key="s.key">
-      <li @click="go_to_submission(s.submission_id, s.link)">
-        {{ s.submitter_name }} - {{ s.submission_status }} - {{ s.mark }}/{{
-          s.points
-        }}
-      </li>
+  <div id="submissions">
+    <course-sidebar />
+    <div id="content">
+      <table id="submissions-table">
+        <thead id="submissions-header">
+          <tr>
+            <th id="name-header">Name</th>
+            <th id="status-header">Status</th>
+            <th id="mark-header">Mark</th>
+            <th id="submission-time-header">Submission Time</th>
+          </tr>
+        </thead>
+        <tbody class="submissions-body">
+          <tr
+            v-for="s in submissions"
+            :key="s.key"
+            class="submission-row"
+            @click="go_to_submission(s.submission_id, s.link)"
+          >
+            <td class="submission-name">{{ s.submitter_name }}</td>
+            <td class="submission-status">
+              {{ s.submission_status }}
+            </td>
+            <td class="submission-mark">
+              {{ s.mark === '' ? '-' : s.mark }}/{{ s.points }}
+            </td>
+            <td class="submission-time">
+              {{
+                s.submission_time !== '' ? format_date(s.submission_time) : '-'
+              }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+    <Footer />
   </div>
 </template>
 
@@ -16,9 +43,12 @@
 
 import https from 'https'
 import axios from 'axios'
+import CourseSidebar from '../components/course_sidebar'
+import Footer from '../components/footer'
 
 export default {
   name: 'AssignmentSubmissions',
+  components: { Footer, CourseSidebar },
   async asyncData(context) {
     const res = await axios.get(
       `https://localhost:3000/courses/${context.params.course_id}/assignments/${
@@ -33,6 +63,7 @@ export default {
         })
       }
     )
+    console.log(res.data)
     return { submissions: res.data.submissions }
   },
   methods: {
@@ -50,4 +81,71 @@ export default {
 
 <style scoped>
 @import '../node_modules/bootstrap/dist/css/bootstrap.css';
+
+p {
+  margin: 0;
+}
+
+td {
+  padding-top: 1vh;
+  padding-bottom: 1vh;
+}
+
+thead {
+  border-bottom: 1px solid #0c2343;
+}
+
+table {
+  margin-bottom: 5vh;
+}
+
+.submission-row:hover {
+  background-color: #f5f5f5;
+}
+
+#submissions {
+  display: flex;
+}
+
+#content {
+  display: block;
+  margin-left: 7vw;
+  margin-top: 7vh;
+}
+
+#submissions-table {
+  font-size: 2vh;
+  color: #0c2343;
+  margin-top: 10vh;
+}
+
+#submissions-header {
+  font-size: 2.75vh;
+}
+
+.submissions-body {
+  font-size: 2.5vh;
+}
+
+#name-header,
+.submission-name {
+  width: 25vw;
+}
+
+#status-header,
+.submission-status {
+  width: 10vw;
+}
+
+#mark-header,
+.submission-mark {
+  width: 15vw;
+  text-align: center;
+}
+
+#submission-time-header,
+.submission-time {
+  width: 15vw;
+  text-align: center;
+}
 </style>

@@ -1,25 +1,11 @@
 <template>
-  <div>
-    <Header />
+  <div id="deleted-assignments">
+    <course-sidebar />
     <div id="content">
-      <div id="sidebar">
-        <p id="people" @click="go_to_people">
-          People
-        </p>
-        <p id="grades" @click="go_to_grades">
-          Grades
-        </p>
-        <p
-          v-if="permissions === 'ta' || permissions === 'instructor'"
-          @click="go_to_new_assignment"
-        >
-          + Assignment
-        </p>
-      </div>
       <table id="assignments">
         <thead id="assignments-header">
           <tr>
-            <th>Name</th>
+            <th id="name-header">Name</th>
             <th></th>
             <th></th>
           </tr>
@@ -51,10 +37,11 @@ import axios from 'axios'
 import Header from '../components/Header'
 import Footer from '../components/footer'
 import StudentAssignmentCard from '../components/student-assignment-card'
+import CourseSidebar from '../components/course_sidebar'
 
 export default {
   name: 'DeletedAssignments',
-  components: { Footer, Header, StudentAssignmentCard },
+  components: { CourseSidebar, Footer, Header, StudentAssignmentCard },
   async asyncData(context) {
     const res = await axios.get(
       `https://localhost:3000/courses/${
@@ -156,24 +143,14 @@ thead {
   cursor: pointer;
 }
 
-#content {
-  width: 100%;
-  height: 100%;
+#deleted-assignments {
   display: flex;
 }
 
-#sidebar {
-  font-size: 3.5vh;
-  color: #0c2343;
-  margin-top: 25vh;
-  margin-right: 5vw;
-  margin-left: 2vw;
-  min-width: 12vw;
-}
-
-#people,
-#grades {
-  margin-bottom: 5vh;
+#content {
+  display: block;
+  margin-left: 7vw;
+  margin-top: 5vh;
 }
 
 #assignments {
@@ -186,12 +163,16 @@ thead {
   font-size: 2.75vh;
 }
 
+#name-header,
+.assignment-title {
+  width: 55vw;
+}
+
 .assignments-body {
   font-size: 2.5vh;
 }
 
 .assignment-title {
-  width: 55vw;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

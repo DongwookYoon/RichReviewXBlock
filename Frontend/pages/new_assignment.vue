@@ -196,7 +196,8 @@ export default {
         type: 'document_submission'
       },
       files: [],
-      showDismissibleAlert: false
+      showDismissibleAlert: false,
+      changesSaved: false
     }
   },
   async asyncData(context) {
@@ -231,6 +232,7 @@ export default {
       this.assignment_data.until_date = ''
     },
     async save() {
+      this.changesSaved = true
       if (this.assignment_data.type === 'comment_submission') {
         if (this.files.length === 0) {
           this.showDismissibleAlert = true
@@ -291,6 +293,16 @@ export default {
         this.files.push(uploadedFiles[i])
       }
     }
+  },
+  beforeRouteLeave(to, from, next) {
+    if (!this.changesSaved) {
+      if (confirm('Leave Page? Changes you made may not be saved.')) {
+        return next()
+      } else {
+        return next(false)
+      }
+    }
+    return next()
   }
 }
 </script>

@@ -12,6 +12,7 @@
             id="title"
             v-model="edits.title"
             placeholder="Assignment Name"
+            @change="changed"
           />
         </div>
         <div id="description-div">
@@ -19,11 +20,17 @@
             id="description"
             v-model="edits.description"
             placeholder="Description"
+            @change="changed"
           ></textarea>
         </div>
         <div id="points-div">
           <label id="points-label">Points</label>
-          <input id="points" v-model="edits.points" placeholder="0" />
+          <input
+            id="points"
+            v-model="edits.points"
+            placeholder="0"
+            @change="changed"
+          />
         </div>
         <!--<div>-->
         <!--<label>Display Grade as</label>-->
@@ -41,6 +48,7 @@
             id="count-towards-final"
             v-model="edits.count_toward_final_grade"
             type="checkbox"
+            @change="changed"
           />
           <label id="count-towards-final-label"
             >Count this assignment towards the final grade</label
@@ -51,6 +59,7 @@
             id="multiple-submissions"
             v-model="edits.allow_multiple_submissions"
             type="checkbox"
+            @change="changed"
           />
           <label id="multiple-submissions-label"
             >Allow multiple submissions</label
@@ -61,11 +70,17 @@
             id="group-assignment"
             v-model="edits.group_assignment"
             type="checkbox"
+            @change="changed"
           />
           <label id="group-assignment-label">Group assignment</label>
         </div>
         <div id="hidden-div">
-          <input id="hidden" v-model="edits.hidden" type="checkbox" />
+          <input
+            id="hidden"
+            v-model="edits.hidden"
+            type="checkbox"
+            @change="changed"
+          />
           <label id="hidden-label">Hidden</label>
         </div>
         <div id="due-date-div">
@@ -131,7 +146,7 @@
 </template>
 
 <script>
-/* eslint-disable no-console */
+/* eslint-disable no-console,nuxt/no-globals-in-created */
 import https from 'https'
 import { Datetime } from 'vue-datetime'
 import 'vue-datetime/dist/vue-datetime.css'
@@ -180,10 +195,33 @@ export default {
           ? new Date(res.data.until_date).toISOString()
           : ''
       },
-      permissions: res.data.permissions
+      original_due_date: context.app.is_date(res.data.due_date)
+        ? new Date(res.data.due_date).toISOString()
+        : '',
+      original_available_date: context.app.is_date(res.data.available_date)
+        ? new Date(res.data.available_date).toISOString()
+        : '',
+      original_until_date: context.app.is_date(res.data.until_date)
+        ? new Date(res.data.until_date).toISOString()
+        : '',
+      permissions: res.data.permissions,
+      changesSaved: false,
+      assignment_changed: false
     }
   },
   methods: {
+    changed() {
+      this.assignment_changed = true
+    },
+    clear_due_date() {
+      this.edits.due_date = ''
+    },
+    clear_available_date() {
+      this.edits.available_date = ''
+    },
+    clear_until_date() {
+      this.edits.until_date = ''
+    },
     go_to_assignment() {
       this.$router.push(
         `/courses/${this.$route.params.course_id}/assignments/${
@@ -192,6 +230,7 @@ export default {
       )
     },
     async edit() {
+      this.changesSaved = true
       await axios.put(
         `https://localhost:3000/courses/${
           this.$route.params.course_id
@@ -212,6 +251,23 @@ export default {
         }`
       )
     }
+  },
+  beforeRouteLeave(to, from, next) {
+    if (
+      this.edits.due_date !== this.original_due_date ||
+      this.edits.available_date !== this.original_available_date ||
+      this.edits.until_date !== this.original_until_date
+    )
+      this.assignment_changed = true
+
+    if (this.assignment_changed && !this.changesSaved) {
+      if (confirm('Leave Page? Changes you made may not be saved.')) {
+        return next()
+      } else {
+        return next(false)
+      }
+    }
+    return next()
   }
 }
 </script>

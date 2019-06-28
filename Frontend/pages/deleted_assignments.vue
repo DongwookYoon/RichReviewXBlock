@@ -98,22 +98,24 @@ export default {
       })
     },
     async deleteAssignment(id) {
-      await axios.delete(
-        `https://localhost:3000/courses/${
-          this.$route.params.course_id
-        }/assignments/${id}/permanently`,
-        {
-          headers: {
-            Authorization: this.$auth.user.sub
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        }
-      )
-      this.assignments = this.assignments.filter(assignment => {
-        return assignment.id !== id
-      })
+      if (confirm('Do you with to permanently delete this assignment?')) {
+        await axios.delete(
+          `https://localhost:3000/courses/${
+            this.$route.params.course_id
+          }/assignments/${id}/permanently`,
+          {
+            headers: {
+              Authorization: this.$auth.user.sub
+            },
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false
+            })
+          }
+        )
+        this.assignments = this.assignments.filter(assignment => {
+          return assignment.id !== id
+        })
+      }
     }
   }
 }

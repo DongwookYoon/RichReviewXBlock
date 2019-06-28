@@ -31,6 +31,7 @@
             id="student-draggable"
             :list="unassigned_students"
             group="people"
+            @change="changed"
           >
             <div v-for="s in unassigned_students" :key="s.key" class="student">
               {{ s.name }}
@@ -54,6 +55,7 @@
             v-for="g in course_groups.active_course_groups"
             :key="g.id"
             @click="change_expand(`group-${g.id}`)"
+            @change="changed"
           >
             <course-group-card
               :id="g.id"
@@ -127,7 +129,9 @@ export default {
       permissions: res.data.permissions,
       group_ids: group_ids,
       show_modal: false,
-      students_per_group: ''
+      students_per_group: '',
+      groups_changed: false,
+      changes_saved: false
     }
   },
   created: function() {
@@ -154,7 +158,11 @@ export default {
     })
   },
   methods: {
+    changed() {
+      this.groups_changed = true
+    },
     newGroup() {
+      this.groups_changed = true
       const id = `placeholder-${sha1(Math.random())}`
       const g = { id: id, name: 'New Group', members: [] }
       this.group_ids.push(id)
@@ -171,6 +179,7 @@ export default {
       this.$modal.hide('Automatic Group Assignment')
     },
     automatically_create_groups() {
+      this.groups_changed = true
       const students_per_group = parseInt(this.students_per_group)
 
       if (isNaN(students_per_group) || students_per_group === 0)
@@ -209,6 +218,7 @@ export default {
       this.hide()
     },
     async permanently_delete_group(id) {
+      this.groups_changed = true
       await axios.delete(
         `https://localhost:3000/courses/${
           this.$route.params.course_id
@@ -224,6 +234,7 @@ export default {
       )
     },
     async save() {
+      this.changes_saved = true
       const all_group_data = []
       for (const group_id of this.group_ids) {
         const group_data = this.$refs[`group-${group_id}`][0].get_data()
@@ -247,6 +258,16 @@ export default {
       )
       window.location.reload(true)
     }
+  },
+  beforeRouteLeave(to, from, next) {
+    if (this.groups_changed && !this.changes_saved) {
+      if (confirm('Leave Page? Changes you made may not be saved.')) {
+        return next()
+      } else {
+        return next(false)
+      }
+    }
+    return next()
   }
 }
 </script>

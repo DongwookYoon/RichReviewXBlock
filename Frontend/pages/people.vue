@@ -3,6 +3,7 @@
     <div id="people-page">
       <course-sidebar :people="true" />
       <div id="content">
+        <nav-bar :course="course_title" people="true" />
         <div id="tab-buttons">
           <p
             id="people-button"
@@ -106,10 +107,11 @@ import https from 'https'
 import axios from 'axios'
 import Footer from '../components/footer'
 import CourseSidebar from '../components/course_sidebar'
+import NavBar from '../components/nav_bar'
 
 export default {
   name: 'People',
-  components: { CourseSidebar, Footer },
+  components: { NavBar, CourseSidebar, Footer },
   asyncData(context) {
     return axios
       .get(`https://localhost:3000/courses/${context.params.course_id}/users`, {
@@ -202,12 +204,11 @@ table {
 #content {
   display: block;
   margin-top: 5vh;
+  margin-left: 7vw;
 }
 
 #tab-buttons {
   display: flex;
-  margin-left: 7vw;
-  margin-top: 6vh;
 }
 
 #people-button,
@@ -242,7 +243,6 @@ table {
 
 #people,
 #groups {
-  margin-left: 7vw;
   margin-top: 2vh;
 }
 

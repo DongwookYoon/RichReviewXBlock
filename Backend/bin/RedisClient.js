@@ -1,5 +1,4 @@
 var redis = require('redis');
-const CourseDatabaseHandler = require("./CourseDatabaseHandler");
 
 class RedisClient {
 

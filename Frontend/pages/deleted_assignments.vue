@@ -2,6 +2,7 @@
   <div id="deleted-assignments">
     <course-sidebar />
     <div id="content">
+      <nav-bar :course="course" deleted_assignments="true" />
       <table id="assignments">
         <thead id="assignments-header">
           <tr>
@@ -38,10 +39,11 @@ import Header from '../components/Header'
 import Footer from '../components/footer'
 import StudentAssignmentCard from '../components/student-assignment-card'
 import CourseSidebar from '../components/course_sidebar'
+import NavBar from '../components/nav_bar'
 
 export default {
   name: 'DeletedAssignments',
-  components: { CourseSidebar, Footer, Header, StudentAssignmentCard },
+  components: { NavBar, CourseSidebar, Footer, Header, StudentAssignmentCard },
   async asyncData(context) {
     const res = await axios.get(
       `https://localhost:3000/courses/${
@@ -58,7 +60,8 @@ export default {
     )
     return {
       assignments: res.data.assignments,
-      permissions: res.data.permissions
+      permissions: res.data.permissions,
+      course: res.data.course_title
     }
   },
   methods: {
@@ -158,7 +161,6 @@ thead {
 #assignments {
   font-size: 2vh;
   color: #0c2343;
-  margin-top: 10vh;
 }
 
 #assignments-header {

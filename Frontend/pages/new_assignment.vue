@@ -5,11 +5,8 @@
       <b-alert v-model="showDismissibleAlert" variant="danger" dismissible>
         One or more files is required for a comment submission assignment.
       </b-alert>
-      <h1 v-if="permissions !== 'instructor' && permissions !== 'ta'">401</h1>
-      <div
-        v-if="permissions === 'ta' || permissions === 'instructor'"
-        id="assignment-grid"
-      >
+      <nav-bar :course="course" new_assignment="true" />
+      <div id="assignment-grid">
         <div id="title-div">
           <input
             id="title"
@@ -164,17 +161,19 @@
 </template>
 
 <script>
-/* eslint-disable no-console,vue/no-unused-components */
+/* eslint-disable no-console,vue/no-unused-components,camelcase */
 import https from 'https'
 import { Datetime } from 'vue-datetime'
 import 'vue-datetime/dist/vue-datetime.css'
 import axios from 'axios'
 import Footer from '../components/footer'
 import CourseSidebar from '../components/course_sidebar'
+import NavBar from '../components/nav_bar'
 
 export default {
   name: 'NewAssignment',
   components: {
+    NavBar,
     CourseSidebar,
     Footer,
     datetime: Datetime
@@ -201,7 +200,7 @@ export default {
     }
   },
   async asyncData(context) {
-    const res = await axios.get(
+    const permission_res = await axios.get(
       `https://localhost:3000/courses/${
         context.params.course_id
       }/users/permissions`,
@@ -214,8 +213,22 @@ export default {
         })
       }
     )
+
+    const course_res = await axios.get(
+      `https://localhost:3000/courses/${context.params.course_id}`,
+      {
+        headers: {
+          Authorization: context.app.$auth.user.sub
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+    console.log(course_res.data)
     return {
-      permissions: res.data.permissions
+      permissions: permission_res.data.permissions,
+      course: course_res.data.course.title
     }
   },
   methods: {
@@ -241,7 +254,11 @@ export default {
         const formData = new FormData()
         for (let i = 0; i < this.files.length; i++) {
           const file = this.files[i]
-          formData.append('files[' + i + ']', file)
+          if (file.type !== 'application/pdf') {
+            alert('Files must be in pdf format')
+            return
+          }
+          formData.append(`file-${i}`, file)
         }
 
         formData.append('assignment_data', JSON.stringify(this.assignment_data))
@@ -333,7 +350,7 @@ hr {
 #content {
   display: block;
   margin-left: 7vw;
-  margin-top: 7vh;
+  margin-top: 5vh;
   width: 50vw;
 }
 
@@ -366,7 +383,7 @@ hr {
   color: white;
   background-color: #0c2343;
   border-radius: 0.5vh;
-  width: 5vw;
+  width: 5.5vw;
   text-align: center;
   cursor: pointer;
 }
@@ -389,7 +406,7 @@ hr {
 }
 
 #description {
-  height: 25vh;
+  height: 20vh;
   border: 1px solid lightgrey;
 }
 

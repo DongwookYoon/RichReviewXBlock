@@ -20,12 +20,12 @@ class GradesDatabaseHandler {
 
 
 
-    async get_all_user_grades (user_key) {
-        let user_db_handler = await UserDatabaseHandler.get_instance();
-        let submitter_db_handler = await SubmitterDatabaseHandler.get_instance();
-        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
-        let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
-        let course_db_handler = await CourseDatabaseHandler.get_instance();
+    async get_all_user_grades (import_handler, user_key) {
+        let user_db_handler = await import_handler.user_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
+        let submission_db_handler = await import_handler.submission_db_handler;
+        let assignment_db_handler = await import_handler.assignment_db_handler;
+        let course_db_handler = await import_handler.course_db_handler;
 
         let user_data = await user_db_handler.get_user_data(user_key);
 
@@ -77,11 +77,11 @@ class GradesDatabaseHandler {
 
 
 
-    async get_assignment_grade (user_key, assignment_key) {
-        let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
-        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
+    async get_assignment_grade (import_handler, user_key, assignment_key) {
+        let assignment_db_handler = await import_handler.assignment_db_handler;
+        let submission_db_handler = await import_handler.submission_db_handler;
 
-        let submission_key = await assignment_db_handler.get_users_submission_key(user_key, assignment_key);
+        let submission_key = await assignment_db_handler.get_users_submission_key(import_handler, user_key, assignment_key);
         let assignment_data = await assignment_db_handler.get_assignment_data(user_key, assignment_key);
 
         if (!submission_key)
@@ -116,11 +116,11 @@ class GradesDatabaseHandler {
 
 
 
-    async get_student_grades (user_key, course_key) {
-        let user_db_handler = await UserDatabaseHandler.get_instance();
-        let course_db_handler = await CourseDatabaseHandler.get_instance();
+    async get_student_grades (import_handler, user_key, course_key) {
+        let user_db_handler = await import_handler.user_db_handler;
+        let course_db_handler = await import_handler.course_db_handler;
 
-        let assignments = await course_db_handler.get_all_course_assigmments(user_key, course_key);
+        let assignments = await course_db_handler.get_all_course_assigmments(import_handler, user_key, course_key);
 
         assignments = assignments.filter((assignments) => {
             return !assignments['hidden'];
@@ -135,7 +135,7 @@ class GradesDatabaseHandler {
 
         for (let assignment of assignments) {
             let assignment_key = KeyDictionary.key_dictionary['assignment'] + assignment.id;
-            let assignment_grade = await this.get_assignment_grade(user_key, assignment_key);
+            let assignment_grade = await this.get_assignment_grade(import_handler, user_key, assignment_key);
 
             assignment_grade['assignment_id'] = assignment['id'];
             assignment_grade['title'] = assignment['title'];
@@ -148,9 +148,9 @@ class GradesDatabaseHandler {
 
 
 
-    async get_all_course_grades (user_key, course_key) {
-        let user_db_handler = await UserDatabaseHandler.get_instance();
-        let course_db_handler = await CourseDatabaseHandler.get_instance();
+    async get_all_course_grades (import_handler, user_key, course_key) {
+        let user_db_handler = await import_handler.user_db_handler;
+        let course_db_handler = await import_handler.course_db_handler;
 
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
@@ -158,8 +158,8 @@ class GradesDatabaseHandler {
             throw new NotAuthorizedError('You are not authorized to view course grades');
         }
 
-        let all_course_students = (await user_db_handler.get_all_course_users(course_key))['students'];
-        let assignments = await course_db_handler.get_all_course_assigmments(user_key, course_key);
+        let all_course_students = (await user_db_handler.get_all_course_users(import_handler, course_key))['students'];
+        let assignments = await course_db_handler.get_all_course_assigmments(import_handler, user_key, course_key);
 
         let grades = [];
 
@@ -173,7 +173,7 @@ class GradesDatabaseHandler {
 
             for (let assignment of assignments) {
                 let assignment_key = KeyDictionary.key_dictionary['assignment'] + assignment.id;
-                let assignment_grade = await this.get_assignment_grade(student_key, assignment_key);
+                let assignment_grade = await this.get_assignment_grade(import_handler, student_key, assignment_key);
 
                 assignment_grade['assignment_id'] = assignment['id'];
                 assignment_grade['title'] = assignment['title'];
@@ -188,50 +188,50 @@ class GradesDatabaseHandler {
     }
 
 
-    async update_student_grade_for_assignment (user_key, student_key, assignment_key, course_key, mark) {
+    async update_student_grade_for_assignment (import_handler, user_key, student_key, assignment_key, course_key, mark) {
 
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+        let user_db_handler = await import_handler.user_db_handler;
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
         if (permissions !== 'instructor' && permissions !== 'ta')
             throw new NotAuthorizedError('You are not authorized to edit grades');
 
-        let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
-        let submission_key = await assignment_db_handler.get_users_submission_key(student_key, assignment_key);
+        let assignment_db_handler = await import_handler.assignment_db_handler;
+        let submission_key = await assignment_db_handler.get_users_submission_key(import_handler, student_key, assignment_key);
 
-        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
+        let submission_db_handler = await import_handler.submission_db_handler;
         await submission_db_handler.update_submission_grade(submission_key, mark)
     }
 
 
 
-    async update_course_group_grade_for_assignment (user_key, course_group_key, assignment_key, course_key, mark) {
+    async update_course_group_grade_for_assignment (import_handler, user_key, course_group_key, assignment_key, course_key, mark) {
 
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+        let user_db_handler = await import_handler.user_db_handler;
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
         if (permissions !== 'instructor' && permissions !== 'ta')
             throw new NotAuthorizedError('You are not authorized to edit grades');
 
-        let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
-        let submission_key = await assignment_db_handler.get_course_groups_submission_key(user_key, course_group_key, assignment_key);
+        let assignment_db_handler = await import_handler.assignment_db_handler;
+        let submission_key = await assignment_db_handler.get_course_groups_submission_key(import_handler, user_key, course_group_key, assignment_key);
 
-        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
+        let submission_db_handler = await import_handler.submission_db_handler;
         await submission_db_handler.update_submission_grade(submission_key, mark)
     }
 
 
 
 
-    async get_grades_csv (user_key, course_key) {
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+    async get_grades_csv (import_handler, user_key, course_key) {
+        let user_db_handler = await import_handler.user_db_handler;
 
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
         if (permissions !== 'instructor' && permissions !== 'ta')
-            return await this.get_all_course_grades(user_key);
+            return await this.get_all_course_grades(import_handler, user_key);
 
-        let grade_data = await this.get_all_course_grades(user_key, course_key);
+        let grade_data = await this.get_all_course_grades(import_handler, user_key, course_key);
         let grades = grade_data['grades'];
 
         let data = [];
@@ -283,3 +283,4 @@ const RedisToJSONParser = require("./RedisToJSONParser");
 const KeyDictionary = require("./KeyDictionary");
 const DateHelper = require("./DateHelper");
 const NotAuthorizedError = require("../errors/NotAuthorizedError");
+

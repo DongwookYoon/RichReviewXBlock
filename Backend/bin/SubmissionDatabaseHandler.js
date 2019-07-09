@@ -1,3 +1,7 @@
+const RedisClient = require("./RedisClient");
+const RedisToJSONParser = require("./RedisToJSONParser");
+const KeyDictionary = require("./KeyDictionary");
+
 class SubmissionDatabaseHandler {
 
     constructor(){
@@ -20,10 +24,10 @@ class SubmissionDatabaseHandler {
 
 
 
-    async get_submission (submission_key) {
+    async get_submission (import_handler, submission_key) {
         let submission_data = await this.get_submission_data(submission_key);
 
-        let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
+        let assignment_db_handler = await import_handler.assignment_db_handler;
         let assignment_data = await assignment_db_handler.get_assignment_id_title_and_points(submission_data['assignment']);
 
         return { submission: submission_data, assignment: assignment_data };
@@ -45,11 +49,11 @@ class SubmissionDatabaseHandler {
 
 
 
-    async create_submission_for_each_user_and_return_keys (course_key, assignment_key) {
-        let user_db_handler = await UserDatabaseHandler.get_instance();
-        let submitter_db_handler = await SubmitterDatabaseHandler.get_instance();
+    async create_submission_for_each_user_and_return_keys (import_handler, course_key, assignment_key) {
+        let user_db_handler = await import_handler.user_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
 
-        let all_users = await user_db_handler.get_all_course_users(course_key);
+        let all_users = await user_db_handler.get_all_course_users(import_handler, course_key);
         let students = all_users['students'].map((student) => {
             return KeyDictionary.key_dictionary['user'] + student.id;
         });
@@ -72,8 +76,11 @@ class SubmissionDatabaseHandler {
             await this.set_submission_data(submission_key, 'current_submission', '');
             await this.set_submission_data(submission_key, 'past_submissions', '[]');
 
-            let submitter_key = await submitter_db_handler.create_submitter_and_return_key([student],
-                submission_key, '');
+            let submitter_key = await submitter_db_handler.create_submitter_and_return_key(
+                import_handler,
+                [student],
+                submission_key,
+                '');
 
             await this.set_submission_data(submission_key, 'submitter', submitter_key);
         }
@@ -83,13 +90,15 @@ class SubmissionDatabaseHandler {
 
 
 
-    async create_submission_for_each_course_group_and_return_keys (course_key, assignment_key) {
-        let course_group_db_handler = await CourseGroupDatabaseHandler.get_instance();
-        let submitter_db_handler = await SubmitterDatabaseHandler.get_instance();
+    async create_submission_for_each_course_group_and_return_keys (import_handler, course_key, assignment_key) {
+        let course_group_db_handler = await import_handler.course_group_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
 
         let submission_keys = [];
 
-        let course_groups = (await course_group_db_handler.get_all_course_groups(course_key))['active_course_groups'];
+        let course_groups = (await course_group_db_handler.get_all_course_groups(
+            import_handler, course_key))['active_course_groups'];
+
         for (let course_group of course_groups) {
             let course_group_key = KeyDictionary.key_dictionary['course_group'] + course_group.id;
 
@@ -110,8 +119,11 @@ class SubmissionDatabaseHandler {
             await this.set_submission_data(submission_key, 'current_submission', '');
             await this.set_submission_data(submission_key, 'past_submissions', '[]');
 
-            let submitter_key = await submitter_db_handler.create_submitter_and_return_key(course_group_members,
-                submission_key, course_group_key);
+            let submitter_key = await submitter_db_handler.create_submitter_and_return_key(
+                import_handler,
+                course_group_members,
+                submission_key,
+                course_group_key);
 
             await this.set_submission_data(submission_key, 'submitter', submitter_key);
 
@@ -122,20 +134,20 @@ class SubmissionDatabaseHandler {
     }
 
 
-    async get_submission_owner (submission_key) {
-        let submitter_db_hanlder = await SubmitterDatabaseHandler.get_instance();
+    async get_submission_owner (import_handler, submission_key) {
+        let submitter_db_handler = await import_handler.submitter_db_handler;
 
         let submission_data = await this.get_submission_data(submission_key);
 
-        let submitter_data = await submitter_db_hanlder.get_submitter_data(submission_data['submitter']);
+        let submitter_data = await submitter_db_handler.get_submitter_data(submission_data['submitter']);
 
         if (submitter_data['course_group'] !== '') {
-            let course_group_db_handler = await CourseGroupDatabaseHandler.get_instance();
+            let course_group_db_handler = await import_handler.course_group_db_handler;
             let course_group_data = await course_group_db_handler.get_course_group_data(submitter_data['course_group']);
             return { name: course_group_data['name'], key: submitter_data['course_group'] };
         }
 
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+        let user_db_handler = await import_handler.user_db_handler;
         let user_data = await user_db_handler.get_user_data(submitter_data['members'][0]);
         return { name: user_data['display_name'], key: submitter_data['members'][0] };
     }
@@ -219,13 +231,13 @@ class SubmissionDatabaseHandler {
 
 
 
-    async submit_comment_submission (submission_key, group_key) {
-        let doc_db_handler = await DocumentDatabaseHandler.get_instance();
-        let group_db_handler = await GroupDatabaseHandler.get_instance();
-        let cmd_db_handler = await CmdDatabaseHandler.get_instance();
-        let log_db_handler = await LogDatabaseHandler.get_instance();
-        let submitter_db_handler = await SubmitterDatabaseHandler.get_instance();
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+    async submit_comment_submission (import_handler, submission_key, group_key) {
+        let doc_db_handler = await import_handler.doc_db_handler;
+        let group_db_handler = await import_handler.group_db_handler;
+        let cmd_db_handler = await import_handler.cmd_db_handler;
+        let log_db_handler = await import_handler.log_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
+        let user_db_handler = await import_handler.user_db_handler;
 
         let group_data = await group_db_handler.get_group_data(group_key);
         let instructor_id = group_data['userid_n'];
@@ -294,11 +306,11 @@ class SubmissionDatabaseHandler {
 
 
 
-    async delete_submission (submission_key) {
-        let submitter_db_handler = await SubmitterDatabaseHandler.get_instance();
+    async delete_submission (import_handler, submission_key) {
+        let submitter_db_handler = await import_handler.submitter_db_handler;
 
         let submission_data = await this.get_submission_data(submission_key);
-        await submitter_db_handler.delete_submitter(submission_data['submitter']);
+        await submitter_db_handler.delete_submitter(import_handler, submission_data['submitter']);
 
         await this.db_handler.client.del(submission_key, (error, result) => {
             if (error) {
@@ -311,8 +323,8 @@ class SubmissionDatabaseHandler {
 
 
 
-    async is_user_owner_of_submission (user_key, submission_key) {
-        let submitter_db_handler = await SubmitterDatabaseHandler.get_instance();
+    async is_user_owner_of_submission (import_handler, user_key, submission_key) {
+        let submitter_db_handler = await import_handler.submitter_db_handler;
 
         let submission_data = await this.get_submission_data(submission_key);
         let submitter_key = submission_data['submitter'];
@@ -321,8 +333,8 @@ class SubmissionDatabaseHandler {
     }
 
 
-    async is_course_group_owner_of_submission (course_group_key, submission_key) {
-        let submitter_db_handler = await SubmitterDatabaseHandler.get_instance();
+    async is_course_group_owner_of_submission (import_handler, course_group_key, submission_key) {
+        let submitter_db_handler = await import_handler.submitter_db_handler;
 
         let submission_data = await this.get_submission_data(submission_key);
         let submitter_key = submission_data['submitter'];
@@ -333,24 +345,6 @@ class SubmissionDatabaseHandler {
 
 module.exports = SubmissionDatabaseHandler;
 
-
-/*
- ** Module exports are at the end of the file to fix the circular dependency between:
- **  - UserDatabaseHandler
- **  - CourseDatabaseHandler
- **  - AssignmentDatabaseHandler
- */
-const RedisClient = require("./RedisClient");
-const RedisToJSONParser = require("./RedisToJSONParser");
-const AssignmentDatabaseHandler = require("./AssignmentDatabaseHandler");
-const UserDatabaseHandler = require("./UserDatabaseHandler");
-const SubmitterDatabaseHandler = require("./SubmitterDatabaseHandler");
-const CourseGroupDatabaseHandler = require("./CourseGroupDatabaseHandler");
-const GroupDatabaseHandler = require("./GroupDatabaseHandler");
-const DocumentDatabaseHandler = require("./DocumentDatabaseHandler");
-const CmdDatabaseHandler = require("./CmdDatabaseHandler");
-const LogDatabaseHandler = require("./LogDatabaseHandler");
-const KeyDictionary = require("./KeyDictionary");
 
 
 

@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
-const GroupDatabaseHandler = require("../bin/GroupDatabaseHandler");
 const KeyDictionary = require("../bin/KeyDictionary");
+const ImportHandler = require("../bin/ImportHandler");
 
 /*
  ** GET
@@ -16,7 +16,7 @@ router.get('/:group_id', async function(req, res, next) {
     let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
     let group_key = KeyDictionary.key_dictionary['group'] + req.params['group_id'];
 
-    let group_db_handler = await GroupDatabaseHandler.get_instance();
+    let group_db_handler = await ImportHandler.group_db_handler;
 
     try {
         let viewer_data = await group_db_handler.get_data_for_viewer(user_key, course_key, group_key);
@@ -26,9 +26,13 @@ router.get('/:group_id', async function(req, res, next) {
     } catch (e) {
         console.warn(e);
         if (e.name === 'NotAuthorizedError')
-            res.sendStatus(401);
+            res.status(401).send({
+                message: e.message
+            });
         else
-            res.sendStatus(500);
+            res.status(500).send({
+                message: e.message
+            });
     }
 });
 

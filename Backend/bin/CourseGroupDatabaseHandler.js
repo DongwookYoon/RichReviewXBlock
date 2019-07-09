@@ -1,3 +1,9 @@
+const RedisClient = require('./RedisClient');
+const RedisToJSONParser = require("./RedisToJSONParser");
+const KeyDictionary = require("./KeyDictionary");
+const NotAuthorizedError = require("../errors/NotAuthorizedError");
+const RichReviewError = require("../errors/RichReviewError");
+
 class CourseGroupDatabaseHandler {
 
     constructor(){
@@ -20,8 +26,8 @@ class CourseGroupDatabaseHandler {
 
 
 
-    async get_all_course_groups (course_key) {
-        let course_db_handler = await CourseDatabaseHandler.get_instance();
+    async get_all_course_groups (import_handler, course_key) {
+        let course_db_handler = await import_handler.course_db_handler;
         let course_data = await course_db_handler.get_course_data(course_key);
 
         let active_group_ids = course_data['active_course_groups'];
@@ -29,7 +35,7 @@ class CourseGroupDatabaseHandler {
 
         let active_course_groups = await Promise.all(active_group_ids.map(async (group_key) => {
             let group_data = await this.get_course_group_data(group_key);
-            let users = await this.get_all_course_group_users(group_key);
+            let users = await this.get_all_course_group_users(import_handler, group_key);
 
             return { id: group_data['id'],
                 name: group_data['name'],
@@ -39,7 +45,7 @@ class CourseGroupDatabaseHandler {
 
         let inactive_course_groups = await Promise.all(inactive_group_ids.map(async (group_key) => {
             let group_data = await this.get_course_group_data(group_key);
-            let users = await this.get_all_course_group_users(group_key);
+            let users = await this.get_all_course_group_users(import_handler, group_key);
 
             return { id: group_data['id'],
                 name: group_data['name'],
@@ -52,9 +58,9 @@ class CourseGroupDatabaseHandler {
 
 
 
-    async get_all_user_course_groups (user_key) {
-        let user_db_handler = await UserDatabaseHandler.get_instance();
-        let course_db_handler = await CourseDatabaseHandler.get_instance();
+    async get_all_user_course_groups (import_handler, user_key) {
+        let user_db_handler = await import_handler.user_db_handler;
+        let course_db_handler = await import_handler.course_db_handler;
 
         let user_data = await user_db_handler.get_user_data(user_key);
         let course_groups = [];
@@ -77,9 +83,9 @@ class CourseGroupDatabaseHandler {
 
 
 
-    async get_all_course_group_users (course_group_key) {
+    async get_all_course_group_users (import_handler, course_group_key) {
 
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+        let user_db_handler = await import_handler.user_db_handler;
         let course_group_data = await this.get_course_group_data(course_group_key);
 
         let users = [];
@@ -94,14 +100,14 @@ class CourseGroupDatabaseHandler {
 
 
 
-    async get_all_course_users_unassigned_to_a_course_group (course_key) {
-        let course_db_handler = await CourseDatabaseHandler.get_instance();
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+    async get_all_course_users_unassigned_to_a_course_group (import_handler, course_key) {
+        let course_db_handler = await import_handler.course_db_handler;
+        let user_db_handler = await import_handler.user_db_handler;
 
         let course_data = await course_db_handler.get_course_data(course_key);
 
         let unassigned_student_keys = [];
-        let course_groups = (await this.get_all_course_groups(course_key))['active_course_groups'];
+        let course_groups = (await this.get_all_course_groups(import_handler, course_key))['active_course_groups'];
 
         for (let user_key of course_data['active_students']) {
             let found_group = false;
@@ -129,9 +135,9 @@ class CourseGroupDatabaseHandler {
 
 
 
-    async create_course_group (user_key, course_key, group_data) {
+    async create_course_group (import_handler, user_key, course_key, group_data) {
         try {
-            let user_db_handler = await UserDatabaseHandler.get_instance();
+            let user_db_handler = await import_handler.user_db_handler;
             let user_permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
             if (user_permissions !== 'ta' && user_permissions !== 'instructor')
@@ -145,8 +151,8 @@ class CourseGroupDatabaseHandler {
                 await user_db_handler.add_course_group_to_user(user, course_group_key);
             }
 
-            let course_db_handler = await CourseDatabaseHandler.get_instance();
-            await course_db_handler.add_group_to_course(course_group_key, course_key);
+            let course_db_handler = await import_handler.course_db_handler;
+            await course_db_handler.add_course_group_to_course(course_group_key, course_key);
 
             // Set default group data values
             await this.set_course_group_data(course_group_key, 'id', largest_group_key + 1);
@@ -164,7 +170,7 @@ class CourseGroupDatabaseHandler {
 
 
 
-    async get_course_group (user_key, course_group_key, course_key) {
+    async get_course_group (import_handler, user_key, course_group_key, course_key) {
 
         let group_data = await this.get_course_group_data(course_group_key);
 
@@ -175,17 +181,17 @@ class CourseGroupDatabaseHandler {
             throw new NotAuthorizedError('Unauthorized to view this group');
 
 
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+        let user_db_handler = await import_handler.user_db_handler;
 
         group_data['users'] = await Promise.all(group_data['users'].map(async (user_key) => {
             let user_data = await user_db_handler.get_user_data(user_key);
             return { id: user_data['id'], display_name: user_data['display_name' ]};
         }));
 
-        let submitter_db_handler = await SubmitterDatabaseHandler.get_instance();
+        let submitter_db_handler = await import_handler.submitter_db_handler;
 
         let submitters = await Promise.all(group_data['submitters'].map(async (submitter_key) => {
-            return await submitter_db_handler.get_submitter(user_key, course_key, submitter_key)
+            return await submitter_db_handler.get_submitter(import_handler, user_key, course_key, submitter_key)
         }));
 
         return { group: group_data, submitters: submitters };
@@ -271,21 +277,21 @@ class CourseGroupDatabaseHandler {
 
 
 
-    async delete_course_group (user_key, course_key, course_group_key) {
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+    async delete_course_group (import_handler, user_key, course_key, course_group_key) {
+        let user_db_handler = await import_handler.user_db_handler;
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
         if (permissions !== 'ta' && permissions !== 'instructor')
             throw new NotAuthorizedError('You are not authorized to delete a course group');
 
-        let course_db_handler = await CourseDatabaseHandler.get_instance();
+        let course_db_handler = await import_handler.course_db_handler;
         await course_db_handler.deactivate_course_group(course_key, course_group_key);
     }
 
 
 
-    async delete_course_group_permanently (user_key, course_key, course_group_key) {
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+    async delete_course_group_permanently (import_handler, user_key, course_key, course_group_key) {
+        let user_db_handler = await import_handler.user_db_handler;
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
         if (permissions !== 'ta' && permissions !== 'instructor')
@@ -299,7 +305,7 @@ class CourseGroupDatabaseHandler {
             await user_db_handler.remove_course_group_from_user(member_key, course_group_key);
         }
 
-        let course_db_handler = await CourseDatabaseHandler.get_instance();
+        let course_db_handler = await import_handler.course_db_handler;
         await course_db_handler.permanently_delete_course_group(course_key, course_group_key);
 
         await this.db_handler.client.del(course_group_key, (error, result) => {
@@ -314,17 +320,3 @@ class CourseGroupDatabaseHandler {
 
 module.exports = CourseGroupDatabaseHandler;
 
-
-/*
- ** Module exports are at the end of the file to fix the circular dependency between:
- **  - UserDatabaseHandler
- **  - CourseDatabaseHandler
- **  - AssignmentDatabaseHandler
- */
-const RedisClient = require('./RedisClient');
-const CourseDatabaseHandler = require('./CourseDatabaseHandler');
-const UserDatabaseHandler = require('./UserDatabaseHandler');
-const SubmitterDatabaseHandler = require('./SubmitterDatabaseHandler');
-const RedisToJSONParser = require("./RedisToJSONParser");
-const KeyDictionary = require("./KeyDictionary");
-const NotAuthorizedError = require("../errors/NotAuthorizedError");

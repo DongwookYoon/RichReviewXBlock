@@ -43,10 +43,10 @@ export default {
         src:
           'https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js'
       },
-      {
-        src:
-          'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/js/bootstrap.min.js'
-      },
+      // {
+      //   src:
+      //     'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/js/bootstrap.min.js'
+      // },
       { src: '/viewer_helper.js', mode: 'client', body: true }
     ]
   },
@@ -119,7 +119,7 @@ export default {
    ** Build configuration
    */
   build: {
-    extractCSS: true,
+    // extractCSS: true,
 
     /*
      ** You can extend webpack config here

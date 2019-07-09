@@ -3,6 +3,7 @@
     <div id="course">
       <course-sidebar :assignments="true" />
       <div id="content">
+        <nav-bar :course="title" />
         <div id="options">
           <p
             v-if="permissions === 'ta' || permissions === 'instructor'"
@@ -96,10 +97,18 @@ import Footer from '../components/footer'
 import StudentAssignmentCard from '../components/student-assignment-card'
 import Sidebar from '../components/dashboard_sidebar'
 import CourseSidebar from '../components/course_sidebar'
+import NavBar from '../components/nav_bar'
 
 export default {
   name: 'Course',
-  components: { CourseSidebar, Sidebar, Footer, Header, StudentAssignmentCard },
+  components: {
+    NavBar,
+    CourseSidebar,
+    Sidebar,
+    Footer,
+    Header,
+    StudentAssignmentCard
+  },
   async asyncData(context) {
     const course_res = await axios.get(
       `https://localhost:3000/courses/${context.params.course_id}`,
@@ -175,9 +184,7 @@ table {
 }
 
 #options {
-  margin-left: 61vw;
-  margin-top: 4vh;
-  margin-bottom: -7vh;
+  margin-left: 54vw;
   display: flex;
 }
 
@@ -199,7 +206,7 @@ table {
 #assignments {
   font-size: 2vh;
   color: #0c2343;
-  margin-top: 10vh;
+  margin-top: 2vh;
 }
 
 #assignments-header {

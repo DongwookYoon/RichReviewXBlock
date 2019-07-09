@@ -157,4 +157,8 @@ export default {
   border-radius: 0 0.5vh 0.5vh 0;
   padding-top: 1vh;
 }
+
+#header-logout {
+  color: #0c2343;
+}
 </style>

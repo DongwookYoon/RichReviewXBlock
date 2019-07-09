@@ -1,3 +1,10 @@
+const RedisClient = require("./RedisClient");
+const RedisToJSONParser = require("./RedisToJSONParser");
+const KeyDictionary = require("./KeyDictionary");
+const DateHelper = require("./DateHelper");
+const NotAuthorizedError = require("../errors/NotAuthorizedError");
+const RichReviewError = require("../errors/RichReviewError");
+
 class AssignmentDatabaseHandler {
 
     constructor(){
@@ -20,19 +27,20 @@ class AssignmentDatabaseHandler {
 
 
 
-    async edit_assignment (user_key, assignment_key, edits) {
+    async edit_assignment (import_handler, user_key, assignment_key, edits) {
 
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+        if(!(await this.is_valid_assignment_key(assignment_key)))
+            throw new RichReviewError('Invalid assignment key');
 
-        let assignment_data = await this.get_assignment_data(user_key, assignment_key);
-
-        if (assignment_data === undefined)
-            throw new NotAuthorizedError('You are not authorized to edit this assignment');
+        let user_db_handler = await import_handler.user_db_handler;
 
         let user_data = await user_db_handler.get_user_data(user_key);
 
-        if(!user_data['teaching'].includes(assignment_data['course']) &&
-                !user_data['taing'].includes(assignment_data['course']))
+        let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+
+        if(assignment_data === undefined ||
+            (!user_data['teaching'].includes(assignment_data['course']) &&
+            !user_data['taing'].includes(assignment_data['course'])))
             throw new NotAuthorizedError('You are not authorized to edit this assignment');
 
         for (const field in edits) {
@@ -47,7 +55,15 @@ class AssignmentDatabaseHandler {
 
 
 
-    async create_assignment (course_key, assignment_data) {
+    async create_assignment (import_handler, course_key, assignment_data) {
+        if(!this.is_valid_assignment_data(assignment_data))
+            throw new RichReviewError('Invalid assignment data');
+
+        let course_db_handler = await import_handler.course_db_handler;
+
+        if (!(await course_db_handler.is_valid_course_key(course_key)))
+            throw new RichReviewError('Invalid course key');
+
         let highest_key = await this.get_largest_assignment_key();
 
         let assignment_key = KeyDictionary.key_dictionary['assignment'] + (highest_key + 1);
@@ -67,7 +83,6 @@ class AssignmentDatabaseHandler {
         await this.set_assignment_data(assignment_key, 'group', '');
         await this.set_assignment_data(assignment_key, 'creation_date', new Date().toISOString());
 
-        let course_db_handler = await CourseDatabaseHandler.get_instance();
         await course_db_handler.add_assignment_to_course(assignment_key, course_key);
 
         return assignment_key;
@@ -75,37 +90,81 @@ class AssignmentDatabaseHandler {
 
 
 
-    async create_document_submission_assignment (course_key, assignment_data) {
+    async create_document_submission_assignment (import_handler, course_key, assignment_data) {
 
-        let assignment_key = await this.create_assignment(course_key, assignment_data);
+        let course_db_handler = await import_handler.course_db_handler;
+
+        if (course_key === undefined)
+            throw new RichReviewError ('No course key');
+        if (assignment_data === undefined)
+            throw new RichReviewError ('No assignment data');
+        if (!(await course_db_handler.is_valid_course_key(course_key)))
+            throw new RichReviewError('Invalid course key');
+
+        let course_data = await course_db_handler.get_course_data(course_key);
+        if (assignment_data['group_assignment'] && course_data['active_course_groups'].length === 0)
+            throw new RichReviewError('The course does not have any course groups');
+
+
+        let assignment_key = await this.create_assignment(import_handler, course_key, assignment_data);
 
         // Create submissions / submitters for each user/group
-        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
+        let submission_db_handler = await import_handler.submission_db_handler;
 
         let submission_keys = [];
 
         if (!assignment_data['group_assignment']) {
-            submission_keys = await submission_db_handler.create_submission_for_each_user_and_return_keys(course_key,
+            submission_keys = await submission_db_handler.create_submission_for_each_user_and_return_keys(
+                import_handler,
+                course_key,
                 assignment_key);
 
         } else {
-            submission_keys = await submission_db_handler.create_submission_for_each_course_group_and_return_keys(course_key,
+            submission_keys = await submission_db_handler.create_submission_for_each_course_group_and_return_keys(
+                import_handler,
+                course_key,
                 assignment_key);
         }
 
         await this.set_assignment_data(assignment_key, 'submissions', JSON.stringify(submission_keys));
+
+        return assignment_key;
     }
 
 
 
-    async create_comment_submission_assignment (user_key, course_key, assignment_data, files) {
+    async create_comment_submission_assignment (import_handler, user_key, course_key, assignment_data, files) {
 
-        let document_upload_handler = await DocumentUploadHandler.get_instance();
-        let document_db_handler = await DocumentDatabaseHandler.get_instance();
-        let group_db_handler = await GroupDatabaseHandler.get_instance();
-        let user_db_handler = await UserDatabaseHandler.get_instance();
-        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
-        let submitter_db_handler = await SubmitterDatabaseHandler.get_instance();
+        let course_db_handler = await import_handler.course_db_handler;
+        let user_db_handler = await import_handler.user_db_handler;
+
+        if (course_key === undefined)
+            throw new RichReviewError ('No course key');
+        if (assignment_data === undefined)
+            throw new RichReviewError ('No assignment data');
+        if (files === undefined)
+            throw new RichReviewError('No assignment files');
+        if (!(await user_db_handler.is_valid_user_key(user_key)))
+            throw new RichReviewError('Invalid user key');
+        if (!(await course_db_handler.is_valid_course_key(course_key)))
+            throw new RichReviewError('Invalid course key');
+        if (Object.keys(assignment_data).length === 0)
+            throw new RichReviewError('Invalid assignment data');
+        if(!this.is_valid_assignment_data(assignment_data))
+            throw new RichReviewError('Invalid assignment data');
+        if (Object.keys(files).length === 0)
+            throw new RichReviewError('No assignment files');
+
+        let course_data = await course_db_handler.get_course_data(course_key);
+        if (assignment_data['group_assignment'] && course_data['active_course_groups'].length === 0)
+            throw new RichReviewError('The course does not have any course groups');
+
+
+        let document_upload_handler = await import_handler.doc_upload_handler;
+        let document_db_handler = await import_handler.doc_db_handler;
+        let group_db_handler = await import_handler.group_db_handler;
+        let submission_db_handler = await import_handler.submission_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
 
         // Upload pdf to azure
         let main_context = await document_upload_handler.upload_documents(files);
@@ -117,7 +176,7 @@ class AssignmentDatabaseHandler {
         await document_db_handler.add_group_to_doc(main_doc_key, main_group_key);
         await user_db_handler.add_group_to_user(user_key, main_group_key);
 
-        let assignment_key = await this.create_assignment(course_key, assignment_data);
+        let assignment_key = await this.create_assignment(import_handler, course_key, assignment_data);
 
         await this.set_assignment_data(assignment_key, 'group', main_group_key);
 
@@ -125,11 +184,15 @@ class AssignmentDatabaseHandler {
         let submission_keys = [];
 
         if (!assignment_data['group_assignment']) {
-            submission_keys = await submission_db_handler.create_submission_for_each_user_and_return_keys(course_key,
+            submission_keys = await submission_db_handler.create_submission_for_each_user_and_return_keys(
+                import_handler,
+                course_key,
                 assignment_key);
 
         } else {
-            submission_keys = await submission_db_handler.create_submission_for_each_course_group_and_return_keys(course_key,
+            submission_keys = await submission_db_handler.create_submission_for_each_course_group_and_return_keys(
+                import_handler,
+                course_key,
                 assignment_key);
         }
 
@@ -167,6 +230,63 @@ class AssignmentDatabaseHandler {
         }
 
         await this.set_assignment_data(assignment_key, 'submissions', JSON.stringify(submission_keys));
+
+        return assignment_key;
+    }
+
+
+
+    async submit_document_assignment (import_handler, user_id, course_key, assignment_key, files) {
+        let document_upload_handler = await import_handler.doc_upload_handler;
+        let document_db_handler = await import_handler.doc_db_handler;
+        let group_db_handler = await import_handler.group_db_handler;
+        let user_db_handler = await import_handler.user_db_handler;
+        let submission_db_handler = await import_handler.submission_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
+        let course_db_handler = await import_handler.course_db_handler;
+
+        let context = await document_upload_handler.upload_documents(files);
+
+        // Add doc and grp to redis
+        let doc_key = await document_db_handler.create_doc(user_id, context.container);
+        let group_key = await group_db_handler.create_group(user_id, doc_key);
+
+        await document_db_handler.add_group_to_doc(doc_key, group_key);
+
+        let user_key = KeyDictionary.key_dictionary['user'] + user_id;
+
+        // Associate group with submission
+        let submission_key = await this.get_users_submission_key(import_handler, user_key, assignment_key);
+
+        let submission_data = await submission_db_handler.get_submission_data(submission_key);
+        let submitter_key = await submission_data['submitter'];
+        let submitter_data = await submitter_db_handler.get_submitter_data(submitter_key);
+
+        for (let member of submitter_data['members']) {
+            if (member !== user_key) {
+                await user_db_handler.add_group_to_user(member, group_key);
+                member = member.replace(KeyDictionary.key_dictionary['user'], '');
+                await group_db_handler.add_user_to_group(member, group_key);
+            }
+        }
+
+        await group_db_handler.add_submission_to_group(group_key, submission_key);
+        await submission_db_handler.add_group_to_document_submission(submission_key, group_key);
+
+        // Add tas and instructors to the group
+        let tas_and_instructors = await course_db_handler.get_course_tas_and_instructors(course_key);
+
+        for (let ta of tas_and_instructors['tas']) {
+            let ta_id = ta.replace(KeyDictionary.key_dictionary['user'], '');
+            await group_db_handler.add_user_to_group(ta_id, group_key);
+        }
+
+        for (let instructor of tas_and_instructors['instructors']) {
+            let instructor_id = instructor.replace(KeyDictionary.key_dictionary['user'], '');
+            await group_db_handler.add_user_to_group(instructor_id, group_key);
+        }
+
+        return submission_key;
     }
 
 
@@ -194,16 +314,17 @@ class AssignmentDatabaseHandler {
 
 
 
-    async get_all_assignments_visible_to_user (user_key) {
-        let course_db_handler = await CourseDatabaseHandler.get_instance();
+    async get_all_assignments_visible_to_user (import_handler, user_key, enrolments) {
+        let user_db_handler = await import_handler.user_db_handler;
+        if (!(await user_db_handler.is_valid_user_key(user_key)))
+            throw new RichReviewError('Invalid user key');
 
-        let enrolments = await course_db_handler.get_user_courses(user_key);
         let assignments = [];
         for (let enrolment of enrolments['enrolments']) {
             for (let assignment_key of enrolment['assignments']) {
                 let assignment_data = await this.get_assignment_data(user_key, assignment_key);
 
-                if (await AssignmentDatabaseHandler.user_has_permission_to_view(user_key, assignment_data)) {
+                if (await AssignmentDatabaseHandler.user_has_permission_to_view(import_handler, user_key, assignment_data)) {
                     assignments.push({
                         course_id: enrolment['id'],
                         assignment_id: assignment_data['id'],
@@ -221,7 +342,7 @@ class AssignmentDatabaseHandler {
             for (let assignment_key of enrolment['assignments']) {
                 let assignment_data = await this.get_assignment_data(user_key, assignment_key);
 
-                if (await AssignmentDatabaseHandler.user_has_permission_to_view(user_key, assignment_data)) {
+                if (await AssignmentDatabaseHandler.user_has_permission_to_view(import_handler, user_key, assignment_data)) {
                     assignments.push({
                         course_id: enrolment['id'],
                         assignment_id: assignment_data['id'],
@@ -239,7 +360,7 @@ class AssignmentDatabaseHandler {
             for (let assignment_key of enrolment['assignments']) {
                 let assignment_data = await this.get_assignment_data(user_key, assignment_key);
 
-                if (await AssignmentDatabaseHandler.user_has_permission_to_view(user_key, assignment_data)) {
+                if (await AssignmentDatabaseHandler.user_has_permission_to_view(import_handler, user_key, assignment_data)) {
                     assignments.push({
                         course_id: enrolment['id'],
                         assignment_id: assignment_data['id'],
@@ -257,10 +378,13 @@ class AssignmentDatabaseHandler {
 
 
 
-    async get_all_users_upcoming_assignments (user_key) {
+    async get_all_users_upcoming_assignments (import_handler, user_key) {
 
-        let user_db_handler = await UserDatabaseHandler.get_instance();
-        let course_db_handler = await CourseDatabaseHandler.get_instance();
+        let user_db_handler = await import_handler.user_db_handler;
+        let course_db_handler = await import_handler.course_db_handler;
+
+        if (!(await user_db_handler.is_valid_user_key(user_key)))
+            throw new RichReviewError('Invalid user key');
 
         let user_data = await user_db_handler.get_user_data(user_key);
 
@@ -278,7 +402,7 @@ class AssignmentDatabaseHandler {
                 let assignment_data = await this.get_assignment_data(user_key, assignment_key);
 
                 if (assignment_data && (assignment_data['due_date'] === '' || new Date(assignment_data['due_date']) > new Date())) {
-                    let submission_status = await this.get_user_submission_status(user_key, assignment_key);
+                    let submission_status = await this.get_user_submission_status(import_handler, user_key, assignment_key);
 
                     let data = {
                         assignment_id: assignment_key.replace(KeyDictionary.key_dictionary['assignment'], ''),
@@ -298,17 +422,24 @@ class AssignmentDatabaseHandler {
 
 
 
-    async get_course_assignments_for_student (user_key, assignment_keys) {
+    async get_course_assignments_for_student (import_handler, user_key, assignment_keys) {
+
+        let user_db_handler = await import_handler.user_db_handler;
+        if (!(await user_db_handler.is_valid_user_key(user_key)))
+            throw new RichReviewError('Invalid user key');
 
         let assignments = [];
-        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
+        let submission_db_handler = await import_handler.submission_db_handler;
 
         for (let assignment_key of assignment_keys) {
+
+            if (!(await this.is_valid_assignment_key(assignment_key)))
+                throw new RichReviewError('Invalid assignment key');
 
             let assignment_data = await this.get_assignment_data(user_key, assignment_key);
 
             if (assignment_data && !assignment_data['hidden']) {
-                let submission_key = await this.get_users_submission_key(user_key, assignment_key);
+                let submission_key = await this.get_users_submission_key(import_handler, user_key, assignment_key);
                 let submission_data = await submission_db_handler.get_submission_data(submission_key);
 
                 assignment_data['submission'] = submission_data;
@@ -339,9 +470,15 @@ class AssignmentDatabaseHandler {
 
 
 
-    get_course_assignments (user_key, assignment_keys) {
+    async get_course_assignments (import_handler, user_key, assignment_keys) {
+
+        let user_db_handler = await import_handler.user_db_handler;
+        if (!(await user_db_handler.is_valid_user_key(user_key)))
+            throw new RichReviewError('Invalid user key');
 
         let assignment_promises = assignment_keys.map(async (assignment_key) => {
+            if(!(await this.is_valid_assignment_key(assignment_key)))
+                throw new RichReviewError('Invalid assignment key');
 
             return await this.get_assignment_data(user_key, assignment_key);
         });
@@ -380,12 +517,20 @@ class AssignmentDatabaseHandler {
     }
 
 
-    async get_assignment_submisions (user_key, course_key, assignment_key) {
-        let user_db_handler = await UserDatabaseHandler.get_instance();
-        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
-        let submitter_db_handler = await SubmitterDatabaseHandler.get_instance();
-        let group_db_handler = await GroupDatabaseHandler.get_instance();
-        let doc_db_handler = await DocumentDatabaseHandler.get_instance();
+    async get_assignment_submissions (import_handler, user_key, course_key, assignment_key) {
+        let user_db_handler = await import_handler.user_db_handler;
+        let submission_db_handler = await import_handler.submission_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
+        let group_db_handler = await import_handler.group_db_handler;
+        let doc_db_handler = await import_handler.doc_db_handler;
+        let course_db_handler = await import_handler.course_db_handler;
+
+        if(!(await user_db_handler.is_valid_user_key(user_key)))
+            throw new RichReviewError('Invalid user key');
+        if(!(await course_db_handler.is_valid_course_key(course_key)))
+            throw new RichReviewError('Invalid course key');
+        if(!(await this.is_valid_assignment_key(assignment_key)))
+            throw new RichReviewError('Invalid assignment key');
 
         let user_permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
@@ -403,9 +548,13 @@ class AssignmentDatabaseHandler {
 
             let submitter_name = '';
             if (submitter_data['course_group'] !== '')
-                submitter_name = await this.get_course_group_assignment_submission_name(submitter_data['course_group']);
+                submitter_name = await this.get_course_group_assignment_submission_name(
+                    import_handler,
+                    submitter_data['course_group']);
             else
-                submitter_name = await this.get_individual_assignment_submission_name(submitter_data['members'][0]);
+                submitter_name = await this.get_individual_assignment_submission_name(
+                    import_handler,
+                    submitter_data['members'][0]);
 
             let link = '';
 
@@ -456,10 +605,16 @@ class AssignmentDatabaseHandler {
 
 
 
-    async get_assignment_submission_links_and_id (user_key, assignment_key) {
-        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
-        let group_db_handler = await GroupDatabaseHandler.get_instance();
-        let doc_db_handler = await DocumentDatabaseHandler.get_instance();
+    async get_assignment_submission_links_and_id (import_handler, user_key, assignment_key) {
+        let submission_db_handler = await import_handler.submission_db_handler;
+        let group_db_handler = await import_handler.group_db_handler;
+        let doc_db_handler = await import_handler.doc_db_handler;
+        let user_db_handler = await import_handler.user_db_handler;
+
+        if(!(await user_db_handler.is_valid_user_key(user_key)))
+            throw new RichReviewError('Invalid user key');
+        if(!(await this.is_valid_assignment_key(assignment_key)))
+            throw new RichReviewError('Invalid assignment key');
 
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
         let submissions = assignment_data['submissions'];
@@ -489,8 +644,11 @@ class AssignmentDatabaseHandler {
     }
 
 
-    async get_first_assignment_submission_link_and_id (user_key, assignment_key) {
-        let submissions_links_and_ids = await this.get_assignment_submission_links_and_id(user_key, assignment_key);
+    async get_first_assignment_submission_link_and_id (import_handler, user_key, assignment_key) {
+        let submissions_links_and_ids = await this.get_assignment_submission_links_and_id(
+            import_handler,
+            user_key,
+            assignment_key);
 
         if (submissions_links_and_ids.length > 0)
             return submissions_links_and_ids[0];
@@ -500,8 +658,11 @@ class AssignmentDatabaseHandler {
 
 
 
-    async get_previous_assignment_submission_link (user_key, assignment_key, submission_id) {
-        let submissions_links_and_ids = await this.get_assignment_submission_links_and_id(user_key, assignment_key);
+    async get_previous_assignment_submission_link (import_handler, user_key, assignment_key, submission_id) {
+        let submissions_links_and_ids = await this.get_assignment_submission_links_and_id(
+            import_handler,
+            user_key,
+            assignment_key);
 
         for(let i = 0; i < submissions_links_and_ids.length; i++) {
             if (submissions_links_and_ids[i].id === submission_id && i > 0)
@@ -512,8 +673,12 @@ class AssignmentDatabaseHandler {
 
 
 
-    async get_next_assignment_submission_link (user_key, assignment_key, submission_id) {
-        let submissions_links_and_ids = await this.get_assignment_submission_links_and_id(user_key, assignment_key);
+    async get_next_assignment_submission_link (import_handler, user_key, assignment_key, submission_id) {
+        let submissions_links_and_ids = await this.get_assignment_submission_links_and_id(
+            import_handler,
+            user_key,
+            assignment_key);
+
         let found = false;
 
         for (let submissions_link_and_id of submissions_links_and_ids) {
@@ -529,29 +694,29 @@ class AssignmentDatabaseHandler {
 
 
 
-    async get_individual_assignment_submission_name (user_key) {
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+    async get_individual_assignment_submission_name (import_handler, user_key) {
+        let user_db_handler = await import_handler.user_db_handler;
         let user_data = await user_db_handler.get_user_data(user_key);
         return user_data['display_name'];
     }
 
 
 
-    async get_course_group_assignment_submission_name (course_group_key) {
-        let course_group_db_handler = await CourseGroupDatabaseHandler.get_instance();
+    async get_course_group_assignment_submission_name (import_handler, course_group_key) {
+        let course_group_db_handler = await import_handler.course_group_db_handler;
         let course_group_data = await course_group_db_handler.get_course_group_data(course_group_key);
         return course_group_data['name'];
     }
 
 
-    async get_users_submission_key (user_key, assignment_key) {
-        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
+    async get_users_submission_key (import_handler, user_key, assignment_key) {
+        let submission_db_handler = await import_handler.submission_db_handler;
 
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
         let submissions = assignment_data['submissions'];
 
         for (let submission_key of submissions) {
-            if (await submission_db_handler.is_user_owner_of_submission(user_key, submission_key))
+            if (await submission_db_handler.is_user_owner_of_submission(import_handler, user_key, submission_key))
                 return submission_key;
         }
 
@@ -561,14 +726,17 @@ class AssignmentDatabaseHandler {
 
 
 
-    async get_course_groups_submission_key (user_key, course_group_key, assignment_key) {
-        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
+    async get_course_groups_submission_key (import_handler, user_key, course_group_key, assignment_key) {
+        let submission_db_handler = await import_handler.submission_db_handler;
 
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
         let submissions = assignment_data['submissions'];
 
         for (let submission_key of submissions) {
-            if (await submission_db_handler.is_course_group_owner_of_submission(course_group_key, submission_key))
+            if (await submission_db_handler.is_course_group_owner_of_submission(
+                import_handler,
+                course_group_key,
+                submission_key))
                 return submission_key;
         }
 
@@ -598,7 +766,7 @@ class AssignmentDatabaseHandler {
         return new Promise((resolve, reject) => {
             console.log('Redis request to key: ' + assignment_key);
             this.db_handler.client.hgetall(assignment_key, (error, result) => {
-                if (error) {
+                if (error || result === null) {
                     console.log(error);
                     reject(error);
                 }
@@ -616,10 +784,10 @@ class AssignmentDatabaseHandler {
 
 
 
-    async delete_assignment (user_key, course_key, assignment_key) {
-        let user_db_handler = await UserDatabaseHandler.get_instance();
-        let course_db_handler = await CourseDatabaseHandler.get_instance();
-        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
+    async delete_assignment (import_handler, user_key, course_key, assignment_key) {
+        let user_db_handler = await import_handler.user_db_handler;
+        let course_db_handler = await import_handler.course_db_handler;
+        let submission_db_handler = await import_handler.submission_db_handler;
 
         let user_permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
@@ -632,7 +800,7 @@ class AssignmentDatabaseHandler {
         let submissions = assignment_data['submissions'];
 
         for (let submission of submissions) {
-            await submission_db_handler.delete_submission(submission);
+            await submission_db_handler.delete_submission(import_handler, submission);
         }
 
         await this.db_handler.client.del(assignment_key, (error, result) => {
@@ -646,9 +814,19 @@ class AssignmentDatabaseHandler {
 
 
 
-    static async user_has_permission_to_view (user_key, assignment_data) {
+    static async user_has_permission_to_view (import_handler, user_key, assignment_data) {
 
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+        let user_db_handler = await import_handler.user_db_handler;
+
+        if(!(await user_db_handler.is_valid_user_key(user_key)))
+            throw new RichReviewError('Invalid user key');
+
+        if (assignment_data['course'] === undefined ||
+            assignment_data['hidden'] === undefined ||
+            assignment_data['available_date'] === undefined ||
+            assignment_data['until_date'] === undefined)
+            throw new RichReviewError('Invalid assignment data');
+
         let user_data = await user_db_handler.get_user_data(user_key);
 
         if (user_data['teaching'].includes(assignment_data['course']) ||
@@ -671,10 +849,16 @@ class AssignmentDatabaseHandler {
 
 
 
-    async get_user_submission_status (user_key, assignment_key) {
-        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
+    async get_user_submission_status (import_handler, user_key, assignment_key) {
+        let submission_db_handler = await import_handler.submission_db_handler;
+        let user_db_handler = await import_handler.user_db_handler;
 
-        let submission_key = await this.get_users_submission_key(user_key, assignment_key);
+        if(!(await user_db_handler.is_valid_user_key(user_key)))
+            throw new RichReviewError('Invalid user key');
+        if(!(await this.is_valid_assignment_key(assignment_key)))
+            throw new RichReviewError('Invalid assignment key');
+
+        let submission_key = await this.get_users_submission_key(import_handler, user_key, assignment_key);
         let submission_data = await submission_db_handler.get_submission_data(submission_key);
 
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
@@ -699,27 +883,37 @@ class AssignmentDatabaseHandler {
             late: late
         };
     }
+
+
+    is_valid_assignment_data (assignment_data) {
+        return assignment_data.title !== undefined &&
+            assignment_data.description !== undefined &&
+            (assignment_data.type === 'document_submission' ||
+                assignment_data.type === 'comment_submission') &&
+            assignment_data.count_toward_final_grade !== undefined &&
+            assignment_data.allow_multiple_submissions !== undefined &&
+            assignment_data.group_assignment !== undefined &&
+            assignment_data.hidden !== undefined &&
+            assignment_data.due_date !== undefined &&
+            assignment_data.available_date !== undefined &&
+            assignment_data.until_date !== undefined;
+    }
+
+
+
+    async is_valid_assignment_key (assignment_key) {
+        return new Promise((resolve, reject) => {
+            console.log('Redis request to key: ' + assignment_key);
+            this.db_handler.client.hgetall(assignment_key, (error, result) => {
+                if (error || result === null) {
+                    resolve(false);
+                }
+
+                resolve(true);
+            });
+        })
+    }
 }
 
 module.exports = AssignmentDatabaseHandler;
 
-
-/*
- ** Module exports are at the end of the file to fix the circular dependency between:
- **  - UserDatabaseHandler
- **  - CourseDatabaseHandler
- **  - AssignmentDatabaseHandler
- */
-const RedisClient = require("./RedisClient");
-const UserDatabaseHandler = require("./UserDatabaseHandler");
-const CourseDatabaseHandler = require("./CourseDatabaseHandler");
-const SubmissionDatabaseHandler = require("./SubmissionDatabaseHandler");
-const SubmitterDatabaseHandler = require("./SubmitterDatabaseHandler");
-const CourseGroupDatabaseHandler = require("./CourseGroupDatabaseHandler");
-const DocumentUploadHandler = require('../bin/DocumentUploadHandler');
-const DocumentDatabaseHandler = require('../bin/DocumentDatabaseHandler');
-const GroupDatabaseHandler = require('../bin/GroupDatabaseHandler');
-const RedisToJSONParser = require("./RedisToJSONParser");
-const KeyDictionary = require("./KeyDictionary");
-const DateHelper = require("./DateHelper");
-const NotAuthorizedError = require("../errors/NotAuthorizedError");

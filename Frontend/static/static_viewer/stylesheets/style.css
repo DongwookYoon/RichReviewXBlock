@@ -729,7 +729,7 @@ a:active {
 }
 
 #dashboard > #main_row {
-  width: 100%; height:auto; text-align:center;
+  width: 100%; height:auto; text-align:center; display: block;
 }
 
 #dashboard > #browse_row > #dashboard_users {
@@ -756,6 +756,11 @@ a:active {
 
 .dashboard-btn:hover{
   color: black;
+}
+
+#dashboard-comment-history {
+  width: 61vw;
+  margin-top: 9px
 }
 
 .dashboard-btn > a,
@@ -1253,7 +1258,7 @@ body::-webkit-scrollbar-corner {
 }
 
 .rm_btn:focus {
-  outline-color: rgba(77, 144, 254, 0.5); // #4D90FE
+  outline-color: rgba(77, 144, 254, 0.5); /*#4D90FE*/
   outline-offset: -2px;
   outline-style: auto;
   outline-width: 3px;

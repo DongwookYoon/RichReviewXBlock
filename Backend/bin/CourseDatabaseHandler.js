@@ -1,6 +1,11 @@
+const RedisClient = require("./RedisClient");
+const RedisToJSONParser = require("./RedisToJSONParser");
+const RichReviewError = require('../errors/RichReviewError');
+
 class CourseDatabaseHandler {
 
     constructor(){
+        console.log(RedisClient);
         RedisClient.get_instance().then((db_handler) => {
             this.db_handler = db_handler;
         });
@@ -20,17 +25,22 @@ class CourseDatabaseHandler {
 
 
 
-    async get_user_courses (user_key) {
+    async get_user_courses (import_handler, user_key) {
 
-        let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
+        let user_db_handler = await import_handler.user_db_handler;
+
+        if (!(await user_db_handler.is_valid_user_key(user_key)))
+            throw new RichReviewError('Invalid user key');
+
+        let assignment_db_handler = await import_handler.assignment_db_handler;
 
         let course_data = {};
 
         let course_ids = await this.get_course_ids(user_key);
-        course_data['enrolments'] = await this.get_user_course_enrolments(user_key, course_ids.enrolments);
+        course_data['enrolments'] = await this.get_user_course_enrolments(import_handler, user_key, course_ids.enrolments);
         course_data['taing'] = await this.get_user_course_taings(user_key, course_ids.taing);
         course_data['teaching'] = await this.get_user_course_teachings(user_key, course_ids.teaching);
-        course_data['assignments'] = await assignment_db_handler.get_all_users_upcoming_assignments(user_key);
+        course_data['assignments'] = await assignment_db_handler.get_all_users_upcoming_assignments(import_handler, user_key);
 
         return course_data;
     }
@@ -38,10 +48,10 @@ class CourseDatabaseHandler {
 
 
 
-    async get_course (user_key, course_key) {
+    async get_course (import_handler, user_key, course_key) {
 
-        let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+        let assignment_db_handler = await import_handler.assignment_db_handler;
+        let user_db_handler = await import_handler.user_db_handler;
 
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
@@ -49,22 +59,31 @@ class CourseDatabaseHandler {
         let assignments = [];
 
         if (permissions === 'student')
-            assignments = await assignment_db_handler.get_course_assignments_for_student(user_key, course_data['assignments']);
+            assignments = await assignment_db_handler.get_course_assignments_for_student(
+                import_handler,
+                user_key,
+                course_data['assignments']);
         else
-            assignments = await assignment_db_handler.get_course_assignments(user_key, course_data['assignments']);
+            assignments = await assignment_db_handler.get_course_assignments(
+                import_handler,
+                user_key,
+                course_data['assignments']);
 
         return { course: course_data, assignments: assignments };
     }
 
 
 
-    async get_deleted_course_assignments (user_key, course_key) {
+    async get_deleted_course_assignments (import_handler, user_key, course_key) {
 
-        let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
+        let assignment_db_handler = await import_handler.assignment_db_handler;
 
         let course_data = await this.get_course_data(course_key);
 
-        let assignments = await assignment_db_handler.get_course_assignments(user_key, course_data['deleted_assignments']);
+        let assignments = await assignment_db_handler.get_course_assignments(
+            import_handler,
+            user_key,
+            course_data['deleted_assignments']);
 
         return { course: course_data, assignments: assignments };
     }
@@ -86,12 +105,12 @@ class CourseDatabaseHandler {
 
 
 
-    async add_group_to_course (group_key, course_key) {
+    async add_course_group_to_course (course_group_key, course_key) {
 
         try {
             let course_data = await this.get_course_data(course_key);
             let groups = course_data['active_course_groups'];
-            groups.push(group_key);
+            groups.push(course_group_key);
             let new_groups = JSON.stringify(groups);
             await this.set_course_data(course_key, 'active_course_groups', new_groups);
 
@@ -123,7 +142,7 @@ class CourseDatabaseHandler {
         return new Promise((resolve, reject) => {
             console.log('Redis request to key: ' + course_key);
             this.db_handler.client.hgetall(course_key, function (error, result) {
-                if (error) {
+                if (error || result === null) {
                     console.log(error);
                     reject(error);
                 }
@@ -158,9 +177,9 @@ class CourseDatabaseHandler {
 
 
 
-    async get_user_course_enrolments (user_key, course_keys) {
+    async get_user_course_enrolments (import_handler, user_key, course_keys) {
 
-        let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
+        let assignment_db_handler = await import_handler.assignment_db_handler;
 
         let enrolments = [];
 
@@ -263,12 +282,12 @@ class CourseDatabaseHandler {
 
 
 
-    async get_all_course_assigmments (user_key, course_key) {
+    async get_all_course_assigmments (import_handler, user_key, course_key) {
         let course_data = await this.get_course_data(course_key);
 
         let assignment_keys = course_data['assignments'];
 
-        let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
+        let assignment_db_handler = await import_handler.assignment_db_handler;
 
         let assignments = [];
 
@@ -368,18 +387,17 @@ class CourseDatabaseHandler {
         assignments.push(assignment_key);
         await this.set_course_data(course_key, 'assignments', JSON.stringify(assignments));
     }
+
+
+    async is_valid_course_key (course_key) {
+        try {
+            await this.get_course_data(course_key);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
 }
 
 module.exports = CourseDatabaseHandler;
 
-
-/*
- ** Module exports are at the end of the file to fix the circular dependency between:
- **  - UserDatabaseHandler
- **  - CourseDatabaseHandler
- **  - AssignmentDatabaseHandler
- */
-const RedisClient = require("./RedisClient");
-const AssignmentDatabaseHandler = require("./AssignmentDatabaseHandler");
-const UserDatabaseHandler = require("./UserDatabaseHandler");
-const RedisToJSONParser = require("./RedisToJSONParser");

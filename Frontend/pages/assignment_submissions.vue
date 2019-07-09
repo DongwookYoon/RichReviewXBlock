@@ -2,6 +2,7 @@
   <div id="submissions">
     <course-sidebar />
     <div id="content">
+      <nav-bar :course="course" :assignment="assignment" submissions="true" />
       <table id="submissions-table">
         <thead id="submissions-header">
           <tr>
@@ -45,10 +46,11 @@ import https from 'https'
 import axios from 'axios'
 import CourseSidebar from '../components/course_sidebar'
 import Footer from '../components/footer'
+import NavBar from '../components/nav_bar'
 
 export default {
   name: 'AssignmentSubmissions',
-  components: { Footer, CourseSidebar },
+  components: { NavBar, Footer, CourseSidebar },
   async asyncData(context) {
     const res = await axios.get(
       `https://localhost:3000/courses/${context.params.course_id}/assignments/${
@@ -64,7 +66,11 @@ export default {
       }
     )
     console.log(res.data)
-    return { submissions: res.data.submissions }
+    return {
+      submissions: res.data.submissions,
+      course: res.data.course_title,
+      assignment: res.data.assignment_title
+    }
   },
   methods: {
     go_to_submission(submission_id, link) {
@@ -110,13 +116,12 @@ table {
 #content {
   display: block;
   margin-left: 7vw;
-  margin-top: 7vh;
+  margin-top: 5vh;
 }
 
 #submissions-table {
   font-size: 2vh;
   color: #0c2343;
-  margin-top: 10vh;
 }
 
 #submissions-header {

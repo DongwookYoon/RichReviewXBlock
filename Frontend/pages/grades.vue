@@ -2,6 +2,7 @@
   <div id="grades">
     <course-sidebar :grades="true" />
     <div id="content">
+      <nav-bar :course="course" grades="true" />
       <table>
         <thead>
           <tr>
@@ -43,10 +44,11 @@ import https from 'https'
 import XLSX from 'xlsx'
 import axios from 'axios'
 import CourseSidebar from '../components/course_sidebar'
+import NavBar from '../components/nav_bar'
 
 export default {
   name: 'Grades',
-  components: { CourseSidebar },
+  components: { NavBar, CourseSidebar },
   async asyncData(context) {
     const res = await axios.get(
       `https://localhost:3000/courses/${context.params.course_id}/grades`,
@@ -59,10 +61,12 @@ export default {
         })
       }
     )
+    console.log(res.data)
     return {
       students: res.data.grades,
       assignments: res.data.assignments,
-      permissions: res.data.permissions
+      permissions: res.data.permissions,
+      course: res.data.course_title
     }
   },
   methods: {
@@ -162,7 +166,7 @@ td {
 
 #content {
   display: block;
-  margin-top: 10vh;
+  margin-top: 5vh;
   margin-left: 7vw;
 }
 

@@ -1,10 +1,8 @@
 var express = require('express');
 var router = express.Router({mergeParams: true});
 
-const UserDatabaseHandler = require('../bin/UserDatabaseHandler');
-const CourseGroupDatabaseHandler = require('../bin/CourseGroupDatabaseHandler');
-const CourseDatabaseHandler = require('../bin/CourseDatabaseHandler');
 const KeyDictionary = require('../bin/KeyDictionary');
+const ImportHandler = require("../bin/ImportHandler");
 
 /*
  ** GET all course users
@@ -14,15 +12,16 @@ router.get('/', async function(req, res, next) {
     let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
     let course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
 
-    let user_db_handler = await UserDatabaseHandler.get_instance();
-    let course_group_db_handler = await CourseGroupDatabaseHandler.get_instance();
-    let course_db_handler = await CourseDatabaseHandler.get_instance();
+    let user_db_handler = await ImportHandler.user_db_handler;
+    let course_group_db_handler = await ImportHandler.course_group_db_handler;
+    let course_db_handler = await ImportHandler.course_db_handler;
 
     try {
-        let users = await user_db_handler.get_all_course_users(KeyDictionary.key_dictionary['course'] +
-            req.params.course_id);
+        let users = await user_db_handler.get_all_course_users(
+            ImportHandler,
+            KeyDictionary.key_dictionary['course'] + req.params.course_id);
 
-        let groups = await course_group_db_handler.get_all_course_groups(course_key);
+        let groups = await course_group_db_handler.get_all_course_groups(ImportHandler, course_key);
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
         let course_data = await course_db_handler.get_course_data(course_key);
@@ -33,7 +32,9 @@ router.get('/', async function(req, res, next) {
         res.end(JSON.stringify(data));
     } catch (e) {
         console.log(e);
-        res.sendStatus(500);
+        res.status(500).send({
+            message: e.message
+        });
     }
 });
 
@@ -46,14 +47,16 @@ router.get('/unassigned', async function(req, res, next) {
     let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
     let course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
 
-    let user_db_handler = await UserDatabaseHandler.get_instance();
-    let course_group_db_handler = await CourseGroupDatabaseHandler.get_instance();
-    let course_db_handler = await CourseDatabaseHandler.get_instance();
+    let user_db_handler = await ImportHandler.user_db_handler;
+    let course_group_db_handler = await ImportHandler.course_group_db_handler;
+    let course_db_handler = await ImportHandler.course_db_handler;
 
     try {
-        let unassigned_students = await course_group_db_handler.get_all_course_users_unassigned_to_a_course_group(course_key);
+        let unassigned_students = await course_group_db_handler.get_all_course_users_unassigned_to_a_course_group(
+            ImportHandler,
+            course_key);
 
-        let groups = await course_group_db_handler.get_all_course_groups(course_key);
+        let groups = await course_group_db_handler.get_all_course_groups(ImportHandler, course_key);
 
         for (let group_type in groups) {
             let active_or_inactive_groups = groups[group_type];
@@ -80,7 +83,9 @@ router.get('/unassigned', async function(req, res, next) {
         res.end(JSON.stringify(data));
     } catch (e) {
         console.log(e);
-        res.sendStatus(500);
+        res.status(500).send({
+            message: e.message
+        });
     }
 });
 
@@ -91,7 +96,7 @@ router.get('/permissions', async function(req, res, next) {
     let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
     let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
 
-    let user_db_handler = await UserDatabaseHandler.get_instance();
+    let user_db_handler = await ImportHandler.user_db_handler;
 
     try {
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
@@ -99,7 +104,9 @@ router.get('/permissions', async function(req, res, next) {
         res.end(JSON.stringify({ permissions: permissions }));
     } catch (e) {
         console.warn(e);
-        res.sendStatus(500);
+        res.status(500).send({
+            message: e.message
+        });
     }
 });
 

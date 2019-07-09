@@ -62,14 +62,9 @@ class LogDatabaseHandler {
 
 module.exports = LogDatabaseHandler;
 
-const env = require('../env');
-const AzureHandler = require('./AzureHandler');
 const RedisClient = require("./RedisClient");
-const KeyDictionary = require("./KeyDictionary");
 const RedisToJSONParser = require("./RedisToJSONParser");
-const UserDatabaseHandler = require("./UserDatabaseHandler");
-const DocumentDatabaseHandler = require("./DocumentDatabaseHandler");
-const NotAuthorizedError = require("../errors/NotAuthorizedError");
+
 
 
 

@@ -2,7 +2,8 @@
 class DocumentUploadHandler {
 
     constructor(){
-        this.path = '/tmp/richreview/pdfs/'
+        this.path0 = '/tmp/richreview';
+        this.path = '/tmp/richreview/pdfs/';
     }
 
 
@@ -152,6 +153,13 @@ class DocumentUploadHandler {
 
     cache_document (uuid, data) {
         try {
+            if (!fs.existsSync(this.path0)) {
+                fs.mkdirSync(this.path0);
+            }
+            if (!fs.existsSync(this.path)) {
+                fs.mkdirSync(this.path);
+            }
+
             let dir = this.path + uuid;
             if (!fs.existsSync(dir)) {
                 fs.mkdirSync(dir);

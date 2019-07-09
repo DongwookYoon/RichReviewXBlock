@@ -34,7 +34,6 @@
       </div>
       <div id="upcoming-assignments">
         <p id="upcoming-assignments-title">Upcoming Assignments:</p>
-        <hr />
         <p v-if="assignments.length === 0" id="no-assignments">
           No upcoming assignments
         </p>
@@ -105,6 +104,14 @@ export default {
 <style>
 @import '../node_modules/bootstrap/dist/css/bootstrap.css';
 
+#test {
+  height: 1px;
+  margin-top: 0;
+  margin-bottom: 0;
+  background-color: #0c2343;
+  margin-right: 10%;
+}
+
 #dashboard {
   display: flex;
 }
@@ -137,18 +144,11 @@ export default {
 
 #upcoming-assignments-title {
   font-size: 3vh;
-  margin: 0;
+  border-bottom: 1px solid #0c2343;
+  margin: 0 1vw 0 0;
 }
 
 #no-assignments {
   color: #535353;
-}
-
-hr {
-  height: 1px;
-  margin-top: 0;
-  margin-bottom: 0;
-  background-color: #0c2343;
-  margin-right: 10%;
 }
 </style>

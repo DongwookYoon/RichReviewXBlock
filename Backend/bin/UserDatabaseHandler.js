@@ -1,6 +1,11 @@
+const RedisClient = require("./RedisClient");
+const KeyDictionary = require("./KeyDictionary");
+const RedisToJSONParser = require("./RedisToJSONParser");
+
 class UserDatabaseHandler {
 
     constructor(){
+        console.log(RedisClient);
         RedisClient.get_instance().then((db_handler) => {
             this.db_handler = db_handler;
         });
@@ -38,7 +43,7 @@ class UserDatabaseHandler {
     get_user_data (user_key) {
         return new Promise((resolve, reject) => {
             this.db_handler.client.HGETALL(user_key, function (error, result) {
-                if (error) {
+                if (error || result === null) {
                     console.log(error);
                     reject(error);
                 }
@@ -51,18 +56,18 @@ class UserDatabaseHandler {
 
 
 
-    async get_course_active_students (course_key) {
+    async get_course_active_students (import_handler, course_key) {
 
-        let course_database_handler = await CourseDatabaseHandler.get_instance();
+        let course_database_handler = await import_handler.course_db_handler;
         let course_data = await course_database_handler.get_course_data(course_key);
         return course_data['active_students'];
     }
 
 
 
-    async get_course_blocked_students (course_key) {
+    async get_course_blocked_students (import_handler, course_key) {
 
-        let course_database_handler = await CourseDatabaseHandler.get_instance();
+        let course_database_handler = await import_handler.course_db_handler;
         let course_data = await course_database_handler.get_course_data(course_key);
         return course_data['blocked_students'];
     }
@@ -73,9 +78,9 @@ class UserDatabaseHandler {
     // TODO should blocked students show up in the 'people' list?
     // It makes sense for profs to see blocked students
     // Should other students be able to see blocked students?
-    async get_all_course_users (course_key) {
+    async get_all_course_users (import_handler, course_key) {
 
-        let course_database_handler = await CourseDatabaseHandler.get_instance();
+        let course_database_handler = await import_handler.course_db_handler;
         let course_data = await course_database_handler.get_course_data(course_key);
 
         let student_keys = await [...new Set([...course_data['active_students'],
@@ -246,18 +251,17 @@ class UserDatabaseHandler {
 
         await this.set_user_data(user_key, 'course_groups', JSON.stringify(course_groups));
     }
+
+
+    async is_valid_user_key (user_key) {
+        try {
+            await this.get_user_data(user_key);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
 }
 
 module.exports = UserDatabaseHandler;
 
-
-/*
- ** Module exports are at the end of the file to fix the circular dependency between:
- **  - UserDatabaseHandler
- **  - CourseDatabaseHandler
- **  - AssignmentDatabaseHandler
- */
-const RedisClient = require("./RedisClient");
-const CourseDatabaseHandler = require("./CourseDatabaseHandler");
-const KeyDictionary = require("./KeyDictionary");
-const RedisToJSONParser = require("./RedisToJSONParser");

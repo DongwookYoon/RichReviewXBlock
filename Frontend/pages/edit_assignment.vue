@@ -2,11 +2,12 @@
   <div id="edit-assignment">
     <course-sidebar />
     <div id="content">
-      <h1 v-if="permissions !== 'instructor' && permissions !== 'ta'">401</h1>
-      <div
-        v-if="permissions === 'ta' || permissions === 'instructor'"
-        id="assignment-grid"
-      >
+      <nav-bar
+        :course="course"
+        :assignment="edits.title"
+        edit_assignment="true"
+      />
+      <div id="assignment-grid">
         <div id="title-div">
           <input
             id="title"
@@ -153,10 +154,12 @@ import 'vue-datetime/dist/vue-datetime.css'
 import axios from 'axios'
 import CourseSidebar from '../components/course_sidebar'
 import Footer from '../components/footer'
+import NavBar from '../components/nav_bar'
 
 export default {
   name: 'EditAssignment',
   components: {
+    NavBar,
     Footer,
     CourseSidebar,
     datetime: Datetime
@@ -176,6 +179,7 @@ export default {
       }
     )
     return {
+      course: res.data.course_title,
       edits: {
         title: res.data.title,
         description: res.data.description,
@@ -289,7 +293,7 @@ hr {
 #content {
   display: block;
   margin-left: 7vw;
-  margin-top: 7vh;
+  margin-top: 5vh;
   width: 50vw;
 }
 
@@ -311,7 +315,7 @@ hr {
 }
 
 #description {
-  height: 25vh;
+  height: 20vh;
   border: 1px solid lightgrey;
 }
 

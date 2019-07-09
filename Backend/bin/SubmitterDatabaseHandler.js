@@ -1,3 +1,8 @@
+const RedisClient = require("./RedisClient");
+const RedisToJSONParser = require("./RedisToJSONParser");
+const KeyDictionary = require("./KeyDictionary");
+const NotAuthorizedError = require("../errors/NotAuthorizedError");
+
 class SubmitterDatabaseHandler {
 
     constructor(){
@@ -20,9 +25,9 @@ class SubmitterDatabaseHandler {
 
 
 
-    async get_submitter (user_key, course_key, submitter_key) {
+    async get_submitter (import_handler, user_key, course_key, submitter_key) {
 
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+        let user_db_handler = await import_handler.user_db_handler;
         let user_permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
         let submitter_data = await this.get_submitter_data(submitter_key);
@@ -32,8 +37,8 @@ class SubmitterDatabaseHandler {
                 user_permissions !== 'ta')
             throw new NotAuthorizedError('User is not authorized to view this submission');
 
-        let submission_db_handler = await SubmissionDatabaseHandler.get_instance();
-        let submission = await submission_db_handler.get_submission(submitter_data['submission']);
+        let submission_db_handler = await import_handler.submission_db_handler;
+        let submission = await submission_db_handler.get_submission(import_handler, submitter_data['submission']);
 
         submission['submitter'] = submitter_data;
 
@@ -41,7 +46,7 @@ class SubmitterDatabaseHandler {
     }
 
 
-    async create_submitter_and_return_key (user_keys, submission_key, course_group_key) {
+    async create_submitter_and_return_key (import_handler, user_keys, submission_key, course_group_key) {
         let largest_submitter_key = await this.get_largest_submitter_key();
 
         let submitter_key = KeyDictionary.key_dictionary['submitter'] + (largest_submitter_key + 1);
@@ -50,7 +55,7 @@ class SubmitterDatabaseHandler {
         await this.set_submitter_data(submitter_key, 'submission', submission_key);
         await this.set_submitter_data(submitter_key, 'course_group', course_group_key);
 
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+        let user_db_handler = await import_handler.user_db_handler;
 
         for (let user_key of user_keys) {
             await user_db_handler.add_submitter_to_user(user_key, submitter_key);
@@ -131,8 +136,8 @@ class SubmitterDatabaseHandler {
 
 
 
-    async delete_submitter (submitter_key) {
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+    async delete_submitter (import_handler, submitter_key) {
+        let user_db_handler = await import_handler.user_db_handler;
 
         let submitter_data = await this.get_submitter_data(submitter_key);
         let members = submitter_data['members'];
@@ -144,7 +149,7 @@ class SubmitterDatabaseHandler {
             await user_db_handler.remove_submitter_from_user(member, submitter_key);
         }
 
-        let course_group_db_handler = await CourseGroupDatabaseHandler.get_instance();
+        let course_group_db_handler = await import_handler.course_group_db_handler;
 
         if (submitter_data['course_group'] !== '')
             await course_group_db_handler.remove_submitter_from_group(submitter_key, submitter_data['course_group']);
@@ -183,17 +188,3 @@ class SubmitterDatabaseHandler {
 
 module.exports = SubmitterDatabaseHandler;
 
-
-/*
- ** Module exports are at the end of the file to fix the circular dependency between:
- **  - UserDatabaseHandler
- **  - CourseDatabaseHandler
- **  - AssignmentDatabaseHandler
- */
-const RedisClient = require("./RedisClient");
-const SubmissionDatabaseHandler = require('./SubmissionDatabaseHandler');
-const UserDatabaseHandler = require('./UserDatabaseHandler');
-const CourseGroupDatabaseHandler = require('./CourseGroupDatabaseHandler');
-const RedisToJSONParser = require("./RedisToJSONParser");
-const KeyDictionary = require("./KeyDictionary");
-const NotAuthorizedError = require("../errors/NotAuthorizedError");

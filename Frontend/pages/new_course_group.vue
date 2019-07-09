@@ -1,6 +1,5 @@
 <template>
   <div>
-    <h1 v-if="permissions !== 'instructor' && permissions !== 'ta'">401</h1>
     <modal width="35%" height="20%" name="Automatic Group Assignment">
       <div id="modal-div">
         <p id="students-per-group-label">Students per group:</p>
@@ -13,75 +12,79 @@
         <p id="modal-cancel-button" @click="hide">Cancel</p>
       </div>
     </modal>
-    <div
-      v-if="permissions === 'instructor' || permissions === 'ta'"
-      id="course-groups"
-    >
+    <div id="course-groups">
       <course-sidebar :people="true" />
       <div id="content">
-        <div id="student-list">
-          <div id="student-header">
-            <p id="student-header-title">Unassigned Students</p>
-            <p id="automatic-groups-button" @click="show">
-              Automatically Assign Groups
-            </p>
-          </div>
-          <hr id="student-hr" />
-          <draggable
-            id="student-draggable"
-            :list="unassigned_students"
-            group="people"
-            @change="changed"
-          >
-            <div v-for="s in unassigned_students" :key="s.key" class="student">
-              {{ s.name }}
+        <nav-bar :course="course" people="true" edit_groups="true" />
+        <div id="edit-course-groups">
+          <div id="student-list">
+            <div id="student-header">
+              <p id="student-header-title">Unassigned Students</p>
+              <p id="automatic-groups-button" @click="show">
+                Automatically Assign Groups
+              </p>
             </div>
-          </draggable>
-        </div>
-        <div id="groups">
-          <div id="group-header">
-            <p id="group-header-title">Groups</p>
-            <p id="edit-group-button" @click="newGroup">+ Group</p>
-            <p id="save-button" @click="save">Save</p>
+            <hr id="student-hr" />
+            <draggable
+              id="student-draggable"
+              :list="unassigned_students"
+              group="people"
+              @change="changed"
+            >
+              <div
+                v-for="s in unassigned_students"
+                :key="s.key"
+                class="student"
+              >
+                {{ s.name }}
+              </div>
+            </draggable>
           </div>
-          <hr id="group-hr" />
-          <!--<p-->
-          <!--v-if="course_groups.active_course_groups.length > 0"-->
-          <!--id="active-course-groups"-->
-          <!--&gt;-->
-          <!--Active Course Groups:-->
-          <!--</p>-->
-          <div
-            v-for="g in course_groups.active_course_groups"
-            :key="g.id"
-            @click="change_expand(`group-${g.id}`)"
-            @change="changed"
-          >
-            <course-group-card
-              :id="g.id"
-              :ref="'group-' + g.id"
-              :passed_name="g.name"
-              :members="g.members"
-            ></course-group-card>
-          </div>
-          <p
-            v-if="course_groups.inactive_course_groups.length > 0"
-            id="inactive-course-groups"
-          >
-            Deleted Course Groups:
-          </p>
-          <div
-            v-for="g in course_groups.inactive_course_groups"
-            :key="g.id"
-            @click="change_expand(`group-${g.id}`)"
-          >
-            <course-group-card
-              :id="g.id"
-              :ref="'group-' + g.id"
-              :passed_name="g.name"
-              :members="g.members"
-              :inactive="true"
-            ></course-group-card>
+          <div id="groups">
+            <div id="group-header">
+              <p id="group-header-title">Groups</p>
+              <p id="edit-group-button" @click="newGroup">+ Group</p>
+              <p id="save-button" @click="save">Save</p>
+            </div>
+            <hr id="group-hr" />
+            <!--<p-->
+            <!--v-if="course_groups.active_course_groups.length > 0"-->
+            <!--id="active-course-groups"-->
+            <!--&gt;-->
+            <!--Active Course Groups:-->
+            <!--</p>-->
+            <div
+              v-for="g in course_groups.active_course_groups"
+              :key="g.id"
+              @click="change_expand(`group-${g.id}`)"
+              @change="changed"
+            >
+              <course-group-card
+                :id="g.id"
+                :ref="'group-' + g.id"
+                :passed_name="g.name"
+                :members="g.members"
+              ></course-group-card>
+            </div>
+            <p
+              v-if="course_groups.inactive_course_groups.length > 0"
+              id="inactive-course-groups"
+            >
+              Deleted Course Groups:
+            </p>
+            <div
+              v-for="g in course_groups.inactive_course_groups"
+              :key="g.id"
+              @click="change_expand(`group-${g.id}`)"
+            >
+              <course-group-card
+                :id="g.id"
+                :ref="'group-' + g.id"
+                :passed_name="g.name"
+                :members="g.members"
+                :inactive="true"
+              ></course-group-card>
+            </div>
           </div>
         </div>
       </div>
@@ -101,10 +104,11 @@ import Footer from '../components/footer'
 import { EventBus } from '../plugins/event-bus'
 import CourseGroupCard from '../components/course_group_card'
 import CourseSidebar from '../components/course_sidebar'
+import NavBar from '../components/nav_bar'
 
 export default {
   name: 'NewGroup',
-  components: { CourseSidebar, Footer, draggable, CourseGroupCard },
+  components: { NavBar, CourseSidebar, Footer, draggable, CourseGroupCard },
   async asyncData(context) {
     const res = await axios.get(
       `https://localhost:3000/courses/${
@@ -131,7 +135,8 @@ export default {
       show_modal: false,
       students_per_group: '',
       groups_changed: false,
-      changes_saved: false
+      changes_saved: false,
+      course: res.data.course_title
     }
   },
   created: function() {
@@ -293,7 +298,12 @@ p {
 }
 
 #content {
-  margin-top: 10vh;
+  display: block;
+  margin-top: 5vh;
+  margin-left: 7vw;
+}
+
+#edit-course-groups {
   display: flex;
 }
 
@@ -333,7 +343,6 @@ p {
 
 #student-list {
   margin-top: 1vh;
-  margin-left: 5vw;
 }
 
 #groups {

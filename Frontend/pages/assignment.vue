@@ -5,6 +5,7 @@
       One or more files is required for a submission.
     </b-alert>
     <div id="content">
+      <nav-bar :course="course" :assignment="assignment.title" />
       <div id="assignment-header">
         <p id="assignment-title">{{ assignment.title }}</p>
         <div
@@ -158,10 +159,11 @@ import https from 'https'
 import axios from 'axios'
 import Footer from '../components/footer'
 import CourseSidebar from '../components/course_sidebar'
+import NavBar from '../components/nav_bar'
 
 export default {
   name: 'Assignment',
-  components: { CourseSidebar, Footer },
+  components: { NavBar, CourseSidebar, Footer },
   data: function() {
     return {
       showDismissibleAlert: false
@@ -190,7 +192,8 @@ export default {
       viewer_link: res.data.link,
       files: [],
       grader_link: res.data.grader_link,
-      grader_submission_id: res.data.grader_submission_id
+      grader_submission_id: res.data.grader_submission_id,
+      course: res.data.course_title
     }
   },
   methods: {
@@ -262,6 +265,10 @@ export default {
       const formData = new FormData()
       for (let i = 0; i < this.files.length; i++) {
         const file = this.files[i]
+        if (file.type !== 'application/pdf') {
+          alert('Files must be in pdf format')
+          return
+        }
         formData.append('files[' + i + ']', file)
       }
 
@@ -389,6 +396,10 @@ hr {
 #multiple-submissions-header,
 #multiple-submissions {
   margin-bottom: 0;
+}
+
+#assignment-description {
+  color: #0c2343;
 }
 
 #files-div {

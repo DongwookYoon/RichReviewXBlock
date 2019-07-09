@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-const UserDatabaseHandler = require("../bin/UserDatabaseHandler");
+const ImportHandler = require("../bin/ImportHandler");
 
 /*
  ** GET
@@ -25,17 +25,19 @@ router.put('/', function(req, res, next) {
  */
 router.post('/', async (req, res, next) => {
     if (req.body.auth['sub']) {
-        let user_db_handler = await UserDatabaseHandler.get_instance();
+        let user_db_handler = await ImportHandler.user_db_handler;
 
         try {
             await user_db_handler.add_user_to_db(req.body.auth, 'Google');
             res.sendStatus(200);
         } catch (e) {
             console.warn(e);
-            res.sendStatus(500);
+            res.status(500).send({
+                message: e.message
+            });
         }
 
-    } else if (req.body.auth.auth_type === 'UBC_CWL') { // CWL handler
+    } else if (req.body.auth.auth_type === 'UBC_CWL') { // todo CWL handler
         console.log('UBC user');
         res.sendStatus(501);
     }

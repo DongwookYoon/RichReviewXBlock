@@ -465,6 +465,13 @@
       $highlight_piecegroup = $piece_group
     }
 
+    pub.clearCommentHistory = function() {
+      const container = $('#dashboard-comment-history')[0]
+      for (let i = 0; i < container.childNodes.length; ++i) {
+        container.removeChild(container.childNodes[i])
+      }
+    }
+
     pub.consumeCmd = function(cmd) {
       if (cmd.op == 'CreateComment') {
         if (cmd.type == 'CommentAudio') {

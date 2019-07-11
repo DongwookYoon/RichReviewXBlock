@@ -76,6 +76,7 @@ const r2Sync = (function() {
 
     var processDownloadedCmds = function(cmds) {
       return new Promise(function(resolve, reject) {
+        r2.commentHistory.clearCommentHistory()
         cmds.sort(r2.util.chronologicalSort)
         var job = function(i) {
           setTimeout(function() {

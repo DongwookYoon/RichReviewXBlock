@@ -46,16 +46,11 @@ if (process.client) {
 export default {
   name: 'Grader',
   head: {
-    link: [{ rel: 'stylesheet', src: '/static_viewer/stylesheets/style.css' }],
     script: [
       {
         src:
           'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/js/bootstrap.min.js'
       },
-      // {
-      //   src:
-      //     'https://richreview2ca.azureedge.net/richreview/stylesheets/style.css'
-      // },
       { src: '/viewer_helper.js', mode: 'client', body: true }
     ]
   },

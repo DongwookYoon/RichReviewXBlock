@@ -106,7 +106,7 @@ hr {
 }
 
 #content {
-  margin-left: 5vw;
+  margin-left: 7vw;
   margin-top: 10vh;
   display: block;
 }

@@ -46,16 +46,16 @@ if (process.client) {
 export default {
   name: 'Grader',
   head: {
+    link: [{ rel: 'stylesheet', src: '/static_viewer/stylesheets/style.css' }],
     script: [
-      { src: '/static_viewer/stylesheets/style.css' },
       {
         src:
           'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/js/bootstrap.min.js'
       },
-      {
-        src:
-          'https://richreview2ca.azureedge.net/richreview/stylesheets/style.css'
-      },
+      // {
+      //   src:
+      //     'https://richreview2ca.azureedge.net/richreview/stylesheets/style.css'
+      // },
       { src: '/viewer_helper.js', mode: 'client', body: true }
     ]
   },
@@ -204,12 +204,12 @@ export default {
 </script>
 
 <style scoped>
-/*@import 'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/css/bootstrap.min.css';*/
+@import 'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/css/bootstrap.min.css';
 /*@import 'https://richreview2ca.azureedge.net/lib/font-awesome-4.6.3/css/font-awesome.min.css';*/
 /*@import 'https://richreview2ca.azureedge.net/lib/font-awesome-animation.min.css';*/
 /*@import 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/smoothness/jquery-ui.css';*/
 /*@import 'https://richreview2ca.azureedge.net/richreview/stylesheets/style.css';*/
-@import '../static/static_viewer/stylesheets/style.css';
+/*@import '../static/static_viewer/stylesheets/style.css';*/
 
 p {
   margin: 0;

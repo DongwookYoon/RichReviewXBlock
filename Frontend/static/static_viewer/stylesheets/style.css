@@ -1,8 +1,8 @@
-body{
+body {
   -ms-content-zooming: none;
 }
 
-#r2_app_container{
+#r2_app_container {
   overflow: scroll;
   #position: absolute;
 }
@@ -51,7 +51,7 @@ body{
 }
 
 
-#main_progress_bar{
+#main_progress_bar {
   overflow: hidden;
   height: 3px;
   margin-bottom: 0;
@@ -107,22 +107,17 @@ body{
   border: dashed 1px black;
 }
 #cover_msg .cover_msg_img{
-  margin: 0;
-  margin-top: 4px;
+  margin: 4px 0 0;
 }
 #cover_msg li p{
-  margin: 0;
-  margin-top: 10px;
+  margin: 10px 0 0;
 }
 #cover_msg  p{
-  margin: 0;
-  margin-top: 12px;
+  margin: 12px 0 0;
 }
 #cover_msg ul,
 #cover_msg ol {
-  margin: 0;
-  margin-top: 12px;
-  margin-bottom: 0;
+  margin: 12px 0 0;
 }
 
 .unselectable {
@@ -760,6 +755,7 @@ a:active {
 
 #dashboard-comment-history {
   width: 61vw;
+  overflow-y: hidden;
   margin-top: 9px
 }
 

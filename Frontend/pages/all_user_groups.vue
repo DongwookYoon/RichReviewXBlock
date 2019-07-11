@@ -101,7 +101,7 @@ hr {
 #content {
   display: block;
   margin-top: 10vh;
-  margin-left: 5vw;
+  margin-left: 7vw;
 }
 
 .group-row:hover {

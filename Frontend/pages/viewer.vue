@@ -1,6 +1,13 @@
 <template>
   <div>
-    <button v-if="show_submit_button" @click="submit">Submit</button>
+    <div id="top-bar">
+      <p id="assignment-title" @click="go_to_assignment">
+        {{ assignment_title }}
+      </p>
+      <button v-if="show_submit_button" id="submit-button" @click="submit">
+        Submit
+      </button>
+    </div>
     <no-ssr>
       <body>
         <div class="content_body">
@@ -24,6 +31,20 @@ if (process.client) {
 
 export default {
   name: 'Viewer',
+  // head: {
+  //   script: [
+  //     { src: '/static_viewer/stylesheets/style.css' },
+  //     {
+  //       src:
+  //         'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/js/bootstrap.min.js'
+  //     },
+  //     {
+  //       src:
+  //         'https://richreview2ca.azureedge.net/richreview/stylesheets/style.css'
+  //     },
+  //     { src: '/viewer_helper.js', mode: 'client', body: true }
+  //   ]
+  // },
   async asyncData(context) {
     const res = await axios.get(
       `https://localhost:3000/courses/${
@@ -40,14 +61,15 @@ export default {
     )
     const assignment_data = res.data.assignment
     const submission_data = res.data.submission
-
+    console.log(res.data)
     const show_submit_button = assignment_data.allow_multiple_submissions
       ? true
       : submission_data.submission_time === ''
 
     return {
       show_submit_button: show_submit_button,
-      assignment_id: assignment_data.id
+      assignment_id: assignment_data.id,
+      assignment_title: assignment_data.title
     }
   },
   mounted: async function() {
@@ -75,6 +97,13 @@ export default {
     )
   },
   methods: {
+    go_to_assignment() {
+      this.$router.push(
+        `/courses/${this.$route.params.course_id}/assignments/${
+          this.$route.params.assignment_id
+        }`
+      )
+    },
     async submit() {
       await axios.post(
         `https://localhost:3000/courses/${
@@ -101,18 +130,37 @@ export default {
 </script>
 
 <style scoped>
-@import 'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/css/bootstrap.min.css';
-@import 'https://richreview2ca.azureedge.net/lib/font-awesome-4.6.3/css/font-awesome.min.css';
-@import 'https://richreview2ca.azureedge.net/lib/font-awesome-animation.min.css';
-@import 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/smoothness/jquery-ui.css';
-@import 'https://richreview2ca.azureedge.net/richreview/stylesheets/style.css';
+/*@import 'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/css/bootstrap.min.css';*/
+/*@import 'https://richreview2ca.azureedge.net/lib/font-awesome-4.6.3/css/font-awesome.min.css';*/
+/*@import 'https://richreview2ca.azureedge.net/lib/font-awesome-animation.min.css';*/
+/*@import 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/smoothness/jquery-ui.css';*/
+/*@import 'https://richreview2ca.azureedge.net/richreview/stylesheets/style.css';*/
+/*@import '../static/static_viewer/stylesheets/style.css';*/
+
+p {
+  margin: 0;
+}
+
+#top-bar {
+  display: flex;
+  background-color: #0c2343;
+}
+
+#assignment-title {
+  color: white;
+  font-size: 2.5vh;
+}
+
+#submit-button {
+  float: right;
+}
+
 body {
   overflow: hidden;
 }
-.r2_app_page {
-  align-self: center;
-}
-.r2_app_container {
-  align-self: left;
+
+#r2_app_page,
+#r2_app_container {
+  max-height: 95vh;
 }
 </style>

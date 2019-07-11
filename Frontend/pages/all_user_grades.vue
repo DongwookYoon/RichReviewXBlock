@@ -100,7 +100,7 @@ hr {
 
 #content {
   display: block;
-  margin-left: 5vw;
+  margin-left: 7vw;
   margin-top: 10vh;
 }
 

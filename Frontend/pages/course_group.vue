@@ -1,24 +1,36 @@
 <template>
-  <div>
-    <h1>{{ group.name }}</h1>
-    <h1>Members:</h1>
-    <div v-for="u in group.users" :key="u.key">
-      <li>{{ u.display_name }}</li>
+  <div id="course-group">
+    <course-sidebar />
+    <div id="content">
+      <nav-bar :course="course" people="true" :course_group="group.name" />
+      <div id="header">
+        <p id="group-name">{{ group.name }}</p>
+        <button
+          v-if="permissions === 'instructor' || permissions === 'ta'"
+          id="delete-button"
+          @click="delete_group()"
+        >
+          Delete
+        </button>
+      </div>
+      <div id="group-body">
+        <div id="members">
+          <p id="members-header">Members</p>
+          <div v-for="u in group.users" :key="u.key">
+            <p>{{ u.display_name }}</p>
+          </div>
+        </div>
+        <div id="submissions">
+          <p id="submissions-header">Submissions</p>
+          <div v-for="s in submitters" :key="s.key">
+            <p>
+              {{ s.submission.submission_status }} - {{ s.assignment.title }}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
-    <h1>Submissions:</h1>
-    <div v-for="s in submitters" :key="s.key">
-      {{ s.assignment.title }} - {{ s.submission.mark }}/{{
-        s.assignment.points
-      }}
-      -
-      {{ format_date(s.submission.submission_time) }}
-    </div>
-    <button
-      v-if="permissions === 'instructor' || permissions === 'ta'"
-      @click="delete_group()"
-    >
-      Delete
-    </button>
+    <Footer />
   </div>
 </template>
 
@@ -26,9 +38,13 @@
 /* eslint-disable no-console */
 import https from 'https'
 import axios from 'axios'
+import CourseSidebar from '../components/course_sidebar'
+import Footer from '../components/footer'
+import NavBar from '../components/nav_bar'
 
 export default {
   name: 'CourseGroup',
+  components: { NavBar, Footer, CourseSidebar },
   async asyncData(context) {
     const res = await axios.get(
       `https://localhost:3000/courses/${
@@ -46,7 +62,8 @@ export default {
     return {
       permissions: res.data.permissions,
       group: res.data.group,
-      submitters: res.data.submitters
+      submitters: res.data.submitters,
+      course: res.data.course
     }
   },
   methods: {
@@ -74,4 +91,50 @@ export default {
 
 <style scoped>
 @import '../node_modules/bootstrap/dist/css/bootstrap.css';
+
+#course-group {
+  display: flex;
+}
+
+#content {
+  display: block;
+  margin-left: 7vw;
+  margin-top: 5vh;
+}
+
+#header,
+#group-body {
+  display: flex;
+}
+
+#delete-button {
+  position: fixed;
+  right: 0;
+  margin-right: 20vw;
+  font-size: 2vh;
+  background-color: #0c2343;
+  border-radius: 0.5vh;
+  color: white;
+}
+
+#members,
+#submissions {
+  display: block;
+  width: 35%;
+  font-size: 2.5vh;
+  color: #0c2343;
+  margin-right: 5%;
+}
+
+#members-header,
+#submissions-header {
+  font-size: 2.75vh;
+  width: 100%;
+  border-bottom: 1px solid lightgrey;
+}
+
+#group-name {
+  font-size: 3vh;
+  color: #0c2343;
+}
 </style>

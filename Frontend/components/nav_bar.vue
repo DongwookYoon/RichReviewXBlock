@@ -57,7 +57,7 @@
       v-if="
         (assignment !== '' &&
           (edit_assignment === 'true' || submissions === 'true')) ||
-          (people === 'true' && edit_groups === 'true')
+          (people === 'true' && (edit_groups === 'true' || course_group !== ''))
       "
       class="nav-bar-divider"
     >
@@ -83,6 +83,13 @@
       class="nav-bar-component"
     >
       Edit Groups
+    </p>
+    <p
+      v-if="people === 'true' && course_group !== ''"
+      :style="{ color: course_group_color }"
+      class="nav-bar-component"
+    >
+      {{ course_group }}
     </p>
   </div>
 </template>
@@ -128,6 +135,10 @@ export default {
     edit_groups: {
       type: String,
       default: ''
+    },
+    course_group: {
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -137,7 +148,8 @@ export default {
       grades_color: '#646464',
       edit_assignment_color: '#646464',
       submissions_color: '#646464',
-      edit_groups_color: '#646464'
+      edit_groups_color: '#646464',
+      course_group_color: '#646464'
     }
   },
   computed: {
@@ -147,7 +159,7 @@ export default {
       return '#0c2343'
     },
     people_color() {
-      if (this.edit_groups === '') return '#646464'
+      if (this.edit_groups === '' && this.course_group === '') return '#646464'
       return '#0c2343'
     }
   },

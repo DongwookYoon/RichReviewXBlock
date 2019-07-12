@@ -56,10 +56,12 @@ router.get("/:group_id", async function (req, res, next){
 
     let course_group_db_handler = await ImportHandler.course_group_db_handler;
     let user_db_handler = await ImportHandler.user_db_handler;
+    let course_db_handler = await ImportHandler.course_db_handler;
 
     try {
         let groups = await course_group_db_handler.get_course_group(ImportHandler, user_key, course_group_key, course_key);
         groups.permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+        groups.course = (await course_db_handler.get_course_data(course_key))['title'];
 
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(groups));

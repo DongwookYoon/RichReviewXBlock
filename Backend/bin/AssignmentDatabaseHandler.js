@@ -245,6 +245,18 @@ class AssignmentDatabaseHandler {
         let submitter_db_handler = await import_handler.submitter_db_handler;
         let course_db_handler = await import_handler.course_db_handler;
 
+        let user_key = KeyDictionary.key_dictionary['user'] + user_id;
+
+        // Associate group with submission
+        let submission_key = await this.get_users_submission_key(import_handler, user_key, assignment_key);
+        let submission_data = await submission_db_handler.get_submission_data(submission_key);
+
+        if (submission_data['submission_time'] !== '') {
+            let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+            if (!assignment_data['allow_multiple_submissions'])
+                throw new RichReviewError('This assignment doesn\'t allow multiple submissions');
+        }
+
         let context = await document_upload_handler.upload_documents(files);
 
         // Add doc and grp to redis
@@ -253,12 +265,7 @@ class AssignmentDatabaseHandler {
 
         await document_db_handler.add_group_to_doc(doc_key, group_key);
 
-        let user_key = KeyDictionary.key_dictionary['user'] + user_id;
 
-        // Associate group with submission
-        let submission_key = await this.get_users_submission_key(import_handler, user_key, assignment_key);
-
-        let submission_data = await submission_db_handler.get_submission_data(submission_key);
         let submitter_key = await submission_data['submitter'];
         let submitter_data = await submitter_db_handler.get_submitter_data(submitter_key);
 

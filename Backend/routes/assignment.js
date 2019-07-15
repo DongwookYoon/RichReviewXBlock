@@ -445,9 +445,7 @@ router.post('/:assignment_id/comment_submissions', async function(req, res, next
         let submission_key = group_data['submission'];
 
         let submission_data = await submission_db_handler.get_submission_data(submission_key);
-
         let assignment_key = submission_data['assignment'];
-
         let assignment_data = await assignment_db_handler.get_assignment_data(user_key, assignment_key);
 
         if (!assignment_data['allow_multiple_submissions'] && submission_data['submission_time'] !== '') {

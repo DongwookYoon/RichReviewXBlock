@@ -20,6 +20,10 @@
               </div>
               <div class="points">Out of {{ a.points }}</div>
             </th>
+            <th>
+              <div>Total</div>
+              <div class="points">Out of {{ total_assignment_points }}</div>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -33,9 +37,11 @@
                 v-if="permissions === 'ta' || permissions === 'instructor'"
                 :placeholder="[[g.mark !== '' ? g.mark : g.submission_status]]"
                 type="text"
+                @keypress="isNumber($event)"
                 @change="updateGrade(s.student_key, g.assignment_id, $event)"
               />
             </td>
+            <td>{{ calculate_total(s.grades) }}%</td>
           </tr>
         </tbody>
       </table>
@@ -73,13 +79,32 @@ export default {
       students: res.data.grades,
       assignments: res.data.assignments,
       permissions: res.data.permissions,
-      course: res.data.course_title
+      course: res.data.course_title,
+      total_assignment_points: res.data.total_assignment_points
     }
   },
   methods: {
     async updateGrade(student_key, assignment_id, event) {
+      console.log(event)
       if (this.permissions === 'instructor' || this.permissions === 'ta') {
-        const mark = event.target.value
+        const mark = parseInt(event.target.value)
+
+        if (isNaN(mark) || (event.target.value.match(/\./g) || []).length > 1) {
+          alert('A grade must be a number, but may include a decimal')
+          return
+        }
+
+        for (const student of this.students) {
+          if (student.student_key === student_key) {
+            for (const grade of student.grades) {
+              if (grade.assignment_id === assignment_id) {
+                grade.mark = mark
+                break
+              }
+            }
+            break
+          }
+        }
 
         await axios.put(
           `https://localhost:3000/courses/${
@@ -126,6 +151,30 @@ export default {
 
       // export Excel file
       XLSX.writeFile(wb, 'grades.xlsx') // name of the file is 'book.xlsx'
+    },
+    calculate_total(grades) {
+      let total = 0
+      for (const grade of grades) {
+        if (grade.mark !== '') {
+          total += grade.mark
+        }
+      }
+      return (
+        Math.round(((total * 100) / this.total_assignment_points) * 100) / 100
+      )
+    },
+    isNumber: function(evt) {
+      evt = evt || window.event
+      const charCode = evt.which ? evt.which : evt.keyCode
+      if (
+        charCode > 31 &&
+        (charCode < 48 || charCode > 57) &&
+        charCode !== 46
+      ) {
+        evt.preventDefault()
+      } else {
+        return true
+      }
     }
   }
 }

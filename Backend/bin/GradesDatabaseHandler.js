@@ -164,6 +164,9 @@ class GradesDatabaseHandler {
         let assignments = await course_db_handler.get_all_course_assigmments(import_handler, user_key, course_key);
 
         let grades = [];
+        let total_assignment_points = assignments.reduce((total, assignment) => {
+            return total + assignment['points'];
+        }, 0);
 
         for (let student of all_course_students) {
             let student_grades = {};
@@ -182,11 +185,10 @@ class GradesDatabaseHandler {
                 assignment_grade['points'] = assignment['points'];
                 student_grades['grades'].push(assignment_grade);
             }
-
             grades.push(student_grades);
         }
 
-        return { grades, assignments };
+        return { grades, assignments, total_assignment_points };
     }
 
 

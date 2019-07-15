@@ -65,9 +65,8 @@ export default {
         })
       }
     )
-
+    console.log(res.data)
     const assignments = res.data
-    console.log(assignments)
     return {
       assignments
     }

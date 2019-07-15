@@ -19,7 +19,10 @@ router.get('/', async function(req, res, next) {
     try {
         let users = await user_db_handler.get_all_course_users(
             ImportHandler,
-            KeyDictionary.key_dictionary['course'] + req.params.course_id);
+            course_key);
+        users['students'] = users['students'].map(user => { return { name: user.name }});
+        users['tas'] = users['tas'].map(user => { return { name: user.name }});
+        users['instructors'] = users['instructors'].map(user => { return { name: user.name }});
 
         let groups = await course_group_db_handler.get_all_course_groups(ImportHandler, course_key);
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);

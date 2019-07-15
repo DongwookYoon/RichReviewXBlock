@@ -19,21 +19,6 @@
             @click="go_to_deleted_assignments"
           />
         </div>
-        <!--<div id="sidebar">-->
-        <!--<p id="people" @click="go_to_people">-->
-        <!--People-->
-        <!--</p>-->
-        <!--<p id="grades" @click="go_to_grades">-->
-        <!--Grades-->
-        <!--</p>-->
-        <!--<p-->
-        <!--v-if="permissions === 'ta' || permissions === 'instructor'"-->
-        <!--id="new-assignment"-->
-        <!--@click="go_to_new_assignment"-->
-        <!--&gt;-->
-        <!--+ Assignment-->
-        <!--</p>-->
-        <!--</div>-->
         <div id="assignments-div">
           <table id="assignments">
             <thead id="assignments-header">

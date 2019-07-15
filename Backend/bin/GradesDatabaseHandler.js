@@ -142,6 +142,8 @@ class GradesDatabaseHandler {
             student_grades['grades'].push(assignment_grade);
         }
 
+        assignments = assignments.map(assignment => { return { title: assignment.title, points: assignment.points }});
+
         grades.push(student_grades);
         return { grades, assignments };
     }

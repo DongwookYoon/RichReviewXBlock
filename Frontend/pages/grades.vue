@@ -3,6 +3,13 @@
     <course-sidebar :grades="true" />
     <div id="content">
       <nav-bar :course="course" grades="true" />
+      <button
+        v-if="permissions === 'instructor' || permissions === 'ta'"
+        id="download-grades-btn"
+        @click="downloadGrades"
+      >
+        Download Grades
+      </button>
       <table>
         <thead>
           <tr>
@@ -19,7 +26,11 @@
           <tr v-for="s in students" :key="s.key">
             <td>{{ s.name }}</td>
             <td v-for="g in s.grades" :key="g.key">
+              <p v-if="permissions === 'student'">
+                {{ g.mark !== '' ? g.mark : g.submission_status }}
+              </p>
               <input
+                v-if="permissions === 'ta' || permissions === 'instructor'"
                 :placeholder="[[g.mark !== '' ? g.mark : g.submission_status]]"
                 type="text"
                 @change="updateGrade(s.student_key, g.assignment_id, $event)"
@@ -28,13 +39,8 @@
           </tr>
         </tbody>
       </table>
-      <button
-        v-if="permissions === 'instructor' || permissions === 'ta'"
-        @click="downloadGrades"
-      >
-        Download Grades
-      </button>
     </div>
+    <Footer />
   </div>
 </template>
 
@@ -45,10 +51,11 @@ import XLSX from 'xlsx'
 import axios from 'axios'
 import CourseSidebar from '../components/course_sidebar'
 import NavBar from '../components/nav_bar'
+import Footer from '../components/footer'
 
 export default {
   name: 'Grades',
-  components: { NavBar, CourseSidebar },
+  components: { Footer, NavBar, CourseSidebar },
   async asyncData(context) {
     const res = await axios.get(
       `https://localhost:3000/courses/${context.params.course_id}/grades`,
@@ -71,25 +78,27 @@ export default {
   },
   methods: {
     async updateGrade(student_key, assignment_id, event) {
-      const mark = event.target.value
+      if (this.permissions === 'instructor' || this.permissions === 'ta') {
+        const mark = event.target.value
 
-      await axios.put(
-        `https://localhost:3000/courses/${
-          this.$route.params.course_id
-        }/grades/${assignment_id}`,
-        {
-          student_key: student_key,
-          mark: mark
-        },
-        {
-          headers: {
-            Authorization: this.$auth.user.sub
+        await axios.put(
+          `https://localhost:3000/courses/${
+            this.$route.params.course_id
+          }/grades/${assignment_id}`,
+          {
+            student_key: student_key,
+            mark: mark
           },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        }
-      )
+          {
+            headers: {
+              Authorization: this.$auth.user.sub
+            },
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false
+            })
+          }
+        )
+      }
     },
     async downloadGrades() {
       const res = await axios.get(
@@ -125,6 +134,10 @@ export default {
 <style scoped>
 @import '../node_modules/bootstrap/dist/css/bootstrap.css';
 
+p {
+  margin: 0;
+}
+
 body {
   font-family: Helvetica Neue, Arial, sans-serif;
   font-size: 14px;
@@ -139,8 +152,8 @@ table {
 }
 
 th {
-  background-color: #2621b9;
-  color: rgb(255, 255, 255);
+  background-color: #0c2343;
+  color: white;
   cursor: pointer;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -168,6 +181,16 @@ td {
   display: block;
   margin-top: 5vh;
   margin-left: 7vw;
+}
+
+#download-grades-btn {
+  border-radius: 0.5vh;
+  cursor: pointer;
+  color: white;
+  background-color: #0c2343;
+  font-size: 2vh;
+  text-align: center;
+  margin-bottom: 1vh;
 }
 
 .points {

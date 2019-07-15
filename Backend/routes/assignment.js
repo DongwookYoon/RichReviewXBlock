@@ -87,75 +87,9 @@ router.get('/:assignment_id', async function(req, res, next) {
     let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
 
     let assignment_db_handler = await ImportHandler.assignment_db_handler;
-    let user_db_handler = await ImportHandler.user_db_handler;
-    let submission_db_handler = await ImportHandler.submission_db_handler;
-    let group_db_handler = await ImportHandler.group_db_handler;
-    let doc_db_handler = await ImportHandler.doc_db_handler;
-    let course_db_handler = await ImportHandler.course_db_handler;
 
     try {
-        let assignment_data = await assignment_db_handler.get_assignment_data(user_key, assignment_key);
-        let course_data = await course_db_handler.get_course_data(course_key);
-
-        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
-
-        let data = {};
-
-        if (permissions === 'instructor' || permissions === 'ta') {
-            let submission_data = await assignment_db_handler.get_first_assignment_submission_link_and_id(
-                ImportHandler,
-                user_key,
-                assignment_key);
-
-            data = {
-                permissions: permissions,
-                assignment: assignment_data,
-                grader_link: submission_data.link,
-                grader_submission_id: submission_data.id,
-                link: ''
-            };
-
-        } else if (permissions === 'student') {
-            // TODO this link is for students, should split into student / instructor specific functions
-            let submission_key = await assignment_db_handler.get_users_submission_key(
-                ImportHandler,
-                user_key,
-                assignment_key);
-
-            let link = '';
-
-            if (submission_key) {
-                let submission_data = await submission_db_handler.get_submission_data(submission_key);
-
-                if (submission_data['group'] && submission_data['group'] !== '') {
-                    let group_id = submission_data['group'].replace(KeyDictionary.key_dictionary['group'], '');
-                    let group_data = await group_db_handler.get_group_data(submission_data['group']);
-
-                    let doc_id = group_data['docid'].replace(KeyDictionary.key_dictionary['document'], '');
-                    let doc_data = await doc_db_handler.get_doc_data(group_data['docid']);
-
-                    let access_code = doc_data['pdfid'];
-
-                    link = `access_code=${access_code}&docid=${doc_id}&groupid=${group_id}`;
-                }
-            }
-
-            data = {
-                permissions: permissions,
-                assignment: assignment_data,
-                grader_link: '',
-                link: link
-            };
-
-        }
-
-        if (data === {})
-            return res.status(500).send({
-                message: 'Assignment not found'
-            });
-
-        data['course_title'] = course_data['title'];
-
+        let data = await assignment_db_handler.get_assignment(ImportHandler, user_key, course_key, assignment_key);
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(data));
 

@@ -153,6 +153,14 @@ class SubmissionDatabaseHandler {
     }
 
 
+
+    async get_submission_status (submission_key) {
+        let submission_data = await this.get_submission_data(submission_key);
+        return submission_data['submission_status']
+    }
+
+
+
     get_largest_submission_key () {
         return new Promise((resolve, reject) => {
             this.db_handler.client.keys(KeyDictionary.key_dictionary['submission'] + '*', (error, result) => {

@@ -14,7 +14,7 @@ router.get('/', async function(req, res, next) {
     let course_db_handler = await ImportHandler.course_db_handler;
 
     try {
-        let user_courses = await course_db_handler.get_user_courses(ImportHandler, user_id);
+        let user_courses = await course_db_handler.get_user_courses_for_dashboard(ImportHandler, user_id);
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(user_courses));
     } catch (e) {

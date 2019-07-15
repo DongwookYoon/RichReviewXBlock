@@ -112,41 +112,30 @@ import NavBar from '../components/nav_bar'
 export default {
   name: 'People',
   components: { NavBar, CourseSidebar, Footer },
-  asyncData(context) {
-    return axios
-      .get(`https://localhost:3000/courses/${context.params.course_id}/users`, {
+  async asyncData(context) {
+    const res = await axios.get(
+      `https://localhost:3000/courses/${context.params.course_id}/users`,
+      {
         headers: {
           Authorization: context.app.$auth.user.sub
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
         })
-      })
-      .then(res => {
-        console.log(res.data)
-        console.log(res.data.groups)
-        return {
-          users: {
-            Instructor: res.data.users.instructors,
-            Ta: res.data.users.tas,
-            Student: res.data.users.students
-          },
-          course_title: res.data.course_title,
-          course_groups: res.data.groups,
-          permissions: res.data.permissions,
-          people_tab: true
-        }
-      })
-      .catch(e => {
-        console.log(e)
-        return {
-          users: {},
-          course_title: '',
-          course_groups: {},
-          permissions: '',
-          people_tab: false
-        }
-      })
+      }
+    )
+    console.log(res.data)
+    return {
+      users: {
+        Instructor: res.data.users.instructors,
+        Ta: res.data.users.tas,
+        Student: res.data.users.students
+      },
+      course_title: res.data.course_title,
+      course_groups: res.data.groups,
+      permissions: res.data.permissions,
+      people_tab: true
+    }
   },
   methods: {
     go_to_edit_groups() {
@@ -155,9 +144,10 @@ export default {
       )
     },
     go_to_group(id) {
-      this.$router.push(
-        `/courses/${this.$route.params.course_id}/course_groups/${id}`
-      )
+      if (this.permissions === 'instructor' || this.permissions === 'ta')
+        this.$router.push(
+          `/courses/${this.$route.params.course_id}/course_groups/${id}`
+        )
     },
     changeToPeopleTab() {
       this.people_tab = true

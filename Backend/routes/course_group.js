@@ -4,8 +4,6 @@ const KeyDictionary = require('../bin/KeyDictionary');
 const ImportHandler = require('../bin/ImportHandler');
 
 router.get('/', async function(req, res, next) {
-    console.log("Get request for all groups in course with id: " + req.params.course_id);
-
     let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
     let course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
 

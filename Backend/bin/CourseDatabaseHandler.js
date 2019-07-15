@@ -25,6 +25,38 @@ class CourseDatabaseHandler {
 
 
 
+    async get_user_courses_for_dashboard (import_handler, user_key) {
+        let user_courses = await this.get_user_courses(import_handler, user_key);
+        user_courses['enrolments'] = user_courses['enrolments'].map(course => {
+            return {
+                id: course.id,
+                title: course.title,
+                description: course.description,
+                assignment_count: course.assignments.length
+            }
+        });
+        user_courses['taing'] = user_courses['taing'].map(course => {
+            return {
+                id: course.id,
+                title: course.title,
+                description: course.description,
+                assignment_count: course.assignments.length
+            }
+        });
+        user_courses['teaching'] = user_courses['teaching'].map(course => {
+            return {
+                id: course.id,
+                title: course.title,
+                description: course.description,
+                assignment_count: course.assignments.length
+            }
+        });
+
+        return user_courses;
+    }
+
+
+
     async get_user_courses (import_handler, user_key) {
 
         let user_db_handler = await import_handler.user_db_handler;
@@ -56,6 +88,7 @@ class CourseDatabaseHandler {
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
         let course_data = await this.get_course_data(course_key);
+
         let assignments = [];
 
         if (permissions === 'student')
@@ -64,11 +97,12 @@ class CourseDatabaseHandler {
                 user_key,
                 course_data['assignments']);
         else
-            assignments = await assignment_db_handler.get_course_assignments(
+            assignments = await assignment_db_handler.get_course_assignments_for_tas_and_instructors(
                 import_handler,
                 user_key,
                 course_data['assignments']);
 
+        course_data = { id: course_data.id, title: course_data.title, description: course_data.description};
         return { course: course_data, assignments: assignments };
     }
 

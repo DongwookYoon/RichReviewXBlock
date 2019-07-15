@@ -8,7 +8,7 @@
             :title="e.title"
             :description="e.description"
             role="Student"
-            :assignment_count="e.assignments.length"
+            :assignment_count="e.assignment_count"
             :link="`courses/${e.id}`"
             class="course-card"
           ></course-card>
@@ -18,7 +18,7 @@
             :title="e.title"
             :description="e.description"
             role="TA"
-            :assignment_count="e.assignments.length"
+            :assignment_count="e.assignment_count"
             :link="`courses/${e.id}`"
           ></course-card>
         </div>
@@ -27,7 +27,7 @@
             :title="e.title"
             :description="e.description"
             role="Instructor"
-            :assignment_count="e.assignments.length"
+            :assignment_count="e.assignment_count"
             :link="`courses/${e.id}`"
           ></course-card>
         </div>
@@ -73,6 +73,7 @@ export default {
           rejectUnauthorized: false
         })
       })
+    console.log(res.data)
     return {
       enrolments: res.data.enrolments,
       taing: res.data.taing,

@@ -314,6 +314,92 @@ class AssignmentDatabaseHandler {
 
 
 
+    async get_assignment (import_handler, user_key, course_key, assignment_key) {
+        let user_db_handler = await import_handler.user_db_handler;
+        let course_db_handler = await import_handler.course_db_handler;
+
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+        let course_data = await course_db_handler.get_course_data(course_key);
+        let data = {};
+
+        if (permissions === 'student') {
+            data = await this.get_assignment_for_students(import_handler, user_key, assignment_key);
+        } else if (permissions === 'instructor' || permissions === 'ta') {
+            data = await this.get_assignment_for_tas_and_instructors(import_handler, user_key, assignment_key);
+        }
+
+        data['permissions'] = permissions;
+        data['course_title'] = course_data['title'];
+        return data
+    }
+
+
+
+    async get_assignment_for_students (import_handler, user_key, assignment_key) {
+        let submission_db_handler = await import_handler.submission_db_handler;
+        let group_db_handler = await import_handler.group_db_handler;
+        let doc_db_handler = await import_handler.doc_db_handler;
+
+        let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+        delete assignment_data['display_grade_as'];
+        delete assignment_data['count_toward_final_grade'];
+        delete assignment_data['creation_date'];
+        delete assignment_data['submissions'];
+
+        let submission_key = await this.get_users_submission_key(
+            import_handler,
+            user_key,
+            assignment_key);
+
+        let link = '';
+
+        if (submission_key) {
+            let submission_data = await submission_db_handler.get_submission_data(submission_key);
+
+            if (submission_data['group'] && submission_data['group'] !== '') {
+                let group_id = submission_data['group'].replace(KeyDictionary.key_dictionary['group'], '');
+                let group_data = await group_db_handler.get_group_data(submission_data['group']);
+
+                let doc_id = group_data['docid'].replace(KeyDictionary.key_dictionary['document'], '');
+                let doc_data = await doc_db_handler.get_doc_data(group_data['docid']);
+
+                let access_code = doc_data['pdfid'];
+
+                link = `access_code=${access_code}&docid=${doc_id}&groupid=${group_id}`;
+            }
+        }
+
+        return {
+            assignment: assignment_data,
+            grader_link: '',
+            link: link
+        };
+    }
+
+
+
+    async get_assignment_for_tas_and_instructors (import_handler, user_key, assignment_key) {
+        let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+        delete assignment_data['display_grade_as'];
+        delete assignment_data['count_toward_final_grade'];
+        delete assignment_data['creation_date'];
+        delete assignment_data['submissions'];
+
+        let submission_data = await this.get_first_assignment_submission_link_and_id(
+            import_handler,
+            user_key,
+            assignment_key);
+
+        return {
+            assignment: assignment_data,
+            grader_link: submission_data.link,
+            grader_submission_id: submission_data.id,
+            link: ''
+        };
+    }
+
+
+
     async get_all_assignments_visible_to_user (import_handler, user_key, enrolments) {
         let user_db_handler = await import_handler.user_db_handler;
         if (!(await user_db_handler.is_valid_user_key(user_key)))
@@ -440,9 +526,9 @@ class AssignmentDatabaseHandler {
 
             if (assignment_data && !assignment_data['hidden']) {
                 let submission_key = await this.get_users_submission_key(import_handler, user_key, assignment_key);
-                let submission_data = await submission_db_handler.get_submission_data(submission_key);
+                let submission_status = await submission_db_handler.get_submission_status(submission_key);
 
-                assignment_data['submission'] = submission_data;
+                assignment_data['submission'] = { submission_status };
 
                 let late = false;
 
@@ -461,9 +547,35 @@ class AssignmentDatabaseHandler {
 
                 assignment_data['late'] = late;
 
+                assignment_data = {
+                    id: assignment_data.id,
+                    title: assignment_data.title,
+                    group_assignment: assignment_data.group_assignment,
+                    due_date: assignment_data.due_date,
+                    submission: assignment_data.submission,
+                    late: assignment_data.late };
+
                 assignments.push(assignment_data);
             }
         }
+
+        return assignments;
+    }
+
+
+
+    async get_course_assignments_for_tas_and_instructors (import_handler, user_key, assignment_keys) {
+        let assignments = await this.get_course_assignments(import_handler, user_key, assignment_keys);
+
+        assignments = assignments.map(assignment => {
+            return {
+                id: assignment.id,
+                title: assignment.title,
+                hidden: assignment.hidden,
+                group_assignment: assignment.group_assignment,
+                due_date: assignment.due_date
+            }
+        });
 
         return assignments;
     }
@@ -504,14 +616,6 @@ class AssignmentDatabaseHandler {
                 let assignment_data = RedisToJSONParser.parse_data_to_JSON(result);
 
                 resolve(assignment_data);
-
-                // TODO reimplement permission checking for this
-                // AssignmentDatabaseHandler.user_has_permission_to_view(user_key, assignment_data).then((can_view) => {
-                //     if (can_view)
-                //         resolve(result);
-                //
-                //     resolve(undefined);
-                // });
             });
         })
     }

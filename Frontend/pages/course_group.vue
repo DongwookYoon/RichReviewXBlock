@@ -59,6 +59,7 @@ export default {
         })
       }
     )
+    console.log(res.data)
     return {
       permissions: res.data.permissions,
       group: res.data.group,

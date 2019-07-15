@@ -10,14 +10,28 @@
         <p id="assignment-title">{{ assignment.title }}</p>
         <div
           v-if="permissions === 'instructor' || permissions === 'ta'"
-          id="assignment-controls"
+          class="assignment-controls"
         >
-          <p id="edit-button" @click="go_to_edit_assignment">Edit</p>
-          <p id="submissions-button" @click="got_to_submissions">Submissions</p>
-          <p v-if="grader_link !== ''" id="grader-button" @click="go_to_grader">
+          <button id="edit-button" @click="go_to_edit_assignment">Edit</button>
+          <button id="submissions-button" @click="got_to_submissions">
+            Submissions
+          </button>
+          <button
+            v-if="grader_link !== ''"
+            id="grader-button"
+            @click="go_to_grader"
+          >
             Grader
-          </p>
-          <p id="delete-button" @click="delete_assignment">Delete</p>
+          </button>
+          <button id="delete-button" @click="delete_assignment">Delete</button>
+        </div>
+        <div v-if="permissions === 'student'" class="assignment-controls">
+          <button id="view-submission-button" @click="go_to_current_submission">
+            View Submission
+          </button>
+          <button id="start-assignment-button" @click="go_to_viewer">
+            Start Assignment
+          </button>
         </div>
       </div>
       <hr />
@@ -90,22 +104,14 @@
             assignment.type === 'comment_submission' &&
             permissions === 'student'
         "
-      >
-        <h2 @click="go_to_viewer">
-          Click here to start annotating the document
-        </h2>
-      </div>
+      ></div>
       <div
         v-if="
           viewer_link !== '' &&
             assignment.type === 'document_submission' &&
             permissions === 'student'
         "
-      >
-        <h2 @click="go_to_current_submission">
-          View current submission
-        </h2>
-      </div>
+      ></div>
       <div
         v-if="
           assignment.type === 'document_submission' &&
@@ -317,35 +323,43 @@ hr {
 }
 
 #assignment-header,
-#assignment-controls {
+.assignment-controls {
   display: flex;
+}
+
+.assignment-controls {
+  margin-top: 0.65vh;
+  right: 0;
+  position: absolute;
+  margin-right: 22vw;
 }
 
 #edit-button,
 #submissions-button,
 #grader-button,
-#delete-button {
+#delete-button,
+#view-submission-button,
+#start-assignment-button {
   font-size: 2vh;
   background-color: #0c2343;
   border-radius: 0.5vh;
   color: white;
   padding-right: 0.5vw;
   padding-left: 0.5vw;
-  padding-top: 0.5vh;
   margin-bottom: 0;
   height: 4.25vh;
 }
 
 #edit-button,
 #submissions-button,
-#grader-button {
+#grader-button,
+#view-submission-button {
   margin-right: 0.5vw;
 }
 
 #assignment-title {
   font-size: 3vh;
   color: #0c2343;
-  margin-right: 36vw;
   margin-bottom: 0;
 }
 

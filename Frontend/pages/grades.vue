@@ -14,11 +14,21 @@
         <thead>
           <tr>
             <th>Student</th>
-            <th v-for="a in assignments" :key="a.key">
+            <th
+              v-for="a in assignments"
+              :key="a.key"
+              @click="go_to_assignment(a.id)"
+            >
               <div>
                 {{ a.title }}
               </div>
               <div class="points">Out of {{ a.points }}</div>
+              <div
+                v-if="!a.count_toward_final_grade"
+                class="count-toward-final"
+              >
+                *Doesn't count toward final grade
+              </div>
             </th>
             <th>
               <div>Total</div>
@@ -155,7 +165,7 @@ export default {
     calculate_total(grades) {
       let total = 0
       for (const grade of grades) {
-        if (grade.mark !== '') {
+        if (grade.mark !== '' && grade.count_toward_final_grade) {
           total += grade.mark
         }
       }
@@ -175,6 +185,11 @@ export default {
       } else {
         return true
       }
+    },
+    go_to_assignment(id) {
+      this.$router.push(
+        `/courses/${this.$route.params.course_id}/assignments/${id}`
+      )
     }
   }
 }
@@ -244,5 +259,9 @@ td {
 
 .points {
   font-size: 10px;
+}
+
+.count-toward-final {
+  font-size: 8px;
 }
 </style>

@@ -126,6 +126,12 @@ class GradesDatabaseHandler {
             return !assignments['hidden'];
         });
 
+        let total_assignment_points = assignments.reduce((total, assignment) => {
+            if (assignment.count_toward_final_grade)
+                return total + assignment['points'];
+            else return total;
+        }, 0);
+
         let user_data = await user_db_handler.get_user_data(user_key);
 
         let grades = [];
@@ -139,13 +145,16 @@ class GradesDatabaseHandler {
 
             assignment_grade['assignment_id'] = assignment['id'];
             assignment_grade['title'] = assignment['title'];
+            assignment_grade['count_toward_final_grade'] = assignment['count_toward_final_grade'];
             student_grades['grades'].push(assignment_grade);
         }
 
-        assignments = assignments.map(assignment => { return { title: assignment.title, points: assignment.points }});
+        assignments = assignments.map(assignment => {
+            return { id: assignment.id, title: assignment.title, points: assignment.points,
+                count_toward_final_grade: assignment.count_toward_final_grade }});
 
         grades.push(student_grades);
-        return { grades, assignments };
+        return { grades, assignments, total_assignment_points };
     }
 
 
@@ -165,7 +174,9 @@ class GradesDatabaseHandler {
 
         let grades = [];
         let total_assignment_points = assignments.reduce((total, assignment) => {
-            return total + assignment['points'];
+            if (assignment.count_toward_final_grade)
+                return total + assignment['points'];
+            else return total;
         }, 0);
 
         for (let student of all_course_students) {
@@ -183,6 +194,7 @@ class GradesDatabaseHandler {
                 assignment_grade['assignment_id'] = assignment['id'];
                 assignment_grade['title'] = assignment['title'];
                 assignment_grade['points'] = assignment['points'];
+                assignment_grade['count_toward_final_grade'] = assignment['count_toward_final_grade'];
                 student_grades['grades'].push(assignment_grade);
             }
             grades.push(student_grades);

@@ -101,7 +101,7 @@ export default {
       })
     },
     async deleteAssignment(id) {
-      if (confirm('Do you with to permanently delete this assignment?')) {
+      if (confirm('Do you wish to permanently delete this assignment?')) {
         await axios.delete(
           `https://localhost:3000/courses/${
             this.$route.params.course_id

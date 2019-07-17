@@ -26,10 +26,18 @@
           <button id="delete-button" @click="delete_assignment">Delete</button>
         </div>
         <div v-if="permissions === 'student'" class="assignment-controls">
-          <button id="view-submission-button" @click="go_to_current_submission">
+          <button
+            v-if="submission_status !== 'Not Submitted'"
+            id="view-submission-button"
+            @click="go_to_current_submission"
+          >
             View Submission
           </button>
-          <button id="start-assignment-button" @click="go_to_viewer">
+          <button
+            v-if="show_start_assignment"
+            id="start-assignment-button"
+            @click="go_to_viewer"
+          >
             Start Assignment
           </button>
         </div>
@@ -112,14 +120,7 @@
             permissions === 'student'
         "
       ></div>
-      <div
-        v-if="
-          assignment.type === 'document_submission' &&
-            (permissions === 'student' &&
-              (viewer_link === '' ||
-                (viewer_link !== '' && assignment.allow_multiple_submissions)))
-        "
-      >
+      <div v-if="show_files">
         <div id="files-div">
           <div class="large-12 medium-12 small-12 cell">
             <label id="files-label">Files </label>
@@ -175,6 +176,28 @@ export default {
       showDismissibleAlert: false
     }
   },
+  computed: {
+    show_files: function() {
+      return (
+        this.assignment.type === 'document_submission' &&
+        this.permissions === 'student' &&
+        (this.submission_status === 'Not Submitted' ||
+          this.assignment.allow_multiple_submissions) &&
+        (Date.now() < new Date(this.assignment.due_date) ||
+          this.assignment.allow_late_submissions)
+      )
+    },
+    show_start_assignment: function() {
+      return (
+        this.assignment.type === 'comment_submission' &&
+        this.permissions === 'student' &&
+        (this.submission_status === 'Not Submitted' ||
+          this.assignment.allow_multiple_submissions) &&
+        (Date.now() < new Date(this.assignment.due_date) ||
+          this.assignment.allow_late_submissions)
+      )
+    }
+  },
   async asyncData(context) {
     const res = await axios.get(
       `https://localhost:3000/courses/${context.params.course_id}/assignments/${
@@ -199,7 +222,8 @@ export default {
       files: [],
       grader_link: res.data.grader_link,
       grader_submission_id: res.data.grader_submission_id,
-      course: res.data.course_title
+      course: res.data.course_title,
+      submission_status: res.data.submission_status
     }
   },
   methods: {
@@ -350,11 +374,12 @@ hr {
   height: 4.25vh;
 }
 
-#edit-button,
 #submissions-button,
 #grader-button,
-#view-submission-button {
-  margin-right: 0.5vw;
+#delete-button,
+#view-submission-button,
+#start-assignment-button {
+  margin-left: 0.5vw;
 }
 
 #assignment-title {

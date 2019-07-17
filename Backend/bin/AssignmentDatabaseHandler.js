@@ -359,9 +359,13 @@ class AssignmentDatabaseHandler {
             assignment_key);
 
         let link = '';
+        let submission_status;
 
         if (submission_key) {
             let submission_data = await submission_db_handler.get_submission_data(submission_key);
+
+            if (submission_data)
+                submission_status = submission_data['submission_status'];
 
             if (submission_data['group'] && submission_data['group'] !== '') {
                 let group_id = submission_data['group'].replace(KeyDictionary.key_dictionary['group'], '');
@@ -379,7 +383,8 @@ class AssignmentDatabaseHandler {
         return {
             assignment: assignment_data,
             grader_link: '',
-            link: link
+            link: link,
+            submission_status
         };
     }
 
@@ -533,6 +538,7 @@ class AssignmentDatabaseHandler {
 
             if (assignment_data && !assignment_data['hidden']) {
                 let submission_key = await this.get_users_submission_key(import_handler, user_key, assignment_key);
+                let submission_data = await submission_db_handler.get_submission_data(submission_key);
                 let submission_status = await submission_db_handler.get_submission_status(submission_key);
 
                 assignment_data['submission'] = { submission_status };

@@ -57,9 +57,12 @@ export default {
     const assignment_data = res.data.assignment
     const submission_data = res.data.submission
     console.log(res.data)
-    const show_submit_button = assignment_data.allow_multiple_submissions
-      ? true
-      : submission_data.submission_time === ''
+    const show_submit_button =
+      assignment_data.type === 'document_submission'
+        ? false
+        : assignment_data.allow_multiple_submissions
+        ? true
+        : submission_data.submission_time === ''
 
     return {
       show_submit_button: show_submit_button,

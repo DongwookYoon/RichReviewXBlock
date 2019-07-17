@@ -62,6 +62,14 @@
             >Allow multiple submissions</label
           >
         </div>
+        <div id="late-submissions-div">
+          <input
+            id="late-submissions"
+            v-model="assignment_data.allow_late_submissions"
+            type="checkbox"
+          />
+          <label id="late-submissions-label">Allow late submissions</label>
+        </div>
         <div id="group-assignment-div">
           <input
             id="group-assignment"
@@ -91,37 +99,39 @@
             X
           </p>
         </div>
-        <div id="available-date-div">
-          <label id="available-date-label">Available from</label>
-          <datetime
-            id="available-date"
-            v-model="assignment_data.available_date"
-            type="datetime"
-            use12-hour
-          ></datetime>
-          <p
-            v-if="assignment_data.available_date !== ''"
-            id="clear-available-date"
-            @click="clear_available_date"
-          >
-            X
-          </p>
-        </div>
-        <div id="until-date-div">
-          <label id="until-date-label">Until</label>
-          <datetime
-            id="until-date"
-            v-model="assignment_data.until_date"
-            type="datetime"
-            use12-hour
-          ></datetime>
-          <p
-            v-if="assignment_data.until_date !== ''"
-            id="clear-until-date"
-            @click="clear_until_date"
-          >
-            X
-          </p>
+        <div id="dates">
+          <div id="available-date-div">
+            <label id="available-date-label">Available from</label>
+            <datetime
+              id="available-date"
+              v-model="assignment_data.available_date"
+              type="datetime"
+              use12-hour
+            ></datetime>
+            <p
+              v-if="assignment_data.available_date !== ''"
+              id="clear-available-date"
+              @click="clear_available_date"
+            >
+              X
+            </p>
+          </div>
+          <div id="until-date-div">
+            <label id="until-date-label">Until</label>
+            <datetime
+              id="until-date"
+              v-model="assignment_data.until_date"
+              type="datetime"
+              use12-hour
+            ></datetime>
+            <p
+              v-if="assignment_data.until_date !== ''"
+              id="clear-until-date"
+              @click="clear_until_date"
+            >
+              X
+            </p>
+          </div>
         </div>
         <hr id="button-hr" />
         <div id="button-div">
@@ -187,6 +197,7 @@ export default {
         display_grade_as: 'Points',
         count_toward_final_grade: true,
         allow_multiple_submissions: true,
+        allow_late_submissions: false,
         group_assignment: false,
         hidden: false,
         due_date: '',
@@ -248,7 +259,10 @@ export default {
       this.changesSaved = true
       if (this.assignment_data.type === 'comment_submission') {
         if (this.files.length === 0) {
-          this.showDismissibleAlert = true
+          // this.showDismissibleAlert = true
+          alert(
+            'One or more files is required for a comment submission assignment'
+          )
           return
         }
         const formData = new FormData()
@@ -427,6 +441,7 @@ hr {
 
 #count-towards-final,
 #multiple-submissions,
+#late-submissions,
 #group-assignment,
 #hidden {
   margin-left: 13.4vw;
@@ -443,12 +458,18 @@ hr {
   margin-top: 1vh;
 }
 
+#dates {
+  display: flex;
+}
+
 #available-date-div {
-  margin-left: 6.2vw;
+  /*margin-left: 6.2vw;*/
+  margin-left: 2vw;
 }
 
 #until-date-div {
-  margin-left: 10.7vw;
+  /*margin-left: 10.7vw;*/
+  margin-left: 2vw;
 }
 
 #due-date-div,

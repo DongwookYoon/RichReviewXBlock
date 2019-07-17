@@ -66,6 +66,14 @@
             >Allow multiple submissions</label
           >
         </div>
+        <div id="late-submissions-div">
+          <input
+            id="late-submissions"
+            v-model="edits.allow_late_submissions"
+            type="checkbox"
+          />
+          <label id="late-submissions-label">Allow late submissions</label>
+        </div>
         <div id="group-assignment-div">
           <input
             id="group-assignment"
@@ -178,6 +186,7 @@ export default {
         })
       }
     )
+    console.log(res.data)
     return {
       course: res.data.course_title,
       edits: {
@@ -187,6 +196,7 @@ export default {
         display_grade_as: res.data.display_grade_as,
         count_toward_final_grade: res.data.count_toward_final_grade,
         allow_multiple_submissions: res.data.allow_multiple_submissions,
+        allow_late_submissions: res.data.allow_late_submissions,
         group_assignment: res.data.group_assignment,
         hidden: res.data.hidden,
         due_date: context.app.is_date(res.data.due_date)
@@ -327,6 +337,7 @@ hr {
 
 #count-towards-final,
 #multiple-submissions,
+#late-submissions,
 #group-assignment,
 #hidden {
   margin-left: 13.4vw;

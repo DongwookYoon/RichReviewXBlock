@@ -67,7 +67,7 @@ var bluemix_stt = (function(bluemix_stt) {
           } else {
             reject(
               new Error(
-                'Could not connect to the speech-to-text server, status code: ' +
+                'Could not connect to the speech-to-text legacy, status code: ' +
                   xhr.status
               )
             )

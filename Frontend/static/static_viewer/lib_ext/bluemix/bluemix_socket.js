@@ -40,7 +40,7 @@ var bluemix_stt = (function(bluemix_stt) {
     const requestLogging = options.requestLogging || 'false'
     const url =
       options.serviceURI ||
-      'wss://stream.watsonplatform.net/speech-to-text/api/v1/recognize?watson-token=' +
+      'wss://stream.watsonplatform.net/speech-to-text/legacy/v1/recognize?watson-token=' +
       token +
       '&X-WDC-PL-OPT-OUT=' +
       requestLogging + // Opt out the Request logging

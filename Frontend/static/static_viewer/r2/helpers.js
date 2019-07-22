@@ -222,7 +222,7 @@
       $btn_cheatsheet = $('#btn-cheatsheet')
 
       pub.AddItem(
-        'Turning pages',
+        'Turning views',
         ": Press '<'/'>' button on the top menu.",
         'nav_pageturn'
       )
@@ -645,7 +645,7 @@
           .catch(function(err) {
             console.error(err, err.stack)
             err.custom_msg =
-              'We failed to sync data with server. Please check your internet connection and retry, otherwise you may lose your comments.'
+              'We failed to sync data with legacy. Please check your internet connection and retry, otherwise you may lose your comments.'
             r2App.asyncErr.throw(err)
           })
       }
@@ -777,7 +777,7 @@
 
     pub.Set = function(groupdata) {
       if (groupdata == null) {
-        throw new Error('Cannot load the group data from the server.')
+        throw new Error('Cannot load the group data from the legacy.')
       }
       let type
 

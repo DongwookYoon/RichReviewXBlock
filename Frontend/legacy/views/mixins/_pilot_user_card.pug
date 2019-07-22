@@ -1,0 +1,51 @@
+mixin pilotUserCard(pilot_user = {})
+    // this is deprecated
+    .pilot_mgmt_user
+        - var is_it_this_user = (pilot_user.email === user.email )
+        - var is_it_blocked  = (pilot_user.is_active === "false")
+        - var is_it_admin    = (pilot_user.is_admin === "true")
+        form.pilot_mgmt_acct_form(action=`/pilot_admin/mgmt_acct/${pilot_user.email}` method="POST")
+            section.email_view
+                b email
+                p= pilot_user.email
+            .vertical_line
+            section.pswd_input
+                if (is_it_admin && !is_it_this_user)
+                    b password
+                    p &bull; &bull; &bull; &bull; &bull;
+                else
+                    label(for="password") password
+                    input.input(type="text" name="password" value=pilot_user.password required)
+            .vertical_line
+            section.is_active_input
+                if is_it_admin
+                    b blocked?
+                    p= (is_it_blocked ? "yes" : "no")
+                else
+                    label(for="is_blocked") blocked?
+                    input(type="checkbox" name="is_blocked" value="is_blocked" checked=is_it_blocked)
+            .vertical_line
+            section
+                b admin?
+                p= pilot_user.is_admin
+            .vertical_line
+            section.button_buff
+                button.form_button(type="submit") save
+        // we cannot yet record user information!!
+
+        //.vertical_line
+        //form.pilot_mgmt_info_form(action=`/pilot_admin/mgmt_info/${pilot_user.email}` method="POST")
+        //    section.info_input
+        //        label(for="first_name") first name
+        //        input(type="text" name="first_name" value=pilot_user.first_name)
+        //    .vertical_line
+        //    section.info_input
+        //        label(for="last_name") last name
+        //        input(type="text" name="last_name" value=pilot_user.last_name)
+        //    .vertical_line
+        //    section.info_input
+        //        label(for="sid") student ID
+        //        input(type="text" name="sid" value=pilot_user.sid)
+        //    .vertical_line
+        //    section.button_buff.right_buff
+        //        button.form_button(type="submit") &#10003

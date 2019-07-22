@@ -52,7 +52,7 @@ const r2Sync = (function() {
         .catch(function(err) {
           console.error(err, err.stack)
           err.custom_msg =
-            'We failed to download data from server. Please check your internet connection and retry.'
+            'We failed to download data from legacy. Please check your internet connection and retry.'
           r2App.asyncErr.throw(err)
         })
         .then(function() {
@@ -66,7 +66,7 @@ const r2Sync = (function() {
         .catch(function(err) {
           console.error(err, err.stack)
           err.custom_msg =
-            'We failed to download data from server. Please check your internet connection and retry.'
+            'We failed to download data from legacy. Please check your internet connection and retry.'
           r2App.asyncErr.throw(err)
         })
         .then(function() {
@@ -187,7 +187,7 @@ const r2Sync = (function() {
           console.error(_err, _err.stack)
           const err = new Error('')
           err.custom_msg =
-            'We failed to sync data with server. Please check your internet connection and retry, otherwise you may lose your comments.'
+            'We failed to sync data with legacy. Please check your internet connection and retry, otherwise you may lose your comments.'
           r2App.asyncErr.throw(err)
         })
     }

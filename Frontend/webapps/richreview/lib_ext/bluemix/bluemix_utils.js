@@ -1,0 +1,195 @@
+/* eslint-disable camelcase,no-var,no-console,prefer-const,no-unused-vars,prettier/prettier,no-undef,no-lone-blocks */
+/**
+ * Created by Dongwook on 1/16/2016, based on Venkat's.
+ */
+
+const bluemix_stt = (function(bluemix_stt) {
+  'use strict'
+
+  const AUTH_URL = window.location.origin + '/bluemix_stt_auth'
+
+  /**
+   * Initialize the publish/subscribe system utils is going to use.
+   */
+  ;(function() {
+    const o = $({})
+    $.subscribe = o.on.bind(o)
+    $.unsubscribe = o.off.bind(o)
+    $.publish = o.trigger.bind(o)
+  })()
+
+  /**
+   * Based on alediaferia's SO response
+   * http://stackoverflow.com/questions/14438187/javascript-filereader-parsing-long-file-in-chunks
+   */
+  bluemix_stt.onFileProgress = function(options, ondata, onerror, onend) {
+    const file = options.file
+    const fileSize = file.size
+    const chunkSize = options.bufferSize || 8192
+    let offset = 44
+    var readChunk = function(evt) {
+      if (offset >= fileSize) {
+        console.log('Done reading file')
+        onend()
+        return
+      }
+      if (evt.target.error == null) {
+        const buffer = evt.target.result
+        offset += buffer.byteLength
+        ondata(buffer) // callback for handling read chunk
+      } else {
+        const errorMessage = evt.target.error
+        console.log('Read error: ' + errorMessage)
+        onerror(errorMessage)
+        return
+      }
+      fileBlock(offset, chunkSize, file, readChunk)
+    }
+    fileBlock(offset, chunkSize, file, readChunk)
+  }
+
+  /**
+   * Requests for the Bluemix authentication token.
+   * Callback should accept a dictionary `authInfo` containing the username, password, and token.
+   */
+  bluemix_stt.getAuthInfo = function() {
+    return new Promise(function(resolve, reject) {
+      const xhr = new XMLHttpRequest()
+      if ('withCredentials' in xhr) {
+        // "withCredentials" only exists on XMLHTTPRequest2 objects.
+        xhr.open('GET', AUTH_URL, true)
+        xhr.withCredentials = true
+        xhr.responseType = 'text'
+      }
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            resolve(xhr.responseText)
+          } else {
+            reject(
+              new Error(
+                'Could not connect to the speech-to-text server, status code: ' +
+                  xhr.status
+              )
+            )
+          }
+        }
+      }
+      xhr.onerror = reject
+      xhr.send()
+    })
+  }
+
+  /**
+   * Performs setup to coordinate the microphone (represented by an AudioRecorder) and the socket communicating with the backend.
+   * This method also sets up the options that determine what results Bluemix will provide.
+   */
+  bluemix_stt.handleMicrophone = function(
+    options,
+    mic,
+    callback,
+    transcriptionCallback,
+    closedCallback,
+    errCallback
+  ) {
+    options.message = {
+      action: 'start',
+      'content-type':
+        'audio/l16;rate=' + (mic ? mic.RECORDER_SOURCE_SAMPLE_RATE : 22050),
+      // 'interim_results': true,
+      continuous: true,
+      word_confidence: true,
+      timestamps: true,
+      max_alternatives: 3
+    }
+
+    function onOpen(socket) {
+      console.log('Bluemix microphone socket: opened')
+    }
+
+    function onListening(socket) {
+      callback(null, socket)
+      if (!mic) {
+        // The user might want to upload a file through the socket instead of transmitting microphone information.
+        return
+      }
+      mic.getRecorder().setOnGetChunkBufCallback(function(blob) {
+        if (socket.readyState < 2) {
+          socket.send(blob)
+        }
+      })
+    }
+
+    function onMessage(msg, socket) {
+      transcriptionCallback(msg)
+      /*
+             if (msg.results) {
+             baseString = TranscriptUtils.updateTranscriptionResult(msg, baseString, false, transcriptionCallback);
+             }
+             */
+    }
+
+    function onError(err, socket) {
+      errCallback(err)
+    }
+
+    function onClose(evt) {
+      closedCallback()
+    }
+
+    bluemix_stt.socket.initSocket(
+      options,
+      onOpen,
+      onListening,
+      onMessage,
+      onError,
+      onClose
+    )
+  }
+
+  // fixMe: onTemp disabled, and will never run.
+  bluemix_stt.messageParser = (function() {
+    const pub = {}
+
+    const callbacks = {}
+
+    pub.run = function(msg) {
+      if (msg.results) {
+        for (let i = 0; i < msg.results.length; ++i) {
+          const best_alternative = msg.results[i].alternatives[0]
+          for (let j = 0; j < best_alternative.timestamps.length; ++j) {
+            if (best_alternative.timestamps[j][0] === '%HESITATION') {
+              best_alternative.timestamps[j][0] = '...'
+            }
+            best_alternative.timestamps[j].push(
+              best_alternative.word_confidence[j][1]
+            ) // append word confidence values to the end of the timestamp data
+          }
+          callbacks.onFinal(
+            best_alternative.timestamps,
+            msg.results[i].alternatives
+          )
+        }
+      }
+    }
+
+    pub.setCallbacks = function(onTemp, onFinal) {
+      callbacks.onTemp = onTemp
+      callbacks.onFinal = onFinal
+    }
+
+    return pub
+  })()
+
+  /**
+   * Get chunked array from a file's offset
+   */
+  var fileBlock = function(_offset, length, _file, readChunk) {
+    const r = new FileReader()
+    const blob = _file.slice(_offset, length + _offset)
+    r.onload = readChunk
+    r.readAsArrayBuffer(blob)
+  }
+
+  return bluemix_stt
+})((window.bluemix_stt = window.bluemix_stt || {}))

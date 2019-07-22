@@ -4,6 +4,11 @@ import pkg from './package'
 
 export default {
   mode: 'universal',
+  serverMiddleware: [
+    // Will register file from project legacy directory to handle /legacy/* requires
+    { path: '/', handler: '~/legacy/index.js' }
+  ],
+
   /*
    ** Server settings
    */

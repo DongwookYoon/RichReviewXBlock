@@ -20,7 +20,7 @@
         ) {
           // http error
           detail = 'HTTP '
-          msg = 'The server responded with an error.'
+          msg = 'The legacy responded with an error.'
           console.error(err)
           console.error(err.stack)
           detail +=

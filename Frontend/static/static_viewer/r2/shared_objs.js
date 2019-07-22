@@ -78,7 +78,7 @@ var r2Const = (function () {
     return pub;
 })();
 
-/** Web app main */
+/** Web app legacy */
 var r2App = (function() {
     "use strict";
 

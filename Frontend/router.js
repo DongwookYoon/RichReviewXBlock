@@ -32,10 +32,10 @@ export function createRouter() {
         path: '/login',
         component: login
       },
-      {
-        path: '/',
-        component: login
-      },
+      // {
+      //   path: '/',
+      //   component: login
+      // },
       {
         path: '/authentication',
         component: authentication

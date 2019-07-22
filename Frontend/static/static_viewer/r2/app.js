@@ -6,7 +6,7 @@
 ;(function(r2) {
   'use strict'
 
-  /** main procedures that updates and draws the scene */
+  /** legacy procedures that updates and draws the scene */
   r2.loop = (function() {
     const pub = {}
 
@@ -224,7 +224,7 @@
     return pub
   })()
 
-  /** main app initializer */
+  /** legacy app initializer */
   r2.main = (function() {
     const pub = {}
 

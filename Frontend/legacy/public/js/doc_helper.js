@@ -12,7 +12,9 @@
 
     Promise.all([postDbs('GetDocsOwned'), postDbs('GetDocsParticipated')])
       .then(function(docids_list) {
-        const docids = merge(docids_list[0], docids_list[1])
+        const docids = merge(docids_list[0], docids_list[1]).filter(docid => {
+          return docid !== undefined && docid !== '' && docid !== null
+        })
         if (docids.length !== 0) {
           return postDbs('GetDocByIds', { docids: docids }).then(function(
             docs

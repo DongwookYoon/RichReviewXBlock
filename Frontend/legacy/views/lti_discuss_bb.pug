@@ -1,0 +1,113 @@
+doctype html(lang='en')
+head(profile='http://www.w3.org/2005/10/profile')
+    script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js')
+    script(src=cdn_endpoint+'/lib/jquery.timeago.js')
+    link(rel='shortcut icon', href=cdn_endpoint+'/favicon.ico', type='image/x-icon')
+    link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css')
+    link(rel='stylesheet', href=cdn_endpoint+'/lib/font-awesome-4.6.3/css/font-awesome.min.css')
+    link(rel='stylesheet', href=cdn_endpoint+'/lib/font-awesome-animation.min.css')
+    script(src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js')
+    meta(charset='UTF-8')
+    title CornellX Online Discussion System
+    style
+        |h2{
+        |font-size: 14px;
+        |font-weight:bold;
+        |}
+        |h3{
+        |font-size: 14px;
+        |font-weight:bold;
+        |margin-top: 4px;
+        |margin-bottom: 4px;
+        |margin-left: 4px;
+        |}
+        |form{
+        |margin-bottom: 0;
+        |}
+        |.list-group{
+        |margin-bottom:0;
+        |}
+        |h3.replies_indent{
+        |margin-top: 14px;
+        |}
+        |.replies_indent{
+        |margin-left: 5%;
+        |}
+        |#posts_ul{
+        |margin-bottom: 10px;
+        |}
+        |li.list-group-item{
+        |overflow: auto;
+        |padding: 15px 20px;
+        |}
+        |p.ago{
+        |margin-bottom: 0;
+        |margin-right: 8px;
+        |display: inline-block;
+        |font-style: italic;
+        |font-weight: bold;
+        |}
+        |button.posts_btn{
+        |padding: 0 6px;
+        |margin-right: 5px;
+        |margin-top: 5px;
+        |font-size: 14px;
+        |vertical-align: baseline;
+        |}
+body
+    .well
+        h1 CornellX Online Discussion System
+
+        h2 Assignment goal:
+        p
+            | Now that you have read “
+            a(href ='https://www.nytimes.com/2014/09/29/us/the-head-scratching-case-of-the-vanishing-bees.html' target='_blank') The Head-Scratching Case of the Vanishing Bees
+            | ,”
+            | we are ready for our virtual press conference.
+        p
+            | We will use RichReview, a discussion tool, to create an engaging conversation over course material.
+            | We will use this activity like a press conference,
+            | where a lot of journalists come together to ask questions and comment on a particular story.
+            | RichReview will make reading and thinking about your own questions interactive.
+        p
+            b
+                | Annotate:
+            |  Use the RichReview discussion tool to go back through the article.
+            | There will be 7-10 students in each annotation group.
+            | You will receive credit for making
+            b
+                |  three
+            |  original annotations and responding to
+            b
+                |  three
+            |  of your fellow students' annotations.
+        p
+            | Please keep each of your annotations to
+            b
+                |  75 words or less
+            | .
+
+        h2 Users in this group:
+        p#users_text
+            | You are the only user in this group.
+            | Other users will join this group soon.
+            | Refresh this page after waiting for ~15 min.
+
+        h2#score_str Current score: 0.0/2.0
+        p#goal_str To earn the full score, make 3 more new comments and reply to 3 other colleagues.
+        p The score will be updated on edX every Tue (weekly-basis).
+
+        h2 Discussion posts:
+        ul#posts_ul.list-group
+            li.list-group-item#new_comment_li
+                form#new_comment_form
+                    h3 Write a New Post:
+                    textarea(class='form-control' rows='5' name='texts' placeholder='Enter text here...')
+                    button.btn.btn-sm.btn-primary.posts_btn#new_comment_btn Save
+            li.list-group-item#spinner
+                i.fa.fa-refresh.fa-spin
+
+    script
+        include ./lti_discuss_bb.js
+        |run('#{bb_ctx}');
+

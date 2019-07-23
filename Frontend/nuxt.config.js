@@ -6,7 +6,7 @@ export default {
   mode: 'universal',
   serverMiddleware: [
     // Will register file from project legacy directory to handle /legacy/* requires
-    { path: '/', handler: '~/legacy/index.js' }
+    { path: '/', handler: '~/legacy/www/www.js' }
   ],
 
   /*
@@ -21,7 +21,7 @@ export default {
         path.resolve(__dirname, 'ssl', 'richreview_net.crt')
       )
     },
-    port: 8000, // default: 3000
+    port: 8001, // default: 3000
     host: '127.0.0.1' // default: localhost
   },
 

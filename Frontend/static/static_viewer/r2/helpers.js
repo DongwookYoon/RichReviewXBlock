@@ -804,7 +804,7 @@
       if (groupdata.users) {
         console.log(groupdata)
         groupdata.users.forEach(function(user) {
-          pub.AddUser(user.id, user.nick_name, user.email, (type = 'member'))
+          pub.AddUser(user.id, user.nick_name || user.display_name, user.email, (type = 'member'))
         })
       }
 

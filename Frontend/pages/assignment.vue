@@ -36,7 +36,7 @@
           <button
             v-if="show_start_assignment"
             id="start-assignment-button"
-            @click="go_to_viewer"
+            @click="go_to_submitter"
           >
             Start Assignment
           </button>
@@ -248,9 +248,9 @@ export default {
         }/submissions/${this.grader_submission_id}/grader?${this.grader_link}`
       )
     },
-    go_to_viewer() {
+    go_to_submitter() {
       window.open(
-        `/education/courses/${this.$route.params.course_id}/viewer?${
+        `/education/courses/${this.$route.params.course_id}/submitter?${
           this.viewer_link
         }`
       )

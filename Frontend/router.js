@@ -17,6 +17,7 @@ import new_course_group from './pages/new_course_group'
 import assignment_submissions from './pages/assignment_submissions'
 import viewer from './pages/viewer'
 import grader from './pages/grader'
+import submitter from './pages/submitter'
 import deleted_assignments from './pages/deleted_assignments'
 import all_user_assignments from './pages/all_user_assignments'
 import all_user_groups from './pages/all_user_groups'
@@ -109,6 +110,10 @@ export function createRouter() {
         path:
           '/education/courses/:course_id/assignments/:assignment_id/submissions/:submission_id/grader',
         component: grader
+      },
+      {
+        path: '/education/courses/:course_id/submitter',
+        component: submitter
       }
     ]
   })

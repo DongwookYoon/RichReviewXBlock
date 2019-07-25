@@ -4,6 +4,9 @@
       <p id="assignment-title" @click="go_to_assignment">
         {{ assignment_title }}
       </p>
+      <button v-if="show_submit_button" id="submit-button" @click="submit">
+        Submit
+      </button>
     </div>
     <no-ssr>
       <body>
@@ -27,7 +30,7 @@ if (process.client) {
 }
 
 export default {
-  name: 'Viewer',
+  name: 'Submitter',
   head: {
     script: [
       {
@@ -52,7 +55,17 @@ export default {
       }
     )
     const assignment_data = res.data.assignment
+    const submission_data = res.data.submission
+    console.log(res.data)
+    const show_submit_button =
+      assignment_data.type === 'document_submission'
+        ? false
+        : assignment_data.allow_multiple_submissions
+        ? true
+        : submission_data.submission_time === ''
+
     return {
+      show_submit_button: show_submit_button,
       assignment_id: assignment_data.id,
       assignment_title: assignment_data.title
     }
@@ -88,6 +101,27 @@ export default {
           this.assignment_id
         }`
       )
+    },
+    async submit() {
+      await axios.post(
+        `https://localhost:3000/courses/${
+          this.$route.params.course_id
+        }/assignments/${this.assignment_id}/comment_submissions`,
+        {
+          access_code: this.$route.query.access_code,
+          docid: this.$route.query.docid,
+          groupid: this.$route.query.groupid
+        },
+        {
+          headers: {
+            Authorization: this.$auth.user.sub
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+      )
+      this.$router.push(`/education/courses/${this.$route.params.course_id}`)
     }
   }
 }
@@ -114,6 +148,13 @@ p {
   color: white;
   font-size: 2.5vh;
   margin-left: 1vw;
+}
+
+#submit-button {
+  position: fixed;
+  right: 0;
+  margin-right: 0.25vw;
+  margin-top: 0.4vh;
 }
 
 body {

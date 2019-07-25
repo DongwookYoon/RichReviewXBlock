@@ -40,7 +40,7 @@
 import https from 'https'
 import axios from 'axios'
 if (process.client) {
-  require('../static/test')
+  require('../static/my_viewer_helper')
 }
 
 export default {
@@ -51,7 +51,7 @@ export default {
         src:
           'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/js/bootstrap.min.js'
       },
-      { src: '/test.js', mode: 'client', body: true }
+      { src: '/my_viewer_helper.js', mode: 'client', body: true }
     ]
   },
   async asyncData(context) {

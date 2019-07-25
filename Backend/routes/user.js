@@ -66,7 +66,7 @@ router.get('/unassigned', async function(req, res, next) {
 
             for (let group of active_or_inactive_groups) {
                 group['members'] = group['members'].map((member) => {
-                    return {id: member['id'], name: member['display_name']}
+                    return {id: member['id'], name: member['name']}
                 });
 
             }

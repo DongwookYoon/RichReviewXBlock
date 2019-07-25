@@ -136,29 +136,31 @@ const webAppSync = (function() {
 const runServer = () => {
   const app = require('../app')
 
-  process.setMaxListeners(0)
-
+  // process.setMaxListeners(0)
+  //
   app.https.set('port', env.node_config.HTTPS_PORT || 8001)
   app.http.set('port', env.node_config.HTTP_PORT || 8002)
 
-  require('http')
-    .createServer(app.http)
-    .listen(app.http.get('port'), function() {
-      util.start('listening on HTTP port: ' + app.http.get('port'))
-    })
-
-  require('https')
-    .createServer(
-      {
-        key: env.ssl_key,
-        cert: env.ssl_cert,
-        ca: [env.ssl_ca]
-      },
-      app.https
-    )
-    .listen(app.https.get('port'), function() {
-      util.start('listening on HTTPS port: ' + app.https.get('port'))
-    })
+  module.exports = app
+  //
+  // require('http')
+  //   .createServer(app.http)
+  //   .listen(app.http.get('port'), function() {
+  //     util.start('listening on HTTP port: ' + app.http.get('port'))
+  //   })
+  //
+  // require('https')
+  //   .createServer(
+  //     {
+  //       key: env.ssl_key,
+  //       cert: env.ssl_cert,
+  //       ca: [env.ssl_ca]
+  //     },
+  //     app.https
+  //   )
+  //   .listen(app.https.get('port'), function() {
+  //     util.start('listening on HTTPS port: ' + app.https.get('port'))
+  //   })
 }
 
 if (process.env.NODE_ENV === 'production') {

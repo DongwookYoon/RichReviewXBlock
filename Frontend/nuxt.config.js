@@ -6,7 +6,7 @@ export default {
   mode: 'universal',
   serverMiddleware: [
     // Will register file from project legacy directory to handle /legacy/* requires
-    { path: '/', handler: '~/legacy/www/www.js' }
+    { path: '/', handler: '~/legacy/app.js' }
   ],
 
   /*
@@ -100,10 +100,10 @@ export default {
   auth: {
     // Options
     redirect: {
-      login: '/login',
-      logout: '/',
-      callback: '/login',
-      home: '/authentication'
+      login: '/education/login',
+      logout: '/education',
+      callback: '/education/login',
+      home: '/education/authentication'
     },
     strategies: {
       google: {

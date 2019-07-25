@@ -26,7 +26,7 @@ export default {
           })
         }
       )
-      this.$router.replace('/dashboard')
+      this.$router.replace('/education/dashboard')
     }
   }
 }

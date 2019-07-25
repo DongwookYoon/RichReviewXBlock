@@ -30,7 +30,7 @@
     r2.CDN_SUBURL = r2.CDN_URL + '/richreview'
   } else {
     console.log('DEBUG: loading from development route')
-    r2.CDN_SUBURL = '/static_viewer'
+    r2.CDN_SUBURL = '/nuxt_static_viewer'
   }
 
   r2.runSerialPromises = (function() {
@@ -91,7 +91,7 @@
 
     pub.get = function(url) {
       if (map === null) {
-        // return '/static_viewer'+url;
+        // return '/nuxt_static_viewer'+url;
         return url
       } else {
         return map[url]

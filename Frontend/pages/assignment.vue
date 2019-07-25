@@ -229,33 +229,37 @@ export default {
   methods: {
     go_to_edit_assignment() {
       this.$router.push(
-        `/courses/${this.$route.params.course_id}/assignments/${
+        `/education/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id
         }/edit`
       )
     },
     got_to_submissions() {
       this.$router.push(
-        `/courses/${this.$route.params.course_id}/assignments/${
+        `/education/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id
         }/submissions`
       )
     },
     go_to_grader() {
       window.open(
-        `/courses/${this.$route.params.course_id}/assignments/${
+        `/education/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id
         }/submissions/${this.grader_submission_id}/grader?${this.grader_link}`
       )
     },
     go_to_viewer() {
       window.open(
-        `/courses/${this.$route.params.course_id}/viewer?${this.viewer_link}`
+        `/education/courses/${this.$route.params.course_id}/viewer?${
+          this.viewer_link
+        }`
       )
     },
     go_to_current_submission() {
       window.open(
-        `/courses/${this.$route.params.course_id}/viewer?${this.viewer_link}`
+        `/education/courses/${this.$route.params.course_id}/viewer?${
+          this.viewer_link
+        }`
       )
     },
     addFiles() {
@@ -285,7 +289,7 @@ export default {
           })
         }
       )
-      this.$router.push(`/courses/${this.$route.params.course_id}/`)
+      this.$router.push(`/education/courses/${this.$route.params.course_id}/`)
     },
     async submitAssignment() {
       if (this.files.length === 0) {
@@ -318,7 +322,7 @@ export default {
         }
       )
 
-      this.$router.push(`/courses/${this.$route.params.course_id}`)
+      this.$router.push(`/education/courses/${this.$route.params.course_id}`)
     }
   }
 }

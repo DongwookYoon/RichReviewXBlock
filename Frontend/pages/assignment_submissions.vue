@@ -76,7 +76,7 @@ export default {
     go_to_submission(submission_id, link) {
       if (link !== '')
         window.open(
-          `/courses/${this.$route.params.course_id}/assignments/${
+          `/education/courses/${this.$route.params.course_id}/assignments/${
             this.$route.params.assignment_id
           }/submissions/${submission_id}/grader?${link}`
         )

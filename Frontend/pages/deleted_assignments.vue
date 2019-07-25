@@ -66,19 +66,23 @@ export default {
   },
   methods: {
     go_to_people() {
-      this.$router.push(`/courses/${this.$route.params.course_id}/users`)
+      this.$router.push(
+        `/education/courses/${this.$route.params.course_id}/users`
+      )
     },
     go_to_grades() {
-      this.$router.push(`/courses/${this.$route.params.course_id}/grades`)
+      this.$router.push(
+        `/education/courses/${this.$route.params.course_id}/grades`
+      )
     },
     go_to_new_assignment() {
       this.$router.push(
-        `/courses/${this.$route.params.course_id}/assignments/new`
+        `/education/courses/${this.$route.params.course_id}/assignments/new`
       )
     },
     go_to_assignment(id) {
       this.$router.push(
-        `/courses/${this.$route.params.course_id}/assignments/${id}`
+        `/education/courses/${this.$route.params.course_id}/assignments/${id}`
       )
     },
     async restore(id) {

@@ -73,7 +73,9 @@ export default {
   },
   methods: {
     go_to_assignment(course_id, assignment_id) {
-      this.$router.push(`/courses/${course_id}/assignments/${assignment_id}`)
+      this.$router.push(
+        `/education/courses/${course_id}/assignments/${assignment_id}`
+      )
     }
   }
 }

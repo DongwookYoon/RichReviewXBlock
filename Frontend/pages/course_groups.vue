@@ -4,7 +4,9 @@
     <button
       v-if="permissions === 'instructor' || permissions === 'ta'"
       @click="
-        $router.push(`/courses/${$route.params.course_id}/course_groups/new`)
+        $router.push(
+          `/education/courses/${$route.params.course_id}/course_groups/new`
+        )
       "
     >
       + Group
@@ -14,7 +16,9 @@
       <li
         @click="
           $router.push(
-            `/courses/${$route.params.course_id}/course_groups/${g.id}`
+            `/education/courses/${$route.params.course_id}/course_groups/${
+              g.id
+            }`
           )
         "
       >
@@ -26,7 +30,9 @@
       <li
         @click="
           $router.push(
-            `/courses/${$route.params.course_id}/course_groups/${g.id}`
+            `/education/courses/${$route.params.course_id}/course_groups/${
+              g.id
+            }`
           )
         "
       >

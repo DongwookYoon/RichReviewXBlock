@@ -83,7 +83,7 @@ export default {
         }
       )
       this.$router.push(
-        `/courses/${this.$route.params.course_id}/course_groups`
+        `/education/courses/${this.$route.params.course_id}/course_groups`
       )
     }
   }

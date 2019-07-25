@@ -81,7 +81,7 @@ const UBC = {
 };
 
 /**
- * 
+ *
  * @type {{ATTRIBUTE: {USERS: Object[], GROUP: Object}}}
  */
 const TEST = {

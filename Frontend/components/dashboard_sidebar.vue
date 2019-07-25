@@ -89,20 +89,20 @@ export default {
   },
   methods: {
     go_to_dashboard() {
-      this.$router.push('/dashboard')
+      this.$router.push('/education/dashboard')
     },
     go_to_all_assignments() {
-      this.$router.push('/all-assignments')
+      this.$router.push('/education/all-assignments')
     },
     go_to_all_groups() {
-      this.$router.push('/all-groups')
+      this.$router.push('/education/all-groups')
     },
     go_to_all_grades() {
-      this.$router.push('/all-grades')
+      this.$router.push('/education/all-grades')
     },
     async logout() {
       await this.$auth.logout()
-      this.$router.push('/')
+      this.$router.push('/education')
     }
   }
 }

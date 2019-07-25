@@ -117,17 +117,17 @@ export default {
   methods: {
     go_to_new_assignment() {
       this.$router.push(
-        `/courses/${this.$route.params.course_id}/assignments/new`
+        `/education/courses/${this.$route.params.course_id}/assignments/new`
       )
     },
     go_to_deleted_assignments() {
       this.$router.push(
-        `/courses/${this.$route.params.course_id}/deleted-assignments`
+        `/education/courses/${this.$route.params.course_id}/deleted-assignments`
       )
     },
     go_to_assignment(id) {
       this.$router.push(
-        `/courses/${this.$route.params.course_id}/assignments/${id}`
+        `/education/courses/${this.$route.params.course_id}/assignments/${id}`
       )
     }
   }

@@ -244,7 +244,7 @@ export default {
   },
   methods: {
     go_to_course() {
-      this.$router.push(`/courses/${this.$route.params.course_id}/`)
+      this.$router.push(`/education/courses/${this.$route.params.course_id}/`)
     },
     clear_due_date() {
       this.assignment_data.due_date = ''
@@ -292,7 +292,7 @@ export default {
             })
           }
         )
-        this.$router.push(`/courses/${this.$route.params.course_id}`)
+        this.$router.push(`/education/courses/${this.$route.params.course_id}`)
       } else {
         await axios.post(
           `https://localhost:3000/courses/${
@@ -308,7 +308,7 @@ export default {
             })
           }
         )
-        this.$router.push(`/courses/${this.$route.params.course_id}`)
+        this.$router.push(`/education/courses/${this.$route.params.course_id}`)
       }
     },
     addFiles() {

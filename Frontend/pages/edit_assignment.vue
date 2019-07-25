@@ -238,7 +238,7 @@ export default {
     },
     go_to_assignment() {
       this.$router.push(
-        `/courses/${this.$route.params.course_id}/assignments/${
+        `/education/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id
         }`
       )
@@ -260,7 +260,7 @@ export default {
         }
       )
       this.$router.push(
-        `/courses/${this.$route.params.course_id}/assignments/${
+        `/education/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id
         }`
       )

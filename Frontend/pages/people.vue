@@ -140,13 +140,15 @@ export default {
   methods: {
     go_to_edit_groups() {
       this.$router.push(
-        `/courses/${this.$route.params.course_id}/course_groups/new`
+        `/education/courses/${this.$route.params.course_id}/course_groups/new`
       )
     },
     go_to_group(id) {
       if (this.permissions === 'instructor' || this.permissions === 'ta')
         this.$router.push(
-          `/courses/${this.$route.params.course_id}/course_groups/${id}`
+          `/education/courses/${
+            this.$route.params.course_id
+          }/course_groups/${id}`
         )
     },
     changeToPeopleTab() {

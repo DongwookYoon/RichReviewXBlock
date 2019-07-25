@@ -11,7 +11,7 @@ export default {
   name: 'Footer',
   methods: {
     go_to_dashboard() {
-      this.$router.push('/dashboard')
+      this.$router.push('/education/dashboard')
     }
   }
 }

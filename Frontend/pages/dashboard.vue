@@ -9,7 +9,7 @@
             :description="e.description"
             role="Student"
             :assignment_count="e.assignment_count"
-            :link="`courses/${e.id}`"
+            :link="`/education/courses/${e.id}`"
             class="course-card"
           ></course-card>
         </div>
@@ -19,7 +19,7 @@
             :description="e.description"
             role="TA"
             :assignment_count="e.assignment_count"
-            :link="`courses/${e.id}`"
+            :link="`/education/courses/${e.id}`"
           ></course-card>
         </div>
         <div v-for="e in instructing" :key="e.key" class="instructing">
@@ -28,7 +28,7 @@
             :description="e.description"
             role="Instructor"
             :assignment_count="e.assignment_count"
-            :link="`courses/${e.id}`"
+            :link="`/education/courses/${e.id}`"
           ></course-card>
         </div>
       </div>
@@ -42,7 +42,9 @@
             :title="a.title.toString()"
             :status="a.submission_status"
             :late="a.late"
-            :link="`courses/${a.course_id}/assignments/${a.assignment_id}`"
+            :link="
+              `/education/courses/${a.course_id}/assignments/${a.assignment_id}`
+            "
           ></upcoming-assignment>
         </div>
       </div>
@@ -83,20 +85,20 @@ export default {
   },
   methods: {
     go_to_dashboard() {
-      this.$router.push('/dashboard')
+      this.$router.push('/education/dashboard')
     },
     go_to_all_assignments() {
-      this.$router.push('/all-assignments')
+      this.$router.push('/education/all-assignments')
     },
     go_to_all_groups() {
-      this.$router.push('/all-groups')
+      this.$router.push('/education/all-groups')
     },
     go_to_all_grades() {
-      this.$router.push('/all-grades')
+      this.$router.push('/education/all-grades')
     },
     async logout() {
       await this.$auth.logout()
-      this.$router.push('/')
+      this.$router.push('/education')
     }
   }
 }

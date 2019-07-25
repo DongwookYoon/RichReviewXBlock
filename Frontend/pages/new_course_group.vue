@@ -123,6 +123,7 @@ export default {
         })
       }
     )
+    console.log(res.data.groups)
     const group_ids = []
     for (const group of res.data.groups.active_course_groups) {
       group_ids.push(group.id)

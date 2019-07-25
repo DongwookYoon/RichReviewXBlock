@@ -26,7 +26,7 @@
 import https from 'https'
 import axios from 'axios'
 if (process.client) {
-  require('../static/viewer_helper')
+  require('../static/test')
 }
 
 export default {
@@ -37,7 +37,7 @@ export default {
         src:
           'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/js/bootstrap.min.js'
       },
-      { src: '/viewer_helper.js', mode: 'client', body: true }
+      { src: '/test.js', mode: 'client', body: true }
     ]
   },
   async asyncData(context) {
@@ -97,7 +97,7 @@ export default {
   methods: {
     go_to_assignment() {
       this.$router.push(
-        `/courses/${this.$route.params.course_id}/assignments/${
+        `/education/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id
         }`
       )
@@ -121,7 +121,7 @@ export default {
           })
         }
       )
-      this.$router.push(`/courses/${this.$route.params.course_id}`)
+      this.$router.push(`/education/courses/${this.$route.params.course_id}`)
     }
   }
 }
@@ -133,7 +133,7 @@ export default {
 /*@import 'https://richreview2ca.azureedge.net/lib/font-awesome-animation.min.css';*/
 /*@import 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/smoothness/jquery-ui.css';*/
 /*@import 'https://richreview2ca.azureedge.net/richreview/stylesheets/style.css';*/
-/*@import '../static/static_viewer/stylesheets/style.css';*/
+/*@import '../static/nuxt_static_viewer/stylesheets/style.css';*/
 
 p {
   margin: 0;

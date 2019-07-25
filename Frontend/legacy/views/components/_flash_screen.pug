@@ -1,0 +1,19 @@
+if flashes
+    -
+        var flashMsgs = Object.keys(flashes).reduce(function(acc, category) {
+            var ff = flashes[category].reduce(function(c, text) {
+                c.push({
+                    category: category,
+                    text: text
+                });
+                return c;
+            }, [ ]);
+            acc = acc.concat(ff);
+            return acc;
+        }, [ ]);
+    if flashMsgs.length > 0
+        .flash_messages
+            each message in flashMsgs
+                .flash(class=`flash--${message.category}` onClick!="var parent = this.parentElement; if(parent.childNodes.length <= 1) {  parent.remove(); } else { this.remove(); }")
+                    p.flash__text!= message.text
+                    button.flash__remove: i(aria-hidden="true").fa.fa-times

@@ -40,8 +40,10 @@ export default {
       default: ''
     }
   },
-  go_to_assignment(link) {
-    this.$router.push(`${link}`)
+  methods: {
+    go_to_assignment(link) {
+      this.$router.push(`${link}`)
+    }
   }
 }
 </script>

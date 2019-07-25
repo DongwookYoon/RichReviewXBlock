@@ -67,7 +67,7 @@ export default {
   methods: {
     go_to_course_group(course_id, course_group_id) {
       this.$router.push(
-        `/courses/${course_id}/course_groups/${course_group_id}`
+        `/education/courses/${course_id}/course_groups/${course_group_id}`
       )
     }
   }

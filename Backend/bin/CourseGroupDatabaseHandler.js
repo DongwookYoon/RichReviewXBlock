@@ -92,7 +92,7 @@ class CourseGroupDatabaseHandler {
 
         for (let user_key of course_group_data['users']) {
             let user_data = await user_db_handler.get_user_data(user_key);
-            users.push({ name: user_data['display_name'] });
+            users.push({ id: user_key['id'], name: user_data['display_name'] });
         }
 
         return users;

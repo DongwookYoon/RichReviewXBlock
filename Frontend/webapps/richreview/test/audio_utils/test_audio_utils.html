@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="../../lib_ext/recorder/recorder.js"></script>
+    <script src="../../r2/audio_utils.js"></script>
+    <script src="test_audio_utils.js"></script>
+    <style>
+        #playbar {
+            width:500px;
+            height:10px;
+        }
+        #transcript_textbox {
+            width:350px;
+            height:50px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Unit Test for r2/audio_utils.js</h1>
+    <h2>Recording</h2>
+    <button id="recording_start_btn" onclick="clickRecordingStart()">Start</button>
+    <button id="recording_stop_btn" onclick="clickRecordingStop()">Stop</button>
+    <p><a id="wav_file_url" target="_blank"></a></p>
+    <h2>Replaying</h2>
+    <canvas id="playbar" width="500" height="10"></canvas>
+    <h2>Transcription</h2>
+    <textarea id="transcript_textbox"></textarea>
+</body>
+</html>

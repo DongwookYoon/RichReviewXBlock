@@ -4,6 +4,11 @@ import pkg from './package'
 
 export default {
   mode: 'universal',
+  serverMiddleware: [
+    // Will register file from project legacy directory to handle /legacy/* requires
+    { path: '/', handler: '~/legacy/app.js' }
+  ],
+
   /*
    ** Server settings
    */
@@ -16,7 +21,7 @@ export default {
         path.resolve(__dirname, 'ssl', 'richreview_net.crt')
       )
     },
-    port: 8000, // default: 3000
+    port: 8001, // default: 3000
     host: '127.0.0.1' // default: localhost
   },
 
@@ -95,10 +100,10 @@ export default {
   auth: {
     // Options
     redirect: {
-      login: '/login',
-      logout: '/',
-      callback: '/login',
-      home: '/authentication'
+      login: '/education/login',
+      logout: '/education',
+      callback: '/education/login',
+      home: '/education/authentication'
     },
     strategies: {
       google: {

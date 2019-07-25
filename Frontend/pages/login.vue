@@ -2,7 +2,6 @@
   <div class="container">
     <div v-for="s in strategies" :key="s.key" class="mb-2">
       <button
-        block
         :style="{ background: s.color }"
         class="login-button"
         @click="$auth.loginWith(s.key)"
@@ -10,6 +9,7 @@
         Login with {{ s.name }}
       </button>
     </div>
+    <img src="/img/CWL_login_button.png" @click="login_ubc" />
   </div>
 </template>
 
@@ -28,6 +28,11 @@ export default {
     },
     isCallback() {
       return Boolean(this.$route.query.callback)
+    }
+  },
+  methods: {
+    login_ubc() {
+      window.open(`${window.location.origin}/education/login-ubc`, "_self")
     }
   }
 }

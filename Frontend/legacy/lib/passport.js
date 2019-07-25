@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier,spaced-comment,import/order,camelcase,new-cap,no-unused-vars */
 /**
  * passport
  *

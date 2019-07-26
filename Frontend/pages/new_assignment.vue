@@ -25,6 +25,11 @@
           <label id="points-label">Points</label>
           <input id="points" v-model="assignment_data.points" placeholder="0" />
         </div>
+        <div id="weight-div">
+          <label id="weight-label">Weight</label>
+          <input id="weight" v-model="assignment_data.weight" placeholder="0" />
+          <label id="weight-label2">% of final grade</label>
+        </div>
         <div id="type-div">
           <label id="type-label">Assignment type</label>
           <select id="type" v-model="assignment_data.type">
@@ -32,16 +37,6 @@
             <option value="comment_submission">Comment Submission</option>
           </select>
         </div>
-        <!--<div>-->
-        <!--<label>Display Grade as</label>-->
-        <!--<select v-model="assignment_data.display_grade_as">-->
-        <!--<option>Points</option>-->
-        <!--<option>Percentage</option>-->
-        <!--<option>Complete/Incomplete</option>-->
-        <!--<option>Letter Grade</option>-->
-        <!--<option>Not Graded</option>-->
-        <!--</select>-->
-        <!--</div>-->
         <div id="count-towards-final-div">
           <input
             id="count-towards-final"
@@ -194,6 +189,7 @@ export default {
         title: '',
         description: '',
         points: 0,
+        weight: 0,
         display_grade_as: 'Points',
         count_toward_final_grade: true,
         allow_multiple_submissions: true,

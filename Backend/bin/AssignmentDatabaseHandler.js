@@ -397,7 +397,7 @@ class AssignmentDatabaseHandler {
         delete assignment_data['creation_date'];
         delete assignment_data['submissions'];
 
-        let submission_data = await this.get_first_assignment_submission_link_and_id(
+        let submission_data = await this.get_first_assignment_submissions_for_grader(
             import_handler,
             user_key,
             assignment_key);
@@ -408,6 +408,49 @@ class AssignmentDatabaseHandler {
             grader_submission_id: submission_data.id,
             link: ''
         };
+    }
+
+
+    async get_first_assignment_submissions_for_grader (import_handler, user_key, assignment_key) {
+        let submissions = await this.get_assignment_submissions_for_grader(import_handler, user_key, assignment_key);
+
+        if (submissions.length > 0)
+            return submissions[0];
+
+        return { id: '', link: ''};
+    }
+
+
+
+    async get_assignment_submissions_for_grader (import_handler, user_key, assignment_key) {
+        let submission_db_handler = await import_handler.submission_db_handler;
+        let group_db_handler = await import_handler.group_db_handler;
+        let doc_db_handler = await import_handler.doc_db_handler;
+
+        let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+        let submission_keys = assignment_data['submissions'];
+
+        let submissions = [];
+        for (let submission_key of submission_keys) {
+            let link = '';
+
+            let submission_data = await submission_db_handler.get_submission_data(submission_key);
+
+            if (submission_data['group'] && submission_data['group'] !== '') {
+
+                let group_id = submission_data['group'].replace(KeyDictionary.key_dictionary['group'], '');
+                let group_data = await group_db_handler.get_group_data(submission_data['group']);
+
+                let doc_id = group_data['docid'].replace(KeyDictionary.key_dictionary['document'], '');
+                let doc_data = await doc_db_handler.get_doc_data(group_data['docid']);
+
+                let access_code = doc_data['pdfid'];
+
+                link = `access_code=${access_code}&docid=${doc_id}&groupid=${group_id}`;
+            }
+            submissions.push({ id: submission_data.id, link: link });
+        }
+        return submissions
     }
 
 
@@ -776,7 +819,7 @@ class AssignmentDatabaseHandler {
 
 
     async get_previous_assignment_submission_link (import_handler, user_key, assignment_key, submission_id) {
-        let submissions_links_and_ids = await this.get_assignment_submission_links_and_id(
+        let submissions_links_and_ids = await this.get_assignment_submissions_for_grader(
             import_handler,
             user_key,
             assignment_key);
@@ -791,7 +834,7 @@ class AssignmentDatabaseHandler {
 
 
     async get_next_assignment_submission_link (import_handler, user_key, assignment_key, submission_id) {
-        let submissions_links_and_ids = await this.get_assignment_submission_links_and_id(
+        let submissions_links_and_ids = await this.get_assignment_submissions_for_grader(
             import_handler,
             user_key,
             assignment_key);

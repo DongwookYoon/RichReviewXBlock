@@ -1,33 +1,43 @@
 <template>
   <div>
     <div id="top-bar">
-      <p id="assignment-title" @click="go_to_assignment">
-        {{ assignment_title }}
-      </p>
-      <input
-        id="mark-input"
-        :placeholder="[[mark !== '' ? mark : '']]"
-        type="text"
-        @change="updateGrade($event)"
-      />
-      <p id="slash">/</p>
-      <p id="points">{{ points }}</p>
-      <p v-if="prev_link !== ''" id="prev-arrow" @click="prev_student">
-        Previous
-      </p>
-      <select id="student-select" v-model="selected" @change="change_student">
-        <option v-for="s of submissions_list" :key="s.key" :value="s.key">
-          {{ s.name }}
-        </option>
-      </select>
-      <p v-if="next_link !== ''" id="next-arrow" @click="next_student">Next</p>
+      <div id="assignment-title-div">
+        <p id="assignment-title" @click="go_to_assignment">
+          {{ assignment_title }}
+        </p>
+      </div>
+      <div id="points-div">
+        <input
+          id="mark-input"
+          :placeholder="[[mark !== '' ? mark : '']]"
+          type="text"
+          @change="updateGrade($event)"
+        />
+        <p id="slash">/</p>
+        <p id="points">{{ points }}</p>
+      </div>
+      <div id="student-div">
+        <p v-if="prev_id !== ''" id="prev-arrow" @click="prev_student">
+          Previous
+        </p>
+        <select id="student-select" v-model="selected" @change="change_student">
+          <option v-for="s of submissions_list" :key="s.key" :value="s.key">
+            {{ s.name }}
+          </option>
+        </select>
+        <p v-if="next_id !== ''" id="next-arrow" @click="next_student">Next</p>
+      </div>
     </div>
     <no-ssr>
       <body>
         <div class="content_body">
           <base href="/" />
           <div id="r2_app_page" align="'center">
-            <div id="r2_app_container" align="left"></div>
+            <div id="r2_app_container" align="left">
+              <p v-if="no_submission" id="no-submission-text">
+                This student has not submitted the assignment
+              </p>
+            </div>
           </div>
         </div>
       </body>
@@ -114,32 +124,41 @@ export default {
       next_id: grader_res.data.next_submission_link_and_id.id,
       mark: grader_res.data.submission_data.mark,
       submissions_list: submissions_list,
-      selected: selected
+      selected: selected,
+      no_submission: false
     }
   },
   mounted: async function() {
-    const res = await axios.get(
-      `https://localhost:3000/courses/${this.$route.params.course_id}/groups/${
-        this.$route.query.groupid
-      }`,
-      {
-        headers: {
-          Authorization: this.$auth.user.sub
-        },
-        httpsAgent: new https.Agent({
-          rejectUnauthorized: false
-        })
-      }
-    )
-    const r2_ctx = res.data.r2_ctx
-    r2_ctx.auth = this.$auth.user
-    const cdn_endpoint = res.data.cdn_endpoint
+    if (
+      !this.$route.query.access_code &&
+      !this.$route.query.docid &&
+      !this.$route.query.groupid
+    ) {
+      this.no_submission = true
+    } else {
+      const res = await axios.get(
+        `https://localhost:3000/courses/${
+          this.$route.params.course_id
+        }/groups/${this.$route.query.groupid}`,
+        {
+          headers: {
+            Authorization: this.$auth.user.sub
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+      )
+      const r2_ctx = res.data.r2_ctx
+      r2_ctx.auth = this.$auth.user
+      const cdn_endpoint = res.data.cdn_endpoint
 
-    loadRichReview(
-      encodeURIComponent(JSON.stringify(r2_ctx)),
-      'development',
-      cdn_endpoint
-    )
+      loadRichReview(
+        encodeURIComponent(JSON.stringify(r2_ctx)),
+        'development',
+        cdn_endpoint
+      )
+    }
   },
   methods: {
     go_to_assignment() {
@@ -213,6 +232,8 @@ p {
 #top-bar {
   display: flex;
   background-color: #0c2343;
+  width: 100%;
+  height: 5vh;
 }
 
 #assignment-title,
@@ -225,9 +246,29 @@ p {
   font-size: 2.5vh;
 }
 
-#assignment-title {
-  margin-left: 1vw;
-  width: 40vw;
+#assignment-title-div,
+#points-div,
+#student-div {
+  display: flex;
+}
+
+#assignment-title-div {
+  position: absolute;
+  left: 1vw;
+}
+
+#points-div {
+  position: absolute;
+  left: 50%;
+  margin-right: -50%;
+  transform: translate(-50%, 0);
+}
+
+#student-div {
+  position: absolute;
+  left: 99%;
+  margin-right: -99%;
+  transform: translate(-99%, 0);
 }
 
 #mark-input {
@@ -241,10 +282,6 @@ p {
 
 #slash {
   margin-right: 1vw;
-}
-
-#points {
-  width: 33vw;
 }
 
 #prev-arrow,
@@ -268,7 +305,13 @@ body {
 #r2_app_container {
   max-height: 95vh;
 }
+
+#no-submission-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-right: -50%;
+  transform: translate(-50%, -50%);
+  font-size: 2vh;
+}
 </style>
-<!--app page-->
-<!--app container-->
-<!--view-->

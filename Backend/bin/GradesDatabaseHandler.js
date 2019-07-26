@@ -146,6 +146,7 @@ class GradesDatabaseHandler {
             assignment_grade['assignment_id'] = assignment['id'];
             assignment_grade['title'] = assignment['title'];
             assignment_grade['count_toward_final_grade'] = assignment['count_toward_final_grade'];
+            assignment_grade['weight'] = assignment['weight'];
             student_grades['grades'].push(assignment_grade);
         }
 
@@ -175,7 +176,7 @@ class GradesDatabaseHandler {
         let grades = [];
         let total_assignment_points = assignments.reduce((total, assignment) => {
             if (assignment.count_toward_final_grade)
-                return total + assignment['points'];
+                return total + assignment['points'] * (assignment['weight'] / 100);
             else return total;
         }, 0);
 
@@ -195,6 +196,7 @@ class GradesDatabaseHandler {
                 assignment_grade['title'] = assignment['title'];
                 assignment_grade['points'] = assignment['points'];
                 assignment_grade['count_toward_final_grade'] = assignment['count_toward_final_grade'];
+                assignment_grade['weight'] = assignment['weight'];
                 student_grades['grades'].push(assignment_grade);
             }
             grades.push(student_grades);

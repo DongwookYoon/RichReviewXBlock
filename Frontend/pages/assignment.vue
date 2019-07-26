@@ -17,7 +17,7 @@
             Submissions
           </button>
           <button
-            v-if="grader_link !== ''"
+            v-if="grader_submission_id !== ''"
             id="grader-button"
             @click="go_to_grader"
           >

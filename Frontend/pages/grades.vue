@@ -23,6 +23,7 @@
                 {{ a.title }}
               </div>
               <div class="points">Out of {{ a.points }}</div>
+              <div class="weights">Worth {{ a.weight }}% of final grade</div>
               <div
                 v-if="!a.count_toward_final_grade"
                 class="count-toward-final"
@@ -32,7 +33,7 @@
             </th>
             <th>
               <div>Total</div>
-              <div class="points">Out of {{ total_assignment_points }}</div>
+              <!--<div class="points">Out of {{ total_assignment_points }}</div>-->
             </th>
           </tr>
         </thead>
@@ -164,9 +165,10 @@ export default {
     },
     calculate_total(grades) {
       let total = 0
+      console.log(grades)
       for (const grade of grades) {
         if (grade.mark !== '' && grade.count_toward_final_grade) {
-          total += grade.mark
+          total += grade.mark * (grade.weight / 100)
         }
       }
       return (
@@ -257,7 +259,8 @@ td {
   margin-bottom: 1vh;
 }
 
-.points {
+.points,
+.weights {
   font-size: 10px;
 }
 

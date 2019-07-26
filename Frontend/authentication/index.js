@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const express = require('express')
 const passport = require('passport')
 require('./passport')
@@ -15,7 +16,11 @@ app.get(
     failureFlash: true
   }),
   function(req, res) {
-    res.redirect(req.session.latestUrl || '/')
+    console.log('here')
+    window.open('www.google.ca')
+    const fs = require('fs')
+    fs.writeFileSync('test.txt', 'test')
+    // res.redirect(req.session.latestUrl || '/')
   }
 )
 
@@ -26,7 +31,9 @@ app.post(
     failureFlash: true
   }),
   function(req, res) {
-    res.redirect(req.session.latestUrl || '/')
+    console.log('here')
+    window.open('www.google.ca')
+    // res.redirect(req.session.latestUrl || '/')
   }
 )
 

@@ -33,17 +33,16 @@
             @change="changed"
           />
         </div>
-        <!--<div>-->
-        <!--<label>Display Grade as</label>-->
-        <!--<select v-model="edits.display_grade_as">-->
-        <!--<option disabled value="">Please select one</option>-->
-        <!--<option>Points</option>-->
-        <!--<option>Percentage</option>-->
-        <!--<option>Complete/Incomplete</option>-->
-        <!--<option>Letter Grade</option>-->
-        <!--<option>Not Graded</option>-->
-        <!--</select>-->
-        <!--</div>-->
+        <div id="weight-div">
+          <label id="weight-label">Weight</label>
+          <input
+            id="weight"
+            v-model="edits.weight"
+            placeholder="0"
+            @change="changed"
+          />
+          <label id="weight-label2">% of final grade</label>
+        </div>
         <div id="count-towards-final-div">
           <input
             id="count-towards-final"
@@ -193,6 +192,7 @@ export default {
         title: res.data.title,
         description: res.data.description,
         points: res.data.points,
+        weight: res.data.weight,
         display_grade_as: res.data.display_grade_as,
         count_toward_final_grade: res.data.count_toward_final_grade,
         allow_multiple_submissions: res.data.allow_multiple_submissions,

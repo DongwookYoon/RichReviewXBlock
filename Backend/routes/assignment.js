@@ -193,7 +193,7 @@ router.get('/:assignment_id/grader', async function(req, res, next) {
 
     try {
 
-        let submission_links_and_id = await assignment_db_handler.get_assignment_submission_links_and_id(
+        let submission_links_and_id = await assignment_db_handler.get_assignment_submissions_for_grader(
             ImportHandler,
             user_key,
             assignment_key);

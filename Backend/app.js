@@ -1,25 +1,25 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
 
 /*
  ** Routers
  */
-var indexRouter = require('./routes/index');
-var courseRouter = require('./routes/course');
-var assignmentRouter = require('./routes/assignment');
-var userRouter = require('./routes/user');
-var loginRouter = require('./routes/login');
-var course_groupRouter = require('./routes/course_group');
-var gradesRouter = require('./routes/grades');
-var groupRouter = require('./routes/group');
-var dbsRouter = require('./routes/dbs');
-var bluemixRouter = require('./routes/bluemix_stt_auth');
+const indexRouter = require('./routes/index');
+const courseRouter = require('./routes/course');
+const assignmentRouter = require('./routes/assignment');
+const userRouter = require('./routes/user');
+const loginRouter = require('./routes/login');
+const course_groupRouter = require('./routes/course_group');
+const gradesRouter = require('./routes/grades');
+const groupRouter = require('./routes/group');
+const dbsRouter = require('./routes/dbs');
+const bluemixRouter = require('./routes/bluemix_stt_auth');
+require('./lib/ELDAPSync');
 
-
-var app = express();
+const app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

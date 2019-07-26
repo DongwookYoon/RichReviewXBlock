@@ -143,14 +143,80 @@ class CourseDatabaseHandler {
 
         try {
             let course_data = await this.get_course_data(course_key);
-            let groups = course_data['active_course_groups'];
-            groups.push(course_group_key);
-            let new_groups = JSON.stringify(groups);
-            await this.set_course_data(course_key, 'active_course_groups', new_groups);
+            let active_course_groups = course_data['active_course_groups'];
+            active_course_groups.push(course_group_key);
+            await this.set_course_data(course_key, 'active_course_groups', JSON.stringify(active_course_groups));
 
         } catch (e) {
             console.warn(e);
             throw e;
+        }
+    }
+
+
+
+    async add_student_to_course (import_handler, user_key, course_key) {
+        try {
+            let course_data = await this.get_course_data(course_key);
+            let active_students = course_data['active_students'];
+            active_students.push(user_key);
+            await this.set_course_data(course_key, 'active_students', JSON.stringify(active_students));
+
+            let user_db_handler = await import_handler.user_db_handler;
+            await user_db_handler.add_course_to_student(user_key, course_key);
+        } catch (e) {
+            console.warn(e);
+            throw e;
+        }
+    }
+
+
+
+    async add_instructor_to_course (import_handler, user_key, course_key) {
+        try {
+            let course_data = await this.get_course_data(course_key);
+            let instructors = course_data['instructors'];
+            instructors.push(user_key);
+            await this.set_course_data(course_key, 'instructors', JSON.stringify(instructors));
+
+            let user_db_handler = await import_handler.user_db_handler;
+            await user_db_handler.add_course_to_instructor(user_key, course_key);
+        } catch (e) {
+            console.warn(e);
+            throw e;
+        }
+    }
+
+
+
+    async create_course (course_key, course_data) {
+        if(course_data['id'] === undefined ||
+            course_data['title'] === undefined  ||
+            course_data['dept'] === undefined  ||
+            course_data['number'] === undefined  ||
+            course_data['section'] === undefined ) {
+                throw new RichReviewError('Invalid course data');
+        }
+
+        await this.set_course_data(course_key, 'title', '');
+        await this.set_course_data(course_key, 'dept', '');
+        await this.set_course_data(course_key, 'section', '');
+        await this.set_course_data(course_key, 'number', '');
+        await this.set_course_data(course_key, 'year', '');
+        await this.set_course_data(course_key, 'institution', '');
+        await this.set_course_data(course_key, 'description', '');
+        await this.set_course_data(course_key, 'instructors', '[]');
+        await this.set_course_data(course_key, 'tas', '[]');
+        await this.set_course_data(course_key, 'active_students', '[]');
+        await this.set_course_data(course_key, 'blocked_students', '[]');
+        await this.set_course_data(course_key, 'assignments', '[]');
+        await this.set_course_data(course_key, 'deleted_assignments', '[]');
+        await this.set_course_data(course_key, 'active_course_groups', '[]');
+        await this.set_course_data(course_key, 'inactive_course_groups', '[]');
+        await this.set_course_data(course_key, 'is_active', 'true');
+
+        for (let field in course_data) {
+            await this.set_course_data(course_key, field, course_data[field]);
         }
     }
 
@@ -430,6 +496,16 @@ class CourseDatabaseHandler {
         } catch (e) {
             return false;
         }
+    }
+
+    async is_user_enrolled_in_course (user_key, course_key) {
+        let course_data = await this.get_course_data(course_key);
+        return course_data['active_students'].includes(user_key);
+    }
+
+    async is_user_instructor_for_course (user_key, course_key) {
+        let course_data = await this.get_course_data(course_key);
+        return course_data['instructors'].includes(user_key);
     }
 }
 

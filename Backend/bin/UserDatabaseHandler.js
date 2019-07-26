@@ -1,6 +1,7 @@
 const RedisClient = require("./RedisClient");
 const KeyDictionary = require("./KeyDictionary");
 const RedisToJSONParser = require("./RedisToJSONParser");
+const RichReviewError = require('../errors/RichReviewError');
 
 class UserDatabaseHandler {
 
@@ -132,6 +133,22 @@ class UserDatabaseHandler {
 
 
 
+    async add_course_to_student (user_key, course_key) {
+        let user_data = await this.get_user_data(user_key);
+        let enrolments = user_data['enrolments'];
+        enrolments.push(course_key);
+        await this.set_user_data(user_key, 'enrolments', JSON.stringify(enrolments));
+    }
+
+
+    async add_course_to_instructor (user_key, course_key) {
+        let user_data = await this.get_user_data(user_key);
+        let teaching = user_data['teaching'];
+        teaching.push(course_key);
+        await this.set_user_data(user_key, 'teaching', JSON.stringify(teaching));
+    }
+
+
 
     async add_submitter_to_user (user_key, submitter_key) {
         let user_data = await this.get_user_data(user_key);
@@ -163,25 +180,6 @@ class UserDatabaseHandler {
         groups.push(group_key);
         await this.set_user_data(user_key, 'groupNs', JSON.stringify(groups));
     }
-
-
-
-
-    set_user_data(user_key, field, value) {
-
-        return new Promise((resolve, reject) => {
-            console.log('Redis hset request to key: ' + user_key);
-            this.db_handler.client.hset(user_key, field, value, (error, result) => {
-                if (error) {
-                    console.log(error);
-                    reject(error);
-                }
-                console.log('SET result -> ' + result);
-                resolve();
-            });
-        })
-    }
-
 
 
 
@@ -229,6 +227,49 @@ class UserDatabaseHandler {
         throw new Error('Not implemented yet');
     }
 
+
+
+    async create_user (user_key, user_data) {
+        if(user_data['id'] === undefined ||
+            user_data['creation_date'] === undefined ||
+            user_data['auth_type'] === undefined) {
+                throw new RichReviewError('Invalid user data')
+        }
+
+        await this.set_user_data(user_key, 'first_name', '');
+        await this.set_user_data(user_key, 'last_name', '');
+        await this.set_user_data(user_key, 'nick_name', '');
+        await this.set_user_data(user_key, 'preferred_name', '');
+        await this.set_user_data(user_key, 'display_name', '');
+        await this.set_user_data(user_key, 'email', '');
+        await this.set_user_data(user_key, 'teaching', '[]');
+        await this.set_user_data(user_key, 'taing', '[]');
+        await this.set_user_data(user_key, 'enrolments', '[]');
+        await this.set_user_data(user_key, 'submitters', '[]');
+        await this.set_user_data(user_key, 'groupNs', '[]');
+        await this.set_user_data(user_key, 'course_groups', '[]');
+
+        for (let field in user_data) {
+            await this.set_user_data(user_key, field, user_data[field]);
+        }
+    }
+
+
+
+    set_user_data(user_key, field, value) {
+
+        return new Promise((resolve, reject) => {
+            console.log('Redis hset request to key: ' + user_key);
+            this.db_handler.client.hset(user_key, field, value, (error, result) => {
+                if (error) {
+                    console.log(error);
+                    reject(error);
+                }
+                console.log('SET result -> ' + result);
+                resolve();
+            });
+        })
+    }
 
 
     async remove_submitter_from_user (user_key, submitter_key) {

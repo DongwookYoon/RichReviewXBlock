@@ -268,6 +268,9 @@ class CourseGroupDatabaseHandler {
 
     async remove_submitter_from_group (submitter_key, course_group_key) {
         let group_data = await this.get_course_group_data(course_group_key);
+        if (Object.keys(group_data).length === 0)
+            return;
+
         let submitters = group_data['submitters'];
         submitters = submitters.filter(submitter => {
             return submitter !== submitter_key;
@@ -299,7 +302,8 @@ class CourseGroupDatabaseHandler {
 
         let course_group_data = await this.get_course_group_data(course_group_key);
 
-        console.log(course_group_data);
+        if (Object.keys(course_group_data).length === 0)
+            return;
 
         for (let member_key of course_group_data['users']) {
             await user_db_handler.remove_course_group_from_user(member_key, course_group_key);

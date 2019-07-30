@@ -471,6 +471,27 @@ router.post('/:assignment_id/comment_submissions', async function(req, res, next
 });
 
 
+router.post('/:assignment_id/extensions', async function(req, res, next) {
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let assignment_key = KeyDictionary.key_dictionary['assignment'] + req.params['assignment_id'];
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
+
+    let extensions = req.body;
+
+    let assignment_db_handler = await ImportHandler.assignment_db_handler;
+
+    try {
+        await assignment_db_handler.set_assignment_extensions(ImportHandler, user_key, course_key, assignment_key, extensions);
+        res.sendStatus(200);
+
+    } catch (e) {
+        console.warn(e);
+        res.status(500).send({
+            message: e.message
+        });
+    }
+});
+
 
 /*
  ** DELETE all course assignments

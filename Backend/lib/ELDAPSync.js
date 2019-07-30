@@ -20,8 +20,8 @@ client.bind(eldap_config.user, eldap_config.password, function(err) {
     console.log(err)
 });
 
-const j = schedule.scheduleJob('0 0 * * *', async function (fireDate) {
-    console.log('This job was supposed to run at ' + fireDate + ', but actually ran at ' + new Date());
+const eldap_sync = schedule.scheduleJob('0 * * * *', async function (fireDate) {
+    console.log('ELDAP sync was supposed to run at ' + fireDate + ', but actually ran at ' + new Date());
 
     let all_courses = await get_all_courses();
 
@@ -41,64 +41,68 @@ async function verify_enrolments(course) {
     }
 
     let instructor_course = is_instructor_course(course);
+    let members = get_user_list(course);
 
     if (instructor_course)
-        await verify_instructor_course(course_key, course.uniqueMember);
+        await verify_instructor_course(course_key, members);
     else
-        await verify_student_course(course_key, course.uniqueMember);
+        await verify_student_course(course_key, members);
 }
 
 
 
 
 async function verify_instructor_course(course_key, members) {
-    if (typeof members === "string") {
-        let user_key = get_user_key(members);
 
-        if(!(await does_user_exist(user_key)))
+    for (let user_key of members) {
+
+        if (!(await does_user_exist(user_key)))
             await create_user(user_key);
 
         let is_user_enrolled = await is_user_instructor_for_course(user_key, course_key);
-        if(!is_user_enrolled)
+        if (!is_user_enrolled)
             await add_instructor_to_course(user_key, course_key);
     }
 
-    for (let member of members) {
-        if (member.length > 1) {
-            let user_key = get_user_key(member);
+    await remove_unenrolled_instructors(course_key, members);
+}
 
-            if (!(await does_user_exist(user_key)))
-                await create_user(user_key);
+async function verify_student_course(course_key, members) {
 
-            let is_user_enrolled = await is_user_instructor_for_course(user_key, course_key);
-            if (!is_user_enrolled)
-                await add_instructor_to_course(user_key, course_key);
+    for (let user_key of members) {
+
+        if (!(await does_user_exist(user_key)))
+            await create_user(user_key);
+
+        let is_user_enrolled = await is_user_enrolled_in_course(user_key, course_key);
+        if (!is_user_enrolled)
+            await add_student_to_course(user_key, course_key);
+    }
+
+    await remove_unenrolled_students(course_key, members);
+}
+
+
+
+
+async function remove_unenrolled_instructors (course_key, members) {
+    let course_db_handler = await ImportHandler.course_db_handler;
+    let instructors = await course_db_handler.get_course_instructors(course_key);
+
+    for(let instructor of instructors) {
+        if (!members.includes(instructor)) {
+            await course_db_handler.remove_instructor(instructor, course_key)
         }
     }
 }
 
-async function verify_student_course(course_key, members) {
-    if (typeof members === "string") {
-        let user_key = get_user_key(members);
+async function remove_unenrolled_students (course_key, members) {
+    let course_db_handler = await ImportHandler.course_db_handler;
+    let active_students = await course_db_handler.get_course_active_student_keys(course_key);
 
-        if(!(await does_user_exist(user_key)))
-            await create_user(user_key);
-
-        let is_user_enrolled = await is_user_enrolled_in_course(user_key, course_key);
-        if(!is_user_enrolled)
-            await add_student_to_course(user_key, course_key);
-    }
-
-    for (let member of members) {
-        if (member.length > 1) {
-            let user_key = get_user_key(member);
-
-            if (!(await does_user_exist(user_key)))
-                await create_user(user_key);
-
-            let is_user_enrolled = await is_user_enrolled_in_course(user_key, course_key);
-            if (!is_user_enrolled)
-                await add_student_to_course(user_key, course_key);
+    for(let student of active_students) {
+        if (!members.includes(student)) {
+            await course_db_handler.deactivate_student(student, course_key)
         }
     }
 }
@@ -146,6 +150,17 @@ async function does_user_exist(user_key) {
 
 
 
+function get_user_list (course) {
+    if (typeof course.uniqueMember === 'string') {
+        return [get_user_key(course.uniqueMember)];
+    }
+
+    let members = [];
+    for (let member of course.uniqueMember) {
+        members.push(get_user_key(member));
+    }
+    return members;
+}
 
 function get_user_key(user) {
     let comma_index = user.indexOf(',');

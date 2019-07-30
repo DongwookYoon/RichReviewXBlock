@@ -1,3 +1,10 @@
+const RedisClient = require("./RedisClient");
+const RedisToJSONParser = require("./RedisToJSONParser");
+const KeyDictionary = require("./KeyDictionary");
+const DateHelper = require("./DateHelper");
+const NotAuthorizedError = require("../errors/NotAuthorizedError");
+const late = require('../lib/late');
+
 class GradesDatabaseHandler {
 
     constructor(){
@@ -42,20 +49,7 @@ class GradesDatabaseHandler {
             let course_key = KeyDictionary.key_dictionary['course'] + course_id;
             let course_data = await course_db_handler.get_course_data(course_key);
 
-            let late = false;
-
-            if (assignment_data['due_date'] !== '') {
-                let due_date = new Date(assignment_data['due_date']);
-                let now = new Date();
-
-                if (submission_data['submission_status'] === 'Not Submitted' &&
-                    now - due_date > 0)
-                    late = true;
-
-                if (submission_data['submission_status'] === 'Submitted' &&
-                    new Date(submission_data['submission_time']) - due_date > 0)
-                    late = true;
-            }
+            let late = late.is_late(assignment_data, submission_data);
 
             if (!assignment_data['hidden']) {
                 grades.push({
@@ -94,22 +88,7 @@ class GradesDatabaseHandler {
         grade['mark'] = submission_data['mark'];
         grade['submission_status'] = submission_data['submission_status'];
 
-        let late = false;
-
-        if (assignment_data['due_date'] !== '') {
-            let due_date = new Date(assignment_data['due_date']);
-            let now = new Date();
-
-            if (submission_data['submission_status'] === 'Not Submitted' &&
-                now - due_date > 0)
-                late = true;
-
-            if (submission_data['submission_status'] === 'Submitted' &&
-                new Date(submission_data['submission_time']) - due_date > 0)
-                late = true;
-        }
-
-        grade['late'] = late;
+        grade['late'] = late.is_late(assignment_data, submission_data);
 
         return grade;
     }
@@ -284,21 +263,4 @@ class GradesDatabaseHandler {
 
 module.exports = GradesDatabaseHandler;
 
-
-/*
- ** Module exports are at the end of the file to fix the circular dependency between:
- **  - UserDatabaseHandler
- **  - CourseDatabaseHandler
- **  - AssignmentDatabaseHandler
- */
-const RedisClient = require("./RedisClient");
-const UserDatabaseHandler = require("./UserDatabaseHandler");
-const SubmitterDatabaseHandler = require("./SubmitterDatabaseHandler");
-const SubmissionDatabaseHandler = require("./SubmissionDatabaseHandler");
-const CourseDatabaseHandler = require("./CourseDatabaseHandler");
-const AssignmentDatabaseHandler = require("./AssignmentDatabaseHandler");
-const RedisToJSONParser = require("./RedisToJSONParser");
-const KeyDictionary = require("./KeyDictionary");
-const DateHelper = require("./DateHelper");
-const NotAuthorizedError = require("../errors/NotAuthorizedError");
 

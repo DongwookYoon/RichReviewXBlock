@@ -79,6 +79,48 @@ class CourseDatabaseHandler {
 
 
 
+    async get_course_active_student_keys (course_key) {
+        let course_data = await this.get_course_data(course_key);
+        return course_data['active_students'];
+    }
+
+
+    async get_course_active_students (import_handler, course_key) {
+        let user_db_handler = await import_handler.user_db_handler;
+
+        let student_keys = await this.get_course_active_student_keys(course_key);
+        let students = [];
+        for (let user_key of student_keys) {
+            let user_data = await user_db_handler.get_user_data(user_key);
+            students.push({ key: user_key, name: user_data['display_name'] });
+        }
+
+        return students;
+    }
+
+
+
+    async get_course_course_groups_keys (course_key) {
+        let course_data = await this.get_course_data(course_key);
+        return course_data['active_course_groups'];
+    }
+
+
+
+    async get_course_course_groups (import_handler, course_key) {
+        let course_group_db_handler = await import_handler.course_group_db_handler;
+
+        let course_group_keys = await this.get_course_course_groups_keys(course_key);
+        let course_groups = [];
+        for (let course_group_key of course_group_keys) {
+            let course_group_data = await course_group_db_handler.get_course_group_data(course_group_key);
+            course_groups.push({ key: course_group_key, name: course_group_data['name'] });
+        }
+
+        return course_groups;
+    }
+
+
 
     async get_course (import_handler, user_key, course_key) {
 
@@ -159,8 +201,15 @@ class CourseDatabaseHandler {
         try {
             let course_data = await this.get_course_data(course_key);
             let active_students = course_data['active_students'];
+            let blocked_students = course_data['blocked_students'];
+
             active_students.push(user_key);
+            blocked_students = blocked_students.filter(student => {
+                return user_key !== student;
+            });
+
             await this.set_course_data(course_key, 'active_students', JSON.stringify(active_students));
+            await this.set_course_data(course_key, 'blocked_students', JSON.stringify(blocked_students));
 
             let user_db_handler = await import_handler.user_db_handler;
             await user_db_handler.add_course_to_student(user_key, course_key);
@@ -397,6 +446,42 @@ class CourseDatabaseHandler {
         }
 
         return assignments;
+    }
+
+
+
+    async get_course_instructors (course_key) {
+        let course_data = await this.get_course_data(course_key);
+        return course_data['instructors'];
+    }
+
+
+
+    async deactivate_student (user_key, course_key) {
+        let course_data = await this.get_course_data(course_key);
+        let active_students = course_data['active_students'];
+        let blocked_students = course_data['blocked_students'];
+
+        active_students = active_students.filter(student => {
+            return student !== user_key
+        });
+        blocked_students.push(user_key);
+
+        await this.set_course_data(course_key, 'active_students', JSON.stringify(active_students));
+        await this.set_course_data(course_key, 'blocked_students', JSON.stringify(blocked_students));
+    }
+
+
+
+    async remove_instructor (user_key, course_key) {
+        let course_data = await this.get_course_data(course_key);
+        let instructors = course_data['instructors'];
+
+        instructors = instructors.filter(instructor => {
+            return instructor !== user_key
+        });
+
+        await this.set_course_data(course_key, 'instructors', JSON.stringify(instructors));
     }
 
 

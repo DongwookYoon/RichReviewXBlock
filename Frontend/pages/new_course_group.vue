@@ -94,7 +94,7 @@
 </template>
 
 <script>
-/* eslint-disable no-console,camelcase */
+/* eslint-disable no-console,camelcase,vue/no-unused-components */
 
 import https from 'https'
 import sha1 from 'sha1'
@@ -105,10 +105,18 @@ import { EventBus } from '../plugins/event-bus'
 import CourseGroupCard from '../components/course_group_card'
 import CourseSidebar from '../components/course_sidebar'
 import NavBar from '../components/nav_bar'
+import ModalPlugin from '../node_modules/bootstrap-vue'
 
 export default {
   name: 'NewGroup',
-  components: { NavBar, CourseSidebar, Footer, draggable, CourseGroupCard },
+  components: {
+    NavBar,
+    CourseSidebar,
+    Footer,
+    draggable,
+    CourseGroupCard,
+    ModalPlugin
+  },
   async asyncData(context) {
     const res = await axios.get(
       `https://localhost:3000/courses/${

@@ -4,6 +4,7 @@ const KeyDictionary = require("./KeyDictionary");
 const DateHelper = require("./DateHelper");
 const NotAuthorizedError = require("../errors/NotAuthorizedError");
 const RichReviewError = require("../errors/RichReviewError");
+const late = require('../lib/late');
 
 class AssignmentDatabaseHandler {
 
@@ -23,6 +24,18 @@ class AssignmentDatabaseHandler {
 
         this.instance = await new AssignmentDatabaseHandler();
         return this.instance;
+    }
+
+
+
+    async set_assignment_extensions (import_handler, user_key, course_key, assignment_key, extensions) {
+        let user_db_handler = await import_handler.user_db_handler;
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+
+        if (permissions !== 'ta' && permissions !== 'instructor')
+            throw new NotAuthorizedError('You are not authorized to change assignment extensions');
+
+        await this.set_assignment_data(assignment_key, 'extensions', JSON.stringify(extensions));
     }
 
 
@@ -82,6 +95,7 @@ class AssignmentDatabaseHandler {
         await this.set_assignment_data(assignment_key, 'course', course_key);
         await this.set_assignment_data(assignment_key, 'group', '');
         await this.set_assignment_data(assignment_key, 'creation_date', new Date().toISOString());
+        await this.set_assignment_data(assignment_key, 'extensions', '[]');
 
         await course_db_handler.add_assignment_to_course(assignment_key, course_key);
 
@@ -391,6 +405,8 @@ class AssignmentDatabaseHandler {
 
 
     async get_assignment_for_tas_and_instructors (import_handler, user_key, assignment_key) {
+        let course_db_handler = await import_handler.course_db_handler;
+
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
         delete assignment_data['display_grade_as'];
         delete assignment_data['count_toward_final_grade'];
@@ -402,11 +418,26 @@ class AssignmentDatabaseHandler {
             user_key,
             assignment_key);
 
+        let student_or_group_list;
+        if (assignment_data['group_assignment'])
+            student_or_group_list = await course_db_handler.get_course_course_groups(import_handler, assignment_data['course']);
+        else
+            student_or_group_list = await course_db_handler.get_course_active_students(import_handler, assignment_data['course']);
+
+        student_or_group_list = student_or_group_list.filter(student_or_group => {
+            for (let extension of assignment_data['extensions']) {
+                if (extension['user'] === student_or_group['key'])
+                    return false;
+            }
+            return true;
+        });
+
         return {
             assignment: assignment_data,
             grader_link: submission_data.link,
             grader_submission_id: submission_data.id,
-            link: ''
+            link: '',
+            student_or_group_list: student_or_group_list
         };
     }
 
@@ -571,6 +602,7 @@ class AssignmentDatabaseHandler {
 
         let assignments = [];
         let submission_db_handler = await import_handler.submission_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
 
         for (let assignment_key of assignment_keys) {
 
@@ -586,22 +618,10 @@ class AssignmentDatabaseHandler {
 
                 assignment_data['submission'] = { submission_status };
 
-                let late = false;
-
-                if (assignment_data['due_date'] !== '') {
-                    let due_date = new Date(assignment_data['due_date']);
-                    let now = new Date();
-
-                    if (submission_data['submission_status'] === 'Not Submitted' &&
-                        now - due_date > 0)
-                        late = true;
-
-                    if (submission_data['submission_status'] === 'Submitted' &&
-                        new Date(submission_data['submission_time']) - due_date > 0)
-                        late = true;
-                }
-
-                assignment_data['late'] = late;
+                let submitter_data = await submitter_db_handler.get_submitter_data(submission_data['submitter']);
+                assignment_data['late'] = late.is_late(assignment_data, submission_data, submitter_data['course_group'] === '' ?
+                    submitter_data['members'][0] :
+                    submitter_data['course_group']);
 
                 assignment_data = {
                     id: assignment_data.id,
@@ -730,20 +750,9 @@ class AssignmentDatabaseHandler {
                 link = `access_code=${access_code}&docid=${doc_id}&groupid=${group_id}`;
             }
 
-            let late = false;
-
-            if (assignment_data['due_date'] !== '') {
-                let due_date = new Date(assignment_data['due_date']);
-                let now = new Date();
-
-                if (submission_data['submission_status'] === 'Not Submitted' &&
-                    now - due_date > 0)
-                    late = true;
-
-                if (submission_data['submission_status'] === 'Submitted' &&
-                    new Date(submission_data['submission_time']) - due_date > 0)
-                    late = true;
-            }
+            let late = late.is_late(assignment_data, submission_data, submitter_data['course_group'] === '' ?
+                                                                            submitter_data['members'][0] :
+                                                                            submitter_data['course_group']);
 
             let assignment_submission = {
                 submitter_name: submitter_name,
@@ -1023,20 +1032,7 @@ class AssignmentDatabaseHandler {
 
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
 
-        let late = false;
-
-        if (assignment_data['due_date'] !== '') {
-            let due_date = new Date(assignment_data['due_date']);
-            let now = new Date();
-
-            if (submission_data['submission_status'] === 'Not Submitted' &&
-                now - due_date > 0)
-                late = true;
-
-            if (submission_data['submission_status'] === 'Submitted' &&
-                new Date(submission_data['submission_time']) - due_date > 0)
-                late = true;
-        }
+        let late = late.is_late(assignment_data, submission_data);
 
         return {
             submission_status: submission_data['submission_status'],

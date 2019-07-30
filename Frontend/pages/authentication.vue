@@ -15,7 +15,7 @@ export default {
   },
   methods: {
     async login() {
-      await axios.post(
+      const res = await axios.post(
         'https://localhost:3000/login',
         {
           auth: this.$auth.user
@@ -26,6 +26,7 @@ export default {
           })
         }
       )
+      console.log(res)
       this.$router.replace('/education/dashboard')
     }
   }

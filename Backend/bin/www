@@ -16,6 +16,7 @@ const path = require('path');
 
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
+console.log(`Bound to port ${port}`);
 
 /**
  * Create HTTP server.
@@ -26,7 +27,6 @@ const options = {
 };
 
 var server = http.createServer(options, app);
-
 /**
  * Listen on provided port, on all network interfaces.
  */

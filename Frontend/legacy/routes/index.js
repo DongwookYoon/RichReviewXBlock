@@ -150,7 +150,6 @@ router.post(
     failureFlash: true
   }),
   function(req, res) {
-    window.open('www.google.ca')
     js_utils.logUserAction(req, 'logged in')
     res.redirect('/education/authentication')
     // res.redirect(req.session.latestUrl || '/')

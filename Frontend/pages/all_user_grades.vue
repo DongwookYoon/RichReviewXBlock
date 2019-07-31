@@ -49,7 +49,7 @@ export default {
   components: { Sidebar, Footer },
   async asyncData(context) {
     const res = await axios.get(
-      `https://localhost:3000/courses/0/grades/all_user_grades`,
+      `https://${process.env.backend}:3000/courses/0/grades/all_user_grades`,
       {
         headers: {
           Authorization: context.app.$auth.user.sub

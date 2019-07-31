@@ -96,7 +96,7 @@ export default {
   },
   async asyncData(context) {
     const course_res = await axios.get(
-      `https://localhost:3000/courses/${context.params.course_id}`,
+      `https://${process.env.backend}:3000/courses/${context.params.course_id}`,
       {
         headers: {
           Authorization: context.app.$auth.user.sub

@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 const passport = require('passport')
 const SAMLStrategy = require('passport-saml').Strategy
-const env = require('../ssl/env.js')
+const env = require('../ssl/certs.js')
 
 passport.serializeUser(function(user, done) {
   done(null, user.id)

@@ -47,7 +47,7 @@ export default {
   components: { NavBar, Footer, CourseSidebar },
   async asyncData(context) {
     const res = await axios.get(
-      `https://localhost:3000/courses/${
+      `https://${process.env.backend}:3000/courses/${
         context.params.course_id
       }/course_groups/${context.params.group_id}`,
       {
@@ -70,7 +70,7 @@ export default {
   methods: {
     async delete_group() {
       await axios.delete(
-        `https://localhost:3000/courses/${
+        `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
         }/course_groups/${this.$route.params.group_id}`,
         {

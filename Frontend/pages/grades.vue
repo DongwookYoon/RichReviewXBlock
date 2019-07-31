@@ -75,7 +75,9 @@ export default {
   components: { Footer, NavBar, CourseSidebar },
   async asyncData(context) {
     const res = await axios.get(
-      `https://localhost:3000/courses/${context.params.course_id}/grades`,
+      `https://${process.env.backend}:3000/courses/${
+        context.params.course_id
+      }/grades`,
       {
         headers: {
           Authorization: context.app.$auth.user.sub
@@ -118,7 +120,7 @@ export default {
         }
 
         await axios.put(
-          `https://localhost:3000/courses/${
+          `https://${process.env.backend}:3000/courses/${
             this.$route.params.course_id
           }/grades/${assignment_id}`,
           {
@@ -138,7 +140,7 @@ export default {
     },
     async downloadGrades() {
       const res = await axios.get(
-        `https://localhost:3000/courses/${
+        `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
         }/grades/csv`,
         {

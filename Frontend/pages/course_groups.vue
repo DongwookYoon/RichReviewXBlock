@@ -52,7 +52,7 @@ export default {
   name: 'CourseGroups',
   async asyncData(context) {
     const res = await axios.get(
-      `https://localhost:3000/courses/${
+      `https://${process.env.backend}:3000/courses/${
         context.params.course_id
       }/course_groups`,
       {

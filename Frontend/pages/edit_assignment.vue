@@ -173,9 +173,9 @@ export default {
   },
   async asyncData(context) {
     const res = await axios.get(
-      `https://localhost:3000/courses/${context.params.course_id}/assignments/${
-        context.params.assignment_id
-      }/edit`,
+      `https://${process.env.backend}:3000/courses/${
+        context.params.course_id
+      }/assignments/${context.params.assignment_id}/edit`,
       {
         headers: {
           Authorization: context.app.$auth.user.sub
@@ -246,7 +246,7 @@ export default {
     async edit() {
       this.changesSaved = true
       await axios.put(
-        `https://localhost:3000/courses/${
+        `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
         }/assignments/${this.$route.params.assignment_id}`,
         { edits: this.edits },

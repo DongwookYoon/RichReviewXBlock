@@ -257,9 +257,9 @@ export default {
   },
   async asyncData(context) {
     const res = await axios.get(
-      `https://localhost:3000/courses/${context.params.course_id}/assignments/${
-        context.params.assignment_id
-      }`,
+      `https://${process.env.backend}:3000/courses/${
+        context.params.course_id
+      }/assignments/${context.params.assignment_id}`,
       {
         headers: {
           Authorization: context.app.$auth.user.sub
@@ -371,7 +371,7 @@ export default {
     },
     async save_extensions() {
       await axios.post(
-        `https://localhost:3000/courses/${
+        `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
         }/assignments/${this.$route.params.assignment_id}/extensions`,
         this.extensions,
@@ -389,7 +389,7 @@ export default {
     },
     async delete_assignment() {
       await axios.delete(
-        `https://localhost:3000/courses/${
+        `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
         }/assignments/${this.$route.params.assignment_id}`,
         {
@@ -419,7 +419,7 @@ export default {
       }
 
       await axios.post(
-        `https://localhost:3000/courses/${
+        `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
         }/assignments/${this.$route.params.assignment_id}/document_submissions`,
         formData,

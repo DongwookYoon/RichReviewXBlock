@@ -53,9 +53,9 @@ export default {
   components: { NavBar, Footer, CourseSidebar },
   async asyncData(context) {
     const res = await axios.get(
-      `https://localhost:3000/courses/${context.params.course_id}/assignments/${
-        context.params.assignment_id
-      }/submissions`,
+      `https://${process.env.backend}:3000/courses/${
+        context.params.course_id
+      }/assignments/${context.params.assignment_id}/submissions`,
       {
         headers: {
           Authorization: context.app.$auth.user.sub

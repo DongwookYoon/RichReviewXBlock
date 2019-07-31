@@ -67,7 +67,7 @@ export default {
   components: { Sidebar, UpcomingAssignment, CourseCard, Footer },
   async asyncData(context) {
     const res = await axios
-      .get(`https://localhost:3000/courses`, {
+      .get(`https://${process.env.backend}:3000/courses`, {
         headers: {
           Authorization: context.app.$auth.user.sub
         },

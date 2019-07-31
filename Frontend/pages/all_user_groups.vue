@@ -47,7 +47,9 @@ export default {
   components: { Sidebar, Footer },
   async asyncData(context) {
     const res = await axios.get(
-      `https://localhost:3000/courses/0/course_groups/all_user_course_groups`,
+      `https://${
+        process.env.backend
+      }:3000/courses/0/course_groups/all_user_course_groups`,
       {
         headers: {
           Authorization: context.app.$auth.user.sub

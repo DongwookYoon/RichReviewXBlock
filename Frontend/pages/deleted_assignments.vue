@@ -46,7 +46,7 @@ export default {
   components: { NavBar, CourseSidebar, Footer, Header, StudentAssignmentCard },
   async asyncData(context) {
     const res = await axios.get(
-      `https://localhost:3000/courses/${
+      `https://${process.env.backend}:3000/courses/${
         context.params.course_id
       }/deleted-assignments`,
       {
@@ -87,7 +87,7 @@ export default {
     },
     async restore(id) {
       await axios.post(
-        `https://localhost:3000/courses/${
+        `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
         }/deleted-assignments/restore`,
         { id: id },
@@ -107,7 +107,7 @@ export default {
     async deleteAssignment(id) {
       if (confirm('Do you wish to permanently delete this assignment?')) {
         await axios.delete(
-          `https://localhost:3000/courses/${
+          `https://${process.env.backend}:3000/courses/${
             this.$route.params.course_id
           }/assignments/${id}/permanently`,
           {

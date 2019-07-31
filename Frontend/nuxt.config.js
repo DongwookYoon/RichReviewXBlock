@@ -1,6 +1,5 @@
-import fs from 'fs'
-import path from 'path'
 import pkg from './package'
+import * as certs from './ssl/certs'
 
 export default {
   mode: 'universal',
@@ -15,15 +14,16 @@ export default {
    */
   server: {
     https: {
-      key: fs.readFileSync(
-        path.resolve(__dirname, 'ssl', 'richreview_net.key')
-      ),
-      cert: fs.readFileSync(
-        path.resolve(__dirname, 'ssl', 'richreview_net.crt')
-      )
+      key: certs.key,
+      cert: certs.cert
     },
-    port: 8001, // default: 3000
-    host: '127.0.0.1' // default: localhost
+    port: certs.port, // default: 3000
+    host: certs.host // default: localhost
+  },
+
+  env: {
+    backend:
+      process.env.NODE_ENV !== 'production' ? 'localhost' : 'richreview.net'
   },
 
   /*
@@ -49,11 +49,6 @@ export default {
         src:
           'https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js'
       }
-      // {
-      //   src:
-      //     'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/js/bootstrap.min.js'
-      // },
-      // { src: '/viewer_helper.js', mode: 'client', body: true }
     ]
   },
 
@@ -139,6 +134,10 @@ export default {
           loader: 'eslint-loader',
           exclude: /(node_modules)/
         })
+      }
+
+      config.node = {
+        fs: 'empty'
       }
     }
   }

@@ -119,7 +119,7 @@ export default {
   },
   async asyncData(context) {
     const res = await axios.get(
-      `https://localhost:3000/courses/${
+      `https://${process.env.backend}:3000/courses/${
         context.params.course_id
       }/users/unassigned`,
       {
@@ -234,7 +234,7 @@ export default {
     async permanently_delete_group(id) {
       this.groups_changed = true
       await axios.delete(
-        `https://localhost:3000/courses/${
+        `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
         }/course_groups/${id}/permanently`,
         {
@@ -257,7 +257,7 @@ export default {
       }
       console.log(all_group_data)
       await axios.post(
-        `https://localhost:3000/courses/${
+        `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
         }/course_groups`,
         all_group_data,

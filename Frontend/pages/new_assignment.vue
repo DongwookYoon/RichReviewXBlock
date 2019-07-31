@@ -208,7 +208,7 @@ export default {
   },
   async asyncData(context) {
     const permission_res = await axios.get(
-      `https://localhost:3000/courses/${
+      `https://${process.env.backend}:3000/courses/${
         context.params.course_id
       }/users/permissions`,
       {
@@ -222,7 +222,7 @@ export default {
     )
 
     const course_res = await axios.get(
-      `https://localhost:3000/courses/${context.params.course_id}`,
+      `https://${process.env.backend}:3000/courses/${context.params.course_id}`,
       {
         headers: {
           Authorization: context.app.$auth.user.sub
@@ -274,7 +274,7 @@ export default {
         formData.append('assignment_data', JSON.stringify(this.assignment_data))
 
         await axios.post(
-          `https://localhost:3000/courses/${
+          `https://${process.env.backend}:3000/courses/${
             this.$route.params.course_id
           }/assignments/comment_submission_assignment`,
           formData,
@@ -291,7 +291,7 @@ export default {
         this.$router.push(`/education/courses/${this.$route.params.course_id}`)
       } else {
         await axios.post(
-          `https://localhost:3000/courses/${
+          `https://${process.env.backend}:3000/courses/${
             this.$route.params.course_id
           }/assignments/document_submission_assignment`,
           { assignment_data: this.assignment_data },

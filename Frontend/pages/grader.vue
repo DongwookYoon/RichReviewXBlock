@@ -66,9 +66,9 @@ export default {
   },
   async asyncData(context) {
     const assignment_res = await axios.get(
-      `https://localhost:3000/courses/${context.params.course_id}/assignments/${
-        context.params.assignment_id
-      }`,
+      `https://${process.env.backend}:3000/courses/${
+        context.params.course_id
+      }/assignments/${context.params.assignment_id}`,
       {
         headers: {
           Authorization: context.app.$auth.user.sub
@@ -80,9 +80,9 @@ export default {
     )
 
     const submissions_res = await axios.get(
-      `https://localhost:3000/courses/${context.params.course_id}/assignments/${
-        context.params.assignment_id
-      }/grader`,
+      `https://${process.env.backend}:3000/courses/${
+        context.params.course_id
+      }/assignments/${context.params.assignment_id}/grader`,
       {
         headers: {
           Authorization: context.app.$auth.user.sub
@@ -94,9 +94,11 @@ export default {
     )
 
     const grader_res = await axios.get(
-      `https://localhost:3000/courses/${context.params.course_id}/assignments/${
-        context.params.assignment_id
-      }/grader/${context.params.submission_id}`,
+      `https://${process.env.backend}:3000/courses/${
+        context.params.course_id
+      }/assignments/${context.params.assignment_id}/grader/${
+        context.params.submission_id
+      }`,
       {
         headers: {
           Authorization: context.app.$auth.user.sub
@@ -137,7 +139,7 @@ export default {
       this.no_submission = true
     } else {
       const res = await axios.get(
-        `https://localhost:3000/courses/${
+        `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
         }/groups/${this.$route.query.groupid}`,
         {
@@ -196,7 +198,7 @@ export default {
       const mark = event.target.value
 
       await axios.put(
-        `https://localhost:3000/courses/${
+        `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
         }/grades/${this.$route.params.assignment_id}`,
         {

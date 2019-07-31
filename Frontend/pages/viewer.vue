@@ -22,6 +22,7 @@
 /* eslint-disable camelcase,no-undef,no-console */
 import https from 'https'
 import axios from 'axios'
+
 if (process.client) {
   require('../static/my_viewer_helper')
 }
@@ -39,7 +40,7 @@ export default {
   },
   async asyncData(context) {
     const res = await axios.get(
-      `https://localhost:3000/courses/${
+      `https://${process.env.backend}:3000/courses/${
         context.params.course_id
       }/assignments/comment_submissions/${context.query.groupid}`,
       {
@@ -59,9 +60,9 @@ export default {
   },
   mounted: async function() {
     const res = await axios.get(
-      `https://localhost:3000/courses/${this.$route.params.course_id}/groups/${
-        this.$route.query.groupid
-      }`,
+      `https://${process.env.backend}:3000/courses/${
+        this.$route.params.course_id
+      }/groups/${this.$route.query.groupid}`,
       {
         headers: {
           Authorization: this.$auth.user.sub

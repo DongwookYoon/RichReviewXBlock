@@ -16,7 +16,7 @@ export default {
   methods: {
     async login() {
       const res = await axios.post(
-        'https://localhost:3000/login',
+        `https://${process.env.backend}:3000/login`,
         {
           auth: this.$auth.user
         },
@@ -26,6 +26,7 @@ export default {
           })
         }
       )
+      console.log(process.env.NODE_ENV)
       console.log(res)
       this.$router.replace('/education/dashboard')
     }

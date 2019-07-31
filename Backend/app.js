@@ -17,7 +17,7 @@ const gradesRouter = require('./routes/grades');
 const groupRouter = require('./routes/group');
 const dbsRouter = require('./routes/dbs');
 const bluemixRouter = require('./routes/bluemix_stt_auth');
-require('./lib/ELDAPSync');
+//require('./lib/ELDAPSync');
 
 const app = express();
 

@@ -24,18 +24,18 @@ app.get(
   }
 )
 
-app.post(
-  '/',
-  passport.authenticate('saml', {
-    failureRedirect: '/',
-    failureFlash: true
-  }),
-  function(req, res) {
-    console.log('here')
-    window.open('www.google.ca')
-    // res.redirect(req.session.latestUrl || '/')
-  }
-)
+// app.post(
+//   '/',
+//   passport.authenticate('saml', {
+//     failureRedirect: '/',
+//     failureFlash: true
+//   }),
+//   function(req, res) {
+//     console.log('here')
+//     window.open('www.google.ca')
+//     // res.redirect(req.session.latestUrl || '/')
+//   }
+// )
 
 // Export the server middleware
 module.exports = {

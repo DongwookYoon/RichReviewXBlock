@@ -16,7 +16,7 @@ export default {
     https: {
       key: certs.key,
       cert: certs.cert,
-      ca: certs.ca
+      ca: [certs.ca]
     },
     port: certs.port, // default: 3000
     host: certs.host // default: localhost

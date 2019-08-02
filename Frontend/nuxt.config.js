@@ -5,8 +5,8 @@ export default {
   mode: 'universal',
   serverMiddleware: [
     // Will register file from project legacy directory to handle /legacy/* requires
-    { path: '/', handler: '~/legacy/app.js' },
-    { path: '/education/login-ubc', handler: '~/authentication/index.js' }
+    { path: '/', handler: '~/legacy/app.js' }
+    // { path: '/education/login-ubc', handler: '~/authentication/index.js' }
   ],
 
   /*

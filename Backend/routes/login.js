@@ -24,7 +24,7 @@ router.put('/', function(req, res, next) {
  ** POST will add a user to redis
  */
 router.post('/', async (req, res, next) => {
-    if (req.body.auth['sub']) {
+    if (req.body.auth_type === 'Google') {
         let user_db_handler = await ImportHandler.user_db_handler;
 
         try {
@@ -37,7 +37,7 @@ router.post('/', async (req, res, next) => {
             });
         }
 
-    } else if (req.body.auth.auth_type === 'UBC_CWL') { // todo CWL handler
+    } else if (req.body.auth_type === 'UBC_CWL') {
         console.log('UBC user');
         res.sendStatus(501);
     }

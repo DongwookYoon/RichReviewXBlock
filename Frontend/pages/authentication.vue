@@ -18,7 +18,8 @@ export default {
       const res = await axios.post(
         `https://${process.env.backend}:3000/login`,
         {
-          auth: this.$auth.user
+          auth: this.$auth.user,
+          auth_type: 'Google'
         },
         {
           httpsAgent: new https.Agent({

@@ -156,7 +156,7 @@ router.post(
     const parser = new Saml2js(req.body.SAMLResponse)
     const user_data = parser.toObject()
 
-    await axios.post(`https://${req.baseUrl}/education/login-ubc`, {
+    await axios.post(`https://${req.headers.host}/education/login-ubc`, {
       user_data: user_data
     })
 

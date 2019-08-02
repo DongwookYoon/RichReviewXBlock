@@ -97,9 +97,9 @@ export default {
   auth: {
     // Options
     redirect: {
-      login: '/education/authentication',
-      logout: '/education/authentication',
-      callback: '/education/authentication',
+      login: '/education/login',
+      logout: '/education',
+      callback: '/education/login',
       home: '/education/authentication'
     },
     strategies: {

@@ -156,7 +156,11 @@ router.post(
     const parser = new Saml2js(req.body.SAMLResponse)
     const user_data = parser.toObject()
 
-    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(''), '')
+    const cipher = crypto.createCipheriv(
+      'aes-256-cbc',
+      Buffer.from('richreview'),
+      'richreview'
+    )
     let encrypted = cipher.update(JSON.stringify(user_data))
     encrypted = Buffer.concat([encrypted, cipher.final()])
 

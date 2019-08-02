@@ -36,11 +36,11 @@ export default {
       this.$router.replace('/education/dashboard')
     },
     decrypt(text) {
-      const iv = Buffer.from('', 'hex')
+      const iv = Buffer.from('richreview', 'hex')
       const encryptedText = Buffer.from(text, 'hex')
       const decipher = crypto.createDecipheriv(
         'aes-256-cbc',
-        Buffer.from(''),
+        Buffer.from('richreview'),
         iv
       )
       let decrypted = decipher.update(encryptedText)

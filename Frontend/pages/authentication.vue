@@ -11,10 +11,11 @@ import axios from 'axios'
 export default {
   name: 'Authentication',
   asyncData(context) {
-    console.log(context.query.info)
+    console.log(
+      JSON.parse(Buffer.from(context.query.info, 'base64').toString('utf8'))
+    )
   },
   beforeMount() {
-    console.log(this.$route)
     this.login()
   },
   methods: {
@@ -33,9 +34,6 @@ export default {
       console.log(process.env.NODE_ENV)
       console.log(res)
       this.$router.replace('/education/dashboard')
-    },
-    decrypt(objJsonB64) {
-      return JSON.parse(Buffer.from(objJsonB64, 'base64').toString('utf8'))
     }
   }
 }

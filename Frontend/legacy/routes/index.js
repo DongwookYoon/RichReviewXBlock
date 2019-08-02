@@ -4,6 +4,7 @@ const passport = require('passport')
 const router = express.Router()
 
 const Saml2js = require('saml2js')
+const axios = require('axios')
 const util = require('../util')
 const js_utils = require('../lib/js_utils.js')
 const _downloader = require('../controllers/_downloader')
@@ -22,7 +23,6 @@ const bluemix_stt_auth = require('../controllers/bluemix_stt_auth')
 // const lti                = require('../controllers/lti');
 const pilotController = require('../controllers/pilotController')
 const authController = require('../controllers/authController')
-const crypto = require('crypto')
 
 /*****************************/
 /** routes for get requests **/
@@ -151,15 +151,16 @@ router.post(
     failureRedirect: '/login_ubc',
     failureFlash: true
   }),
-  function(req, res) {
+  async function(req, res) {
     js_utils.logUserAction(req, 'logged in')
     const parser = new Saml2js(req.body.SAMLResponse)
     const user_data = parser.toObject()
 
-    const objJsonStr = JSON.stringify(user_data)
-    const objJsonB64 = Buffer.from(objJsonStr).toString('base64')
+    await axios.post(`https://${req.baseUrl}/education/login-ubc`, {
+      user_data: user_data
+    })
 
-    res.redirect(`/education/authentication?info=${objJsonB64}`)
+    res.redirect('/education/authentication')
     // res.redirect(req.session.latestUrl || '/')
   }
 )

@@ -10,11 +10,6 @@ import axios from 'axios'
 
 export default {
   name: 'Authentication',
-  asyncData(context) {
-    console.log(
-      JSON.parse(Buffer.from(context.query.info, 'base64').toString('utf8'))
-    )
-  },
   beforeMount() {
     this.login()
   },

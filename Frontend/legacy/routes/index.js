@@ -156,15 +156,10 @@ router.post(
     const parser = new Saml2js(req.body.SAMLResponse)
     const user_data = parser.toObject()
 
-    const cipher = crypto.createCipheriv(
-      'aes-256-cbc',
-      Buffer.from('richreview'),
-      'richreview'
-    )
-    let encrypted = cipher.update(JSON.stringify(user_data))
-    encrypted = Buffer.concat([encrypted, cipher.final()])
+    const objJsonStr = JSON.stringify(user_data)
+    const objJsonB64 = Buffer.from(objJsonStr).toString('base64')
 
-    res.redirect(`/education/authentication?info=${encrypted.toString('hex')}`)
+    res.redirect(`/education/authentication?info=${objJsonB64}`)
     // res.redirect(req.session.latestUrl || '/')
   }
 )

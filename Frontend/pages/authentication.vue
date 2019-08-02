@@ -7,7 +7,6 @@
 
 import https from 'https'
 import axios from 'axios'
-import * as certs from '../ssl/certs'
 
 export default {
   name: 'Authentication',
@@ -35,17 +34,8 @@ export default {
       console.log(res)
       this.$router.replace('/education/dashboard')
     },
-    decrypt(text) {
-      const iv = Buffer.from('richreview', 'hex')
-      const encryptedText = Buffer.from(text, 'hex')
-      const decipher = crypto.createDecipheriv(
-        'aes-256-cbc',
-        Buffer.from('richreview'),
-        iv
-      )
-      let decrypted = decipher.update(encryptedText)
-      decrypted = Buffer.concat([decrypted, decipher.final()])
-      return decrypted.toString()
+    decrypt(objJsonB64) {
+      return JSON.parse(Buffer.from(objJsonB64, 'base64').toString('utf8'))
     }
   }
 }

@@ -3,7 +3,9 @@ import Vuex from 'vuex'
 
 Vue.use(Vuex)
 
-require('whatwg-fetch')
+if (process.client) {
+  require('whatwg-fetch')
+}
 
 const store = () =>
   new Vuex.Store({

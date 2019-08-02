@@ -30,7 +30,7 @@ const LocalStrategy = require('passport-local').Strategy;
 //const LtiStrategy = require('passport-lti');
 
 passport.serializeUser(function(user, done){
-  console.log(`Serialize user ${user}`)
+  console.log(`Serialize user ${JSON.stringify(user)}`)
     done(null, user.id);
 });
 

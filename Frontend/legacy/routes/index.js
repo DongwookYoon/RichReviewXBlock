@@ -21,7 +21,7 @@ const bluemix_stt_auth = require('../controllers/bluemix_stt_auth')
 // const lti                = require('../controllers/lti');
 const pilotController = require('../controllers/pilotController')
 const authController = require('../controllers/authController')
-const saml = require('saml');
+const saml = require('saml-encoder-decoder-js')
 
 /*****************************/
 /** routes for get requests **/
@@ -153,7 +153,7 @@ router.post(
   function(req, res) {
     console.log(req.body)
     js_utils.logUserAction(req, 'logged in')
-    saml.encodeSamlPost(req.body.SAMLResponse, function(err, encoded) {
+    saml.decodeSamlPost(req.body.SAMLResponse, function(err, encoded) {
       if (!err) {
         console.log("POST encoded string", encoded);
         res.redirect('/education/authentication')

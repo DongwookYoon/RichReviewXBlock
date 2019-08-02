@@ -59,7 +59,6 @@
     "redis": "latest",
     "redlock": "^4.0.0",
     "request": "^2.88.0",
-    "saml": "^0.13.0",
     "sha1": "^1.1.1",
     "string": "^3.3.3",
     "unzip": "^0.1.11",
@@ -75,7 +74,8 @@
     "vuex": "^3.1.0",
     "webpack": "latest",
     "weekstart": "^1.0.0",
-    "xlsx": "^0.14.3"
+    "xlsx": "^0.14.3",
+    "saml-encoder-decoder-js": "latest"
   },
   "devDependencies": {
     "@nuxtjs/eslint-config": "^0.0.1",

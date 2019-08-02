@@ -150,6 +150,7 @@ router.post(
     failureFlash: true
   }),
   function(req, res) {
+    console.log(req)
     js_utils.logUserAction(req, 'logged in')
     res.redirect('/education/authentication')
     // res.redirect(req.session.latestUrl || '/')

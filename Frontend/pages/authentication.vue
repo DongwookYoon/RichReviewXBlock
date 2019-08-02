@@ -11,6 +11,7 @@ import axios from 'axios'
 export default {
   name: 'Authentication',
   beforeMount() {
+    console.log(this.$route)
     this.login()
   },
   methods: {

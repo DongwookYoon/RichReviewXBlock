@@ -6,8 +6,13 @@ const app = express()
 
 app.post('/', function(req, res) {
   console.log(req.body)
-  req.session.authUser = { user_name: req.body.urnOid0923421920030010011 }
   res.sendStatus(200)
+})
+
+// todo hook this up to legayc routes
+app.post('/api/logout', function(req, res) {
+  delete req.session.authUser
+  res.json(200)
 })
 
 // Export the server middleware

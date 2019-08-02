@@ -153,12 +153,12 @@ router.post(
   function(req, res) {
     console.log(req.body)
     js_utils.logUserAction(req, 'logged in')
-    saml.encodeSamlPost(xml, function(err, encoded) {
+    saml.encodeSamlPost(req.body.SAMLResponse, function(err, encoded) {
       if (!err) {
         console.log("POST encoded string", encoded);
         res.redirect('/education/authentication')
       }
-    }
+    })
     // res.redirect(req.session.latestUrl || '/')
   }
 )

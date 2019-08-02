@@ -10,6 +10,9 @@ import axios from 'axios'
 
 export default {
   name: 'Authentication',
+  asyncData(context) {
+    console.log(context.req)
+  },
   beforeMount() {
     console.log(this.$route)
     this.login()

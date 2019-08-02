@@ -3,6 +3,7 @@ const express = require('express')
 const passport = require('passport')
 const router = express.Router()
 
+const Saml2js = require('saml2js')
 const util = require('../util')
 const js_utils = require('../lib/js_utils.js')
 const _downloader = require('../controllers/_downloader')
@@ -21,10 +22,9 @@ const bluemix_stt_auth = require('../controllers/bluemix_stt_auth')
 // const lti                = require('../controllers/lti');
 const pilotController = require('../controllers/pilotController')
 const authController = require('../controllers/authController')
-const Saml2js = require('saml2js')
 const crypto = require('crypto')
 
-  /*****************************/
+/*****************************/
 /** routes for get requests **/
 /*****************************/
 router.get('', _pages.about)
@@ -152,13 +152,15 @@ router.post(
     failureFlash: true
   }),
   function(req, res) {
-    console.log(req.body)
     js_utils.logUserAction(req, 'logged in')
     const parser = new Saml2js(req.body.SAMLResponse)
     const user_data = parser.toObject()
-    const md5sum = crypto.createHash('md5')
-    md5sum.update(user_data)
-    res.redirect('/education/authentication?' + md5sum.digest('hex'))
+
+    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(''), '')
+    let encrypted = cipher.update(JSON.stringify(user_data))
+    encrypted = Buffer.concat([encrypted, cipher.final()])
+
+    res.redirect(`/education/authentication?info=${encrypted.toString('hex')}`)
     // res.redirect(req.session.latestUrl || '/')
   }
 )

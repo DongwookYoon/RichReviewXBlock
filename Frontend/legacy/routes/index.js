@@ -21,6 +21,7 @@ const bluemix_stt_auth = require('../controllers/bluemix_stt_auth')
 // const lti                = require('../controllers/lti');
 const pilotController = require('../controllers/pilotController')
 const authController = require('../controllers/authController')
+const saml = require('saml');
 
 /*****************************/
 /** routes for get requests **/
@@ -152,7 +153,12 @@ router.post(
   function(req, res) {
     console.log(req.body)
     js_utils.logUserAction(req, 'logged in')
-    res.redirect('/education/authentication')
+    saml.encodeSamlPost(xml, function(err, encoded) {
+      if (!err) {
+        console.log("POST encoded string", encoded);
+        res.redirect('/education/authentication')
+      }
+    }
     // res.redirect(req.session.latestUrl || '/')
   }
 )

@@ -11,7 +11,7 @@ import axios from 'axios'
 export default {
   name: 'Authentication',
   asyncData(context) {
-    console.log(context.req)
+    console.log('')
   },
   beforeMount() {
     console.log(this.$route)

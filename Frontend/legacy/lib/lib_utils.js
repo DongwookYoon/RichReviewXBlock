@@ -150,7 +150,7 @@ exports.makePilotUserID = (profile) => {
    * @member {string} _raw
    * @member {Object} _json
    */
-  
+
   /**
    * Helper for googleStrategyCB and wrapper for R2D User.create()
    * @param {GoogleProfile} profile
@@ -168,7 +168,7 @@ exports.makePilotUserID = (profile) => {
     };
     return R2D.User.create(id, email, options);
   };
-  
+
   /**
    * Callback for Google OAth2.0 Authentication strategy. Strategy will either find a user corr. to the ID in the profile if it exists, or create a new user if it does not. If email is different from ID, then syncs the email in the user model and userid_email_table.
    * @param accessToken
@@ -216,7 +216,7 @@ exports.makePilotUserID = (profile) => {
    * @member {string} mail
    * @member {string} email
    */
-  
+
   // uid - CWL login name of the account holder authenticating.
   const uid = "urn:oid:0.9.2342.19200300.100.1.1";
   // mail - email address of account holder. The value is derived from following sources (in order of precedence): HR business email address, SIS email address, Email address entered when registering for CWL account
@@ -261,6 +261,7 @@ exports.makePilotUserID = (profile) => {
    * @param {function} done - callback for passport
    */
   exports.UBCsamlStrategyCB = (profile, done) => {
+    console.log('At UBCsamlStrategyCB')
     util.debug(JSON.stringify(profile, null, '\t'));
     findUserByID(profile[ubcEduPersistentID])
       .then((user) => {

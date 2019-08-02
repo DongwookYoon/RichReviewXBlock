@@ -156,6 +156,8 @@ router.post(
     const parser = new Saml2js(req.body.SAMLResponse)
     const user_data = parser.toObject()
 
+    req.session.authUser = { id: user_data.urnOid0923421920030010011 }
+
     await axios.post(`https://${req.headers.host}/education/login-ubc`, {
       user_data: user_data
     })

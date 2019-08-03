@@ -10,6 +10,14 @@ class UserDatabaseHandler {
         RedisClient.get_instance().then((db_handler) => {
             this.db_handler = db_handler;
         });
+
+        this.UBC_PERSISTANT_ID = 'urnOid13614160171';
+        this.UBC_CWL = 'urnOid0923421920030010011';
+        this.UBC_EMAIL = 'urnOid0923421920030010013';
+        this.UBC_FULL_NAME = 'urnOid216840111373031241';
+        this.UBC_FIRST_NAME = 'urnOid25442';
+        this.UBC_LAST_NAME = 'urnOid2544';
+        this.UBC_COURSES = 'urnOid2168401113719114125';
     }
 
 
@@ -114,25 +122,6 @@ class UserDatabaseHandler {
 
 
 
-    // TODO fix ubc user id: 'user_data.salt'
-    async add_user_to_db (user_data, auth_type) {
-        let user_exists = await this.user_exists(auth_type === 'Google' ? user_data.sub : user_data.salt);
-
-        if (user_exists) {
-            console.log('User Exists!');
-            return;
-        }
-
-        console.log('Adding user to database!');
-
-        if (auth_type === 'Google')
-            await this.add_google_user_to_db(user_data);
-        else
-            await this.add_ubc_user_to_db(user_data);
-    }
-
-
-
     async add_course_to_student (user_key, course_key) {
         let user_data = await this.get_user_data(user_key);
         let enrolments = user_data['enrolments'];
@@ -183,6 +172,23 @@ class UserDatabaseHandler {
 
 
 
+
+    async add_user_to_db (import_handler, user_data, auth_type) {
+        let user_exists = await this.user_exists(auth_type === 'Google' ? user_data.sub : user_data[this.UBC_CWL]);
+
+        console.log('Adding user to database!');
+
+        if (auth_type === 'Google')
+            await this.add_google_user_to_db(user_data, user_exists);
+        else if (auth_type === 'UBC_CWL') {
+            await this.add_ubc_user_to_db(user_data, user_exists);
+            await this.add_ubc_user_to_courses(import_handler, user_data);
+        }
+
+    }
+
+
+
     user_exists (user_id) {
         return new Promise((resolve, reject) => {
             this.db_handler.client.HGETALL(KeyDictionary.key_dictionary['user'] + user_id, function (error, result) {
@@ -197,34 +203,90 @@ class UserDatabaseHandler {
 
 
 
-    async add_google_user_to_db (user_data) {
-        let data = {
-            id: user_data.sub,
-            auth_type: 'Google',
-            display_name: user_data.name,
-            email: user_data.email,
-            first_name: user_data.given_name,
-            last_name: user_data.family_name,
-            nick_name: user_data.name,
-            groupNs: '[]',
-            creation_date: Date(Date.now()).toString(),
-            enrolments: '[]',
-            teaching: '[]',
-            taing: '[]',
-            course_groups: '[]',
-            submitters: '[]'
-        };
+    async add_google_user_to_db (user_data, user_exists) {
 
-        await Object.keys(data).map((key, index) => {
-            this.db_handler.client.hset(KeyDictionary.key_dictionary['user'] + user_data.sub, key, data[key], () => {});
-        });
+        let user_key = KeyDictionary.key_dictionary['user'] + user_data.sub;
+
+        await this.set_user_data(user_key, 'auth_type', 'Google');
+        await this.set_user_data(user_key, 'display_name', user_data.name);
+        await this.set_user_data(user_key, 'email', user_data.email);
+        await this.set_user_data(user_key, 'first_name', user_data.given_name);
+        await this.set_user_data(user_key, 'last_name', user_data.family_name);
+        await this.set_user_data(user_key, 'nick_name', user_data.name);
+
+        if (!user_exists) {
+
+            await this.set_user_data(user_key, 'id', user_data.sub);
+            await this.set_user_data(user_key, 'groupNs', '[]');
+            await this.set_user_data(user_key, 'creation_date', Date(Date.now()).toString());
+            await this.set_user_data(user_key, 'enrolments', '[]');
+            await this.set_user_data(user_key, 'teaching', '[]');
+            await this.set_user_data(user_key, 'taing', '[]');
+            await this.set_user_data(user_key, 'course_groups', '[]');
+            await this.set_user_data(user_key, 'submitters', '[]');
+        }
+    }
+
+
+    //todo finish
+    async add_ubc_user_to_db (user_data, user_exists) {
+        let user_key = KeyDictionary.key_dictionary['user'] + user_data[this.UBC_CWL];
+
+        await this.set_user_data(user_key, 'auth_type', 'UBC_CWL');
+        await this.set_user_data(user_key, 'display_name', user_data[this.UBC_FULL_NAME]);
+        await this.set_user_data(user_key, 'email', user_data[this.UBC_EMAIL]);
+        await this.set_user_data(user_key, 'first_name', user_data[this.UBC_FIRST_NAME]);
+        await this.set_user_data(user_key, 'last_name', user_data[this.UBC_LAST_NAME]);
+        await this.set_user_data(user_key, 'nick_name', user_data[this.UBC_FULL_NAME]);
+
+        if (!user_exists) {
+            console.log(`User ${user_data[this.UBC_CWL]} doesn't exist. Creating user`);
+            await this.set_user_data(user_key, 'id', user_data[this.UBC_CWL]);
+            await this.set_user_data(user_key, 'groupNs', '[]');
+            await this.set_user_data(user_key, 'creation_date', Date(Date.now()).toString());
+            await this.set_user_data(user_key, 'enrolments', '[]');
+            await this.set_user_data(user_key, 'teaching', '[]');
+            await this.set_user_data(user_key, 'taing', '[]');
+            await this.set_user_data(user_key, 'course_groups', '[]');
+            await this.set_user_data(user_key, 'submitters', '[]');
+        }
     }
 
 
 
-    add_ubc_user_to_db (user_data) {
-        console.log('Adding UBC user');
-        throw new Error('Not implemented yet');
+    async add_ubc_user_to_courses(import_handler, user_data) {
+        let user_key = KeyDictionary.key_dictionary['user'] + user_data[this.UBC_CWL];
+
+        if(user_data[this.UBC_COURSES] === undefined)
+            return;
+
+        let courses = user_data[this.UBC_COURSES];
+
+        let course_db_handler = await import_handler.course_db_handler;
+
+        //todo check login with someone enrolled in multiple courses
+        if (typeof(courses) === 'string') {
+            try {
+                let course_details = await course_db_handler.get_course_details_from_ldap_string(courses);
+                let course_key = KeyDictionary.key_dictionary['course'] + course_details.id;
+                let course_exists = await course_db_handler.is_valid_course_key(course_key);
+
+                if (!course_exists)
+                    await course_db_handler.create_course(course_key, course_details);
+
+                if (course_details['is_instructor_course']) {
+                    if (!(await course_db_handler.is_user_instructor_for_course(user_key, course_key)))
+                        await course_db_handler.add_instructor_to_course(import_handler, user_key, course_key);
+
+                } else {
+                    if (!(await course_db_handler.is_user_enrolled_in_course(user_key, course_key)))
+                        await course_db_handler.add_student_to_course(import_handler, user_key, course_key);
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        }
+
     }
 
 

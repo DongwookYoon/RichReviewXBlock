@@ -30,7 +30,6 @@ const LocalStrategy = require('passport-local').Strategy;
 //const LtiStrategy = require('passport-lti');
 
 passport.serializeUser(function(user, done){
-    console.log(`Serialize user ${JSON.stringify(user)}`)
     done(null, user.id);
 });
 
@@ -41,7 +40,6 @@ passport.deserializeUser(function(id, done) {
     .catch(function(err) {
       return lib_utils.findUserByID(id);
     })*/
-  console.log(`deserialize id: ${id}`)
   return lib_utils.findUserByID(id)
     .then((user) => {
       done(null, user);

@@ -158,8 +158,9 @@ router.post(
 
     req.session.authUser = { id: user_data.urnOid0923421920030010011 }
 
-    await axios.post(`https://${req.headers.host}/education/login-ubc`, {
-      user_data: user_data
+    await axios.post(`https://${req.headers.host}:3000/login`, {
+      user_data: user_data,
+      auth_type: 'UBC_CWL'
     })
 
     res.redirect('/education/authentication')

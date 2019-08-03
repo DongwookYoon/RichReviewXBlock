@@ -24,22 +24,24 @@ router.put('/', function(req, res, next) {
  ** POST will add a user to redis
  */
 router.post('/', async (req, res, next) => {
-    if (req.body.auth_type === 'Google') {
-        let user_db_handler = await ImportHandler.user_db_handler;
+    let user_db_handler = await ImportHandler.user_db_handler;
 
-        try {
-            await user_db_handler.add_user_to_db(req.body.auth, 'Google');
-            res.sendStatus(200);
-        } catch (e) {
-            console.warn(e);
-            res.status(500).send({
-                message: e.message
-            });
-        }
+    try {
+        let user_data;
+        let auth_type = req.body.auth_type;
 
-    } else if (req.body.auth_type === 'UBC_CWL') {
-        console.log('UBC user');
-        res.sendStatus(501);
+        if (auth_type === 'Google')
+            user_data = req.body.auth;
+        else if (auth_type === 'UBC_CWL')
+            user_data = req.body.user_data;
+
+        await user_db_handler.add_user_to_db(ImportHandler, user_data, auth_type);
+        res.sendStatus(200);
+    } catch (e) {
+        console.warn(e);
+        res.status(500).send({
+            message: e.message
+        });
     }
 });
 

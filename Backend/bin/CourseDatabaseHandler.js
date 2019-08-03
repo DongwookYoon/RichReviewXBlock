@@ -237,6 +237,23 @@ class CourseDatabaseHandler {
     }
 
 
+    async get_course_details_from_ldap_string(course_string) {
+        course_string = course['course_string'].replace('_instructor', '');
+        let details = course_string.split('_');
+
+        return {
+            'id': course_string,
+            'title': `${details[0]} ${details[1]} ${details[2]}`,
+            'dept': details[0],
+            'number': details[1],
+            'section': details[2],
+            'year': details[3],
+            'institution': 'UBC',
+            'is_instructor_course': course_string.includes('instructor')
+        }
+    }
+
+
 
     async create_course (course_key, course_data) {
         if(course_data['id'] === undefined ||

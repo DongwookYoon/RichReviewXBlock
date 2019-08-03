@@ -21,8 +21,8 @@ const store = () =>
 
     actions: {
       nuxtServerInit({ commit }, { req }) {
-        if (req.session && req.session.passport.user) {
-          commit('SET_USER', req.session.passport.user)
+        if (req.session && req.session.authUser) {
+          commit('SET_USER', req.session.authUser)
         }
       },
       login({ commit }, { username, password }) {

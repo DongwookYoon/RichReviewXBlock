@@ -23,6 +23,7 @@ const bluemix_stt_auth = require('../controllers/bluemix_stt_auth')
 // const lti                = require('../controllers/lti');
 const pilotController = require('../controllers/pilotController')
 const authController = require('../controllers/authController')
+const https = require('https')
 
 /*****************************/
 /** routes for get requests **/
@@ -158,10 +159,18 @@ router.post(
 
     req.session.authUser = { id: user_data.urnOid0923421920030010011 }
 
-    await axios.post(`https://${req.headers.host}:3000/login`, {
-      user_data: user_data,
-      auth_type: 'UBC_CWL'
-    })
+    await axios.post(
+      `https://${req.headers.host}:3000/login`,
+      {
+        user_data: user_data,
+        auth_type: 'UBC_CWL'
+      },
+      {
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
 
     res.redirect('/education/authentication')
     // res.redirect(req.session.latestUrl || '/')

@@ -36,7 +36,7 @@ router.post('/', async (req, res, next) => {
             user_data = req.body.user_data;
 
         console.log(JSON.stringify(user_data));
-        
+
         await user_db_handler.add_user_to_db(ImportHandler, user_data, auth_type);
         res.sendStatus(200);
     } catch (e) {

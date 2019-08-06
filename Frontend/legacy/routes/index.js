@@ -222,7 +222,8 @@ router.get(
   passport.authenticate('google', { failureRedirect: '/login_google' }),
   async function(req, res) {
     const user_data = req.user
-    console.log(user_data)
+    console.log(typeof user_data)
+    console.log(JSON.parse(user_data))
     req.session.authUser = { id: user_data.id }
 
     await axios.post(

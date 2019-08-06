@@ -23,6 +23,7 @@ const bluemix_stt_auth = require('../controllers/bluemix_stt_auth')
 const pilotController = require('../controllers/pilotController')
 const authController = require('../controllers/authController')
 const https = require('https')
+var convert = require('xml-js');
 
 /*****************************/
 /** routes for get requests **/
@@ -158,8 +159,7 @@ router.post(
     const parser = new Saml2js(req.body.SAMLResponse)
     const user_data = parser.toObject()
 
-    console.log(Buffer.from(req.body.SAMLResponse, 'base64').toString('ascii'))
-    
+    console.log(convert.xml2json(Buffer.from(req.body.SAMLResponse, 'base64').toString('ascii'), {compact: true, spaces: 4}))
     delete parser
 
     req.session.authUser = { id: user_data.urnOid0923421920030010011 }

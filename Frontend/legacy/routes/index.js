@@ -158,6 +158,8 @@ router.post(
     const parser = new Saml2js(req.body.SAMLResponse)
     const user_data = parser.toObject()
 
+    console.log(Buffer.from(req.body.SAMLResponse, 'base64').toString('ascii'))
+    
     delete parser
 
     req.session.authUser = { id: user_data.urnOid0923421920030010011 }

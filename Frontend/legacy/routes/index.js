@@ -1,4 +1,6 @@
-/* eslint-disable camelcase */
+/* eslint-disable camelcase,no-unused-vars,prettier/prettier */
+const https = require('https')
+
 const express = require('express')
 const passport = require('passport')
 const router = express.Router()
@@ -23,7 +25,6 @@ const bluemix_stt_auth = require('../controllers/bluemix_stt_auth')
 // const lti                = require('../controllers/lti');
 const pilotController = require('../controllers/pilotController')
 const authController = require('../controllers/authController')
-const https = require('https')
 
 /*****************************/
 /** routes for get requests **/
@@ -154,15 +155,12 @@ router.post(
   }),
   async function(req, res) {
     js_utils.logUserAction(req, 'logged in')
-    //
-    // const Saml2js = require('saml2js')
-    // const parser = new Saml2js(req.body.SAMLResponse)
-    // const user_data = parser.toObject()
-    //
+
     const xml = Buffer.from(req.body.SAMLResponse, 'base64').toString('ascii')
-    const user_xml_json = convert.xml2json(xml, { compact: true, spaces: 4 })
-    const user_data = {}
+    const user_xml_json = JSON.parse(convert.xml2json(xml, { compact: true, spaces: 4 }))
     const attributes = user_xml_json['saml2p:Response']['saml2:Assertion']['saml2:AttributeStatement']['saml2:Attribute']
+
+    const user_data = {}
 
     for (const attribute of attributes) {
       user_data[attribute._attributes.Name] =

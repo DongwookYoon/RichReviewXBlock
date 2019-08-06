@@ -238,8 +238,11 @@ class CourseDatabaseHandler {
 
 
     async get_course_details_from_ldap_string(course_string) {
-        course_string = course['course_string'].replace('_instructor', '');
+        course_string = course_string.replace('_instructor', '');
         let details = course_string.split('_');
+
+        if (details.length < 2)
+            throw new RichReviewError('Invalid Course');
 
         return {
             'id': course_string,

@@ -3,7 +3,6 @@ const express = require('express')
 const passport = require('passport')
 const router = express.Router()
 
-const Saml2js = require('saml2js')
 const axios = require('axios')
 const util = require('../util')
 const js_utils = require('../lib/js_utils.js')
@@ -155,6 +154,7 @@ router.post(
   async function(req, res) {
     js_utils.logUserAction(req, 'logged in')
 
+    const Saml2js = require('saml2js')
     const parser = new Saml2js(req.body.SAMLResponse)
     const user_data = parser.toObject()
 

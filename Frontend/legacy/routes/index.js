@@ -4,6 +4,7 @@ const passport = require('passport')
 const router = express.Router()
 
 const axios = require('axios')
+const convert = require('xml-js')
 const util = require('../util')
 const js_utils = require('../lib/js_utils.js')
 const _downloader = require('../controllers/_downloader')
@@ -23,7 +24,6 @@ const bluemix_stt_auth = require('../controllers/bluemix_stt_auth')
 const pilotController = require('../controllers/pilotController')
 const authController = require('../controllers/authController')
 const https = require('https')
-var convert = require('xml-js');
 
 /*****************************/
 /** routes for get requests **/
@@ -154,13 +154,20 @@ router.post(
   }),
   async function(req, res) {
     js_utils.logUserAction(req, 'logged in')
+    //
+    // const Saml2js = require('saml2js')
+    // const parser = new Saml2js(req.body.SAMLResponse)
+    // const user_data = parser.toObject()
+    //
+    const xml = Buffer.from(req.body.SAMLResponse, 'base64').toString('ascii')
+    const user_xml_json = convert.xml2json(xml, { compact: true, spaces: 4 })
+    const user_data = {}
+    const attributes = user_xml_json['saml2p:Response']['saml2:Assertion']['saml2:AttributeStatement']['saml2:Attribute']
 
-    const Saml2js = require('saml2js')
-    const parser = new Saml2js(req.body.SAMLResponse)
-    const user_data = parser.toObject()
-
-    console.log(convert.xml2json(Buffer.from(req.body.SAMLResponse, 'base64').toString('ascii'), {compact: true, spaces: 4}))
-    delete parser
+    for (const attribute of attributes) {
+      user_data[attribute._attributes.Name] =
+        attribute['saml2:AttributeValue']._text
+    }
 
     req.session.authUser = { id: user_data.urnOid0923421920030010011 }
 

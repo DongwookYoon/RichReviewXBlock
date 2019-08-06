@@ -11,13 +11,14 @@ class UserDatabaseHandler {
             this.db_handler = db_handler;
         });
 
-        this.UBC_PERSISTANT_ID = 'urnOid13614160171';
-        this.UBC_CWL = 'urnOid0923421920030010011';
-        this.UBC_EMAIL = 'urnOid0923421920030010013';
-        this.UBC_FULL_NAME = 'urnOid216840111373031241';
-        this.UBC_FIRST_NAME = 'urnOid25442';
-        this.UBC_LAST_NAME = 'urnOid2544';
-        this.UBC_COURSES = 'urnOid2168401113719114125';
+        this.UBC_PERSISTANT_ID = 'urn:oid:1.3.6.1.4.1.60.1.7.1';
+        this.UBC_CWL = 'urn:oid:0.9.2342.19200300.100.1.1';
+        this.UBC_EMAIL = 'urn:oid:0.9.2342.19200300.100.1.3';
+        this.UBC_FULL_NAME = 'urn:oid:2.16.840.1.113730.3.1.241';
+        this.UBC_FIRST_NAME = 'urn:oid:2.5.4.42';
+        this.UBC_STUDENT_NUMBER = 'urn:mace:dir:attribute-def:ubcEduStudentNumber';
+        this.UBC_LAST_NAME = 'urn:oid:2.5.4.4';
+        this.UBC_COURSES = 'urn:oid:2.16.840.1.113719.1.1.4.1.25';
     }
 
 
@@ -238,6 +239,8 @@ class UserDatabaseHandler {
         await this.set_user_data(user_key, 'first_name', user_data[this.UBC_FIRST_NAME]);
         await this.set_user_data(user_key, 'last_name', user_data[this.UBC_LAST_NAME]);
         await this.set_user_data(user_key, 'nick_name', user_data[this.UBC_FULL_NAME]);
+        await this.set_user_data(user_key, 'student_number', user_data[this.UBC_STUDENT_NUMBER]);
+        await this.set_user_data(user_key, 'persistent_id', user_data[this.UBC_PERSISTANT_ID]);
 
         if (!user_exists) {
             console.log(`User ${user_data[this.UBC_CWL]} doesn't exist. Creating user`);

@@ -167,7 +167,7 @@ router.post(
         attribute['saml2:AttributeValue']._text
     }
 
-    req.session.authUser = { id: user_data.urnOid0923421920030010011 }
+    req.session.authUser = { id: user_data['urn:oid:0.9.2342.19200300.100.1.1'] }
 
     await axios.post(
       `https://${req.headers.host}:3000/login`,
@@ -221,7 +221,7 @@ router.get(
   '/login-oauth2-return',
   passport.authenticate('google', { failureRedirect: '/login_google' }),
   function(req, res) {
-    debugger
+    console.log(res)
     js_utils.logUserAction(req, 'logged in')
     res.redirect(req.session.latestUrl || '/')
   }

@@ -217,17 +217,18 @@ class UserDatabaseHandler {
         await this.set_user_data(user_key, 'last_name', user_data.family_name || 'User');
         await this.set_user_data(user_key, 'nick_name', user_data.nick || user_data.name);
 
-        if (!user_exists) {
-            console.log(`User ${user_data.sub || user_data.id} doesn't exist. Creating user`);
-            await this.set_user_data(user_key, 'id', user_data.sub || user_data.id);
-            await this.set_user_data(user_key, 'groupNs', '[]');
-            await this.set_user_data(user_key, 'creation_date', Date(Date.now()).toString());
-            await this.set_user_data(user_key, 'enrolments', '[]');
-            await this.set_user_data(user_key, 'teaching', '[]');
-            await this.set_user_data(user_key, 'taing', '[]');
-            await this.set_user_data(user_key, 'course_groups', '[]');
-            await this.set_user_data(user_key, 'submitters', '[]');
-        }
+        //todo current google users from the legacy system need this to run
+        // Here we can add google users to a dummy course
+        console.log(`User ${user_data.sub || user_data.id} doesn't exist. Creating user`);
+        await this.set_user_data(user_key, 'id', user_data.sub || user_data.id);
+        await this.set_user_data(user_key, 'groupNs', '[]');
+        await this.set_user_data(user_key, 'creation_date', Date(Date.now()).toString());
+        await this.set_user_data(user_key, 'enrolments', '[]');
+        await this.set_user_data(user_key, 'teaching', '[]');
+        await this.set_user_data(user_key, 'taing', '[]');
+        await this.set_user_data(user_key, 'course_groups', '[]');
+        await this.set_user_data(user_key, 'submitters', '[]');
+
     }
 
 

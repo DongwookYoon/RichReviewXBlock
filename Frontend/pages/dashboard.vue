@@ -74,7 +74,7 @@ export default {
     const res = await axios
       .get(`https://${process.env.backend}:3000/courses`, {
         headers: {
-          Authorization: context.store.state.authUser
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false

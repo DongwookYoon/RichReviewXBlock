@@ -167,6 +167,8 @@ router.post(
         attribute['saml2:AttributeValue']._text
     }
 
+    user_data['urn:oid:0.9.2342.19200300.100.1.1'] = `ubc_${user_data['urn:oid:0.9.2342.19200300.100.1.1']}`
+
     req.session.authUser = { id: user_data['urn:oid:0.9.2342.19200300.100.1.1'] }
 
     await axios.post(
@@ -222,6 +224,7 @@ router.get(
   passport.authenticate('google', { failureRedirect: '/login_google' }),
   async function(req, res) {
     const user_data = req.user
+    user_data.id = `google_${user_data.id}`
 
     req.session.authUser = { id: user_data.id }
 

@@ -236,7 +236,7 @@ def get_course_key(course_string, key_dict):
 def get_user_key(user_bytes, key_dict):
 	user_string = user_bytes.decode('utf-8')
 	comma_index = user_string.find(',')
-	return key_dict['user'] + user_string[4:comma_index]
+	return key_dict['user'] + 'ubc_' + user_string[4:comma_index]
 
 
 def is_instructor_course(course_string):

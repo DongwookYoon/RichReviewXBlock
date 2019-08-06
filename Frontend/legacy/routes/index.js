@@ -154,9 +154,11 @@ router.post(
   }),
   async function(req, res) {
     js_utils.logUserAction(req, 'logged in')
-    console.log(req)
+
     const parser = new Saml2js(req.body.SAMLResponse)
     const user_data = parser.toObject()
+
+    delete parser
 
     req.session.authUser = { id: user_data.urnOid0923421920030010011 }
 

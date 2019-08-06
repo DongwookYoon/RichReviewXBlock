@@ -208,7 +208,7 @@ class UserDatabaseHandler {
 
     async add_google_user_to_db (user_data, user_exists) {
 
-        let user_key = KeyDictionary.key_dictionary['user'] + user_data.sub;
+        let user_key = `KeyDictionary.key_dictionary['user']${user_data.sub ? user_data.sub : user_data.id}`;
 
         await this.set_user_data(user_key, 'auth_type', 'Google');
         await this.set_user_data(user_key, 'display_name', user_data.name || 'Google User');
@@ -231,7 +231,6 @@ class UserDatabaseHandler {
     }
 
 
-    //todo finish
     async add_ubc_user_to_db (user_data, user_exists) {
         let user_key = KeyDictionary.key_dictionary['user'] + user_data[this.UBC_CWL];
 

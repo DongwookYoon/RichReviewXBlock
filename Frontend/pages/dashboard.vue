@@ -65,11 +65,16 @@ import Sidebar from '../components/dashboard_sidebar'
 
 export default {
   components: { Sidebar, UpcomingAssignment, CourseCard, Footer },
+  fetch ({ store, redirect }) {
+    if (!store.state.authUser) {
+      return redirect('/')
+    }
+  },
   async asyncData(context) {
     const res = await axios
       .get(`https://${process.env.backend}:3000/courses`, {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false

@@ -239,8 +239,11 @@ class UserDatabaseHandler {
         await this.set_user_data(user_key, 'first_name', user_data[this.UBC_FIRST_NAME]);
         await this.set_user_data(user_key, 'last_name', user_data[this.UBC_LAST_NAME]);
         await this.set_user_data(user_key, 'nick_name', user_data[this.UBC_FULL_NAME]);
-        await this.set_user_data(user_key, 'student_number', user_data[this.UBC_STUDENT_NUMBER]);
         await this.set_user_data(user_key, 'persistent_id', user_data[this.UBC_PERSISTANT_ID]);
+
+        if(user_data[this.UBC_STUDENT_NUMBER]) {
+            await this.set_user_data(user_key, 'student_number', user_data[this.UBC_STUDENT_NUMBER]);
+        }
 
         if (!user_exists) {
             console.log(`User ${user_data[this.UBC_CWL]} doesn't exist. Creating user`);

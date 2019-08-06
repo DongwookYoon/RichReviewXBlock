@@ -175,7 +175,9 @@ class UserDatabaseHandler {
 
 
     async add_user_to_db (import_handler, user_data, auth_type) {
-        let user_exists = await this.user_exists(auth_type === 'Google' ? user_data.sub : user_data[this.UBC_CWL]);
+        let user_exists = await this.user_exists(auth_type === 'Google' ?
+            (user_data.sub || user_data.id) :
+            user_data[this.UBC_CWL]);
 
         console.log('Adding user to database!');
 

@@ -31,7 +31,7 @@ router.post('/', async (req, res, next) => {
         let auth_type = req.body.auth_type;
 
         if (auth_type === 'Google')
-            user_data = req.body.auth;
+            user_data = req.body.auth || req.body.user_data;
         else if (auth_type === 'UBC_CWL')
             user_data = req.body.user_data;
 

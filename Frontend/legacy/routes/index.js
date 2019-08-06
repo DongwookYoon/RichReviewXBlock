@@ -223,7 +223,7 @@ router.get(
   async function(req, res) {
     const user_data = req.user
     console.log(typeof user_data)
-    console.log(JSON.parse(user_data))
+    console.log(user_data)
     req.session.authUser = { id: user_data.id }
 
     await axios.post(

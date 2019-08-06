@@ -213,7 +213,7 @@ router.post(
 router.get(
   '/login_google',
   authController.isNotLoggedIn,
-  passport.authenticate('google', { scope: ['email'] })
+  passport.authenticate('google', { scope: ['profile'] })
 )
 
 // TODO: now OAth2 callback needs to be reached through a GET command instead of a POST command. Why?

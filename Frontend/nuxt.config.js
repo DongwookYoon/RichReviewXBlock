@@ -73,7 +73,7 @@ export default {
   modules: [
     // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
-    '@nuxtjs/auth',
+    // '@nuxtjs/auth',
     '@nuxtjs/router',
     'bootstrap-vue/nuxt'
   ],
@@ -93,28 +93,28 @@ export default {
   /*
    ** Auth module configuration
    */
-  auth: {
-    // Options
-    redirect: {
-      login: '/education/login',
-      logout: '/education',
-      callback: '/education/login',
-      home: '/education/authentication'
-    },
-    strategies: {
-      google: {
-        client_id:
-          '1038882230851-in5k8etr5gsjh52o38qo1rg5m4rge7hb.apps.googleusercontent.com'
-      }
-    }
-  },
+  // auth: {
+  //   // Options
+  //   redirect: {
+  //     login: '/education/login',
+  //     logout: '/education',
+  //     callback: '/education/login',
+  //     home: '/education/authentication'
+  //   },
+  //   strategies: {
+  //     google: {
+  //       client_id:
+  //         '1038882230851-in5k8etr5gsjh52o38qo1rg5m4rge7hb.apps.googleusercontent.com'
+  //     }
+  //   }
+  // },
 
-  /*
-   ** Globally enable auth
-   */
-  router: {
-    middleware: ['auth']
-  },
+  // /*
+  //  ** Globally enable auth
+  //  */
+  // router: {
+  //   middleware: ['auth']
+  // },
 
   /*
    ** Build configuration

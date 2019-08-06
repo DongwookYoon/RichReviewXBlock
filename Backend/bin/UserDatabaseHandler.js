@@ -209,15 +209,15 @@ class UserDatabaseHandler {
         let user_key = KeyDictionary.key_dictionary['user'] + user_data.sub;
 
         await this.set_user_data(user_key, 'auth_type', 'Google');
-        await this.set_user_data(user_key, 'display_name', user_data.name);
+        await this.set_user_data(user_key, 'display_name', user_data.name || 'Google User');
         await this.set_user_data(user_key, 'email', user_data.email);
-        await this.set_user_data(user_key, 'first_name', user_data.given_name);
-        await this.set_user_data(user_key, 'last_name', user_data.family_name);
-        await this.set_user_data(user_key, 'nick_name', user_data.name);
+        await this.set_user_data(user_key, 'first_name', user_data.given_name || 'Google');
+        await this.set_user_data(user_key, 'last_name', user_data.family_name || 'User');
+        await this.set_user_data(user_key, 'nick_name', user_data.nick || user_data.name);
 
         if (!user_exists) {
-
-            await this.set_user_data(user_key, 'id', user_data.sub);
+            console.log(`User ${user_data.sub || user_data.id} doesn't exist. Creating user`);
+            await this.set_user_data(user_key, 'id', user_data.sub || user_data.id);
             await this.set_user_data(user_key, 'groupNs', '[]');
             await this.set_user_data(user_key, 'creation_date', Date(Date.now()).toString());
             await this.set_user_data(user_key, 'enrolments', '[]');

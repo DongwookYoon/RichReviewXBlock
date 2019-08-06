@@ -182,7 +182,7 @@ router.post(
       }
     )
 
-    res.redirect('/education/authentication')
+    res.redirect('/education/dashboard')
     // res.redirect(req.session.latestUrl || '/')
   }
 )
@@ -220,10 +220,27 @@ router.get(
 router.get(
   '/login-oauth2-return',
   passport.authenticate('google', { failureRedirect: '/login_google' }),
-  function(req, res) {
-    console.log(req.user)
+  async function(req, res) {
+    const user_data = req.user
+
+    req.session.authUser = { id: user_data.id }
+
+    await axios.post(
+      `https://${req.headers.host}:3000/login`,
+      {
+        user_data: user_data,
+        auth_type: 'Google'
+      },
+      {
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+
     js_utils.logUserAction(req, 'logged in')
-    res.redirect(req.session.latestUrl || '/')
+    res.redirect('/education/dashboard')
+    // res.redirect(req.session.latestUrl || '/')
   }
 )
 

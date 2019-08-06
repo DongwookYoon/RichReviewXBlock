@@ -221,7 +221,7 @@ router.get(
   '/login-oauth2-return',
   passport.authenticate('google', { failureRedirect: '/login_google' }),
   function(req, res) {
-    console.log(res)
+    console.log(req.user)
     js_utils.logUserAction(req, 'logged in')
     res.redirect(req.session.latestUrl || '/')
   }

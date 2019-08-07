@@ -39,13 +39,15 @@ export default {
     ]
   },
   async asyncData(context) {
+    if (!context.store.state.authUser) return
+
     const res = await axios.get(
       `https://${process.env.backend}:3000/courses/${
         context.params.course_id
       }/assignments/comment_submissions/${context.query.groupid}`,
       {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -58,6 +60,11 @@ export default {
       assignment_title: assignment_data.title
     }
   },
+  fetch({ store, redirect }) {
+    if (!store.state.authUser) {
+      return redirect('/education/login')
+    }
+  },
   mounted: async function() {
     const res = await axios.get(
       `https://${process.env.backend}:3000/courses/${
@@ -65,7 +72,7 @@ export default {
       }/groups/${this.$route.query.groupid}`,
       {
         headers: {
-          Authorization: this.$auth.user.sub
+          Authorization: this.$store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false

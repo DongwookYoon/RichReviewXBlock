@@ -45,13 +45,15 @@ export default {
   name: 'DeletedAssignments',
   components: { NavBar, CourseSidebar, Footer, Header, StudentAssignmentCard },
   async asyncData(context) {
+    if (!context.store.state.authUser) return
+
     const res = await axios.get(
       `https://${process.env.backend}:3000/courses/${
         context.params.course_id
       }/deleted-assignments`,
       {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -62,6 +64,11 @@ export default {
       assignments: res.data.assignments,
       permissions: res.data.permissions,
       course: res.data.course_title
+    }
+  },
+  fetch({ store, redirect }) {
+    if (!store.state.authUser) {
+      return redirect('/education/login')
     }
   },
   methods: {
@@ -93,7 +100,7 @@ export default {
         { id: id },
         {
           headers: {
-            Authorization: this.$auth.user.sub
+            Authorization: this.$store.state.authUser.id
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false
@@ -112,7 +119,7 @@ export default {
           }/assignments/${id}/permanently`,
           {
             headers: {
-              Authorization: this.$auth.user.sub
+              Authorization: this.$store.state.authUser.id
             },
             httpsAgent: new https.Agent({
               rejectUnauthorized: false

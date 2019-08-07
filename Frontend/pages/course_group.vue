@@ -46,13 +46,15 @@ export default {
   name: 'CourseGroup',
   components: { NavBar, Footer, CourseSidebar },
   async asyncData(context) {
+    if (!context.store.state.authUser) return
+
     const res = await axios.get(
       `https://${process.env.backend}:3000/courses/${
         context.params.course_id
       }/course_groups/${context.params.group_id}`,
       {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -67,6 +69,11 @@ export default {
       course: res.data.course
     }
   },
+  fetch({ store, redirect }) {
+    if (!store.state.authUser) {
+      return redirect('/education/login')
+    }
+  },
   methods: {
     async delete_group() {
       await axios.delete(
@@ -75,7 +82,7 @@ export default {
         }/course_groups/${this.$route.params.group_id}`,
         {
           headers: {
-            Authorization: this.$auth.user.sub
+            Authorization: this.$store.state.authUser.id
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false

@@ -118,13 +118,15 @@ export default {
     ModalPlugin
   },
   async asyncData(context) {
+    if (!context.store.state.authUser) return
+
     const res = await axios.get(
       `https://${process.env.backend}:3000/courses/${
         context.params.course_id
       }/users/unassigned`,
       {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -146,6 +148,11 @@ export default {
       groups_changed: false,
       changes_saved: false,
       course: res.data.course_title
+    }
+  },
+  fetch({ store, redirect }) {
+    if (!store.state.authUser) {
+      return redirect('/education/login')
     }
   },
   created: function() {
@@ -239,7 +246,7 @@ export default {
         }/course_groups/${id}/permanently`,
         {
           headers: {
-            Authorization: this.$auth.user.sub
+            Authorization: this.$store.state.authUser.id
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false
@@ -263,7 +270,7 @@ export default {
         all_group_data,
         {
           headers: {
-            Authorization: this.$auth.user.sub
+            Authorization: this.$store.state.authUser.id
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false

@@ -207,13 +207,15 @@ export default {
     }
   },
   async asyncData(context) {
+    if (!context.store.state.authUser) return
+
     const permission_res = await axios.get(
       `https://${process.env.backend}:3000/courses/${
         context.params.course_id
       }/users/permissions`,
       {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -225,7 +227,7 @@ export default {
       `https://${process.env.backend}:3000/courses/${context.params.course_id}`,
       {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -236,6 +238,11 @@ export default {
     return {
       permissions: permission_res.data.permissions,
       course: course_res.data.course.title
+    }
+  },
+  fetch({ store, redirect }) {
+    if (!store.state.authUser) {
+      return redirect('/education/login')
     }
   },
   methods: {
@@ -281,7 +288,7 @@ export default {
           {
             headers: {
               'Content-Type': 'multipart/form-data',
-              Authorization: this.$auth.user.sub
+              Authorization: this.$store.state.authUser.id
             },
             httpsAgent: new https.Agent({
               rejectUnauthorized: false
@@ -297,7 +304,7 @@ export default {
           { assignment_data: this.assignment_data },
           {
             headers: {
-              Authorization: this.$auth.user.sub
+              Authorization: this.$store.state.authUser.id
             },
             httpsAgent: new https.Agent({
               rejectUnauthorized: false

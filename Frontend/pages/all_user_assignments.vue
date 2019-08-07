@@ -63,7 +63,7 @@ export default {
       }:3000/courses/0/assignments/all_user_assignments`,
       {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false

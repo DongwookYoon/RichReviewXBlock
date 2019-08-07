@@ -74,13 +74,15 @@ export default {
   name: 'Grades',
   components: { Footer, NavBar, CourseSidebar },
   async asyncData(context) {
+    if (!context.store.state.authUser) return
+
     const res = await axios.get(
       `https://${process.env.backend}:3000/courses/${
         context.params.course_id
       }/grades`,
       {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -94,6 +96,11 @@ export default {
       permissions: res.data.permissions,
       course: res.data.course_title,
       total_assignment_points: res.data.total_assignment_points
+    }
+  },
+  fetch({ store, redirect }) {
+    if (!store.state.authUser) {
+      return redirect('/education/login')
     }
   },
   methods: {
@@ -129,7 +136,7 @@ export default {
           },
           {
             headers: {
-              Authorization: this.$auth.user.sub
+              Authorization: this.$store.state.authUser.id
             },
             httpsAgent: new https.Agent({
               rejectUnauthorized: false
@@ -145,7 +152,7 @@ export default {
         }/grades/csv`,
         {
           headers: {
-            Authorization: this.$auth.user.sub
+            Authorization: this.$store.state.authUser.id
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false

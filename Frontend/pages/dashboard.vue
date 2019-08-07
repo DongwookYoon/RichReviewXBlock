@@ -66,8 +66,7 @@ import Sidebar from '../components/dashboard_sidebar'
 export default {
   components: { Sidebar, UpcomingAssignment, CourseCard, Footer },
   async asyncData(context) {
-    if(!context.store.state.authUser)
-      return
+    if (!context.store.state.authUser) return
 
     const res = await axios
       .get(`https://${process.env.backend}:3000/courses`, {
@@ -86,7 +85,7 @@ export default {
       assignments: res.data.assignments
     }
   },
-  fetch ({ store, redirect }) {
+  fetch({ store, redirect }) {
     if (!store.state.authUser) {
       return redirect('/education/login')
     }

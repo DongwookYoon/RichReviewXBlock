@@ -95,11 +95,13 @@ export default {
     StudentAssignmentCard
   },
   async asyncData(context) {
+    if (!context.store.state.authUser) return
+
     const course_res = await axios.get(
       `https://${process.env.backend}:3000/courses/${context.params.course_id}`,
       {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -112,6 +114,11 @@ export default {
       permissions: course_res.data.permissions,
       title: course_res.data.course.title,
       description: course_res.data.course.description
+    }
+  },
+  fetch({ store, redirect }) {
+    if (!store.state.authUser) {
+      return redirect('/education/login')
     }
   },
   methods: {

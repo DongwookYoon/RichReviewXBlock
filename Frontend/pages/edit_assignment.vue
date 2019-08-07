@@ -172,13 +172,15 @@ export default {
     datetime: Datetime
   },
   async asyncData(context) {
+    if (!context.store.state.authUser) return
+
     const res = await axios.get(
       `https://${process.env.backend}:3000/courses/${
         context.params.course_id
       }/assignments/${context.params.assignment_id}/edit`,
       {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -223,6 +225,11 @@ export default {
       assignment_changed: false
     }
   },
+  fetch({ store, redirect }) {
+    if (!store.state.authUser) {
+      return redirect('/education/login')
+    }
+  },
   methods: {
     changed() {
       this.assignment_changed = true
@@ -252,7 +259,7 @@ export default {
         { edits: this.edits },
         {
           headers: {
-            Authorization: this.$auth.user.sub
+            Authorization: this.$store.state.authUser.id
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false

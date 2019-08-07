@@ -48,11 +48,14 @@ export default {
   name: 'AllUserGrades',
   components: { Sidebar, Footer },
   async asyncData(context) {
+    if (!context.store.state.authUser) {
+      return
+    }
     const res = await axios.get(
       `https://${process.env.backend}:3000/courses/0/grades/all_user_grades`,
       {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -64,6 +67,11 @@ export default {
     console.log(grades)
     return {
       grades
+    }
+  },
+  fetch({ store, redirect }) {
+    if (!store.state.authUser) {
+      return redirect('/education/login')
     }
   },
   methods: {

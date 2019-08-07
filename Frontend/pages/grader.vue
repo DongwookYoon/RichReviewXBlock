@@ -65,13 +65,15 @@ export default {
     ]
   },
   async asyncData(context) {
+    if (!context.store.state.authUser) return
+
     const assignment_res = await axios.get(
       `https://${process.env.backend}:3000/courses/${
         context.params.course_id
       }/assignments/${context.params.assignment_id}`,
       {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -85,7 +87,7 @@ export default {
       }/assignments/${context.params.assignment_id}/grader`,
       {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -101,7 +103,7 @@ export default {
       }`,
       {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -130,6 +132,11 @@ export default {
       no_submission: false
     }
   },
+  fetch({ store, redirect }) {
+    if (!store.state.authUser) {
+      return redirect('/education/login')
+    }
+  },
   mounted: async function() {
     if (
       !this.$route.query.access_code &&
@@ -144,7 +151,7 @@ export default {
         }/groups/${this.$route.query.groupid}`,
         {
           headers: {
-            Authorization: this.$auth.user.sub
+            Authorization: this.$store.state.authUser.id
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false
@@ -207,7 +214,7 @@ export default {
         },
         {
           headers: {
-            Authorization: this.$auth.user.sub
+            Authorization: this.$store.state.authUser.id
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false

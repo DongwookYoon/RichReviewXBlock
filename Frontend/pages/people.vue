@@ -113,13 +113,15 @@ export default {
   name: 'People',
   components: { NavBar, CourseSidebar, Footer },
   async asyncData(context) {
+    if (!context.store.state.authUser) return
+
     const res = await axios.get(
       `https://${process.env.backend}:3000/courses/${
         context.params.course_id
       }/users`,
       {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -137,6 +139,11 @@ export default {
       course_groups: res.data.groups,
       permissions: res.data.permissions,
       people_tab: true
+    }
+  },
+  fetch({ store, redirect }) {
+    if (!store.state.authUser) {
+      return redirect('/education/login')
     }
   },
   methods: {

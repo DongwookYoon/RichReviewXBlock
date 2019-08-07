@@ -52,13 +52,15 @@ export default {
   name: 'AssignmentSubmissions',
   components: { NavBar, Footer, CourseSidebar },
   async asyncData(context) {
+    if (!context.store.state.authUser) return
+
     const res = await axios.get(
       `https://${process.env.backend}:3000/courses/${
         context.params.course_id
       }/assignments/${context.params.assignment_id}/submissions`,
       {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -70,6 +72,11 @@ export default {
       submissions: res.data.submissions,
       course: res.data.course_title,
       assignment: res.data.assignment_title
+    }
+  },
+  fetch({ store, redirect }) {
+    if (!store.state.authUser) {
+      return redirect('/education/login')
     }
   },
   methods: {

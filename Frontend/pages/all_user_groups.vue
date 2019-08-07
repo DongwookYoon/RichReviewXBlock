@@ -46,13 +46,16 @@ export default {
   name: 'AllUserGroups',
   components: { Sidebar, Footer },
   async asyncData(context) {
+    if (!context.store.state.authUser) {
+      return
+    }
     const res = await axios.get(
       `https://${
         process.env.backend
       }:3000/courses/0/course_groups/all_user_course_groups`,
       {
         headers: {
-          Authorization: context.app.$auth.user.sub
+          Authorization: context.store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -64,6 +67,11 @@ export default {
     console.log(groups)
     return {
       groups
+    }
+  },
+  fetch({ store, redirect }) {
+    if (!store.state.authUser) {
+      return redirect('/education/login')
     }
   },
   methods: {

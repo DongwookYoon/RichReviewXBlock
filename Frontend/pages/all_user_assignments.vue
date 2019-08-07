@@ -54,6 +54,9 @@ export default {
   name: 'AllUserAssignments',
   components: { Sidebar, Footer },
   async asyncData(context) {
+    if (!context.store.state.authUser) {
+      return
+    }
     const res = await axios.get(
       `https://${
         process.env.backend
@@ -71,6 +74,11 @@ export default {
     const assignments = res.data
     return {
       assignments
+    }
+  },
+  fetch({ store, redirect }) {
+    if (!store.state.authUser) {
+      return redirect('/education/login')
     }
   },
   methods: {

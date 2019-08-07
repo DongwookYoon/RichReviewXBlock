@@ -268,33 +268,40 @@ class UserDatabaseHandler {
         if(user_data[this.UBC_COURSES] === undefined)
             return;
 
-        let courses = user_data[this.UBC_COURSES];
+        try {
+            let courses = JSON.parse(user_data[this.UBC_COURSES]);
+            for (const course of courses) {
+                await this.add_ubc_user_to_course(import_handler, user_key, course)
+            }
+        } catch {
+            let course = user_data[this.UBC_COURSES];
+            await this.add_ubc_user_to_course(import_handler, user_key, course)
+        }
+    }
 
+
+    async add_ubc_user_to_course(import_handler, user_key, course) {
         let course_db_handler = await import_handler.course_db_handler;
 
-        //todo check login with someone enrolled in multiple courses
-        if (typeof(courses) === 'string') {
-            try {
-                let course_details = await course_db_handler.get_course_details_from_ldap_string(courses);
-                let course_key = KeyDictionary.key_dictionary['course'] + course_details.id;
-                let course_exists = await course_db_handler.is_valid_course_key(course_key);
+        try {
+            let course_details = await course_db_handler.get_course_details_from_ldap_string(course);
+            let course_key = KeyDictionary.key_dictionary['course'] + course_details.id;
+            let course_exists = await course_db_handler.is_valid_course_key(course_key);
 
-                if (!course_exists)
-                    await course_db_handler.create_course(course_key, course_details);
+            if (!course_exists)
+                await course_db_handler.create_course(course_key, course_details);
 
-                if (course_details['is_instructor_course']) {
-                    if (!(await course_db_handler.is_user_instructor_for_course(user_key, course_key)))
-                        await course_db_handler.add_instructor_to_course(import_handler, user_key, course_key);
+            if (course_details['is_instructor_course']) {
+                if (!(await course_db_handler.is_user_instructor_for_course(user_key, course_key)))
+                    await course_db_handler.add_instructor_to_course(import_handler, user_key, course_key);
 
-                } else {
-                    if (!(await course_db_handler.is_user_enrolled_in_course(user_key, course_key)))
-                        await course_db_handler.add_student_to_course(import_handler, user_key, course_key);
-                }
-            } catch (e) {
-                console.log(e);
+            } else {
+                if (!(await course_db_handler.is_user_enrolled_in_course(user_key, course_key)))
+                    await course_db_handler.add_student_to_course(import_handler, user_key, course_key);
             }
+        } catch (e) {
+            console.log(e);
         }
-
     }
 
 

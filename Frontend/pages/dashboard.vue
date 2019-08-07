@@ -65,12 +65,10 @@ import Sidebar from '../components/dashboard_sidebar'
 
 export default {
   components: { Sidebar, UpcomingAssignment, CourseCard, Footer },
-  fetch ({ store, redirect }) {
-    if (!store.state.authUser) {
-      return redirect('/')
-    }
-  },
   async asyncData(context) {
+    if(!context.store.state.authUser)
+      return
+
     const res = await axios
       .get(`https://${process.env.backend}:3000/courses`, {
         headers: {
@@ -86,6 +84,11 @@ export default {
       taing: res.data.taing,
       instructing: res.data.teaching,
       assignments: res.data.assignments
+    }
+  },
+  fetch ({ store, redirect }) {
+    if (!store.state.authUser) {
+      return redirect('/education/login')
     }
   },
   methods: {

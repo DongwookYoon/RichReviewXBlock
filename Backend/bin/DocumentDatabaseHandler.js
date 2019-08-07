@@ -37,8 +37,11 @@ class DocumentDatabaseHandler {
     async add_group_to_doc (doc_key, group_key) {
         let doc_data = await this.get_doc_data(doc_key);
         let groups = doc_data['groups'];
-        groups.push(group_key);
-        await this.set_document_data(doc_key, 'groups', JSON.stringify(groups));
+
+        if (!groups.includes(group_key)) {
+            groups.push(group_key);
+            await this.set_document_data(doc_key, 'groups', JSON.stringify(groups));
+        }
     }
 
 

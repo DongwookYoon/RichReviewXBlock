@@ -203,8 +203,11 @@ class CourseGroupDatabaseHandler {
 
         let group_data = await this.get_course_group_data(course_group_key);
         let submitters = group_data['submitters'];
-        submitters.push(submitter_key);
-        await this.set_course_group_data(course_group_key, 'submitters', JSON.stringify(submitters));
+
+        if (!submitters.includes(submitter_key)) {
+            submitters.push(submitter_key);
+            await this.set_course_group_data(course_group_key, 'submitters', JSON.stringify(submitters));
+        }
     }
 
 

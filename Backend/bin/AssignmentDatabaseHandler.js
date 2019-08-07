@@ -362,6 +362,12 @@ class AssignmentDatabaseHandler {
         let doc_db_handler = await import_handler.doc_db_handler;
 
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+        let extension_date;
+        for (let extension of assignment_data['extensions']) {
+            if (extension['user'] === user_key)
+                extension_date = extension['date']
+        }
+        delete assignment_data['extensions'];
         delete assignment_data['display_grade_as'];
         delete assignment_data['count_toward_final_grade'];
         delete assignment_data['creation_date'];
@@ -398,7 +404,8 @@ class AssignmentDatabaseHandler {
             assignment: assignment_data,
             grader_link: '',
             link: link,
-            submission_status
+            submission_status,
+            extension_date
         };
     }
 

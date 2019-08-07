@@ -2,6 +2,7 @@ const RedisClient = require("./RedisClient");
 const KeyDictionary = require("./KeyDictionary");
 const RedisToJSONParser = require("./RedisToJSONParser");
 const RichReviewError = require('../errors/RichReviewError');
+const env = require('../env');
 
 class UserDatabaseHandler {
 
@@ -126,16 +127,22 @@ class UserDatabaseHandler {
     async add_course_to_student (user_key, course_key) {
         let user_data = await this.get_user_data(user_key);
         let enrolments = user_data['enrolments'];
-        enrolments.push(course_key);
-        await this.set_user_data(user_key, 'enrolments', JSON.stringify(enrolments));
+
+        if (!enrolments.includes(course_key)) {
+            enrolments.push(course_key);
+            await this.set_user_data(user_key, 'enrolments', JSON.stringify(enrolments));
+        }
     }
 
 
     async add_course_to_instructor (user_key, course_key) {
         let user_data = await this.get_user_data(user_key);
         let teaching = user_data['teaching'];
-        teaching.push(course_key);
-        await this.set_user_data(user_key, 'teaching', JSON.stringify(teaching));
+
+        if (!teaching.includes(course_key)) {
+            teaching.push(course_key);
+            await this.set_user_data(user_key, 'teaching', JSON.stringify(teaching));
+        }
     }
 
 
@@ -143,8 +150,11 @@ class UserDatabaseHandler {
     async add_submitter_to_user (user_key, submitter_key) {
         let user_data = await this.get_user_data(user_key);
         let submitters = user_data['submitters'];
-        submitters.push(submitter_key);
-        await this.set_user_data(user_key, 'submitters', JSON.stringify(submitters));
+
+        if (!submitters.includes(submitter_key)) {
+            submitters.push(submitter_key);
+            await this.set_user_data(user_key, 'submitters', JSON.stringify(submitters));
+        }
     }
 
 
@@ -167,8 +177,11 @@ class UserDatabaseHandler {
     async add_group_to_user (user_key, group_key) {
         let user_data = await this.get_user_data(user_key);
         let groups = user_data['groupNs'];
-        groups.push(group_key);
-        await this.set_user_data(user_key, 'groupNs', JSON.stringify(groups));
+
+        if (!groups.includes(group_key)) {
+            groups.push(group_key);
+            await this.set_user_data(user_key, 'groupNs', JSON.stringify(groups));
+        }
     }
 
 
@@ -211,24 +224,33 @@ class UserDatabaseHandler {
         let user_key = `${KeyDictionary.key_dictionary['user']}${user_data.sub ? user_data.sub : user_data.id}`;
 
         await this.set_user_data(user_key, 'auth_type', 'Google');
-        await this.set_user_data(user_key, 'display_name', user_data.name || 'Google User');
+        await this.set_user_data(user_key, 'display_name', user_data.display_name || user_data.name || 'Google User');
         await this.set_user_data(user_key, 'email', user_data.email);
-        await this.set_user_data(user_key, 'first_name', user_data.given_name || 'Google');
-        await this.set_user_data(user_key, 'last_name', user_data.family_name || 'User');
-        await this.set_user_data(user_key, 'nick_name', user_data.nick || user_data.name);
+        await this.set_user_data(user_key, 'first_name', user_data.first_name || user_data.given_name || 'Google');
+        await this.set_user_data(user_key, 'last_name', user_data.last_name || user_data.family_name || 'User');
+        await this.set_user_data(user_key, 'nick_name', user_data.nick || user_data.display_name || user_data.name || 'Google User');
 
         //todo current google users from the legacy system need this to run
         // Here we can add google users to a dummy course
+        let redis_user_data = await this.get_user_data(user_key);
+
         console.log(`User ${user_data.sub || user_data.id} doesn't exist. Creating user`);
         await this.set_user_data(user_key, 'id', user_data.sub || user_data.id);
-        await this.set_user_data(user_key, 'groupNs', '[]');
-        await this.set_user_data(user_key, 'creation_date', Date(Date.now()).toString());
-        await this.set_user_data(user_key, 'enrolments', '[]');
-        await this.set_user_data(user_key, 'teaching', '[]');
-        await this.set_user_data(user_key, 'taing', '[]');
-        await this.set_user_data(user_key, 'course_groups', '[]');
-        await this.set_user_data(user_key, 'submitters', '[]');
 
+        if (!redis_user_data['groupNs'])
+            await this.set_user_data(user_key, 'groupNs', '[]');
+        if (!redis_user_data['creation_date'])
+            await this.set_user_data(user_key, 'creation_date', Date(Date.now()).toString());
+        if (!redis_user_data['enrolments'])
+            await this.set_user_data(user_key, 'enrolments', '[]');
+        if (!redis_user_data['teaching'])
+            await this.set_user_data(user_key, 'teaching', '[]');
+        if (!redis_user_data['taing'])
+            await this.set_user_data(user_key, 'taing', '[]');
+        if (!redis_user_data['course_groups'])
+            await this.set_user_data(user_key, 'course_groups', '[]');
+        if (!redis_user_data['submitters'])
+            await this.set_user_data(user_key, 'submitters', '[]');
     }
 
 

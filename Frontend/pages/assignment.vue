@@ -74,7 +74,7 @@
         </div>
         <div v-if="permissions === 'student'" class="assignment-controls">
           <button
-            v-if="submission_status !== 'Not Submitted'"
+            v-if="submission_status && submission_status !== 'Not Submitted'"
             id="view-submission-button"
             @click="go_to_current_submission"
           >
@@ -241,7 +241,8 @@ export default {
         (this.submission_status === 'Not Submitted' ||
           this.assignment.allow_multiple_submissions) &&
         (Date.now() < new Date(this.assignment.due_date) ||
-          this.assignment.allow_late_submissions)
+          this.assignment.allow_late_submissions ||
+          (this.extension_date && Date.now() < new Date(this.extension_date)))
       )
     },
     show_start_assignment: function() {
@@ -251,7 +252,8 @@ export default {
         (this.submission_status === 'Not Submitted' ||
           this.assignment.allow_multiple_submissions) &&
         (Date.now() < new Date(this.assignment.due_date) ||
-          this.assignment.allow_late_submissions)
+          this.assignment.allow_late_submissions ||
+          (this.extension_date && Date.now() < new Date(this.extension_date)))
       )
     }
   },
@@ -287,7 +289,7 @@ export default {
       extensions: res.data.assignment.extensions,
       selected_user_name: '',
       selected_user_key: '',
-      extension_date: ''
+      extension_date: res.data.extension_date
     }
   },
   fetch({ store, redirect }) {

@@ -25,6 +25,7 @@ const bluemix_stt_auth = require('../controllers/bluemix_stt_auth')
 // const lti                = require('../controllers/lti');
 const pilotController = require('../controllers/pilotController')
 const authController = require('../controllers/authController')
+const env = require('../lib/env')
 
 /*****************************/
 /** routes for get requests **/
@@ -172,7 +173,7 @@ router.post(
     req.session.authUser = { id: user_data['urn:oid:0.9.2342.19200300.100.1.1'] }
 
     await axios.post(
-      `https://${req.headers.host}:3000/login`,
+      `https://${env.node_config.BACKEND}:3000/login`,
       {
         user_data: user_data,
         auth_type: 'UBC_CWL'
@@ -223,13 +224,22 @@ router.get(
   '/login-oauth2-return',
   passport.authenticate('google', { failureRedirect: '/login_google' }),
   async function(req, res) {
-    const user_data = req.user
-    user_data.id = `google_${user_data.id}`
+    const user_data = {};
 
+    // We must copy the object, otherwise appending "google_" will
+    // edit the req.user object
+    // This means "google_" will keep stacking as users log in
+    // Eg) google_google_google_<user id>
+    for (const field in req.user) {
+      if (typeof req.user[field] !== 'function')
+        user_data[field] = req.user[field]
+    }
+
+    user_data.id = `google_${user_data.id}`
     req.session.authUser = { id: user_data.id }
 
     await axios.post(
-      `https://${req.headers.host}:3000/login`,
+      `https://${env.node_config.BACKEND}:3000/login`,
       {
         user_data: user_data,
         auth_type: 'Google'

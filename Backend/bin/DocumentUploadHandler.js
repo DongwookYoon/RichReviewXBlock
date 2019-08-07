@@ -14,6 +14,13 @@ class DocumentUploadHandler {
             return this.instance;
         }
 
+        if (!fs.existsSync('/tmp'))
+            fs.mkdirSync('/tmp');
+        if (!fs.existsSync('/tmp/richreview'))
+            fs.mkdirSync('/tmp/richreview');
+        if (!fs.existsSync('/tmp/richreview/pdfs'))
+            fs.mkdirSync('/tmp/richreview/pdfs');
+
         this.instance = await new DocumentUploadHandler();
         return this.instance;
     }

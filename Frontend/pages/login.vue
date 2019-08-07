@@ -1,12 +1,8 @@
 <template>
   <div class="container">
     <div v-for="s in strategies" :key="s.key" class="mb-2">
-      <button
-        :style="{ background: s.color }"
-        class="login-button"
-        @click="$auth.loginWith(s.key)"
-      >
-        Login with {{ s.name }}
+      <button id="login-with-google" @click="login_google">
+        Login with Google
       </button>
     </div>
     <img src="/img/CWL_login_button.png" @click="login_ubc" />
@@ -31,8 +27,13 @@ export default {
     }
   },
   methods: {
+    login_google() {
+      window.open('/login_google', '_self')
+      // this.$router.push('/login_google')
+    },
     login_ubc() {
-      window.open(`${window.location.origin}/education/login-ubc`, "_self")
+      this.$router.push('/login_ubc')
+      // window.open(`${window.location.origin}/education/login-ubc`, "_self")
     }
   }
 }
@@ -40,4 +41,8 @@ export default {
 
 <style scoped>
 @import '../node_modules/bootstrap/dist/css/bootstrap.css';
+
+#login-with-google {
+  color: #4284f4;
+}
 </style>

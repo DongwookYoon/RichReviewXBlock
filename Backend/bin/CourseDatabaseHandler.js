@@ -172,11 +172,13 @@ class CourseDatabaseHandler {
 
         let assignments = course_data['assignments'];
 
-        assignments.push(assignment_key);
+        if (!assignments.includes(assignment_key)) {
+            assignments.push(assignment_key);
 
-        let new_assignments = JSON.stringify(assignments);
+            let new_assignments = JSON.stringify(assignments);
 
-        await this.set_course_data(course_key, 'assignments', new_assignments);
+            await this.set_course_data(course_key, 'assignments', new_assignments);
+        }
     }
 
 
@@ -186,8 +188,11 @@ class CourseDatabaseHandler {
         try {
             let course_data = await this.get_course_data(course_key);
             let active_course_groups = course_data['active_course_groups'];
-            active_course_groups.push(course_group_key);
-            await this.set_course_data(course_key, 'active_course_groups', JSON.stringify(active_course_groups));
+
+            if (!active_course_groups.includes(course_group_key)) {
+                active_course_groups.push(course_group_key);
+                await this.set_course_data(course_key, 'active_course_groups', JSON.stringify(active_course_groups));
+            }
 
         } catch (e) {
             console.warn(e);
@@ -203,12 +208,15 @@ class CourseDatabaseHandler {
             let active_students = course_data['active_students'];
             let blocked_students = course_data['blocked_students'];
 
-            active_students.push(user_key);
+            if (!active_students.includes(user_key)) {
+                active_students.push(user_key);
+                await this.set_course_data(course_key, 'active_students', JSON.stringify(active_students));
+            }
+
             blocked_students = blocked_students.filter(student => {
                 return user_key !== student;
             });
 
-            await this.set_course_data(course_key, 'active_students', JSON.stringify(active_students));
             await this.set_course_data(course_key, 'blocked_students', JSON.stringify(blocked_students));
 
             let user_db_handler = await import_handler.user_db_handler;
@@ -225,8 +233,11 @@ class CourseDatabaseHandler {
         try {
             let course_data = await this.get_course_data(course_key);
             let instructors = course_data['instructors'];
-            instructors.push(user_key);
-            await this.set_course_data(course_key, 'instructors', JSON.stringify(instructors));
+
+            if (!instructors.includes(user_key)) {
+                instructors.push(user_key);
+                await this.set_course_data(course_key, 'instructors', JSON.stringify(instructors));
+            }
 
             let user_db_handler = await import_handler.user_db_handler;
             await user_db_handler.add_course_to_instructor(user_key, course_key);

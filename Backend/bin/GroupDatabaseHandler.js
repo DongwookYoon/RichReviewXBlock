@@ -75,8 +75,11 @@ class GroupDatabaseHandler {
     async add_user_to_group (user_id, group_key) {
         let group_data = await this.get_group_data(group_key);
         let users = group_data['users'];
-        users['participating'].push(user_id);
-        await this.set_group_data(group_key, 'users', JSON.stringify(users));
+
+        if (!users['participating'].includes(user_id)) {
+            users['participating'].push(user_id);
+            await this.set_group_data(group_key, 'users', JSON.stringify(users));
+        }
     }
 
 

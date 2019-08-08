@@ -158,7 +158,7 @@ router.post(
     js_utils.logUserAction(req, 'logged in')
 
     console.log(req)
-    
+
     const xml = Buffer.from(req.body.SAMLResponse, 'base64').toString('ascii')
     const user_xml_json = JSON.parse(convert.xml2json(xml, { compact: true, spaces: 4 }))
     const attributes = user_xml_json['saml2p:Response']['saml2:Assertion']['saml2:AttributeStatement']['saml2:Attribute']
@@ -166,8 +166,19 @@ router.post(
     const user_data = {}
 
     for (const attribute of attributes) {
-      user_data[attribute._attributes.Name] =
-        attribute['saml2:AttributeValue']._text
+      if (attribute._attributes.Name === 'urn:oid:2.16.840.1.113719.1.1.4.1.25') {
+        let courses = [];
+        try {
+          for (const course of attribute['saml2:AttributeValue']) {
+            courses.push(course._text)
+          }
+        } catch(e) {
+          courses = attribute['saml2:AttributeValue']._text
+        }
+        user_data['urn:oid:2.16.840.1.113719.1.1.4.1.25'] = courses;
+      } else {
+        user_data[attribute._attributes.Name] = attribute['saml2:AttributeValue']._text
+      }
     }
 
     user_data['urn:oid:0.9.2342.19200300.100.1.1'] = `ubc_${user_data['urn:oid:0.9.2342.19200300.100.1.1']}`

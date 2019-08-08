@@ -284,11 +284,11 @@ class AssignmentDatabaseHandler {
         let submitter_data = await submitter_db_handler.get_submitter_data(submitter_key);
 
         for (let member of submitter_data['members']) {
-            if (member !== user_key) {
+            // if (member !== user_key) {
                 await user_db_handler.add_group_to_user(member, group_key);
                 member = member.replace(KeyDictionary.key_dictionary['user'], '');
                 await group_db_handler.add_user_to_group(member, group_key);
-            }
+            // }
         }
 
         await group_db_handler.add_submission_to_group(group_key, submission_key);
@@ -757,10 +757,6 @@ class AssignmentDatabaseHandler {
                 link = `access_code=${access_code}&docid=${doc_id}&groupid=${group_id}`;
             }
 
-            let late = late.is_late(assignment_data, submission_data, submitter_data['course_group'] === '' ?
-                                                                            submitter_data['members'][0] :
-                                                                            submitter_data['course_group']);
-
             let assignment_submission = {
                 submitter_name: submitter_name,
                 points: assignment_data['points'],
@@ -768,7 +764,9 @@ class AssignmentDatabaseHandler {
                 submission_status: submission_data['submission_status'],
                 submission_time: submission_data['submission_time'],
                 group: submission_data['current_submission'],
-                late: late,
+                late: late.is_late(assignment_data, submission_data, submitter_data['course_group'] === '' ?
+                    submitter_data['members'][0] :
+                    submitter_data['course_group']),
                 link: link,
                 submission_id: submission_data['id']
             };
@@ -1039,11 +1037,9 @@ class AssignmentDatabaseHandler {
 
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
 
-        let late = late.is_late(assignment_data, submission_data);
-
         return {
             submission_status: submission_data['submission_status'],
-            late: late
+            late: late.is_late(assignment_data, submission_data)
         };
     }
 

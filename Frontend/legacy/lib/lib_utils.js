@@ -191,7 +191,11 @@ exports.makePilotUserID = (profile) => {
           return makeGoogleUser(profile);
         }
       })
-      .then((user) => { done(null, user); })
+      .then((user) => {
+        console.log(`USER! ${JSON.stringify(user)}`);
+        if (!user['id'].includes('google'))
+          user['id'] = `google_${user.id}`;
+        done(null, user); })
       .catch(done);
   };
 }/**************************************/

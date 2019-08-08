@@ -332,7 +332,7 @@
           type: 'GET',
           url: url,
           headers: {
-            authorization: r2.ctx.auth.sub
+            authorization: r2.ctx.auth.id
           },
           timeout: 5000, // in milliseconds
           success: function(data) {
@@ -356,7 +356,7 @@
           type: 'GET',
           url: url,
           headers: {
-            authorization: r2.ctx.auth
+            authorization: r2.ctx.auth.id
           },
           timeout: 5000, // in milliseconds
           success: function(data) {

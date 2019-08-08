@@ -224,18 +224,8 @@ router.get(
   '/login-oauth2-return',
   passport.authenticate('google', { failureRedirect: '/login_google' }),
   async function(req, res) {
-    const user_data = {};
+    const user_data = req.user;
 
-    // We must copy the object, otherwise appending "google_" will
-    // edit the req.user object
-    // This means "google_" will keep stacking as users log in
-    // Eg) google_google_google_<user id>
-    for (const field in req.user) {
-      if (typeof req.user[field] !== 'function')
-        user_data[field] = req.user[field]
-    }
-
-    user_data.id = `google_${user_data.id}`
     req.session.authUser = { id: user_data.id }
 
     await axios.post(

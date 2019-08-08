@@ -16,6 +16,7 @@ exports.isLoggedIn = (req, res, next) => {
     return next();
   }
   req.flash('error', 'You are not logged in');
+  delete req.session.authUser
   res.redirect('/');
 };
 
@@ -50,6 +51,7 @@ exports.testMe = (req, res, next) => {
  */
 exports.samlLogout = (req, res) => {
   js_utils.logUserAction(req, 'logging out of SAML...');
+  delete req.session.authUser
   try {
     req.user.nameID = req.user.saml.nameID;
     req.user.nameIDFormat = req.user.saml.nameIDFormat;
@@ -86,5 +88,5 @@ exports.logout = function(req, res) {
   res.redirect(
     'https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue='+process.env.HOST_URL
   );*/
-  res.redirect('/');
+  // res.redirect('/');
 };

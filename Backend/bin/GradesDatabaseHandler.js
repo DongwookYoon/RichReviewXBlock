@@ -49,8 +49,6 @@ class GradesDatabaseHandler {
             let course_key = KeyDictionary.key_dictionary['course'] + course_id;
             let course_data = await course_db_handler.get_course_data(course_key);
 
-            let late = late.is_late(assignment_data, submission_data);
-
             if (!assignment_data['hidden']) {
                 grades.push({
                     course_id: course_id,
@@ -60,7 +58,7 @@ class GradesDatabaseHandler {
                     submission_status: submission_data['submission_status'],
                     mark: submission_data['mark'],
                     points: assignment_data['points'],
-                    late: late
+                    late: late.is_late(assignment_data, submission_data)
                 })
             }
         }

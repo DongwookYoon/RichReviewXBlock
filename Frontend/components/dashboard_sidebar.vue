@@ -100,9 +100,11 @@ export default {
     go_to_all_grades() {
       this.$router.push('/education/all-grades')
     },
-    async logout() {
-      await this.$auth.logout()
-      this.$router.push('/education')
+    logout() {
+      this.$store.dispatch('logout')
+      window.open('/logout_saml', '_self')
+      // await this.$auth.logout()
+      // this.$router.push('/education')
     }
   }
 }

@@ -32,7 +32,8 @@ export default {
       // this.$router.push('/login_google')
     },
     login_ubc() {
-      this.$router.push('/login_ubc')
+      window.open('/login_google', '_self')
+      // this.$router.push('/login_ubc')
       // window.open(`${window.location.origin}/education/login-ubc`, "_self")
     }
   }

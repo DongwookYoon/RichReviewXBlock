@@ -42,16 +42,16 @@ router.post('/', async (req, res, next) => {
 
         let user_key = await user_db_handler.add_user_to_db(ImportHandler, user_login_data, auth_type);
 
-        let user_data = await user_db_handler.get_user_data(user_key);
-
-        let user_assignments = await Promise.all(user_data['submitters'].map(async (submitter) => {
-            let submitter_data = await submitter_db_handler.get_submitter_data(submitter);
-            let submission_data = await submission_db_handler.get_submission_data(submitter_data['submission']);
-            return submission_data['assignment'];
-        }));
-
-        for (const course of user_data['enrolments'])
-            await course_db_handler.create_submitters_for_student(ImportHandler, user_key, course, user_assignments);
+        // let user_data = await user_db_handler.get_user_data(user_key);
+        //
+        // let user_assignments = await Promise.all(user_data['submitters'].map(async (submitter) => {
+        //     let submitter_data = await submitter_db_handler.get_submitter_data(submitter);
+        //     let submission_data = await submission_db_handler.get_submission_data(submitter_data['submission']);
+        //     return submission_data['assignment'];
+        // }));
+        //
+        // for (const course of user_data['enrolments'])
+        //     await course_db_handler.create_submitters_for_student(ImportHandler, user_key, course, user_assignments);
 
         res.sendStatus(200);
     } catch (e) {

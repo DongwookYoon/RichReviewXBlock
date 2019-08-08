@@ -249,6 +249,8 @@ class CourseDatabaseHandler {
 
 
     async get_course_details_from_ldap_string(course_string) {
+        const comma_index = course_string.indexOf(',');
+        course_string = course_string.substring(3, comma_index);
         course_string = course_string.replace('_instructor', '');
         let details = course_string.split('_');
 

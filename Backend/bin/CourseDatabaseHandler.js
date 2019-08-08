@@ -305,6 +305,8 @@ class CourseDatabaseHandler {
     async create_submitters_for_student (import_handler, user_key, course_key, user_assignments) {
         let submission_db_handler = await import_handler.submission_db_handler;
         let assignment_db_handler = await import_handler.assignment_db_handler;
+        let group_db_handler = await import_handler.group_db_handler;
+        let doc_db_handler = await import_handler.doc_db_handler;
 
         let course_data = await this.get_course_data(course_key);
 
@@ -317,7 +319,22 @@ class CourseDatabaseHandler {
                         '');
                     await assignment_db_handler.add_submission_to_assignment(assignment, submission_key);
                 } else {
+                    let assignment_group_key = assignment['group'];
+                    let group_data = group_db_handler.get_group_data(assignment_group_key);
 
+                    let doc_key = group_data['docid'];
+                    let group_key = await group_db_handler.create_group(group_data['userid_n'], doc_key);
+
+                    await doc_db_handler.add_group_to_doc(doc_key, group_key);
+                    await group_db_handler.add_user_to_group(user_key.replace(KeyDictionary.key_dictionary['user'], ''), group_key);
+
+                    let submission_key = await submission_db_handler.create_submission(import_handler,
+                        assignment,
+                        user_key,
+                        group_key);
+                    await assignment_db_handler.add_submission_to_assignment(assignment, submission_key);
+
+                    await group_db_handler.add_submission_to_group(group_key, submission_key);
                 }
             }
         }

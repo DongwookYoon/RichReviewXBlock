@@ -260,15 +260,15 @@ class UserDatabaseHandler {
         let user_key = KeyDictionary.key_dictionary['user'] + user_data[this.UBC_CWL];
 
         await this.set_user_data(user_key, 'auth_type', 'UBC_CWL');
-        await this.set_user_data(user_key, 'display_name', user_data[this.UBC_FULL_NAME]);
-        await this.set_user_data(user_key, 'email', user_data[this.UBC_EMAIL]);
-        await this.set_user_data(user_key, 'first_name', user_data[this.UBC_FIRST_NAME]);
-        await this.set_user_data(user_key, 'last_name', user_data[this.UBC_LAST_NAME]);
-        await this.set_user_data(user_key, 'nick_name', user_data[this.UBC_FULL_NAME]);
-        await this.set_user_data(user_key, 'persistent_id', user_data[this.UBC_PERSISTANT_ID]);
+        await this.set_user_data(user_key, 'display_name', user_data[this.UBC_FULL_NAME] || '');
+        await this.set_user_data(user_key, 'email', user_data[this.UBC_EMAIL] || '');
+        await this.set_user_data(user_key, 'first_name', user_data[this.UBC_FIRST_NAME] || '');
+        await this.set_user_data(user_key, 'last_name', user_data[this.UBC_LAST_NAME] || '');
+        await this.set_user_data(user_key, 'nick_name', user_data[this.UBC_FULL_NAME] || '');
+        await this.set_user_data(user_key, 'persistent_id', user_data[this.UBC_PERSISTANT_ID] || '');
 
         if(user_data[this.UBC_STUDENT_NUMBER]) {
-            await this.set_user_data(user_key, 'student_number', user_data[this.UBC_STUDENT_NUMBER]);
+            await this.set_user_data(user_key, 'student_number', user_data[this.UBC_STUDENT_NUMBER] || '');
         }
 
         if (!user_exists) {

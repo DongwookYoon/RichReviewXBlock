@@ -302,6 +302,28 @@ class CourseDatabaseHandler {
 
 
 
+    async create_submitters_for_student (import_handler, user_key, course_key, user_assignments) {
+        let submission_db_handler = await import_handler.submission_db_handler;
+        let assignment_db_handler = await import_handler.assignment_db_handler;
+
+        let course_data = await this.get_course_data(course_key);
+
+        for (const assignment of course_data['assignments']) {
+            if (!user_assignments.includes(assignment)) {
+                if (assignment['type'] === 'document_submission') {
+                    let submission_key = await submission_db_handler.create_submission(import_handler,
+                        assignment,
+                        user_key,
+                        '');
+                    await assignment_db_handler.add_submission_to_assignment(assignment, submission_key);
+                } else {
+
+                }
+            }
+        }
+    }
+
+
     set_course_data (course_key, field, value) {
         return new Promise((resolve, reject) => {
             console.log('Redis hset request to key: ' + course_key);

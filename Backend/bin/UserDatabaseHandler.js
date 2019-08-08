@@ -195,10 +195,10 @@ class UserDatabaseHandler {
         console.log('Adding user to database!');
 
         if (auth_type === 'Google')
-            await this.add_google_user_to_db(user_data, user_exists);
+            return await this.add_google_user_to_db(user_data, user_exists);
         else if (auth_type === 'UBC_CWL') {
             await this.add_ubc_user_to_db(user_data, user_exists);
-            await this.add_ubc_user_to_courses(import_handler, user_data);
+            return await this.add_ubc_user_to_courses(import_handler, user_data);
         }
 
     }
@@ -251,6 +251,8 @@ class UserDatabaseHandler {
             await this.set_user_data(user_key, 'course_groups', '[]');
         if (!redis_user_data['submitters'])
             await this.set_user_data(user_key, 'submitters', '[]');
+
+        return user_key;
     }
 
 
@@ -290,16 +292,20 @@ class UserDatabaseHandler {
         if(user_data[this.UBC_COURSES] === undefined)
             return;
 
-        try {
-            let courses = JSON.parse(user_data[this.UBC_COURSES]);
+        if (typeof user_data[this.UBC_COURSES] === 'string') {
+            let course = user_data[this.UBC_COURSES];
+            await this.add_ubc_user_to_course(import_handler, user_key, course)
+
+        } else {
+            let courses = user_data[this.UBC_COURSES];
             for (const course of courses) {
                 await this.add_ubc_user_to_course(import_handler, user_key, course)
             }
-        } catch {
-            let course = user_data[this.UBC_COURSES];
-            await this.add_ubc_user_to_course(import_handler, user_key, course)
         }
+
+        return user_key;
     }
+
 
 
     async add_ubc_user_to_course(import_handler, user_key, course) {

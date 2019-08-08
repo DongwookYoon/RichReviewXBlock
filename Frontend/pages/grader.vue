@@ -159,7 +159,7 @@ export default {
         }
       )
       const r2_ctx = res.data.r2_ctx
-      r2_ctx.auth = this.$auth.user
+      r2_ctx.auth = this.$store.state.authUser
       const cdn_endpoint = res.data.cdn_endpoint
 
       loadRichReview(

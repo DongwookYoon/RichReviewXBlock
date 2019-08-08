@@ -88,5 +88,5 @@ exports.logout = function(req, res) {
   res.redirect(
     'https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue='+process.env.HOST_URL
   );*/
-  // res.redirect('/');
+  res.redirect('/');
 };

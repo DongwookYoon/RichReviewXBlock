@@ -134,6 +134,34 @@ class SubmissionDatabaseHandler {
     }
 
 
+
+    async create_submission(import_handler, assignment_key, user_key, group_key) {
+        let largest_submission_key = await this.get_largest_submission_key();
+        let submission_key = KeyDictionary.key_dictionary['submission'] + (largest_submission_key + 1);
+
+        await this.set_submission_data(submission_key, 'id', largest_submission_key + 1);
+        await this.set_submission_data(submission_key, 'submission_status', 'Not Submitted');
+        await this.set_submission_data(submission_key, 'mark', '');
+        await this.set_submission_data(submission_key, 'submission_time', '');
+        await this.set_submission_data(submission_key, 'assignment', assignment_key);
+        await this.set_submission_data(submission_key, 'group', group_key || '');
+        await this.set_submission_data(submission_key, 'current_submission', '');
+        await this.set_submission_data(submission_key, 'past_submissions', '[]');
+
+        let submitter_db_handler = await import_handler.submitter_db_handler;
+        let submitter_key = await submitter_db_handler.create_submitter_and_return_key(
+            import_handler,
+            [user_key],
+            submission_key,
+            '');
+
+        await this.set_submission_data(submission_key, 'submitter', submitter_key);
+
+        return submission_key;
+    }
+
+
+
     async get_submission_owner (import_handler, submission_key) {
         let submitter_db_handler = await import_handler.submitter_db_handler;
 

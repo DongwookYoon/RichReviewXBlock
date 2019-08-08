@@ -240,18 +240,23 @@ export default {
         this.permissions === 'student' &&
         (this.submission_status === 'Not Submitted' ||
           this.assignment.allow_multiple_submissions) &&
-        (Date.now() < new Date(this.assignment.due_date) ||
+        (this.assignment.due_date === '' ||
+          (this.assignment.due_date !== '' &&
+            Date.now() < new Date(this.assignment.due_date)) ||
           this.assignment.allow_late_submissions ||
           (this.extension_date && Date.now() < new Date(this.extension_date)))
       )
     },
     show_start_assignment: function() {
       return (
+        this.viewer_link !== '' &&
         this.assignment.type === 'comment_submission' &&
         this.permissions === 'student' &&
         (this.submission_status === 'Not Submitted' ||
           this.assignment.allow_multiple_submissions) &&
-        (Date.now() < new Date(this.assignment.due_date) ||
+        (this.assignment.due_date === '' ||
+          (this.assignment.due_date !== '' &&
+            Date.now() < new Date(this.assignment.due_date)) ||
           this.assignment.allow_late_submissions ||
           (this.extension_date && Date.now() < new Date(this.extension_date)))
       )

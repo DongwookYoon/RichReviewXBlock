@@ -67,6 +67,17 @@ class AssignmentDatabaseHandler {
     }
 
 
+    async add_submission_to_assignment (assignment_key, submission_key) {
+        let assignment_data = await this.get_assignment_data('', assignment_key);
+        let submissions = assignment_data['submissions'];
+
+        if (!submissions.includes(submission_key)) {
+            submissions.push(submission_key);
+            await this.set_assignment_data(assignment_key, 'submissions', JSON.stringify(submissions));
+        }
+    }
+
+
 
     async create_assignment (import_handler, course_key, assignment_data) {
         if(!this.is_valid_assignment_data(assignment_data))
@@ -185,9 +196,9 @@ class AssignmentDatabaseHandler {
 
         // Add doc and grp to redis
         let user_id = user_key.replace(KeyDictionary.key_dictionary['user'], '');
-        let main_doc_key = await document_db_handler.create_doc(user_id, main_context.container);
-        let main_group_key = await group_db_handler.create_group(user_id, main_doc_key);
-        await document_db_handler.add_group_to_doc(main_doc_key, main_group_key);
+        let doc_key = await document_db_handler.create_doc(user_id, main_context.container);
+        let main_group_key = await group_db_handler.create_group(user_id, doc_key);
+        await document_db_handler.add_group_to_doc(doc_key, main_group_key);
         await user_db_handler.add_group_to_user(user_key, main_group_key);
 
         let assignment_key = await this.create_assignment(import_handler, course_key, assignment_data);
@@ -212,12 +223,6 @@ class AssignmentDatabaseHandler {
 
 
         for (let submission_key of submission_keys) {
-
-            // Upload pdf to azure
-            let context = await document_upload_handler.upload_documents(files);
-
-            // Add doc and grp to redis
-            let doc_key = await document_db_handler.create_doc(user_id, context.container);
 
             let group_key = await group_db_handler.create_group(user_id, doc_key);
             await group_db_handler.add_submission_to_group(group_key, submission_key);

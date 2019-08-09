@@ -1,6 +1,7 @@
 const RedisClient = require("./RedisClient");
 const RedisToJSONParser = require("./RedisToJSONParser");
 const RichReviewError = require('../errors/RichReviewError');
+const KeyDictionary = require('./KeyDictionary');
 
 class CourseDatabaseHandler {
 
@@ -310,26 +311,29 @@ class CourseDatabaseHandler {
         let assignment_db_handler = await import_handler.assignment_db_handler;
         let group_db_handler = await import_handler.group_db_handler;
         let doc_db_handler = await import_handler.doc_db_handler;
+        let user_db_handler = await import_handler.user_db_handler;
 
         let course_data = await this.get_course_data(course_key);
 
         for (const assignment of course_data['assignments']) {
             if (!user_assignments.includes(assignment)) {
-                if (assignment['type'] === 'document_submission') {
+                let assignment_data = await assignment_db_handler.get_assignment_data('', assignment);
+                if (assignment_data['type'] === 'document_submission') {
                     let submission_key = await submission_db_handler.create_submission(import_handler,
                         assignment,
                         user_key,
                         '');
                     await assignment_db_handler.add_submission_to_assignment(assignment, submission_key);
                 } else {
-                    let assignment_group_key = assignment['group'];
-                    let group_data = group_db_handler.get_group_data(assignment_group_key);
+                    let assignment_group_key = assignment_data['group'];
+                    let group_data = await group_db_handler.get_group_data(assignment_group_key);
 
                     let doc_key = group_data['docid'];
                     let group_key = await group_db_handler.create_group(group_data['userid_n'], doc_key);
 
                     await doc_db_handler.add_group_to_doc(doc_key, group_key);
                     await group_db_handler.add_user_to_group(user_key.replace(KeyDictionary.key_dictionary['user'], ''), group_key);
+                    await user_db_handler.add_group_to_user(user_key, group_key);
 
                     let submission_key = await submission_db_handler.create_submission(import_handler,
                         assignment,

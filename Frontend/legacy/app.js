@@ -214,9 +214,18 @@ app.use((req, res, next) => {
   next()
 })
 
-const redirectToHTTPS = require('express-http-to-https').redirectToHTTPS
-app.use(redirectToHTTPS([], [], 301));
+// const redirectToHTTPS = require('express-http-to-https').redirectToHTTPS
+// app.use(redirectToHTTPS([], [], 301));
 
+app.use(function(req, res, next) {
+  if (req.secure) {
+    // request was via https, so do no special handling
+    next()
+  } else {
+    // request was via http, so redirect to https
+    res.redirect('https://' + req.headers.host + req.url)
+  }
+})
 // app.get('*', function(req, res, next) {
 //   if (req.secure) {
 //     console.log('secure')
@@ -247,6 +256,13 @@ function redirectHttp() {
 }
 const app_http = redirectHttp()
 
+app_http.set('port', 80)
+
+require('http')
+  .createServer(app_http)
+  .listen(app_http.get('port'), function() {
+    util.start('listening on HTTP port: ' + app_http.get('port'))
+  })
 /******************************************/
 /******************************************/
 

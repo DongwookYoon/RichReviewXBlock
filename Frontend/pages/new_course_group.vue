@@ -17,6 +17,13 @@
       <div id="content">
         <nav-bar :course="course" people="true" edit_groups="true" />
         <div id="edit-course-groups">
+          <div id="group-sets">
+            <div id="group-set-header">
+              <p id="group-set-title">Group Sets</p>
+              <button id="new-group-set-button">New Group Set</button>
+            </div>
+            <hr id="group-set-hr" />
+          </div>
           <div id="student-list">
             <div id="student-header">
               <p id="student-header-title">Unassigned Students</p>
@@ -301,11 +308,9 @@ p {
 }
 
 #group-hr {
-  width: 35vw;
 }
 
 #student-hr {
-  width: 35vw;
   margin-right: 5vw;
 }
 
@@ -357,25 +362,26 @@ p {
   min-height: 20vh;
 }
 
-#student-list {
-  margin-top: 1vh;
-}
-
+#group-sets,
+#student-list,
 #groups {
   margin-top: 1vh;
+  width: 33.333%;
 }
 
+#group-set-header,
 #student-header,
 #group-header {
   display: flex;
 }
 
+#new-group-set-button,
 #automatic-groups-button,
 #edit-group-button,
 #save-button,
 #modal-continue-button,
 #modal-cancel-button {
-  font-size: 2.5vh;
+  font-size: 1.5vh;
   color: white;
   background-color: #0c2343;
   border-radius: 0.5vh;
@@ -399,28 +405,24 @@ p {
   margin-right: 1vw;
 }
 
+#group-set-title,
 #student-header-title,
 .student,
 #group-header-title {
   color: #0c2343;
 }
 
-#student-header-title {
-  font-size: 3vh;
-  width: 18.5vw;
-}
-
+#group-set-title,
+#student-header-title,
 #group-header-title {
-  font-size: 3vh;
-  width: 25vw;
+  font-size: 2vh;
 }
 
 .student {
-  font-size: 2vh;
+  font-size: 1.5vh;
   padding-top: 0.5vh;
   padding-bottom: 0.5vh;
   padding-left: 1vw;
-  width: 40.5vw;
   cursor: pointer;
 }
 
@@ -430,9 +432,8 @@ p {
 
 #active-course-groups,
 #inactive-course-groups {
-  font-size: 2.5vh;
+  font-size: 1.5vh;
   color: #0c2343;
-  width: 15vw;
   margin-bottom: 1vh;
 }
 

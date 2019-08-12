@@ -295,8 +295,11 @@ class CourseDatabaseHandler {
         await this.set_course_data(course_key, 'blocked_students', '[]');
         await this.set_course_data(course_key, 'assignments', '[]');
         await this.set_course_data(course_key, 'deleted_assignments', '[]');
-        await this.set_course_data(course_key, 'active_course_groups', '[]');
-        await this.set_course_data(course_key, 'inactive_course_groups', '[]');
+
+        // await this.set_course_data(course_key, 'active_course_groups', '[]');
+        // await this.set_course_data(course_key, 'inactive_course_groups', '[]');
+        await this.set_course_data(course_key, 'course_group_sets', '[]');
+
         await this.set_course_data(course_key, 'is_active', 'true');
 
         for (let field in course_data) {

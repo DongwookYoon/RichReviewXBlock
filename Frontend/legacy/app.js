@@ -214,6 +214,21 @@ app.use((req, res, next) => {
   next()
 })
 
+const redirectToHTTPS = require('express-http-to-https').redirectToHTTPS
+app.use(redirectToHTTPS([], [], 301));
+
+// app.get('*', function(req, res, next) {
+//   if (req.secure) {
+//     console.log('secure')
+//     // request was via https, so do no special handling
+//     next();
+//   } else {
+//     // request was via http, so redirect to https
+//     console.log('Insecure')
+//     res.redirect('https://' + req.headers.host + req.url);
+//   }
+// });
+
 util.start('setting up routes')
 app.use('/', routes)
 

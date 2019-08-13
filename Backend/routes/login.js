@@ -41,7 +41,7 @@ router.post('/', async (req, res, next) => {
         console.log(JSON.stringify(user_login_data));
 
         let user_key = await user_db_handler.add_user_to_db(ImportHandler, user_login_data, auth_type);
-
+        console.log(user_key)
         let user_data = await user_db_handler.get_user_data(user_key);
 
         let user_assignments = await Promise.all(user_data['submitters'].map(async (submitter) => {

@@ -376,12 +376,10 @@
                     // It must be resumed (or created) after a user gesture on the page.
                     document.documentElement.addEventListener(
                         "mousedown", function(){
-                          console.log('mouse down')
-                          console.log(audio_context)
-                          console.log(audio_context.state)
                             if (audio_context.state !== 'running') {
                                 audio_context.resume();
-                            }})
+                            }
+                        })
                     // Ends
 
                 } catch (e) {
@@ -506,6 +504,7 @@
             var link = window.document.createElement('a');
             link.href = url;
             link.download = filename || 'output.wav';
+            link.type = 'audio/x-wav';
             var click = document.createEvent("Event");
             click.initEvent("click", true, true);
             link.dispatchEvent(click);

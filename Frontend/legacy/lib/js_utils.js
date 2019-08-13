@@ -91,6 +91,7 @@ exports.PostResp = function(res, req, code, err){
     if(req.headers.origin === 'https://localhost:8000' || req.headers.origin === 'https://localhost:8001' ){
         res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     }
+    console.log('here')
     res.send(s);
 };
 

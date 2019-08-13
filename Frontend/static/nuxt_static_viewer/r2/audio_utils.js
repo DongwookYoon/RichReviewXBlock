@@ -494,7 +494,6 @@
         };
 
         pub.downloadAudioFile = function (urlOrBlob, filename) {
-          console.log(`Download req to ${filename}`)
             var url;
             if (typeof urlOrBlob == 'string') {
                 url = urlOrBlob;

@@ -362,7 +362,10 @@ class UserDatabaseHandler {
 
 
     set_user_data(user_key, field, value) {
-
+        if (value === undefined) {
+            console.log(`Recieved an undefined value for field ${field}`);
+            return;
+        }
         return new Promise((resolve, reject) => {
             console.log('Redis hset request to key: ' + user_key);
             this.db_handler.client.hset(user_key, field, value, (error, result) => {

@@ -1,15 +1,27 @@
 <template>
   <div>
     <modal width="35%" height="20%" name="Automatic Group Assignment">
-      <div id="modal-div">
+      <div class="modal-div">
         <p id="students-per-group-label">Students per group:</p>
         <input id="students-per-group-input" v-model="students_per_group" />
       </div>
-      <div id="modal-footer">
-        <p id="modal-continue-button" @click="automatically_create_groups">
+      <div class="modal-footer">
+        <p class="modal-continue-button" @click="automatically_create_groups">
           Continue
         </p>
-        <p id="modal-cancel-button" @click="hide">Cancel</p>
+        <p class="modal-cancel-button" @click="hide_automatic_group">Cancel</p>
+      </div>
+    </modal>
+    <modal width="35%" height="20%" name="Rename Group Set">
+      <div class="modal-div">
+        <p id="new-name-label">New Group Set Name:</p>
+        <input id="group-set-name-input" v-model="new_name" />
+      </div>
+      <div class="modal-footer">
+        <p class="modal-continue-button" @click="rename_course_group">
+          Save
+        </p>
+        <p class="modal-cancel-button" @click="hide_rename_group_set">Cancel</p>
       </div>
     </modal>
     <div id="course-groups">
@@ -20,14 +32,37 @@
           <div id="group-sets">
             <div id="group-set-header">
               <p id="group-set-title">Group Sets</p>
-              <button id="new-group-set-button">New Group Set</button>
+              <p id="new-group-set-button" @click="new_course_group_set">
+                New Group Set
+              </p>
             </div>
             <hr id="group-set-hr" />
+            <div
+              v-for="group_set in course_group_sets"
+              :key="group_set.key"
+              class="group_set"
+            >
+              <p class="group-set-name">{{ group_set.name }}</p>
+              <div class="group-set-controls">
+                <p
+                  class="group-set-rename-button"
+                  @click="show_rename_group_set(group_set.id)"
+                >
+                  Rename
+                </p>
+                <p
+                  class="group-set-delete-button"
+                  @click="delete_course_group(group_set.id)"
+                >
+                  Delete
+                </p>
+              </div>
+            </div>
           </div>
           <div id="student-list">
             <div id="student-header">
               <p id="student-header-title">Unassigned Students</p>
-              <p id="automatic-groups-button" @click="show">
+              <p id="automatic-groups-button" @click="show_automatic_group">
                 Automatically Assign Groups
               </p>
             </div>
@@ -73,25 +108,6 @@
                 :members="g.members"
               ></course-group-card>
             </div>
-            <p
-              v-if="course_groups.inactive_course_groups.length > 0"
-              id="inactive-course-groups"
-            >
-              Deleted Course Groups:
-            </p>
-            <div
-              v-for="g in course_groups.inactive_course_groups"
-              :key="g.id"
-              @click="change_expand(`group-${g.id}`)"
-            >
-              <course-group-card
-                :id="g.id"
-                :ref="'group-' + g.id"
-                :passed_name="g.name"
-                :members="g.members"
-                :inactive="true"
-              ></course-group-card>
-            </div>
           </div>
         </div>
       </div>
@@ -101,7 +117,7 @@
 </template>
 
 <script>
-/* eslint-disable no-console,camelcase,vue/no-unused-components */
+/* eslint-disable no-console,camelcase,vue/no-unused-components,no-unused-vars */
 
 import https from 'https'
 import sha1 from 'sha1'
@@ -124,6 +140,9 @@ export default {
     CourseGroupCard,
     ModalPlugin
   },
+  data() {
+    return { new_name: '', group_set_id: null }
+  },
   async asyncData(context) {
     if (!context.store.state.authUser) return
 
@@ -140,16 +159,16 @@ export default {
         })
       }
     )
-    console.log(res.data.groups)
-    const group_ids = []
-    for (const group of res.data.groups.active_course_groups) {
-      group_ids.push(group.id)
-    }
+
+    console.log(res.data)
     return {
-      unassigned_students: res.data.unassigned_students,
-      course_groups: res.data.groups,
+      course_group_sets: res.data.course_group_sets,
+      all_students: res.data.all_students,
+      selected_course_group_set: null,
+      unassigned_students: [],
+      course_groups: [],
       permissions: res.data.permissions,
-      group_ids: group_ids,
+      group_ids: [],
       show_modal: false,
       students_per_group: '',
       groups_changed: false,
@@ -189,61 +208,91 @@ export default {
     changed() {
       this.groups_changed = true
     },
+    new_course_group_set() {
+      this.course_group_sets.push({
+        id: `temp_id${Date.now()}`,
+        name: 'New Group Set',
+        course_groups: [],
+        unassigned_students: this.all_students
+      })
+    },
+    rename_course_group() {
+      for (const group_set of this.course_group_sets) {
+        if (group_set.id === this.group_set_id) {
+          group_set.name = this.new_name
+        }
+      }
+      this.new_name = ''
+      this.group_set_id = null
+      this.hide_rename_group_set()
+    },
+    delete_course_group(id) {
+      this.course_group_sets = this.course_group_sets.filter(group_set => {
+        return group_set.id !== id
+      })
+    },
     newGroup() {
-      this.groups_changed = true
-      const id = `placeholder-${sha1(Math.random())}`
-      const g = { id: id, name: 'New Group', members: [] }
-      this.group_ids.push(id)
-      this.course_groups.active_course_groups.push(g)
-      return id
+      // this.groups_changed = true
+      // const id = `placeholder-${sha1(Math.random())}`
+      // const g = { id: id, name: 'New Group', members: [] }
+      // this.group_ids.push(id)
+      // this.course_groups.active_course_groups.push(g)
+      // return id
     },
     change_expand(id) {
       this.$refs[id][0].change_expand()
     },
-    show() {
+    show_automatic_group() {
       this.$modal.show('Automatic Group Assignment')
     },
-    hide() {
+    hide_automatic_group() {
       this.$modal.hide('Automatic Group Assignment')
     },
+    show_rename_group_set(id) {
+      this.group_set_id = id
+      this.$modal.show('Rename Group Set')
+    },
+    hide_rename_group_set() {
+      this.$modal.hide('Rename Group Set')
+    },
     automatically_create_groups() {
-      this.groups_changed = true
-      const students_per_group = parseInt(this.students_per_group)
-
-      if (isNaN(students_per_group) || students_per_group === 0)
-        console.warn('Invalid number of students per group')
-      else {
-        let number_of_groups =
-          this.unassigned_students.length / students_per_group
-
-        while (this.unassigned_students.length > 0) {
-          const group_id = this.newGroup()
-
-          if (number_of_groups >= 2) {
-            for (const group of this.course_groups.active_course_groups) {
-              if (group.id === group_id) {
-                for (let i = 0; i < students_per_group; i++) {
-                  group.members.push(this.unassigned_students.pop())
-                }
-              }
-            }
-          }
-
-          if (number_of_groups < 2) {
-            for (const group of this.course_groups.active_course_groups) {
-              if (group.id === group_id) {
-                for (let i = 0; i < this.unassigned_students.length; i++) {
-                  group.members.push(this.unassigned_students.pop())
-                  i--
-                }
-              }
-            }
-          }
-
-          number_of_groups -= 1
-        }
-      }
-      this.hide()
+      // this.groups_changed = true
+      // const students_per_group = parseInt(this.students_per_group)
+      //
+      // if (isNaN(students_per_group) || students_per_group === 0)
+      //   console.warn('Invalid number of students per group')
+      // else {
+      //   let number_of_groups =
+      //     this.unassigned_students.length / students_per_group
+      //
+      //   while (this.unassigned_students.length > 0) {
+      //     const group_id = this.newGroup()
+      //
+      //     if (number_of_groups >= 2) {
+      //       for (const group of this.course_groups.active_course_groups) {
+      //         if (group.id === group_id) {
+      //           for (let i = 0; i < students_per_group; i++) {
+      //             group.members.push(this.unassigned_students.pop())
+      //           }
+      //         }
+      //       }
+      //     }
+      //
+      //     if (number_of_groups < 2) {
+      //       for (const group of this.course_groups.active_course_groups) {
+      //         if (group.id === group_id) {
+      //           for (let i = 0; i < this.unassigned_students.length; i++) {
+      //             group.members.push(this.unassigned_students.pop())
+      //             i--
+      //           }
+      //         }
+      //       }
+      //     }
+      //
+      //     number_of_groups -= 1
+      //   }
+      // }
+      // this.hide_automatic_group()
     },
     async permanently_delete_group(id) {
       this.groups_changed = true
@@ -324,37 +373,65 @@ p {
   margin-left: 7vw;
 }
 
+.group_set {
+  display: flex;
+  position: relative;
+}
+
 #edit-course-groups {
   display: flex;
 }
 
-#modal-div,
-#modal-footer {
+.modal-div,
+.modal-footer {
   display: flex;
 }
 
-#modal-div {
+.modal-div {
   margin-top: 5vh;
   margin-left: 2vw;
 }
 
-#modal-footer {
+.modal-footer {
   margin-top: 2vh;
   margin-left: -3vw;
 }
 
-#students-per-group-label {
+.group-set-controls {
+  color: white;
+  cursor: pointer;
+  position: absolute;
+  right: 0;
+  display: flex;
+}
+
+.group-set-rename-button {
+  margin-right: 0.5vw;
+  background-color: #0c2343;
+  border-radius: 0.5vh;
+}
+
+.group-set-delete-button {
+  background-color: #0c2343;
+  border-radius: 0.5vh;
+}
+
+#students-per-group-label,
+#new-name-label {
   margin-right: 1vw;
 }
 
-#students-per-group-input {
+#students-per-group-input,
+#group-set-name-input {
   text-align: right;
 }
 
 #students-per-group-label,
-#students-per-group-input {
+#new-name-label,
+#students-per-group-input,
+#group-set-name-input {
   color: #0c2343;
-  font-size: 3vh;
+  font-size: 1.5vh;
 }
 
 #student-draggable {
@@ -367,6 +444,7 @@ p {
 #groups {
   margin-top: 1vh;
   width: 33.333%;
+  margin-right: 2vw;
 }
 
 #group-set-header,
@@ -379,8 +457,8 @@ p {
 #automatic-groups-button,
 #edit-group-button,
 #save-button,
-#modal-continue-button,
-#modal-cancel-button {
+.modal-continue-button,
+.modal-cancel-button {
   font-size: 1.5vh;
   color: white;
   background-color: #0c2343;
@@ -392,12 +470,12 @@ p {
   cursor: pointer;
 }
 
-#modal-continue-button {
+.modal-continue-button {
   margin-right: 0.5vw;
   margin-left: 25vw;
 }
 
-#modal-cancel-button {
+.modal-cancel-button {
   background-color: #595959;
 }
 

@@ -26,6 +26,62 @@ class CourseGroupDatabaseHandler {
 
 
 
+    async get_course_group_set_data (course_group_set_key) {
+        return new Promise((resolve, reject) => {
+            console.log('Redis request to key: ' + course_group_set_key);
+            this.db_handler.client.hgetall(course_group_set_key, (error, result) => {
+                if (error) {
+                    console.log(error);
+                    reject(error);
+                }
+                console.log('GET result -> ' + { result });
+
+                let parsed_data = RedisToJSONParser.parse_data_to_JSON(result);
+
+                resolve(parsed_data);
+            });
+        });
+    }
+
+
+
+    async get_all_course_group_sets (import_handler, course_key) {
+        let course_db_handler = await import_handler.course_db_handler;
+        let user_db_handler = await import_handler.user_db_handler;
+
+        let course_data = await course_db_handler.get_course_data(course_key);
+        let course_group_sets = course_data['course_group_sets'];
+        let all_students = course_data['active_students'];
+
+        let all_course_groups = [];
+
+        for (const course_groups of course_group_sets) {
+            let course_group_set = await this.get_course_group_set_data();
+            let course_group_set_data = [];
+            let assigned_students = [];
+            let unassigned_students = [];
+
+            for (const course_group of course_groups) {
+                const course_group_data = await this.get_course_group_data(course_group);
+                course_group_set_data.push(course_group_data);
+                assigned_students.concat(course_group_data['members'])
+            }
+
+            for (const student of all_students) {
+                if (!assigned_students.includes(student)) {
+                    let student_data = await user_db_handler.get_user_data(student);
+                    unassigned_students.push({ id: student_data['id'], name: student_data['display_name'] });
+                }
+            }
+
+            all_course_groups.push({ course_group_set, unassigned_students, 'course_groups': course_group_set_data})
+        }
+
+        return all_course_groups;
+    }
+
+
+
     async get_all_course_groups (import_handler, course_key) {
         let course_db_handler = await import_handler.course_db_handler;
         let course_data = await course_db_handler.get_course_data(course_key);

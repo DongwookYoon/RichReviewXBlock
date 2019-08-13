@@ -376,6 +376,7 @@
                     // It must be resumed (or created) after a user gesture on the page.
                     document.documentElement.addEventListener(
                         "mousedown", function(){
+                          console.log('mouse down')
                             if (audio_context.state !== 'running') {
                                 audio_context.resume();
                             }})

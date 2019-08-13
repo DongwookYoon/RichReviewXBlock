@@ -377,6 +377,8 @@
                     document.documentElement.addEventListener(
                         "mousedown", function(){
                           console.log('mouse down')
+                          console.log(audio_context)
+                          console.log(audio_context.state)
                             if (audio_context.state !== 'running') {
                                 audio_context.resume();
                             }})

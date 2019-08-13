@@ -72,6 +72,7 @@
             cur_cmd = cmd;
 
             m_audio = new Audio(cmd.param_url);
+            m_audio.crossOrigin = 'use-credentials';
             m_audio.preload = "auto";
             m_audio.loop = false;
             m_audio.addEventListener('ended', function() {
@@ -504,7 +505,6 @@
             var link = window.document.createElement('a');
             link.href = url;
             link.download = filename || 'output.wav';
-            link.type = 'audio/x-wav';
             var click = document.createEvent("Event");
             click.initEvent("click", true, true);
             link.dispatchEvent(click);

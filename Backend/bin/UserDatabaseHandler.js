@@ -290,7 +290,7 @@ class UserDatabaseHandler {
         let user_key = KeyDictionary.key_dictionary['user'] + user_data[this.UBC_CWL];
 
         if(user_data[this.UBC_COURSES] === undefined)
-            return;
+            return user_key;
 
         if (typeof user_data[this.UBC_COURSES] === 'string') {
             let course = user_data[this.UBC_COURSES];

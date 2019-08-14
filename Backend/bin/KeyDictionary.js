@@ -11,7 +11,8 @@ KeyDictionary.key_dictionary = {
     'submitter': 'smt:',
     'document': 'doc:',
     'group': 'grp:',
-    'command': 'cmd:'
+    'command': 'cmd:',
+    'course_group_set': 'cgs:'
 };
 
 module.exports = KeyDictionary;

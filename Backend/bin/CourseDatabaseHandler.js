@@ -202,6 +202,23 @@ class CourseDatabaseHandler {
     }
 
 
+    async add_course_group_set_to_course (course_group_set_key, course_key) {
+        try {
+            let course_data = await this.get_course_data(course_key);
+            let course_group_sets = course_data['course_group_sets'];
+
+            if (!course_group_sets.includes(course_group_set_key)) {
+                course_group_sets.push(course_group_set_key);
+                await this.set_course_data(course_key, 'course_group_sets', JSON.stringify(course_group_sets));
+            }
+
+        } catch (e) {
+            console.warn(e);
+            throw e;
+        }
+    }
+
+
 
     async add_student_to_course (import_handler, user_key, course_key) {
         try {

@@ -25,6 +25,76 @@ class CourseGroupDatabaseHandler {
     }
 
 
+    // todo delete deleted course_groups, create submitters for students if needed
+    async update_course_group_sets (import_handler, user_key, course_key, course_group_sets) {
+        let course_db_handler = await import_handler.course_db_handler;
+
+        for (let course_group_set of course_group_sets) {
+
+            if(!course_group_set.id.includes('placeholder')) {
+                await this.update_existing_course_group_set(import_handler, user_key, course_key, course_group_set);
+
+            } else {
+                let course_group_set_key = await this.update_new_course_group_set(import_handler,
+                    user_key, course_key, course_group_set);
+
+                await course_db_handler.add_course_group_set_to_course(course_group_set_key, course_key);
+            }
+        }
+    }
+
+
+    async update_existing_course_group_set (import_handler, user_key, course_key, course_group_set) {
+        let course_group_set_key = `${KeyDictionary.key_dictionary['course_group_set']}${course_group_set['id']}`;
+        let course_group_set_data = await this.get_course_group_set_data(course_group_set_key);
+
+        await this.set_course_group_set_data(course_group_set_key, 'name', course_group_set['name']);
+
+        for (let course_group of course_group_set['course_groups']) {
+            course_group.users = course_group.users.map(user => { return user.key });
+
+            if (course_group['id'].startsWith('placeholder')) {
+                let course_group_key = await this.create_course_group(import_handler,
+                    user_key, course_key, course_group_set_key, {
+                        name: course_group.name,
+                        users: course_group['users']
+                    });
+                course_group_set_data['course_groups'].push(course_group_key);
+            } else {
+                let course_group_key = KeyDictionary.key_dictionary['course_group'] + course_group['id'];
+                await this.set_course_group_data(course_group_key, 'name', course_group['name']);
+                await this.set_course_group_data(course_group_key, 'users', JSON.stringify(course_group['user']));
+            }
+        }
+
+        await this.set_course_group_set_data(course_group_set_key, 'course_groups',
+            JSON.stringify(course_group_set_data['course_groups']));
+    }
+
+
+
+    async update_new_course_group_set (import_handler, user_key, course_key, course_group_set) {
+        let course_group_set_key = await this.create_course_group_set(import_handler, course_key,
+            {name: course_group_set['name']});
+
+        let course_groups = [];
+        for (let course_group of course_group_set['course_groups']) {
+            course_group.users = course_group.users.map(member => { return member.key });
+
+            let course_group_key = await this.create_course_group(import_handler,
+                user_key, course_key, course_group_set_key, {
+                    name: course_group.name,
+                    users: course_group['users']
+                });
+            course_groups.push(course_group_key);
+        }
+        await this.set_course_group_set_data(course_group_set_key, 'course_groups',
+            JSON.stringify(course_groups));
+
+        return course_group_set_key;
+    }
+
+
 
     async get_course_group_set_data (course_group_set_key) {
         return new Promise((resolve, reject) => {
@@ -55,26 +125,31 @@ class CourseGroupDatabaseHandler {
 
         let all_course_groups = [];
 
-        for (const course_groups of course_group_sets) {
-            let course_group_set = await this.get_course_group_set_data();
+        for (const course_group_set_key of course_group_sets) {
+            let course_group_set = await this.get_course_group_set_data(course_group_set_key);
             let course_group_set_data = [];
             let assigned_students = [];
             let unassigned_students = [];
 
-            for (const course_group of course_groups) {
+            for (const course_group of course_group_set.course_groups) {
                 const course_group_data = await this.get_course_group_data(course_group);
                 course_group_set_data.push(course_group_data);
-                assigned_students.concat(course_group_data['members'])
+                assigned_students = assigned_students.concat(course_group_data['users']);
+
+                course_group_data.users = await Promise.all(course_group_data.users.map(async user => {
+                    let user_data = await user_db_handler.get_user_data(user);
+                    return { key: user, name: user_data['display_name'] }
+                }));
             }
 
             for (const student of all_students) {
                 if (!assigned_students.includes(student)) {
                     let student_data = await user_db_handler.get_user_data(student);
-                    unassigned_students.push({ id: student_data['id'], name: student_data['display_name'] });
+                    unassigned_students.push({ key: student, name: student_data['display_name'] });
                 }
             }
 
-            all_course_groups.push({ course_group_set, unassigned_students, 'course_groups': course_group_set_data})
+            all_course_groups.push({ id: course_group_set.id, name: course_group_set.name, unassigned_students, 'course_groups': course_group_set_data})
         }
 
         return all_course_groups;
@@ -191,7 +266,7 @@ class CourseGroupDatabaseHandler {
 
 
 
-    async create_course_group (import_handler, user_key, course_key, group_data) {
+    async create_course_group (import_handler, user_key, course_key, course_group_set_key, group_data) {
         try {
             let user_db_handler = await import_handler.user_db_handler;
             let user_permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
@@ -207,8 +282,8 @@ class CourseGroupDatabaseHandler {
                 await user_db_handler.add_course_group_to_user(user, course_group_key);
             }
 
-            let course_db_handler = await import_handler.course_db_handler;
-            await course_db_handler.add_course_group_to_course(course_group_key, course_key);
+            // let course_db_handler = await import_handler.course_db_handler;
+            // await course_db_handler.add_course_group_to_course(course_group_key, course_key);
 
             // Set default group data values
             await this.set_course_group_data(course_group_key, 'id', largest_group_key + 1);
@@ -216,14 +291,32 @@ class CourseGroupDatabaseHandler {
             await this.set_course_group_data(course_group_key, 'users', JSON.stringify(group_data.users));
             await this.set_course_group_data(course_group_key, 'creation_time', new Date());
             await this.set_course_group_data(course_group_key, 'submitters', '[]');
-            await this.set_course_group_data(course_group_key, 'course', course_key);
+            // await this.set_course_group_data(course_group_key, 'course', course_key);
+            await this.set_course_group_data(course_group_key, 'course_group_set', course_group_set_key);
 
+            return course_group_key;
         } catch (e) {
             console.warn(e);
             throw e;
         }
     }
 
+
+    async create_course_group_set (import_handler, course_key, course_group_set_data) {
+        let course_db_handler = await import_handler.course_db_handler;
+        let course_data = await course_db_handler.get_course_data(course_key);
+
+        const course_group_set_key = `${KeyDictionary.key_dictionary['course_group_set']}${course_data.id}_${Date.now()}`;
+
+        await this.set_course_group_set_data(course_group_set_key, 'name', course_group_set_data['name']);
+        await this.set_course_group_set_data(course_group_set_key, 'id',
+            course_group_set_key.replace(KeyDictionary.key_dictionary['course_group_set'], ''));
+
+        await this.set_course_group_set_data(course_group_set_key, 'course_groups', '[]');
+        await this.set_course_group_set_data(course_group_set_key, 'course', course_key);
+
+        return course_group_set_key;
+    }
 
 
     async get_course_group (import_handler, user_key, course_group_key, course_key) {
@@ -273,6 +366,22 @@ class CourseGroupDatabaseHandler {
         return new Promise((resolve, reject) => {
             console.log('Redis hset request to key: ' + course_group_key);
             this.db_handler.client.hset(course_group_key, field, value, (error, result) => {
+                if (error) {
+                    console.log(error);
+                    reject(error);
+                }
+                console.log('SET result -> ' + result);
+                resolve();
+            });
+        })
+    }
+
+
+    set_course_group_set_data (course_group_set_key, field, value) {
+
+        return new Promise((resolve, reject) => {
+            console.log('Redis hset request to key: ' + course_group_set_key);
+            this.db_handler.client.hset(course_group_set_key, field, value, (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);

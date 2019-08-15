@@ -73,6 +73,7 @@ Backend/node_modules/
 .nuxt/
 .idea/
 node_modules/
-!.eslintrc.js
-!.prettierrc
+dist/
+.eslintrc.js
+.prettierrc
 

@@ -29,6 +29,8 @@ class CourseGroupDatabaseHandler {
     async update_course_group_sets (import_handler, user_key, course_key, course_group_sets) {
         let course_db_handler = await import_handler.course_db_handler;
 
+        await this.remove_deleted_course_groups(import_handler, user_key, course_key, course_group_sets);
+
         for (let course_group_set of course_group_sets) {
 
             if(!course_group_set.id.includes('placeholder')) {
@@ -60,10 +62,12 @@ class CourseGroupDatabaseHandler {
                         users: course_group['users']
                     });
                 course_group_set_data['course_groups'].push(course_group_key);
+                await this.create_submitters_for_course_group(import_handler, course_key, course_group_set_key, course_group_key);
             } else {
                 let course_group_key = KeyDictionary.key_dictionary['course_group'] + course_group['id'];
+                await this.update_submitters_for_course_group_users(import_handler, course_group_key, course_group['users']);
                 await this.set_course_group_data(course_group_key, 'name', course_group['name']);
-                await this.set_course_group_data(course_group_key, 'users', JSON.stringify(course_group['user']));
+                await this.set_course_group_data(course_group_key, 'users', JSON.stringify(course_group['users']));
             }
         }
 
@@ -94,6 +98,89 @@ class CourseGroupDatabaseHandler {
         return course_group_set_key;
     }
 
+
+
+    async remove_deleted_course_groups (import_handler, user_key, course_key, course_group_sets) {
+        let course_db_handler = await import_handler.course_db_handler;
+        let course_data = await course_db_handler.get_course_data(course_key);
+
+        let cur_course_group_sets = await Promise.all(course_data['course_group_sets'].map(async course_group_set => {
+            return await this.get_course_group_set_data(course_group_set);
+        }));
+
+        let new_course_groups = [];
+        for (const course_group_set of course_group_sets) {
+            new_course_groups = new_course_groups.concat(course_group_set['course_groups']);
+        }
+
+        for (const cur_course_group_set of cur_course_group_sets) {
+            for (const course_group of cur_course_group_set['course_groups']) {
+                let id = course_group.replace(KeyDictionary.key_dictionary['course_group'], '');
+
+                let found = new_course_groups.filter(new_course_group => {
+                    return new_course_group.id === id;
+                });
+                if(found.length === 0) {
+                    await this.delete_course_group_permanently(import_handler, user_key, course_key, course_group);
+                }
+            }
+
+            let found = course_group_sets.filter(course_group_set => {
+                return course_group_set.id === cur_course_group_set['id'];
+            });
+            if(found.length === 0) {
+                let key = KeyDictionary.key_dictionary['course_group_set'] + cur_course_group_set['id'];
+                await this.delete_course_group_set_permanently(import_handler, user_key, course_key, key);
+            }
+        }
+    }
+
+
+
+    async create_submitters_for_course_group (import_handler, course_key, course_group_set_key, course_group_key) {
+        let course_db_hanlder = await import_handler.course_db_handler;
+        let assignment_db_handler = await import_handler.assignment_db_handler;
+        let submission_db_handler = await import_handler.submission_db_handler;
+
+        let course_data = await course_db_hanlder.get_course_data(course_key);
+        let assignments = await Promise.all(course_data['assignments'].map(async assignment => {
+            return await assignment_db_handler.get_assignment_data('', assignment);
+        }));
+
+        for (const assignment of assignments) {
+            if (assignment.group_assignment && assignment.course_group_set === course_group_set_key) {
+                let assignment_key = KeyDictionary.key_dictionary['assignment'] + assignment.id;
+                await submission_db_handler.create_submission_for_course_group(import_handler, assignment_key, '', course_group_key);
+            }
+        }
+    }
+
+
+
+    async update_submitters_for_course_group_users (import_handler, course_group_key, new_users) {
+        let user_db_handler = await import_handler.user_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
+
+        let course_group_data = await this.get_course_group_data(course_group_key);
+        let cur_users = course_group_data['users'];
+        let submitters = course_group_data['submitters'];
+
+        for (const cur_user of cur_users) {
+            if (!new_users.includes(cur_user)) {
+                for (const submitter of submitters) {
+                    await user_db_handler.remove_submitter_from_user(cur_user, submitter);
+                    await submitter_db_handler.remove_user_from_submitter(cur_user, submitter);
+                }
+            }
+        }
+
+        for (const new_user of new_users) {
+            for (const submitter of submitters) {
+                await user_db_handler.add_submitter_to_user(new_user, submitter);
+                await submitter_db_handler.add_user_to_submitter(new_user, submitter);
+            }
+        }
+    }
 
 
     async get_course_group_set_data (course_group_set_key) {
@@ -448,6 +535,21 @@ class CourseGroupDatabaseHandler {
 
 
 
+    async remove_course_group_from_set (course_group_key, course_group_set_key) {
+        let course_group_set = await this.get_course_group_set_data(course_group_set_key);
+        if (Object.keys(course_group_set).length === 0)
+            return;
+
+        let course_groups = course_group_set['course_groups'];
+        course_groups = course_groups.filter(course_group => {
+            return course_group !== course_group_key;
+        });
+
+        await this.set_course_group_data(course_group_set_key, 'course_groups', JSON.stringify(course_groups));
+    }
+
+
+
     async delete_course_group (import_handler, user_key, course_key, course_group_key) {
         let user_db_handler = await import_handler.user_db_handler;
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
@@ -473,6 +575,8 @@ class CourseGroupDatabaseHandler {
         if (Object.keys(course_group_data).length === 0)
             return;
 
+        await this.remove_course_group_from_set(course_group_key, course_group_data['course_group_set']);
+
         for (let member_key of course_group_data['users']) {
             await user_db_handler.remove_course_group_from_user(member_key, course_group_key);
         }
@@ -481,6 +585,33 @@ class CourseGroupDatabaseHandler {
         await course_db_handler.permanently_delete_course_group(course_key, course_group_key);
 
         await this.db_handler.client.del(course_group_key, (error, result) => {
+            if (error) {
+                console.log(error);
+                throw error;
+            }
+            console.log('DEL result -> ' + result);
+        });
+    }
+
+
+
+    async delete_course_group_set_permanently(import_handler, user_key, course_key, course_group_set_key) {
+        let user_db_handler = await import_handler.user_db_handler;
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+
+        if (permissions !== 'ta' && permissions !== 'instructor')
+            throw new NotAuthorizedError('You are not authorized to delete a course group');
+
+        let course_group_set_data = await this.get_course_group_set_data(course_group_set_key);
+
+        for (const course_group of course_group_set_data['course_groups']) {
+            await this.delete_course_group_permanently(import_handler, user_key, course_key, course_group);
+        }
+
+        let course_db_handler = await import_handler.course_db_handler;
+        await course_db_handler.remove_course_group_set_from_course(course_group_set_key, course_key);
+
+        await this.db_handler.client.del(course_group_set_key, (error, result) => {
             if (error) {
                 console.log(error);
                 throw error;

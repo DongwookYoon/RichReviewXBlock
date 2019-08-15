@@ -86,12 +86,6 @@ router.post("/", async function (req, res, next){
     let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
     let course_group_sets = req.body;
 
-    if (course_group_sets.length === 0) {
-        res.sendStatus(200);
-        return;
-    }
-
-
     try {
         await course_group_db_handler.update_course_group_sets(ImportHandler, user_key, course_key, course_group_sets);
 

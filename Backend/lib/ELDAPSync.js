@@ -91,7 +91,7 @@ async function remove_unenrolled_instructors (course_key, members) {
 
     for(let instructor of instructors) {
         if (!members.includes(instructor)) {
-            await course_db_handler.remove_instructor(instructor, course_key)
+            await course_db_handler.remove_instructor_from_course(instructor, course_key)
         }
     }
 }

@@ -127,6 +127,7 @@ class CourseDatabaseHandler {
 
         let assignment_db_handler = await import_handler.assignment_db_handler;
         let user_db_handler = await import_handler.user_db_handler;
+        let course_group_db_handler = await import_handler.course_group_db_handler;
 
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
@@ -145,8 +146,17 @@ class CourseDatabaseHandler {
                 user_key,
                 course_data['assignments']);
 
-        course_data = { id: course_data.id, title: course_data.title, description: course_data.description};
-        return { course: course_data, assignments: assignments };
+
+        const ret_course_data = { id: course_data.id, title: course_data.title, description: course_data.description};
+
+        if (permissions === 'instructor' || permissions === 'ta') {
+            ret_course_data['course_group_sets'] = await Promise.all(course_data['course_group_sets'].map(async course_group_set => {
+                return await course_group_db_handler.get_course_group_set_data(course_group_set);
+            }));
+        }
+
+
+        return { course: ret_course_data, assignments: assignments };
     }
 
 
@@ -339,7 +349,7 @@ class CourseDatabaseHandler {
             if (!user_assignments.includes(assignment)) {
                 let assignment_data = await assignment_db_handler.get_assignment_data('', assignment);
                 if (assignment_data['type'] === 'document_submission') {
-                    let submission_key = await submission_db_handler.create_submission(import_handler,
+                    let submission_key = await submission_db_handler.create_submission_for_single_user(import_handler,
                         assignment,
                         user_key,
                         '');
@@ -355,7 +365,7 @@ class CourseDatabaseHandler {
                     await group_db_handler.add_user_to_group(user_key.replace(KeyDictionary.key_dictionary['user'], ''), group_key);
                     await user_db_handler.add_group_to_user(user_key, group_key);
 
-                    let submission_key = await submission_db_handler.create_submission(import_handler,
+                    let submission_key = await submission_db_handler.create_submission_for_single_user(import_handler,
                         assignment,
                         user_key,
                         group_key);
@@ -570,7 +580,7 @@ class CourseDatabaseHandler {
 
 
 
-    async remove_instructor (user_key, course_key) {
+    async remove_instructor_from_course (user_key, course_key) {
         let course_data = await this.get_course_data(course_key);
         let instructors = course_data['instructors'];
 
@@ -580,6 +590,20 @@ class CourseDatabaseHandler {
 
         await this.set_course_data(course_key, 'instructors', JSON.stringify(instructors));
     }
+
+
+
+    async remove_course_group_set_from_course (course_group_set_key, course_key) {
+        let course_data = await this.get_course_data(course_key);
+        let course_group_sets = course_data['course_group_sets'];
+
+        course_group_sets = course_group_sets.filter(course_group_set => {
+            return course_group_set !== course_group_set_key
+        });
+
+        await this.set_course_data(course_key, 'course_group_sets', JSON.stringify(course_group_sets));
+    }
+
 
 
 

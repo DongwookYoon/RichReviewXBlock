@@ -126,9 +126,8 @@ class AssignmentDatabaseHandler {
         if (!(await course_db_handler.is_valid_course_key(course_key)))
             throw new RichReviewError('Invalid course key');
 
-        let course_data = await course_db_handler.get_course_data(course_key);
-        if (assignment_data['group_assignment'] && course_data['active_course_groups'].length === 0)
-            throw new RichReviewError('The course does not have any course groups');
+        if (assignment_data['group_assignment'] && assignment_data['course_group_set'] === 'default')
+            throw new RichReviewError('No course group set selected');
 
 
         let assignment_key = await this.create_assignment(import_handler, course_key, assignment_data);
@@ -148,7 +147,8 @@ class AssignmentDatabaseHandler {
             submission_keys = await submission_db_handler.create_submission_for_each_course_group_and_return_keys(
                 import_handler,
                 course_key,
-                assignment_key);
+                assignment_key,
+                assignment_data['course_group_set']);
         }
 
         await this.set_assignment_data(assignment_key, 'submissions', JSON.stringify(submission_keys));
@@ -180,9 +180,8 @@ class AssignmentDatabaseHandler {
         if (Object.keys(files).length === 0)
             throw new RichReviewError('No assignment files');
 
-        let course_data = await course_db_handler.get_course_data(course_key);
-        if (assignment_data['group_assignment'] && course_data['active_course_groups'].length === 0)
-            throw new RichReviewError('The course does not have any course groups');
+        if (assignment_data['group_assignment'] && assignment_data['course_group_set'] === 'default')
+            throw new RichReviewError('No course group set selected');
 
 
         let document_upload_handler = await import_handler.doc_upload_handler;
@@ -218,7 +217,8 @@ class AssignmentDatabaseHandler {
             submission_keys = await submission_db_handler.create_submission_for_each_course_group_and_return_keys(
                 import_handler,
                 course_key,
-                assignment_key);
+                assignment_key,
+                assignment_data['course_group_set']);
         }
 
 

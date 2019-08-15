@@ -90,17 +90,16 @@ class SubmissionDatabaseHandler {
 
 
 
-    async create_submission_for_each_course_group_and_return_keys (import_handler, course_key, assignment_key) {
+    async create_submission_for_each_course_group_and_return_keys (import_handler, course_key, assignment_key, course_group_set_id) {
         let course_group_db_handler = await import_handler.course_group_db_handler;
         let submitter_db_handler = await import_handler.submitter_db_handler;
 
         let submission_keys = [];
 
-        let course_groups = (await course_group_db_handler.get_all_course_groups(
-            import_handler, course_key))['active_course_groups'];
+        let course_group_set_key = KeyDictionary.key_dictionary['course_group_set'] + course_group_set_id;
+        let course_group_set = await course_group_db_handler.get_course_group_data(course_group_set_key);
 
-        for (let course_group of course_groups) {
-            let course_group_key = KeyDictionary.key_dictionary['course_group'] + course_group.id;
+        for (let course_group_key of course_group_set['course_groups']) {
 
             let largest_submission_key = await this.get_largest_submission_key();
             let submission_key = KeyDictionary.key_dictionary['submission'] + (largest_submission_key + 1);
@@ -135,7 +134,7 @@ class SubmissionDatabaseHandler {
 
 
 
-    async create_submission(import_handler, assignment_key, user_key, group_key) {
+    async create_submission (import_handler, assignment_key, group_key) {
         let largest_submission_key = await this.get_largest_submission_key();
         let submission_key = KeyDictionary.key_dictionary['submission'] + (largest_submission_key + 1);
 
@@ -147,6 +146,13 @@ class SubmissionDatabaseHandler {
         await this.set_submission_data(submission_key, 'group', group_key || '');
         await this.set_submission_data(submission_key, 'current_submission', '');
         await this.set_submission_data(submission_key, 'past_submissions', '[]');
+
+        return submission_key;
+    }
+
+
+    async create_submission_for_single_user(import_handler, assignment_key, user_key, group_key) {
+        let submission_key = await this.create_submission(import_handler, assignment_key, group_key);
 
         let submitter_db_handler = await import_handler.submitter_db_handler;
         let submitter_key = await submitter_db_handler.create_submitter_and_return_key(
@@ -160,6 +166,42 @@ class SubmissionDatabaseHandler {
         return submission_key;
     }
 
+
+    async create_submission_for_multiple_users(import_handler, assignment_key, user_keys, group_key) {
+        let submission_key = await this.create_submission(import_handler, assignment_key, group_key);
+
+        let submitter_db_handler = await import_handler.submitter_db_handler;
+        let submitter_key = await submitter_db_handler.create_submitter_and_return_key(
+            import_handler,
+            user_keys,
+            submission_key,
+            '');
+
+        await this.set_submission_data(submission_key, 'submitter', submitter_key);
+
+        return submission_key;
+    }
+
+
+    async create_submission_for_course_group (import_handler, assignment_key, group_key, course_group_key) {
+        let course_group_db_handler = await import_handler.course_group_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
+
+        let submission_key = await this.create_submission(import_handler, assignment_key, group_key);
+
+        let course_group_data = await course_group_db_handler.get_course_group_data(course_group_key);
+
+        let submitter_key = await submitter_db_handler.create_submitter_and_return_key(
+            import_handler,
+            course_group_data['users'],
+            submission_key,
+            course_group_key);
+
+        await this.set_submission_data(submission_key, 'submitter', submitter_key);
+        await course_group_db_handler.add_submitter_to_course_group(submitter_key, course_group_key);
+
+        return submission_key;
+    }
 
 
     async get_submission_owner (import_handler, submission_key) {

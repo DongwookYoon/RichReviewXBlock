@@ -153,7 +153,7 @@
 </template>
 
 <script>
-/* eslint-disable no-console,camelcase,vue/no-unused-components,no-unused-vars,standard/computed-property-even-spacing */
+/* eslint-disable no-console,camelcase,vue/no-unused-components,no-unused-vars,standard/computed-property-even-spacing,require-await */
 
 import https from 'https'
 import sha1 from 'sha1'
@@ -402,6 +402,7 @@ export default {
     },
     async save() {
       this.changes_saved = true
+      console.log(this.course_group_sets)
       await axios.post(
         `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id

@@ -73,6 +73,20 @@
           />
           <label id="group-assignment-label">Group assignment</label>
         </div>
+        <div v-if="assignment_data.group_assignment" id="course-group-set-div">
+          <select
+            id="course-group-set-select"
+            v-model="assignment_data.course_group_set"
+          >
+            <option
+              v-for="option in course_group_sets"
+              :key="option.key"
+              :value="option.id"
+            >
+              {{ option.name }}
+            </option>
+          </select>
+        </div>
         <div id="hidden-div">
           <input id="hidden" v-model="assignment_data.hidden" type="checkbox" />
           <label id="hidden-label">Hidden</label>
@@ -199,7 +213,8 @@ export default {
         due_date: '',
         available_date: '',
         until_date: '',
-        type: 'document_submission'
+        type: 'document_submission',
+        course_group_set: 'default'
       },
       files: [],
       showDismissibleAlert: false,
@@ -235,9 +250,18 @@ export default {
       }
     )
     console.log(course_res.data)
+    const default_value = {
+      id: 'default',
+      name: 'Please select a group set'
+    }
+    const course_group_sets = [default_value].concat(
+      course_res.data.course.course_group_sets
+    )
+    console.log(course_group_sets)
     return {
       permissions: permission_res.data.permissions,
-      course: course_res.data.course.title
+      course: course_res.data.course.title,
+      course_group_sets: course_group_sets
     }
   },
   fetch({ store, redirect }) {
@@ -259,6 +283,13 @@ export default {
       this.assignment_data.until_date = ''
     },
     async save() {
+      if (
+        this.assignment_data.group_assignment &&
+        this.assignment_data.course_group_set === 'default'
+      ) {
+        alert('A group assignment requires a group set')
+        return
+      }
       this.changesSaved = true
       if (this.assignment_data.type === 'comment_submission') {
         if (this.files.length === 0) {
@@ -446,6 +477,7 @@ hr {
 #multiple-submissions,
 #late-submissions,
 #group-assignment,
+#course-group-set-select,
 #hidden {
   margin-left: 13.4vw;
 }

@@ -26,6 +26,11 @@ export default {
       return Boolean(this.$route.query.callback)
     }
   },
+  fetch({store, redirect}){
+    if (store.state.authUser) {
+      return redirect('/education/dashboard')
+    }
+  },
   methods: {
     login_google() {
       window.open('/login_google', '_self')

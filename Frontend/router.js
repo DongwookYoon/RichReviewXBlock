@@ -117,7 +117,7 @@ export function createRouter() {
         component: submitter
       },
       {
-        path: '/education/admin',
+        path: '/edu/admin',
         component: admin
       }
     ]

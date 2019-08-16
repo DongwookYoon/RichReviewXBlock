@@ -28,7 +28,7 @@ export default {
   },
   fetch({store, redirect}){
     if (store.state.authUser) {
-      return redirect('/education/dashboard')
+      return redirect('/edu/dashboard')
     }
   },
   methods: {

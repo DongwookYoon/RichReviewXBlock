@@ -45,7 +45,7 @@ export default {
   },
   async fetch({ store, redirect }) {
     if (!store.state.authUser) {
-      return redirect('/education/login')
+      return redirect('/edu/login')
     }
     const res = await axios.get(
       `https://${process.env.backend}:3000/dbs/is_admin`,
@@ -59,24 +59,24 @@ export default {
       }
     )
     console.log('is_admin:' + res.data)
-    if (!res.data) return redirect('/education/dashboard')
+    if (!res.data) return redirect('/edu/dashboard')
   },
   methods: {
     go_to_dashboard() {
-      this.$router.push('/education/dashboard')
+      this.$router.push('/edu/dashboard')
     },
     go_to_all_assignments() {
-      this.$router.push('/education/all-assignments')
+      this.$router.push('/edu/all-assignments')
     },
     go_to_all_groups() {
-      this.$router.push('/education/all-groups')
+      this.$router.push('/edu/all-groups')
     },
     go_to_all_grades() {
-      this.$router.push('/education/all-grades')
+      this.$router.push('/edu/all-grades')
     },
     async logout() {
       await this.$auth.logout()
-      this.$router.push('/education')
+      this.$router.push('/edu')
     }
   }
 }

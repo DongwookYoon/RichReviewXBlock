@@ -29,7 +29,7 @@ export default {
       )
       console.log(process.env.NODE_ENV)
       console.log(res)
-      this.$router.replace('/education/dashboard')
+      this.$router.replace('/edu/dashboard')
     }
   }
 }

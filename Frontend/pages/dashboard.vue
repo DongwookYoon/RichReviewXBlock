@@ -9,7 +9,7 @@
             :description="e.description"
             role="Student"
             :assignment_count="e.assignment_count"
-            :link="`/education/courses/${e.id}`"
+            :link="`/edu/courses/${e.id}`"
             class="course-card"
           ></course-card>
         </div>
@@ -19,7 +19,7 @@
             :description="e.description"
             role="TA"
             :assignment_count="e.assignment_count"
-            :link="`/education/courses/${e.id}`"
+            :link="`/edu/courses/${e.id}`"
           ></course-card>
         </div>
         <div v-for="e in instructing" :key="e.key" class="instructing">
@@ -28,7 +28,7 @@
             :description="e.description"
             role="Instructor"
             :assignment_count="e.assignment_count"
-            :link="`/education/courses/${e.id}`"
+            :link="`/edu/courses/${e.id}`"
           ></course-card>
         </div>
       </div>
@@ -43,7 +43,7 @@
             :status="a.submission_status"
             :late="a.late"
             :link="
-              `/education/courses/${a.course_id}/assignments/${a.assignment_id}`
+              `/edu/courses/${a.course_id}/assignments/${a.assignment_id}`
             "
           ></upcoming-assignment>
         </div>
@@ -87,25 +87,25 @@ export default {
   },
   fetch({ store, redirect }) {
     if (!store.state.authUser) {
-      return redirect('/education/login')
+      return redirect('/edu/login')
     }
   },
   methods: {
     go_to_dashboard() {
-      this.$router.push('/education/dashboard')
+      this.$router.push('/edu/dashboard')
     },
     go_to_all_assignments() {
-      this.$router.push('/education/all-assignments')
+      this.$router.push('/edu/all-assignments')
     },
     go_to_all_groups() {
-      this.$router.push('/education/all-groups')
+      this.$router.push('/edu/all-groups')
     },
     go_to_all_grades() {
-      this.$router.push('/education/all-grades')
+      this.$router.push('/edu/all-grades')
     },
     async logout() {
       await this.$auth.logout()
-      this.$router.push('/education')
+      this.$router.push('/edu')
     }
   }
 }

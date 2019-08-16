@@ -266,12 +266,12 @@ export default {
   },
   fetch({ store, redirect }) {
     if (!store.state.authUser) {
-      return redirect('/education/login')
+      return redirect('/edu/login')
     }
   },
   methods: {
     go_to_course() {
-      this.$router.push(`/education/courses/${this.$route.params.course_id}/`)
+      this.$router.push(`/edu/courses/${this.$route.params.course_id}/`)
     },
     clear_due_date() {
       this.assignment_data.due_date = ''
@@ -326,7 +326,7 @@ export default {
             })
           }
         )
-        this.$router.push(`/education/courses/${this.$route.params.course_id}`)
+        this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
       } else {
         await axios.post(
           `https://${process.env.backend}:3000/courses/${
@@ -342,7 +342,7 @@ export default {
             })
           }
         )
-        this.$router.push(`/education/courses/${this.$route.params.course_id}`)
+        this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
       }
     },
     addFiles() {

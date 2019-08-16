@@ -97,19 +97,19 @@ export default {
   },
   methods: {
     go_to_dashboard() {
-      this.$router.push('/education/dashboard')
+      this.$router.push('/edu/dashboard')
     },
     go_to_all_assignments() {
-      this.$router.push(`/education/courses/${this.$route.params.course_id}`)
+      this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
     },
     go_to_people() {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/users`
+        `/edu/courses/${this.$route.params.course_id}/users`
       )
     },
     go_to_all_grades() {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/grades`
+        `/edu/courses/${this.$route.params.course_id}/grades`
       )
     },
     logout() {

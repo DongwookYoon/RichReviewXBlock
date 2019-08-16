@@ -30,89 +30,89 @@ export function createRouter() {
     mode: 'history',
     routes: [
       {
-        path: '/education/login',
+        path: '/edu/login',
         component: login
       },
       {
-        path: '/education',
+        path: '/edu',
         component: login
       },
       {
-        path: '/education/authentication',
+        path: '/edu/authentication',
         component: authentication
       },
       {
-        path: '/education/dashboard',
+        path: '/edu/dashboard',
         component: dashboard
       },
       {
-        path: '/education/all-assignments',
+        path: '/edu/all-assignments',
         component: all_user_assignments
       },
       {
-        path: '/education/all-groups',
+        path: '/edu/all-groups',
         component: all_user_groups
       },
       {
-        path: '/education/all-grades',
+        path: '/edu/all-grades',
         component: all_user_grades
       },
       {
-        path: '/education/courses/:course_id',
+        path: '/edu/courses/:course_id',
         component: course
       },
       {
-        path: '/education/courses/:course_id/assignments/new',
+        path: '/edu/courses/:course_id/assignments/new',
         component: new_assignment
       },
       {
-        path: '/education/courses/:course_id/deleted-assignments',
+        path: '/edu/courses/:course_id/deleted-assignments',
         component: deleted_assignments
       },
       {
-        path: '/education/courses/:course_id/assignments/:assignment_id',
+        path: '/edu/courses/:course_id/assignments/:assignment_id',
         component: assignment
       },
       {
-        path: '/education/courses/:course_id/users',
+        path: '/edu/courses/:course_id/users',
         component: people
       },
       {
-        path: '/education/courses/:course_id/course_groups',
+        path: '/edu/courses/:course_id/course_groups',
         component: course_groups
       },
       {
-        path: '/education/courses/:course_id/course_groups/new',
+        path: '/edu/courses/:course_id/course_groups/new',
         component: new_course_group
       },
       {
-        path: '/education/courses/:course_id/course_groups/:group_id',
+        path: '/edu/courses/:course_id/course_groups/:group_id',
         component: course_group
       },
       {
-        path: '/education/courses/:course_id/assignments/:assignment_id/edit',
+        path: '/edu/courses/:course_id/assignments/:assignment_id/edit',
         component: edit_assignment
       },
       {
-        path: '/education/courses/:course_id/grades',
+        path: '/edu/courses/:course_id/grades',
         component: grades
       },
       {
         path:
-          '/education/courses/:course_id/assignments/:assignment_id/submissions',
+          '/edu/courses/:course_id/assignments/:assignment_id/submissions',
         component: assignment_submissions
       },
       {
-        path: '/education/courses/:course_id/viewer',
+        path: '/edu/courses/:course_id/viewer',
         component: viewer
       },
       {
         path:
-          '/education/courses/:course_id/assignments/:assignment_id/submissions/:submission_id/grader',
+          '/edu/courses/:course_id/assignments/:assignment_id/submissions/:submission_id/grader',
         component: grader
       },
       {
-        path: '/education/courses/:course_id/submitter',
+        path: '/edu/courses/:course_id/submitter',
         component: submitter
       }
     ]

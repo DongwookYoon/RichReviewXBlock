@@ -118,23 +118,23 @@ export default {
   },
   fetch({ store, redirect }) {
     if (!store.state.authUser) {
-      return redirect('/education/login')
+      return redirect('/edu/login')
     }
   },
   methods: {
     go_to_new_assignment() {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/assignments/new`
+        `/edu/courses/${this.$route.params.course_id}/assignments/new`
       )
     },
     go_to_deleted_assignments() {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/deleted-assignments`
+        `/edu/courses/${this.$route.params.course_id}/deleted-assignments`
       )
     },
     go_to_assignment(id) {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/assignments/${id}`
+        `/edu/courses/${this.$route.params.course_id}/assignments/${id}`
       )
     }
   }

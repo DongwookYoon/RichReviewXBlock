@@ -214,7 +214,7 @@ export default {
   },
   fetch({ store, redirect }) {
     if (!store.state.authUser) {
-      return redirect('/education/login')
+      return redirect('/edu/login')
     }
   },
   created: function() {

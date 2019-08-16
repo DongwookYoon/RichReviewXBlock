@@ -90,13 +90,12 @@ class SubmissionDatabaseHandler {
 
 
 
-    async create_submission_for_each_course_group_and_return_keys (import_handler, course_key, assignment_key, course_group_set_id) {
+    async create_submission_for_each_course_group_and_return_keys (import_handler, course_key, assignment_key, course_group_set_key) {
         let course_group_db_handler = await import_handler.course_group_db_handler;
         let submitter_db_handler = await import_handler.submitter_db_handler;
 
         let submission_keys = [];
 
-        let course_group_set_key = KeyDictionary.key_dictionary['course_group_set'] + course_group_set_id;
         let course_group_set = await course_group_db_handler.get_course_group_data(course_group_set_key);
 
         for (let course_group_key of course_group_set['course_groups']) {

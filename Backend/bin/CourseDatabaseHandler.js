@@ -151,7 +151,9 @@ class CourseDatabaseHandler {
 
         if (permissions === 'instructor' || permissions === 'ta') {
             ret_course_data['course_group_sets'] = await Promise.all(course_data['course_group_sets'].map(async course_group_set => {
-                return await course_group_db_handler.get_course_group_set_data(course_group_set);
+                let course_group_set_data = await course_group_db_handler.get_course_group_set_data(course_group_set);
+                course_group_set_data['key'] = course_group_set;
+                return course_group_set_data;
             }));
         }
 

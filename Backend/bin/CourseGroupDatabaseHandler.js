@@ -65,9 +65,7 @@ class CourseGroupDatabaseHandler {
                 await this.create_submitters_for_course_group(import_handler, course_key, course_group_set_key, course_group_key);
             } else {
                 let course_group_key = KeyDictionary.key_dictionary['course_group'] + course_group['id'];
-                await this.update_submitters_for_course_group_users(import_handler, course_group_key, course_group['users']);
-                await this.set_course_group_data(course_group_key, 'name', course_group['name']);
-                await this.set_course_group_data(course_group_key, 'users', JSON.stringify(course_group['users']));
+                await this.update_course_group(import_handler, course_group, course_group_key);
             }
         }
 
@@ -100,6 +98,27 @@ class CourseGroupDatabaseHandler {
 
 
 
+    async update_course_group (import_handler, new_course_group_data, course_group_key) {
+        let user_db_handler = await import_handler.user_db_handler;
+
+        let course_group_data = await this.get_course_group_data(course_group_key);
+        for(const user of course_group_data['users']) {
+            if(!new_course_group_data.users.includes(user)) {
+                await user_db_handler.remove_course_group_from_user(user, course_group_key);
+            }
+        }
+
+        for (const user of new_course_group_data.users) {
+            await user_db_handler.add_course_group_to_user(user, course_group_key);
+        }
+
+        await this.update_submitters_for_course_group_users(import_handler, course_group_key, new_course_group_data['users']);
+        await this.set_course_group_data(course_group_key, 'name', new_course_group_data['name']);
+        await this.set_course_group_data(course_group_key, 'users', JSON.stringify(new_course_group_data['users']));
+    }
+
+
+
     async remove_deleted_course_groups (import_handler, user_key, course_key, course_group_sets) {
         let course_db_handler = await import_handler.course_db_handler;
         let course_data = await course_db_handler.get_course_data(course_key);
@@ -121,6 +140,7 @@ class CourseGroupDatabaseHandler {
                     return new_course_group.id === id;
                 });
                 if(found.length === 0) {
+                    await this.update_submitters_for_course_group_users(import_handler, course_group, []);
                     await this.delete_course_group_permanently(import_handler, user_key, course_key, course_group);
                 }
             }

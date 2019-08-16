@@ -81,7 +81,7 @@
             <option
               v-for="option in course_group_sets"
               :key="option.key"
-              :value="option.id"
+              :value="option.key"
             >
               {{ option.name }}
             </option>
@@ -251,7 +251,7 @@ export default {
     )
     console.log(course_res.data)
     const default_value = {
-      id: 'default',
+      key: 'default',
       name: 'Please select a group set'
     }
     const course_group_sets = [default_value].concat(

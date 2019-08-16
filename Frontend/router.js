@@ -22,6 +22,7 @@ import deleted_assignments from './pages/deleted_assignments'
 import all_user_assignments from './pages/all_user_assignments'
 import all_user_groups from './pages/all_user_groups'
 import all_user_grades from './pages/all_user_grades'
+import admin from './pages/admin'
 
 Vue.use(Router)
 
@@ -114,6 +115,10 @@ export function createRouter() {
       {
         path: '/education/courses/:course_id/submitter',
         component: submitter
+      },
+      {
+        path: '/education/admin',
+        component: admin
       }
     ]
   })

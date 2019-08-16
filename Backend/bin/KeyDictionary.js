@@ -11,7 +11,8 @@ KeyDictionary.key_dictionary = {
     'submitter': 'smt:',
     'document': 'doc:',
     'group': 'grp:',
-    'command': 'cmd:'
+    'command': 'cmd:',
+    'admins': 'admins'
 };
 
 module.exports = KeyDictionary;

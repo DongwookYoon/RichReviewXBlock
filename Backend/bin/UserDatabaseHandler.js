@@ -217,7 +217,18 @@ class UserDatabaseHandler {
         })
     }
 
-
+    async is_admin (user_key) {
+        console.log('usr_key: ', user_key)
+        return new Promise((resolve, reject) => {
+            this.db_handler.client.SISMEMBER(KeyDictionary.key_dictionary['admins'], user_key, function (error, result){
+                if (error) {
+                    console.log(error);
+                    reject(error);
+                }
+                resolve(result===1);
+            })
+        })
+    }
 
     async add_google_user_to_db (user_data, user_exists) {
 

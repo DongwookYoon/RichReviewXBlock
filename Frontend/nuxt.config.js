@@ -125,6 +125,9 @@ export default {
     /*
      ** You can extend webpack config here
      */
+    parallel: true,
+    hardSource: true,
+    cache: true,
     extend(config, ctx) {
       // Run ESLint on save
       if (ctx.isDev && ctx.isClient) {

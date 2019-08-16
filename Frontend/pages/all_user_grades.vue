@@ -71,13 +71,13 @@ export default {
   },
   fetch({ store, redirect }) {
     if (!store.state.authUser) {
-      return redirect('/education/login')
+      return redirect('/edu/login')
     }
   },
   methods: {
     go_to_assignment(course_id, assignment_id) {
       this.$router.push(
-        `/education/courses/${course_id}/assignments/${assignment_id}`
+        `/edu/courses/${course_id}/assignments/${assignment_id}`
       )
     }
   }

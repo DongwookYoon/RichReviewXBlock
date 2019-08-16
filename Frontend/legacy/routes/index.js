@@ -198,7 +198,7 @@ router.post(
       }
     )
 
-    res.redirect('/education/dashboard')
+    res.redirect('/edu/dashboard')
     // res.redirect(req.session.latestUrl || '/')
   }
 )
@@ -255,7 +255,7 @@ router.get(
     )
 
     js_utils.logUserAction(req, 'logged in')
-    res.redirect('/education/dashboard')
+    res.redirect('/edu/dashboard')
     // res.redirect(req.session.latestUrl || '/')
   }
 )

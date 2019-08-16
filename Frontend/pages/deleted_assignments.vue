@@ -68,28 +68,28 @@ export default {
   },
   fetch({ store, redirect }) {
     if (!store.state.authUser) {
-      return redirect('/education/login')
+      return redirect('/edu/login')
     }
   },
   methods: {
     go_to_people() {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/users`
+        `/edu/courses/${this.$route.params.course_id}/users`
       )
     },
     go_to_grades() {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/grades`
+        `/edu/courses/${this.$route.params.course_id}/grades`
       )
     },
     go_to_new_assignment() {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/assignments/new`
+        `/edu/courses/${this.$route.params.course_id}/assignments/new`
       )
     },
     go_to_assignment(id) {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/assignments/${id}`
+        `/edu/courses/${this.$route.params.course_id}/assignments/${id}`
       )
     },
     async restore(id) {

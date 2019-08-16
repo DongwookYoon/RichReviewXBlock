@@ -71,6 +71,10 @@ export default {
       this.renaming = true
     },
     save_rename() {
+      EventBus.$emit('rename-group', {
+        name: this.group_name,
+        id: this.id
+      })
       this.renaming = false
     },
     delete_group() {
@@ -111,13 +115,24 @@ p {
   display: flex;
 }
 
-.active-group,
-.rename-button,
-.delete-button {
-  font-size: 2.25vh;
+.active-group {
+  font-size: 2vh;
   padding-top: 0.5vh;
   padding-bottom: 0.5vh;
   color: #0c2343;
+}
+
+.rename-button,
+.delete-button {
+  font-size: 1.5vh;
+  color: white;
+  background-color: #0c2343;
+  border-radius: 0.5vh;
+  padding-left: 0.5vw;
+  padding-right: 0.5vw;
+  margin-top: 0.33vh;
+  margin-bottom: 0.33vh;
+  cursor: pointer;
 }
 
 .active-group {

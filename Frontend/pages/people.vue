@@ -143,19 +143,19 @@ export default {
   },
   fetch({ store, redirect }) {
     if (!store.state.authUser) {
-      return redirect('/education/login')
+      return redirect('/edu/login')
     }
   },
   methods: {
     go_to_edit_groups() {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/course_groups/new`
+        `/edu/courses/${this.$route.params.course_id}/course_groups/new`
       )
     },
     go_to_group(id) {
       if (this.permissions === 'instructor' || this.permissions === 'ta')
         this.$router.push(
-          `/education/courses/${
+          `/edu/courses/${
             this.$route.params.course_id
           }/course_groups/${id}`
         )

@@ -299,41 +299,41 @@ export default {
   },
   fetch({ store, redirect }) {
     if (!store.state.authUser) {
-      return redirect('/education/login')
+      return redirect('/edu/login')
     }
   },
   methods: {
     go_to_edit_assignment() {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/assignments/${
+        `/edu/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id
         }/edit`
       )
     },
     got_to_submissions() {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/assignments/${
+        `/edu/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id
         }/submissions`
       )
     },
     go_to_grader() {
       window.open(
-        `/education/courses/${this.$route.params.course_id}/assignments/${
+        `/edu/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id
         }/submissions/${this.grader_submission_id}/grader?${this.grader_link}`
       )
     },
     go_to_submitter() {
       window.open(
-        `/education/courses/${this.$route.params.course_id}/submitter?${
+        `/edu/courses/${this.$route.params.course_id}/submitter?${
           this.viewer_link
         }`
       )
     },
     go_to_current_submission() {
       window.open(
-        `/education/courses/${this.$route.params.course_id}/viewer?${
+        `/edu/courses/${this.$route.params.course_id}/viewer?${
           this.viewer_link
         }`
       )
@@ -415,7 +415,7 @@ export default {
           })
         }
       )
-      this.$router.push(`/education/courses/${this.$route.params.course_id}/`)
+      this.$router.push(`/edu/courses/${this.$route.params.course_id}/`)
     },
     async submitAssignment() {
       if (this.files.length === 0) {
@@ -448,7 +448,7 @@ export default {
         }
       )
 
-      this.$router.push(`/education/courses/${this.$route.params.course_id}`)
+      this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
     }
   }
 }

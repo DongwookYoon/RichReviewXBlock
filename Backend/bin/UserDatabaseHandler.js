@@ -163,9 +163,11 @@ class UserDatabaseHandler {
         try {
             let user_data = await this.get_user_data(user_key);
             let course_groups = user_data['course_groups'];
-            course_groups.push(course_group_key);
-            await this.set_user_data(user_key, 'course_groups', JSON.stringify(course_groups));
 
+            if (!course_groups.includes(course_group_key)) {
+                course_groups.push(course_group_key);
+                await this.set_user_data(user_key, 'course_groups', JSON.stringify(course_groups));
+            }
         } catch (e) {
             console.warn(e);
             throw e;

@@ -165,23 +165,23 @@ export default {
   },
   methods: {
     go_to_course() {
-      this.$router.push(`/education/courses/${this.$route.params.course_id}`)
+      this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
     },
     go_to_assignment() {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/assignments/${
+        `/edu/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id
         }`
       )
     },
     go_to_people() {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/users`
+        `/edu/courses/${this.$route.params.course_id}/users`
       )
     },
     go_to_grades() {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/grades`
+        `/edu/courses/${this.$route.params.course_id}/grades`
       )
     }
   }

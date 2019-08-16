@@ -227,7 +227,7 @@ export default {
   },
   fetch({ store, redirect }) {
     if (!store.state.authUser) {
-      return redirect('/education/login')
+      return redirect('/edu/login')
     }
   },
   methods: {
@@ -245,7 +245,7 @@ export default {
     },
     go_to_assignment() {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/assignments/${
+        `/edu/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id
         }`
       )
@@ -267,7 +267,7 @@ export default {
         }
       )
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/assignments/${
+        `/edu/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id
         }`
       )

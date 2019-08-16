@@ -66,6 +66,30 @@ class SubmitterDatabaseHandler {
 
 
 
+    async add_user_to_submitter (user_key, submitter_key) {
+        let submitter_data = await this.get_submitter_data(submitter_key);
+        let members = submitter_data['members'];
+
+        if (!members.includes(user_key)) {
+            members.push(user_key);
+            await this.set_submitter_data(submitter_key, 'members', JSON.stringify(members));
+        }
+    }
+
+
+
+    async remove_user_from_submitter (user_key, submitter_key) {
+        let submitter_data = await this.get_submitter_data(submitter_key);
+        let members = submitter_data['members'];
+        members = members.filter(member => {
+            return member !== user_key;
+        });
+
+        await this.set_submitter_data(submitter_key, 'members', JSON.stringify(members));
+    }
+
+
+
     async get_all_submitters (submitter_keys) {
         let submitters = [];
 

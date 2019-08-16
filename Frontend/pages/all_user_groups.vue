@@ -71,13 +71,13 @@ export default {
   },
   fetch({ store, redirect }) {
     if (!store.state.authUser) {
-      return redirect('/education/login')
+      return redirect('/edu/login')
     }
   },
   methods: {
     go_to_course_group(course_id, course_group_id) {
       this.$router.push(
-        `/education/courses/${course_id}/course_groups/${course_group_id}`
+        `/edu/courses/${course_id}/course_groups/${course_group_id}`
       )
     }
   }

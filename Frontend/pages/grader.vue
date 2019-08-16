@@ -134,7 +134,7 @@ export default {
   },
   fetch({ store, redirect }) {
     if (!store.state.authUser) {
-      return redirect('/education/login')
+      return redirect('/edu/login')
     }
   },
   mounted: async function() {
@@ -172,21 +172,21 @@ export default {
   methods: {
     go_to_assignment() {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/assignments/${
+        `/edu/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id
         }`
       )
     },
     prev_student() {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/assignments/${
+        `/edu/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id
         }/submissions/${this.prev_id}/grader?${this.prev_link}`
       )
     },
     next_student() {
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/assignments/${
+        `/edu/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id
         }/submissions/${this.next_id}/grader?${this.next_link}`
       )
@@ -195,7 +195,7 @@ export default {
       for (const submission of this.submissions_list) {
         if (submission.key === this.selected)
           this.$router.push(
-            `/education/courses/${this.$route.params.course_id}/assignments/${
+            `/edu/courses/${this.$route.params.course_id}/assignments/${
               this.$route.params.assignment_id
             }/submissions/${submission.id}/grader?${submission.link}`
           )

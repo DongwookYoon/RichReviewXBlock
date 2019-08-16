@@ -89,16 +89,16 @@ export default {
   },
   methods: {
     go_to_dashboard() {
-      this.$router.push('/education/dashboard')
+      this.$router.push('/edu/dashboard')
     },
     go_to_all_assignments() {
-      this.$router.push('/education/all-assignments')
+      this.$router.push('/edu/all-assignments')
     },
     go_to_all_groups() {
-      this.$router.push('/education/all-groups')
+      this.$router.push('/edu/all-groups')
     },
     go_to_all_grades() {
-      this.$router.push('/education/all-grades')
+      this.$router.push('/edu/all-grades')
     },
     logout() {
       this.$store.dispatch('logout')

@@ -71,7 +71,7 @@ export default {
   },
   fetch({ store, redirect }) {
     if (!store.state.authUser) {
-      return redirect('/education/login')
+      return redirect('/edu/login')
     }
   },
   methods: {
@@ -90,7 +90,7 @@ export default {
         }
       )
       this.$router.push(
-        `/education/courses/${this.$route.params.course_id}/users`
+        `/edu/courses/${this.$route.params.course_id}/users`
       )
     }
   }

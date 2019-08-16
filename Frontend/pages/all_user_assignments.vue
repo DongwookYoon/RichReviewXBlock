@@ -43,7 +43,7 @@
 </template>
 
 <script>
-/* eslint-disable no-unused-vars,camelcase,no-console */
+/* eslint-disable no-unused-vars,camelcase,no-console,no-undef */
 
 import https from 'https'
 import axios from 'axios'
@@ -78,13 +78,13 @@ export default {
   },
   fetch({ store, redirect }) {
     if (!store.state.authUser) {
-      return redirect('/education/login')
+      return redirect('/edu/login')
     }
   },
   methods: {
     go_to_assignment(course_id, assignment_id) {
       this.$router.push(
-        `/education/courses/${course_id}/assignments/${assignment_id}`
+        `/edu/courses/${course_id}/assignments/${assignment_id}`
       )
     }
   }

@@ -37,26 +37,6 @@ router.get('/getmyself', async function(req, res, next) {
 });
 
 
-/*
- ** GET if a user is admin
- */
-router.get('/is_admin', async function(req, res, next){
-
-    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
-
-    console.log("Get if a user is admin: " + user_key);
-
-    let user_db_handler = await ImportHandler.user_db_handler;
-
-    try {
-        var is_admin = await user_db_handler.is_admin(user_key)
-        res.send(is_admin);
-    } catch (e) {
-        console.log(e);
-        res.status(500).send({message: e.message});
-    }
-});
-
 router.get('/getgroupdata/:group_id', async function(req, res, next) {
     let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
     let group_key = KeyDictionary.key_dictionary['group'] + req.params['group_id'];

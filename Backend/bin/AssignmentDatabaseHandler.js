@@ -1,4 +1,5 @@
 const RedisClient = require("./RedisClient");
+const AsyncRedisClient = require("./AsyncRedisClient");
 const RedisToJSONParser = require("./RedisToJSONParser");
 const KeyDictionary = require("./KeyDictionary");
 const DateHelper = require("./DateHelper");

@@ -1,4 +1,5 @@
 const RedisClient = require("./RedisClient");
+const AsyncRedisClient = require("./AsyncRedisClient");
 const RedisToJSONParser = require("./RedisToJSONParser");
 const RichReviewError = require('../errors/RichReviewError');
 const KeyDictionary = require('./KeyDictionary');
@@ -9,6 +10,9 @@ class CourseDatabaseHandler {
         console.log(RedisClient);
         RedisClient.get_instance().then((db_handler) => {
             this.db_handler = db_handler;
+        });
+        AsyncRedisClient.get_instance().then((handler) => {
+            this.async_db_handler = handler;
         });
     }
 
@@ -121,7 +125,14 @@ class CourseDatabaseHandler {
         return course_groups;
     }
 
-
+    async get_all_course_data (){
+        let course_keys = await this.async_db_handler.client.keys("crs:*");
+        let course_data = [];
+        for(const course_key of course_keys){
+            course_data.push(await this.async_db_handler.client.hgetall(course_key));
+        }
+        return course_data;
+    }
 
     async get_course (import_handler, user_key, course_key) {
 

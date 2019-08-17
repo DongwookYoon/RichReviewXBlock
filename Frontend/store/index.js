@@ -1,7 +1,4 @@
-import Vue from 'vue'
 import Vuex from 'vuex'
-
-Vue.use(Vuex)
 
 if (process.client) {
   require('whatwg-fetch')

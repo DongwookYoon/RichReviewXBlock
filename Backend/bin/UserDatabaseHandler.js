@@ -1,4 +1,5 @@
 const RedisClient = require("./RedisClient");
+const AsyncRedisClient = require("./AsyncRedisClient");
 const KeyDictionary = require("./KeyDictionary");
 const RedisToJSONParser = require("./RedisToJSONParser");
 const RichReviewError = require('../errors/RichReviewError');
@@ -11,6 +12,10 @@ class UserDatabaseHandler {
         RedisClient.get_instance().then((db_handler) => {
             this.db_handler = db_handler;
         });
+        AsyncRedisClient.get_instance().then((handler) => {
+            this.async_db_handler = handler;
+        });
+
 
         this.UBC_PERSISTANT_ID = 'urn:oid:1.3.6.1.4.1.60.1.7.1';
         this.UBC_CWL = 'urn:oid:0.9.2342.19200300.100.1.1';
@@ -84,7 +89,21 @@ class UserDatabaseHandler {
     }
 
 
+    async get_all_user_data (){
+        const user_keys = await this.get_all_user_keys();
+        let user_data = [];
+        for(const user_key of user_keys){
+            user_data.push(await this.async_db_handler.client.hgetall(user_key));
+        }
+        return user_data;
+    }
 
+    async get_all_user_keys () {
+        const ubc_user_keys = await this.async_db_handler.client.keys(KeyDictionary.key_dictionary['user'] + 'ubc_*');
+        const google_user_keys = await this.async_db_handler.client.keys(KeyDictionary.key_dictionary['user'] + 'google_*');
+
+        return ubc_user_keys.concat(google_user_keys);
+    }
 
     // TODO should blocked students show up in the 'people' list?
     // It makes sense for profs to see blocked students
@@ -220,7 +239,6 @@ class UserDatabaseHandler {
     }
 
     async is_admin (user_key) {
-        console.log('usr_key: ', user_key)
         return new Promise((resolve, reject) => {
             this.db_handler.client.SISMEMBER(KeyDictionary.key_dictionary['admins'], user_key, function (error, result){
                 if (error) {

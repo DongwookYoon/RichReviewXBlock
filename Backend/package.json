@@ -24,6 +24,7 @@
     "pdfjs-dist": "^2.0.943",
     "pug": "^2.0.3",
     "redis": "^2.8.0",
+    "async-redis": "latest",
     "request": "^2.88.0",
     "uuid": "^3.3.2",
     "worker-loader": "^2.0.0",

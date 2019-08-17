@@ -164,6 +164,14 @@ class UserDatabaseHandler {
         }
     }
 
+    async remove_course_from_instructor (user_key, course_key) {
+        let user_data = await this.get_user_data(user_key);
+        let teaching = user_data['teaching'];
+        teaching = teaching.filter(course => {
+            return course !== course_key;
+        });
+        await this.set_user_data(user_key, 'teaching', JSON.stringify(teaching));
+    }
 
 
     async add_submitter_to_user (user_key, submitter_key) {

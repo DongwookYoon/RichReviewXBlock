@@ -270,21 +270,13 @@ class CourseDatabaseHandler {
 
 
 
-    async add_instructor_to_course (import_handler, user_key, course_key) {
-        try {
-            let course_data = await this.get_course_data(course_key);
-            let instructors = course_data['instructors'];
+    async add_instructor_to_course (user_key, course_key) {
+        let course_data = await this.get_course_data(course_key);
+        let instructors = course_data['instructors'];
 
-            if (!instructors.includes(user_key)) {
-                instructors.push(user_key);
-                await this.set_course_data(course_key, 'instructors', JSON.stringify(instructors));
-            }
-
-            let user_db_handler = await import_handler.user_db_handler;
-            await user_db_handler.add_course_to_instructor(user_key, course_key);
-        } catch (e) {
-            console.warn(e);
-            throw e;
+        if (!instructors.includes(user_key)) {
+            instructors.push(user_key);
+            await this.set_course_data(course_key, 'instructors', JSON.stringify(instructors));
         }
     }
 
@@ -411,7 +403,10 @@ class CourseDatabaseHandler {
         return new Promise((resolve, reject) => {
             console.log('Redis request to key: ' + course_key);
             this.db_handler.client.hgetall(course_key, function (error, result) {
-                if (error || result === null) {
+                if(result === null){
+                    error = new Error("Cannot find the course with the key: " + course_key);
+                }
+                if (error) {
                     console.log(error);
                     reject(error);
                 }
@@ -603,7 +598,6 @@ class CourseDatabaseHandler {
 
         await this.set_course_data(course_key, 'instructors', JSON.stringify(instructors));
     }
-
 
 
     async remove_course_group_set_from_course (course_group_set_key, course_key) {

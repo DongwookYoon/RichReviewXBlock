@@ -62,4 +62,110 @@ router.get('/all_course_data', async function(req, res){
     }
 });
 
+/*
+ ** POST add a user as an instructor to a course
+ */
+router.post('/add_instructor_to_course', async function(req, res, next) {
+    try {
+        let user_key = KeyDictionary.key_dictionary['user'] + req.body.user_id;
+        let course_key = KeyDictionary.key_dictionary['course'] + req.body.course_id;
+
+        let course_db_handler = await ImportHandler.course_db_handler;
+        let user_db_handler = await ImportHandler.user_db_handler;
+
+        await course_db_handler.add_instructor_to_course(user_key, course_key);
+        await user_db_handler.add_course_to_instructor(user_key, course_key);
+
+        res.sendStatus(200);
+    } catch (e) {
+        console.warn(e);
+        if (e.name === 'NotAuthorizedError')
+            res.status(401).send({
+                message: e.message
+            });
+        else
+            res.status(500).send({
+                message: e.message
+            });
+    }
+});
+
+/*
+ ** POST remove an instructor from a course
+ */
+router.post('/remove_instructor_from_course', async function(req, res, next) {
+    try {
+        let user_key = KeyDictionary.key_dictionary['user'] + req.body.user_id;
+        let course_key = KeyDictionary.key_dictionary['course'] + req.body.course_id;
+
+        let course_db_handler = await ImportHandler.course_db_handler;
+        let user_db_handler = await ImportHandler.user_db_handler;
+
+        await user_db_handler.remove_course_from_instructor(user_key, course_key);
+        await course_db_handler.remove_instructor_from_course(user_key, course_key);
+        res.sendStatus(200);
+    } catch (e) {
+        console.warn(e);
+        if (e.name === 'NotAuthorizedError')
+            res.status(401).send({
+                message: e.message
+            });
+        else
+            res.status(500).send({
+                message: e.message
+            });
+    }
+});
+
+/*
+ ** POST add a user as an instructor to a course
+ */
+router.post('/add_student_to_course', async function(req, res, next) {
+    try {
+        let user_key = KeyDictionary.key_dictionary['user'] + req.body.user_id;
+        let course_key = KeyDictionary.key_dictionary['course'] + req.body.course_id;
+
+        let course_db_handler = await ImportHandler.course_db_handler;
+
+        await course_db_handler.add_student_to_course(ImportHandler, user_key, course_key);
+
+        res.sendStatus(200);
+    } catch (e) {
+        console.warn(e);
+        if (e.name === 'NotAuthorizedError')
+            res.status(401).send({
+                message: e.message
+            });
+        else
+            res.status(500).send({
+                message: e.message
+            });
+    }
+});
+
+/*
+ ** POST remove an instructor from a course
+ */
+router.post('/block_student_from_course', async function(req, res, next) {
+    try {
+        let user_key = KeyDictionary.key_dictionary['user'] + req.body.user_id;
+        let course_key = KeyDictionary.key_dictionary['course'] + req.body.course_id;
+
+        let course_db_handler = await ImportHandler.course_db_handler;
+
+        course_db_handler.deactivate_student(user_key, course_key);
+        res.sendStatus(200);
+    } catch (e) {
+        console.warn(e);
+        if (e.name === 'NotAuthorizedError')
+            res.status(401).send({
+                message: e.message
+            });
+        else
+            res.status(500).send({
+                message: e.message
+            });
+    }
+});
+
 module.exports = router;

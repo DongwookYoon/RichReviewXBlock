@@ -12,7 +12,7 @@ KeyDictionary.key_dictionary = {
     'document': 'doc:',
     'group': 'grp:',
     'command': 'cmd:',
-    'admins': 'admins:',
+    'admins': 'admins',
     'course_group_set': 'cgs:'
 };
 

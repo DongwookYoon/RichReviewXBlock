@@ -51,10 +51,6 @@
 </template>
 
 <script>
-module.exports = {}
-</script>
-
-<script>
 /* eslint-disable require-await,no-unused-vars,no-console,prettier/prettier,no-undef,camelcase */
 
 import https from 'https'
@@ -259,18 +255,19 @@ export default {
   }
 }
 </script>
+
 <style scoped>
-  body {
-    margin: 0px 20px 21px 20px;
-  }
-  tr {
-    border-bottom: 1px solid #e8e8e8;
-  }
-  td, th{
-    padding: 1px 4px;
-  }
-  .users_table_button {
-    padding: 1px 4px 2px 4px;
-    line-height: normal;
-  }
+#admin {
+  margin: 0 20px 21px 20px;
+}
+tr {
+  border-bottom: 1px solid #e8e8e8;
+}
+td, th{
+  padding: 1px 4px;
+}
+.users_table_button {
+  padding: 1px 4px 2px 4px;
+  line-height: normal;
+}
 </style>

@@ -197,13 +197,13 @@ class AssignmentDatabaseHandler {
         // Add doc and grp to redis
         let user_id = user_key.replace(KeyDictionary.key_dictionary['user'], '');
         let doc_key = await document_db_handler.create_doc(user_id, main_context.container);
-        let main_group_key = await group_db_handler.create_group(user_id, doc_key);
-        await document_db_handler.add_group_to_doc(doc_key, main_group_key);
-        await user_db_handler.add_group_to_user(user_key, main_group_key);
+        let master_group_key = await group_db_handler.create_group(user_id, doc_key);
+        await document_db_handler.add_group_to_doc(doc_key, master_group_key);
+        await user_db_handler.add_group_to_user(user_key, master_group_key);
 
         let assignment_key = await this.create_assignment(import_handler, course_key, assignment_data);
 
-        await this.set_assignment_data(assignment_key, 'group', main_group_key);
+        await this.set_assignment_data(assignment_key, 'group', master_group_key);
 
 
         let submission_keys = [];
@@ -225,7 +225,7 @@ class AssignmentDatabaseHandler {
 
         for (let submission_key of submission_keys) {
 
-            let group_key = await group_db_handler.create_group(user_id, doc_key);
+            let group_key = await group_db_handler.create_group(user_id, doc_key, master_group_key);
             await group_db_handler.add_submission_to_group(group_key, submission_key);
 
             await document_db_handler.add_group_to_doc(doc_key, group_key);

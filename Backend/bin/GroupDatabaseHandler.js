@@ -84,7 +84,7 @@ class GroupDatabaseHandler {
 
 
 
-    async create_group (user_id, doc_key) {
+    async create_group (user_id, doc_key, master_group) {
         let creation_time = Date.now();
         let group_key = `${KeyDictionary.key_dictionary['group']}${user_id}_${creation_time}`;
 
@@ -99,6 +99,7 @@ class GroupDatabaseHandler {
         }));
 
         await this.set_group_data(group_key, 'write_blocked', '[]');
+        await this.set_group_data(group_key, 'master_group', master_group || '');
         return group_key;
     }
 

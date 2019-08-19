@@ -182,6 +182,12 @@ class UserDatabaseHandler {
             submitters.push(submitter_key);
             await this.set_user_data(user_key, 'submitters', JSON.stringify(submitters));
         }
+
+        let inactive_submitters = user_data['inactive_submitters'];
+        inactive_submitters = inactive_submitters.filter(submitter => {
+            return submitter !== submitter;
+        });
+        await this.set_user_data(user_key, 'inactive_submitters', JSON.stringify(inactive_submitters));
     }
 
 
@@ -290,7 +296,8 @@ class UserDatabaseHandler {
             await this.set_user_data(user_key, 'course_groups', '[]');
         if (!redis_user_data['submitters'])
             await this.set_user_data(user_key, 'submitters', '[]');
-
+        if (!redis_user_data['inactive_submitters'])
+            await this.set_user_data(user_key, 'inactive_submitters', '[]');
         return user_key;
     }
 
@@ -320,6 +327,7 @@ class UserDatabaseHandler {
             await this.set_user_data(user_key, 'taing', '[]');
             await this.set_user_data(user_key, 'course_groups', '[]');
             await this.set_user_data(user_key, 'submitters', '[]');
+            await this.set_user_data(user_key, 'inactive_submitters', '[]');
         }
     }
 
@@ -427,6 +435,12 @@ class UserDatabaseHandler {
         });
 
         await this.set_user_data(user_key, 'submitters', JSON.stringify(submitters));
+
+        let inactive_submitters = user_data['inactive_submitters'];
+        if (!inactive_submitters.includes(submitter_key)) {
+            inactive_submitters.push(submitter_key);
+            await this.set_user_data(user_key, 'inactive_submitters', JSON.stringify(inactive_submitters));
+        }
     }
 
 

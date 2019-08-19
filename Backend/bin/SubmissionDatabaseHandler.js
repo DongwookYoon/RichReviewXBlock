@@ -252,7 +252,8 @@ class SubmissionDatabaseHandler {
 
 
 
-    get_submission_data (submission_key) {
+    async get_submission_data (submission_key) {
+
         return new Promise((resolve, reject) => {
             console.log('Redis request to key: ' + submission_key);
             this.db_handler.client.hgetall(submission_key, (error, result) => {

@@ -18,7 +18,7 @@ router.get('/is_admin', async function(req, res, next){
     let user_db_handler = await ImportHandler.user_db_handler;
 
     try {
-        var is_admin = await user_db_handler.is_admin(user_key)
+        const is_admin = await user_db_handler.is_admin(user_key);
         res.send(is_admin);
     } catch (e) {
         console.log(e);

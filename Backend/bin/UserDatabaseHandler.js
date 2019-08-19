@@ -56,18 +56,8 @@ class UserDatabaseHandler {
 
 
 
-    get_user_data (user_key) {
-        return new Promise((resolve, reject) => {
-            this.db_handler.client.HGETALL(user_key, function (error, result) {
-                if (error || result === null) {
-                    console.log(error);
-                    reject(error);
-                }
-
-                let parsed_data = RedisToJSONParser.parse_data_to_JSON(result);
-                resolve(parsed_data);
-            });
-        })
+    async get_user_data (user_key) {
+        return RedisToJSONParser.parse_data_to_JSON(await this.async_db_handler.client.hgetall(user_key));
     }
 
 
@@ -240,16 +230,19 @@ class UserDatabaseHandler {
 
 
 
-    user_exists (user_id) {
-        return new Promise((resolve, reject) => {
-            this.db_handler.client.HGETALL(KeyDictionary.key_dictionary['user'] + user_id, function (error, result) {
-                if (error) {
-                    console.log(error);
-                    reject(error);
-                }
-                resolve(result !== null);
-            });
-        })
+    async user_exists (user_id) {
+        let user_key = KeyDictionary.key_dictionary['user'] + user_id;
+        return (await this.async_db_handler.client.hgetall(user_key)) !== null;
+
+        // return new Promise((resolve, reject) => {
+        //     this.db_handler.client.HGETALL(KeyDictionary.key_dictionary['user'] + user_id, function (error, result) {
+        //         if (error) {
+        //             console.log(error);
+        //             reject(error);
+        //         }
+        //         resolve(result !== null);
+        //     });
+        // })
     }
 
     async is_admin (user_key) {
@@ -408,22 +401,12 @@ class UserDatabaseHandler {
 
 
 
-    set_user_data(user_key, field, value) {
+    async set_user_data(user_key, field, value) {
         if (value === undefined) {
             console.log(`Recieved an undefined value for field ${field}`);
             return;
         }
-        return new Promise((resolve, reject) => {
-            console.log('Redis hset request to key: ' + user_key);
-            this.db_handler.client.hset(user_key, field, value, (error, result) => {
-                if (error) {
-                    console.log(error);
-                    reject(error);
-                }
-                console.log('SET result -> ' + result);
-                resolve();
-            });
-        })
+        return await this.async_db_handler.client.hset(user_key, field, value);
     }
 
 

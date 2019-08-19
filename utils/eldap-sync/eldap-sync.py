@@ -59,7 +59,7 @@ def create_user(r, user_key, key_dict):
 	user_data = {
 		'id': user_key.replace(key_dict['user'], ''),
 		'creation_date': int(round(time.time() * 1000)),
-		'auth_type': 'UBC'
+		'auth_type': 'UBC_CWL'
 	}
 	
 	r.hset(user_key, 'first_name', '');
@@ -78,7 +78,13 @@ def create_user(r, user_key, key_dict):
 	for field, value in user_data.items():
 	    r.hset(user_key, field, value);
 	
-		
+	
+def update_user_information (r, user_key, key_dict):
+	print('\t-> Updating user {}'.format(user_key))
+	r.hset(user_key, 'auth_type', 'UBC_CWL');
+
+	
+			
 def user_exists(r, user_key):
 	return not r.hgetall(user_key) == {}
 
@@ -195,7 +201,9 @@ def syncronize_students(r, course, key_dict):
 	for user in course['members']:
 		if not user_exists(r, user):
 			create_user(r, user, key_dict)
-		
+		else:
+			update_user_information(r, user, key_dict)
+			
 		if not user in currently_enrolled_students:
 			add_student_to_course(r, user, course['key'])
 			add_course_to_student(r, user, course['key'])
@@ -210,7 +218,9 @@ def synconize_instructors(r, course, key_dict):
 	for user in course['members']:
 		if not user_exists(r, user):
 			create_user(r, user, key_dict)
-
+		else:
+			update_user_information(r, user, key_dict)
+			
 		if not user in current_instructors:
 			add_instructor_to_course(r, user, course['key'])
 			add_course_to_instructor(r, user, course['key'])

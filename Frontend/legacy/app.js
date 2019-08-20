@@ -256,7 +256,11 @@ function redirectHttp() {
 }
 const app_http = redirectHttp()
 
-app_http.set('port', 80 || 8080)
+try {
+  app_http.set('port', 80)
+} catch (e) {
+  app_http.set('port', 8080)
+}
 
 require('http')
   .createServer(app_http)

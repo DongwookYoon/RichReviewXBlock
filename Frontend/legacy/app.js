@@ -264,9 +264,10 @@ process.on('uncaughtException', function(err) {
       .listen(app_http.get('port'), function() {
         util.start('listening on HTTP port: ' + app_http.get('port'))
       })
-  } else
+  } else {
     console.log(err);
-  process.exit(1);
+    process.exit(1);
+  }
 });
 
 

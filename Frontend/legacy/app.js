@@ -254,19 +254,33 @@ function redirectHttp() {
   })
   return app_http
 }
+
+process.on('uncaughtException', function(err) {
+  if(err.errno === 'EADDRINUSE') {
+    const app_http = redirectHttp()
+    app_http.set('port', 8080)
+    require('http')
+      .createServer(app_http)
+      .listen(app_http.get('port'), function() {
+        util.start('listening on HTTP port: ' + app_http.get('port'))
+      })
+  } else
+    console.log(err);
+  process.exit(1);
+});
+
+
 const app_http = redirectHttp()
 
-try {
-  app_http.set('port', 80)
-} catch (e) {
-  app_http.set('port', 8080)
-}
+app_http.set('port', 80)
 
 require('http')
   .createServer(app_http)
   .listen(app_http.get('port'), function() {
     util.start('listening on HTTP port: ' + app_http.get('port'))
   })
+
+
 /******************************************/
 /******************************************/
 

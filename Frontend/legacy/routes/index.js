@@ -156,7 +156,7 @@ router.post(
   }),
   async function(req, res) {
     js_utils.logUserAction(req, 'logged in')
-    
+
     const xml = Buffer.from(req.body.SAMLResponse, 'base64').toString('ascii')
     const user_xml_json = JSON.parse(convert.xml2json(xml, { compact: true, spaces: 4 }))
     const attributes = user_xml_json['saml2p:Response']['saml2:Assertion']['saml2:AttributeStatement']['saml2:Attribute']

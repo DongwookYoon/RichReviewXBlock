@@ -3,6 +3,7 @@
     <sidebar />
     <div id="content">
       <div id="courses">
+        <p>test</p>
         <div v-for="e in enrolments" :key="e.key" class="enrolments">
           <course-card
             :title="e.title"

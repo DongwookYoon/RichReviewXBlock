@@ -46,7 +46,7 @@ router.get('/viewer', viewer.page)
 router.get('/dataviewer', dataviewer.get)
 router.get('/account', authController.isLoggedIn, account.get)
 router.get('/resources', resources.get)
-router.get('/math2220_sp2016', authController.isLoggedIn, course.get)
+// router.get('/math2220_sp2016', authController.isLoggedIn, course.get)
 router.get('/bluemix_stt_auth', bluemix_stt_auth.get)
 // router.get('/lti_entry',       lti.get_entry);
 // router.get('/lti_failure',     lti.get_failure);
@@ -66,7 +66,7 @@ router.post('/dataviewer', dataviewer.post)
 router.post('/upload', upload.post)
 router.post('/support', support.post)
 router.post('/resources', resources.post)
-router.post('/course', course.post)
+// router.post('/course', course.post)
 // router.post('/lti_dbs',    lti.post_dbs);
 // router.post('/lti_survey', lti.post_survey);
 // router.post('/lti_discuss_bb', lti.post_bb);

@@ -51,9 +51,9 @@
       </div>
     </modal>
     <div id="content">
-      <nav-bar :course="course" :assignment="assignment.title.toString()" />
+      <nav-bar :course="course" :assignment="assignment.title.toString() || 'Untitled Assignment'" />
       <div id="assignment-header">
-        <p id="assignment-title">{{ assignment.title }}</p>
+        <p id="assignment-title">{{ assignment.title || 'Untitled Assignment'}}</p>
         <div
           v-if="permissions === 'instructor' || permissions === 'ta'"
           class="assignment-controls"

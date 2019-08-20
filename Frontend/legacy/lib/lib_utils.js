@@ -277,7 +277,8 @@ exports.makePilotUserID = (profile) => {
         user.saml = {};
         user.saml.nameID = profile.nameID;
         user.saml.nameIDFormat = profile.nameIDFormat;
-        return Course.plugCourse(user, profile);
+        return user;
+        // return Course.plugCourse(user, profile);
       })
       .then(user => {
         done(null, user);

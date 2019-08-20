@@ -1,10 +1,10 @@
 /**
  * A module that extends the backend models.
- * 
+ *
  * This module is currently being used
- * 
+ *
  * NOTE:
- * 
+ *
  * by Colin
  */
 
@@ -17,8 +17,6 @@ const redis_utils = require("./redis_client").util;
 const User        = require("./r2d").User;
 const Group       = require("./r2d").Group;
 const Doc         = require("./r2d").Doc;
-const Course      = require("./Course");
-
 const util        = require("../util");
 
 /******************************/
@@ -202,7 +200,7 @@ User.deleteUser = (usr_str) => {
    */
   usr_str = User.makeUserKey(usr_str);
   const id = User.extractID(usr_str);
-  //const id = 
+  //const id =
   return RedisClient.HGET(usr_str, "groupNs")
   // 1) remove user from any groups; and delete groups created by user
     .then(deleteOrRemoveGroups.bind(null, usr_str))
@@ -213,12 +211,13 @@ User.deleteUser = (usr_str) => {
     // 4) remove user from the all courses
     .then(() => {
       if(User.cache.exists(id)) {
-        const user = User.cache.get(id);
-        const courses = Course.cache.getCourses.withUser(user);
-        const promises = courses.map((course) => {
-          return course.removeUser(user);
-        });
-        return Promise.all(promises);
+        // const user = User.cache.get(id);
+        // const courses = Course.cache.getCourses.withUser(user);
+        // const promises = courses.map((course) => {
+        //   return course.removeUser(user);
+        // });
+        // return Promise.all(promises);
+        return [];
       }
     })
     // 5) delete user in userid_email_table
@@ -330,4 +329,4 @@ InternalStudy.validatePassword = (user, password) => {
   return user.password_hash === encryptPassword(password, user.salt);
 };
 
-exports.InternalStudy = InternalStudy; 
+exports.InternalStudy = InternalStudy;

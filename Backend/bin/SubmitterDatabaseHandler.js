@@ -46,10 +46,9 @@ class SubmitterDatabaseHandler {
     }
 
 
-    async create_submitter_and_return_key (import_handler, user_keys, submission_key, course_group_key) {
-        let largest_submitter_key = await this.get_largest_submitter_key();
-
-        let submitter_key = KeyDictionary.key_dictionary['submitter'] + (largest_submitter_key + 1);
+    async create_submitter_and_return_key (import_handler, course_key, user_keys, submission_key, course_group_key) {
+        let id = `${course_key.replace(KeyDictionary.key_dictionary['course'], '')}_${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`;
+        let submitter_key = KeyDictionary.key_dictionary['submitter'] + id;
 
         await this.set_submitter_data(submitter_key, 'members', JSON.stringify(user_keys));
         await this.set_submitter_data(submitter_key, 'submission', submission_key);
@@ -132,28 +131,6 @@ class SubmitterDatabaseHandler {
                 }
                 console.log('SET result -> ' + result);
                 resolve();
-            });
-        })
-    }
-
-
-
-    get_largest_submitter_key () {
-        return new Promise((resolve, reject) => {
-            this.db_handler.client.keys(KeyDictionary.key_dictionary['submitter'] + '*', (error, result) => {
-                if (error) {
-                    console.log(error);
-                    reject(error);
-                }
-                console.log('KEY result -> ' + result);
-                result = result.map((key) => {
-                    return parseInt(key.replace(KeyDictionary.key_dictionary['submitter'], ''));
-                });
-                result.push(0);
-                result.sort((a, b) => {
-                    return a - b;
-                });
-                resolve(result[result.length - 1]);
             });
         })
     }

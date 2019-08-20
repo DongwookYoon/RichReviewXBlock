@@ -61,13 +61,12 @@ class SubmissionDatabaseHandler {
         let submission_keys = [];
 
         for (let student of students) {
-            console.log(student);
-            let largest_submission_key = await this.get_largest_submission_key();
-            let submission_key = KeyDictionary.key_dictionary['submission'] + (largest_submission_key + 1);
+            let id = `${course_key.replace(KeyDictionary.key_dictionary['course'], '')}_${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`;
+            let submission_key = KeyDictionary.key_dictionary['submission'] + id;
 
             submission_keys.push(submission_key);
 
-            await this.set_submission_data(submission_key, 'id', largest_submission_key + 1);
+            await this.set_submission_data(submission_key, 'id', id);
             await this.set_submission_data(submission_key, 'submission_status', 'Not Submitted');
             await this.set_submission_data(submission_key, 'mark', '');
             await this.set_submission_data(submission_key, 'submission_time', '');
@@ -78,6 +77,7 @@ class SubmissionDatabaseHandler {
 
             let submitter_key = await submitter_db_handler.create_submitter_and_return_key(
                 import_handler,
+                course_key,
                 [student],
                 submission_key,
                 '');
@@ -100,15 +100,15 @@ class SubmissionDatabaseHandler {
 
         for (let course_group_key of course_group_set['course_groups']) {
 
-            let largest_submission_key = await this.get_largest_submission_key();
-            let submission_key = KeyDictionary.key_dictionary['submission'] + (largest_submission_key + 1);
+            let id = `${course_key.replace(KeyDictionary.key_dictionary['course'], '')}_${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`;
+            let submission_key = KeyDictionary.key_dictionary['submission'] + id;
 
             submission_keys.push(submission_key);
 
             let course_group_data = await course_group_db_handler.get_course_group_data(course_group_key);
             let course_group_members = course_group_data['users'];
 
-            await this.set_submission_data(submission_key, 'id', largest_submission_key + 1);
+            await this.set_submission_data(submission_key, 'id', id);
             await this.set_submission_data(submission_key, 'submission_status', 'Not Submitted');
             await this.set_submission_data(submission_key, 'mark', '');
             await this.set_submission_data(submission_key, 'submission_time', '');
@@ -119,6 +119,7 @@ class SubmissionDatabaseHandler {
 
             let submitter_key = await submitter_db_handler.create_submitter_and_return_key(
                 import_handler,
+                course_key,
                 course_group_members,
                 submission_key,
                 course_group_key);
@@ -133,11 +134,11 @@ class SubmissionDatabaseHandler {
 
 
 
-    async create_submission (import_handler, assignment_key, group_key) {
-        let largest_submission_key = await this.get_largest_submission_key();
-        let submission_key = KeyDictionary.key_dictionary['submission'] + (largest_submission_key + 1);
+    async create_submission (import_handler, course_key, assignment_key, group_key) {
+        let id = `${course_key.replace(KeyDictionary.key_dictionary['course'], '')}_${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`;
+        let submission_key = KeyDictionary.key_dictionary['submission'] + id;
 
-        await this.set_submission_data(submission_key, 'id', largest_submission_key + 1);
+        await this.set_submission_data(submission_key, 'id', id);
         await this.set_submission_data(submission_key, 'submission_status', 'Not Submitted');
         await this.set_submission_data(submission_key, 'mark', '');
         await this.set_submission_data(submission_key, 'submission_time', '');
@@ -150,12 +151,13 @@ class SubmissionDatabaseHandler {
     }
 
 
-    async create_submission_for_single_user(import_handler, assignment_key, user_key, group_key) {
-        let submission_key = await this.create_submission(import_handler, assignment_key, group_key);
+    async create_submission_for_single_user(import_handler, course_key, assignment_key, user_key, group_key) {
+        let submission_key = await this.create_submission(import_handler, course_key, assignment_key, group_key);
 
         let submitter_db_handler = await import_handler.submitter_db_handler;
         let submitter_key = await submitter_db_handler.create_submitter_and_return_key(
             import_handler,
+            course_key,
             [user_key],
             submission_key,
             '');
@@ -182,16 +184,17 @@ class SubmissionDatabaseHandler {
     }
 
 
-    async create_submission_for_course_group (import_handler, assignment_key, group_key, course_group_key) {
+    async create_submission_for_course_group (import_handler, course_key, assignment_key, group_key, course_group_key) {
         let course_group_db_handler = await import_handler.course_group_db_handler;
         let submitter_db_handler = await import_handler.submitter_db_handler;
 
-        let submission_key = await this.create_submission(import_handler, assignment_key, group_key);
+        let submission_key = await this.create_submission(import_handler, course_key, assignment_key, group_key);
 
         let course_group_data = await course_group_db_handler.get_course_group_data(course_group_key);
 
         let submitter_key = await submitter_db_handler.create_submitter_and_return_key(
             import_handler,
+            course_key,
             course_group_data['users'],
             submission_key,
             course_group_key);
@@ -226,28 +229,6 @@ class SubmissionDatabaseHandler {
     async get_submission_status (submission_key) {
         let submission_data = await this.get_submission_data(submission_key);
         return submission_data['submission_status']
-    }
-
-
-
-    get_largest_submission_key () {
-        return new Promise((resolve, reject) => {
-            this.db_handler.client.keys(KeyDictionary.key_dictionary['submission'] + '*', (error, result) => {
-                if (error) {
-                    console.log(error);
-                    reject(error);
-                }
-                console.log('KEY result -> ' + result);
-                result = result.map((key) => {
-                    return parseInt(key.replace(KeyDictionary.key_dictionary['submission'], ''));
-                });
-                result.push(0);
-                result.sort((a, b) => {
-                    return a - b;
-                });
-                resolve(result[result.length - 1]);
-            });
-        })
     }
 
 

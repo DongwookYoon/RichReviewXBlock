@@ -25,15 +25,15 @@ const util        = require("../util");
  * In Redis
  * Course (`crs:<institution>:<course-group>:prop`) is a hash with keys:
  * course_group, is_active, institution, [dept], [number], [section], [year], [title]
- * 
- * 
- * 
+ *
+ *
+ *
  * Active students can view the class and assignments. Blocked students cannot view anything.
- * 
+ *
  * course instructors (`crs:<institution>:<course-group>:instructors`) is a set containing strings that are user IDs of instructors.
- * 
+ *
  * course active students (`crs:<institution>:<course-group>:students:active`) is a set containing the user IDs of active students of course.
- * 
+ *
  * course blocked students (`crs:<institution>:<course-group>:students:blocked`) is a set containing the user IDs of blocked students of course.
  */
 
@@ -89,11 +89,11 @@ const Course = function(course_group, is_active, institution, options) {
 
 /**
  * Course Methods
- * 
+ *
  * Static methods:
  * create
  * plugCourse
- * 
+ *
  * Instance methods (prototype):
  * getPropKey
  * getInstructorKey
@@ -107,7 +107,7 @@ const Course = function(course_group, is_active, institution, options) {
  * removeInstructor
  * activate
  * deactivate
- * 
+ *
  * TODO: populate methods
  */
 
@@ -189,7 +189,7 @@ Course.cache = (function () {
   /**
    * @typedef {string} CourseCacheKey - the key of course cache has the form <institution>:<group_group>
    */
-  
+
   /**
    * @type {Object.<CourseCacheKey, Course>} - cache of Course objects
    */
@@ -229,7 +229,7 @@ Course.cache = (function () {
   pub.loadFromDB = (institution, course_group) => {
     return loadFromDBInternal(Course.getPropKey(institution, course_group));
   };
-  
+
   pub.populate = () => {
     cache = { };
     return RedisClient.KEYS("crs:*:*:prop")
@@ -299,7 +299,7 @@ Course.cache = (function () {
         (courses, key) => {
           if(cache[key].isInstructor(user)) courses.push(cache[key]);
           return courses;
-        }, 
+        },
         [ ]
       );
     },
@@ -357,7 +357,7 @@ Course.create = (institution, course_group, options) => {
   if(options) {
     sss = [ ];
     if(options.detail) sss.push(
-        "dept", options.detail.dept, "number", options.detail.number, 
+        "dept", options.detail.dept, "number", options.detail.number,
         "section", options.detail.section, "year", options.detail.year,
       );
     if(options.title) sss.push("title", options.title);
@@ -372,7 +372,7 @@ Course.create = (institution, course_group, options) => {
       if(sss) return RedisClient.HMSET.bind(null, Course.getPropKey(institution, course_group)).apply(null, sss);
     })
     .then(() => {
-      return Course.cache.loadFromDB(institution, course_group); 
+      return Course.cache.loadFromDB(institution, course_group);
     });
 };
 
@@ -392,9 +392,9 @@ Course.prototype.setDetail = function(dept, number, section, year, title) {
   dept = dept.toLocaleLowerCase(); number = number.toLocaleLowerCase();
   section = section.toLocaleLowerCase(); year = year.toLocaleLowerCase();
   const sss = [
-    "dept",    dept, 
-    "number",  number, 
-    "section", section, 
+    "dept",    dept,
+    "number",  number,
+    "section", section,
     "year",    year
   ];
   if(title) {
@@ -412,7 +412,7 @@ Course.prototype.setDetail = function(dept, number, section, year, title) {
  * Deletes this course. Removes it from cache and redis.
  * @memberOf Course
  * TODO: update implementation and test
- * 
+ *
  * Tasks when adding assignment functionality
  * TODO: delete assignments assoc. with course
  * TODO: uncouple groups when deleting assignments
@@ -444,7 +444,7 @@ Course.prototype.activate = function() {
 Course.prototype.deactivate = function() {
   const that = this;
   return RedisClient.HSET(that.getPropKey(), "is_active", false)
-    .then(() => { that.is_active = false; });
+    .then(() => { that.is_active = false; });enrollUser
 };
 
 /**
@@ -554,7 +554,7 @@ Course.prototype.isBlockedStudent = function(user) { return this.blocked_student
 }/*******************************************/
 
 /**
- * 
+ *
  * @param {User} user - the user to remove
  * @returns {boolean} true if there is a user removed; false otherwise
  */
@@ -564,15 +564,15 @@ Course.prototype.removeUser = function(user) {
     RedisClient.SREM(that.getBlockedStudentKey(), user.id),
     RedisClient.SREM(that.getActiveStudentKey(),  user.id),
     RedisClient.SREM(that.getInstructorKey(),     user.id)
-  ]).then(() => { 
-    return that.active_students.delete(user) || 
+  ]).then(() => {
+    return that.active_students.delete(user) ||
            that.blocked_students.delete(user) ||
            that.instructors.delete(user);
   });
 };
 
 /**
- * 
+ *
  * @param {User} user - the user to remove
  * @returns {boolean} true if there is a user removed; false otherwise
  */
@@ -601,7 +601,7 @@ Course.prototype.removeInstructor = function(user) {
  * @returns {Object}
  */
 Course.prototype.send = function() {
-  const result = { 
+  const result = {
     institution: this.institution, is_active: this.is_active, course_group: this.course_group,
     /*active_students: [...this.active_students].map((user) => user.id),
     blocked_students: [...this.blocked_students].map((user) => user.id),

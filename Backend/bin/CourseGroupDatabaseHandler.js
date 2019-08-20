@@ -170,7 +170,7 @@ class CourseGroupDatabaseHandler {
         for (const assignment of assignments) {
             if (assignment.group_assignment && assignment.course_group_set === course_group_set_key) {
                 let assignment_key = KeyDictionary.key_dictionary['assignment'] + assignment.id;
-                await submission_db_handler.create_submission_for_course_group(import_handler, assignment_key, '', course_group_key);
+                await submission_db_handler.create_submission_for_course_group(import_handler, course_key, assignment_key, '', course_group_key);
             }
         }
     }
@@ -381,8 +381,8 @@ class CourseGroupDatabaseHandler {
             if (user_permissions !== 'ta' && user_permissions !== 'instructor')
                 throw new NotAuthorizedError('You are not authorized to create a group');
 
-            let largest_group_key = await this.get_largest_group_key();
-            let course_group_key = KeyDictionary.key_dictionary['course_group'] + (largest_group_key + 1);
+            let id = `${course_key.replace(KeyDictionary.key_dictionary['course'], '')}_${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`;
+            let course_group_key = KeyDictionary.key_dictionary['course_group'] + id;
 
 
             for (let user of group_data.users) {
@@ -393,7 +393,7 @@ class CourseGroupDatabaseHandler {
             // await course_db_handler.add_course_group_to_course(course_group_key, course_key);
 
             // Set default group data values
-            await this.set_course_group_data(course_group_key, 'id', largest_group_key + 1);
+            await this.set_course_group_data(course_group_key, 'id', id);
             await this.set_course_group_data(course_group_key, 'name', group_data.name);
             await this.set_course_group_data(course_group_key, 'users', JSON.stringify(group_data.users));
             await this.set_course_group_data(course_group_key, 'creation_time', new Date());
@@ -516,27 +516,6 @@ class CourseGroupDatabaseHandler {
                 resolve(parsed_data);
             });
         });
-    }
-
-
-    get_largest_group_key () {
-        return new Promise((resolve, reject) => {
-            this.db_handler.client.keys(KeyDictionary.key_dictionary['course_group'] + '*', (error, result) => {
-                if (error) {
-                    console.log(error);
-                    reject(error);
-                }
-                console.log('KEY result -> ' + result);
-                result = result.map((key) => {
-                    return parseInt(key.replace(KeyDictionary.key_dictionary['course_group'], ''));
-                });
-                result.push(0);
-                result.sort((a, b) => {
-                    return a - b;
-                });
-                resolve(result[result.length - 1]);
-            });
-        })
     }
 
 

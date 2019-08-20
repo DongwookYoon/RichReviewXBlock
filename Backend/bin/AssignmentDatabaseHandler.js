@@ -89,9 +89,8 @@ class AssignmentDatabaseHandler {
         if (!(await course_db_handler.is_valid_course_key(course_key)))
             throw new RichReviewError('Invalid course key');
 
-        let highest_key = await this.get_largest_assignment_key();
-
-        let assignment_key = KeyDictionary.key_dictionary['assignment'] + (highest_key + 1);
+        let id = `${course_key.replace(KeyDictionary.key_dictionary['course'], '')}_${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`;
+        let assignment_key = KeyDictionary.key_dictionary['assignment'] + id;
 
         for (const field in assignment_data) {
             let value = assignment_data[field];
@@ -103,7 +102,7 @@ class AssignmentDatabaseHandler {
         }
 
         //Set default assignment data
-        await this.set_assignment_data(assignment_key, 'id', highest_key + 1);
+        await this.set_assignment_data(assignment_key, 'id', id);
         await this.set_assignment_data(assignment_key, 'course', course_key);
         await this.set_assignment_data(assignment_key, 'group', '');
         await this.set_assignment_data(assignment_key, 'creation_date', new Date().toISOString());
@@ -314,29 +313,6 @@ class AssignmentDatabaseHandler {
         }
 
         return submission_key;
-    }
-
-
-
-    get_largest_assignment_key () {
-        return new Promise((resolve, reject) => {
-            this.db_handler.client.keys(KeyDictionary.key_dictionary['assignment'] + '*', (error, result) => {
-                if (error) {
-                    console.log(error);
-                    reject(error);
-                }
-                console.log('KEY result -> ' + result);
-
-                result = result.map((key) => {
-                    return parseInt(key.replace(KeyDictionary.key_dictionary['assignment'], ''));
-                });
-                result.push(0);
-                result.sort((a, b) => {
-                    return a - b;
-                });
-                resolve(result[result.length - 1]);
-            });
-        })
     }
 
 

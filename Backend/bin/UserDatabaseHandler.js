@@ -346,16 +346,16 @@ class UserDatabaseHandler {
             let course_key = KeyDictionary.key_dictionary['course'] + course_details.id;
             let course_exists = await course_db_handler.is_valid_course_key(course_key);
 
-            if (!course_exists)
-                await course_db_handler.create_course(course_key, course_details);
+            if (course_exists) {
+                // await course_db_handler.create_course(course_key, course_details);
+                if (course_details['is_instructor_course']) {
+                    if (!(await course_db_handler.is_user_instructor_for_course(user_key, course_key)))
+                        await course_db_handler.add_instructor_to_course(import_handler, user_key, course_key);
 
-            if (course_details['is_instructor_course']) {
-                if (!(await course_db_handler.is_user_instructor_for_course(user_key, course_key)))
-                    await course_db_handler.add_instructor_to_course(import_handler, user_key, course_key);
-
-            } else {
-                if (!(await course_db_handler.is_user_enrolled_in_course(user_key, course_key)))
-                    await course_db_handler.add_student_to_course(import_handler, user_key, course_key);
+                } else {
+                    if (!(await course_db_handler.is_user_enrolled_in_course(user_key, course_key)))
+                        await course_db_handler.add_student_to_course(import_handler, user_key, course_key);
+                }
             }
         } catch (e) {
             console.log(e);

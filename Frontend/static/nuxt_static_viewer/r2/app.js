@@ -290,25 +290,36 @@
     }
 
     function initAudioRecorder() {
+
       if (r2.ctx.text_only) {
         r2.coverMsg.hideMicSetup()
         return Promise.resolve()
       } else {
-        return r2.coverMsg
-          .showMicSetup()
-          .then(r2.audioRecorder.Init)
-          .then(function() {
-            r2App.browser_support.audio_recording = true
-            r2.coverMsg.hideMicSetup()
-          })
-          .catch(function(err) {
-            r2App.browser_support.audio_recording = false
-            r2.coverMsg.hideMicSetup()
-            console.error('AudioInitFailed')
-            console.error(err)
-            r2.coverMsg.showMicFailed()
-          })
+        // Prevent: The AudioContext was not allowed to start.
+        // It must be resumed (or created) after a user gesture on the page.
+        document.documentElement.addEventListener(
+            "mousedown", function(){
+              if (!r2.audioRecorder.isInitialized() && !r2.audioRecorder.initInProgress()){
+                return r2.coverMsg.setTimerShowMicSetup()
+                    .then(r2.audioRecorder.Init)
+                    .then(function() {
+                      r2App.browser_support.audio_recording = true
+                      r2.coverMsg.clearTimerShowMicSetup()
+                      r2.coverMsg.hideMicSetup()
+                    })
+                    .catch(function(err) {
+                      r2App.browser_support.audio_recording = false
+                      r2.coverMsg.clearTimerShowMicSetup()
+                      r2.coverMsg.hideMicSetup()
+                      console.error('AudioInitFailed')
+                      console.error(err)
+                      r2.coverMsg.showMicFailed()
+                    })
+              }
+            })
+        // Ends
       }
+      return Promise.resolve();
     }
 
     function initSpeechSynthesizer() {

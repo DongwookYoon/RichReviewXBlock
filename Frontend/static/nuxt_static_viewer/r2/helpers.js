@@ -110,6 +110,8 @@
       $dom = $('#cover_msg')
     }
 
+    var tmr = null;
+
     /* z-idx
             10 - fatal error
             9 - mobile warning
@@ -140,6 +142,16 @@
     pub.hideMicSetup = function() {
       hideBrowserTemplateName('micsetup')
     }
+
+    pub.setTimerShowMicSetup = function(){
+      tmr = setTimeout (function(){return showBrowserTemplateName('micsetup')}, 500)
+      return Promise.resolve();
+    };
+
+    pub.clearTimerShowMicSetup = function(){
+      clearTimeout(tmr);
+      return Promise.resolve();
+    };
 
     pub.done = function() {}
 

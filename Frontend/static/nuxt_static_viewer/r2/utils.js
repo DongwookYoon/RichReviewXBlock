@@ -379,7 +379,7 @@
           data: msg,
           timeout: 5000, // in milliseconds
           success: function(data) {
-            console.log({ data })
+            console.log("postDownloadCmds", { data })
             resolve(data)
           },
           error: function(err) {

@@ -270,26 +270,34 @@ class CourseGroupDatabaseHandler {
 
         let active_group_ids = course_data['active_course_groups'];
         let inactive_group_ids = course_data['inactive_course_groups'];
+        let active_course_groups;
+        let inactive_course_groups;
+        try{
+            active_course_groups = await Promise.all(active_group_ids.map(async (group_key) => {
+                let group_data = await this.get_course_group_data(group_key);
+                let users = await this.get_all_course_group_users(import_handler, group_key);
 
-        let active_course_groups = await Promise.all(active_group_ids.map(async (group_key) => {
-            let group_data = await this.get_course_group_data(group_key);
-            let users = await this.get_all_course_group_users(import_handler, group_key);
+                return { id: group_data['id'],
+                    name: group_data['name'],
+                    member_count: group_data['users'].length,
+                    members: users }
+            }));
 
-            return { id: group_data['id'],
-                name: group_data['name'],
-                member_count: group_data['users'].length,
-                members: users }
-        }));
+            inactive_course_groups = await Promise.all(inactive_group_ids.map(async (group_key) => {
+                let group_data = await this.get_course_group_data(group_key);
+                let users = await this.get_all_course_group_users(import_handler, group_key);
 
-        let inactive_course_groups = await Promise.all(inactive_group_ids.map(async (group_key) => {
-            let group_data = await this.get_course_group_data(group_key);
-            let users = await this.get_all_course_group_users(import_handler, group_key);
+                return { id: group_data['id'],
+                    name: group_data['name'],
+                    member_count: group_data['users'].length,
+                    members: users }
+            }));
+        }
+        catch(e){
+            console.warn("active_group_ids:", active_group_ids)
+            console.warn("inactive_group_ids:", inactive_group_ids)
+        }
 
-            return { id: group_data['id'],
-                name: group_data['name'],
-                member_count: group_data['users'].length,
-                members: users }
-        }));
 
         return { active_course_groups: active_course_groups, inactive_course_groups: inactive_course_groups };
     }

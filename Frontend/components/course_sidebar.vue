@@ -7,8 +7,7 @@
       }"
          @click="go_to_dashboard"
     >
-      <img v-if="!sbdashboard" id="dashboard-icon" src="/dashboard.png" />
-      <img v-if="sbdashboard" id="dashboard-icon-white" src="/dashboard-white.png" />
+      <img id="dashboard-icon" src="/dashboard.png" />
       <p id="header-dashboard">
         Dashboard
       </p>
@@ -94,12 +93,6 @@ export default {
   },
   mounted: function() {
     console.log(this.$route)
-
-    if (this.$route.fullPath.includes('dashboard')) {
-      this.sbdashboard = true
-      this.dashboard_background_color = '#0c2343'
-      this.dashboard_color = 'white'
-    }
 
     if (this.assignments) {
       this.assignments_background_color = '#0c2343'

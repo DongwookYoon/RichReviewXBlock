@@ -56,7 +56,8 @@ const r2Sync = (function() {
           r2App.asyncErr.throw(err)
         })
         .then(function() {
-          busy = false
+          //busy = false
+          busy = true; // one time download.
         })
     }
 

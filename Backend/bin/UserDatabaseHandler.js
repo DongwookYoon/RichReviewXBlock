@@ -180,7 +180,7 @@ class UserDatabaseHandler {
 
         if (!submitters) {
             await this.set_user_data(user_key, 'submitters', JSON.stringify([submitter_key]));
-        } else (!submitters.includes(submitter_key)) {
+        } else if (!submitters.includes(submitter_key)) {
             submitters.push(submitter_key);
             await this.set_user_data(user_key, 'submitters', JSON.stringify(submitters));
         }

@@ -262,7 +262,7 @@ class CourseDatabaseHandler {
 
             if(!active_students) {
                 await this.set_course_data(course_key, 'active_students', JSON.stringify([user_key]));
-            } else (!active_students.includes(user_key)) {
+            } else if (!active_students.includes(user_key)) {
                 active_students.push(user_key);
                 await this.set_course_data(course_key, 'active_students', JSON.stringify(active_students));
             }

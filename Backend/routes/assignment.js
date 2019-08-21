@@ -20,8 +20,11 @@ router.get('/all_user_assignments', async function(req, res, next) {
 
     let assignment_db_handler = await ImportHandler.assignment_db_handler;
     let course_db_handler = await ImportHandler.course_db_handler;
+    let user_db_handler = await ImportHandler.user_db_handler;
 
     try {
+        await user_db_handler.verify_submitters_for_enrolments(ImportHandler, user_key);
+
         let enrolments = await course_db_handler.get_user_courses(ImportHandler, user_key);
         let all_assignments = await assignment_db_handler.get_all_assignments_visible_to_user(
             ImportHandler,
@@ -77,7 +80,7 @@ router.get('/comment_submissions/:groupid', async function(req, res, next) {
 
 
 /*
- ** GET a course assignments
+ ** GET a course assignment
  */
 router.get('/:assignment_id', async function(req, res, next) {
 
@@ -87,8 +90,10 @@ router.get('/:assignment_id', async function(req, res, next) {
     let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
 
     let assignment_db_handler = await ImportHandler.assignment_db_handler;
-
+    let course_db_handler = await ImportHandler.course_db_handler;
     try {
+        await course_db_handler.verify_submitters_for_all_students(ImportHandler, course_key);
+
         let data = await assignment_db_handler.get_assignment(ImportHandler, user_key, course_key, assignment_key);
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(data));
@@ -113,6 +118,8 @@ router.get('/:assignment_id/edit', async function(req, res, next) {
     let course_db_handler = await ImportHandler.course_db_handler;
 
     try {
+        await course_db_handler.verify_submitters_for_all_students(ImportHandler, course_key);
+
         let assignment_data = await assignment_db_handler.get_assignment_data(user_key, assignment_key);
         let course_data = await course_db_handler.get_course_data(course_key);
 
@@ -150,6 +157,7 @@ router.get('/:assignment_id/submissions', async function(req, res, next) {
     let course_db_handler = await ImportHandler.course_db_handler;
 
     try {
+        await course_db_handler.verify_submitters_for_all_students(ImportHandler, course_key);
 
         let submissions = await assignment_db_handler.get_assignment_submissions(
             ImportHandler,
@@ -190,8 +198,10 @@ router.get('/:assignment_id/grader', async function(req, res, next) {
 
     let submission_db_handler = await ImportHandler.submission_db_handler;
     let assignment_db_handler = await ImportHandler.assignment_db_handler;
+    let course_db_handler = await ImportHandler.course_db_handler;
 
     try {
+        await course_db_handler.verify_submitters_for_all_students(ImportHandler, course_key);
 
         let submission_links_and_id = await assignment_db_handler.get_assignment_submissions_for_grader(
             ImportHandler,
@@ -231,8 +241,9 @@ router.get('/:assignment_id/grader/:submission_id', async function(req, res, nex
 
     let assignment_db_handler = await ImportHandler.assignment_db_handler;
     let submission_db_handler = await ImportHandler.submission_db_handler;
-
+    let course_db_handler = await ImportHandler.course_db_handler;
     try {
+        await course_db_handler.verify_submitters_for_all_students(ImportHandler, course_key);
 
         let previous_submission_link_and_id = await assignment_db_handler.get_previous_assignment_submission_link(
             ImportHandler,
@@ -288,8 +299,10 @@ router.put('/:assignment_id', async function(req, res, next) {
     let assignment_key = KeyDictionary.key_dictionary['assignment'] + req.params['assignment_id'];
 
     let assignment_db_handler = await ImportHandler.assignment_db_handler;
+    let course_db_handler = await ImportHandler.course_db_handler;
 
     try {
+        await course_db_handler.verify_submitters_for_all_students(ImportHandler, course_key);
         await assignment_db_handler.edit_assignment(ImportHandler, user_key, assignment_key, req.body.edits);
         res.sendStatus(200);
     } catch (e) {
@@ -404,6 +417,10 @@ router.post('/:assignment_id/document_submissions', async function(req, res, nex
 
     let assignment_db_handler = await ImportHandler.assignment_db_handler;
 
+    let course_db_handler = await ImportHandler.course_db_handler;
+    await course_db_handler.verify_submitters_for_all_students(ImportHandler, course_key);
+
+
     let form = new formidable.IncomingForm();
     await form.parse(req, async function(err, fields, files) {
         if (err || (Object.entries(files).length === 0 && files.constructor === Object)) {
@@ -439,8 +456,11 @@ router.post('/:assignment_id/comment_submissions', async function(req, res, next
     let group_db_handler = await ImportHandler.group_db_handler;
     let assignment_db_handler = await ImportHandler.assignment_db_handler;
     let submission_db_handler = await ImportHandler.submission_db_handler;
+    let course_db_handler = await ImportHandler.course_db_handler;
 
     try {
+        await course_db_handler.verify_submitters_for_all_students(ImportHandler, course_key);
+
         let group_data = await group_db_handler.get_group_data(group_key);
         let submission_key = group_data['submission'];
 
@@ -479,8 +499,10 @@ router.post('/:assignment_id/extensions', async function(req, res, next) {
     let extensions = req.body;
 
     let assignment_db_handler = await ImportHandler.assignment_db_handler;
+    let course_db_handler = await ImportHandler.course_db_handler;
 
     try {
+        await course_db_handler.verify_submitters_for_all_students(ImportHandler, course_key);
         await assignment_db_handler.set_assignment_extensions(ImportHandler, user_key, course_key, assignment_key, extensions);
         res.sendStatus(200);
 

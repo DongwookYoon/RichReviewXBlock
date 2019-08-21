@@ -955,13 +955,21 @@ class AssignmentDatabaseHandler {
         if (user_permissions !== 'ta' && user_permissions !== 'instructor')
             throw new NotAuthorizedError('You are not authorized to delete this assignment');
 
-        await course_db_handler.delete_assignment_from_course(assignment_key, course_key);
+        try {
+            await course_db_handler.delete_assignment_from_course(assignment_key, course_key);
+        } catch (e) {
+            console.warn(e)
+        }
 
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
         let submissions = assignment_data['submissions'];
 
         for (let submission of submissions) {
-            await submission_db_handler.delete_submission(import_handler, submission);
+            try {
+                await submission_db_handler.delete_submission(import_handler, submission);
+            } catch(e) {
+                console.warn(e);
+            }
         }
 
         await this.db_handler.client.del(assignment_key, (error, result) => {
@@ -1029,6 +1037,7 @@ class AssignmentDatabaseHandler {
             late: late.is_late(assignment_data, submission_data)
         };
     }
+
 
 
     is_valid_assignment_data (assignment_data) {

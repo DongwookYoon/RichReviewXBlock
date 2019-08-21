@@ -2,7 +2,7 @@
   <footer id="footer">
     <p id="footer-title" @click="go_to_dashboard">RichReview</p>
     <p id="footer-copyright">© Dongwook Yoon</p>
-    <p id="footer-about">About</p>
+    <p id="footer-about"><a href="https://richreview.net/about" target="_blank">About</a></p>
   </footer>
 </template>
 
@@ -50,5 +50,10 @@ export default {
   text-align: center;
   display: table;
   min-height: 4vh;
+}
+#footer a,
+#footer a:hover{
+  text-decoration: none;
+  color: white;
 }
 </style>

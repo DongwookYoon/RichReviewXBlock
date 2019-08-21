@@ -23,7 +23,8 @@ const azure = require('./lib/azure')
 const HOSTNAME =
   process.env.NODE_ENV === 'production' ? 'richreview' : 'localhost'
 const HASHFILE = HOSTNAME + '/richreview_webapp_hash.txt'
-const WEBAPP_PATH = path.resolve(__dirname, '../webapps/richreview/')
+//const WEBAPP_PATH = path.resolve(__dirname, '../webapps/richreview/')
+const WEBAPP_PATH = path.resolve(__dirname, '../static/nuxt_static_viewer/')
 
 util.start('App NODE_ENV:' + process.env.NODE_ENV)
 

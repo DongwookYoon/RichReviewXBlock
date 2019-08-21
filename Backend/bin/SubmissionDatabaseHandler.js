@@ -369,7 +369,11 @@ class SubmissionDatabaseHandler {
         let submitter_db_handler = await import_handler.submitter_db_handler;
 
         let submission_data = await this.get_submission_data(submission_key);
-        await submitter_db_handler.delete_submitter(import_handler, submission_data['submitter']);
+        try {
+            await submitter_db_handler.delete_submitter(import_handler, submission_data['submitter']);
+        } catch (e) {
+            console.warn(e);
+        }
 
         await this.db_handler.client.del(submission_key, (error, result) => {
             if (error) {

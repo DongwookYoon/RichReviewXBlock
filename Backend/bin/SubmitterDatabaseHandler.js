@@ -69,6 +69,11 @@ class SubmitterDatabaseHandler {
         let submitter_data = await this.get_submitter_data(submitter_key);
         let members = submitter_data['members'];
 
+        if(!members) {
+            await this.set_submitter_data(submitter_key, 'members', JSON.stringify([user_key]));
+            return;
+        }
+
         if (!members.includes(user_key)) {
             members.push(user_key);
             await this.set_submitter_data(submitter_key, 'members', JSON.stringify(members));
@@ -147,13 +152,22 @@ class SubmitterDatabaseHandler {
             console.log('');
 
         for (let member of members) {
-            await user_db_handler.remove_submitter_from_user(member, submitter_key);
+            try {
+                await user_db_handler.remove_submitter_from_user(member, submitter_key);
+            } catch (e) {
+                console.warn(e);
+            }
         }
 
         let course_group_db_handler = await import_handler.course_group_db_handler;
 
-        if (submitter_data['course_group'] !== '')
-            await course_group_db_handler.remove_submitter_from_group(submitter_key, submitter_data['course_group']);
+        if (submitter_data['course_group'] !== '') {
+            try {
+                await course_group_db_handler.remove_submitter_from_group(submitter_key, submitter_data['course_group']);
+            } catch (e) {
+                console.warn(e);
+            }
+        }
 
 
         await this.db_handler.client.del(submitter_key, (error, result) => {
@@ -164,6 +178,41 @@ class SubmitterDatabaseHandler {
             console.log('DEL result -> ' + result);
         });
     }
+
+
+
+    // async update_user_submitters (import_handler, user_key, course_key) {
+    //     let course_db_handler = await import_handler.course_db_handler;
+    //     let assignment_db_handler = await import_handler.assignment_db_handler;
+    //
+    //     let course_data = await course_db_handler.get_course_data(course_key);
+    //
+    //     for (const assignment of course_data['assignments']) {
+    //         let assignment_data = await assignment_db_handler.get_assignment_data('', assignment);
+    //         if (!(await this.does_user_have_submitter(import_handler, user_key, assignment)) && !assignment_data['group_assignment']) {
+    //
+    //         }
+    //     }
+    // }
+
+
+
+    async does_user_have_submitter(import_handler, user_key, assignment_key) {
+        let assignment_db_handler = await import_handler.assignment_db_handler;
+        let submission_db_handler = await import_handler.submission_db_handler;
+        let user_db_handler = await import_handler.user_db_handler;
+
+        let assignment_data = await assignment_db_handler.get_assignment_data('', assignment_key);
+        let submitters = await Promise.all(assignment_data['submissions'].map(async submission => {
+            let submission_data = await submission_db_handler.get_submission_data(submission);
+            return submission_data['submitter'];
+        }));
+
+        let user_data = await user_db_handler.get_user_data(user_key);
+
+        return submitters.some(submitter => user_data['submitters'].includes(submitter));
+    }
+
 
 
 

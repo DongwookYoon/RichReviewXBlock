@@ -137,6 +137,11 @@ class UserDatabaseHandler {
         let user_data = await this.get_user_data(user_key);
         let enrolments = user_data['enrolments'];
 
+        if (!enrolments) {
+            await this.set_user_data(user_key, 'enrolments', JSON.stringify([course_key]));
+            return;
+        }
+
         if (!enrolments.includes(course_key)) {
             enrolments.push(course_key);
             await this.set_user_data(user_key, 'enrolments', JSON.stringify(enrolments));
@@ -147,6 +152,11 @@ class UserDatabaseHandler {
     async add_course_to_instructor (user_key, course_key) {
         let user_data = await this.get_user_data(user_key);
         let teaching = user_data['teaching'];
+
+        if (!teaching) {
+            await this.set_user_data(user_key, 'teaching', JSON.stringify([course_key]));
+            return;
+        }
 
         if (!teaching.includes(course_key)) {
             teaching.push(course_key);
@@ -165,15 +175,27 @@ class UserDatabaseHandler {
 
 
     async add_submitter_to_user (user_key, submitter_key) {
+        console.log(`Adding submitter to user ${user_key}`);
         let user_data = await this.get_user_data(user_key);
+
+        console.log(JSON.stringify(user_data));
+
         let submitters = user_data['submitters'];
 
-        if (!submitters.includes(submitter_key)) {
+        if (!submitters) {
+            await this.set_user_data(user_key, 'submitters', JSON.stringify([submitter_key]));
+        } else if (!submitters.includes(submitter_key)) {
             submitters.push(submitter_key);
             await this.set_user_data(user_key, 'submitters', JSON.stringify(submitters));
         }
 
         let inactive_submitters = user_data['inactive_submitters'];
+
+        if (!inactive_submitters) {
+            await this.set_user_data(user_key, 'inactive_submitters', JSON.stringify([]));
+            return;
+        }
+
         inactive_submitters = inactive_submitters.filter(submitter => {
             return submitter !== submitter;
         });
@@ -186,6 +208,11 @@ class UserDatabaseHandler {
         try {
             let user_data = await this.get_user_data(user_key);
             let course_groups = user_data['course_groups'];
+
+            if (!course_groups) {
+                await this.set_user_data(user_key, 'course_groups', JSON.stringify([course_group_key]));
+                return;
+            }
 
             if (!course_groups.includes(course_group_key)) {
                 course_groups.push(course_group_key);
@@ -202,6 +229,11 @@ class UserDatabaseHandler {
     async add_group_to_user (user_key, group_key) {
         let user_data = await this.get_user_data(user_key);
         let groups = user_data['groupNs'];
+
+        if(!groups) {
+            await this.set_user_data(user_key, 'groupNs', JSON.stringify([group_key]));
+            return;
+        }
 
         if (!groups.includes(group_key)) {
             groups.push(group_key);
@@ -425,6 +457,46 @@ class UserDatabaseHandler {
         });
 
         await this.set_user_data(user_key, 'course_groups', JSON.stringify(course_groups));
+    }
+
+
+
+    async verify_submitters_for_course (import_handler, user_key, course_key) {
+        let course_db_handler = await import_handler.course_db_handler;
+        let user_db_handler = await import_handler.user_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
+        let submission_db_handler = await import_handler.submission_db_handler;
+
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+        if (permissions === 'instructor' || permissions === 'ta')
+            return;
+
+        let user_data = await user_db_handler.get_user_data(user_key);
+
+        try {
+            let user_assignments = await Promise.all(user_data['submitters'].map(async (submitter) => {
+                let submitter_data = await submitter_db_handler.get_submitter_data(submitter);
+                let submission_data = await submission_db_handler.get_submission_data(submitter_data['submission']);
+                return submission_data['assignment'];
+            }));
+
+            await course_db_handler.create_submitters_for_student(import_handler, user_key, course_key, user_assignments);
+        } catch (e) {
+            console.warn(e);
+        }
+    }
+
+
+    async verify_submitters_for_courses (import_handler, user_key, course_keys) {
+        for (const course_key of course_keys)
+            await this.verify_submitters_for_course(import_handler, user_key, course_key);
+    }
+
+
+
+    async verify_submitters_for_enrolments (import_handler, user_key) {
+        let user_data = await this.get_user_data(user_key);
+        await this.verify_submitters_for_courses(import_handler, user_key, user_data['enrolments']);
     }
 
 

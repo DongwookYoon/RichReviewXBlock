@@ -66,7 +66,7 @@ body {
 
 
 #cover_msg {
-  display: table;
+  display: none;
   position: absolute;
   left: 0;
   top: 0;
@@ -538,7 +538,7 @@ a:active {
 #onscrbtns_static{
   position: absolute;
   z-index: 3;
-  font-size: 0.45em;
+  font-size: 0.65em;
   right: 0;
   bottom: 0;
   color: black;

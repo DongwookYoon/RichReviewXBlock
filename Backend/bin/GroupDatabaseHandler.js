@@ -39,7 +39,7 @@ class GroupDatabaseHandler {
                 pdfjs_url: `${env.azure_config.storage.host}${doc_data['pdfid']}/doc.vs_doc`,
                 serve_dbs_url: process.env.HOST_URL
             },
-            env: process.env.NODE_ENV,
+            env: env.node_config.ENV,
             cdn_endpoint: env.azure_config.cdn.endpoint
         }
     }

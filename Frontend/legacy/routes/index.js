@@ -121,7 +121,7 @@ router.get('/demo', function(req, res) {
 
 router.get('/demo0', function(req, res) {
   res.redirect(
-    '/viewer?access_code=7bf0f0add24f13dda0c0a64da0f45a0a6909809e&docid=116730002901619859123_1416501969000&groupid=116730002901619859123_1424986924617'
+    '/viewer?access_code=7bf0f0add24f13dda0c0a64da0f45a0a6909809e'
   )
 })
 

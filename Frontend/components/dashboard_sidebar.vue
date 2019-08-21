@@ -1,6 +1,18 @@
 <template>
   <div id="sidebar">
-    <img id="logo" src="/loading-icon.png" @click="go_to_dashboard" />
+    <div id="sb_dashboard"
+      :style="{
+        'background-color': dashboard_background_color,
+        color: dashboard_color
+      }"
+            @click="go_to_dashboard"
+    >
+      <img v-if="!sbdashboard" id="dashboard-icon" src="/dashboard.png" />
+      <img v-if="sbdashboard" id="dashboard-icon-white" src="/dashboard-white.png" />
+      <p id="header-dashboard">
+        Dashboard
+      </p>
+    </div>
     <div
       id="assignments"
       :style="{
@@ -56,6 +68,8 @@ export default {
   name: 'Sidebar',
   data: function() {
     return {
+      dashboard_background_color: 'white',
+      dashboard_color: '#0c2343',
       assignments_background_color: 'white',
       assignments_color: '#0c2343',
       assignments: false,
@@ -64,11 +78,19 @@ export default {
       groups: false,
       grades_background_color: 'white',
       grades_color: '#0c2343',
-      grades: false
+      grades: false,
+      sbdashboard: false
     }
   },
   mounted: function() {
     console.log(this.$route)
+
+    if (this.$route.fullPath.includes('dashboard')) {
+      this.sbdashboard = true
+      this.dashboard_background_color = '#0c2343'
+      this.dashboard_color = 'white'
+    }
+
     if (this.$route.fullPath.includes('all-assignments')) {
       this.assignments = true
       this.assignments_background_color = '#0c2343'
@@ -122,6 +144,8 @@ export default {
   cursor: pointer;
 }
 
+#dashboard-icon,
+#dashboard-icon-white,
 #assignment-icon,
 #assignment-icon-white,
 #group-icon,
@@ -133,6 +157,7 @@ export default {
   margin-left: 4.6vw;
 }
 
+#header-dashboard,
 #header-assignments,
 #header-groups,
 #header-grades,
@@ -142,6 +167,7 @@ export default {
   text-align: center;
 }
 
+#sb_dashboard,
 #assignments,
 #groups,
 #grades,

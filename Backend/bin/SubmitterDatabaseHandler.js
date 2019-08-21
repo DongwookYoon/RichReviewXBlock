@@ -69,6 +69,11 @@ class SubmitterDatabaseHandler {
         let submitter_data = await this.get_submitter_data(submitter_key);
         let members = submitter_data['members'];
 
+        if(!members) {
+            await this.set_submitter_data(submitter_key, 'members', JSON.stringify([user_key]));
+            return;
+        }
+
         if (!members.includes(user_key)) {
             members.push(user_key);
             await this.set_submitter_data(submitter_key, 'members', JSON.stringify(members));

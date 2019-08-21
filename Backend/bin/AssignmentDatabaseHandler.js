@@ -72,6 +72,11 @@ class AssignmentDatabaseHandler {
         let assignment_data = await this.get_assignment_data('', assignment_key);
         let submissions = assignment_data['submissions'];
 
+        if (!submissions) {
+            await this.set_assignment_data(assignment_key, 'submissions', JSON.stringify([submission_key]));
+            return;
+        }
+
         if (!submissions.includes(submission_key)) {
             submissions.push(submission_key);
             await this.set_assignment_data(assignment_key, 'submissions', JSON.stringify(submissions));
@@ -231,7 +236,11 @@ class AssignmentDatabaseHandler {
 
             await user_db_handler.add_group_to_user(user_key, group_key);
 
-            await submission_db_handler.add_group_to_comment_submission(submission_key, group_key);
+            try {
+                await submission_db_handler.add_group_to_comment_submission(submission_key, group_key);
+            } catch (e) {
+                console.warn(e);
+            }
 
             let submission_data = await submission_db_handler.get_submission_data(submission_key);
 

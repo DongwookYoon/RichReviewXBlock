@@ -137,6 +137,11 @@ class UserDatabaseHandler {
         let user_data = await this.get_user_data(user_key);
         let enrolments = user_data['enrolments'];
 
+        if (!enrolments) {
+            await this.set_user_data(user_key, 'enrolments', JSON.stringify([course_key]));
+            return;
+        }
+
         if (!enrolments.includes(course_key)) {
             enrolments.push(course_key);
             await this.set_user_data(user_key, 'enrolments', JSON.stringify(enrolments));
@@ -147,6 +152,11 @@ class UserDatabaseHandler {
     async add_course_to_instructor (user_key, course_key) {
         let user_data = await this.get_user_data(user_key);
         let teaching = user_data['teaching'];
+
+        if (!teaching) {
+            await this.set_user_data(user_key, 'teaching', JSON.stringify([course_key]));
+            return;
+        }
 
         if (!teaching.includes(course_key)) {
             teaching.push(course_key);
@@ -168,12 +178,20 @@ class UserDatabaseHandler {
         let user_data = await this.get_user_data(user_key);
         let submitters = user_data['submitters'];
 
-        if (!submitters.includes(submitter_key)) {
+        if (!submitters) {
+            await this.set_user_data(user_key, 'submitters', JSON.stringify([submitter_key]));
+        } else (!submitters.includes(submitter_key)) {
             submitters.push(submitter_key);
             await this.set_user_data(user_key, 'submitters', JSON.stringify(submitters));
         }
 
         let inactive_submitters = user_data['inactive_submitters'];
+
+        if (!inactive_submitters) {
+            await this.set_user_data(user_key, 'inactive_submitters', JSON.stringify([]));
+            return;
+        }
+
         inactive_submitters = inactive_submitters.filter(submitter => {
             return submitter !== submitter;
         });
@@ -186,6 +204,11 @@ class UserDatabaseHandler {
         try {
             let user_data = await this.get_user_data(user_key);
             let course_groups = user_data['course_groups'];
+
+            if (!course_groups) {
+                await this.set_user_data(user_key, 'course_groups', JSON.stringify([course_group_key]));
+                return;
+            }
 
             if (!course_groups.includes(course_group_key)) {
                 course_groups.push(course_group_key);
@@ -202,6 +225,11 @@ class UserDatabaseHandler {
     async add_group_to_user (user_key, group_key) {
         let user_data = await this.get_user_data(user_key);
         let groups = user_data['groupNs'];
+
+        if(!groups) {
+            await this.set_user_data(user_key, 'groupNs', JSON.stringify([group_key]));
+            return;
+        }
 
         if (!groups.includes(group_key)) {
             groups.push(group_key);

@@ -76,6 +76,11 @@ class GroupDatabaseHandler {
         let group_data = await this.get_group_data(group_key);
         let users = group_data['users'];
 
+        if(!users) {
+            await this.set_group_data(group_key, 'users', JSON.stringify([user_id]));
+            return;
+        }
+
         if (!users['participating'].includes(user_id)) {
             users['participating'].push(user_id);
             await this.set_group_data(group_key, 'users', JSON.stringify(users));

@@ -30,8 +30,24 @@ const env = require('../lib/env')
 /*****************************/
 /** routes for get requests **/
 /*****************************/
-router.get('', _pages.about)
-router.get('/', _pages.about)
+router.get('', function(req, res) {
+    console.log("AUTHTEST")
+    if(req.session.authUser){
+        res.redirect('/edu/dashboard')
+    }
+    else{
+        res.render('_pages_about')
+    }
+})
+router.get('/', function(req, res) {
+    console.log("AUTHTEST")
+    if(req.session.authUser){
+        res.redirect('/edu/dashboard')
+    }
+    else{
+        res.render('_pages_about')
+    }
+})
 router.get('/about', _pages.about)
 router.get('/logout_saml', authController.isLoggedIn, authController.samlLogout)
 router.get('/logout', authController.isLoggedIn, authController.logout)
@@ -121,7 +137,7 @@ router.get('/demo', function(req, res) {
 
 router.get('/demo0', function(req, res) {
   res.redirect(
-    '/viewer?access_code=7bf0f0add24f13dda0c0a64da0f45a0a6909809e&docid=116730002901619859123_1416501969000&groupid=116730002901619859123_1424986924617'
+    '/viewer?access_code=7bf0f0add24f13dda0c0a64da0f45a0a6909809e'
   )
 })
 

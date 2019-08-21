@@ -282,6 +282,7 @@ export default {
     console.log(res.data)
 
     return {
+      sbdashboard: false,
       permissions: res.data.permissions,
       assignment: res.data.assignment,
       viewer_link: res.data.link,

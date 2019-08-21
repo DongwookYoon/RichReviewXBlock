@@ -83,7 +83,8 @@ export default {
       enrolments: res.data.enrolments,
       taing: res.data.taing,
       instructing: res.data.teaching,
-      assignments: res.data.assignments
+      assignments: res.data.assignments,
+      sbdashboard: true
     }
   },
   fetch({ store, redirect }) {

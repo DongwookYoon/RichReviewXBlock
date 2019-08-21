@@ -109,7 +109,7 @@ class AssignmentDatabaseHandler {
         //Set default assignment data
         await this.set_assignment_data(assignment_key, 'id', id);
         await this.set_assignment_data(assignment_key, 'course', course_key);
-        await this.set_assignment_data(assignment_key, 'group', '');
+        await this.set_assignment_data(assignment_key, 'template_group', '');
         await this.set_assignment_data(assignment_key, 'creation_date', new Date().toISOString());
         await this.set_assignment_data(assignment_key, 'extensions', '[]');
 
@@ -207,7 +207,7 @@ class AssignmentDatabaseHandler {
 
         let assignment_key = await this.create_assignment(import_handler, course_key, assignment_data);
 
-        await this.set_assignment_data(assignment_key, 'group', master_group_key);
+        await this.set_assignment_data(assignment_key, 'template_group', master_group_key);
 
 
         let submission_keys = [];

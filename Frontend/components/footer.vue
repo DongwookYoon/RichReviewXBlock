@@ -2,7 +2,7 @@
   <footer id="footer">
     <p id="footer-title" @click="go_to_dashboard">RichReview</p>
     <p id="footer-copyright">© Dongwook Yoon</p>
-    <p id="footer-about"><a href="https://richreview.net/about" target="_blank">About</a></p>
+    <p id="footer-about"><a href="/about" target="_blank">About</a></p>
   </footer>
 </template>
 

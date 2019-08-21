@@ -375,6 +375,9 @@ class CourseDatabaseHandler {
         for (const assignment of course_data['assignments']) {
             if (!user_assignments.includes(assignment)) {
                 let assignment_data = await assignment_db_handler.get_assignment_data('', assignment);
+                if (!assignment_data['submissions']) {
+                    await assignment_db_handler.set_assignment_data(assignment, 'submissions', '[]');
+                }
                 if (assignment_data['type'] === 'document_submission') {
                     let submission_key = await submission_db_handler.create_submission_for_single_user(import_handler,
                         course_key,

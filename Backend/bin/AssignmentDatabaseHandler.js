@@ -886,12 +886,17 @@ class AssignmentDatabaseHandler {
 
     async get_users_submission_key (import_handler, user_key, assignment_key) {
         let submission_db_handler = await import_handler.submission_db_handler;
+        let course_db_handler = await import_handler.course_db_handler;
 
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
         let submissions = assignment_data['submissions'];
 
-        if(!submissions)
-            return undefined;
+        if(!submissions) {
+            await this.set_assignment_data(assignment_key, 'submissions', '[]');
+            await course_db_handler.verify_submitters_for_all_students(import_handler, assignment_data['course']);
+            assignment_data = await this.get_assignment_data(user_key, assignment_key);
+            submissions = assignment_data['submissions'];
+        }
 
         for (let submission_key of submissions) {
             if (await submission_db_handler.is_user_owner_of_submission(import_handler, user_key, submission_key))

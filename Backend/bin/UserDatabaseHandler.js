@@ -175,7 +175,11 @@ class UserDatabaseHandler {
 
 
     async add_submitter_to_user (user_key, submitter_key) {
+        console.log(`Adding submitter to user ${user_key}`);
         let user_data = await this.get_user_data(user_key);
+
+        console.log(JSON.stringify(user_data));
+
         let submitters = user_data['submitters'];
 
         if (!submitters) {

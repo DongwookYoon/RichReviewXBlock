@@ -203,6 +203,9 @@ class SubmitterDatabaseHandler {
         let user_db_handler = await import_handler.user_db_handler;
 
         let assignment_data = await assignment_db_handler.get_assignment_data('', assignment_key);
+        if (!assignment_data['submissions'])
+            return false;
+
         let submitters = await Promise.all(assignment_data['submissions'].map(async submission => {
             let submission_data = await submission_db_handler.get_submission_data(submission);
             return submission_data['submitter'];

@@ -464,8 +464,10 @@ class AssignmentDatabaseHandler {
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
         let submission_keys = assignment_data['submissions'];
 
-        if (!submission_keys)
+        if (!submission_keys) {
+            await this.set_assignment_data(assignment_key, 'submissions', '[]');
             return [];
+        }
 
         let submissions = [];
         for (let submission_key of submission_keys) {
@@ -887,6 +889,9 @@ class AssignmentDatabaseHandler {
 
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
         let submissions = assignment_data['submissions'];
+
+        if(!submissions)
+            return undefined;
 
         for (let submission_key of submissions) {
             if (await submission_db_handler.is_user_owner_of_submission(import_handler, user_key, submission_key))

@@ -85,7 +85,7 @@ export default {
 
     loadRichReview(
       encodeURIComponent(JSON.stringify(r2_ctx)),
-      'development',
+      res.data.env,
       cdn_endpoint
     )
   },

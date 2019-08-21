@@ -195,6 +195,7 @@ router.get('/:assignment_id/grader', async function(req, res, next) {
     console.log("Get request for assignment with id: " + req.params.assignment_id);
     let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
     let assignment_key = KeyDictionary.key_dictionary['assignment'] + req.params['assignment_id'];
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
 
     let submission_db_handler = await ImportHandler.submission_db_handler;
     let assignment_db_handler = await ImportHandler.assignment_db_handler;
@@ -238,6 +239,7 @@ router.get('/:assignment_id/grader/:submission_id', async function(req, res, nex
     let assignment_key = KeyDictionary.key_dictionary['assignment'] + req.params['assignment_id'];
     let submission_id = req.params['submission_id'];
     let submission_key = KeyDictionary.key_dictionary['submission'] + req.params['submission_id'];
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
 
     let assignment_db_handler = await ImportHandler.assignment_db_handler;
     let submission_db_handler = await ImportHandler.submission_db_handler;

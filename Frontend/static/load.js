@@ -130,7 +130,7 @@
         [r2.CDN_SUBURL + '/r2/audio_utils.js', 'js'],
         [r2.CDN_SUBURL + '/lib_ext/newspeak-ui.js', 'js'],
         [r2.CDN_SUBURL + '/lib_ext/transcription-ui.js', 'js'],
-        [r2.CDN_SUBURL + '/r2/utils.js', 'js'],
+        [r2.CDN_SUBURL + '/r2/edu_utils.js', 'js'],
         [r2.CDN_SUBURL + '/r2/helpers.js', 'js'],
         [r2.CDN_SUBURL + '/r2/shared_objs.js', 'js'],
         [r2.CDN_SUBURL + '/r2/model/dom_model.js', 'js'],

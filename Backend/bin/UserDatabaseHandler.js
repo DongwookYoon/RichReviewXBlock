@@ -488,15 +488,25 @@ class UserDatabaseHandler {
 
 
     async verify_submitters_for_courses (import_handler, user_key, course_keys) {
-        for (const course_key of course_keys)
-            await this.verify_submitters_for_course(import_handler, user_key, course_key);
+        for (const course_key of course_keys){
+            try {
+                await this.verify_submitters_for_course(import_handler, user_key, course_key);
+            } catch(e) {
+                console.warn (e);
+            }
+        }
     }
 
 
 
     async verify_submitters_for_enrolments (import_handler, user_key) {
         let user_data = await this.get_user_data(user_key);
-        await this.verify_submitters_for_courses(import_handler, user_key, user_data['enrolments']);
+        try {
+            await this.verify_submitters_for_courses(import_handler, user_key, user_data['enrolments']);
+        } catch (e) {
+            console.warn (`Error verifying ${user_key}'s submissions`);
+            console.warn(e);
+        }
     }
 
 

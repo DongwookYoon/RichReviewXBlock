@@ -464,6 +464,9 @@ class AssignmentDatabaseHandler {
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
         let submission_keys = assignment_data['submissions'];
 
+        if (!submission_keys)
+            return [];
+
         let submissions = [];
         for (let submission_key of submission_keys) {
             let link = '';

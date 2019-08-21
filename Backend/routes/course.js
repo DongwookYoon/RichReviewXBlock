@@ -9,12 +9,16 @@ let ImportHandler = require('../bin/ImportHandler');
 router.get('/', async function(req, res, next) {
     console.log("Get request for all courses");
 
-    let user_id = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
 
     let course_db_handler = await ImportHandler.course_db_handler;
+    let user_db_handler = await ImportHandler.user_db_handler;
 
     try {
-        let user_courses = await course_db_handler.get_user_courses_for_dashboard(ImportHandler, user_id);
+        await user_db_handler.verify_submitters_for_enrolments(ImportHandler, user_key);
+
+        let user_courses = await course_db_handler.get_user_courses_for_dashboard(ImportHandler, user_key);
+
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(user_courses));
     } catch (e) {
@@ -39,6 +43,8 @@ router.get('/:course_id', async function(req, res, next) {
     let user_db_handler = await ImportHandler.user_db_handler;
 
     try {
+        await course_db_handler.verify_submitters_for_all_students(ImportHandler, course_key);
+
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
         let data = await course_db_handler.get_course(ImportHandler, user_key, course_key);
 

@@ -428,6 +428,46 @@ class UserDatabaseHandler {
     }
 
 
+
+    async verify_submitters_for_course (import_handler, user_key, course_key) {
+        let course_db_handler = await import_handler.course_db_handler;
+        let user_db_handler = await import_handler.user_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
+        let submission_db_handler = await import_handler.submission_db_handler;
+
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+        if (permissions === 'instructor' || permissions === 'ta')
+            return;
+
+        let user_data = await user_db_handler.get_user_data(user_key);
+
+        try {
+            let user_assignments = await Promise.all(user_data['submitters'].map(async (submitter) => {
+                let submitter_data = await submitter_db_handler.get_submitter_data(submitter);
+                let submission_data = await submission_db_handler.get_submission_data(submitter_data['submission']);
+                return submission_data['assignment'];
+            }));
+
+            await course_db_handler.create_submitters_for_student(import_handler, user_key, course_key, user_assignments);
+        } catch (e) {
+            console.warn(e);
+        }
+    }
+
+
+    async verify_submitters_for_courses (import_handler, user_key, course_keys) {
+        for (const course_key of course_keys)
+            await this.verify_submitters_for_course(import_handler, user_key, course_key);
+    }
+
+
+
+    async verify_submitters_for_enrolments (import_handler, user_key) {
+        let user_data = await this.get_user_data(user_key);
+        await this.verify_submitters_for_courses(import_handler, user_key, user_data['enrolments']);
+    }
+
+
     async is_admin (user_key) {
         return new Promise((resolve, reject) => {
             this.db_handler.client.SISMEMBER(KeyDictionary.key_dictionary['admins'], user_key, function (error, result){

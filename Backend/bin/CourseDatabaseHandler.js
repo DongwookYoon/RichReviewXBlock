@@ -446,6 +446,7 @@ class CourseDatabaseHandler {
     async get_user_course_enrolments (import_handler, user_key, course_keys) {
 
         let assignment_db_handler = await import_handler.assignment_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
 
         let enrolments = [];
 
@@ -455,6 +456,8 @@ class CourseDatabaseHandler {
             let filtered_assignments = [];
 
             for (let assignment_key of course_data['assignments']) {
+                let submitter_exists = await submitter_db_handler.does_user_have_submitter(import_handler, user_key, assignment_key);
+                console.log(submitter_exists);
                 if (await assignment_db_handler.get_assignment_data(user_key, assignment_key))
                     filtered_assignments.push(assignment_key);
             }
@@ -702,6 +705,23 @@ class CourseDatabaseHandler {
         assignments.push(assignment_key);
         await this.set_course_data(course_key, 'assignments', JSON.stringify(assignments));
     }
+
+
+
+    async verify_submitters_for_all_students (import_handler, course_key) {
+        let user_db_handler = await import_handler.user_db_handler;
+
+        let course_data = await this.get_course_data(course_key);
+
+        for (const student of course_data['active_students']) {
+            try {
+                await user_db_handler.verify_submitters_for_course(import_handler, student, course_key);
+            } catch (e) {
+                console.warn(e);
+            }
+        }
+    }
+
 
 
     async is_valid_course_key (course_key) {

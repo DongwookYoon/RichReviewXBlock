@@ -379,15 +379,7 @@ class AssignmentDatabaseHandler {
                 submission_status = submission_data['submission_status'];
 
             if (submission_data['group'] && submission_data['group'] !== '') {
-                let group_id = submission_data['group'].replace(KeyDictionary.key_dictionary['group'], '');
-                let group_data = await group_db_handler.get_group_data(submission_data['group']);
-
-                let doc_id = group_data['docid'].replace(KeyDictionary.key_dictionary['document'], '');
-                let doc_data = await doc_db_handler.get_doc_data(group_data['docid']);
-
-                let access_code = doc_data['pdfid'];
-
-                link = `access_code=${access_code}&docid=${doc_id}&groupid=${group_id}`;
+                link = await group_db_handler.get_group_link(import_handler, submission_data['group'])
             }
         }
 
@@ -405,6 +397,7 @@ class AssignmentDatabaseHandler {
     async get_assignment_for_tas_and_instructors (import_handler, user_key, assignment_key) {
         let course_db_handler = await import_handler.course_db_handler;
         let course_group_db_handler = await import_handler.course_group_db_handler;
+        let group_db_handler = await import_handler.group_db_handler;
 
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
         delete assignment_data['display_grade_as'];
@@ -435,12 +428,17 @@ class AssignmentDatabaseHandler {
             return true;
         });
 
+        let template_link = '';
+        if (assignment_data['template_group'] && assignment_data['template_link'] !== '')
+            template_link = await group_db_handler.get_group_link(import_handler, assignment_data['template_group']);
+
         return {
             assignment: assignment_data,
             grader_link: submission_data.link,
             grader_submission_id: submission_data.id,
             link: '',
-            student_or_group_list: student_or_group_list
+            student_or_group_list: student_or_group_list,
+            template_link: template_link
         };
     }
 
@@ -459,7 +457,6 @@ class AssignmentDatabaseHandler {
     async get_assignment_submissions_for_grader (import_handler, user_key, assignment_key) {
         let submission_db_handler = await import_handler.submission_db_handler;
         let group_db_handler = await import_handler.group_db_handler;
-        let doc_db_handler = await import_handler.doc_db_handler;
 
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
         let submission_keys = assignment_data['submissions'];
@@ -477,15 +474,7 @@ class AssignmentDatabaseHandler {
 
             if (submission_data['group'] && submission_data['group'] !== '') {
 
-                let group_id = submission_data['group'].replace(KeyDictionary.key_dictionary['group'], '');
-                let group_data = await group_db_handler.get_group_data(submission_data['group']);
-
-                let doc_id = group_data['docid'].replace(KeyDictionary.key_dictionary['document'], '');
-                let doc_data = await doc_db_handler.get_doc_data(group_data['docid']);
-
-                let access_code = doc_data['pdfid'];
-
-                link = `access_code=${access_code}&docid=${doc_id}&groupid=${group_id}`;
+                link = await group_db_handler.get_group_link(import_handler, submission_data['group']);
             }
             submissions.push({ id: submission_data.id, link: link });
         }
@@ -747,15 +736,7 @@ class AssignmentDatabaseHandler {
             let link = '';
 
             if (submission_data['current_submission'] !== '') {
-                let group_id = submission_data['current_submission'].replace(KeyDictionary.key_dictionary['group'], '');
-                let group_data = await group_db_handler.get_group_data(submission_data['current_submission']);
-
-                let doc_id = group_data['docid'].replace(KeyDictionary.key_dictionary['document'], '');
-                let doc_data = await doc_db_handler.get_doc_data(group_data['docid']);
-
-                let access_code = doc_data['pdfid'];
-
-                link = `access_code=${access_code}&docid=${doc_id}&groupid=${group_id}`;
+                link = await group_db_handler.get_group_link(import_handler, submission_data['current_submission']);
             }
 
             let assignment_submission = {

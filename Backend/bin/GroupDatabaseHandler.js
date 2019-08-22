@@ -45,6 +45,20 @@ class GroupDatabaseHandler {
     }
 
 
+    async get_group_link (import_handler, group_key) {
+        let doc_db_handler = await import_handler.doc_db_handler;
+
+        let group_id = group_key.replace(KeyDictionary.key_dictionary['group'], '');
+        let group_data = await this.get_group_data(group_key);
+
+        let doc_id = group_data['docid'].replace(KeyDictionary.key_dictionary['document'], '');
+        let doc_data = await doc_db_handler.get_doc_data(group_data['docid']);
+
+        let access_code = doc_data['pdfid'];
+
+        return`access_code=${access_code}&docid=${doc_id}&groupid=${group_id}`;
+    }
+
 
     async get_number_of_users (group_key) {
         let group_data = await this.get_group_data(group_key);

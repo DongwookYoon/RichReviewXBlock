@@ -179,27 +179,36 @@ export default {
       )
     },
     prev_student() {
-      this.$router.push(
-        `/edu/courses/${this.$route.params.course_id}/assignments/${
-          this.$route.params.assignment_id
-        }/submissions/${this.prev_id}/grader?${this.prev_link}`
-      )
+      // this.$router.push(
+      //   `/edu/courses/${this.$route.params.course_id}/assignments/${
+      //     this.$route.params.assignment_id
+      //   }/submissions/${this.prev_id}/grader?${this.prev_link}`
+      // )
+      window.open(`/edu/courses/${this.$route.params.course_id}/assignments/${
+        this.$route.params.assignment_id
+        }/submissions/${this.prev_id}/grader?${this.prev_link}`, '_self')
     },
     next_student() {
-      this.$router.push(
-        `/edu/courses/${this.$route.params.course_id}/assignments/${
-          this.$route.params.assignment_id
-        }/submissions/${this.next_id}/grader?${this.next_link}`
-      )
+      // this.$router.push(
+      //   `/edu/courses/${this.$route.params.course_id}/assignments/${
+      //     this.$route.params.assignment_id
+      //   }/submissions/${this.next_id}/grader?${this.next_link}`
+      // )
+      window.open(`/edu/courses/${this.$route.params.course_id}/assignments/${
+        this.$route.params.assignment_id
+        }/submissions/${this.next_id}/grader?${this.next_link}`, '_self')
     },
     change_student() {
       for (const submission of this.submissions_list) {
         if (submission.key === this.selected)
-          this.$router.push(
-            `/edu/courses/${this.$route.params.course_id}/assignments/${
-              this.$route.params.assignment_id
-            }/submissions/${submission.id}/grader?${submission.link}`
-          )
+          window.open(`/edu/courses/${this.$route.params.course_id}/assignments/${
+            this.$route.params.assignment_id
+            }/submissions/${submission.id}/grader?${submission.link}`, '_self')
+          // this.$router.push(
+          //   `/edu/courses/${this.$route.params.course_id}/assignments/${
+          //     this.$route.params.assignment_id
+          //   }/submissions/${submission.id}/grader?${submission.link}`
+          // )
       }
     },
     async updateGrade(event) {
@@ -297,6 +306,11 @@ p {
 #prev-arrow,
 #student-select {
   margin-right: 2vw;
+}
+
+#prev-arrow,
+#next-arrow {
+  cursor: pointer;
 }
 
 #student-select {

@@ -58,7 +58,8 @@
           v-if="permissions === 'instructor' || permissions === 'ta'"
           class="assignment-controls"
         >
-          <button @click="show">Extensions</button>
+          <button v-if="template_link !== ''" id="template-button" @click="go_to_template">Template</button>
+          <button id="extension-button" @click="show">Extensions</button>
           <button id="edit-button" @click="go_to_edit_assignment">Edit</button>
           <button id="submissions-button" @click="got_to_submissions">
             Submissions
@@ -295,7 +296,8 @@ export default {
       extensions: res.data.assignment.extensions,
       selected_user_name: '',
       selected_user_key: '',
-      extension_date: res.data.extension_date
+      extension_date: res.data.extension_date,
+      template_link: res.data.template_link || ''
     }
   },
   fetch({ store, redirect }) {
@@ -304,6 +306,13 @@ export default {
     }
   },
   methods: {
+    go_to_template() {
+      window.open(
+        `/edu/courses/${this.$route.params.course_id}/assignments/${
+          this.$route.params.assignment_id
+          }/viewer?${this.template_link}`
+      )
+    },
     go_to_edit_assignment() {
       this.$router.push(
         `/edu/courses/${this.$route.params.course_id}/assignments/${
@@ -327,16 +336,16 @@ export default {
     },
     go_to_submitter() {
       window.open(
-        `/edu/courses/${this.$route.params.course_id}/submitter?${
-          this.viewer_link
-        }`
+        `/edu/courses/${this.$route.params.course_id}/assignments/${
+          this.$route.params.assignment_id
+          }/submitter?${this.viewer_link}`
       )
     },
     go_to_current_submission() {
       window.open(
-        `/edu/courses/${this.$route.params.course_id}/viewer?${
-          this.viewer_link
-        }`
+        `/edu/courses/${this.$route.params.course_id}/assignments/${
+          this.$route.params.assignment_id
+          }/viewer?${this.template_link}`
       )
     },
     show() {
@@ -512,6 +521,8 @@ hr {
   margin-right: 5px;
 }
 
+#template-button,
+#extension-button,
 #edit-button,
 #submissions-button,
 #grader-button,
@@ -526,13 +537,6 @@ hr {
   padding-left: 0.5vw;
   margin-bottom: 0;
   height: 4.25vh;
-}
-
-#submissions-button,
-#grader-button,
-#delete-button,
-#view-submission-button,
-#start-assignment-button {
   margin-left: 0.5vw;
 }
 

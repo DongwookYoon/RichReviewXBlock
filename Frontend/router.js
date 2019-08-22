@@ -104,7 +104,7 @@ export function createRouter() {
         component: assignment_submissions
       },
       {
-        path: '/edu/courses/:course_id/viewer',
+        path: '/edu/courses/:course_id/assignments/:assignment_id/viewer',
         component: viewer
       },
       {
@@ -113,7 +113,7 @@ export function createRouter() {
         component: grader
       },
       {
-        path: '/edu/courses/:course_id/submitter',
+        path: '/edu/courses/:course_id/assignments/:assignment_id/submitter',
         component: submitter
       },
       {

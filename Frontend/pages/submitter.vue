@@ -46,7 +46,9 @@ export default {
     const res = await axios.get(
       `https://${process.env.backend}:3000/courses/${
         context.params.course_id
-      }/assignments/comment_submissions/${context.query.groupid}`,
+        }/assignments/${
+        context.params.assignment_id
+        }/comment_submissions/${context.query.groupid}`,
       {
         headers: {
           Authorization: context.store.state.authUser.id

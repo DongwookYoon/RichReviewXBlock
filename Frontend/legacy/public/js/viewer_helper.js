@@ -3,15 +3,16 @@
  */
 /* eslint-disable camelcase,no-unused-vars,no-var,no-undef,no-console,no-redeclare,no-lone-blocks */
 
-function loadRichReview(r2_ctx, env, cdn_endpoint) {
+function loadRichReview(r2_ctx, env, cdn_endpoint, is_education) {
   ;(function(r2) {
     r2.platform = 'Azure'
     r2.scroll_wrapper = document.getElementById('r2_app_page')
     r2.ctx = JSON.parse(decodeURIComponent(r2_ctx))
     r2.env = env
     r2.cdn_endpoint = cdn_endpoint
+    r2.is_education = is_education
     warnIE()
-    loadJsScript('/static_viewer/load.js', 'js').then(function() {
+    loadJsScript('/load.js', 'js').then(function() {
       r2.loadApp(null)
     })
   })((window.r2 = window.r2 || {}))

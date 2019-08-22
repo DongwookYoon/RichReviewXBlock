@@ -130,18 +130,18 @@
         [r2.CDN_SUBURL + '/r2/audio_utils.js', 'js'],
         [r2.CDN_SUBURL + '/lib_ext/newspeak-ui.js', 'js'],
         [r2.CDN_SUBURL + '/lib_ext/transcription-ui.js', 'js'],
-        [r2.CDN_SUBURL + '/r2/edu_utils.js', 'js'],
-        [r2.CDN_SUBURL + '/r2/helpers.js', 'js'],
+        [r2.CDN_SUBURL + `/r2/${r2.is_education ? 'edu_' : ''}utils.js`, 'js'],
+        [r2.CDN_SUBURL + `/r2/${r2.is_education ? 'edu_' : ''}helpers.js`, 'js'],
         [r2.CDN_SUBURL + '/r2/shared_objs.js', 'js'],
         [r2.CDN_SUBURL + '/r2/model/dom_model.js', 'js'],
         [r2.CDN_SUBURL + '/r2/model/doc_model_legacy.js', 'js'],
         [r2.CDN_SUBURL + '/r2/model/doc_model.js', 'js'],
         [r2.CDN_SUBURL + '/r2/controller/controller_cmds.js', 'js'],
-        [r2.CDN_SUBURL + '/r2/controller/controller_dbs.js', 'js'],
+        [r2.CDN_SUBURL + `/r2/controller/${r2.is_education ? 'edu_' : ''}controller_dbs.js`, 'js'],
         [r2.CDN_SUBURL + '/r2/controller/controller_event.js', 'js'],
         [r2.CDN_SUBURL + '/r2/controller/controller_ctrl.js', 'js'],
         [r2.CDN_SUBURL + '/r2/controller/controller_recording.js', 'js'],
-        [r2.CDN_SUBURL + '/r2/app.js', 'js']
+        [r2.CDN_SUBURL + `/r2/${r2.is_education ? 'edu_' : ''}app.js`, 'js']
       ]
 
       const promises = scripts.map(function(script) {

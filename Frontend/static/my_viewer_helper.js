@@ -3,7 +3,7 @@
  * Created by dongwookyoon on 6/10/15.
  */
 
-function loadRichReview(r2_ctx, env, cdn_endpoint) {
+function loadRichReview(r2_ctx, env, cdn_endpoint, is_education) {
   ;(function(r2) {
     console.log('LOADING RICH REVIEW')
     r2.platform = 'Azure'
@@ -11,6 +11,7 @@ function loadRichReview(r2_ctx, env, cdn_endpoint) {
     r2.ctx = JSON.parse(decodeURIComponent(r2_ctx))
     r2.env = env
     r2.cdn_endpoint = cdn_endpoint
+    r2.is_education = is_education
     warnIE()
     loadJsScript('/load.js', 'js')
       .then(function() {

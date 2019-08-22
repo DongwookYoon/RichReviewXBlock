@@ -194,7 +194,8 @@ exports.admin_list = [
  */
 exports.path = {
     'temp_pdfs': '/tmp/richreview/pdfs',
-    'webapp_richreview': 'webapps/richreview',
+    //'webapp_richreview': 'webapps/richreview',
+    'webapp_richreview': 'static/nuxt_static_viewer',
     'webapp_multicolumn': 'webapps/multicolumn'
 };
 
@@ -207,10 +208,15 @@ exports.webapp_urls = {
         '/static_multicolumn/',
         /((\/|^)\..*)/
     ),
+    // 'richreview': file_utils.getWebAppUrls(
+    //     'webapps/richreview',
+    //     '/static_viewer/',
+    //     /((\/|^)\..*)|(^test\/.*)/
+    // )
     'richreview': file_utils.getWebAppUrls(
-        'webapps/richreview',
-        '/static_viewer/',
-        /((\/|^)\..*)|(^test\/.*)/
+      'static/nuxt_static_viewer',
+      '/static_viewer/',
+      /((\/|^)\..*)|(^test\/.*)/
     )
 };
 

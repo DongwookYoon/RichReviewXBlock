@@ -30,6 +30,9 @@ export default {
     if (store.state.authUser) {
       return redirect('/edu/dashboard')
     }
+    else {
+      return redirect('/login_ubc')
+    }
   },
   methods: {
     login_google() {

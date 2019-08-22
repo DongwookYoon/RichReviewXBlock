@@ -345,7 +345,7 @@ export default {
       window.open(
         `/edu/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id
-          }/viewer?${this.template_link}`
+          }/viewer?${this.viewer_link}`
       )
     },
     show() {

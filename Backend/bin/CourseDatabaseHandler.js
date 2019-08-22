@@ -389,7 +389,7 @@ class CourseDatabaseHandler {
                         '');
                     await assignment_db_handler.add_submission_to_assignment(assignment, submission_key);
                 } else {
-                    let assignment_group_key = assignment_data['group'];
+                    let assignment_group_key = assignment_data['template_group'];
                     let group_data = await group_db_handler.get_group_data(assignment_group_key);
 
                     let doc_key = group_data['docid'];

@@ -7,19 +7,15 @@ if should_show_login
             i.fa.fa-list-ul
         ul.dropdown-menu(aria-labelledby="loginDropdown")
             li
-                p other user types:
-            li
-                a(href="/login_pilot")
-                    i.fa.fa-plane
-                    | &nbspPilot Login
+                p Other login types:
             li
                 a(href="/login_google")
                     i.fa.fa-google
                     | &nbspGoogle Login
             li
-                a(href="/login_cornell")
-                    i.fa.fa-university
-                    | &nbspCornell Login
+                a(href="/login_pilot")
+                    i.fa.fa-plane
+                    | &nbspPilot Login
 if user
     li
         a(href="/account")

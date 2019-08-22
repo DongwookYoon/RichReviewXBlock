@@ -39,19 +39,22 @@ html
                                 |About
                         li(class=cur_page === "Demo" ? "active" : "")
                             a(href="/demo")
-                                |Demo
-                        li(class=cur_page === "mydocs" ? "active" : "")
-                            a(href="/mydocs")
-                                |My Docs
-                        li(class=cur_page === "upload" ? "active" : "")
-                            a(href="/upload")
-                                |Upload
+                                |Live Demo
+                        li
+                            a(href="/edu")
+                                |UBC Courses
                         if is_admin
+                            li(class=cur_page === "mydocs" ? "active" : "")
+                                a(href="/mydocs")
+                                    | My Docs
+                            li(class=cur_page === "upload" ? "active" : "")
+                                a(href="/upload")
+                                    | Upload
                             li(class=cur_page === "pilot_admin" ? "active" : "")
                                 a(href='/pilot_admin') Admin
-                        li(class = cur_page === "Support" ? "active" : "")
-                            a(href="/support")
-                                | Support
+                            li(class = cur_page === "Support" ? "active" : "")
+                                a(href="/support")
+                                    | Support
                     ul.nav.navbar-nav.navbar-right
                         include components/_login_dropdown
 

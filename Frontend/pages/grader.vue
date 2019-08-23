@@ -17,8 +17,10 @@
         <p id="points">{{ points }}</p>
       </div>
       <div id="student-div">
-        <input id="hidden" v-model="hidden" type="checkbox" @change="change_hide_names" />
-        <label id="hidden-label">Hide student names</label>
+        <!--<div id="hidden-div">-->
+          <input id="hidden" v-model="hidden" type="checkbox" @change="change_hide_names" />
+          <p id="hidden-label">Hide student names</p>
+        <!--</div>-->
         <p v-if="prev_id !== ''" id="prev-arrow" @click="prev_student">
           Previous
         </p>
@@ -207,7 +209,15 @@ export default {
       }
     },
     change_hide_names() {
-      window.open(`${this.$route.fullPath}&${this.hidden ? 'hidden=' : ''}`, '_self')
+      let new_path = this.$route.fullPath
+      if (this.hidden) {
+        if (!this.$route.fullPath.includes('grader?'))
+          new_path += '?'
+        new_path += '&hidden='
+      } else {
+        new_path = new_path.replace('hidden=', '')
+      }
+      window.open(new_path, '_self')
     },
     async updateGrade(event) {
       const mark = event.target.value
@@ -288,17 +298,17 @@ p {
   transform: translate(-40%, 0);
 }
 
-#hidden-div {
-  margin-top: 0.5%;
-  position: absolute;
-  left: 57%;
-  margin-right: -57%;
-  transform: translate(-57%, 0);
+#hidden {
+  margin-top: 1.8vh;
+  margin-right: 0.5vw;
 }
 
 #hidden-label {
+  margin-top: 1vh;
   color: white;
+  margin-right: 4vw;
 }
+
 #student-div {
   position: absolute;
   left: 99%;

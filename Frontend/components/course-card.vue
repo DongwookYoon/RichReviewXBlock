@@ -91,16 +91,17 @@ export default {
 .course-role {
   font-style: italic;
   font-size: 2vh;
-  position: absolute;
-  color: white;
+  position: relative;
+  color: black;
   bottom: 0;
   right: 0;
   padding-right: 5%;
+  text-align: right;
 }
 
 .course-assignment-count {
   font-size: 2vh;
-  position: absolute;
+  position: relative;
   bottom: 0;
   width: 100%;
   color: white;
@@ -112,7 +113,7 @@ export default {
   /*margin-bottom: 5vh;*/
   margin-left: 2vw;
   background-color: #e8e8e8;
-  min-height: 20vh;
+  min-height: 11vh;
   max-height: 25vh;
   width: 17vw;
   position: relative;

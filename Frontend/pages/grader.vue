@@ -207,7 +207,7 @@ export default {
       }
     },
     change_hide_names() {
-      window.open(`${this.$route.fullPath}&${this.hidden ? 'hidden=' : ''}`, '_self')
+      window.open(`${this.$route.fullPath}${!this.$route.fullPath.includes('grader?') ? '?' : ''}&${this.hidden ? 'hidden=' : ''}`, '_self')
     },
     async updateGrade(event) {
       const mark = event.target.value

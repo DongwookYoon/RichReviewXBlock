@@ -190,7 +190,7 @@ p {
 #header-grades,
 .header-logout {
   width: 11vw;
-  font-size: 3vh;
+  font-size: 1rem;
   text-align: center;
 }
 

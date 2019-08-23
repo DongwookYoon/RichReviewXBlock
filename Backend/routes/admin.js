@@ -32,8 +32,15 @@ router.get('/is_admin', async function(req, res, next){
 router.get('/all_user_data', async function(req, res){
     console.log("Get request for all user data in the system");
     let user_db_handler = await ImportHandler.user_db_handler;
-    let user_data = await user_db_handler.get_all_user_data();
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+
     try {
+        let is_admin = await user_db_handler.is_admin(user_key);
+        if (!is_admin) {
+            res.sendStatus(403);
+            return;
+        }
+        let user_data = await user_db_handler.get_all_user_data();
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({user_data: user_data}));
     } catch (e) {
@@ -50,8 +57,18 @@ router.get('/all_user_data', async function(req, res){
 router.get('/all_course_data', async function(req, res){
     console.log("Get request for all course data in the system");
     let course_db_handler = await ImportHandler.course_db_handler;
-    let course_data = await course_db_handler.get_all_course_data();
+    let user_db_handler = await ImportHandler.user_db_handler;
+
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+
     try {
+        let is_admin = await user_db_handler.is_admin(user_key);
+        if (!is_admin) {
+            res.sendStatus(403);
+            return;
+        }
+
+        let course_data = await course_db_handler.get_all_course_data();
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({course_data: course_data}));
     } catch (e) {
@@ -66,7 +83,17 @@ router.get('/all_course_data', async function(req, res){
  ** POST add a user as an instructor to a course
  */
 router.post('/add_instructor_to_course', async function(req, res, next) {
+    let user_db_handler = await ImportHandler.user_db_handler;
+
+    let req_user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+
     try {
+        let is_admin = await user_db_handler.is_admin(req_user_key);
+        if (!is_admin) {
+            res.sendStatus(403);
+            return;
+        }
+
         let user_key = KeyDictionary.key_dictionary['user'] + req.body.user_id;
         let course_key = KeyDictionary.key_dictionary['course'] + req.body.course_id;
 
@@ -94,7 +121,17 @@ router.post('/add_instructor_to_course', async function(req, res, next) {
  ** POST remove an instructor from a course
  */
 router.post('/remove_instructor_from_course', async function(req, res, next) {
+    let user_db_handler = await ImportHandler.user_db_handler;
+
+    let req_user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+
     try {
+        let is_admin = await user_db_handler.is_admin(req_user_key);
+        if (!is_admin) {
+            res.sendStatus(403);
+            return;
+        }
+
         let user_key = KeyDictionary.key_dictionary['user'] + req.body.user_id;
         let course_key = KeyDictionary.key_dictionary['course'] + req.body.course_id;
 
@@ -121,7 +158,17 @@ router.post('/remove_instructor_from_course', async function(req, res, next) {
  ** POST add a user as an instructor to a course
  */
 router.post('/add_student_to_course', async function(req, res, next) {
+    let user_db_handler = await ImportHandler.user_db_handler;
+
+    let req_user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+
     try {
+        let is_admin = await user_db_handler.is_admin(req_user_key);
+        if (!is_admin) {
+            res.sendStatus(403);
+            return;
+        }
+
         let user_key = KeyDictionary.key_dictionary['user'] + req.body.user_id;
         let course_key = KeyDictionary.key_dictionary['course'] + req.body.course_id;
 
@@ -147,7 +194,17 @@ router.post('/add_student_to_course', async function(req, res, next) {
  ** POST remove an instructor from a course
  */
 router.post('/block_student_from_course', async function(req, res, next) {
+    let user_db_handler = await ImportHandler.user_db_handler;
+
+    let req_user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+
     try {
+        let is_admin = await user_db_handler.is_admin(req_user_key);
+        if (!is_admin) {
+            res.sendStatus(403);
+            return;
+        }
+
         let user_key = KeyDictionary.key_dictionary['user'] + req.body.user_id;
         let course_key = KeyDictionary.key_dictionary['course'] + req.body.course_id;
 

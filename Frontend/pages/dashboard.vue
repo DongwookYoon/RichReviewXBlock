@@ -143,8 +143,8 @@ p {
   display: flex;
 }
 
-#enrolment-div {
-  margin-top: 5vh;
+#teaching-div {
+  margin-bottom: 5vh;
 }
 
 .courses-header {

@@ -457,6 +457,9 @@ class AssignmentDatabaseHandler {
     async get_assignment_submissions_for_grader (import_handler, user_key, assignment_key) {
         let submission_db_handler = await import_handler.submission_db_handler;
         let group_db_handler = await import_handler.group_db_handler;
+        let user_db_handler = await import_handler.user_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
+        let course_group_db_handler = await import_handler.course_group_db_handler;
 
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
         let submission_keys = assignment_data['submissions'];
@@ -476,9 +479,20 @@ class AssignmentDatabaseHandler {
 
                 link = await group_db_handler.get_group_link(import_handler, submission_data['group']);
             }
-            submissions.push({ id: submission_data.id, link: link });
+            let submitter_data = await submitter_db_handler.get_submitter_data(submission_data['submitter']);
+
+            let name = '';
+            if (submitter_data['course_group'] === '')
+                name = await submission_db_handler.get_submission_last_name(import_handler, submission_key);
+            else
+                name = await submission_db_handler.get_submission_group_name(import_handler, submission_key);
+
+            submissions.push({ id: submission_data.id, link: link, name: name });
         }
-        return submissions
+
+        return submissions.sort(function (a, b) {
+            return ('' + a.name).localeCompare(b.name);
+        });
     }
 
 
@@ -699,7 +713,6 @@ class AssignmentDatabaseHandler {
         let submission_db_handler = await import_handler.submission_db_handler;
         let submitter_db_handler = await import_handler.submitter_db_handler;
         let group_db_handler = await import_handler.group_db_handler;
-        let doc_db_handler = await import_handler.doc_db_handler;
         let course_db_handler = await import_handler.course_db_handler;
 
         if(!(await user_db_handler.is_valid_user_key(user_key)))
@@ -724,14 +737,18 @@ class AssignmentDatabaseHandler {
             let submitter_data = await submitter_db_handler.get_submitter_data(submission_data['submitter']);
 
             let submitter_name = '';
-            if (submitter_data['course_group'] !== '')
+            let name = '';
+            if (submitter_data['course_group'] !== '') {
                 submitter_name = await this.get_course_group_assignment_submission_name(
                     import_handler,
                     submitter_data['course_group']);
-            else
+                name = await submission_db_handler.get_submission_group_name(import_handler, submission_key);
+            } else {
                 submitter_name = await this.get_individual_assignment_submission_name(
                     import_handler,
                     submitter_data['members'][0]);
+                name = await submission_db_handler.get_submission_last_name(import_handler, submission_key);
+            }
 
             let link = '';
 
@@ -750,13 +767,16 @@ class AssignmentDatabaseHandler {
                     submitter_data['members'][0] :
                     submitter_data['course_group']),
                 link: link,
-                submission_id: submission_data['id']
+                submission_id: submission_data['id'],
+                name: name
             };
 
             assignment_submissions.push(assignment_submission);
         }
 
-        return assignment_submissions;
+        return assignment_submissions.sort(function (a, b) {
+            return ('' + a.name).localeCompare(b.name);
+        });
     }
 
 

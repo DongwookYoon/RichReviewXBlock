@@ -8,7 +8,6 @@ import dashboard from './pages/dashboard'
 import course from './pages/course'
 import assignment from './pages/assignment'
 import people from './pages/people'
-import course_groups from './pages/course_groups'
 import course_group from './pages/course_group'
 import edit_assignment from './pages/edit_assignment'
 import new_assignment from './pages/new_assignment'
@@ -77,10 +76,6 @@ export function createRouter() {
       {
         path: '/edu/courses/:course_id/users',
         component: people
-      },
-      {
-        path: '/edu/courses/:course_id/course_groups',
-        component: course_groups
       },
       {
         path: '/edu/courses/:course_id/course_groups/new',

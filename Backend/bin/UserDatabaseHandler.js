@@ -40,6 +40,11 @@ class UserDatabaseHandler {
     }
 
 
+    async get_user_name (user_key) {
+        let user_data = await this.get_user_data(user_key);
+        return user_data.display_name
+    }
+
 
     async get_user_course_permissions (user_key, course_key) {
         let user_data = await this.get_user_data(user_key);

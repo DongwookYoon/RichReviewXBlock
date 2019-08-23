@@ -375,12 +375,16 @@ class CourseDatabaseHandler {
         let group_db_handler = await import_handler.group_db_handler;
         let doc_db_handler = await import_handler.doc_db_handler;
         let user_db_handler = await import_handler.user_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
 
         let course_data = await this.get_course_data(course_key);
 
         for (const assignment of course_data['assignments']) {
+            let assignment_data = await assignment_db_handler.get_assignment_data('', assignment);
             if (!user_assignments.includes(assignment)) {
-                let assignment_data = await assignment_db_handler.get_assignment_data('', assignment);
+                if (!assignment_data['submissions']) {
+                    await assignment_db_handler.set_assignment_data(assignment, 'submissions', '[]');
+                }
                 if (assignment_data['type'] === 'document_submission') {
                     let submission_key = await submission_db_handler.create_submission_for_single_user(import_handler,
                         course_key,
@@ -407,6 +411,18 @@ class CourseDatabaseHandler {
                     await assignment_db_handler.add_submission_to_assignment(assignment, submission_key);
 
                     await group_db_handler.add_submission_to_group(group_key, submission_key);
+                }
+            }
+            let submission_key = await assignment_db_handler.get_users_submission_key(import_handler, user_key, assignment);
+            if (!submission_key) {
+                let user_data = await user_db_handler.get_user_data(user_key);
+                for (const submitter of user_data['submitters']) {
+                    let submitter_data = await submitter_db_handler.get_submitter_data(submitter);
+                    let submission_data = await submission_db_handler.get_submission_data(submitter_data['submission']);
+                    if (submission_data['assignment'] === assignment) {
+                        await assignment_db_handler.add_submission_to_assignment(assignment, submitter_data['submission']);
+                        break;
+                    }
                 }
             }
         }

@@ -23,7 +23,8 @@ const azure = require('./lib/azure')
 const HOSTNAME =
   process.env.NODE_ENV === 'production' ? 'richreview' : 'localhost'
 const HASHFILE = HOSTNAME + '/richreview_webapp_hash.txt'
-const WEBAPP_PATH = path.resolve(__dirname, '../webapps/richreview/')
+//const WEBAPP_PATH = path.resolve(__dirname, '../webapps/richreview/')
+const WEBAPP_PATH = path.resolve(__dirname, '../static/nuxt_static_viewer/')
 
 util.start('App NODE_ENV:' + process.env.NODE_ENV)
 
@@ -254,6 +255,23 @@ function redirectHttp() {
   })
   return app_http
 }
+
+process.on('uncaughtException', function(err) {
+  if(err.errno === 'EADDRINUSE') {
+    const app_http = redirectHttp()
+    app_http.set('port', 8080)
+    require('http')
+      .createServer(app_http)
+      .listen(app_http.get('port'), function() {
+        util.start('listening on HTTP port: ' + app_http.get('port'))
+      })
+  } else {
+    console.log(err);
+    process.exit(1);
+  }
+});
+
+
 const app_http = redirectHttp()
 
 app_http.set('port', 80)
@@ -263,6 +281,8 @@ require('http')
   .listen(app_http.get('port'), function() {
     util.start('listening on HTTP port: ' + app_http.get('port'))
   })
+
+
 /******************************************/
 /******************************************/
 

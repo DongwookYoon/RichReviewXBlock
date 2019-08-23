@@ -1,72 +1,72 @@
 <template>
   <div>
     <div id="course">
-      <course-sidebar :assignments="true" />
+      <course-sidebar :name="name" :assignments="true" />
       <div id="content">
         <nav-bar :course="title" />
-        <div id="options">
-          <p
-            v-if="permissions === 'ta' || permissions === 'instructor'"
-            id="new-assignment"
-            @click="go_to_new_assignment"
-          >
-            New Assignment
-          </p>
-          <p
-            v-if="permissions === 'instructor' || permissions === 'ta'"
-            id="deleted-assignments"
-            @click="go_to_deleted_assignments"
-          >
-            Deleted Assignments
-          </p>
-        </div>
-        <div id="assignments-div">
-          <table id="assignments">
-            <thead id="assignments-header">
-              <tr>
-                <th id="name-header">Assignment Name</th>
-                <th v-if="permissions === 'student'" id="status-header">
-                  Status
-                </th>
-                <th
-                  v-if="permissions === 'ta' || permissions === 'instructor'"
-                  id="published-header"
+          <div id="options">
+            <p
+              v-if="permissions === 'ta' || permissions === 'instructor'"
+              id="new-assignment"
+              @click="go_to_new_assignment"
+            >
+              New Assignment
+            </p>
+            <p
+              v-if="permissions === 'instructor' || permissions === 'ta'"
+              id="deleted-assignments"
+              @click="go_to_deleted_assignments"
+            >
+              Deleted Assignments
+            </p>
+          </div>
+          <div id="assignments-div">
+            <table id="assignments">
+              <thead id="assignments-header">
+                <tr>
+                  <th id="name-header">Assignment Name</th>
+                  <th v-if="permissions === 'student'" id="status-header">
+                    Status
+                  </th>
+                  <th
+                    v-if="permissions === 'ta' || permissions === 'instructor'"
+                    id="published-header"
+                  >
+                    Published
+                  </th>
+                  <th id="group-header-title">
+                    Group Assignment
+                  </th>
+                  <th id="due-header">Due</th>
+                </tr>
+              </thead>
+              <tbody class="assignments-body">
+                <tr
+                  v-for="a in assignments"
+                  :key="a.key"
+                  class="assignment-row"
+                  @click="go_to_assignment(a.id)"
                 >
-                  Published
-                </th>
-                <th id="group-header-title">
-                  Group Assignment
-                </th>
-                <th id="due-header">Due</th>
-              </tr>
-            </thead>
-            <tbody class="assignments-body">
-              <tr
-                v-for="a in assignments"
-                :key="a.key"
-                class="assignment-row"
-                @click="go_to_assignment(a.id)"
-              >
-                <td class="assignment-title">{{ a.title }}</td>
-                <td v-if="permissions === 'student'" class="assignment-status">
-                  {{ a.submission.submission_status }}
-                </td>
-                <td
-                  v-if="permissions === 'ta' || permissions === 'instructor'"
-                  class="assignment-published"
-                >
-                  {{ a.hidden ? 'No' : 'Yes' }}
-                </td>
-                <td class="assignment-group">
-                  {{ a.group_assignment ? 'Yes' : 'No' }}
-                </td>
-                <td class="assignment-due">
-                  {{ a.due_date !== '' ? format_date(a.due_date) : '-' }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+                  <td class="assignment-title">{{ a.title }}</td>
+                  <td v-if="permissions === 'student'" class="assignment-status">
+                    {{ a.submission.submission_status }}
+                  </td>
+                  <td
+                    v-if="permissions === 'ta' || permissions === 'instructor'"
+                    class="assignment-published"
+                  >
+                    {{ a.hidden ? 'No' : 'Yes' }}
+                  </td>
+                  <td class="assignment-group">
+                    {{ a.group_assignment ? 'Yes' : 'No' }}
+                  </td>
+                  <td class="assignment-due">
+                    {{ a.due_date !== '' ? format_date(a.due_date) : '-' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
       </div>
       <Footer />
     </div>
@@ -114,7 +114,8 @@ export default {
       assignments: course_res.data.assignments,
       permissions: course_res.data.permissions,
       title: course_res.data.course.title,
-      description: course_res.data.course.description
+      description: course_res.data.course.description,
+      name: course_res.data.user_name
     }
   },
   fetch({ store, redirect }) {
@@ -171,13 +172,12 @@ table {
 }
 
 #content {
-  display: block;
+  display: inline-block;
   margin-left: 7vw;
   margin-top: 5vh;
 }
 
 #options {
-  margin-left: 54vw;
   display: flex;
 }
 

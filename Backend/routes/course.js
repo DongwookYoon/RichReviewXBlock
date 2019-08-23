@@ -18,6 +18,7 @@ router.get('/', async function(req, res, next) {
         await user_db_handler.verify_submitters_for_enrolments(ImportHandler, user_key);
 
         let user_courses = await course_db_handler.get_user_courses_for_dashboard(ImportHandler, user_key);
+        user_courses['user_name'] = await user_db_handler.get_user_name(user_key);
 
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(user_courses));
@@ -50,6 +51,8 @@ router.get('/:course_id', async function(req, res, next) {
 
         data['permissions'] = permissions;
 
+        data['user_name'] = await user_db_handler.get_user_name(user_key);
+
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(data));
     } catch (e) {
@@ -80,6 +83,7 @@ router.get('/:course_id/deleted-assignments', async function(req, res, next) {
 
         data['permissions'] = permissions;
         data['course_title'] = course_data['title'];
+        data['user_name'] = await user_db_handler.get_user_name(user_key);
 
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(data));

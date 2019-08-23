@@ -1,6 +1,6 @@
 <template>
   <div id="grades">
-    <course-sidebar :grades="true" />
+    <course-sidebar :name="name" :grades="true" />
     <div id="content">
       <nav-bar :course="course" grades="true" />
       <button
@@ -95,7 +95,8 @@ export default {
       assignments: res.data.assignments,
       permissions: res.data.permissions,
       course: res.data.course_title,
-      total_assignment_points: res.data.total_assignment_points
+      total_assignment_points: res.data.total_assignment_points,
+      name: res.data.user_name || ''
     }
   },
   fetch({ store, redirect }) {

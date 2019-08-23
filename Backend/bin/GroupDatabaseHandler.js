@@ -42,7 +42,10 @@ class GroupDatabaseHandler {
         let user_data = await user_db_handler.get_user_data(user_key);
         let course_data = await course_db_handler.get_course_data(course_key);
 
-        let all_instructors = course_data['instructors'].concat(course_data['tas']);
+        let all_instructors = await Promise.all((course_data['instructors'].concat(course_data['tas'])).map(async user => {
+           let user_data = await user_db_handler.get_user_data(user);
+           return { id: user_data['id'], name: user_data['nick_name' ]};
+        }));
 
         return {
             r2_ctx: {
@@ -54,7 +57,7 @@ class GroupDatabaseHandler {
                 serve_dbs_url: process.env.HOST_URL,
                 instructor_data: {
                     is_instructor,
-                    cur_instructor_name: is_instructor ? user_data['display_name'] : '',
+                    cur_instructor_name: is_instructor ? user_data['nick_name'] : '',
                     cur_instructor_id: is_instructor ? user_data['id'] : '',
                     all_instructors
                 }

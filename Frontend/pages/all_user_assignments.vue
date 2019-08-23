@@ -1,6 +1,6 @@
 <template>
   <div id="all-assignments">
-    <sidebar />
+    <sidebar :name="name" />
     <div id="content">
       <div id="all-assignments-header">
         <p id="all-assignments-text">All Assignments</p>
@@ -71,9 +71,10 @@ export default {
       }
     )
     console.log(res.data)
-    const assignments = res.data
+    const assignments = res.data.assignments
     return {
-      assignments
+      assignments,
+      name: res.data.user_name
     }
   },
   fetch({ store, redirect }) {

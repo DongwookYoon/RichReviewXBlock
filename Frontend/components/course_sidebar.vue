@@ -1,5 +1,10 @@
 <template>
   <div id="sidebar">
+    <div v-if="name !== ''" id="name-div">
+      <p class="logged-in-text">Logged in as</p>
+      <p class="logged-in-text">{{ name }}</p>
+      <hr />
+    </div>
     <div id="sb_dashboard"
          :style="{
         'background-color': dashboard_background_color,
@@ -56,7 +61,9 @@
     </div>
     <div id="logout" @click="logout">
       <img id="logout-icon" src="/logout.png" />
-      <p id="header-logout">Logout</p>
+      <p v-if="name !== ''" class="header-logout">Logout of</p>
+      <p v-if="name !== ''" class="header-logout">{{ name }}</p>
+      <p v-if="name === ''" class="header-logout">Logout</p>
     </div>
   </div>
 </template>
@@ -66,6 +73,10 @@
 export default {
   name: 'CourseSidebar',
   props: {
+    name: {
+      type: String,
+      default: ''
+    },
     assignments: {
       type: Boolean,
       default: false
@@ -139,13 +150,17 @@ export default {
 <style scoped>
 @import '../node_modules/bootstrap/dist/css/bootstrap.css';
 
-#logo {
-  vertical-align: middle;
-  text-align: left;
-  padding-left: 1vw;
-  padding-top: 1vw;
-  width: 10vw;
-  cursor: pointer;
+p {
+  margin: 0;
+}
+
+#name-div {
+  text-align: center;
+}
+
+.logged-in-text {
+  font-size: 2vh;
+  color: #0c2343;
 }
 
 #dashboard-icon,
@@ -165,13 +180,12 @@ export default {
 #header-assignments,
 #header-people,
 #header-grades,
-#header-logout {
+.header-logout {
   width: 11vw;
   font-size: 3vh;
   text-align: center;
 }
 
-#sb_dashboard,
 #assignments,
 #people,
 #grades,
@@ -182,7 +196,14 @@ export default {
   padding-top: 1vh;
 }
 
-#header-logout {
+#sb_dashboard {
+  margin-top: 2vh;
+  cursor: pointer;
+  border-radius: 0 0.5vh 0.5vh 0;
+  padding-top: 1vh;
+}
+
+.header-logout {
   color: #0c2343;
 }
 </style>

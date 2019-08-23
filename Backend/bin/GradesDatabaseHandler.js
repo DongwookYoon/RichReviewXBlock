@@ -76,12 +76,17 @@ class GradesDatabaseHandler {
     async get_assignment_grade (import_handler, user_key, assignment_key) {
         let assignment_db_handler = await import_handler.assignment_db_handler;
         let submission_db_handler = await import_handler.submission_db_handler;
+        let user_db_Handler = await import_handler.user_db_handler;
 
         let submission_key = await assignment_db_handler.get_users_submission_key(import_handler, user_key, assignment_key);
-        let assignment_data = await assignment_db_handler.get_assignment_data(user_key, assignment_key);
 
-        if (!submission_key)
-            return undefined;
+        if (!submission_key) {
+            await user_db_Handler.verify_submitters_for_enrolments(import_handler, user_key);
+            submission_key = await assignment_db_handler.get_users_submission_key(import_handler, user_key, assignment_key);
+        }
+
+
+        let assignment_data = await assignment_db_handler.get_assignment_data(user_key, assignment_key);
 
         let submission_data = await submission_db_handler.get_submission_data(submission_key);
 

@@ -1,6 +1,6 @@
 <template>
   <div id="all-grades">
-    <sidebar />
+    <sidebar :name="name" />
     <div id="content">
       <div id="all-grades-header">
         <p id="all-grades-text">All Grades</p>
@@ -63,10 +63,11 @@ export default {
       }
     )
 
-    const grades = res.data
+    const grades = res.data.grades
     console.log(grades)
     return {
-      grades
+      grades,
+      name: res.data.user_name
     }
   },
   fetch({ store, redirect }) {

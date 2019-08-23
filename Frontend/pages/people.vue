@@ -1,7 +1,7 @@
 <template>
   <div>
     <div id="people-page">
-      <course-sidebar :people="true" />
+      <course-sidebar :name="name" :people="true" />
       <div id="content">
         <nav-bar :course="course_title" people="true" />
         <div id="tab-buttons">
@@ -138,7 +138,8 @@ export default {
       course_title: res.data.course_title,
       course_groups: res.data.groups,
       permissions: res.data.permissions,
-      people_tab: true
+      people_tab: true,
+      name: res.data.user_name || ''
     }
   },
   fetch({ store, redirect }) {

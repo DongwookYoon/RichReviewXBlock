@@ -26,10 +26,14 @@ router.get('/all_user_assignments', async function(req, res, next) {
         await user_db_handler.verify_submitters_for_enrolments(ImportHandler, user_key);
 
         let enrolments = await course_db_handler.get_user_courses(ImportHandler, user_key);
-        let all_assignments = await assignment_db_handler.get_all_assignments_visible_to_user(
+        let all_assignments = {};
+
+        all_assignments.assignments = await assignment_db_handler.get_all_assignments_visible_to_user(
             ImportHandler,
             user_key,
             enrolments);
+
+        all_assignments['user_name'] = await user_db_handler.get_user_name(user_key);
 
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(all_assignments))
@@ -93,10 +97,14 @@ router.get('/:assignment_id', async function(req, res, next) {
 
     let assignment_db_handler = await ImportHandler.assignment_db_handler;
     let course_db_handler = await ImportHandler.course_db_handler;
+    let user_db_handler = await ImportHandler.user_db_handler;
+
     try {
         await course_db_handler.verify_submitters_for_all_students(ImportHandler, course_key);
 
         let data = await assignment_db_handler.get_assignment(ImportHandler, user_key, course_key, assignment_key);
+        data['user_name'] = await user_db_handler.get_user_name(user_key);
+
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(data));
 
@@ -136,6 +144,7 @@ router.get('/:assignment_id/edit', async function(req, res, next) {
 
         assignment_data['permissions'] = await user_db_handler.get_user_course_permissions(user_key, course_key);
         assignment_data['course_title'] = course_data['title'];
+        assignment_data['user_name'] = await user_db_handler.get_user_name(user_key);
 
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(assignment_data));
@@ -157,6 +166,7 @@ router.get('/:assignment_id/submissions', async function(req, res, next) {
 
     let assignment_db_handler = await ImportHandler.assignment_db_handler;
     let course_db_handler = await ImportHandler.course_db_handler;
+    let user_db_handler = await ImportHandler.user_db_handler;
 
     try {
         await course_db_handler.verify_submitters_for_all_students(ImportHandler, course_key);
@@ -173,7 +183,8 @@ router.get('/:assignment_id/submissions', async function(req, res, next) {
         let data = {
             submissions: submissions,
             assignment_title: assignment_data['title'],
-            course_title: course_data['title']
+            course_title: course_data['title'],
+            user_name: await user_db_handler.get_user_name(user_key)
         };
 
         res.setHeader('Content-Type', 'application/json');
@@ -301,6 +312,7 @@ router.put('/:assignment_id', async function(req, res, next) {
 
     let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
     let assignment_key = KeyDictionary.key_dictionary['assignment'] + req.params['assignment_id'];
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
 
     let assignment_db_handler = await ImportHandler.assignment_db_handler;
     let course_db_handler = await ImportHandler.course_db_handler;
@@ -562,19 +574,6 @@ router.delete('/:assignment_id', async function(req, res, next) {
                 message: e.message
             });
     }
-    // let assignment_db_handler = await AssignmentDatabaseHandler.get_instance();
-    //
-    // try {
-    //     await assignment_db_handler.delete_assignment(user_key, course_key, assignment_key);
-    //     res.sendStatus(200);
-    //
-    // } catch (e) {
-    //     console.warn(e);
-    //     if (e.name === 'NotAuthorizedError')
-    //         res.sendStatus(401);
-    //     else
-    //         res.sendStatus(500);
-    // }
 });
 
 

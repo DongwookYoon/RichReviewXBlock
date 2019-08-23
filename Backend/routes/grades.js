@@ -26,6 +26,7 @@ router.get('/', async function(req, res, next) {
 
         grades['permissions'] = permissions;
         grades['course_title'] = course_data['title'];
+        grades['user_name'] = await user_db_handler.get_user_name(user_key);
 
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(grades));
@@ -48,10 +49,14 @@ router.get('/all_user_grades', async function(req, res, next) {
     let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
 
     let grades_db_handler = await ImportHandler.grades_db_handler;
+    let user_db_handler = await ImportHandler.user_db_handler;
 
     try {
 
-        let grades = await grades_db_handler.get_all_user_grades(ImportHandler, user_key);
+        let grades = {};
+        grades.grades = await grades_db_handler.get_all_user_grades(ImportHandler, user_key);
+
+        grades['user_name'] = await user_db_handler.get_user_name(user_key);
 
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(grades));

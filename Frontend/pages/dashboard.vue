@@ -1,51 +1,65 @@
 <template>
   <div id="dashboard">
-    <sidebar />
+    <sidebar :name="name"/>
     <div id="content">
       <div id="courses">
-        <div v-for="e in enrolments" :key="e.key" class="enrolments">
-          <course-card
-            :title="e.title"
-            :description="e.description"
-            role="Student"
-            :assignment_count="e.assignment_count"
-            :link="`/edu/courses/${e.id}`"
-            class="course-card"
-          ></course-card>
+        <div v-if="taing.length > 0 || instructing.length > 0" id="teaching-div">
+          <p class="courses-header">Courses you are teaching:</p>
+          <hr />
+          <div class="course-contents">
+            <div v-for="e in taing" :key="e.key" class="taing">
+              <course-card
+                :title="e.title"
+                :description="e.description"
+                role="TA"
+                :assignment_count="e.assignment_count"
+                :link="`/edu/courses/${e.id}`"
+              ></course-card>
+            </div>
+            <div v-for="e in instructing" :key="e.key" class="instructing">
+              <course-card
+                :title="e.title"
+                :description="e.description"
+                role="Instructor"
+                :assignment_count="e.assignment_count"
+                :link="`/edu/courses/${e.id}`"
+              ></course-card>
+            </div>
+          </div>
         </div>
-        <div v-for="e in taing" :key="e.key" class="taing">
-          <course-card
-            :title="e.title"
-            :description="e.description"
-            role="TA"
-            :assignment_count="e.assignment_count"
-            :link="`/edu/courses/${e.id}`"
-          ></course-card>
-        </div>
-        <div v-for="e in instructing" :key="e.key" class="instructing">
-          <course-card
-            :title="e.title"
-            :description="e.description"
-            role="Instructor"
-            :assignment_count="e.assignment_count"
-            :link="`/edu/courses/${e.id}`"
-          ></course-card>
-        </div>
-      </div>
-      <div id="upcoming-assignments">
-        <p id="upcoming-assignments-title">Upcoming Assignments:</p>
-        <p v-if="assignments.length === 0" id="no-assignments">
-          No upcoming assignments
-        </p>
-        <div v-for="a in assignments" :key="a.key" class="assignments">
-          <upcoming-assignment
-            :title="a.title.toString()"
-            :status="a.submission_status"
-            :late="a.late"
-            :link="
-              `/edu/courses/${a.course_id}/assignments/${a.assignment_id}`
-            "
-          ></upcoming-assignment>
+        <div v-if="enrolments.length > 0" id="enrolment-div">
+          <p class="courses-header">Courses you are enrolled in:</p>
+          <hr />
+          <div id="student-contents">
+            <div class="course-contents">
+              <div v-for="e in enrolments" :key="e.key" class="enrolments">
+                <course-card
+                  :title="e.title"
+                  :description="e.description"
+                  role="Student"
+                  :assignment_count="e.assignment_count"
+                  :link="`/edu/courses/${e.id}`"
+                  class="course-card"
+                ></course-card>
+              </div>
+            </div>
+            <div v-if="enrolments.length > 0" id="upcoming-assignments">
+              <p id="upcoming-assignments-title">Upcoming Assignments:</p>
+              <p v-if="assignments.length === 0" id="no-assignments">
+                No upcoming assignments
+              </p>
+              <div v-for="a in assignments" :key="a.key" class="assignments">
+                <upcoming-assignment
+                  :title="a.title.toString()"
+                  :status="a.submission_status"
+                  :late="a.late"
+                  :link="
+                `/edu/courses/${a.course_id}/assignments/${a.assignment_id}`
+              "
+                ></upcoming-assignment>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -77,13 +91,13 @@ export default {
           rejectUnauthorized: false
         })
       })
-    console.log(res.data)
+    console.log(res.data.user_name)
     return {
       enrolments: res.data.enrolments,
       taing: res.data.taing,
       instructing: res.data.teaching,
       assignments: res.data.assignments,
-      sbdashboard: true
+      name: res.data.user_name || ''
     }
   },
   fetch({ store, redirect }) {
@@ -112,15 +126,12 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 @import '../node_modules/bootstrap/dist/css/bootstrap.css';
 
-#test {
-  height: 1px;
-  margin-top: 0;
-  margin-bottom: 0;
-  background-color: #0c2343;
-  margin-right: 10%;
+hr,
+p {
+  margin: 0;
 }
 
 #dashboard {
@@ -132,23 +143,44 @@ export default {
   display: flex;
 }
 
+#enrolment-div {
+  margin-top: 5vh;
+}
+
+.courses-header {
+  font-size: 2vh;
+  color: #0c2343;
+}
+
 #courses {
-  display: grid;
+  /*display: grid;*/
   margin-top: 5%;
   margin-left: 4%;
+  /*grid-template-columns: 20vw 20vw 20vw;*/
+  /*grid-column-gap: 1vw;*/
+  /*grid-row-gap: 6vh;*/
+  /*max-width: 60%;*/
+}
+
+.course-contents {
+  margin-top: 3vh;
+  display: grid;
   grid-template-columns: 20vw 20vw 20vw;
   grid-column-gap: 1vw;
   grid-row-gap: 6vh;
   max-width: 60%;
 }
 
+#student-contents {
+  display: flex;
+}
+
 #upcoming-assignments {
   position: absolute;
   right: 0;
   display: inline-block;
-  width: 20%;
-  margin-top: 4.5%;
-  margin-left: 4%;
+  /*width: 20%;*/
+  margin-right: 2vw;
   font-size: 2.5vh;
   color: #0c2343;
 }

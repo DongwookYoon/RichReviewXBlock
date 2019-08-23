@@ -1,6 +1,6 @@
 <template>
   <div id="course-group">
-    <course-sidebar />
+    <course-sidebar :name="name" />
     <div id="content">
       <nav-bar :course="course" people="true" :course_group="group.name" />
       <div id="header">
@@ -66,7 +66,8 @@ export default {
       permissions: res.data.permissions,
       group: res.data.group,
       submitters: res.data.submitters,
-      course: res.data.course
+      course: res.data.course,
+      name: res.data.user_name
     }
   },
   fetch({ store, redirect }) {

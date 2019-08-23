@@ -30,6 +30,7 @@ router.get('/', async function(req, res, next) {
         let course_data = await course_db_handler.get_course_data(course_key);
 
         let data = { users: users, groups: groups, permissions: permissions, course_title: course_data['title'] };
+        data.user_name = await user_db_handler.get_user_name(user_key);
 
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(data));
@@ -70,40 +71,12 @@ router.get('/unassigned', async function(req, res, next) {
             course_group_sets: course_group_sets,
             permissions: permissions,
             course_title: course_data['title'],
-            all_students: all_students};
+            all_students: all_students,
+            user_name: await user_db_handler.get_user_name(user_key)
+        };
 
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(data));
-
-        // let unassigned_students = await course_group_db_handler.get_all_course_users_unassigned_to_a_course_group(
-        //     ImportHandler,
-        //     course_key);
-        //
-        // let groups = await course_group_db_handler.get_all_course_groups(ImportHandler, course_key);
-        //
-        // for (let group_type in groups) {
-        //     let active_or_inactive_groups = groups[group_type];
-        //
-        //     for (let group of active_or_inactive_groups) {
-        //         group['members'] = group['members'].map((member) => {
-        //             return {id: member['id'], name: member['name']}
-        //         });
-        //
-        //     }
-        // }
-        //
-        // let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
-        //
-        // let course_data = await course_db_handler.get_course_data(course_key);
-        //
-        // let data = {
-        //     unassigned_students: unassigned_students,
-        //     groups: groups,
-        //     permissions: permissions,
-        //     course_title: course_data['title'] };
-        //
-        // res.setHeader('Content-Type', 'application/json');
-        // res.end(JSON.stringify(data));
     } catch (e) {
         console.log(e);
         res.status(500).send({

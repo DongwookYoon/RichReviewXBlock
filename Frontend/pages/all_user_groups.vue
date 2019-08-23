@@ -1,6 +1,6 @@
 <template>
   <div id="all-groups">
-    <sidebar />
+    <sidebar :name="name" />
     <div id="content">
       <div id="all-groups-header">
         <p id="all-groups-text">All Groups</p>
@@ -63,10 +63,11 @@ export default {
       }
     )
 
-    const groups = res.data
+    const groups = res.data.groups
     console.log(groups)
     return {
-      groups
+      groups,
+      name: res.data.user_name
     }
   },
   fetch({ store, redirect }) {

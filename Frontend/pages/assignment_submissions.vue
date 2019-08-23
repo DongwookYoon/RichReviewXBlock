@@ -1,6 +1,6 @@
 <template>
   <div id="submissions">
-    <course-sidebar />
+    <course-sidebar :name="name" />
     <div id="content">
       <nav-bar :course="course" :assignment="assignment" submissions="true" />
       <table id="submissions-table">
@@ -71,7 +71,8 @@ export default {
     return {
       submissions: res.data.submissions,
       course: res.data.course_title,
-      assignment: res.data.assignment_title
+      assignment: res.data.assignment_title,
+      name: res.data.user_name
     }
   },
   fetch({ store, redirect }) {

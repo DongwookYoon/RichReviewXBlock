@@ -438,12 +438,8 @@ class CourseGroupDatabaseHandler {
 
         let group_data = await this.get_course_group_data(course_group_key);
 
-        if (group_data['course'] !== course_key)
-            throw new RichReviewError('Invalid course group');
-
         if (group_data['users'].includes(course_group_key))
             throw new NotAuthorizedError('Unauthorized to view this group');
-
 
         let user_db_handler = await import_handler.user_db_handler;
 

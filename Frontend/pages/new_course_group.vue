@@ -25,7 +25,7 @@
       </div>
     </modal>
     <div id="course-groups">
-      <course-sidebar :people="true" />
+      <course-sidebar :name="name" :people="true" />
       <div id="content">
         <nav-bar :course="course" people="true" edit_groups="true" />
         <p id="save-button" @click="save">Save</p>
@@ -209,7 +209,8 @@ export default {
       students_per_group: '',
       groups_changed: false,
       changes_saved: false,
-      course: res.data.course_title
+      course: res.data.course_title,
+      name: res.data.user_name
     }
   },
   fetch({ store, redirect }) {

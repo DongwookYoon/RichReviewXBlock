@@ -1,6 +1,6 @@
 <template>
   <div id="assignment">
-    <course-sidebar />
+    <course-sidebar :name="name" />
     <b-alert v-model="showDismissibleAlert" variant="danger" dismissible>
       One or more files is required for a submission.
     </b-alert>
@@ -297,7 +297,8 @@ export default {
       selected_user_name: '',
       selected_user_key: '',
       extension_date: res.data.extension_date,
-      template_link: res.data.template_link || ''
+      template_link: res.data.template_link || '',
+      name: res.data.user_name
     }
   },
   fetch({ store, redirect }) {

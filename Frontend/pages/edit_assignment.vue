@@ -1,6 +1,6 @@
 <template>
   <div id="edit-assignment">
-    <course-sidebar />
+    <course-sidebar :name="name" />
     <div id="content">
       <nav-bar
         :course="course"
@@ -222,7 +222,8 @@ export default {
         : '',
       permissions: res.data.permissions,
       changesSaved: false,
-      assignment_changed: false
+      assignment_changed: false,
+      name: res.data.user_name || ''
     }
   },
   fetch({ store, redirect }) {

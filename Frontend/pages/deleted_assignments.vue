@@ -1,6 +1,6 @@
 <template>
   <div id="deleted-assignments">
-    <course-sidebar />
+    <course-sidebar :name="name" />
     <div id="content">
       <nav-bar :course="course" deleted_assignments="true" />
       <table id="assignments">
@@ -63,7 +63,8 @@ export default {
     return {
       assignments: res.data.assignments,
       permissions: res.data.permissions,
-      course: res.data.course_title
+      course: res.data.course_title,
+      name: res.data.user_name || ''
     }
   },
   fetch({ store, redirect }) {

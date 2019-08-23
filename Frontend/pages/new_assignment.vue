@@ -1,6 +1,6 @@
 <template>
   <div id="new-assignment">
-    <course-sidebar />
+    <course-sidebar :name="name" />
     <div id="content">
       <b-alert v-model="showDismissibleAlert" variant="danger" dismissible>
         One or more files is required for a comment submission assignment.
@@ -261,7 +261,8 @@ export default {
     return {
       permissions: permission_res.data.permissions,
       course: course_res.data.course.title,
-      course_group_sets: course_group_sets
+      course_group_sets: course_group_sets,
+      name: course_res.data.user_name || ''
     }
   },
   fetch({ store, redirect }) {

@@ -62,9 +62,10 @@
     </div>
     <div id="logout" @click="logout">
       <img id="logout-icon" src="/logout.png" />
-      <p v-if="name !== ''" class="header-logout">Logout of</p>
-      <p v-if="name !== ''" class="header-logout">{{ name }}</p>
-      <p v-if="name === ''" class="header-logout">Logout</p>
+      <!--<p v-if="name !== ''" class="header-logout">Logout of</p>-->
+      <!--<p v-if="name !== ''" class="header-logout">{{ name }}</p>-->
+      <!--<p v-if="name === ''" class="header-logout">Logout</p>-->
+      <p class="header-logout">Logout</p>
     </div>
   </div>
 </template>

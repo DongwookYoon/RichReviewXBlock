@@ -232,6 +232,31 @@ class SubmissionDatabaseHandler {
     }
 
 
+    async get_submission_last_name(import_handler, submission_key){
+        let submitter_db_handler = await import_handler.submitter_db_handler;
+        let user_db_handler = await import_handler.user_db_handler;
+
+        try {
+            let submission_data = await this.get_submission_data(submission_key);
+            let submitter_data = await submitter_db_handler.get_submitter_data(submission_data['submitter']);
+            let user_data = await user_db_handler.get_user_data(submitter_data['members'][0]);
+            return user_data['last_name'] || '';
+        } catch (e) { return ''; }
+    }
+
+
+    async get_submission_group_name (import_handler, submission_key) {
+        let submitter_db_handler = await import_handler.submitter_db_handler;
+        let course_group_db_handler = await import_handler.course_group_db_handler;
+
+        try {
+            let submission_data = await this.get_submission_data(submission_key);
+            let submitter_data = await submitter_db_handler.get_submitter_data(submission_data['submitter']);
+            let course_group_data = await course_group_db_handler.get_course_group_data(submitter_data['course_group']);
+            return course_group_data['name'] || '';
+        } catch(e) { return ''; }
+    }
+
 
     async get_submission_data (submission_key) {
 

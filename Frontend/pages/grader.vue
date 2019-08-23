@@ -17,12 +17,14 @@
         <p id="points">{{ points }}</p>
       </div>
       <div id="student-div">
+        <input id="hidden" v-model="hidden" type="checkbox" @change="change_hide_names" />
+        <label id="hidden-label">Hide student names</label>
         <p v-if="prev_id !== ''" id="prev-arrow" @click="prev_student">
           Previous
         </p>
         <select id="student-select" v-model="selected" @change="change_student">
-          <option v-for="s of submissions_list" :key="s.key" :value="s.key">
-            {{ s.name }}
+          <option v-for="(s, i) of submissions_list" :key="s.key" :value="s.key">
+            ({{ s.mark === '' ? 'Unmarked' : `Marked: ${s.mark}`}}) {{ hidden ? `Student ${i + 1}` : s.name }}
           </option>
         </select>
         <p v-if="next_id !== ''" id="next-arrow" @click="next_student">Next</p>
@@ -132,6 +134,11 @@ export default {
       no_submission: false
     }
   },
+  data() {
+    return {
+      hidden: this.$route.query.hidden !== undefined
+    }
+  },
   fetch({ store, redirect }) {
     if (!store.state.authUser) {
       return redirect('/edu/login')
@@ -181,23 +188,36 @@ export default {
     prev_student() {
       window.open(`/edu/courses/${this.$route.params.course_id}/assignments/${
         this.$route.params.assignment_id
-        }/submissions/${this.prev_id}/grader?${this.prev_link}`, '_self')
+        }/submissions/${this.prev_id}/grader?${this.prev_link}&${this.hidden ? 'hidden=' : ''}`,
+        '_self')
     },
     next_student() {
       window.open(`/edu/courses/${this.$route.params.course_id}/assignments/${
         this.$route.params.assignment_id
-        }/submissions/${this.next_id}/grader?${this.next_link}`, '_self')
+        }/submissions/${this.next_id}/grader?${this.next_link}&${this.hidden ? 'hidden=' : ''}`,
+        '_self')
     },
     change_student() {
       for (const submission of this.submissions_list) {
         if (submission.key === this.selected)
           window.open(`/edu/courses/${this.$route.params.course_id}/assignments/${
             this.$route.params.assignment_id
-            }/submissions/${submission.id}/grader?${submission.link}`, '_self')
+            }/submissions/${submission.id}/grader?${submission.link}&${this.hidden ? 'hidden=' : ''}`
+            , '_self')
       }
+    },
+    change_hide_names() {
+      window.open(`${this.$route.fullPath}&${this.hidden ? 'hidden=' : ''}`, '_self')
     },
     async updateGrade(event) {
       const mark = event.target.value
+
+      for (let submission of this.submissions_list) {
+        if (submission.key === this.student_key) {
+          submission.mark = mark
+          break
+        }
+      }
 
       await axios.put(
         `https://${process.env.backend}:3000/courses/${
@@ -263,11 +283,22 @@ p {
 
 #points-div {
   position: absolute;
-  left: 50%;
-  margin-right: -50%;
-  transform: translate(-50%, 0);
+  left: 40%;
+  margin-right: -40%;
+  transform: translate(-40%, 0);
 }
 
+#hidden-div {
+  margin-top: 0.5%;
+  position: absolute;
+  left: 57%;
+  margin-right: -57%;
+  transform: translate(-57%, 0);
+}
+
+#hidden-label {
+  color: white;
+}
 #student-div {
   position: absolute;
   left: 99%;

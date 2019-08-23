@@ -225,8 +225,13 @@ router.get('/:assignment_id/grader', async function(req, res, next) {
         submission_links_and_id = await Promise.all(submission_links_and_id.map(async (submission_link_and_id) => {
             let submission_key = KeyDictionary.key_dictionary['submission'] + submission_link_and_id['id'];
             let submission_owner = await submission_db_handler.get_submission_owner(ImportHandler, submission_key);
+            let submission_data = await submission_db_handler.get_submission_data(submission_key);
+
             submission_link_and_id['name'] = submission_owner['name'];
             submission_link_and_id['key'] = submission_owner['key'];
+            submission_link_and_id['submission_status'] = submission_data['submission_status'];
+            submission_link_and_id['mark'] = submission_data['mark'];
+
             return submission_link_and_id;
         }));
 

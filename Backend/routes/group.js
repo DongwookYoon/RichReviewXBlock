@@ -19,7 +19,7 @@ router.get('/:group_id', async function(req, res, next) {
     let group_db_handler = await ImportHandler.group_db_handler;
 
     try {
-        let viewer_data = await group_db_handler.get_data_for_viewer(user_key, course_key, group_key);
+        let viewer_data = await group_db_handler.get_data_for_viewer(ImportHandler, user_key, course_key, group_key);
         viewer_data['r2_ctx']['serve_dbs_url'] = `https://${req.headers.host}/`;
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(viewer_data));

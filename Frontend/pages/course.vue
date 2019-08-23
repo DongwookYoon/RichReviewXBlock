@@ -10,14 +10,15 @@
             id="new-assignment"
             @click="go_to_new_assignment"
           >
-            + Assignment
+            New Assignment
           </p>
-          <img
+          <p
             v-if="permissions === 'instructor' || permissions === 'ta'"
-            id="garbage-icon"
-            src="/delete.png"
+            id="deleted-assignments"
             @click="go_to_deleted_assignments"
-          />
+          >
+            Deleted Assignments
+          </p>
         </div>
         <div id="assignments-div">
           <table id="assignments">
@@ -180,11 +181,12 @@ table {
   display: flex;
 }
 
-#garbage-icon {
-  cursor: pointer;
+#assignments-div {
+  display: inline-block;
 }
 
-#new-assignment {
+#new-assignment,
+#deleted-assignments {
   margin-right: 1vw;
   background-color: #0c2343;
   font-size: 2.5vh;

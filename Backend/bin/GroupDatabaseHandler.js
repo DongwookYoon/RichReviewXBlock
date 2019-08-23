@@ -1,3 +1,8 @@
+const env = require('../env');
+const RedisClient = require("./RedisClient");
+const KeyDictionary = require("./KeyDictionary");
+const RedisToJSONParser = require("./RedisToJSONParser");
+
 class GroupDatabaseHandler {
 
     constructor(){
@@ -20,15 +25,24 @@ class GroupDatabaseHandler {
 
 
 
-    async get_data_for_viewer (user_key, course_key, group_key) {
+    async get_data_for_viewer (import_handler, user_key, course_key, group_key) {
+        let doc_db_handler = await import_handler.doc_db_handler;
+        let user_db_handler = await import_handler.user_db_handler;
+        let course_db_handler = await import_handler.course_db_handler;
 
         let group_data = await this.get_group_data(group_key);
 
-        if (!this.user_has_permission_to_view_group(user_key, course_key, group_data))
-            throw new NotAuthorizedError('You are not authorized to view this document');
+        // if (!this.user_has_permission_to_view_group(user_key, course_key, group_data))
+        //     throw new NotAuthorizedError('You are not authorized to view this document');
 
-        let doc_db_handler = await DocumentDatabaseHandler.get_instance();
         let doc_data = await doc_db_handler.get_doc_data(group_data['docid']);
+
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+        let is_instructor = permissions === 'instructor' || permissions === 'ta';
+        let user_data = await user_db_handler.get_user_data(user_key);
+        let course_data = await course_db_handler.get_course_data(course_key);
+
+        let all_instructors = course_data['instructors'].concat(course_data['tas']);
 
         return {
             r2_ctx: {
@@ -37,7 +51,13 @@ class GroupDatabaseHandler {
                 groupid: group_key.replace(KeyDictionary.key_dictionary['group'], ''),
                 pdf_url: `${env.azure_config.storage.host}${doc_data['pdfid']}/doc.pdf`,
                 pdfjs_url: `${env.azure_config.storage.host}${doc_data['pdfid']}/doc.vs_doc`,
-                serve_dbs_url: process.env.HOST_URL
+                serve_dbs_url: process.env.HOST_URL,
+                instructor_data: {
+                    is_instructor,
+                    cur_instructor_name: is_instructor ? user_data['display_name'] : '',
+                    cur_instructor_id: is_instructor ? user_data['id'] : '',
+                    all_instructors
+                }
             },
             env: env.node_config.ENV,
             cdn_endpoint: env.azure_config.cdn.endpoint
@@ -177,6 +197,46 @@ class GroupDatabaseHandler {
     }
 
 
+
+    async verify_instructor_group_memberships (import_handler, user_key, course_key) {
+        let user_db_handler = await import_handler.user_db_handler;
+        let course_db_handler = await import_handler.course_db_handler;
+        let assignment_db_handler = await import_handler.assignment_db_handler;
+        let submission_db_handler = await import_handler.submission_db_handler;
+
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+
+        if (permissions !== 'ta' && permissions !== 'instructor')
+            return;
+
+        let user_id = user_key.replace(KeyDictionary.key_dictionary['user'], '');
+
+        let course_data = await course_db_handler.get_course_data(course_key);
+        for (const assignment of course_data['assignments']) {
+            try {
+                let assignment_data = await assignment_db_handler.get_assignment_data('', assignment);
+                for (const submission of assignment_data['submissions']) {
+                    try {
+                        let submission_data = await submission_db_handler.get_submission_data(submission);
+                        if (submission_data['group'] && submission_data['group'] !== '') {
+                            await this.add_user_to_group(user_id, submission_data['group']);
+                            await user_db_handler.add_group_to_user(user_key, submission_data['group']);
+                        }
+                        if (submission_data['current_submission'] && submission_data['current_submission'] !== '') {
+                            await this.add_user_to_group(user_id, submission_data['current_submission']);
+                            await user_db_handler.add_group_to_user(user_key, submission_data['current_submission']);
+                        }
+                        for (const group of submission_data['past_submissions']) {
+                            await this.add_user_to_group(user_id, group);
+                            await user_db_handler.add_group_to_user(user_key, group);
+                        }
+                    } catch (e) { console.warn(e); }
+                }
+            } catch (e) { console.warn(e) ;}
+        }
+    }
+
+
     async user_has_permission_to_view_group (user_key, course_key, group_data) {
         return true;
     }
@@ -184,15 +244,6 @@ class GroupDatabaseHandler {
 
 module.exports = GroupDatabaseHandler;
 
-const env = require('../env');
-const AzureHandler = require('./AzureHandler');
-const RedisClient = require("./RedisClient");
-const KeyDictionary = require("./KeyDictionary");
-const RedisToJSONParser = require("./RedisToJSONParser");
-const UserDatabaseHandler = require("./UserDatabaseHandler");
-const DocumentDatabaseHandler = require("./DocumentDatabaseHandler");
-const CourseDatabaseHandler = require("./CourseDatabaseHandler");
-const NotAuthorizedError = require("../errors/NotAuthorizedError");
 
 
 

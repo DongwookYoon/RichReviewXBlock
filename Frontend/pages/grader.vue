@@ -178,21 +178,11 @@ export default {
       )
     },
     prev_student() {
-      // this.$router.push(
-      //   `/edu/courses/${this.$route.params.course_id}/assignments/${
-      //     this.$route.params.assignment_id
-      //   }/submissions/${this.prev_id}/grader?${this.prev_link}`
-      // )
       window.open(`/edu/courses/${this.$route.params.course_id}/assignments/${
         this.$route.params.assignment_id
         }/submissions/${this.prev_id}/grader?${this.prev_link}`, '_self')
     },
     next_student() {
-      // this.$router.push(
-      //   `/edu/courses/${this.$route.params.course_id}/assignments/${
-      //     this.$route.params.assignment_id
-      //   }/submissions/${this.next_id}/grader?${this.next_link}`
-      // )
       window.open(`/edu/courses/${this.$route.params.course_id}/assignments/${
         this.$route.params.assignment_id
         }/submissions/${this.next_id}/grader?${this.next_link}`, '_self')
@@ -203,11 +193,6 @@ export default {
           window.open(`/edu/courses/${this.$route.params.course_id}/assignments/${
             this.$route.params.assignment_id
             }/submissions/${submission.id}/grader?${submission.link}`, '_self')
-          // this.$router.push(
-          //   `/edu/courses/${this.$route.params.course_id}/assignments/${
-          //     this.$route.params.assignment_id
-          //   }/submissions/${submission.id}/grader?${submission.link}`
-          // )
       }
     },
     async updateGrade(event) {

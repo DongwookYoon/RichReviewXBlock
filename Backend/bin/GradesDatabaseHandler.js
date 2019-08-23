@@ -39,27 +39,31 @@ class GradesDatabaseHandler {
         let grades = [];
 
         for (let submitter_key of user_data['submitters']) {
-            let submitter_data = await submitter_db_handler.get_submitter_data(submitter_key);
-            let submission_key = submitter_data['submission'];
-            let submission_data = await submission_db_handler.get_submission_data(submission_key);
-            let assignment_key = submission_data['assignment'];
-            let assignment_data = await assignment_db_handler.get_assignment_data(user_key, assignment_key);
-            let course_id = assignment_data['course'].replace(KeyDictionary.key_dictionary['course'], '');
+            try {
+                let submitter_data = await submitter_db_handler.get_submitter_data(submitter_key);
+                let submission_key = submitter_data['submission'];
+                let submission_data = await submission_db_handler.get_submission_data(submission_key);
+                let assignment_key = submission_data['assignment'];
+                let assignment_data = await assignment_db_handler.get_assignment_data(user_key, assignment_key);
+                let course_id = assignment_data['course'].replace(KeyDictionary.key_dictionary['course'], '');
 
-            let course_key = KeyDictionary.key_dictionary['course'] + course_id;
-            let course_data = await course_db_handler.get_course_data(course_key);
+                let course_key = KeyDictionary.key_dictionary['course'] + course_id;
+                let course_data = await course_db_handler.get_course_data(course_key);
 
-            if (!assignment_data['hidden']) {
-                grades.push({
-                    course_id: course_id,
-                    assignment_id: assignment_data['id'],
-                    assignment: assignment_data['title'],
-                    course: course_data['title'],
-                    submission_status: submission_data['submission_status'],
-                    mark: submission_data['mark'],
-                    points: assignment_data['points'],
-                    late: late.is_late(assignment_data, submission_data)
-                })
+                if (!assignment_data['hidden']) {
+                    grades.push({
+                        course_id: course_id,
+                        assignment_id: assignment_data['id'],
+                        assignment: assignment_data['title'],
+                        course: course_data['title'],
+                        submission_status: submission_data['submission_status'],
+                        mark: submission_data['mark'],
+                        points: assignment_data['points'],
+                        late: late.is_late(assignment_data, submission_data)
+                    })
+                }
+            } catch (e) {
+                console.warn(e);
             }
         }
 

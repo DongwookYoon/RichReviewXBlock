@@ -60,16 +60,13 @@
             <thead id="group-header-title">
               <tr>
                 <th id="group-name-header">Name</th>
-                <th id="active-header">Active</th>
+                <th id="course-group-set-header">Group Set</th>
                 <th id="user-count-header">Users</th>
               </tr>
             </thead>
-            <tbody
-              v-for="(group_list, groupe_type) in course_groups"
-              :key="groupe_type"
-            >
+            <tbody>
               <tr
-                v-for="group in group_list"
+                v-for="group in course_groups"
                 :key="group.key"
                 class="group-row"
                 @click="go_to_group(group.id)"
@@ -78,8 +75,8 @@
                   <p class="group-name">{{ group.name }}</p>
                 </td>
                 <td>
-                  <p class="active">
-                    {{ groupe_type === 'active_course_groups' ? 'Yes' : 'No' }}
+                  <p class="course-group-set">
+                    {{ group.course_group_set }}
                   </p>
                 </td>
                 <td>
@@ -252,7 +249,7 @@ table {
 #course-header,
 #role-header,
 #group-name-header,
-#active-header,
+#course-group-set-header,
 #user-count-header {
   font-size: 2.5vh;
   color: #0c2343;
@@ -267,7 +264,7 @@ table {
 .course-title,
 .role,
 .group-name,
-.active,
+.course-group-set,
 .user-count {
   font-size: 2vh;
   color: #0c2343;
@@ -287,8 +284,8 @@ table {
 
 #course-header,
 .course-title,
-#active-header,
-.active {
+#course-group-set-header,
+.course-group-set {
   margin-right: 5vw;
   text-align: left;
   width: 20vw;

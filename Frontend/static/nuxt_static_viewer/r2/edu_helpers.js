@@ -675,27 +675,28 @@
     pub.cur_user = null
 
     const user_colors = [
-      [187, 62, 82], // 0 Red
-      [56, 172, 84], // 1 Green
-      [255, 165, 0], // 2 Orange
-      [229, 64, 40], // 3 Blue
-      [149, 3, 255], // 4 Indigo
-      [218, 112, 214], // 5 Lavender
-      [102, 205, 170], // 6 Aqua
-      [255, 215, 0], // 7 Gold
-      [165, 42, 42], // 8 Brown
-      [128, 128, 0], // 9 Olive
-      [50, 205, 50], // 10 Lime
-      [0, 191, 255] // 11 LightBlue
+      [56, 172, 84],   // 0 Green
+      [255, 165, 0],   // 1 Orange
+      [229, 64, 40],   // 2 Blue
+      [149, 3, 255],   // 3 Indigo
+      [218, 112, 214], // 4 Lavender
+      [102, 205, 170], // 5 Aqua
+      [255, 215, 0],   // 6 Gold
+      [165, 42, 42],   // 7 Brown
+      [128, 128, 0],   // 8 Olive
+      [50, 205, 50],   // 9 Lime
+      [0, 191, 255]    // 10 LightBlue
     ]
     const user_color_legacy = [51, 172, 227] // blue
     const user_color_anonymous = [50, 50, 50] // gray
+    const user_color_instructor = [187, 62, 82] // red
 
-    const R2User = function(_name, nick, email, _color, isguest, n) {
+    const R2User = function(_name, nick, email, _color, isguest, n, type) {
       this.name = _name
       this.nick = nick
       this.email = email
       this.isguest = isguest
+      this.type = type
       this.n = n
 
       this.color_normal = _color.map(function(v) {
@@ -814,9 +815,8 @@
       )
 
       if (groupdata.users) {
-        console.log(groupdata)
         groupdata.users.forEach(function(user) {
-          pub.AddUser(user.id, user.nick_name || user.display_name, user.email, (type = 'member'))
+          pub.AddUser(user.id, user.nick_name || user.display_name, user.email, user.type)
         })
       }
 
@@ -860,8 +860,12 @@
       let color
       let isguest
       switch (type) {
-        case 'member':
-          color = user_colors[pub.GetCurMemberUsersNum()]
+        case 'instructor':
+          color = user_color_instructor
+          isguest = false
+          break
+        case 'student':
+          color = user_colors[pub.GetCurStudentMemberUsersNum()]
           isguest = false
           break
         case 'legacy':
@@ -882,7 +886,8 @@
           email,
           color,
           isguest,
-          Object.keys(users).length
+          Object.keys(users).length,
+          type
         )
         r2App.annotStaticInkMgr.addNewUser(users[name])
 
@@ -930,6 +935,24 @@
             !user.isguest &&
             user.name != r2Const.LEGACY_USERNAME &&
             user.name != 'anonymous'
+          ) {
+            n += 1
+          }
+        }
+      }
+      return n
+    }
+
+    pub.GetCurStudentMemberUsersNum = function() {
+      let n = 0
+      for (const name in users) {
+        if (users.hasOwnProperty(name)) {
+          const user = users[name]
+          if (
+              !user.isguest &&
+              user.name != r2Const.LEGACY_USERNAME &&
+              user.name != 'anonymous' &&
+              user.type == 'student'
           ) {
             n += 1
           }

@@ -1,29 +1,9 @@
 <template>
   <div>
-    <modal width="35%" height="20%" name="Automatic Group Assignment">
-      <div class="modal-div">
-        <p id="students-per-group-label">Students per group:</p>
-        <input id="students-per-group-input" v-model="students_per_group" />
-      </div>
-      <div class="modal-footer">
-        <p class="modal-continue-button" @click="automatically_create_groups">
-          Continue
-        </p>
-        <p class="modal-cancel-button" @click="hide_automatic_group">Cancel</p>
-      </div>
-    </modal>
-    <modal width="35%" height="20%" name="Rename Group Set">
-      <div class="modal-div">
-        <p id="new-name-label">New Group Set Name:</p>
-        <input id="group-set-name-input" v-model="new_group_set_name" />
-      </div>
-      <div class="modal-footer">
-        <p class="modal-continue-button" @click="rename_course_group_set">
-          Save
-        </p>
-        <p class="modal-cancel-button" @click="hide_rename_group_set">Cancel</p>
-      </div>
-    </modal>
+    <automatic-group-modal v-if="show_automatic_group_modal" @close="show_automatic_group_modal = false">
+    </automatic-group-modal>
+    <rename-group-set-modal v-if="show_rename_group_set_modal" @close="show_rename_group_set_modal = false">
+    </rename-group-set-modal>
     <div id="course-groups">
       <course-sidebar :name="name" :people="true" />
       <div id="content">
@@ -165,6 +145,8 @@ import CourseGroupCard from '../components/course_group_card'
 import CourseSidebar from '../components/course_sidebar'
 import NavBar from '../components/nav_bar'
 import ModalPlugin from '../node_modules/bootstrap-vue'
+import AutomaticGroupModal from '../components/automatic-group-modal'
+import RenameGroupSetModal from '../components/rename-group-set-modal'
 
 export default {
   name: 'NewGroup',
@@ -174,10 +156,17 @@ export default {
     Footer,
     draggable,
     CourseGroupCard,
-    ModalPlugin
+    AutomaticGroupModal,
+    RenameGroupSetModal
+    // ModalPlugin
   },
   data() {
-    return { new_group_set_name: '', group_set_index: null }
+    return {
+      new_group_set_name: '',
+      group_set_index: null,
+      show_automatic_group_modal: false,
+      show_rename_group_set_modal: false
+    }
   },
   async asyncData(context) {
     if (!context.store.state.authUser) return
@@ -261,20 +250,24 @@ export default {
           course_group.name = name
         }
       }
-      // await this.permanently_delete_group(id)
+    })
 
-      // todo this is the disabled inactive course group functionality
-      // const members = data.members
-      // const inactive = data.inactive
-      // const id = data.id
-      //
-      // if (inactive) {
-      //   await this.permanently_delete_group(id)
-      // } else {
-      //   for (const member of members) {
-      //     this.unassigned_students.push(member)
-      //   }
-      // }
+    EventBus.$on('save-automatically-create-groups', data => {
+      this.students_per_group = data.students_per_group
+      this.automatically_create_groups()
+    })
+
+    EventBus.$on('close-automatically-create-groups', data => {
+      this.hide_automatic_group()
+    })
+
+    EventBus.$on('save-rename-group-set', data => {
+      this.course_group_sets[this.group_set_index].name = data.new_group_set_name
+      this.hide_rename_group_set()
+    })
+
+    EventBus.$on('close-automatically-create-groups', data => {
+      this.hide_rename_group_set()
     })
   },
   methods: {
@@ -323,17 +316,17 @@ export default {
       } catch (e) {}
     },
     show_automatic_group() {
-      this.$modal.show('Automatic Group Assignment')
+      this.show_automatic_group_modal = true
     },
     hide_automatic_group() {
-      this.$modal.hide('Automatic Group Assignment')
+      this.show_automatic_group_modal = false
     },
     show_rename_group_set(index) {
       this.group_set_index = index
-      this.$modal.show('Rename Group Set')
+      this.show_rename_group_set_modal = true
     },
     hide_rename_group_set() {
-      this.$modal.hide('Rename Group Set')
+      this.show_rename_group_set_modal = false
     },
     automatically_create_groups() {
       this.groups_changed = true
@@ -445,7 +438,6 @@ p {
 }
 
 #student-hr {
-  margin-right: 5vw;
 }
 
 #course-groups {
@@ -456,6 +448,7 @@ p {
   display: block;
   margin-top: 5vh;
   margin-left: 7vw;
+  width: 100%;
 }
 
 .group_set {
@@ -466,21 +459,7 @@ p {
 
 #edit-course-groups {
   display: flex;
-}
-
-.modal-div,
-.modal-footer {
-  display: flex;
-}
-
-.modal-div {
-  margin-top: 5vh;
-  margin-left: 2vw;
-}
-
-.modal-footer {
-  margin-top: 2vh;
-  margin-left: -3vw;
+  width: 100%;
 }
 
 .group-set-controls {
@@ -502,28 +481,6 @@ p {
   border-radius: 0.5vh;
 }
 
-#students-per-group-label,
-#new-name-label {
-  margin-right: 1vw;
-}
-
-#students-per-group-input,
-#group-set-name-input {
-  text-align: right;
-}
-
-#group-set-name-input {
-  cursor: pointer;
-}
-
-#students-per-group-label,
-#new-name-label,
-#students-per-group-input,
-#group-set-name-input {
-  color: #0c2343;
-  font-size: 1.75vh;
-}
-
 #student-draggable {
   width: 100%;
   min-height: 20vh;
@@ -533,7 +490,7 @@ p {
 #student-list,
 #groups {
   margin-top: 1vh;
-  width: 33.333%;
+  min-width: 30%;
   margin-right: 2vw;
 }
 
@@ -546,9 +503,7 @@ p {
 #new-group-set-button,
 #automatic-groups-button,
 #edit-group-button,
-#save-button,
-.modal-continue-button,
-.modal-cancel-button {
+#save-button {
   font-size: 1.5vh;
   color: white;
   background-color: #0c2343;
@@ -563,15 +518,6 @@ p {
 #save-button {
   width: 3.25vw;
   font-size: 2vh;
-}
-
-.modal-continue-button {
-  margin-right: 0.5vw;
-  margin-left: 25vw;
-}
-
-.modal-cancel-button {
-  background-color: #595959;
 }
 
 #edit-group-button {
@@ -601,21 +547,5 @@ p {
 
 .student:hover {
   background-color: #f5f5f5;
-}
-
-#active-course-groups,
-#inactive-course-groups {
-  font-size: 1.5vh;
-  color: #0c2343;
-  margin-bottom: 1vh;
-}
-
-#active-course-groups {
-  margin-bottom: 1vh;
-}
-
-#inactive-course-groups {
-  margin-top: 3vh;
-  margin-bottom: 1vh;
 }
 </style>

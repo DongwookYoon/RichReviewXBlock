@@ -72,11 +72,6 @@ export default {
   margin-left: 5px;
 }
 
-#button-div {
-  display: flex;
-  float: right;
-}
-
 .modal-continue-button,
 .modal-cancel-button {
   font-size: 1.5vh;

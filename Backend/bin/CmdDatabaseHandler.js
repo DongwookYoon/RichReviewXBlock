@@ -19,6 +19,22 @@ class CmdDatabaseHandler {
     }
 
 
+    async does_cmd_exists (cmd_key) {
+        return new Promise((resolve, reject) => {
+            console.log('Redis request to key: ' + cmd_key);
+            this.db_handler.client.exists(cmd_key, async (error, result) => {
+                if (error) {
+                    console.log(error);
+                    reject(error);
+                }
+                console.log('GET result -> ' + { result });
+
+                resolve(result === 1);
+            });
+        })
+    }
+
+
     async get_cmd_data (cmd_key, cmds_downloaded) {
         return new Promise((resolve, reject) => {
             console.log('Redis request to key: ' + cmd_key);

@@ -201,13 +201,13 @@ class AssignmentDatabaseHandler {
         // Add doc and grp to redis
         let user_id = user_key.replace(KeyDictionary.key_dictionary['user'], '');
         let doc_key = await document_db_handler.create_doc(user_id, main_context.container);
-        let master_group_key = await group_db_handler.create_group(user_id, doc_key);
-        await document_db_handler.add_group_to_doc(doc_key, master_group_key);
-        await user_db_handler.add_group_to_user(user_key, master_group_key);
+        let template_group_key = await group_db_handler.create_group(user_id, doc_key);
+        await document_db_handler.add_group_to_doc(doc_key, template_group_key);
+        await user_db_handler.add_group_to_user(user_key, template_group_key);
 
         let assignment_key = await this.create_assignment(import_handler, course_key, assignment_data);
 
-        await this.set_assignment_data(assignment_key, 'template_group', master_group_key);
+        await this.set_assignment_data(assignment_key, 'template_group', template_group_key);
 
 
         let submission_keys = [];
@@ -229,19 +229,6 @@ class AssignmentDatabaseHandler {
 
         for (let submission_key of submission_keys) {
 
-            let group_key = await group_db_handler.create_group(user_id, doc_key, master_group_key);
-            await group_db_handler.add_submission_to_group(group_key, submission_key);
-
-            await document_db_handler.add_group_to_doc(doc_key, group_key);
-
-            await user_db_handler.add_group_to_user(user_key, group_key);
-
-            try {
-                await submission_db_handler.add_group_to_comment_submission(submission_key, group_key);
-            } catch (e) {
-                console.warn(e);
-            }
-
             let submission_data = await submission_db_handler.get_submission_data(submission_key);
 
             let submitter_key = submission_data['submitter'];
@@ -249,6 +236,22 @@ class AssignmentDatabaseHandler {
             let submitter_data = await submitter_db_handler.get_submitter_data(submitter_key);
 
             let members = submitter_data['members'];
+
+            let first_student = members.pop();
+            let first_student_id = first_student.replace(KeyDictionary.key_dictionary['user'], '');
+
+            let group_key = await group_db_handler.create_group(first_student_id, doc_key, template_group_key);
+            await group_db_handler.add_submission_to_group(group_key, submission_key);
+
+            await document_db_handler.add_group_to_doc(doc_key, group_key);
+
+            await user_db_handler.add_group_to_user(first_student, group_key);
+
+            try {
+                await submission_db_handler.add_group_to_comment_submission(submission_key, group_key);
+            } catch (e) {
+                console.warn(e);
+            }
 
             for (let member of members) {
                 await user_db_handler.add_group_to_user(member, group_key);
@@ -298,28 +301,26 @@ class AssignmentDatabaseHandler {
         let submitter_data = await submitter_db_handler.get_submitter_data(submitter_key);
 
         for (let member of submitter_data['members']) {
-            // if (member !== user_key) {
-                await user_db_handler.add_group_to_user(member, group_key);
-                member = member.replace(KeyDictionary.key_dictionary['user'], '');
-                await group_db_handler.add_user_to_group(member, group_key);
-            // }
+            await user_db_handler.add_group_to_user(member, group_key);
+            member = member.replace(KeyDictionary.key_dictionary['user'], '');
+            await group_db_handler.add_user_to_group(member, group_key);
         }
 
         await group_db_handler.add_submission_to_group(group_key, submission_key);
         await submission_db_handler.add_group_to_document_submission(submission_key, group_key);
 
         // Add tas and instructors to the group
-        let tas_and_instructors = await course_db_handler.get_course_tas_and_instructors(course_key);
-
-        for (let ta of tas_and_instructors['tas']) {
-            let ta_id = ta.replace(KeyDictionary.key_dictionary['user'], '');
-            await group_db_handler.add_user_to_group(ta_id, group_key);
-        }
-
-        for (let instructor of tas_and_instructors['instructors']) {
-            let instructor_id = instructor.replace(KeyDictionary.key_dictionary['user'], '');
-            await group_db_handler.add_user_to_group(instructor_id, group_key);
-        }
+        // let tas_and_instructors = await course_db_handler.get_course_tas_and_instructors(course_key);
+        //
+        // for (let ta of tas_and_instructors['tas']) {
+        //     let ta_id = ta.replace(KeyDictionary.key_dictionary['user'], '');
+        //     await group_db_handler.add_user_to_group(ta_id, group_key);
+        // }
+        //
+        // for (let instructor of tas_and_instructors['instructors']) {
+        //     let instructor_id = instructor.replace(KeyDictionary.key_dictionary['user'], '');
+        //     await group_db_handler.add_user_to_group(instructor_id, group_key);
+        // }
 
         return submission_key;
     }

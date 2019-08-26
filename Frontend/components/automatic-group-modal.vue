@@ -95,7 +95,7 @@ export default {
 
 .modal-cancel-button {
   background-color: gray;
-  color: black;
+  color: white;
 }
 
 .modal-mask {

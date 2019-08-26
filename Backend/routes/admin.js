@@ -83,11 +83,11 @@ router.get('/all_course_data', async function(req, res){
  ** POST add a user as an instructor to a course
  */
 router.post('/add_instructor_to_course', async function(req, res, next) {
-    let user_db_handler = await ImportHandler.user_db_handler;
-
-    let req_user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
-
     try {
+        let user_db_handler = await ImportHandler.user_db_handler;
+
+        let req_user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+
         let is_admin = await user_db_handler.is_admin(req_user_key);
         if (!is_admin) {
             res.sendStatus(403);
@@ -98,7 +98,6 @@ router.post('/add_instructor_to_course', async function(req, res, next) {
         let course_key = KeyDictionary.key_dictionary['course'] + req.body.course_id;
 
         let course_db_handler = await ImportHandler.course_db_handler;
-        let user_db_handler = await ImportHandler.user_db_handler;
 
         await course_db_handler.add_instructor_to_course(user_key, course_key);
         await user_db_handler.add_course_to_instructor(user_key, course_key);

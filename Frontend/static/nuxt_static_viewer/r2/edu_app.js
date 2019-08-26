@@ -343,32 +343,14 @@
           groupid: 'grp:' + r2.ctx.groupid
         })
       ]).then(function(rtn) {
-        const myself = rtn[0]
-        const group = rtn[1]
+        let myself = rtn[0]
+        let users = rtn[1].users
+        r2.util.addEduInstructors(myself, users);
         return r2.userGroup.Set({
           self: myself,
-          users: group.users
+          users: users
         })
       })
-      // .then(function() {
-      //   return r2.util
-      //     .postToDbsServer('isDocCourseSubmission', {
-      //       docid: r2App.url_queries.get('docid'),
-      //       course_id: 'math2220_sp2016'
-      //     })
-      //     .then(function(is_doc_crs_submission) {
-      //       r2App.disable_comment_production = false
-      //       if (is_doc_crs_submission.resp) {
-      //         if (r2.userGroup.cur_user.n - 1 > 2) {
-      //           // disable comment production of the student user in math2220
-      //           r2App.disable_comment_production = false
-      //         }
-      //       }
-      //     })
-      //     .catch(function(err) {
-      //       console.error(err)
-      //     })
-      // })
     }
 
     function initLtiUserSet() {

@@ -336,7 +336,6 @@
           },
           timeout: 5000, // in milliseconds
           success: function(data) {
-            console.log({ data })
             resolve(data)
           },
           error: function(err) {
@@ -360,7 +359,6 @@
           },
           timeout: 5000, // in milliseconds
           success: function(data) {
-            console.log({ data })
             resolve(data)
           },
           error: function(err) {
@@ -368,6 +366,35 @@
           }
         })
       })
+    }
+
+    pub.addEduInstructors = function(myself, users){
+      function isInGroup(id, users){
+        let i = 0
+        for (let user of users){
+          if (id === user.id){
+            return i++
+          }
+        }
+        return -1
+      }
+      for (let user of users){
+        user.type = 'student'
+      }
+      if (r2.ctx.instructor_data){
+        for (let instructor_data of r2.ctx.instructor_data.all_instructors){
+          let idx_ins = isInGroup(instructor_data.id, users)
+          if (idx_ins===-1){
+            //add the instructor to the group
+            users.push({id: instructor_data.id, display_name:instructor_data.name, type: 'instructor'})
+          }
+          else{
+            //already in the group. likely that the instructor is the submitter.
+            users[idx_ins].type = 'instructor'
+          }
+        }
+      }
+
     }
 
     pub.postDownloadCmds = function(msg) {

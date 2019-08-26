@@ -42,7 +42,8 @@ const r2Sync = (function() {
         })
         .then(function(resp) {
           if (resp.group_update) {
-            r2.userGroup.Set(resp.group_update)
+            //r2.util.addEduInstructors(myself, users);
+            //r2.userGroup.Set(resp.group_update)
           }
           if (resp.cmds && resp.cmds.length !== 0) {
             return processDownloadedCmds(resp.cmds)

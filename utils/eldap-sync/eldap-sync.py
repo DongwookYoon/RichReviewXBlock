@@ -320,8 +320,8 @@ def main():
 			password = input('Please enter your password: ')
 			ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
 			l = ldap.initialize(eldap_config['url'])
-			username = eldap_config['user']
-			password = eldap_config['password']
+			username = 'uid=' + user + '.adm,ou=ADMINS,ou=IDM,dc=id,dc=ubc,dc=ca'
+			password = password
 			l.protocol_version = ldap.VERSION3
 			l.simple_bind_s(username, password)
 			break

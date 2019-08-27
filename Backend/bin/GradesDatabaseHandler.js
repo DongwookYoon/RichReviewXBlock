@@ -16,10 +16,8 @@ class GradesDatabaseHandler {
 
 
     static async get_instance() {
-        if (this.instance) {
-            console.log('Database handler instance found');
+        if (this.instance)
             return this.instance;
-        }
 
         this.instance = await new GradesDatabaseHandler();
         return this.instance;

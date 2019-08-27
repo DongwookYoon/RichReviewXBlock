@@ -13,10 +13,8 @@ class SubmissionDatabaseHandler {
 
 
     static async get_instance() {
-        if (this.instance) {
-            console.log('Database handler instance found');
+        if (this.instance)
             return this.instance;
-        }
 
         this.instance = await new SubmissionDatabaseHandler();
         return this.instance;
@@ -261,13 +259,11 @@ class SubmissionDatabaseHandler {
     async get_submission_data (submission_key) {
 
         return new Promise((resolve, reject) => {
-            console.log('Redis request to key: ' + submission_key);
             this.db_handler.client.hgetall(submission_key, (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('GET result -> ' + { result });
 
                 let parsed_data = RedisToJSONParser.parse_data_to_JSON(result);
                 resolve(parsed_data);
@@ -376,13 +372,11 @@ class SubmissionDatabaseHandler {
     set_submission_data(submission_key, field, value) {
 
         return new Promise((resolve, reject) => {
-            console.log('Redis hset request to key: ' + submission_key);
             this.db_handler.client.hset(submission_key, field, value, (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('SET result -> ' + result);
                 resolve();
             });
         })
@@ -405,7 +399,6 @@ class SubmissionDatabaseHandler {
                 console.log(error);
                 throw error;
             }
-            console.log('DEL result -> ' + result);
         });
     }
 

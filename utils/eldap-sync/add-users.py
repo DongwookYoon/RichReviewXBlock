@@ -40,7 +40,7 @@ def main():
 		
 	r = redis.Redis()
 	
-	for i in range(1, 100):
+	for i in range(100, 150):
 		key = create_user(r, i)
 		add_user_to_course(r, key)
 

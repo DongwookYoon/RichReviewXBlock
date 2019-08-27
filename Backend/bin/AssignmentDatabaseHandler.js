@@ -693,14 +693,11 @@ class AssignmentDatabaseHandler {
     get_assignment_data (user_key, assignment_key) {
 
         return new Promise((resolve, reject) => {
-            console.log('Redis request to key: ' + assignment_key);
             this.db_handler.client.hgetall(assignment_key, (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('GET result -> ' + { result });
-
                 let assignment_data = RedisToJSONParser.parse_data_to_JSON(result);
 
                 resolve(assignment_data);
@@ -895,7 +892,7 @@ class AssignmentDatabaseHandler {
 
         if(!submissions) {
             await this.set_assignment_data(assignment_key, 'submissions', '[]');
-            await course_db_handler.verify_submitters_for_all_students(import_handler, assignment_data['course']);
+            await course_db_handler.verify_course_submitters(import_handler, user_key, assignment_data['course']);
             assignment_data = await this.get_assignment_data(user_key, assignment_key);
             submissions = assignment_data['submissions'];
         }
@@ -933,13 +930,11 @@ class AssignmentDatabaseHandler {
     set_assignment_data (assignment_key, field, value) {
 
         return new Promise((resolve, reject) => {
-            console.log('Redis hset request to key: ' + assignment_key);
             this.db_handler.client.hset(assignment_key, field, value, (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('SET result -> ' + result);
                 resolve();
             });
         })
@@ -949,13 +944,11 @@ class AssignmentDatabaseHandler {
 
     get_assignment_id_title_and_points (assignment_key) {
         return new Promise((resolve, reject) => {
-            console.log('Redis request to key: ' + assignment_key);
             this.db_handler.client.hgetall(assignment_key, (error, result) => {
                 if (error || result === null) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('GET result -> ' + { result });
 
                 let assignment_data = RedisToJSONParser.parse_data_to_JSON(result);
 
@@ -1001,7 +994,6 @@ class AssignmentDatabaseHandler {
                 console.log(error);
                 throw error;
             }
-            console.log('DEL result -> ' + result);
         });
     }
 
@@ -1082,7 +1074,6 @@ class AssignmentDatabaseHandler {
 
     async is_valid_assignment_key (assignment_key) {
         return new Promise((resolve, reject) => {
-            console.log('Redis request to key: ' + assignment_key);
             this.db_handler.client.hgetall(assignment_key, (error, result) => {
                 if (error || result === null) {
                     resolve(false);

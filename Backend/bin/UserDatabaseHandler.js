@@ -8,7 +8,6 @@ const env = require('../env');
 class UserDatabaseHandler {
 
     constructor(){
-        console.log(RedisClient);
         RedisClient.get_instance().then((db_handler) => {
             this.db_handler = db_handler;
         });
@@ -30,10 +29,8 @@ class UserDatabaseHandler {
 
 
     static async get_instance() {
-        if (this.instance) {
-            console.log('Database handler instance found');
+        if (this.instance)
             return this.instance;
-        }
 
         this.instance = await new UserDatabaseHandler();
         return this.instance;
@@ -180,10 +177,7 @@ class UserDatabaseHandler {
 
 
     async add_submitter_to_user (user_key, submitter_key) {
-        console.log(`Adding submitter to user ${user_key}`);
         let user_data = await this.get_user_data(user_key);
-
-        console.log(JSON.stringify(user_data));
 
         let submitters = user_data['submitters'];
 

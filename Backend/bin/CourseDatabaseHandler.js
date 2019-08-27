@@ -7,7 +7,6 @@ const KeyDictionary = require('./KeyDictionary');
 class CourseDatabaseHandler {
 
     constructor(){
-        console.log(RedisClient);
         RedisClient.get_instance().then((db_handler) => {
             this.db_handler = db_handler;
         });
@@ -19,10 +18,8 @@ class CourseDatabaseHandler {
 
 
     static async get_instance() {
-        if (this.instance) {
-            console.log('Database handler instance found');
+        if (this.instance)
             return this.instance;
-        }
 
         this.instance = await new CourseDatabaseHandler();
         return this.instance;
@@ -431,13 +428,11 @@ class CourseDatabaseHandler {
 
     set_course_data (course_key, field, value) {
         return new Promise((resolve, reject) => {
-            console.log('Redis hset request to key: ' + course_key);
             this.db_handler.client.hset(course_key, field, value, (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('SET result -> ' + result);
                 resolve();
             });
         })
@@ -447,7 +442,6 @@ class CourseDatabaseHandler {
 
     get_course_data (course_key) {
         return new Promise((resolve, reject) => {
-            console.log('Redis request to key: ' + course_key);
             this.db_handler.client.hgetall(course_key, function (error, result) {
                 if(result === null){
                     error = new Error("Cannot find the course with the key: " + course_key);
@@ -456,7 +450,6 @@ class CourseDatabaseHandler {
                     console.log(error);
                     reject(error);
                 }
-                console.log('GET result -> ' + { result });
 
                 let parsed_data = RedisToJSONParser.parse_data_to_JSON(result);
 
@@ -468,13 +461,11 @@ class CourseDatabaseHandler {
 
     get_course_ids (user) {
         return new Promise((resolve, reject) => {
-            console.log('Redis request to key: ' + user);
             this.db_handler.client.hgetall(user, function (error, result) {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('GET result -> ' + { result });
                 let course_ids = {
                     enrolments: JSON.parse(result.enrolments),
                     taing: JSON.parse(result.taing),
@@ -501,7 +492,6 @@ class CourseDatabaseHandler {
 
             for (let assignment_key of course_data['assignments']) {
                 let submitter_exists = await submitter_db_handler.does_user_have_submitter(import_handler, user_key, assignment_key);
-                console.log(submitter_exists);
                 if (await assignment_db_handler.get_assignment_data(user_key, assignment_key))
                     filtered_assignments.push(assignment_key);
             }
@@ -534,13 +524,11 @@ class CourseDatabaseHandler {
         let enrolment_promises = taings.map((taing) => {
 
             return new Promise((resolve, reject) => {
-                console.log('Redis request to key: ' + user);
                 this.db_handler.client.hgetall(taing, (error, result) => {
                     if (error) {
                         console.log(error);
                         reject(error);
                     }
-                    console.log('GET result -> ' + {result});
 
                     if (JSON.parse(result['tas']).includes(user)) {
 
@@ -565,13 +553,11 @@ class CourseDatabaseHandler {
         let enrolment_promises = teachings.map((teaching) => {
 
             return new Promise((resolve, reject) => {
-                console.log('Redis request to key: ' + user);
                 this.db_handler.client.hgetall(teaching, (error, result) => {
                     if (error) {
                         console.log(error);
                         reject(error);
                     }
-                    console.log('GET result -> ' + {result});
 
                     if (JSON.parse(result['instructors']).includes(user)) {
                         for (let field in result) {
@@ -764,6 +750,17 @@ class CourseDatabaseHandler {
                 console.warn(e);
             }
         }
+    }
+
+
+    async verify_course_submitters (import_handler, user_key, course_key){
+        let user_db_handler = await import_handler.user_db_handler;
+
+        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
+        if (permissions === 'instructor' || permissions === 'ta')
+            await this.verify_submitters_for_all_students(import_handler, course_key);
+        else
+            await user_db_handler.verify_submitters_for_course(import_handler, user_key, course_key);
     }
 
 

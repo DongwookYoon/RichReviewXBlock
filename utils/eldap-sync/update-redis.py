@@ -33,6 +33,8 @@ def main():
 		value = input('What should the default value be? (enter no value for an empty string) ')
 			
 	redis_config = None
+	
+	# Change to redis_config_local.json to edit local redis db
 	with open(os.path.join(os.getcwd(), 'ssl', 'redis_config.json')) as json_file:
 		redis_config = json.load(json_file)
 

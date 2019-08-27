@@ -9,9 +9,15 @@ const r2Sync = (function() {
 
   const my_cmds = {} // my own commands will be tracked and ignored on download.
 
+  var downloader_run = false;
+
   pub.loop = function() {
     pub.uploader.loop()
-    pub.downloader.loop()
+    if(!downloader_run){
+      pub.downloader.runOnce()
+      downloader_run = true;
+    }
+    //pub.downloader.loop()
   }
 
   pub.downloader = (function() {
@@ -20,6 +26,57 @@ const r2Sync = (function() {
     let timestamp = 0
 
     let busy = false
+
+    pub_dn.runOnce = function(){
+      var downloadTemplateComments = function(){
+        if(r2.ctx.template_group_cmd){
+          return r2.util
+              .postDownloadCmds({
+                groupid_n: r2.ctx.template_group_cmd.substr(4),
+                groupid: "grp:"+r2.ctx.template_group_cmd.substr(4),
+                cmds_downloaded_n: 0,
+                cur_members_n: 0
+              })
+              .then(function(resp){
+                if(resp.cmds && resp.cmds.length !== 0){
+                  return processDownloadedCmds(resp.cmds);
+                }
+                else{
+                  return Promise.resolve(null);
+                }
+              })
+        }
+        else{
+          return Promise.resolve(null);
+        }
+      }
+
+      var downloadNonTemplateComments = function(){
+        return r2.util
+            .postDownloadCmds({
+              groupid_n: r2.ctx.groupid,
+              groupid: 'grp:' + r2.ctx.groupid,
+              cmds_downloaded_n: 0,
+              cur_members_n: 0
+            })
+            .then(function(resp) {
+              if (resp.cmds && resp.cmds.length !== 0) {
+                return processDownloadedCmds(resp.cmds)
+              }
+              return Promise.resolve(null)
+            })
+      }
+
+      downloadTemplateComments()
+          .then(downloadNonTemplateComments)
+          .catch(function(err) {
+            console.error(err, err.stack)
+            err.custom_msg =
+                'We failed to download data from the server. Please check your internet connection and retry.'
+            r2App.asyncErr.throw(err)
+          })
+
+    }
 
     pub_dn.loop = function() {
       if (r2App.cur_time - timestamp > r2Const.DB_SYNC_POLLING_INTERVAL) {

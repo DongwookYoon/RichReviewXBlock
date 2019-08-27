@@ -5,6 +5,7 @@ import os
 import time
 import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
+import sys
 
 def create_course(r, course):
 	course_key = course['key']
@@ -343,6 +344,7 @@ def sync_redis_with_ldap(r, l, eldap_config):
 	
 def main():
 
+	print(sys.argv)
 	redis_config = None
 	with open(os.path.join(os.getcwd(), 'ssl', 'redis_config.json')) as json_file:
 		redis_config = json.load(json_file)

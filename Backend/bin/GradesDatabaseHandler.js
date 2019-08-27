@@ -246,15 +246,20 @@ class GradesDatabaseHandler {
             student_grades['Student Name'] = grade['name'];
 
             for (let assignment of grade['grades']) {
-                let mark = '';
+                let mark;
 
-                if (assignment['mark'] !== '')
-                    mark = assignment['mark'];
-                else
-                    mark = assignment['submission_status'];
-
-                if (assignment['late'])
-                    mark = `${mark} - late`;
+                try {
+                    mark = JSON.parse(assignment['mark']);
+                } catch (e) {
+                    mark = 0;
+                }
+                // if (assignment['mark'] !== '')
+                //     mark = assignment['mark'];
+                // else
+                //     mark = assignment['submission_status'];
+                //
+                // if (assignment['late'])
+                //     mark = `${mark} - late`;
 
                 let assignment_title = `${assignment['title']} - Out of ${assignment['points']}`;
 

@@ -29,6 +29,7 @@ class GroupDatabaseHandler {
         let doc_db_handler = await import_handler.doc_db_handler;
         let user_db_handler = await import_handler.user_db_handler;
         let course_db_handler = await import_handler.course_db_handler;
+        let cmd_db_handler = await import_handler.cmd_db_handler;
 
         let group_data = await this.get_group_data(group_key);
 
@@ -47,6 +48,18 @@ class GroupDatabaseHandler {
            return { id: user_data['id'], name: user_data['nick_name' ]};
         }));
 
+        let template_group_cmd;
+
+        try {
+            let template_group = group_data['template_group'];
+            let template_group_id = template_group.replace(KeyDictionary.key_dictionary['group'], '');
+            template_group_cmd = KeyDictionary.key_dictionary['command'] + template_group_id;
+            if (!(await cmd_db_handler.does_cmd_exists(template_group_cmd)))
+                template_group_cmd = '';
+        } catch (e) {
+            template_group_cmd = '';
+        }
+
         return {
             r2_ctx: {
                 pdfid: doc_data['pdfid'],
@@ -60,7 +73,8 @@ class GroupDatabaseHandler {
                     cur_instructor_name: is_instructor ? user_data['nick_name'] : '',
                     cur_instructor_id: is_instructor ? user_data['id'] : '',
                     all_instructors
-                }
+                },
+                template_group_cmd: template_group_cmd
             },
             env: env.node_config.ENV,
             cdn_endpoint: env.azure_config.cdn.endpoint
@@ -126,7 +140,7 @@ class GroupDatabaseHandler {
 
 
 
-    async create_group (user_id, doc_key, master_group) {
+    async create_group (user_id, doc_key, template_group) {
         let creation_time = Date.now();
         let group_key = `${KeyDictionary.key_dictionary['group']}${user_id}_${creation_time}`;
 
@@ -135,13 +149,18 @@ class GroupDatabaseHandler {
         await this.set_group_data(group_key, 'creationTime', creation_time);
         await this.set_group_data(group_key, 'name', `Group created at ${new Date()}`);
         await this.set_group_data(group_key, 'submission', '');
+
+        let participating = [];
+        if (user_id !== '')
+            participating.push(user_id);
+
         await this.set_group_data(group_key, 'users', JSON.stringify({
             invited: [],
-            participating: [user_id]
+            participating: participating
         }));
 
         await this.set_group_data(group_key, 'write_blocked', '[]');
-        await this.set_group_data(group_key, 'master_group', master_group || '');
+        await this.set_group_data(group_key, 'template_group', template_group || '');
         return group_key;
     }
 
@@ -197,46 +216,6 @@ class GroupDatabaseHandler {
                 resolve();
             });
         })
-    }
-
-
-
-    async verify_instructor_group_memberships (import_handler, user_key, course_key) {
-        let user_db_handler = await import_handler.user_db_handler;
-        let course_db_handler = await import_handler.course_db_handler;
-        let assignment_db_handler = await import_handler.assignment_db_handler;
-        let submission_db_handler = await import_handler.submission_db_handler;
-
-        let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
-
-        if (permissions !== 'ta' && permissions !== 'instructor')
-            return;
-
-        let user_id = user_key.replace(KeyDictionary.key_dictionary['user'], '');
-
-        let course_data = await course_db_handler.get_course_data(course_key);
-        for (const assignment of course_data['assignments']) {
-            try {
-                let assignment_data = await assignment_db_handler.get_assignment_data('', assignment);
-                for (const submission of assignment_data['submissions']) {
-                    try {
-                        let submission_data = await submission_db_handler.get_submission_data(submission);
-                        if (submission_data['group'] && submission_data['group'] !== '') {
-                            await this.add_user_to_group(user_id, submission_data['group']);
-                            await user_db_handler.add_group_to_user(user_key, submission_data['group']);
-                        }
-                        if (submission_data['current_submission'] && submission_data['current_submission'] !== '') {
-                            await this.add_user_to_group(user_id, submission_data['current_submission']);
-                            await user_db_handler.add_group_to_user(user_key, submission_data['current_submission']);
-                        }
-                        for (const group of submission_data['past_submissions']) {
-                            await this.add_user_to_group(user_id, group);
-                            await user_db_handler.add_group_to_user(user_key, group);
-                        }
-                    } catch (e) { console.warn(e); }
-                }
-            } catch (e) { console.warn(e) ;}
-        }
     }
 
 

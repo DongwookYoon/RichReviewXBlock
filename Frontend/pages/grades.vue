@@ -175,15 +175,19 @@ export default {
     },
     calculate_total(grades) {
       let total = 0
-      console.log(grades)
+      if (isNaN(this.total_assignment_points) || this.total_assignment_points === 0)
+        return 0
+
       for (const grade of grades) {
         if (grade.mark !== '' && grade.count_toward_final_grade) {
           total += grade.mark * (grade.weight / 100)
         }
       }
-      return (
-        Math.round(((total * 100) / this.total_assignment_points) * 100) / 100
-      )
+
+      if (isNaN(total))
+        return 0
+
+      return Math.round(((total * 100) / this.total_assignment_points) * 100) / 100
     },
     isNumber: function(evt) {
       evt = evt || window.event

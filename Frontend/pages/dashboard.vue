@@ -155,7 +155,7 @@ p {
 #courses {
   /*display: grid;*/
   margin-top: 5%;
-  margin-left: 4%;
+  margin-left: 7vw;
   /*grid-template-columns: 20vw 20vw 20vw;*/
   /*grid-column-gap: 1vw;*/
   /*grid-row-gap: 6vh;*/

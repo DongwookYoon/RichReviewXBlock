@@ -268,38 +268,33 @@ class CourseGroupDatabaseHandler {
         let course_db_handler = await import_handler.course_db_handler;
         let course_data = await course_db_handler.get_course_data(course_key);
 
-        let active_group_ids = course_data['active_course_groups'];
-        let inactive_group_ids = course_data['inactive_course_groups'];
-        let active_course_groups;
-        let inactive_course_groups;
+        let course_group_sets = course_data['course_group_sets'];
+
+        let active_course_groups = [];
+
         try{
-            active_course_groups = await Promise.all(active_group_ids.map(async (group_key) => {
-                let group_data = await this.get_course_group_data(group_key);
-                let users = await this.get_all_course_group_users(import_handler, group_key);
+            for (const course_group_set of course_group_sets) {
+                let course_group_set_data = await this.get_course_group_set_data(course_group_set);
+                active_course_groups = active_course_groups.concat(
+                    await Promise.all(course_group_set_data['course_groups'].map(async (group_key) => {
+                    let group_data = await this.get_course_group_data(group_key);
+                    let users = await this.get_all_course_group_users(import_handler, group_key);
 
-                return { id: group_data['id'],
-                    name: group_data['name'],
-                    member_count: group_data['users'].length,
-                    members: users }
-            }));
-
-            inactive_course_groups = await Promise.all(inactive_group_ids.map(async (group_key) => {
-                let group_data = await this.get_course_group_data(group_key);
-                let users = await this.get_all_course_group_users(import_handler, group_key);
-
-                return { id: group_data['id'],
-                    name: group_data['name'],
-                    member_count: group_data['users'].length,
-                    members: users }
-            }));
+                    return { id: group_data['id'],
+                        name: group_data['name'],
+                        member_count: group_data['users'].length,
+                        members: users ,
+                        course_group_set: course_group_set_data['name']
+                    }
+                })));
+            }
         }
         catch(e){
-            console.warn("active_group_ids:", active_group_ids)
-            console.warn("inactive_group_ids:", inactive_group_ids)
+            console.warn(e)
         }
 
 
-        return { active_course_groups: active_course_groups, inactive_course_groups: inactive_course_groups };
+        return { active_course_groups: active_course_groups, inactive_course_groups: [] };
     }
 
 

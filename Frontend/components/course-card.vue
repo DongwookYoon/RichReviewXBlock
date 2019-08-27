@@ -14,7 +14,7 @@
       <p v-if="assignment_count === 1" class="course-assignment-count">
         {{ assignment_count }} Assignment
       </p>
-      <p class="course-role">{{ role }}</p>
+      <!--<p class="course-role">{{ role }}</p>-->
     </div>
   </div>
 </template>
@@ -86,6 +86,7 @@ export default {
   font-size: 1.75vh;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-height: 1rem;
 }
 
 .course-role {
@@ -111,11 +112,12 @@ export default {
 .course-card {
   margin-top: 0;
   /*margin-bottom: 5vh;*/
-  margin-left: 2vw;
+  /*margin-left: 2vw;*/
   background-color: #e8e8e8;
   min-height: 11vh;
   max-height: 25vh;
-  width: 17vw;
+  /*width: 17vw;*/
+  width: 262px;
   position: relative;
   break-inside: avoid-column;
   border-radius: 0.5vh;

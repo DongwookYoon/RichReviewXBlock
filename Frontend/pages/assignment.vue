@@ -4,52 +4,9 @@
     <b-alert v-model="showDismissibleAlert" variant="danger" dismissible>
       One or more files is required for a submission.
     </b-alert>
-    <modal width="60%" height="50%" name="Assignment Extensions">
-      <div id="modal-div">
-        <div id="student-list-div">
-          <p
-            v-for="s in student_or_group_list"
-            :key="s.key"
-            class="student-or-group"
-            :style="
-              selected_user_key === s.key ? selected_style : default_style
-            "
-            @click="select_student(s.key, s.name)"
-          >
-            {{ s.name }}
-          </p>
-        </div>
-        <div id="date-div">
-          <p>Extension Date</p>
-          <datetime
-            v-model="extension_date"
-            class="extension-date"
-            type="datetime"
-            use12-hour
-            title="Due Date"
-          ></datetime>
-          <button @click="add_extension">Add</button>
-        </div>
-        <div id="extension-div">
-          <div v-for="e in extensions" :key="e.key" class="extension">
-            <p class="extension-name">{{ e.name }}</p>
-            <datetime
-              v-model="e.date"
-              class="extension-date"
-              type="datetime"
-              use12-hour
-              title="Due Date"
-            ></datetime>
-          </div>
-        </div>
-      </div>
-      <div id="modal-footer">
-        <p id="modal-continue-button" @click="save_extensions">
-          Save
-        </p>
-        <p id="modal-cancel-button" @click="hide">Cancel</p>
-      </div>
-    </modal>
+    <assignment-extension-modal v-if="show_extensions_modal"
+      :cur_student_or_group_list="student_or_group_list" :cur_extensions="extensions">
+    </assignment-extension-modal>
     <div id="content">
       <nav-bar :course="course" :assignment="assignment.title.toString() || 'Untitled Assignment'" />
       <div id="assignment-header">
@@ -216,7 +173,8 @@ import { Datetime } from 'vue-datetime'
 import Footer from '../components/footer'
 import CourseSidebar from '../components/course_sidebar'
 import NavBar from '../components/nav_bar'
-import ModalPlugin from '../node_modules/bootstrap-vue'
+import AssignmentExtensionModal from '../components/assignment-extension-modal'
+import { EventBus } from '../plugins/event-bus'
 
 export default {
   name: 'Assignment',
@@ -224,14 +182,15 @@ export default {
     NavBar,
     CourseSidebar,
     Footer,
-    ModalPlugin,
+    AssignmentExtensionModal,
     datetime: Datetime
   },
   data: function() {
     return {
       showDismissibleAlert: false,
       selected_style: { color: 'white', 'background-color': '#0c2343' },
-      default_style: { color: '#0c2343', 'background-color': 'white' }
+      default_style: { color: '#0c2343', 'background-color': 'white' },
+      show_extensions_modal: false
     }
   },
   computed: {
@@ -306,6 +265,32 @@ export default {
       return redirect('/edu/login')
     }
   },
+  created: function() {
+    EventBus.$on('save-extensions', async data => {
+      this.extensions.map(extension => {
+        if (!data.extensions.includes(extension))
+          this.student_or_group_list.push({
+            key: extension.user,
+            name: extension.name
+          })
+      })
+      this.extensions = data.extensions
+      this.student_or_group_list = this.student_or_group_list.filter(user => {
+        for (const extension of this.extensions)
+          if (extension.user === user.key)
+            return false
+        return true
+      })
+      this.student_or_group_list = this.student_or_group_list.sort((a, b) => {
+        return ('' + a.name).localeCompare(b.name)
+      })
+      await this.save_extensions()
+    })
+
+    EventBus.$on('close-extensions', async data => {
+      this.hide()
+    })
+  },
   methods: {
     go_to_template() {
       window.open(
@@ -350,36 +335,10 @@ export default {
       )
     },
     show() {
-      this.$modal.show('Assignment Extensions')
+      this.show_extensions_modal = true
     },
     hide() {
-      this.$modal.hide('Assignment Extensions')
-    },
-    select_student(key, name) {
-      this.selected_user_key = key
-      this.selected_user_name = name
-    },
-    add_extension() {
-      if (
-        this.selected_user_key === '' ||
-        this.selected_user_name === '' ||
-        this.extension_date === ''
-      )
-        return
-
-      this.extensions.push({
-        user: this.selected_user_key,
-        date: this.extension_date,
-        name: this.selected_user_name
-      })
-
-      this.student_or_group_list = this.student_or_group_list.filter(user => {
-        return user.key !== this.selected_user_key
-      })
-
-      this.selected_user_key = ''
-      this.extension_date = ''
-      this.selected_user_name = ''
+      this.show_extensions_modal = false
     },
     addFiles() {
       this.$refs.files.click()
@@ -497,29 +456,6 @@ hr {
   right: 0;
   position: absolute;
   margin-right: 22vw;
-}
-
-#student-list-div {
-  overflow-y: scroll;
-  width: 30%;
-  margin-right: 3%;
-}
-
-.student-or-group {
-  cursor: pointer;
-}
-
-#date-div {
-  width: 30%;
-  margin-right: 3%;
-}
-
-.extension {
-  display: flex;
-}
-
-.extension-name {
-  margin-right: 5px;
 }
 
 #template-button,
@@ -642,44 +578,5 @@ hr {
   width: 5vw;
   font-size: 2.5vh;
   text-align: center;
-}
-
-#modal-div,
-#modal-footer {
-  display: flex;
-}
-
-#modal-div {
-  margin-top: 5vh;
-  margin-left: 2vw;
-}
-
-#modal-footer {
-  margin-top: 2vh;
-  margin-right: 1vw;
-  position: absolute;
-  bottom: 0;
-  right: 0;
-}
-
-#modal-continue-button,
-#modal-cancel-button {
-  font-size: 2.5vh;
-  color: white;
-  background-color: #0c2343;
-  border-radius: 0.5vh;
-  padding-left: 0.5vw;
-  padding-right: 0.5vw;
-  margin-top: 0.33vh;
-  margin-bottom: 0.33vh;
-  cursor: pointer;
-}
-
-#modal-continue-button {
-  margin-right: 0.5vw;
-}
-
-#modal-cancel-button {
-  background-color: #595959;
 }
 </style>

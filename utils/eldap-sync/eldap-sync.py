@@ -345,6 +345,9 @@ def sync_redis_with_ldap(r, l, eldap_config):
 def main():
 
 	print(sys.argv)
+	f = open("eldap-sync-log.txt","a+")
+	f.write(str(sys.argv))
+	f.close()
 #	redis_config = None
 #	with open(os.path.join(os.getcwd(), 'ssl', 'redis_config.json')) as json_file:
 #		redis_config = json.load(json_file)

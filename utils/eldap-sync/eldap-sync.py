@@ -359,19 +359,33 @@ def main():
 		ssl=True)
 	
 	l = None
+	if (len(sys.argv) < 3):
+		print('Username and password not passed as args! Args: ' + str(sys.argv))
+		f = open("eldap-sync-log.txt","a+")
+		f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + 'Username and password not passed as args! Args: ' + str(sys.argv) + '\n')
+		f.close()
+		exit(1)
+		
+	user = sys.argv[1].strip()
+	password = sys.argv[2].strip()
+	
 	try:
-		user = sys.argv[1].strip()
-		password = sys.argv[2].strip()
 		ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
 		l = ldap.initialize(eldap_config['url'])
 		username = 'uid=' + user + '.adm,ou=ADMINS,ou=IDM,dc=id,dc=ubc,dc=ca'
 		password = password
 		l.protocol_version = ldap.VERSION3
 		l.simple_bind_s(username, password)
-	except Exception:
-		print('An error occured logging into eldap')
+		
+		print('Logged in as: ' + user)
 		f = open("eldap-sync-log.txt","a+")
-		f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + 'An error occured logging into eldap\n')
+		f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + 'Logged in as: ' + user + '\n')
+		f.close()
+		exit(1)
+	except Exception:
+		print('An error occured logging into eldap for user: ' + user)
+		f = open("eldap-sync-log.txt","a+")
+		f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + 'An error occured logging into eldap for user: ' + user + '\n')
 		f.close()
 		exit(1)
 	

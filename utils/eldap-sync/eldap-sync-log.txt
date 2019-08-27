@@ -1,0 +1,2 @@
+2019-08-27 13:35: Username and password not passed as args! Args: ['eldap-sync.py']
+2019-08-27 13:35: An error occured logging into eldap for user: a

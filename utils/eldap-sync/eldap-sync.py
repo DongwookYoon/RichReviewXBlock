@@ -360,8 +360,8 @@ def main():
 	
 	l = None
 	try:
-		user = sys.argv[1]
-		password = sys.argv[2]
+		user = sys.argv[1].strip()
+		password = sys.argv[2].strip()
 		ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
 		l = ldap.initialize(eldap_config['url'])
 		username = 'uid=' + user + '.adm,ou=ADMINS,ou=IDM,dc=id,dc=ubc,dc=ca'

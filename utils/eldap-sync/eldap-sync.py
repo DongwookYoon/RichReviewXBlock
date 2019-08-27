@@ -367,7 +367,7 @@ def main():
 		exit(1)
 		
 	user = sys.argv[1].strip()
-	password = sys.argv[2].strip()
+	password = bytearray.fromhex(sys.argv[2]).decode().strip()[:-1]
 	
 	try:
 		ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)

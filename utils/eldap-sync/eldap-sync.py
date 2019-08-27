@@ -345,49 +345,49 @@ def sync_redis_with_ldap(r, l, eldap_config):
 def main():
 
 	print(sys.argv)
-	redis_config = None
-	with open(os.path.join(os.getcwd(), 'ssl', 'redis_config.json')) as json_file:
-		redis_config = json.load(json_file)
-		
-	eldap_config = None
-	with open(os.path.join(os.getcwd(), 'ssl', 'eldap_config.json')) as json_file:
-		eldap_config = json.load(json_file)
-		
-	r = redis.StrictRedis(
-		host=redis_config['redis_cache']['hostname'],
-		port=redis_config['redis_cache']['port'],
-		password=redis_config['redis_cache']['access_key'],
-		ssl=True)
-	
-	l = None
-	while True:
-		try:
-			user = input('Please enter your cwl username: ')
-			password = input('Please enter your password: ')
-			ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-			l = ldap.initialize(eldap_config['url'])
-			username = 'uid=' + user + '.adm,ou=ADMINS,ou=IDM,dc=id,dc=ubc,dc=ca'
-			password = password
-			l.protocol_version = ldap.VERSION3
-			l.simple_bind_s(username, password)
-			break
-		except Exception:
-			print('An error occured logging into eldap')
-			f = open("eldap-sync-log.txt","a+")
-			f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + 'An error occured logging into eldap\n')
-			f.close()
-	
-	SYNC_INTERVAL = 3600 #seconds
-	 
-	scheduler = BackgroundScheduler()
-	scheduler.start()	
-	
-	sync_redis_with_ldap(r, l, eldap_config)
-
-	scheduler.add_job(sync_redis_with_ldap, 'interval', [r, l, eldap_config],seconds = SYNC_INTERVAL)
-
-	while True:
-		time.sleep(1)
+#	redis_config = None
+#	with open(os.path.join(os.getcwd(), 'ssl', 'redis_config.json')) as json_file:
+#		redis_config = json.load(json_file)
+#		
+#	eldap_config = None
+#	with open(os.path.join(os.getcwd(), 'ssl', 'eldap_config.json')) as json_file:
+#		eldap_config = json.load(json_file)
+#		
+#	r = redis.StrictRedis(
+#		host=redis_config['redis_cache']['hostname'],
+#		port=redis_config['redis_cache']['port'],
+#		password=redis_config['redis_cache']['access_key'],
+#		ssl=True)
+#	
+#	l = None
+#	while True:
+#		try:
+#			user = input('Please enter your cwl username: ')
+#			password = input('Please enter your password: ')
+#			ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
+#			l = ldap.initialize(eldap_config['url'])
+#			username = 'uid=' + user + '.adm,ou=ADMINS,ou=IDM,dc=id,dc=ubc,dc=ca'
+#			password = password
+#			l.protocol_version = ldap.VERSION3
+#			l.simple_bind_s(username, password)
+#			break
+#		except Exception:
+#			print('An error occured logging into eldap')
+#			f = open("eldap-sync-log.txt","a+")
+#			f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + 'An error occured logging into eldap\n')
+#			f.close()
+#	
+#	SYNC_INTERVAL = 3600 #seconds
+#	 
+#	scheduler = BackgroundScheduler()
+#	scheduler.start()	
+#	
+#	sync_redis_with_ldap(r, l, eldap_config)
+#
+#	scheduler.add_job(sync_redis_with_ldap, 'interval', [r, l, eldap_config],seconds = SYNC_INTERVAL)
+#
+#	while True:
+#		time.sleep(1)
 		
 if __name__ == "__main__":
 	main()

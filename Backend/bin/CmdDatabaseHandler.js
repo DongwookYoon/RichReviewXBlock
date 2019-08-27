@@ -9,10 +9,8 @@ class CmdDatabaseHandler {
 
 
     static async get_instance() {
-        if (this.instance) {
-            console.log('Database handler instance found');
+        if (this.instance)
             return this.instance;
-        }
 
         this.instance = await new CmdDatabaseHandler();
         return this.instance;
@@ -21,13 +19,11 @@ class CmdDatabaseHandler {
 
     async does_cmd_exists (cmd_key) {
         return new Promise((resolve, reject) => {
-            console.log('Redis request to key: ' + cmd_key);
             this.db_handler.client.exists(cmd_key, async (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('GET result -> ' + { result });
 
                 resolve(result === 1);
             });
@@ -37,13 +33,11 @@ class CmdDatabaseHandler {
 
     async get_cmd_data (cmd_key, cmds_downloaded) {
         return new Promise((resolve, reject) => {
-            console.log('Redis request to key: ' + cmd_key);
             this.db_handler.client.lrange(cmd_key, cmds_downloaded, -1, async (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('GET result -> ' + { result });
 
                 let cmds = RedisToJSONParser.parse_data_to_JSON(result);
 
@@ -91,8 +85,6 @@ class CmdDatabaseHandler {
 
             cmds_per_pid[pid].push(cmd);
         }
-
-        console.log('');
 
         for (let pid in cmds_per_pid) {
             cmds_per_pid[pid].sort((a, b) => {

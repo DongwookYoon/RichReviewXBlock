@@ -9,10 +9,8 @@ class DocumentUploadHandler {
 
 
     static async get_instance() {
-        if (this.instance) {
-            console.log('Database handler instance found');
+        if (this.instance)
             return this.instance;
-        }
 
         if (!fs.existsSync('/tmp'))
             fs.mkdirSync('/tmp');

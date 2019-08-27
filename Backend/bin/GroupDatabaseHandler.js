@@ -14,10 +14,8 @@ class GroupDatabaseHandler {
 
 
     static async get_instance() {
-        if (this.instance) {
-            console.log('Database handler instance found');
+        if (this.instance)
             return this.instance;
-        }
 
         this.instance = await new GroupDatabaseHandler();
         return this.instance;
@@ -107,13 +105,11 @@ class GroupDatabaseHandler {
 
     async get_group_data (group_key) {
         return new Promise((resolve, reject) => {
-            console.log('Redis request to key: ' + group_key);
             this.db_handler.client.hgetall(group_key, async (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('GET result -> ' + { result });
 
                 let group_data = RedisToJSONParser.parse_data_to_JSON(result);
 
@@ -206,13 +202,11 @@ class GroupDatabaseHandler {
     set_group_data(group_key, field, value) {
 
         return new Promise((resolve, reject) => {
-            console.log('Redis hset request to key: ' + group_key);
             this.db_handler.client.hset(group_key, field, value, (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('SET result -> ' + result);
                 resolve();
             });
         })

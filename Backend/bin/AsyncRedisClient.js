@@ -4,7 +4,9 @@ const env = require('../env');
 
 class AsyncRedisClient {
 
-    constructor(){
+    constructor() {}
+
+    async init(){
 
         if(env.node_config.ENV === 'production') {
             console.log('using redis cache for RichReview CA VM');
@@ -35,12 +37,11 @@ class AsyncRedisClient {
 
 
     static async get_instance() {
-        if (this.instance) {
-            console.log('AsyncDatabase handler instance found');
+        if (this.instance)
             return this.instance;
-        }
 
-        this.instance = await new AsyncRedisClient();
+        this.instance = new AsyncRedisClient();
+        await this.instance.init();
         return this.instance;
     }
 }

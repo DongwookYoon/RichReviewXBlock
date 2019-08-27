@@ -5,10 +5,14 @@ import os
 import time
 import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
+import sys
 
 def create_course(r, course):
 	course_key = course['key']
 	print('\t-> Creating course {}'.format(course_key))
+	f = open("eldap-sync-log.txt","a+")
+	f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Creating course {}\n'.format(course_key))
+	f.close()
 	
 	course_details = get_course_details(course)
 	
@@ -55,6 +59,9 @@ def get_course_details(course):
 
 def create_user(r, user_key, key_dict):
 	print('\t-> Creating user {}'.format(user_key))
+	f = open("eldap-sync-log.txt","a+")
+	f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Creating user {}\n'.format(user_key))
+	f.close()
 	
 	user_data = {
 		'id': user_key.replace(key_dict['user'], ''),
@@ -81,6 +88,9 @@ def create_user(r, user_key, key_dict):
 	
 def update_user_information (r, user_key, key_dict):
 	print('\t-> Updating user {}'.format(user_key))
+	f = open("eldap-sync-log.txt","a+")
+	f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Updating user {}\n'.format(user_key))
+	f.close()
 	r.hset(user_key, 'auth_type', 'UBC_CWL');
 
 	
@@ -91,6 +101,10 @@ def user_exists(r, user_key):
 
 def add_student_to_course(r, user_key, course_key):
 	print('\t-> Adding user {} to course {}'.format(user_key, course_key))
+	f = open("eldap-sync-log.txt","a+")
+	f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Adding user {} to course {}\n'.format(user_key, course_key))
+	f.close()
+	
 	course_data = r.hgetall(course_key)
 	course_data = { y.decode('ascii'): course_data.get(y).decode('ascii') for y in course_data.keys() }
 	active_students = json.loads(course_data['active_students'])
@@ -107,6 +121,10 @@ def add_student_to_course(r, user_key, course_key):
 
 def add_instructor_to_course(r, user_key, course_key):
 	print('\t-> Adding instructor {} to course {}'.format(user_key, course_key))
+	f = open("eldap-sync-log.txt","a+")
+	f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Adding instructor {} to course {}\n'.format(user_key, course_key))
+	f.close()
+	
 	course_data = r.hgetall(course_key)
 	course_data = { y.decode('ascii'): course_data.get(y).decode('ascii') for y in course_data.keys() }
 	instructors = json.loads(course_data['instructors'])
@@ -118,6 +136,10 @@ def add_instructor_to_course(r, user_key, course_key):
 
 def add_course_to_student(r, user_key, course_key):
 	print('\t-> Adding course {} to user {}'.format(course_key, user_key))
+	f = open("eldap-sync-log.txt","a+")
+	f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Adding course {} to user {}\n'.format(course_key, user_key))
+	f.close()
+	
 	user_data = r.hgetall(user_key)
 	user_data = { y.decode('ascii'): user_data.get(y).decode('ascii') for y in user_data.keys() }
 	enrolments = json.loads(user_data['enrolments'])
@@ -129,6 +151,10 @@ def add_course_to_student(r, user_key, course_key):
 	
 def add_course_to_instructor(r, user_key, course_key):
 	print('\t-> Adding course {} to instructor {}'.format(course_key, user_key))
+	f = open("eldap-sync-log.txt","a+")
+	f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Adding course {} to instructor {}\n'.format(course_key, user_key))
+	f.close()
+	
 	user_data = r.hgetall(user_key)
 	user_data = { y.decode('ascii'): user_data.get(y).decode('ascii') for y in user_data.keys() }
 	teaching = json.loads(user_data['teaching'])
@@ -153,6 +179,10 @@ def get_all_course_instructors(r, course_key):
 
 def remove_unenrolled_student(r, user_key, course_key):
 	print('\t-> Removing {} as a student from {}'.format(user_key, course_key))
+	f = open("eldap-sync-log.txt","a+")
+	f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Removing {} as a student from {}\n'.format(user_key, course_key))
+	f.close()
+	
 	course_data = r.hgetall(course_key)
 	course_data = { y.decode('ascii'): course_data.get(y).decode('ascii') for y in course_data.keys() }
 	active_students = json.loads(course_data['active_students'])
@@ -177,6 +207,10 @@ def remove_unenrolled_student(r, user_key, course_key):
 	
 def remove_unenrolled_instructor(r, user_key, course_key):
 	print('\t-> Removing {} as an instructor from {}'.format(user_key, course_key))
+	f = open("eldap-sync-log.txt","a+")
+	f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Removing {} as an instructor from {}'.format(user_key, course_key))
+	f.close()
+	
 	course_data = r.hgetall(course_key)
 	course_data = { y.decode('ascii'): course_data.get(y).decode('ascii') for y in course_data.keys() }
 	instructors = json.loads(course_data['instructors'])
@@ -253,19 +287,12 @@ def is_instructor_course(course_string):
 	return course_string.find('instructor') > 0
 
 
-def get_all_courses(eldap_config, key_dict):
-	ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-	l = ldap.initialize(eldap_config['url'])
-	username = eldap_config['user']
-	password = eldap_config['password']
-
+def get_all_courses(l, eldap_config, key_dict):
 	searchFilter = "(cn=*)"
 	searchAttribute = []
 	searchScope = ldap.SCOPE_SUBTREE
 	
 	try:
-		l.protocol_version = ldap.VERSION3
-		l.simple_bind_s(username, password)
 		results = l.search_s(eldap_config['dn'], searchScope, searchFilter, searchAttribute) 
 		courses = []
 
@@ -279,17 +306,44 @@ def get_all_courses(eldap_config, key_dict):
 					course['members'].append(get_user_key(member, key_dict))
 				course['is_instructor_course'] = is_instructor_course(result[0])
 				courses.append(course)
-		l.unbind_s()
+		#l.unbind_s()
 		return courses
 	except Exception as error:
 		print (error)
+		f = open("eldap-sync-log.txt","a+")
+		f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + str(error) + '\n')
+		f.close()
 	
 
-def sync_redis_with_ldap():
+def sync_redis_with_ldap(r, l, eldap_config):
 	print('==================================================================================================')
+	f = open("eldap-sync-log.txt","a+")
+	f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '==================================================================================================\n')
 	print('Running syncronization with UBC LDAP at {}'.format(datetime.datetime.now()))
-	key_dict = { 'course': 'crs:', 'user': 'usr:' }
+	f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + 'Running syncronization with UBC LDAP at {}\n'.format(datetime.datetime.now()))
+	f.close()
 	
+	key_dict = { 'course': 'crs:', 'user': 'usr:' }
+
+	courses = get_all_courses(l, eldap_config, key_dict)
+
+	for course in courses:
+		if not course_exists(r, course['key']):
+			create_course(r, course)
+			
+		if not course['is_instructor_course']:
+			syncronize_students(r, course, key_dict)
+		else:
+			synconize_instructors(r, course, key_dict)
+	
+	print('Syncronization complete at {}'.format(datetime.datetime.now()))
+	f = open("eldap-sync-log.txt","a+")
+	f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + 'Syncronization complete at {}\n'.format(datetime.datetime.now()))
+	f.close()
+	
+	
+def main():
+
 	redis_config = None
 	with open(os.path.join(os.getcwd(), 'ssl', 'redis_config.json')) as json_file:
 		redis_config = json.load(json_file)
@@ -303,30 +357,46 @@ def sync_redis_with_ldap():
 		port=redis_config['redis_cache']['port'],
 		password=redis_config['redis_cache']['access_key'],
 		ssl=True)
-
-	courses = get_all_courses(eldap_config, key_dict)
-
-	for course in courses:
-		if not course_exists(r, course['key']):
-			create_course(r, course)
-			
-		if not course['is_instructor_course']:
-			syncronize_students(r, course, key_dict)
-		else:
-			synconize_instructors(r, course, key_dict)
 	
-	print('Syncronization complete at {}'.format(datetime.datetime.now()))
+	l = None
+	if (len(sys.argv) < 3):
+		print('Username and password not passed as args! Args: ' + str(sys.argv))
+		f = open("eldap-sync-log.txt","a+")
+		f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + 'Username and password not passed as args! Args: ' + str(sys.argv) + '\n')
+		f.close()
+		exit(1)
+		
+	user = sys.argv[1].strip()
+	password = bytearray.fromhex(sys.argv[2]).decode().strip()
 	
+	try:
+		ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
+		l = ldap.initialize(eldap_config['url'])
+		username = 'uid=' + user + '.adm,ou=ADMINS,ou=IDM,dc=id,dc=ubc,dc=ca'
+		password = password
+		l.protocol_version = ldap.VERSION3
+		l.simple_bind_s(username, password)
+		
+		print('Logged in as: ' + user)
+		f = open("eldap-sync-log.txt","a+")
+		f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + 'Logged in as: ' + user + '\n')
+		f.close()
+		exit(1)
+	except Exception:
+		print('An error occured logging into eldap for user: ' + user)
+		f = open("eldap-sync-log.txt","a+")
+		f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + 'An error occured logging into eldap for user: ' + user + '\n')
+		f.close()
+		exit(1)
 	
-def main():
-	SYNC_INTERVAL = 600 #seconds
+	SYNC_INTERVAL = 3600 #seconds
 	 
 	scheduler = BackgroundScheduler()
 	scheduler.start()	
 	
-	sync_redis_with_ldap()
+	sync_redis_with_ldap(r, l, eldap_config)
 
-	scheduler.add_job(sync_redis_with_ldap, 'interval', seconds = SYNC_INTERVAL)
+	scheduler.add_job(sync_redis_with_ldap, 'interval', [r, l, eldap_config],seconds = SYNC_INTERVAL)
 
 	while True:
 		time.sleep(1)

@@ -9,10 +9,8 @@ class DocumentDatabaseHandler {
 
 
     static async get_instance() {
-        if (this.instance) {
-            console.log('Database handler instance found');
+        if (this.instance)
             return this.instance;
-        }
 
         this.instance = await new DocumentDatabaseHandler();
         return this.instance;
@@ -65,13 +63,11 @@ class DocumentDatabaseHandler {
     set_document_data(doc_key, field, value) {
 
         return new Promise((resolve, reject) => {
-            console.log('Redis hset request to key: ' + doc_key);
             this.db_handler.client.hset(doc_key, field, value, (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('SET result -> ' + result);
                 resolve();
             });
         })

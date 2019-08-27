@@ -1,5 +1,8 @@
 <template>
   <div id="new-assignment">
+    <loading :active.sync="loading"
+             :is-full-page="true"
+             color="#0c2343"></loading>
     <course-sidebar :name="name" />
     <div id="content">
       <b-alert v-model="showDismissibleAlert" variant="danger" dismissible>
@@ -188,6 +191,8 @@ import axios from 'axios'
 import Footer from '../components/footer'
 import CourseSidebar from '../components/course_sidebar'
 import NavBar from '../components/nav_bar'
+import Loading from 'vue-loading-overlay';
+import 'vue-loading-overlay/dist/vue-loading.css';
 
 export default {
   name: 'NewAssignment',
@@ -195,7 +200,8 @@ export default {
     NavBar,
     CourseSidebar,
     Footer,
-    datetime: Datetime
+    datetime: Datetime,
+    Loading
   },
   data: function() {
     return {
@@ -218,7 +224,8 @@ export default {
       },
       files: [],
       showDismissibleAlert: false,
-      changesSaved: false
+      changesSaved: false,
+      loading: false
     }
   },
   async asyncData(context) {
@@ -292,58 +299,65 @@ export default {
         return
       }
       this.changesSaved = true
-      if (this.assignment_data.type === 'comment_submission') {
-        if (this.files.length === 0) {
-          // this.showDismissibleAlert = true
-          alert(
-            'One or more files is required for a comment submission assignment'
-          )
-          return
-        }
-        const formData = new FormData()
-        for (let i = 0; i < this.files.length; i++) {
-          const file = this.files[i]
-          if (file.type !== 'application/pdf') {
-            alert('Files must be in pdf format')
+      try {
+        if (this.assignment_data.type === 'comment_submission') {
+          if (this.files.length === 0) {
+            // this.showDismissibleAlert = true
+            alert(
+              'One or more files is required for a comment submission assignment'
+            )
             return
           }
-          formData.append(`file-${i}`, file)
+          this.loading = true
+          const formData = new FormData()
+          for (let i = 0; i < this.files.length; i++) {
+            const file = this.files[i]
+            if (file.type !== 'application/pdf') {
+              alert('Files must be in pdf format')
+              return
+            }
+            formData.append(`file-${i}`, file)
+          }
+
+          formData.append('assignment_data', JSON.stringify(this.assignment_data))
+
+          await axios.post(
+            `https://${process.env.backend}:3000/courses/${
+              this.$route.params.course_id
+              }/assignments/comment_submission_assignment`,
+            formData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: this.$store.state.authUser.id
+              },
+              httpsAgent: new https.Agent({
+                rejectUnauthorized: false
+              })
+            }
+          )
+          this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
+        } else {
+          this.loading = true
+          await axios.post(
+            `https://${process.env.backend}:3000/courses/${
+              this.$route.params.course_id
+              }/assignments/document_submission_assignment`,
+            { assignment_data: this.assignment_data },
+            {
+              headers: {
+                Authorization: this.$store.state.authUser.id
+              },
+              httpsAgent: new https.Agent({
+                rejectUnauthorized: false
+              })
+            }
+          )
+          this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
         }
-
-        formData.append('assignment_data', JSON.stringify(this.assignment_data))
-
-        await axios.post(
-          `https://${process.env.backend}:3000/courses/${
-            this.$route.params.course_id
-          }/assignments/comment_submission_assignment`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              Authorization: this.$store.state.authUser.id
-            },
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          }
-        )
-        this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
-      } else {
-        await axios.post(
-          `https://${process.env.backend}:3000/courses/${
-            this.$route.params.course_id
-          }/assignments/document_submission_assignment`,
-          { assignment_data: this.assignment_data },
-          {
-            headers: {
-              Authorization: this.$store.state.authUser.id
-            },
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          }
-        )
-        this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
+      } catch (e) {
+        this.loading = false
+        window.alert(e.response.data.message)
       }
     },
     addFiles() {

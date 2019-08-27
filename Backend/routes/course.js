@@ -44,7 +44,7 @@ router.get('/:course_id', async function(req, res, next) {
     let user_db_handler = await ImportHandler.user_db_handler;
 
     try {
-        await course_db_handler.verify_submitters_for_all_students(ImportHandler, course_key);
+        await course_db_handler.verify_course_submitters(ImportHandler, user_key, course_key);
 
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
         let data = await course_db_handler.get_course(ImportHandler, user_key, course_key);

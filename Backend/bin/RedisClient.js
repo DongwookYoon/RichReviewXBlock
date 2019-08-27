@@ -4,10 +4,12 @@ const env = require('../env');
 class RedisClient {
 
     constructor(){
+    }
 
+    async init() {
         if(env.node_config.ENV === 'production') {
             console.log('using redis cache for RichReview CA VM');
-            this.client = redis.createClient(
+            this.client = await redis.createClient(
                 env.redis_config.redis_cache.port,
                 env.redis_config.redis_cache.hostname,
                 {
@@ -19,7 +21,7 @@ class RedisClient {
             );
         } else {
             console.log('using local redis server');
-            this.client = redis.createClient(env.redis_config.port);
+            this.client = await redis.createClient(env.redis_config.port);
         }
 
         this.client.on('connect', function() {
@@ -32,14 +34,12 @@ class RedisClient {
     }
 
 
-
     static async get_instance() {
-        if (this.instance) {
-            console.log('Database handler instance found');
+        if (this.instance)
             return this.instance;
-        }
 
-        this.instance = await new RedisClient();
+        this.instance = new RedisClient();
+        await this.instance.init();
         return this.instance;
     }
 }

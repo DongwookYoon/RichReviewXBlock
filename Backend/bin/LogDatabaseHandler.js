@@ -9,10 +9,8 @@ class LogDatabaseHandler {
 
 
     static async get_instance() {
-        if (this.instance) {
-            console.log('Database handler instance found');
+        if (this.instance)
             return this.instance;
-        }
 
         this.instance = await new LogDatabaseHandler();
         return this.instance;
@@ -44,13 +42,11 @@ class LogDatabaseHandler {
 
     async get_logs (log_key) {
         return new Promise((resolve, reject) => {
-            console.log('Redis request to key: ' + log_key);
             this.db_handler.client.lrange(log_key, 0, -1, async (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('GET result -> ' + { result });
 
                 let logs = RedisToJSONParser.parse_data_to_JSON(result);
 

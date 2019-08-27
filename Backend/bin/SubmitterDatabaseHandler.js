@@ -14,10 +14,8 @@ class SubmitterDatabaseHandler {
 
 
     static async get_instance() {
-        if (this.instance) {
-            console.log('Database handler instance found');
+        if (this.instance)
             return this.instance;
-        }
 
         this.instance = await new SubmitterDatabaseHandler();
         return this.instance;
@@ -109,13 +107,11 @@ class SubmitterDatabaseHandler {
 
     get_submitter_data (submitter_key) {
         return new Promise((resolve, reject) => {
-            console.log('Redis request to key: ' + submitter_key);
             this.db_handler.client.hgetall(submitter_key, (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('GET result -> ' + { result });
 
                 let parsed_data = RedisToJSONParser.parse_data_to_JSON(result);
                 resolve(parsed_data);
@@ -128,13 +124,11 @@ class SubmitterDatabaseHandler {
     set_submitter_data(submitter_key, field, value) {
 
         return new Promise((resolve, reject) => {
-            console.log('Redis hset request to key: ' + submitter_key);
             this.db_handler.client.hset(submitter_key, field, value, (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('SET result -> ' + result);
                 resolve();
             });
         })
@@ -147,9 +141,6 @@ class SubmitterDatabaseHandler {
 
         let submitter_data = await this.get_submitter_data(submitter_key);
         let members = submitter_data['members'];
-
-        if (members === undefined)
-            console.log('');
 
         for (let member of members) {
             try {
@@ -175,7 +166,6 @@ class SubmitterDatabaseHandler {
                 console.log(error);
                 throw error;
             }
-            console.log('DEL result -> ' + result);
         });
     }
 

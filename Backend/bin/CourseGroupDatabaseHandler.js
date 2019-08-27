@@ -15,10 +15,8 @@ class CourseGroupDatabaseHandler {
 
 
     static async get_instance() {
-        if (this.instance) {
-            console.log('Database handler instance found');
+        if (this.instance)
             return this.instance;
-        }
 
         this.instance = await new CourseGroupDatabaseHandler();
         return this.instance;
@@ -205,13 +203,11 @@ class CourseGroupDatabaseHandler {
 
     async get_course_group_set_data (course_group_set_key) {
         return new Promise((resolve, reject) => {
-            console.log('Redis request to key: ' + course_group_set_key);
             this.db_handler.client.hgetall(course_group_set_key, (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('GET result -> ' + { result });
 
                 let parsed_data = RedisToJSONParser.parse_data_to_JSON(result);
 
@@ -475,13 +471,11 @@ class CourseGroupDatabaseHandler {
     set_course_group_data (course_group_key, field, value) {
 
         return new Promise((resolve, reject) => {
-            console.log('Redis hset request to key: ' + course_group_key);
             this.db_handler.client.hset(course_group_key, field, value, (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('SET result -> ' + result);
                 resolve();
             });
         })
@@ -491,13 +485,11 @@ class CourseGroupDatabaseHandler {
     set_course_group_set_data (course_group_set_key, field, value) {
 
         return new Promise((resolve, reject) => {
-            console.log('Redis hset request to key: ' + course_group_set_key);
             this.db_handler.client.hset(course_group_set_key, field, value, (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('SET result -> ' + result);
                 resolve();
             });
         })
@@ -507,13 +499,11 @@ class CourseGroupDatabaseHandler {
 
     get_course_group_data (course_group_key) {
         return new Promise((resolve, reject) => {
-            console.log('Redis request to key: ' + course_group_key);
             this.db_handler.client.hgetall(course_group_key, (error, result) => {
                 if (error) {
                     console.log(error);
                     reject(error);
                 }
-                console.log('GET result -> ' + { result });
 
                 let parsed_data = RedisToJSONParser.parse_data_to_JSON(result);
 
@@ -592,7 +582,6 @@ class CourseGroupDatabaseHandler {
                 console.log(error);
                 throw error;
             }
-            console.log('DEL result -> ' + result);
         });
     }
 
@@ -619,7 +608,6 @@ class CourseGroupDatabaseHandler {
                 console.log(error);
                 throw error;
             }
-            console.log('DEL result -> ' + result);
         });
     }
 }

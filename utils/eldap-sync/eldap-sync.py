@@ -253,19 +253,12 @@ def is_instructor_course(course_string):
 	return course_string.find('instructor') > 0
 
 
-def get_all_courses(eldap_config, key_dict):
-	ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-	l = ldap.initialize(eldap_config['url'])
-	username = eldap_config['user']
-	password = eldap_config['password']
-
+def get_all_courses(l, eldap_config, key_dict):
 	searchFilter = "(cn=*)"
 	searchAttribute = []
 	searchScope = ldap.SCOPE_SUBTREE
 	
 	try:
-		l.protocol_version = ldap.VERSION3
-		l.simple_bind_s(username, password)
 		results = l.search_s(eldap_config['dn'], searchScope, searchFilter, searchAttribute) 
 		courses = []
 
@@ -279,32 +272,18 @@ def get_all_courses(eldap_config, key_dict):
 					course['members'].append(get_user_key(member, key_dict))
 				course['is_instructor_course'] = is_instructor_course(result[0])
 				courses.append(course)
-		l.unbind_s()
+		#l.unbind_s()
 		return courses
 	except Exception as error:
 		print (error)
 	
 
-def sync_redis_with_ldap():
+def sync_redis_with_ldap(r, l, eldap_config):
 	print('==================================================================================================')
 	print('Running syncronization with UBC LDAP at {}'.format(datetime.datetime.now()))
 	key_dict = { 'course': 'crs:', 'user': 'usr:' }
-	
-	redis_config = None
-	with open(os.path.join(os.getcwd(), 'ssl', 'redis_config.json')) as json_file:
-		redis_config = json.load(json_file)
-		
-	eldap_config = None
-	with open(os.path.join(os.getcwd(), 'ssl', 'eldap_config.json')) as json_file:
-		eldap_config = json.load(json_file)
-		
-	r = redis.StrictRedis(
-		host=redis_config['redis_cache']['hostname'],
-		port=redis_config['redis_cache']['port'],
-		password=redis_config['redis_cache']['access_key'],
-		ssl=True)
 
-	courses = get_all_courses(eldap_config, key_dict)
+	courses = get_all_courses(l, eldap_config, key_dict)
 
 	for course in courses:
 		if not course_exists(r, course['key']):
@@ -319,14 +298,45 @@ def sync_redis_with_ldap():
 	
 	
 def main():
-	SYNC_INTERVAL = 600 #seconds
+
+	redis_config = None
+	with open(os.path.join(os.getcwd(), 'ssl', 'redis_config.json')) as json_file:
+		redis_config = json.load(json_file)
+		
+	eldap_config = None
+	with open(os.path.join(os.getcwd(), 'ssl', 'eldap_config.json')) as json_file:
+		eldap_config = json.load(json_file)
+		
+	r = redis.StrictRedis(
+		host=redis_config['redis_cache']['hostname'],
+		port=redis_config['redis_cache']['port'],
+		password=redis_config['redis_cache']['access_key'],
+		ssl=True)
+	
+	l = None
+	while True:
+		try:
+			user = input('Please enter your cwl username: ')
+			password = input('Please enter your password: ')
+			ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
+			l = ldap.initialize(eldap_config['url'])
+			username = eldap_config['user']
+			password = eldap_config['password']
+			l.protocol_version = ldap.VERSION3
+			l.simple_bind_s(username, password)
+			break
+		except Exception:
+			print('An error occured logging into eldap')
+	
+	
+	SYNC_INTERVAL = 3600 #seconds
 	 
 	scheduler = BackgroundScheduler()
 	scheduler.start()	
 	
-	sync_redis_with_ldap()
+	sync_redis_with_ldap(r, l, eldap_config)
 
-	scheduler.add_job(sync_redis_with_ldap, 'interval', seconds = SYNC_INTERVAL)
+	scheduler.add_job(sync_redis_with_ldap, 'interval', [r, l, eldap_config],seconds = SYNC_INTERVAL)
 
 	while True:
 		time.sleep(1)

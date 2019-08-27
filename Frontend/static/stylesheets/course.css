@@ -1,0 +1,137 @@
+h5 {
+    margin: 0;
+}
+
+.table {
+    margin: 0;
+    margin-bottom: 10px;
+}
+
+.panel {
+    margin: 0;
+    margin-top: 23px;
+}
+
+.panel p {
+    margin: 0;
+    margin-bottom: 10px;
+}
+
+.panel-body {
+    padding: 10px 15px;
+    padding-bottom: 0;
+}
+
+#submission_items > tr {
+    cursor: pointer;
+}
+
+#submission_items > tr > td > p {
+    margin-bottom: 0;
+}
+
+#submission_items > tr > td > a {
+    margin-left: 0;
+    display: inherit;
+}
+
+.btn {
+    text-transform: none;
+    margin-left: 5px;
+    padding: 1px 5px;
+    font-size: 13px;
+    vertical-align: bottom;
+}
+
+.btn > .fa {
+    font-size: 15px;
+}
+
+/* dropdown menu */
+.btn-group {
+    margin-left: 5px;
+    display: inline-flex;
+    vertical-align: baseline;
+}
+.dropdown-menu {
+    min-width: 40px;
+    padding: 0;
+    margin: 0;
+}
+.dropdown-menu > li > a {
+    margin: 0;
+    padding: 1px 5px;
+    font-size: 12px;
+}
+
+/* addStudent*/
+#enrollment_add_student_input {
+    height: 40px;
+}
+.add_student_input {
+    float: right;
+    display: inline-flex;
+    margin: 0;
+    padding-left: 10px;
+}
+.add_student_input .input-group {
+    display: inline-flex;
+}
+.add_student_input .form-control{
+    font-size: 13px;
+    border: solid 1px lightcyan;
+    height: 22px;
+    width: 400px;
+}
+
+/*student's file input for pdf upload*/
+input.pdf-file-input {
+    width: 200px;
+    display: flex;
+    margin: 3.5px 0;
+}
+
+.download_btn > i{
+    color: #e51c23;
+}
+
+/* progress bar modal window */
+.ui-dialog {
+    background-color: white;
+    padding: 15px 7px;
+}
+
+.ui-dialog > .ui-dialog-titlebar {
+    background: none;
+    border: none;
+    color: #444444;
+    font-size: 20px;
+}
+
+.ui-dialog > .ui-dialog-titlebar > button {
+    display: none;
+}
+
+#progress-modal{
+    padding-bottom: 13px;
+}
+
+#progress-modal > .ui-progressbar {
+    border: none;
+    border-radius: 0;
+    height: 6px;
+}
+
+#progress-modal > .ui-progressbar > .ui-progressbar-value {
+    display: block;
+    background: rgba(33, 150, 243, 1.0);
+    border: none;
+    margin: 0;
+}
+
+
+/* announcements */
+#announcement_items > p > a{
+    color: rgba(33, 150, 243, 1.0);
+    font-weight: bold;
+}

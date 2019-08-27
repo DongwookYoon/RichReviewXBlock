@@ -1,0 +1,12 @@
+extends __layout_cprght
+
+block content_with_cprght
+  h2
+    |<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+    |Something's gone weird... Please try again.
+  h4
+    |If this error last more than 1 minute, please report this to the system manager (dy252@cornell.edu)
+  p
+    |Error Type: #{msg}
+  p
+    |Error Detail: #{error}

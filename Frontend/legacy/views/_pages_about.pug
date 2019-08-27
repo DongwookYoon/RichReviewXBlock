@@ -1,0 +1,43 @@
+﻿extends __layout_cprght
+
+block content_with_cprght
+    .about.row-fluid.row-fluid
+        .about-intro
+            h3
+                |<b>RichReview:</b> Rich and Expressive Communication over Shared Documents
+            .intro-items
+                .intro-item
+                    a.intro-button-box(href="/edu" target="_blank")
+                        button.btn.btn-primary.btn_ubc
+                            i.fa.fa-graduation-cap
+                            |&nbsp;<b>UBC Courses:</b> Use speech-based assignments in your courses
+                .intro-item
+                    a.intro-button-box(href="/demo" target="_blank")
+                        button.btn.btn-success
+                            i.fa.fa-play-circle
+                            | &nbsp;<b>Live Demo:</b> Click to try out our hands-on interactive demo
+
+        .about-description
+            h4= 'What is RichReview ?'
+            .text-center
+                iframe.about_video(src="//www.youtube.com/embed/twSTqxghHNQ" allowfullscreen)
+            p
+                |RichReview is a document annotation system from Cornell University and Microsoft Research that
+                | supports a rich and expressive way of communication over shared texts.
+                | You can record your voice, inking, and pointing gesture over a shared document as if you are having a face to face meeting with your fellow workers.
+                | For more information, please see our research papers published at
+                a.text-primary(href='http://dl.acm.org/citation.cfm?id=2647390' target='_blank')= " UIST '14 "
+                | and
+                a.text-primary(href='http://dl.acm.org/citation.cfm?id=2819951' target='_blank')= " CSCW '16"
+                |.
+            h4.about_h5
+                |System Requirement
+            ul
+                li
+                    |System : Windows, Mac.
+                li
+                    |Browser :  The latest version of Google Chrome, Mozilla Firefox, or Microsoft Edge.
+            h4.about_h5
+                |Contact
+            p
+                |Please contact yoon@cs.ubc.ca for all bugs, features and questions.

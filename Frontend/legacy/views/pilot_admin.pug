@@ -1,0 +1,44 @@
+extends __layout_cprght
+
+include mixins/_pilot_student_card
+include mixins/_pilot_admin_card
+
+block content_with_cprght
+    link(rel='stylesheet', href='/stylesheets/pilot_admin.css')
+    link(rel='stylesheet', href='//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css')
+    script(src='//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js')
+    script(type='text/javascript', src="/js/pilot_admin_helper.js")
+    - var pilot_user_sorted = pilot_users.sort(function(userA, userB) { return userA.email.localeCompare(userB.email); });
+    h4 Users
+    .panel
+        .panel-heading
+            p Admin
+        .panel-body
+            .pilot_mgmt_container
+                .pilot_mgmt_user
+                    section.email_view
+                        b email
+                    .vertical_line
+                    section.pswd_input
+                        b password
+                    .vertical_line
+                    section.is_active_input
+                        b blocked?
+                each pilot_user in pilot_user_sorted
+                    +pilotAdminCard(pilot_user)
+    .panel
+        .panel-heading
+            p Students
+        .panel-body
+            .pilot_mgmt_container
+                .pilot_mgmt_user
+                    section.email_view
+                        b email
+                    .vertical_line
+                    section.pswd_input
+                        b password
+                    .vertical_line
+                    section.is_active_input
+                        b blocked?
+                each pilot_user in pilot_user_sorted
+                    +pilotStudentCard(pilot_user)

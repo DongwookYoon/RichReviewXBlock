@@ -1,0 +1,5 @@
+mixin pilotBackdoorUser(pilot_user = {})
+    // I will add forms to set is_active, password
+    p= pilot_user.email
+    form(action="/pilot_backdoor/delete" method="POST")
+        button(type="submit" value=pilot_user.email) delete

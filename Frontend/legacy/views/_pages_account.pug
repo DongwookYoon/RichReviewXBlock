@@ -1,0 +1,28 @@
+extends __layout_cprght
+
+block content_with_cprght
+    //   Created by yoon on 2/1/15.
+    .well.account-well
+        form.form-horizontal(role="form" action="/account?op=hello" method="post")
+            .form-group
+                label.control-label.col-sm-2(for="nick")
+                    | nickname
+                .col-sm-10
+                    input.form-control(placeholder="#{user.nick}" type="text" aria-describedby="nick" name="nick")
+            .form-group
+                label.control-label.col-sm-2
+                    | email
+                .col-sm-10
+                    p.form-control-static
+                        |#{user.email}
+            .form-group
+                label.control-label.col-sm-2
+                    i.fa.fa-google-plus
+                    |&nbspid
+                .col-sm-10
+                    p.form-control-static
+                        |#{user.id}
+            .form-group.no_bottom_margin
+                .col-lg-12
+                    button.btn.btn-primary.float_right(type="submit")
+                        |Submit

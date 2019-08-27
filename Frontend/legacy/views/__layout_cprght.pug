@@ -1,0 +1,9 @@
+extends __layout
+
+block content
+    .container
+        include components/_flash_screen
+        block content_with_cprght
+    p.text-muted.text-center(style="padding-top: 35px;")
+        |&copy;
+        a(href='http://dwyoon.com' target='_blank')= ' Dongwook Yoon'

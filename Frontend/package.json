@@ -24,6 +24,7 @@
     "bootstrap": "^4.3.1",
     "bootstrap-vue": "^2.0.0-rc.19",
     "bunyan": "^1.8.12",
+    "cache-manager": "^2.10.0",
     "chai": "^4.2.0",
     "compression": "latest",
     "connect-flash": "^0.1.1",

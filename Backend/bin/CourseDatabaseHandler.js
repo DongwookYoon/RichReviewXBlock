@@ -94,7 +94,7 @@ class CourseDatabaseHandler {
         let students = [];
         for (let user_key of student_keys) {
             let user_data = await user_db_handler.get_user_data(user_key);
-            students.push({ key: user_key, name: user_data['display_name'] });
+            students.push({ key: user_key, name: user_data['display_name'], id: user_data['id'] });
         }
 
         return students;

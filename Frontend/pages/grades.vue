@@ -261,6 +261,7 @@ td {
   display: block;
   margin-top: 5vh;
   margin-left: 7vw;
+  margin-bottom: 50px;
 }
 
 #download-grades-btn {

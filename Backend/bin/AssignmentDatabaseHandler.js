@@ -416,10 +416,11 @@ class AssignmentDatabaseHandler {
             let course_group_set_data = await course_group_db_handler.get_course_group_set_data(assignment_data['course_group_set']);
             student_or_group_list = await Promise.all(course_group_set_data['course_groups'].map(async course_group => {
                 let course_group_data = await course_group_db_handler.get_course_group_data(course_group);
-                return {key: course_group, name: course_group_data['name']};
+                return {key: course_group, name: course_group_data['name'], id: course_group_data['id']};
             }));
-        }else
+        } else
             student_or_group_list = await course_db_handler.get_course_active_students(import_handler, assignment_data['course']);
+
 
         student_or_group_list = student_or_group_list.filter(student_or_group => {
             for (let extension of assignment_data['extensions']) {

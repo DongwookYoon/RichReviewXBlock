@@ -64,7 +64,7 @@ router.get('/unassigned', async function(req, res, next) {
 
         const all_students = await Promise.all(course_data['active_students'].map(async (student) => {
             let user_data = await user_db_handler.get_user_data(student);
-            return { key: student, name: user_data['display_name']}
+            return { key: student, name: user_data['display_name'] || user_data.id }
         }));
 
         let data = {

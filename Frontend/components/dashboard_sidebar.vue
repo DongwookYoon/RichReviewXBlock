@@ -4,7 +4,7 @@
       <p class="logged-in-text">Logged in as</p>
       <p class="logged-in-text">{{ name }}</p>
       <div id="logout" @click="logout">
-        <img id="logout-icon" src="/logout.png" />
+        <img id="logout-icon" src="/logout-white.png" />
         <!--<p v-if="name !== ''" class="header-logout">Logout of</p>-->
         <!--<p v-if="name !== ''" class="header-logout">{{ name }}</p>-->
         <!--<p v-if="name === ''" class="header-logout">Logout</p>-->
@@ -19,8 +19,8 @@
       }"
             @click="go_to_dashboard"
     >
-      <img v-if="!sbdashboard" id="dashboard-icon" src="/dashboard.png" />
-      <img v-if="sbdashboard" id="dashboard-icon-white" src="/dashboard-white.png" />
+      <img v-if="sbdashboard" id="dashboard-icon" src="/dashboard.png" />
+      <img v-if="!sbdashboard" id="dashboard-icon-white" src="/dashboard-white.png" />
       <p id="header-dashboard">
         Dashboard
       </p>
@@ -33,9 +33,9 @@
       }"
       @click="go_to_all_assignments"
     >
-      <img v-if="!assignments" id="assignment-icon" src="/assignment.png" />
+      <img v-if="assignments" id="assignment-icon" src="/assignment.png" />
       <img
-        v-if="assignments"
+        v-if="!assignments"
         id="assignment-icon-white"
         src="/assignment-white.png"
       />
@@ -51,8 +51,8 @@
       }"
       @click="go_to_all_groups"
     >
-      <img v-if="!groups" id="group-icon" src="/group.png" />
-      <img v-if="groups" id="group-icon-white" src="/group-white.png" />
+      <img v-if="groups" id="group-icon" src="/group.png" />
+      <img v-if="!groups" id="group-icon-white" src="/group-white.png" />
       <p id="header-groups">Groups</p>
     </div>
     <div
@@ -63,8 +63,8 @@
       }"
       @click="go_to_all_grades"
     >
-      <img v-if="!grades" id="grade-icon" src="/grade.png" />
-      <img v-if="grades" id="grade-icon-white" src="/grade-white.png" />
+      <img v-if="grades" id="grade-icon" src="/grade.png" />
+      <img v-if="!grades" id="grade-icon-white" src="/grade-white.png" />
       <p id="header-grades">Grades</p>
     </div>
   </div>
@@ -82,16 +82,16 @@ export default {
   },
   data: function() {
     return {
-      dashboard_background_color: 'white',
-      dashboard_color: '#0c2343',
-      assignments_background_color: 'white',
-      assignments_color: '#0c2343',
+      dashboard_background_color: '#0c2343',
+      dashboard_color: 'white',
+      assignments_background_color: '#0c2343',
+      assignments_color: 'white',
       assignments: false,
-      groups_background_color: 'white',
-      groups_colour: '#0c2343',
+      groups_background_color: '#0c2343',
+      groups_colour: 'white',
       groups: false,
-      grades_background_color: 'white',
-      grades_color: '#0c2343',
+      grades_background_color: '#0c2343',
+      grades_color: 'white',
       grades: false,
       sbdashboard: false
     }
@@ -101,26 +101,26 @@ export default {
 
     if (this.$route.fullPath.includes('dashboard')) {
       this.sbdashboard = true
-      this.dashboard_background_color = '#0c2343'
-      this.dashboard_color = 'white'
+      this.dashboard_background_color = 'white'
+      this.dashboard_color = '#0c2343'
     }
 
     if (this.$route.fullPath.includes('all-assignments')) {
       this.assignments = true
-      this.assignments_background_color = '#0c2343'
-      this.assignments_color = 'white'
+      this.assignments_background_color = 'white'
+      this.assignments_color = '#0c2343'
     }
 
     if (this.$route.fullPath.includes('all-groups')) {
       this.groups = true
-      this.groups_background_color = '#0c2343'
-      this.groups_colour = 'white'
+      this.groups_background_color = 'white'
+      this.groups_colour = '#0c2343'
     }
 
     if (this.$route.fullPath.includes('all-grades')) {
       this.grades = true
-      this.grades_background_color = '#0c2343'
-      this.grades_color = 'white'
+      this.grades_background_color = 'white'
+      this.grades_color = '#0c2343'
     }
   },
   methods: {
@@ -149,12 +149,19 @@ export default {
 <style scoped>
 @import '../node_modules/bootstrap/dist/css/bootstrap.css';
 
+hr {
+  border-top: 1px solid white;
+}
+
 p {
   margin: 0;
 }
 
 #sidebar {
   width: 100px;
+  height: 100%;
+  background-color: #0c2343;
+  color: #0c2343;
 }
 
 #name-div {
@@ -164,7 +171,7 @@ p {
 
 .logged-in-text {
   font-size: 0.875rem;
-  color: #0c2343;
+  color: white;
 }
 
 #dashboard-icon,
@@ -211,6 +218,6 @@ p {
 }
 
 .header-logout {
-  color: #0c2343;
+  color: white;
 }
 </style>

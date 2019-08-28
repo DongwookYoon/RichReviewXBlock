@@ -15,9 +15,9 @@
                 :key="s.key"
                 class="student-or-group"
                 :style="selected_user_key === s.key ? selected_style : default_style"
-                @click="select_student(s.key, s.name)"
+                @click="select_student(s.key, s.name, s.id)"
               >
-                {{ s.name }}
+                {{ s.name || s.id }}
               </p>
             </div>
             <div id="date-div">
@@ -40,7 +40,7 @@
               <p id="current-extension-header">Current Extensions</p>
               <hr class="modal-hr" />
               <div v-for="(e, index) in extensions" :key="e.key" class="extension">
-                <p class="extension-name">{{ e.name }}</p>
+                <p class="extension-name">{{ e.name || e.id }}</p>
                 <datetime
                   v-model="e.date"
                   class="current-extension-date"
@@ -90,25 +90,29 @@ export default {
       new_group_set_name: '',
       selected_user_key: '',
       selected_user_name: '',
+      selected_user_id: '',
       selected_style: { color: 'white', 'background-color': '#0c2343' },
       default_style: { color: '#0c2343', 'background-color': 'white' },
       extension_date: ''
     }
   },
   methods: {
-    select_student(key, name) {
+    select_student(key, name, id) {
       this.selected_user_key = key
       this.selected_user_name = name
+      this.selected_user_id = id
     },
     deselect_student() {
       this.selected_user_key = ''
       this.selected_user_name = ''
       this.extension_date = ''
+      this.selected_user_id = ''
     },
     add_extension() {
       if (
         this.selected_user_key === '' ||
-        this.selected_user_name === '' ||
+        (this.selected_user_name === '' &&
+          this.selected_user_id === '') ||
         this.extension_date === ''
       )
         return
@@ -116,7 +120,8 @@ export default {
       this.extensions.push({
         user: this.selected_user_key,
         date: this.extension_date,
-        name: this.selected_user_name
+        name: this.selected_user_name,
+        id: this.selected_user_id
       })
 
       this.student_or_group_list = this.student_or_group_list.filter(user => {
@@ -133,7 +138,8 @@ export default {
       let extension = this.extensions[index]
       this.student_or_group_list.push({
         key: extension.user,
-        name: extension.name
+        name: extension.name,
+        id: extension.id
       })
       this.extensions = this.extensions.filter(ex => {
         return ex.user !== extension.user
@@ -157,23 +163,27 @@ export default {
 </script>
 
 <style scoped>
+.modal-container {
+  height: 500px;
+}
+
 .modal-div,
 .modal-footer {
   display: flex;
 }
 
 .modal-header {
-  font-size: 2vh;
+  font-size: 1rem;
   color: white;
   background-color: #0c2343;
   text-align: center;
-  height: auto;
+  height: 42px;
   padding-top: 7px;
   padding-bottom: 7px;
 }
 
 .modal-div {
-  margin-top: 1vh;
+  margin-top: 2px;
   margin-left: 10px;
   font-size: 1rem;
 }
@@ -186,6 +196,18 @@ export default {
 
 #extension-div {
   min-width: 450px;
+
+}
+
+#student-list-div,
+#extension-div {
+  overflow: hidden;
+  overflow-y: scroll;
+  height: 400px;
+  border: 1px solid lightgrey;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top: 0;
 }
 
 #student-header,
@@ -235,11 +257,11 @@ export default {
   font-size: 0.75rem;
   color: white;
   background-color: #0c2343;
-  border-radius: 0.5vh;
-  padding-left: 0.5vw;
-  padding-right: 0.5vw;
-  margin-top: 0.33vh;
-  margin-bottom: 0.33vh;
+  border-radius: 2px;
+  padding-left: 2px;
+  padding-right: 2px;
+  margin-top: 2px;
+  margin-bottom: 2px;
   cursor: pointer;
   margin-right: 5px
 }

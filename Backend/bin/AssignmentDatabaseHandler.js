@@ -871,7 +871,7 @@ class AssignmentDatabaseHandler {
     async get_individual_assignment_submission_name (import_handler, user_key) {
         let user_db_handler = await import_handler.user_db_handler;
         let user_data = await user_db_handler.get_user_data(user_key);
-        return user_data['display_name'];
+        return user_data['display_name'] || user_data['id'];
     }
 
 

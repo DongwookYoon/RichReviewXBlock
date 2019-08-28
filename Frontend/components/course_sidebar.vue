@@ -3,6 +3,13 @@
     <div v-if="name !== ''" id="name-div">
       <p class="logged-in-text">Logged in as</p>
       <p class="logged-in-text">{{ name }}</p>
+      <div id="logout" @click="logout">
+        <img id="logout-icon" src="/logout.png" />
+        <!--<p v-if="name !== ''" class="header-logout">Logout of</p>-->
+        <!--<p v-if="name !== ''" class="header-logout">{{ name }}</p>-->
+        <!--<p v-if="name === ''" class="header-logout">Logout</p>-->
+        <p class="header-logout">Logout</p>
+      </div>
       <hr />
     </div>
     <div id="sb_dashboard"
@@ -58,13 +65,6 @@
       <img v-if="!grades" id="grade-icon" src="/grade.png" />
       <img v-if="grades" id="grade-icon-white" src="/grade-white.png" />
       <p id="header-grades">Grades</p>
-    </div>
-    <div id="logout" @click="logout">
-      <img id="logout-icon" src="/logout.png" />
-      <!--<p v-if="name !== ''" class="header-logout">Logout of</p>-->
-      <!--<p v-if="name !== ''" class="header-logout">{{ name }}</p>-->
-      <!--<p v-if="name === ''" class="header-logout">Logout</p>-->
-      <p class="header-logout">Logout</p>
     </div>
   </div>
 </template>
@@ -155,17 +155,21 @@ p {
   margin: 0;
 }
 
+#sidebar {
+  width: 100px;
+}
+
 #name-div {
+  margin-top: 20px;
   text-align: center;
 }
 
 .logged-in-text {
-  font-size: 2vh;
+  font-size: 0.875rem;
   color: #0c2343;
 }
 
 #dashboard-icon,
-#dashboard-icon-white,
 #assignment-icon,
 #assignment-icon-white,
 #group-icon,
@@ -173,8 +177,10 @@ p {
 #grade-icon,
 #grade-icon-white,
 #logout-icon {
-  width: 2vw;
-  margin-left: 4.6vw;
+  width: 30px;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
 }
 
 #header-dashboard,
@@ -182,26 +188,27 @@ p {
 #header-people,
 #header-grades,
 .header-logout {
-  width: 11vw;
-  font-size: 3vh;
+  font-size: 0.875rem;
   text-align: center;
 }
 
+#sb_dashboard,
 #assignments,
 #people,
 #grades,
 #logout {
-  margin-top: 7vh;
+  margin-top: 50px;
   cursor: pointer;
-  border-radius: 0 0.5vh 0.5vh 0;
-  padding-top: 1vh;
+  border-radius: 0 2px 2px 0;
+  padding-top: 5px;
 }
 
 #sb_dashboard {
-  margin-top: 2vh;
-  cursor: pointer;
-  border-radius: 0 0.5vh 0.5vh 0;
-  padding-top: 1vh;
+  margin-top: 20px;
+}
+
+#logout {
+  margin-top: 20px;
 }
 
 .header-logout {

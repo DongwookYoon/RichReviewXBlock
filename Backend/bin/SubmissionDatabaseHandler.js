@@ -219,7 +219,7 @@ class SubmissionDatabaseHandler {
 
         let user_db_handler = await import_handler.user_db_handler;
         let user_data = await user_db_handler.get_user_data(submitter_data['members'][0]);
-        return { name: user_data['display_name'], key: submitter_data['members'][0] };
+        return { name: user_data['display_name'] || user_data['id'], key: submitter_data['members'][0] };
     }
 
 
@@ -238,7 +238,7 @@ class SubmissionDatabaseHandler {
             let submission_data = await this.get_submission_data(submission_key);
             let submitter_data = await submitter_db_handler.get_submitter_data(submission_data['submitter']);
             let user_data = await user_db_handler.get_user_data(submitter_data['members'][0]);
-            return user_data['last_name'] || '';
+            return user_data['last_name'] || user_data['id'];
         } catch (e) { return ''; }
     }
 

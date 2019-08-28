@@ -2,13 +2,16 @@ import os
 import json
 import redis 
 
-def add_or_modify_field(r, table, field, value):
+def add_or_modify_field(r, table, field, value, overwrite):
 	keys = r.keys(table)
 	for key in keys:
 		key = key.decode('utf-8')
-		if r.hget(key, field) == None:
+		if overwrite == 2:
+			if r.hget(key, field) == None:
+				r.hset(key, field, value)
+		else:
 			r.hset(key, field, value)
-	
+			
 def delete_field(r, table, field):
 	keys = r.keys(table)
 	for key in keys:
@@ -32,21 +35,27 @@ def main():
 	if operation == '1':
 		value = input('What should the default value be? (enter no value for an empty string) ')
 			
+	overwrite = 0
+	while (overwrite not in ['1','2']):
+		overwrite = input('Would you like to overwrite existing data?\n[1] Yes\n[2] No\nPlease enter the corresponding number: ')
+	
+	overwrite = int(overwrite)
+	
 	redis_config = None
 	
-	# Change to redis_config_local.json to edit local redis db
 	with open(os.path.join(os.getcwd(), 'ssl', 'redis_config.json')) as json_file:
 		redis_config = json.load(json_file)
 
-#	r = redis.Redis()		
-	r = redis.StrictRedis(
-		host=redis_config['redis_cache']['hostname'],
-		port=redis_config['redis_cache']['port'],
-		password=redis_config['redis_cache']['access_key'],
-		ssl=True)
+	#change to strict redis to edit azure redis
+	r = redis.Redis()		
+#	r = redis.StrictRedis(
+#		host=redis_config['redis_cache']['hostname'],
+#		port=redis_config['redis_cache']['port'],
+#		password=redis_config['redis_cache']['access_key'],
+#		ssl=True)
 		
 	if operation == '1':
-		add_or_modify_field (r, table, field, value)
+		add_or_modify_field (r, table, field, value, overwrite)
 	else:
 		delete_field(r, table, field)
 		

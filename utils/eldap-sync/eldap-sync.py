@@ -82,7 +82,8 @@ def create_user(r, user_key, key_dict):
 	r.hset(user_key, 'submitters', '[]');
 	r.hset(user_key, 'groupNs', '[]');
 	r.hset(user_key, 'course_groups', '[]');
-
+	r.hset(user_key, 'inactive_submitters', '[]')
+	
 	for field, value in user_data.items():
 	    r.hset(user_key, field, value);
 	

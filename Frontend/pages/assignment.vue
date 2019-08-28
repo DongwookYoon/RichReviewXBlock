@@ -271,7 +271,8 @@ export default {
         if (!data.extensions.includes(extension))
           this.student_or_group_list.push({
             key: extension.user,
-            name: extension.name
+            name: extension.name,
+            id: extension.id
           })
       })
       this.extensions = data.extensions

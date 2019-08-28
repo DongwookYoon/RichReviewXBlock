@@ -134,6 +134,7 @@ p {
 
 #dashboard {
   display: flex;
+  height: 100vh;
 }
 
 #content {

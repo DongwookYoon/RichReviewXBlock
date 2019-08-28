@@ -31,6 +31,7 @@ def create_course(r, course):
 	r.hset(course_key, 'active_course_groups', '[]');
 	r.hset(course_key, 'inactive_course_groups', '[]');
 	r.hset(course_key, 'is_active', 'true');
+	r.hset(course_key, 'course_group_sets', '[]');
 
 	for field, value in course_details.items():
 	    r.hset(course_key, field, value);

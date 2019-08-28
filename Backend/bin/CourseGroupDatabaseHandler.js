@@ -304,7 +304,8 @@ class CourseGroupDatabaseHandler {
 
         for (let course_group_key of user_data['course_groups']) {
             let course_group_data = await this.get_course_group_data(course_group_key);
-            let course_data = await course_db_handler.get_course_data(course_group_data['course']);
+            let course_group_set_data = await this.get_course_group_set_data(course_group_data['course_group_set']);
+            let course_data = await course_db_handler.get_course_data(course_group_set_data['course']);
 
             course_groups.push({
                 course_group_id: course_group_data['id'],

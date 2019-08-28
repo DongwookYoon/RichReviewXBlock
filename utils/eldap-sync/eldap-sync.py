@@ -383,10 +383,12 @@ def main():
 		f = open("eldap-sync-log.txt","a+")
 		f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + 'Logged in as: ' + user + '\n')
 		f.close()
-	except Exception:
+	except Exception as e:
 		print('An error occured logging into eldap for user: ' + user)
+		print(e)
 		f = open("eldap-sync-log.txt","a+")
 		f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + 'An error occured logging into eldap for user: ' + user + '\n')
+		f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + str(e) + '\n')
 		f.close()
 		exit(1)
 	

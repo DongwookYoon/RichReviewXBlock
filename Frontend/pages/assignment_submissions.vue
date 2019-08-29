@@ -1,5 +1,6 @@
 <template>
   <div id="submissions">
+    <dashboard-sidebar :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
     <course-sidebar :name="name" />
     <div id="content">
       <nav-bar :course="course" :assignment="assignment" submissions="true" />
@@ -47,10 +48,11 @@ import axios from 'axios'
 import CourseSidebar from '../components/course_sidebar'
 import Footer from '../components/footer'
 import NavBar from '../components/nav_bar'
+import DashboardSidebar from '../components/dashboard_sidebar'
 
 export default {
   name: 'AssignmentSubmissions',
-  components: { NavBar, Footer, CourseSidebar },
+  components: { NavBar, Footer, CourseSidebar, 'dashboard-sidebar': DashboardSidebar },
   async asyncData(context) {
     if (!context.store.state.authUser) return
 
@@ -67,12 +69,23 @@ export default {
         })
       }
     )
-    console.log(res.data)
+    const course_res = await axios
+      .get(`https://${process.env.backend}:3000/courses`, {
+        headers: {
+          Authorization: context.store.state.authUser.id
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      })
     return {
       submissions: res.data.submissions,
       course: res.data.course_title,
       assignment: res.data.assignment_title,
-      name: res.data.user_name
+      name: res.data.user_name,
+      enrolments: course_res.data.enrolments,
+      taing: course_res.data.taing,
+      instructing: course_res.data.teaching
     }
   },
   fetch({ store, redirect }) {
@@ -119,6 +132,7 @@ table {
 
 #submissions {
   display: flex;
+  min-height: 100vh;
 }
 
 #content {

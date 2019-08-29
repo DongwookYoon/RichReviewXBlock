@@ -1,5 +1,6 @@
 <template>
   <div id="assignment">
+    <dashboard-sidebar :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
     <course-sidebar :name="name" />
     <b-alert v-model="showDismissibleAlert" variant="danger" dismissible>
       One or more files is required for a submission.
@@ -175,6 +176,7 @@ import CourseSidebar from '../components/course_sidebar'
 import NavBar from '../components/nav_bar'
 import AssignmentExtensionModal from '../components/assignment-extension-modal'
 import { EventBus } from '../plugins/event-bus'
+import DashboardSidebar from '../components/dashboard_sidebar'
 
 export default {
   name: 'Assignment',
@@ -183,7 +185,8 @@ export default {
     CourseSidebar,
     Footer,
     AssignmentExtensionModal,
-    datetime: Datetime
+    datetime: Datetime,
+    'dashboard-sidebar': DashboardSidebar
   },
   data: function() {
     return {
@@ -239,7 +242,15 @@ export default {
       }
     )
 
-    console.log(res.data)
+    const course_res = await axios
+      .get(`https://${process.env.backend}:3000/courses`, {
+        headers: {
+          Authorization: context.store.state.authUser.id
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      })
 
     return {
       sbdashboard: false,
@@ -257,7 +268,10 @@ export default {
       selected_user_key: '',
       extension_date: res.data.extension_date,
       template_link: res.data.template_link || '',
-      name: res.data.user_name
+      name: res.data.user_name,
+      enrolments: course_res.data.enrolments,
+      taing: course_res.data.taing,
+      instructing: course_res.data.teaching
     }
   },
   fetch({ store, redirect }) {
@@ -439,6 +453,7 @@ hr {
 
 #assignment {
   display: flex;
+  min-height: 100vh;
 }
 
 #content {

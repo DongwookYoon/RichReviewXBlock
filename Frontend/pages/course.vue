@@ -1,5 +1,6 @@
 <template>
   <div id="course">
+    <dashboard-sidebar :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
     <course-sidebar :name="name" :assignments="true" />
     <div id="content">
       <nav-bar :course="title" />
@@ -82,6 +83,7 @@ import StudentAssignmentCard from '../components/student-assignment-card'
 import Sidebar from '../components/dashboard_sidebar'
 import CourseSidebar from '../components/course_sidebar'
 import NavBar from '../components/nav_bar'
+import DashboardSidebar from '../components/dashboard_sidebar'
 
 export default {
   name: 'Course',
@@ -91,12 +93,13 @@ export default {
     Sidebar,
     Footer,
     Header,
-    StudentAssignmentCard
+    StudentAssignmentCard,
+    'dashboard-sidebar': DashboardSidebar
   },
   async asyncData(context) {
     if (!context.store.state.authUser) return
 
-    const course_res = await axios.get(
+    const res = await axios.get(
       `https://${process.env.backend}:3000/courses/${context.params.course_id}`,
       {
         headers: {
@@ -107,13 +110,26 @@ export default {
         })
       }
     )
-    console.log(course_res.data)
+
+    const course_res = await axios
+      .get(`https://${process.env.backend}:3000/courses`, {
+        headers: {
+          Authorization: context.store.state.authUser.id
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      })
+
     return {
-      assignments: course_res.data.assignments,
-      permissions: course_res.data.permissions,
-      title: course_res.data.course.title,
-      description: course_res.data.course.description,
-      name: course_res.data.user_name
+      assignments: res.data.assignments,
+      permissions: res.data.permissions,
+      title: res.data.course.title,
+      description: res.data.course.description,
+      name: res.data.user_name,
+      enrolments: course_res.data.enrolments,
+      taing: course_res.data.taing,
+      instructing: course_res.data.teaching
     }
   },
   fetch({ store, redirect }) {
@@ -167,7 +183,7 @@ table {
 
 #course {
   display: flex;
-  height: 100%;
+  min-height: 100vh;
 }
 
 #content {

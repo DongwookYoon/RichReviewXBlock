@@ -394,7 +394,7 @@ class CourseDatabaseHandler {
                     let group_data = await group_db_handler.get_group_data(assignment_group_key);
 
                     let doc_key = group_data['docid'];
-                    let group_key = await group_db_handler.create_group(group_data['userid_n'], doc_key);
+                    let group_key = await group_db_handler.create_group(group_data['userid_n'], doc_key, assignment_group_key || '');
 
                     await doc_db_handler.add_group_to_doc(doc_key, group_key);
                     await group_db_handler.add_user_to_group(user_key.replace(KeyDictionary.key_dictionary['user'], ''), group_key);

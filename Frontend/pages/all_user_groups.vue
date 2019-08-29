@@ -1,6 +1,6 @@
 <template>
   <div id="all-groups">
-    <sidebar :name="name" />
+    <sidebar :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
     <div id="content">
       <div id="all-groups-header">
         <p id="all-groups-text">All Groups</p>
@@ -63,11 +63,24 @@ export default {
       }
     )
 
+    const course_res = await axios
+      .get(`https://${process.env.backend}:3000/courses`, {
+        headers: {
+          Authorization: context.store.state.authUser.id
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      })
+
     const groups = res.data.groups
-    console.log(groups)
+
     return {
       groups,
-      name: res.data.user_name
+      name: res.data.user_name,
+      enrolments: course_res.data.enrolments,
+      taing: course_res.data.taing,
+      instructing: course_res.data.teaching
     }
   },
   fetch({ store, redirect }) {
@@ -107,6 +120,7 @@ hr {
 
 #all-groups {
   display: flex;
+  min-height: 100vh;
 }
 
 #content {

@@ -3,11 +3,9 @@
     <loading :active.sync="loading"
              :is-full-page="true"
              color="#0c2343"></loading>
+    <dashboard-sidebar :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
     <course-sidebar :name="name" />
     <div id="content">
-      <b-alert v-model="showDismissibleAlert" variant="danger" dismissible>
-        One or more files is required for a comment submission assignment.
-      </b-alert>
       <nav-bar :course="course" new_assignment="true" />
       <div id="assignment-grid">
         <div id="title-div">
@@ -193,6 +191,7 @@ import CourseSidebar from '../components/course_sidebar'
 import NavBar from '../components/nav_bar'
 import Loading from 'vue-loading-overlay';
 import 'vue-loading-overlay/dist/vue-loading.css';
+import DashboardSidebar from '../components/dashboard_sidebar'
 
 export default {
   name: 'NewAssignment',
@@ -201,7 +200,8 @@ export default {
     CourseSidebar,
     Footer,
     datetime: Datetime,
-    Loading
+    Loading,
+    'dashboard-sidebar': DashboardSidebar
   },
   data: function() {
     return {
@@ -223,7 +223,6 @@ export default {
         course_group_set: 'default'
       },
       files: [],
-      showDismissibleAlert: false,
       changesSaved: false,
       loading: false
     }
@@ -256,7 +255,16 @@ export default {
         })
       }
     )
-    console.log(course_res.data)
+    const enrolment_res = await axios
+      .get(`https://${process.env.backend}:3000/courses`, {
+        headers: {
+          Authorization: context.store.state.authUser.id
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      })
+
     const default_value = {
       key: 'default',
       name: 'Please select a group set'
@@ -264,12 +272,15 @@ export default {
     const course_group_sets = [default_value].concat(
       course_res.data.course.course_group_sets
     )
-    console.log(course_group_sets)
+
     return {
       permissions: permission_res.data.permissions,
       course: course_res.data.course.title,
       course_group_sets: course_group_sets,
-      name: course_res.data.user_name || ''
+      name: course_res.data.user_name || '',
+      enrolments: enrolment_res.data.enrolments,
+      taing: enrolment_res.data.taing,
+      instructing: enrolment_res.data.teaching
     }
   },
   fetch({ store, redirect }) {
@@ -302,7 +313,6 @@ export default {
       try {
         if (this.assignment_data.type === 'comment_submission') {
           if (this.files.length === 0) {
-            // this.showDismissibleAlert = true
             alert(
               'One or more files is required for a comment submission assignment'
             )
@@ -408,6 +418,7 @@ hr {
 
 #new-assignment {
   display: flex;
+  min-height: 100vh;
 }
 
 #content {
@@ -551,6 +562,7 @@ hr {
 #button-div {
   display: flex;
   margin-left: 30vw;
+  margin-bottom: 50px;
 }
 
 #save-button,

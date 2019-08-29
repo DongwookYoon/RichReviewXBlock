@@ -1,5 +1,6 @@
 <template>
   <div id="course-group">
+    <dashboard-sidebar :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
     <course-sidebar :name="name" />
     <div id="content">
       <nav-bar :course="course" people="true" :course_group="group.name" />
@@ -41,10 +42,11 @@ import axios from 'axios'
 import CourseSidebar from '../components/course_sidebar'
 import Footer from '../components/footer'
 import NavBar from '../components/nav_bar'
+import DashboardSidebar from '../components/dashboard_sidebar'
 
 export default {
   name: 'CourseGroup',
-  components: { NavBar, Footer, CourseSidebar },
+  components: { NavBar, Footer, CourseSidebar, 'dashboard-sidebar': DashboardSidebar },
   async asyncData(context) {
     if (!context.store.state.authUser) return
 
@@ -61,13 +63,24 @@ export default {
         })
       }
     )
-    console.log(res.data)
+    const course_res = await axios
+      .get(`https://${process.env.backend}:3000/courses`, {
+        headers: {
+          Authorization: context.store.state.authUser.id
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      })
     return {
       permissions: res.data.permissions,
       group: res.data.group,
       submitters: res.data.submitters,
       course: res.data.course,
-      name: res.data.user_name
+      name: res.data.user_name,
+      enrolments: course_res.data.enrolments,
+      taing: course_res.data.taing,
+      instructing: course_res.data.teaching
     }
   },
   fetch({ store, redirect }) {
@@ -103,6 +116,7 @@ export default {
 
 #course-group {
   display: flex;
+  min-height: 100vh;
 }
 
 #content {
@@ -129,7 +143,7 @@ export default {
 #members,
 #submissions {
   display: block;
-  width: 35%;
+  width: 35vw;
   font-size: 2.5vh;
   color: #0c2343;
   margin-right: 5%;

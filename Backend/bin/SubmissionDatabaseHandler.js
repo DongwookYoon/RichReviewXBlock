@@ -219,7 +219,7 @@ class SubmissionDatabaseHandler {
 
         let user_db_handler = await import_handler.user_db_handler;
         let user_data = await user_db_handler.get_user_data(submitter_data['members'][0]);
-        return { name: user_data['display_name'] || user_data['id'], key: submitter_data['members'][0] };
+        return { name: user_data['display_name'] || 'UBC User', key: submitter_data['members'][0] };
     }
 
 
@@ -238,7 +238,7 @@ class SubmissionDatabaseHandler {
             let submission_data = await this.get_submission_data(submission_key);
             let submitter_data = await submitter_db_handler.get_submitter_data(submission_data['submitter']);
             let user_data = await user_db_handler.get_user_data(submitter_data['members'][0]);
-            return user_data['last_name'] || user_data['id'];
+            return user_data['last_name'] || 'UBC User';
         } catch (e) { return ''; }
     }
 
@@ -322,14 +322,15 @@ class SubmissionDatabaseHandler {
         let group_data = await group_db_handler.get_group_data(group_key);
         let instructor_id = group_data['userid_n'];
 
-        let doc_data = await doc_db_handler.get_doc_data(group_data['docid']);
+        let doc_key = group_data['docid'];
+        // let doc_data = await doc_db_handler.get_doc_data(group_data['docid']);
+        //
+        // let new_doc_key = await doc_db_handler.create_doc(instructor_id, doc_data['pdfid']);
 
-        let new_doc_key = await doc_db_handler.create_doc(instructor_id, doc_data['pdfid']);
-
-        let new_group_key = await group_db_handler.create_group(instructor_id, new_doc_key);
+        let new_group_key = await group_db_handler.create_group(instructor_id, doc_key, group_data['template_group']);
         await group_db_handler.add_submission_to_group(new_group_key, submission_key);
 
-        await doc_db_handler.add_group_to_doc(new_doc_key, new_group_key);
+        await doc_db_handler.add_group_to_doc(doc_key, new_group_key);
 
         let cmd_key = KeyDictionary.key_dictionary['command'] + group_key.replace(KeyDictionary.key_dictionary['group'], '');
         let cmd_data = await cmd_db_handler.get_cmd_data(cmd_key, 0);

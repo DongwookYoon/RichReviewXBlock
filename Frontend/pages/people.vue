@@ -1,6 +1,7 @@
 <template>
   <div>
     <div id="people-page">
+      <dashboard-sidebar :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
       <course-sidebar :name="name" :people="true" />
       <div id="content">
         <nav-bar :course="course_title" people="true" />
@@ -105,10 +106,11 @@ import axios from 'axios'
 import Footer from '../components/footer'
 import CourseSidebar from '../components/course_sidebar'
 import NavBar from '../components/nav_bar'
+import DashboardSidebar from '../components/dashboard_sidebar'
 
 export default {
   name: 'People',
-  components: { NavBar, CourseSidebar, Footer },
+  components: { NavBar, CourseSidebar, Footer, 'dashboard-sidebar': DashboardSidebar },
   async asyncData(context) {
     if (!context.store.state.authUser) return
 
@@ -125,7 +127,15 @@ export default {
         })
       }
     )
-    console.log(res.data)
+    const course_res = await axios
+      .get(`https://${process.env.backend}:3000/courses`, {
+        headers: {
+          Authorization: context.store.state.authUser.id
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      })
     return {
       users: {
         Instructor: res.data.users.instructors,
@@ -136,7 +146,10 @@ export default {
       course_groups: res.data.groups,
       permissions: res.data.permissions,
       people_tab: true,
-      name: res.data.user_name || ''
+      name: res.data.user_name || '',
+      enrolments: course_res.data.enrolments,
+      taing: course_res.data.taing,
+      instructing: course_res.data.teaching
     }
   },
   fetch({ store, redirect }) {
@@ -198,6 +211,7 @@ table {
 
 #people-page {
   display: flex;
+  min-height: 100vh;
 }
 
 #content {

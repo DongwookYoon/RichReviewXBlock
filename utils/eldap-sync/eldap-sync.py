@@ -180,6 +180,9 @@ def get_all_course_instructors(r, course_key):
 
 
 def remove_unenrolled_student(r, user_key, course_key):
+	if not "usr:UBC_" in user_key:
+		return
+		
 	print('\t-> Removing {} as a student from {}'.format(user_key, course_key))
 	f = open("eldap-sync-log.txt","a+")
 	f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Removing {} as a student from {}\n'.format(user_key, course_key))
@@ -208,6 +211,9 @@ def remove_unenrolled_student(r, user_key, course_key):
 	
 	
 def remove_unenrolled_instructor(r, user_key, course_key):
+	if not "usr:UBC_" in user_key:
+		return
+		
 	print('\t-> Removing {} as an instructor from {}'.format(user_key, course_key))
 	f = open("eldap-sync-log.txt","a+")
 	f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Removing {} as an instructor from {}'.format(user_key, course_key))

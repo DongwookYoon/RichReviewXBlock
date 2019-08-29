@@ -437,7 +437,7 @@ class CourseGroupDatabaseHandler {
 
         group_data['users'] = await Promise.all(group_data['users'].map(async (user_key) => {
             let user_data = await user_db_handler.get_user_data(user_key);
-            return { display_name: user_data['display_name' ] || user_data.id };
+            return { display_name: user_data['display_name' ] || 'UBC User' };
         }));
 
         let submitter_db_handler = await import_handler.submitter_db_handler;

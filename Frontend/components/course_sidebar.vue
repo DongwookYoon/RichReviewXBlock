@@ -104,14 +104,16 @@ export default {
     }
   },
   mounted: function() {
-    console.log(this.$route)
-
-    if (this.assignments) {
+    // if (this.assignments) {
+    //   this.assignments_background_color = '#0c2343'
+    //   this.assignments_color = 'white'
+    // }
+    if (this.$route.fullPath.includes('assignments') || this.assignments) {
       this.assignments_background_color = '#0c2343'
       this.assignments_color = 'white'
     }
 
-    if (this.people) {
+    if (this.$route.fullPath.includes('course_groups') || this.people) {
       this.people_background_color = '#0c2343'
       this.people_colour = 'white'
     }
@@ -157,61 +159,22 @@ p {
 
 #sidebar {
   width: 100px;
+  margin-left: 20px;
+  margin-top: 27vh;
 }
 
-#name-div {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.logged-in-text {
-  font-size: 0.875rem;
-  color: #0c2343;
-}
-
-#dashboard-icon,
-#assignment-icon,
-#assignment-icon-white,
-#group-icon,
-#group-icon-white,
-#grade-icon,
-#grade-icon-white,
-#logout-icon {
-  width: 30px;
-  margin-left: auto;
-  margin-right: auto;
-  display: block;
-}
-
-#header-dashboard,
 #header-assignments,
 #header-people,
-#header-grades,
-.header-logout {
+#header-grades {
   font-size: 1rem;
   text-align: center;
 }
 
-#sb_dashboard,
 #assignments,
 #people,
-#grades,
-#logout {
+#grades {
   margin-top: 50px;
   cursor: pointer;
-  border-radius: 0 2px 2px 0;
-  padding-top: 5px;
-}
-
-#sb_dashboard {
-  margin-top: 20px;
-}
-
-#logout {
-  margin-top: 20px;
-}
-
-.header-logout {
-  color: #0c2343;
+  border-radius: 5px;
 }
 </style>

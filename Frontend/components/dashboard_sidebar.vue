@@ -31,9 +31,9 @@
         }"
         @click="toggle_sidebar"
       >
-        <img v-if="courses" id="courses-icon" src="/course.png" />
+        <img v-if="navbar_toggle || courses" id="courses-icon" src="/course.png" />
         <img
-          v-if="!courses"
+          v-if="!navbar_toggle && !courses"
           id="courses-icon-white"
           src="/course-white.png"
         />

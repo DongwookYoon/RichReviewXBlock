@@ -1,6 +1,6 @@
 <template>
   <div id="all-assignments">
-    <sidebar :name="name" />
+    <sidebar :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
     <div id="content">
       <div id="all-assignments-header">
         <p id="all-assignments-text">All Assignments</p>
@@ -70,11 +70,24 @@ export default {
         })
       }
     )
-    console.log(res.data)
+
+    const course_res = await axios
+      .get(`https://${process.env.backend}:3000/courses`, {
+        headers: {
+          Authorization: context.store.state.authUser.id
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      })
+
     const assignments = res.data.assignments
     return {
       assignments,
-      name: res.data.user_name
+      name: res.data.user_name,
+      enrolments: course_res.data.enrolments,
+      taing: course_res.data.taing,
+      instructing: course_res.data.teaching
     }
   },
   fetch({ store, redirect }) {
@@ -121,10 +134,12 @@ hr {
   margin-left: 7vw;
   margin-top: 10vh;
   display: block;
+  min-height: 100vh;
 }
 
 #all-assignments {
   display: flex;
+  min-height: 100vh;
 }
 
 #all-assignments-header {

@@ -1,5 +1,6 @@
 <template>
   <div id="deleted-assignments">
+    <dashboard-sidebar :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
     <course-sidebar :name="name" />
     <div id="content">
       <nav-bar :course="course" deleted_assignments="true" />
@@ -40,10 +41,11 @@ import Footer from '../components/footer'
 import StudentAssignmentCard from '../components/student-assignment-card'
 import CourseSidebar from '../components/course_sidebar'
 import NavBar from '../components/nav_bar'
+import DashboardSidebar from '../components/dashboard_sidebar'
 
 export default {
   name: 'DeletedAssignments',
-  components: { NavBar, CourseSidebar, Footer, Header, StudentAssignmentCard },
+  components: { NavBar, CourseSidebar, Footer, Header, StudentAssignmentCard, 'dashboard-sidebar': DashboardSidebar },
   async asyncData(context) {
     if (!context.store.state.authUser) return
 
@@ -60,11 +62,25 @@ export default {
         })
       }
     )
+
+    const course_res = await axios
+      .get(`https://${process.env.backend}:3000/courses`, {
+        headers: {
+          Authorization: context.store.state.authUser.id
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      })
+
     return {
       assignments: res.data.assignments,
       permissions: res.data.permissions,
       course: res.data.course_title,
-      name: res.data.user_name || ''
+      name: res.data.user_name || '',
+      enrolments: course_res.data.enrolments,
+      taing: course_res.data.taing,
+      instructing: course_res.data.teaching
     }
   },
   fetch({ store, redirect }) {
@@ -162,6 +178,7 @@ thead {
 
 #deleted-assignments {
   display: flex;
+  min-height: 100vh;
 }
 
 #content {

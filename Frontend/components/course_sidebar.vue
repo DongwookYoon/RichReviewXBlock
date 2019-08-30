@@ -1,29 +1,29 @@
 <template>
   <div id="sidebar">
-    <div v-if="name !== ''" id="name-div">
-      <p class="logged-in-text">Logged in as</p>
-      <p class="logged-in-text">{{ name }}</p>
-      <div id="logout" @click="logout">
-        <img id="logout-icon" src="/logout.png" />
-        <!--<p v-if="name !== ''" class="header-logout">Logout of</p>-->
-        <!--<p v-if="name !== ''" class="header-logout">{{ name }}</p>-->
-        <!--<p v-if="name === ''" class="header-logout">Logout</p>-->
-        <p class="header-logout">Logout</p>
-      </div>
-      <hr />
-    </div>
-    <div id="sb_dashboard"
-         :style="{
-        'background-color': dashboard_background_color,
-        color: dashboard_color
-      }"
-         @click="go_to_dashboard"
-    >
-      <img id="dashboard-icon" src="/dashboard.png" />
-      <p id="header-dashboard">
-        Dashboard
-      </p>
-    </div>
+    <!--<div v-if="name !== ''" id="name-div">-->
+      <!--<p class="logged-in-text">Logged in as</p>-->
+      <!--<p class="logged-in-text">{{ name }}</p>-->
+      <!--<div id="logout" @click="logout">-->
+        <!--<img id="logout-icon" src="/logout.png" />-->
+        <!--&lt;!&ndash;<p v-if="name !== ''" class="header-logout">Logout of</p>&ndash;&gt;-->
+        <!--&lt;!&ndash;<p v-if="name !== ''" class="header-logout">{{ name }}</p>&ndash;&gt;-->
+        <!--&lt;!&ndash;<p v-if="name === ''" class="header-logout">Logout</p>&ndash;&gt;-->
+        <!--<p class="header-logout">Logout</p>-->
+      <!--</div>-->
+      <!--<hr />-->
+    <!--</div>-->
+    <!--<div id="sb_dashboard"-->
+         <!--:style="{-->
+        <!--'background-color': dashboard_background_color,-->
+        <!--color: dashboard_color-->
+      <!--}"-->
+         <!--@click="go_to_dashboard"-->
+    <!--&gt;-->
+      <!--<img id="dashboard-icon" src="/dashboard.png" />-->
+      <!--<p id="header-dashboard">-->
+        <!--Dashboard-->
+      <!--</p>-->
+    <!--</div>-->
     <div
       id="assignments"
       :style="{
@@ -32,12 +32,12 @@
       }"
       @click="go_to_all_assignments"
     >
-      <img v-if="!assignments" id="assignment-icon" src="/assignment.png" />
-      <img
-        v-if="assignments"
-        id="assignment-icon-white"
-        src="/assignment-white.png"
-      />
+      <!--<img v-if="!assignments" id="assignment-icon" src="/assignment.png" />-->
+      <!--<img-->
+        <!--v-if="assignments"-->
+        <!--id="assignment-icon-white"-->
+        <!--src="/assignment-white.png"-->
+      <!--/>-->
       <p id="header-assignments">
         Assignments
       </p>
@@ -50,8 +50,8 @@
       }"
       @click="go_to_people"
     >
-      <img v-if="!people" id="group-icon" src="/group.png" />
-      <img v-if="people" id="group-icon-white" src="/group-white.png" />
+      <!--<img v-if="!people" id="group-icon" src="/group.png" />-->
+      <!--<img v-if="people" id="group-icon-white" src="/group-white.png" />-->
       <p id="header-people">People</p>
     </div>
     <div
@@ -62,8 +62,8 @@
       }"
       @click="go_to_all_grades"
     >
-      <img v-if="!grades" id="grade-icon" src="/grade.png" />
-      <img v-if="grades" id="grade-icon-white" src="/grade-white.png" />
+      <!--<img v-if="!grades" id="grade-icon" src="/grade.png" />-->
+      <!--<img v-if="grades" id="grade-icon-white" src="/grade-white.png" />-->
       <p id="header-grades">Grades</p>
     </div>
   </div>
@@ -104,14 +104,16 @@ export default {
     }
   },
   mounted: function() {
-    console.log(this.$route)
-
-    if (this.assignments) {
+    // if (this.assignments) {
+    //   this.assignments_background_color = '#0c2343'
+    //   this.assignments_color = 'white'
+    // }
+    if (this.$route.fullPath.includes('assignments') || this.assignments) {
       this.assignments_background_color = '#0c2343'
       this.assignments_color = 'white'
     }
 
-    if (this.people) {
+    if (this.$route.fullPath.includes('course_groups') || this.people) {
       this.people_background_color = '#0c2343'
       this.people_colour = 'white'
     }
@@ -157,61 +159,22 @@ p {
 
 #sidebar {
   width: 100px;
+  margin-left: 20px;
+  margin-top: 27vh;
 }
 
-#name-div {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.logged-in-text {
-  font-size: 0.875rem;
-  color: #0c2343;
-}
-
-#dashboard-icon,
-#assignment-icon,
-#assignment-icon-white,
-#group-icon,
-#group-icon-white,
-#grade-icon,
-#grade-icon-white,
-#logout-icon {
-  width: 30px;
-  margin-left: auto;
-  margin-right: auto;
-  display: block;
-}
-
-#header-dashboard,
 #header-assignments,
 #header-people,
-#header-grades,
-.header-logout {
-  font-size: 0.875rem;
+#header-grades {
+  font-size: 1rem;
   text-align: center;
 }
 
-#sb_dashboard,
 #assignments,
 #people,
-#grades,
-#logout {
+#grades {
   margin-top: 50px;
   cursor: pointer;
-  border-radius: 0 2px 2px 0;
-  padding-top: 5px;
-}
-
-#sb_dashboard {
-  margin-top: 20px;
-}
-
-#logout {
-  margin-top: 20px;
-}
-
-.header-logout {
-  color: #0c2343;
+  border-radius: 5px;
 }
 </style>

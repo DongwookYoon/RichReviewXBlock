@@ -5,6 +5,7 @@
     <rename-group-set-modal v-if="show_rename_group_set_modal" @close="show_rename_group_set_modal = false">
     </rename-group-set-modal>
     <div id="course-groups">
+      <dashboard-sidebar :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
       <course-sidebar :name="name" :people="true" />
       <div id="content">
         <nav-bar :course="course" people="true" edit_groups="true" />
@@ -147,6 +148,7 @@ import NavBar from '../components/nav_bar'
 import ModalPlugin from '../node_modules/bootstrap-vue'
 import AutomaticGroupModal from '../components/automatic-group-modal'
 import RenameGroupSetModal from '../components/rename-group-set-modal'
+import DashboardSidebar from '../components/dashboard_sidebar'
 
 export default {
   name: 'NewGroup',
@@ -157,7 +159,8 @@ export default {
     draggable,
     CourseGroupCard,
     AutomaticGroupModal,
-    RenameGroupSetModal
+    RenameGroupSetModal,
+    'dashboard-sidebar': DashboardSidebar
     // ModalPlugin
   },
   data() {
@@ -184,7 +187,15 @@ export default {
         })
       }
     )
-
+    const course_res = await axios
+      .get(`https://${process.env.backend}:3000/courses`, {
+        headers: {
+          Authorization: context.store.state.authUser.id
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      })
     console.log(res.data)
     return {
       course_group_sets: res.data.course_group_sets,
@@ -199,7 +210,10 @@ export default {
       groups_changed: false,
       changes_saved: false,
       course: res.data.course_title,
-      name: res.data.user_name
+      name: res.data.user_name,
+      enrolments: course_res.data.enrolments,
+      taing: course_res.data.taing,
+      instructing: course_res.data.teaching
     }
   },
   fetch({ store, redirect }) {
@@ -442,6 +456,7 @@ p {
 
 #course-groups {
   display: flex;
+  min-height: 100vh;
 }
 
 #content {

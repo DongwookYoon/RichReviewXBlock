@@ -1,6 +1,6 @@
 <template>
   <div id="dashboard">
-    <sidebar :name="name"/>
+    <sidebar :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
     <div id="content">
       <div id="courses">
         <div v-if="taing.length > 0 || instructing.length > 0" id="teaching-div">
@@ -92,6 +92,7 @@ export default {
         })
       })
     console.log(res.data.user_name)
+
     return {
       enrolments: res.data.enrolments,
       taing: res.data.taing,
@@ -134,7 +135,7 @@ p {
 
 #dashboard {
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 #content {

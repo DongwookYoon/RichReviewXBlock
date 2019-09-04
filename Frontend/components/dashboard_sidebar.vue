@@ -31,9 +31,9 @@
         }"
         @click="toggle_sidebar"
       >
-        <img v-if="courses" id="courses-icon" src="/course.png" />
+        <img v-if="navbar_toggle || courses" id="courses-icon" src="/course.png" />
         <img
-          v-if="!courses"
+          v-if="!navbar_toggle && !courses"
           id="courses-icon-white"
           src="/course-white.png"
         />
@@ -348,7 +348,7 @@ p {
   transition: 0.25s; /* 0.5 second transition effect to slide in the sidenav */
   margin-left: 100px;
   box-shadow: 2px 0 5px -2px #888;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 /* The navigation menu links */

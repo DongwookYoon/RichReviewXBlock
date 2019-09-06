@@ -501,24 +501,29 @@ class AssignmentDatabaseHandler {
 
     async get_all_assignments_visible_to_user (import_handler, user_key, enrolments) {
         let user_db_handler = await import_handler.user_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
+
         if (!(await user_db_handler.is_valid_user_key(user_key)))
             throw new RichReviewError('Invalid user key');
 
         let assignments = [];
         for (let enrolment of enrolments['enrolments']) {
             for (let assignment_key of enrolment['assignments']) {
-                let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+                let submitter_exists = await submitter_db_handler.does_user_have_submitter(import_handler, user_key, assignment_key);
+                if (submitter_exists) {
+                    let assignment_data = await this.get_assignment_data(user_key, assignment_key);
 
-                if (await AssignmentDatabaseHandler.user_has_permission_to_view(import_handler, user_key, assignment_data)) {
-                    assignments.push({
-                        course_id: enrolment['id'],
-                        assignment_id: assignment_data['id'],
-                        course: enrolment['title'],
-                        title: assignment_data['title'],
-                        due: assignment_data['due_date'],
-                        group_assignment: assignment_data['group_assignment'],
-                        role: 'Student'
-                    })
+                    if (await AssignmentDatabaseHandler.user_has_permission_to_view(import_handler, user_key, assignment_data)) {
+                        assignments.push({
+                            course_id: enrolment['id'],
+                            assignment_id: assignment_data['id'],
+                            course: enrolment['title'],
+                            title: assignment_data['title'],
+                            due: assignment_data['due_date'],
+                            group_assignment: assignment_data['group_assignment'],
+                            role: 'Student'
+                        })
+                    }
                 }
             }
         }
@@ -567,6 +572,7 @@ class AssignmentDatabaseHandler {
 
         let user_db_handler = await import_handler.user_db_handler;
         let course_db_handler = await import_handler.course_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
 
         if (!(await user_db_handler.is_valid_user_key(user_key)))
             throw new RichReviewError('Invalid user key');
@@ -584,20 +590,24 @@ class AssignmentDatabaseHandler {
 
             for (let assignment_key of assignments) {
 
-                let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+                let submitter_exists = await submitter_db_handler.does_user_have_submitter(import_handler, user_key, assignment_key);
 
-                if (assignment_data && (assignment_data['due_date'] === '' || new Date(assignment_data['due_date']) > new Date())) {
-                    let submission_status = await this.get_user_submission_status(import_handler, user_key, assignment_key);
+                if (submitter_exists) {
+                    let assignment_data = await this.get_assignment_data(user_key, assignment_key);
 
-                    let data = {
-                        assignment_id: assignment_key.replace(KeyDictionary.key_dictionary['assignment'], ''),
-                        course_id: assignment_data['course'].replace(KeyDictionary.key_dictionary['course'], ''),
-                        title: assignment_data['title'],
-                        submission_status: submission_status.submission_status,
-                        late: submission_status.late
-                    };
+                    if (assignment_data && (assignment_data['due_date'] === '' || new Date(assignment_data['due_date']) > new Date())) {
+                        let submission_status = await this.get_user_submission_status(import_handler, user_key, assignment_key);
 
-                    upcoming_assignments.push(data);
+                        let data = {
+                            assignment_id: assignment_key.replace(KeyDictionary.key_dictionary['assignment'], ''),
+                            course_id: assignment_data['course'].replace(KeyDictionary.key_dictionary['course'], ''),
+                            title: assignment_data['title'],
+                            submission_status: submission_status.submission_status,
+                            late: submission_status.late
+                        };
+
+                        upcoming_assignments.push(data);
+                    }
                 }
             }
         }
@@ -621,30 +631,34 @@ class AssignmentDatabaseHandler {
 
             if (!(await this.is_valid_assignment_key(assignment_key)))
                 throw new RichReviewError('Invalid assignment key');
+            let submitter_exists = await submitter_db_handler.does_user_have_submitter(import_handler, user_key, assignment_key);
 
-            let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+            if (submitter_exists) {
+                let assignment_data = await this.get_assignment_data(user_key, assignment_key);
 
-            if (assignment_data && !assignment_data['hidden']) {
-                let submission_key = await this.get_users_submission_key(import_handler, user_key, assignment_key);
-                let submission_data = await submission_db_handler.get_submission_data(submission_key);
-                let submission_status = await submission_db_handler.get_submission_status(submission_key);
+                if (assignment_data && !assignment_data['hidden']) {
+                    let submission_key = await this.get_users_submission_key(import_handler, user_key, assignment_key);
+                    let submission_data = await submission_db_handler.get_submission_data(submission_key);
+                    let submission_status = await submission_db_handler.get_submission_status(submission_key);
 
-                assignment_data['submission'] = { submission_status };
+                    assignment_data['submission'] = {submission_status};
 
-                let submitter_data = await submitter_db_handler.get_submitter_data(submission_data['submitter']);
-                assignment_data['late'] = late.is_late(assignment_data, submission_data, submitter_data['course_group'] === '' ?
-                    submitter_data['members'][0] :
-                    submitter_data['course_group']);
+                    let submitter_data = await submitter_db_handler.get_submitter_data(submission_data['submitter']);
+                    assignment_data['late'] = late.is_late(assignment_data, submission_data, submitter_data['course_group'] === '' ?
+                        submitter_data['members'][0] :
+                        submitter_data['course_group']);
 
-                assignment_data = {
-                    id: assignment_data.id,
-                    title: assignment_data.title,
-                    group_assignment: assignment_data.group_assignment,
-                    due_date: assignment_data.due_date,
-                    submission: assignment_data.submission,
-                    late: assignment_data.late };
+                    assignment_data = {
+                        id: assignment_data.id,
+                        title: assignment_data.title,
+                        group_assignment: assignment_data.group_assignment,
+                        due_date: assignment_data.due_date,
+                        submission: assignment_data.submission,
+                        late: assignment_data.late
+                    };
 
-                assignments.push(assignment_data);
+                    assignments.push(assignment_data);
+                }
             }
         }
 
@@ -893,7 +907,7 @@ class AssignmentDatabaseHandler {
 
         if(!submissions) {
             await this.set_assignment_data(assignment_key, 'submissions', '[]');
-            await course_db_handler.verify_course_submitters(import_handler, user_key, assignment_data['course']);
+            // await course_db_handler.verify_course_submitters(import_handler, user_key, assignment_data['course']);
             assignment_data = await this.get_assignment_data(user_key, assignment_key);
             submissions = assignment_data['submissions'];
         }

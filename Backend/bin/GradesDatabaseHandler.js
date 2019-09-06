@@ -79,16 +79,19 @@ class GradesDatabaseHandler {
 
         let submission_key = await assignment_db_handler.get_users_submission_key(import_handler, user_key, assignment_key);
 
+        let grade = {};
+
         if (!submission_key) {
-            throw new RichReviewError('Student does not have a submitter and submission for this assignment');
-            return;
+            console.warn(`Student ${user_key} does not have a submitter and submission for this assignment`);
+            grade['mark'] = '';
+            grade['submission_status'] = 'Not Assigned';
+            grade['late'] = false;
+            return grade;
         }
 
         let assignment_data = await assignment_db_handler.get_assignment_data(user_key, assignment_key);
 
         let submission_data = await submission_db_handler.get_submission_data(submission_key);
-
-        let grade = {};
 
         grade['mark'] = submission_data['mark'];
         grade['submission_status'] = submission_data['submission_status'];

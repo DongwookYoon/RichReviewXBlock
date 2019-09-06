@@ -10,17 +10,17 @@ import random
 
 def student_has_submitter(r, user_key, assignment_key):
 	assignment_data = r.hgetall(assignment_key)
-	assignment_data = { y.decode('ascii'): assignment_data.get(y).decode('ascii') for y in assignment_data.keys() }	
+	assignment_data = { y.decode('utf-8'): assignment_data.get(y).decode('utf-8') for y in assignment_data.keys() }	
 	assignment_submissions = json.loads(assignment_data['submissions'])
 	
 	user_data = r.hgetall(user_key)
-	user_data = { y.decode('ascii'): user_data.get(y).decode('ascii') for y in user_data.keys() }	
+	user_data = { y.decode('utf-8'): user_data.get(y).decode('utf-8') for y in user_data.keys() }	
 	user_submitters = json.loads(user_data['submitters'])
 	
 	user_submissions = []
 	for user_submitter in user_submitters:
 		submitter = r.hgetall(user_submitter);
-		submitter = { y.decode('ascii'): submitter.get(y).decode('ascii') for y in submitter.keys() }	
+		submitter = { y.decode('utf-8'): submitter.get(y).decode('utf-8') for y in submitter.keys() }	
 		user_submissions.append(submitter['submission'])
 		
 	return not set(user_submissions).isdisjoint(assignment_submissions)
@@ -29,7 +29,7 @@ def student_has_submitter(r, user_key, assignment_key):
 
 def add_submission_to_assignment (r, assignment_key, submission_key):
 	assignment_data = r.hgetall(assignment_key)
-	assignment_data = { y.decode('ascii'): assignment_data.get(y).decode('ascii') for y in assignment_data.keys() }	
+	assignment_data = { y.decode('utf-8'): assignment_data.get(y).decode('utf-8') for y in assignment_data.keys() }	
 	submissions = json.loads(assignment_data['submissions'])
 	
 	if not submission_key in submissions:
@@ -59,7 +59,7 @@ def create_group (r, user_id, doc_key, template_group):
 	
 def create_submission(r, assignment_key, submitter_key, group = None):
 	assignment_data = r.hgetall(assignment_key)
-	assignment_data = { y.decode('ascii'): assignment_data.get(y).decode('ascii') for y in assignment_data.keys() }	
+	assignment_data = { y.decode('utf-8'): assignment_data.get(y).decode('utf-8') for y in assignment_data.keys() }	
 	
 	course_id = assignment_data['course'].replace('crs:', '')
 	submission_key = 'sbm:{}_{}_{}'.format(course_id, str(int(round(time.time() * 1000))), random.randint(1, 100000))
@@ -80,7 +80,7 @@ def create_submission(r, assignment_key, submitter_key, group = None):
 	
 def add_group_to_doc (r, doc_key, group_key):
 	doc_data = r.hgetall(doc_key)
-	doc_data = { y.decode('ascii'): doc_data.get(y).decode('ascii') for y in doc_data.keys() }	
+	doc_data = { y.decode('utf-8'): doc_data.get(y).decode('utf-8') for y in doc_data.keys() }	
 	groups = json.loads(doc_data['groups'])
 	
 	if not group_key in groups:
@@ -90,7 +90,7 @@ def add_group_to_doc (r, doc_key, group_key):
 
 def add_user_to_group (r, group_key, user_key):
 	group_data = r.hgetall(group_key)
-	group_data = { y.decode('ascii'): group_data.get(y).decode('ascii') for y in group_data.keys() }	
+	group_data = { y.decode('utf-8'): group_data.get(y).decode('utf-8') for y in group_data.keys() }	
 	users = json.loads(group_data['users'])
 	
 	if not user_key in users['participating']:
@@ -100,7 +100,7 @@ def add_user_to_group (r, group_key, user_key):
 
 def add_group_to_user (r, user_key, group_key):
 	user_data = r.hgetall(user_key)
-	user_data = { y.decode('ascii'): user_data.get(y).decode('ascii') for y in user_data.keys() }	
+	user_data = { y.decode('utf-8'): user_data.get(y).decode('utf-8') for y in user_data.keys() }	
 	groupNs = json.loads(user_data['groupNs'])
 	
 	if not group_key in groupNs:
@@ -110,13 +110,13 @@ def add_group_to_user (r, user_key, group_key):
 
 def add_submission_to_group (r, group_key, submission_key):
 	group_data = r.hgetall(group_key)
-	group_data = { y.decode('ascii'): group_data.get(y).decode('ascii') for y in group_data.keys() }	
+	group_data = { y.decode('utf-8'): group_data.get(y).decode('utf-8') for y in group_data.keys() }	
 	r.hset(group_key, 'submission', submission_key)
 	
 	
 def add_submitter_to_user (r, user_key, submitter_key):
 	user_data = r.hgetall(user_key)
-	user_data = { y.decode('ascii'): user_data.get(y).decode('ascii') for y in user_data.keys() }	
+	user_data = { y.decode('utf-8'): user_data.get(y).decode('utf-8') for y in user_data.keys() }	
 	submitters = json.loads(user_data['submitters'])
 	
 	if not submitter_key in submitters:
@@ -133,12 +133,12 @@ def create_document_submission (r, assignment_key, submitter_key):
 	
 def create_comment_submission (r, user_key, assignment_key, submitter_key):
 	assignment_data = r.hgetall(assignment_key)
-	assignment_data = { y.decode('ascii'): assignment_data.get(y).decode('ascii') for y in assignment_data.keys() }	
+	assignment_data = { y.decode('utf-8'): assignment_data.get(y).decode('utf-8') for y in assignment_data.keys() }	
 	
 	assignment_group_key = assignment_data['template_group']
 		
 	group_data = r.hgetall(assignment_group_key)
-	group_data = { y.decode('ascii'): group_data.get(y).decode('ascii') for y in group_data.keys() }		
+	group_data = { y.decode('utf-8'): group_data.get(y).decode('utf-8') for y in group_data.keys() }		
 	
 	doc_key = group_data['docid']
 	group_key = create_group(r, group_data['userid_n'], doc_key, assignment_group_key)
@@ -155,7 +155,7 @@ def create_comment_submission (r, user_key, assignment_key, submitter_key):
 	
 def create_submitter(r, user_key, assignment_key):
 	assignment_data = r.hgetall(assignment_key)
-	assignment_data = { y.decode('ascii'): assignment_data.get(y).decode('ascii') for y in assignment_data.keys() }	
+	assignment_data = { y.decode('utf-8'): assignment_data.get(y).decode('utf-8') for y in assignment_data.keys() }	
 	
 	course_id = assignment_data['course'].replace('crs:', '')
 	submitter_key = 'smt:{}_{}_{}'.format(course_id, str(int(round(time.time() * 1000))), random.randint(1, 100000))
@@ -176,12 +176,12 @@ def create_submitter(r, user_key, assignment_key):
 	
 def verify_submitter_for_course(r, user_key, course_key):
 	course_data = r.hgetall(course_key)
-	course_data = { y.decode('ascii'): course_data.get(y).decode('ascii') for y in course_data.keys() }	
+	course_data = { y.decode('utf-8'): course_data.get(y).decode('utf-8') for y in course_data.keys() }	
 	
 	assignments = json.loads(course_data['assignments'])
 	for assignment_key in assignments:
 		assignment_data = r.hgetall(assignment_key)
-		assignment_data = { y.decode('ascii'): assignment_data.get(y).decode('ascii') for y in assignment_data.keys() }	
+		assignment_data = { y.decode('utf-8'): assignment_data.get(y).decode('utf-8') for y in assignment_data.keys() }	
 		
 		if not json.loads(assignment_data['group_assignment']):
 			if not student_has_submitter(r, user_key, assignment_key):
@@ -294,7 +294,7 @@ def add_student_to_course(r, user_key, course_key):
 	f.close()
 	
 	course_data = r.hgetall(course_key)
-	course_data = { y.decode('ascii'): course_data.get(y).decode('ascii') for y in course_data.keys() }
+	course_data = { y.decode('utf-8'): course_data.get(y).decode('utf-8') for y in course_data.keys() }
 	active_students = json.loads(course_data['active_students'])
 	
 	blocked_students = json.loads(course_data['blocked_students'])
@@ -314,7 +314,7 @@ def add_instructor_to_course(r, user_key, course_key):
 	f.close()
 	
 	course_data = r.hgetall(course_key)
-	course_data = { y.decode('ascii'): course_data.get(y).decode('ascii') for y in course_data.keys() }
+	course_data = { y.decode('utf-8'): course_data.get(y).decode('utf-8') for y in course_data.keys() }
 	instructors = json.loads(course_data['instructors'])
 	
 	if not user_key in instructors:
@@ -329,7 +329,7 @@ def add_course_to_student(r, user_key, course_key):
 	f.close()
 	
 	user_data = r.hgetall(user_key)
-	user_data = { y.decode('ascii'): user_data.get(y).decode('ascii') for y in user_data.keys() }
+	user_data = { y.decode('utf-8'): user_data.get(y).decode('utf-8') for y in user_data.keys() }
 	enrolments = json.loads(user_data['enrolments'])
 	
 	if not course_key in enrolments:
@@ -344,7 +344,7 @@ def add_course_to_instructor(r, user_key, course_key):
 	f.close()
 	
 	user_data = r.hgetall(user_key)
-	user_data = { y.decode('ascii'): user_data.get(y).decode('ascii') for y in user_data.keys() }
+	user_data = { y.decode('utf-8'): user_data.get(y).decode('utf-8') for y in user_data.keys() }
 	teaching = json.loads(user_data['teaching'])
 	
 	if not course_key in teaching:
@@ -355,12 +355,12 @@ def add_course_to_instructor(r, user_key, course_key):
 	
 def get_all_course_students(r, course_key):
 	course_data = r.hgetall(course_key)
-	course_data = { y.decode('ascii'): course_data.get(y).decode('ascii') for y in course_data.keys() }
+	course_data = { y.decode('utf-8'): course_data.get(y).decode('utf-8') for y in course_data.keys() }
 	return json.loads(course_data['active_students'])
 
 def get_all_course_instructors(r, course_key):
 	course_data = r.hgetall(course_key)
-	course_data = { y.decode('ascii'): course_data.get(y).decode('ascii') for y in course_data.keys() }
+	course_data = { y.decode('utf-8'): course_data.get(y).decode('utf-8') for y in course_data.keys() }
 	return json.loads(course_data['instructors'])
 
 
@@ -375,7 +375,7 @@ def remove_unenrolled_student(r, user_key, course_key):
 	f.close()
 	
 	course_data = r.hgetall(course_key)
-	course_data = { y.decode('ascii'): course_data.get(y).decode('ascii') for y in course_data.keys() }
+	course_data = { y.decode('utf-8'): course_data.get(y).decode('utf-8') for y in course_data.keys() }
 	active_students = json.loads(course_data['active_students'])
 	blocked_students = json.loads(course_data['blocked_students'])
 	
@@ -388,7 +388,7 @@ def remove_unenrolled_student(r, user_key, course_key):
 		r.hset(course_key, 'blocked_students', json.dumps(blocked_students))
 
 	user_data = r.hgetall(user_key)
-	user_data = { y.decode('ascii'): user_data.get(y).decode('ascii') for y in user_data.keys() }
+	user_data = { y.decode('utf-8'): user_data.get(y).decode('utf-8') for y in user_data.keys() }
 	enrolments = json.loads(user_data['enrolments'])
 	
 	if course_key in enrolments:
@@ -406,7 +406,7 @@ def remove_unenrolled_instructor(r, user_key, course_key):
 	f.close()
 	
 	course_data = r.hgetall(course_key)
-	course_data = { y.decode('ascii'): course_data.get(y).decode('ascii') for y in course_data.keys() }
+	course_data = { y.decode('utf-8'): course_data.get(y).decode('utf-8') for y in course_data.keys() }
 	instructors = json.loads(course_data['instructors'])
 	
 	if user_key in instructors:
@@ -414,7 +414,7 @@ def remove_unenrolled_instructor(r, user_key, course_key):
 		r.hset(course_key, 'instructors', json.dumps(instructors))
 
 	user_data = r.hgetall(user_key)
-	user_data = { y.decode('ascii'): user_data.get(y).decode('ascii') for y in user_data.keys() }
+	user_data = { y.decode('utf-8'): user_data.get(y).decode('utf-8') for y in user_data.keys() }
 	teaching = json.loads(user_data['teaching'])
 	
 	if course_key in teaching:
@@ -525,14 +525,13 @@ def sync_redis_with_ldap(r, l, eldap_config):
 	courses = get_all_courses(l, eldap_config, key_dict)
 	for course in courses:
 		#print(course)
-		if course['key'] == 'crs:CPSC_554K_201_2019W':
-			if not course_exists(r, course['key']):
-				create_course(r, course)
-				
-			if not course['is_instructor_course']:
-				syncronize_students(r, course, key_dict)
-			else:
-				synconize_instructors(r, course, key_dict)
+		if not course_exists(r, course['key']):
+			create_course(r, course)
+			
+		if not course['is_instructor_course']:
+			syncronize_students(r, course, key_dict)
+		else:
+			synconize_instructors(r, course, key_dict)
 	
 	print('Syncronization complete at {}'.format(datetime.datetime.now()))
 	f = open("eldap-sync-log.txt","a+")

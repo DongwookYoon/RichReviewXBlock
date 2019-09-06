@@ -282,6 +282,7 @@ class CourseDatabaseHandler {
 
             let user_db_handler = await import_handler.user_db_handler;
             await user_db_handler.add_course_to_student(user_key, course_key);
+            await user_db_handler.verify_submitters_for_enrolments(import_handler, user_key);
         } catch (e) {
             console.warn(e);
             throw e;
@@ -378,7 +379,7 @@ class CourseDatabaseHandler {
 
         for (const assignment of course_data['assignments']) {
             let assignment_data = await assignment_db_handler.get_assignment_data('', assignment);
-            if (!user_assignments.includes(assignment)) {
+            if (!user_assignments.includes(assignment) && !assignment_data['group_assignment']) {
                 if (!assignment_data['submissions']) {
                     await assignment_db_handler.set_assignment_data(assignment, 'submissions', '[]');
                 }
@@ -615,7 +616,8 @@ class CourseDatabaseHandler {
         active_students = active_students.filter(student => {
             return student !== user_key
         });
-        blocked_students.push(user_key);
+        if (!blocked_students.includes(user_key))
+            blocked_students.push(user_key);
 
         await this.set_course_data(course_key, 'active_students', JSON.stringify(active_students));
         await this.set_course_data(course_key, 'blocked_students', JSON.stringify(blocked_students));

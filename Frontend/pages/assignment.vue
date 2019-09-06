@@ -417,23 +417,28 @@ export default {
         formData.append('files[' + i + ']', file)
       }
 
-      await axios.post(
-        `https://${process.env.backend}:3000/courses/${
-          this.$route.params.course_id
-        }/assignments/${this.$route.params.assignment_id}/document_submissions`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: this.$store.state.authUser.id
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        }
-      )
+      try {
+        await axios.post(
+          `https://${process.env.backend}:3000/courses/${
+            this.$route.params.course_id
+            }/assignments/${this.$route.params.assignment_id}/document_submissions`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              Authorization: this.$store.state.authUser.id
+            },
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false
+            })
+          }
+        )
 
-      this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
+        this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
+      } catch (e) {
+        this.loading = false
+        window.alert(e.response.data.message)
+      }
     }
   }
 }

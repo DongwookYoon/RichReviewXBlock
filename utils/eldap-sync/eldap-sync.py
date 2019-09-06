@@ -6,6 +6,192 @@ import time
 import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 import sys
+import random
+
+def student_has_submitter(r, user_key, assignment_key):
+	assignment_data = r.hgetall(assignment_key)
+	assignment_data = { y.decode('ascii'): assignment_data.get(y).decode('ascii') for y in assignment_data.keys() }	
+	assignment_submissions = json.loads(assignment_data['submissions'])
+	
+	user_data = r.hgetall(user_key)
+	user_data = { y.decode('ascii'): user_data.get(y).decode('ascii') for y in user_data.keys() }	
+	user_submitters = json.loads(user_data['submitters'])
+	
+	user_submissions = []
+	for user_submitter in user_submitters:
+		submitter = r.hgetall(user_submitter);
+		submitter = { y.decode('ascii'): submitter.get(y).decode('ascii') for y in submitter.keys() }	
+		user_submissions.append(submitter['submission'])
+		
+	return not set(user_submissions).isdisjoint(assignment_submissions)
+
+
+
+def add_submission_to_assignment (r, assignment_key, submission_key):
+	assignment_data = r.hgetall(assignment_key)
+	assignment_data = { y.decode('ascii'): assignment_data.get(y).decode('ascii') for y in assignment_data.keys() }	
+	submissions = json.loads(assignment_data['submissions'])
+	
+	if not submission_key in submissions:
+		submissions.append(submission_key)
+		r.hset(assignment_key, 'submissions', json.dumps(submissions))
+	
+
+def create_group (r, user_id, doc_key, template_group):
+	group_key = 'grp:{}_{}'.format(user_id, str(int(round(time.time() * 1000))))
+	
+	r.hset(group_key, 'userid_n', user_id)
+	r.hset(group_key, 'docid', doc_key)
+	r.hset(group_key, 'creationTime', str(int(round(time.time() * 1000))))
+	r.hset(group_key, 'name', 'Group created at {}'.format(str(int(round(time.time() * 1000)))))
+	r.hset(group_key, 'submission', '')
+	
+	participating = [user_id]
+	users = {}
+	users['invited'] = []
+	users['participating'] = participating
+	
+	r.hset(group_key, 'users', json.dumps(users))
+	r.hset(group_key, 'write_blocked', '[]')
+	r.hset(group_key, 'template_group', template_group or '')
+	return group_key
+	
+	
+def create_submission(r, assignment_key, submitter_key, group = None):
+	assignment_data = r.hgetall(assignment_key)
+	assignment_data = { y.decode('ascii'): assignment_data.get(y).decode('ascii') for y in assignment_data.keys() }	
+	
+	course_id = assignment_data['course'].replace('crs:', '')
+	submission_key = 'sbm:{}_{}_{}'.format(course_id, str(int(round(time.time() * 1000))), random.randint(1, 100000))
+	
+	r.hset(submission_key, 'id', submission_key.replace('sbm:', ''))
+	r.hset(submission_key, 'submission_status', 'Not Submitted')
+	r.hset(submission_key, 'mark', '')
+	r.hset(submission_key, 'submission_time', '')
+	r.hset(submission_key, 'assignment', assignment_key)
+	r.hset(submission_key, 'group', group or '')
+	r.hset(submission_key, 'current_submission', '')
+	r.hset(submission_key, 'past_submissions', '[]')
+	r.hset(submission_key, 'submitter',  submitter_key)
+
+	return submission_key	
+	
+	
+	
+def add_group_to_doc (r, doc_key, group_key):
+	doc_data = r.hgetall(doc_key)
+	doc_data = { y.decode('ascii'): doc_data.get(y).decode('ascii') for y in doc_data.keys() }	
+	groups = json.loads(doc_data['groups'])
+	
+	if not group_key in groups:
+		groups.append(group_key)
+		r.hset(doc_key, 'groups', json.dumps(groups))
+	
+
+def add_user_to_group (r, group_key, user_key):
+	group_data = r.hgetall(group_key)
+	group_data = { y.decode('ascii'): group_data.get(y).decode('ascii') for y in group_data.keys() }	
+	users = json.loads(group_data['users'])
+	
+	if not user_key in users['participating']:
+		users['participating'].append(user_key)
+		r.hset(group_key, 'users', json.dumps(users))
+
+
+def add_group_to_user (r, user_key, group_key):
+	user_data = r.hgetall(user_key)
+	user_data = { y.decode('ascii'): user_data.get(y).decode('ascii') for y in user_data.keys() }	
+	groupNs = json.loads(user_data['groupNs'])
+	
+	if not group_key in groupNs:
+		groupNs.append(group_key)
+		r.hset(user_key, 'groupNs', json.dumps(groupNs))
+		
+
+def add_submission_to_group (r, group_key, submission_key):
+	group_data = r.hgetall(group_key)
+	group_data = { y.decode('ascii'): group_data.get(y).decode('ascii') for y in group_data.keys() }	
+	r.hset(group_key, 'submission', submission_key)
+	
+	
+def add_submitter_to_user (r, user_key, submitter_key):
+	user_data = r.hgetall(user_key)
+	user_data = { y.decode('ascii'): user_data.get(y).decode('ascii') for y in user_data.keys() }	
+	submitters = json.loads(user_data['submitters'])
+	
+	if not submitter_key in submitters:
+		submitters.append(submitter_key)
+		r.hset(user_key, 'submitters', json.dumps(submitters))
+
+
+def create_document_submission (r, assignment_key, submitter_key):
+	submission_key = create_submission(r, assignment_key, submitter_key)
+	add_submission_to_assignment(r, assignment_key, submission_key)
+	return submission_key
+	
+	
+	
+def create_comment_submission (r, user_key, assignment_key, submitter_key):
+	assignment_data = r.hgetall(assignment_key)
+	assignment_data = { y.decode('ascii'): assignment_data.get(y).decode('ascii') for y in assignment_data.keys() }	
+	
+	assignment_group_key = assignment_data['template_group']
+		
+	group_data = r.hgetall(assignment_group_key)
+	group_data = { y.decode('ascii'): group_data.get(y).decode('ascii') for y in group_data.keys() }		
+	
+	doc_key = group_data['docid']
+	group_key = create_group(r, group_data['userid_n'], doc_key, assignment_group_key)
+
+	add_group_to_doc(r, doc_key, group_key);
+	add_user_to_group(r, group_key, user_key.replace('usr:', ''));
+	add_group_to_user(r, user_key, group_key);
+
+	submission_key = create_submission(r, assignment_key, submitter_key, group_key)
+	add_submission_to_assignment(r, assignment_key, submission_key)
+	add_submission_to_group(r, group_key, submission_key)
+	return submission_key
+	
+	
+def create_submitter(r, user_key, assignment_key):
+	assignment_data = r.hgetall(assignment_key)
+	assignment_data = { y.decode('ascii'): assignment_data.get(y).decode('ascii') for y in assignment_data.keys() }	
+	
+	course_id = assignment_data['course'].replace('crs:', '')
+	submitter_key = 'smt:{}_{}_{}'.format(course_id, str(int(round(time.time() * 1000))), random.randint(1, 100000))
+	
+	submission_key = None
+	
+	if assignment_data['type'] == 'document_submission':
+		submission_key = create_document_submission(r, assignment_key, submitter_key)
+	else:
+		submission_key = create_comment_submission(r, user_key, assignment_key, submitter_key)
+			
+	r.hset(submitter_key, 'members', json.dumps(["{}".format(user_key)]))
+	r.hset(submitter_key, 'submission', submission_key)
+	r.hset(submitter_key, 'course_group', '')
+	add_submitter_to_user (r, user_key, submitter_key)
+	
+	
+	
+def verify_submitter_for_course(r, user_key, course_key):
+	course_data = r.hgetall(course_key)
+	course_data = { y.decode('ascii'): course_data.get(y).decode('ascii') for y in course_data.keys() }	
+	
+	assignments = json.loads(course_data['assignments'])
+	for assignment_key in assignments:
+		assignment_data = r.hgetall(assignment_key)
+		assignment_data = { y.decode('ascii'): assignment_data.get(y).decode('ascii') for y in assignment_data.keys() }	
+		
+		if not json.loads(assignment_data['group_assignment']):
+			if not student_has_submitter(r, user_key, assignment_key):
+				print('\t-> Creating submitters for {} in assignment {}'.format(user_key, assignment_key))
+				f = open("eldap-sync-log.txt","a+")
+				f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Creating submitters for {} in assignment {}'.format(user_key, assignment_key))
+				f.close()
+				create_submitter(r, user_key, assignment_key)
+			
+		
 
 def create_course(r, course):
 	course_key = course['key']
@@ -216,7 +402,7 @@ def remove_unenrolled_instructor(r, user_key, course_key):
 		
 	print('\t-> Removing {} as an instructor from {}'.format(user_key, course_key))
 	f = open("eldap-sync-log.txt","a+")
-	f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Removing {} as an instructor from {}'.format(user_key, course_key))
+	f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Removing {} as an instructor from {}\n'.format(user_key, course_key))
 	f.close()
 	
 	course_data = r.hgetall(course_key)
@@ -249,10 +435,13 @@ def syncronize_students(r, course, key_dict):
 		if not user in currently_enrolled_students:
 			add_student_to_course(r, user, course['key'])
 			add_course_to_student(r, user, course['key'])
+			
+		verify_submitter_for_course (r, user, course['key'])
 		
 	for currently_enrolled_student in currently_enrolled_students:
 		if not currently_enrolled_student in course['members']:
 			remove_unenrolled_student(r, currently_enrolled_student, course['key'])
+			
 			
 def synconize_instructors(r, course, key_dict):
 	current_instructors = get_all_course_instructors(r, course['key'])
@@ -334,15 +523,16 @@ def sync_redis_with_ldap(r, l, eldap_config):
 	key_dict = { 'course': 'crs:', 'user': 'usr:' }
 
 	courses = get_all_courses(l, eldap_config, key_dict)
-
 	for course in courses:
-		if not course_exists(r, course['key']):
-			create_course(r, course)
-			
-		if not course['is_instructor_course']:
-			syncronize_students(r, course, key_dict)
-		else:
-			synconize_instructors(r, course, key_dict)
+		#print(course)
+		if course['key'] == 'crs:CPSC_554K_201_2019W':
+			if not course_exists(r, course['key']):
+				create_course(r, course)
+				
+			if not course['is_instructor_course']:
+				syncronize_students(r, course, key_dict)
+			else:
+				synconize_instructors(r, course, key_dict)
 	
 	print('Syncronization complete at {}'.format(datetime.datetime.now()))
 	f = open("eldap-sync-log.txt","a+")

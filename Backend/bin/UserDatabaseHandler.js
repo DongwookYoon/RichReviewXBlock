@@ -250,13 +250,17 @@ class UserDatabaseHandler {
 
         console.log('Adding user to database!');
 
+        let user_key;
+
         if (auth_type === 'Google')
-            return await this.add_google_user_to_db(user_data, user_exists);
+            user_key = await this.add_google_user_to_db(user_data, user_exists);
         else if (auth_type === 'UBC_CWL') {
             await this.add_ubc_user_to_db(user_data, user_exists);
-            return await this.add_ubc_user_to_courses(import_handler, user_data);
+            user_key = await this.add_ubc_user_to_courses(import_handler, user_data);
         }
 
+        await this.verify_submitters_for_enrolments(import_handler, user_key);
+        return user_key;
     }
 
 
@@ -264,16 +268,6 @@ class UserDatabaseHandler {
     async user_exists (user_id) {
         let user_key = KeyDictionary.key_dictionary['user'] + user_id;
         return (await this.async_db_handler.client.hgetall(user_key)) !== null;
-
-        // return new Promise((resolve, reject) => {
-        //     this.db_handler.client.HGETALL(KeyDictionary.key_dictionary['user'] + user_id, function (error, result) {
-        //         if (error) {
-        //             console.log(error);
-        //             reject(error);
-        //         }
-        //         resolve(result !== null);
-        //     });
-        // })
     }
 
 

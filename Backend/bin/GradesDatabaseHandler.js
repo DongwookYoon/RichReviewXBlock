@@ -3,6 +3,7 @@ const RedisToJSONParser = require("./RedisToJSONParser");
 const KeyDictionary = require("./KeyDictionary");
 const DateHelper = require("./DateHelper");
 const NotAuthorizedError = require("../errors/NotAuthorizedError");
+const RichReviewError = require("../errors/RichReviewError");
 const late = require('../lib/late');
 
 class GradesDatabaseHandler {
@@ -79,10 +80,9 @@ class GradesDatabaseHandler {
         let submission_key = await assignment_db_handler.get_users_submission_key(import_handler, user_key, assignment_key);
 
         if (!submission_key) {
-            await user_db_Handler.verify_submitters_for_enrolments(import_handler, user_key);
-            submission_key = await assignment_db_handler.get_users_submission_key(import_handler, user_key, assignment_key);
+            throw new RichReviewError('Student does not have a submitter and submission for this assignment');
+            return;
         }
-
 
         let assignment_data = await assignment_db_handler.get_assignment_data(user_key, assignment_key);
 
@@ -125,8 +125,14 @@ class GradesDatabaseHandler {
 
         for (let assignment of assignments) {
             let assignment_key = KeyDictionary.key_dictionary['assignment'] + assignment.id;
-            let assignment_grade = await this.get_assignment_grade(import_handler, user_key, assignment_key);
-
+            let assignment_grade = {};
+            try {
+                assignment_grade = await this.get_assignment_grade(import_handler, user_key, assignment_key);
+            } catch (e) {
+                assignment_grade['mark'] = '';
+                assignment_grade['submission_status'] = 'Not Assigned';
+                assignment_grade['late'] = false;
+            }
             assignment_grade['assignment_id'] = assignment['id'];
             assignment_grade['title'] = assignment['title'];
             assignment_grade['count_toward_final_grade'] = assignment['count_toward_final_grade'];

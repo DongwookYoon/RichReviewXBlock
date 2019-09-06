@@ -13,7 +13,7 @@ router.get('/', async function(req, res, next) {
     let course_db_handler = await ImportHandler.course_db_handler;
 
     try {
-        await course_db_handler.verify_course_submitters(ImportHandler, user_key, course_key);
+        // await course_db_handler.verify_course_submitters(ImportHandler, user_key, course_key);
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
         let course_data = await course_db_handler.get_course_data(course_key);
 

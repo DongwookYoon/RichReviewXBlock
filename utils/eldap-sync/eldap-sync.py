@@ -8,6 +8,56 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import sys
 import random
 
+def is_submitter_for_course (r, submitter_key, course_key):
+	submitter_data = r.hgetall(submitter_key)
+	submitter_data = { y.decode('utf-8'): submitter_data.get(y).decode('utf-8') for y in submitter_data.keys() }	
+	
+	submission_key = submitter_data['submission']
+	submission_data = r.hgetall(submission_key)
+	submission_data = { y.decode('utf-8'): submission_data.get(y).decode('utf-8') for y in submission_data.keys() }
+	
+	assignment_key = submission_data['assignment']
+	assignment_data = r.hgetall(assignment_key)
+	assignment_data = { y.decode('utf-8'): assignment_data.get(y).decode('utf-8') for y in assignment_data.keys() }
+	try:
+		return assignment_data['course'] == course_key
+	except Exception:
+		return False
+	
+
+def delete_submitter_and_submission (r, submitter_key):
+	submitter_data = r.hgetall(submitter_key)
+	submitter_data = { y.decode('utf-8'): submitter_data.get(y).decode('utf-8') for y in submitter_data.keys() }	
+	
+	if submitter_data['course_group'] == '':
+		submission_key = submitter_data['submission']
+		submission_data = r.hgetall(submission_key)
+		submission_data = { y.decode('utf-8'): submission_data.get(y).decode('utf-8') for y in submission_data.keys() }
+		
+		assignment_key = submission_data['assignment']
+		assignment_data = r.hgetall(assignment_key)
+		assignment_data = { y.decode('utf-8'): assignment_data.get(y).decode('utf-8') for y in assignment_data.keys() }
+		
+		submissions = json.loads(assignment_data['submissions'])
+		if submission_key in submissions:
+			submissions.remove(submission_key)
+			r.hset(assignment_key, 'submissions', json.dumps(submissions))
+		
+		r.delete(submission_key)
+		r.delete(submitter_key)
+	
+
+
+def remove_submitter_from_user (r, user_key, submitter_key):
+	user_data = r.hgetall(user_key)
+	user_data = { y.decode('utf-8'): user_data.get(y).decode('utf-8') for y in user_data.keys() }
+	submitters = json.loads(user_data['submitters'])	
+	if submitter_key in submitters:
+		submitters.remove(submitter_key)
+		r.hset(user_key, 'submitters', json.dumps(submitters))		
+		
+		
+		
 def student_has_submitter(r, user_key, assignment_key):
 	assignment_data = r.hgetall(assignment_key)
 	assignment_data = { y.decode('utf-8'): assignment_data.get(y).decode('utf-8') for y in assignment_data.keys() }	
@@ -395,6 +445,17 @@ def remove_unenrolled_student(r, user_key, course_key):
 		enrolments.remove(course_key)
 		r.hset(user_key, 'enrolments', json.dumps(enrolments))
 	
+	submitters = json.loads(user_data['submitters'])
+	for submitter in submitters:
+		if is_submitter_for_course(r, submitter, course_key):
+			print('\t-> Deleting submitter {} from user {}'.format(submitter, user_key))
+			f = open("eldap-sync-log.txt","a+")
+			f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Deleting submitter {} from user {}'.format(submitter, user_key))
+			f.close()
+			delete_submitter_and_submission(r, submitter)
+			remove_submitter_from_user(r, user_key, submitter)
+			
+			
 	
 def remove_unenrolled_instructor(r, user_key, course_key):
 	if not "usr:ubc_" in user_key:

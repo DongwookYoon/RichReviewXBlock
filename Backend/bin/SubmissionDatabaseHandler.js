@@ -50,12 +50,13 @@ class SubmissionDatabaseHandler {
     async create_submission_for_each_user_and_return_keys (import_handler, course_key, assignment_key) {
         let user_db_handler = await import_handler.user_db_handler;
         let submitter_db_handler = await import_handler.submitter_db_handler;
+        let course_db_handler = await import_handler.course_db_handler;
 
-        let all_users = await user_db_handler.get_all_course_users(import_handler, course_key);
-        let students = all_users['students'].map((student) => {
-            return KeyDictionary.key_dictionary['user'] + student.id;
-        });
-
+        // let all_users = await user_db_handler.get_all_course_users(import_handler, course_key);
+        // let students = all_users['students'].map((student) => {
+        //     return KeyDictionary.key_dictionary['user'] + student.id;
+        // });
+        let students = await course_db_handler.get_course_active_student_keys(course_key);
         let submission_keys = [];
 
         for (let student of students) {

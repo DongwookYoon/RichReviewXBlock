@@ -310,7 +310,7 @@ def create_user(r, user_key, key_dict):
 	r.hset(user_key, 'last_name', '');
 	r.hset(user_key, 'nick_name', '');
 	r.hset(user_key, 'preferred_name', '');
-	r.hset(user_key, 'display_name', '');
+	r.hset(user_key, 'display_name', 'UBC User');
 	r.hset(user_key, 'email', '');
 	r.hset(user_key, 'teaching', '[]');
 	r.hset(user_key, 'taing', '[]');
@@ -330,6 +330,7 @@ def update_user_information (r, user_key, key_dict):
 	f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Updating user {}\n'.format(user_key))
 	f.close()
 	r.hset(user_key, 'auth_type', 'UBC_CWL');
+	
 
 	
 			

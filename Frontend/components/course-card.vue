@@ -50,6 +50,9 @@ export default {
       default: ''
     }
   },
+  mounted() {
+    this.$emit('done')
+  },
   methods: {
     go_to_course(link) {
       this.$router.push(`${link}`)

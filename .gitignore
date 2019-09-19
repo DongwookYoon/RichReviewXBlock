@@ -79,3 +79,5 @@ dist/
 .eslintrc.js
 .prettierrc
 
+
+redis/dump.rdb

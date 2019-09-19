@@ -245,7 +245,6 @@ export default {
 </script>
 
 <style scoped>
-@import '../node_modules/bootstrap/dist/css/bootstrap.css';
 
 hr {
   border-top: 1px solid white;

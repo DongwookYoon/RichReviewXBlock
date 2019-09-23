@@ -37,6 +37,24 @@ router.post('/', async (req, res, next) => {
             user_login_data = req.body.auth || req.body.user_data;
         else if (auth_type === 'UBC_CWL')
             user_login_data = req.body.user_data;
+        else if (auth_type === 'Pilot') {
+            if (req.body.password !== 'Richreview1!') {
+                res.status(401).send({
+                    message: 'Invalid Credentials'
+                });
+                return;
+            }
+
+            if (req.body.user !== 'instructor' && req.body.user !== 'student') {
+                res.status(401).send({
+                    message: 'Invalid Credentials'
+                });
+                return;
+            }
+
+            res.sendStatus(200);
+            return;
+        }
 
         console.log(JSON.stringify(user_login_data));
 

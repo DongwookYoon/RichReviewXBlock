@@ -237,7 +237,7 @@ def verify_submitter_for_course(r, user_key, course_key):
 			if not student_has_submitter(r, user_key, assignment_key):
 				print('\t-> Creating submitters for {} in assignment {}'.format(user_key, assignment_key))
 				f = open("eldap-sync-log.txt","a+")
-				f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Creating submitters for {} in assignment {}'.format(user_key, assignment_key))
+				f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Creating submitters for {} in assignment {}\n'.format(user_key, assignment_key))
 				f.close()
 				create_submitter(r, user_key, assignment_key)
 			
@@ -451,7 +451,7 @@ def remove_unenrolled_student(r, user_key, course_key):
 		if is_submitter_for_course(r, submitter, course_key):
 			print('\t-> Deleting submitter {} from user {}'.format(submitter, user_key))
 			f = open("eldap-sync-log.txt","a+")
-			f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Deleting submitter {} from user {}'.format(submitter, user_key))
+			f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + '\t-> Deleting submitter {} from user {}\n'.format(submitter, user_key))
 			f.close()
 			delete_submitter_and_submission(r, submitter)
 			remove_submitter_from_user(r, user_key, submitter)

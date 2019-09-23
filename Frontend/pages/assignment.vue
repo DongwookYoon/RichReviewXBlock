@@ -304,16 +304,11 @@ export default {
   },
   methods: {
     go_to_template() {
-      this.$router.push(
+      window.open(
         `/edu/courses/${this.$route.params.course_id}/assignments/${
           this.$route.params.assignment_id
           }/viewer?${this.template_link}`
       )
-      // window.open(
-      //   `/edu/courses/${this.$route.params.course_id}/assignments/${
-      //     this.$route.params.assignment_id
-      //     }/viewer?${this.template_link}`
-      // )
     },
     go_to_edit_assignment() {
       this.$router.push(

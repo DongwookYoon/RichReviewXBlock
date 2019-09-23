@@ -2,9 +2,6 @@
   <div id="assignment">
     <dashboard-sidebar :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
     <course-sidebar :name="name" />
-    <b-alert v-model="showDismissibleAlert" variant="danger" dismissible>
-      One or more files is required for a submission.
-    </b-alert>
     <assignment-extension-modal v-if="show_extensions_modal"
       :cur_student_or_group_list="student_or_group_list" :cur_extensions="extensions">
     </assignment-extension-modal>
@@ -190,7 +187,6 @@ export default {
   },
   data: function() {
     return {
-      showDismissibleAlert: false,
       selected_style: { color: 'white', 'background-color': '#0c2343' },
       default_style: { color: '#0c2343', 'background-color': 'white' },
       show_extensions_modal: false
@@ -404,7 +400,7 @@ export default {
     },
     async submitAssignment() {
       if (this.files.length === 0) {
-        this.showDismissibleAlert = true
+        alert('One or more files is required for a submission.')
         return
       }
       const formData = new FormData()

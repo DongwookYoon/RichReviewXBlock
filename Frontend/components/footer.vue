@@ -18,7 +18,6 @@ export default {
 </script>
 
 <style scoped>
-@import '../node_modules/bootstrap/dist/css/bootstrap.css';
 
 #footer-title,
 #footer-copyright,

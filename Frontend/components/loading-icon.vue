@@ -14,9 +14,13 @@ export default {
   components: {
     Loading
   },
-  data: () => ({
-    loading: false
-  }),
+  props: {
+    loading: {
+      type: Boolean,
+      isRequired: false,
+      default: false
+    }
+  },
   methods: {
     start() {
       this.loading = true

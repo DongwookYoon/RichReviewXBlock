@@ -97,13 +97,21 @@ export default {
         })
       })
     console.log(res.data.user_name)
-
+    let done = {}
+    if (res.data.enrolments.length === 0 &&
+        res.data.taing.length === 0 &&
+        res.data.teaching.length === 0){
+        done.isLoading = false,
+        done.loadingCSS = ''
+        }
     return {
       enrolments: res.data.enrolments,
       taing: res.data.taing,
       instructing: res.data.teaching,
       assignments: res.data.assignments,
-      name: res.data.user_name || ''    }
+      name: res.data.user_name || '',
+      ...done  
+      }
   },
   data() {
     return {isLoading: true, loadingCSS: 'display: none'}

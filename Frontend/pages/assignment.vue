@@ -551,6 +551,7 @@ hr {
 
 #assignment-description {
   color: #0c2343;
+  width: 60vw;
 }
 
 #files-div {

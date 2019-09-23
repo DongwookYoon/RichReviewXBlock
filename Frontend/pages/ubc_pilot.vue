@@ -25,15 +25,20 @@ export default {
         password: ''
       }
     },
+    fetch({store, redirect}){
+      if (store.state.authUser) {
+        return redirect('/edu/dashboard')
+      }
+    },
     methods: {
       async login() {
         try {
-          await axios.post(
-            `https://${process.env.backend}:3000/login`,
+          const user = await axios.post(
+            `/login_pilot`,
             {
-              auth_type: 'Pilot',
-              user: this.user,
-              password: this.password
+              'id_str': 'pilot_' + this.user,
+              'password': this.password,
+              'auth_type': 'ubc_pilot'
             },
             {
               httpsAgent: new https.Agent({
@@ -41,12 +46,14 @@ export default {
               })
             }
           )
-          this.$store.state.authUser = { id: `pilot_${this.user}` }
-          this.$router.replace('/edu/dashboard')
+          console.log(user.data)
+          if (user.data) {
+            this.$store.state.authUser = user.data
+            this.$router.push('/edu/dashboard')
+          }
         } catch (e) {
-          alert('Invalid credentials')
-          this.user = ''
-          this.password = ''
+          console.warn(e)
+          alert('Invalid Credentials')
         }
       }
     }

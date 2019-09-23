@@ -12,6 +12,7 @@ const env = require('./lib/env')
 process.env.HOSTNAME = env.node_config.HOSTNAME || os.hostname()
 process.env.NODE_ENV = env.node_config.ENV
 process.env.HOST_URL = env.node_config.HOST_URL
+process.env.backend = env.node_config.BACKEND
 
 // import libraries
 const util = require('./util')

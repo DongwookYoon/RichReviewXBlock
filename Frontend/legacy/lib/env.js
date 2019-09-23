@@ -259,3 +259,4 @@ exports.ubc = {
     privateCert: fs.readFileSync(path.join(__dirname, '..', 'ssl/sp_richreview_ubc.cert'), 'utf-8'),
     decryptionPvk: fs.readFileSync(path.join(__dirname, '..', 'ssl/sp_richreview_ubc.key'), 'utf-8')
 };
+

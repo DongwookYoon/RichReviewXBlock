@@ -47,12 +47,12 @@ def main():
 		redis_config = json.load(json_file)
 
 	#change to strict redis to edit azure redis
-	r = redis.Redis()		
-#	r = redis.StrictRedis(
-#		host=redis_config['redis_cache']['hostname'],
-#		port=redis_config['redis_cache']['port'],
-#		password=redis_config['redis_cache']['access_key'],
-#		ssl=True)
+#	r = redis.Redis()		
+	r = redis.StrictRedis(
+		host=redis_config['redis_cache']['hostname'],
+		port=redis_config['redis_cache']['port'],
+		password=redis_config['redis_cache']['access_key'],
+		ssl=True)
 		
 	if operation == '1':
 		add_or_modify_field (r, table, field, value, overwrite)

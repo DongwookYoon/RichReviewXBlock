@@ -252,7 +252,7 @@ export default {
 </script>
 
 <style scoped>
-@import 'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/css/bootstrap.min.css';
+/* @import 'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/css/bootstrap.min.css'; */
 /*@import 'https://richreview2ca.azureedge.net/lib/font-awesome-4.6.3/css/font-awesome.min.css';*/
 /*@import 'https://richreview2ca.azureedge.net/lib/font-awesome-animation.min.css';*/
 /*@import 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/smoothness/jquery-ui.css';*/

@@ -151,7 +151,6 @@ export default {
 </script>
 
 <style scoped>
-@import '../node_modules/bootstrap/dist/css/bootstrap.css';
 
 p {
   margin: 0;

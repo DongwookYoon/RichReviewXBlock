@@ -1,7 +1,8 @@
 <template>
   <div id="dashboard">
-    <sidebar :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
-    <div id="content">
+    <Loading :loading="isLoading ? true : false"/>
+    <sidebar :style="loadingCSS" :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
+    <div :style="loadingCSS" id="content">
       <div id="courses">
         <div v-if="taing.length > 0 || instructing.length > 0" id="teaching-div">
           <p class="courses-header">Courses you are teaching:</p>
@@ -14,6 +15,7 @@
                 role="TA"
                 :assignment_count="e.assignment_count"
                 :link="`/edu/courses/${e.id}`"
+                v-on:done="doneLoading"
               ></course-card>
             </div>
             <div v-for="e in instructing" :key="e.key" class="instructing">
@@ -23,6 +25,7 @@
                 role="Instructor"
                 :assignment_count="e.assignment_count"
                 :link="`/edu/courses/${e.id}`"
+                v-on:done="doneLoading"
               ></course-card>
             </div>
           </div>
@@ -40,6 +43,7 @@
                   :assignment_count="e.assignment_count"
                   :link="`/edu/courses/${e.id}`"
                   class="course-card"
+                  v-on:done="doneLoading"
                 ></course-card>
               </div>
             </div>
@@ -71,6 +75,7 @@
 /* eslint-disable require-await,no-unused-vars,no-console,prettier/prettier,no-undef,camelcase */
 
 import https from 'https'
+import Loading from '../components/loading-icon'
 import axios from 'axios'
 import Footer from '../components/footer'
 import CourseCard from '../components/course-card'
@@ -78,7 +83,7 @@ import UpcomingAssignment from '../components/upcoming-assignment'
 import Sidebar from '../components/dashboard_sidebar'
 
 export default {
-  components: { Sidebar, UpcomingAssignment, CourseCard, Footer },
+  components: { Loading, Sidebar, UpcomingAssignment, CourseCard, Footer },
   async asyncData(context) {
     if (!context.store.state.authUser) return
 
@@ -98,8 +103,10 @@ export default {
       taing: res.data.taing,
       instructing: res.data.teaching,
       assignments: res.data.assignments,
-      name: res.data.user_name || ''
-    }
+      name: res.data.user_name || ''    }
+  },
+  data() {
+    return {isLoading: true, loadingCSS: 'display: none'}
   },
   fetch({ store, redirect }) {
     if (!store.state.authUser) {
@@ -107,6 +114,10 @@ export default {
     }
   },
   methods: {
+    doneLoading() {
+      this.isLoading = false,
+      this.loadingCSS = ''
+    },
     go_to_dashboard() {
       this.$router.push('/edu/dashboard')
     },

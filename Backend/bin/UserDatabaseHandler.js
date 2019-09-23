@@ -93,8 +93,9 @@ class UserDatabaseHandler {
     async get_all_user_keys () {
         const ubc_user_keys = await this.async_db_handler.client.keys(KeyDictionary.key_dictionary['user'] + 'ubc_*');
         const google_user_keys = await this.async_db_handler.client.keys(KeyDictionary.key_dictionary['user'] + 'google_*');
+        const pilot_user_keys = await this.async_db_handler.client.keys(KeyDictionary.key_dictionary['user'] + 'pilot_*');
 
-        return ubc_user_keys.concat(google_user_keys);
+        return ubc_user_keys.concat(google_user_keys).concat(pilot_user_keys);
     }
 
     // TODO should blocked students show up in the 'people' list?

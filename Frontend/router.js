@@ -22,6 +22,7 @@ import all_user_assignments from './pages/all_user_assignments'
 import all_user_groups from './pages/all_user_groups'
 import all_user_grades from './pages/all_user_grades'
 import admin from './pages/admin'
+import ubc_pilot from './pages/ubc_pilot'
 
 Vue.use(Router)
 
@@ -114,6 +115,10 @@ export function createRouter() {
       {
         path: '/edu/admin',
         component: admin
+      },
+      {
+        path: '/ubc-pilot',
+        component: ubc_pilot
       }
     ]
   })

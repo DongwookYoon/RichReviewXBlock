@@ -63,11 +63,14 @@ export default {
     }
   },
   fetch({ store, redirect }) {
-    if (!store.state.authUser) {
-      return redirect('/edu/login')
-    }
+    console.log(store.state)
+    // if (!store.state.authUser) {
+    //   return redirect('/edu/login')
+    // }
   },
   mounted: async function() {
+    console.log(this.$store.state)
+
     const res = await axios.get(
       `https://${process.env.backend}:3000/courses/${
         this.$route.params.course_id

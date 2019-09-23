@@ -282,6 +282,18 @@ router.post(
     successFlash: 'You are logged in'
   }),
   function(req, res) {
+    if (req.body.auth_type === 'ubc_pilot') {
+      const user_data = req.user;
+      if (user_data && user_data.id) {
+        req.session.authUser = { id: user_data.id }
+        res.end(JSON.stringify({ id: user_data.id }))
+        return
+      } else {
+        res.sendStatus(403)
+        return
+      }
+    }
+
     js_utils.logUserAction(req, 'logged in')
     res.redirect(req.session.latestUrl || '/')
   }

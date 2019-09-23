@@ -110,7 +110,7 @@ export default {
       instructing: res.data.teaching,
       assignments: res.data.assignments,
       name: res.data.user_name || '',
-      ...done  
+      ...done
       }
   },
   data() {

@@ -15,6 +15,8 @@ const RedisClient = require('./redis_client').RedisClient;
 const redis_utils = require('./redis_client').util;
 const lib_utils   = require('./lib_utils');
 const util        = require('../util');
+const axios = require('axios');
+const https = require('https');
 
 /**
  * Structure of pilot:[userid]
@@ -344,30 +346,52 @@ const plugPilot = (user) => {
  * TODO: test changes and delete comments
  */
 const localStrategyCB = (id_str, password, done) => {
+  if (id_str.includes('pilot_')) {
+      axios.post(
+          `https://${process.env.backend}:3000/login`,
+          {
+            auth_type: 'Pilot',
+            user: id_str,
+            password: password
+          },
+          {
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false
+            })
+          }
+        ).then(() => {
+         done(null, { id: id_str })
+      }).catch (() => {
+        console.log(`Login failed for ${id_str} ${password}`)
+        console.log(e)
+        done(null, false)
+      })
+  } else {
     let userid = makeUserID(id_str);
-    util.logger("localStrategyCB", "logging in "+userid+"...");
+    util.logger("localStrategyCB", "logging in " + userid + "...");
     util.logger("localStrategyCB", "get user Password");
     confirmUserIsActive(userid)
-        .then(getUserPassword)
-        .then(function(user_password) {
-            if(password === user_password) {
-                util.logger("localStrategyCB", "getR2DUser");
-                //const hashed_id = js_utils.generateSaltedSha1(userid, env.sha1_salt.netid).substring(0, 21);
-                return lib_utils.findPilotUser(userid);
-                // return lib_utils.findUserByEmail(userid);
-            } else {
-                throw "password does not match";
-            }
-        })
-        .then(function(user) {
-            util.logger("localStrategyCB", "success");
-            done(null, user);
+      .then(getUserPassword)
+      .then(function(user_password) {
+        if (password === user_password) {
+          util.logger("localStrategyCB", "getR2DUser");
+          //const hashed_id = js_utils.generateSaltedSha1(userid, env.sha1_salt.netid).substring(0, 21);
+          return lib_utils.findPilotUser(userid);
+          // return lib_utils.findUserByEmail(userid);
+        } else {
+          throw "password does not match";
+        }
+      })
+      .then(function(user) {
+        util.logger("localStrategyCB", "success");
+        done(null, user);
 
-        })
-        .catch(function(err) {
-            util.error(err);
-            done(null, false);
-        });
+      })
+      .catch(function(err) {
+        util.error(err);
+        done(null, false);
+      });
+  }
 };
 
 /*const sanityCheckPilot = () => {

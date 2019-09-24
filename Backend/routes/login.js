@@ -45,7 +45,7 @@ router.post('/', async (req, res, next) => {
                 return;
             }
 
-            if (req.body.user !== 'pilot_instructor' && req.body.user !== 'pilot_student') {
+            if (req.body.user !== 'pilot_instructor' && req.body.user !== 'pilot_student' && req.body.user !== 'pilot_ta') {
                 res.status(401).send({
                     message: 'Invalid Credentials'
                 });

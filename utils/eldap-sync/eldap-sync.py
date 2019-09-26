@@ -500,9 +500,9 @@ def syncronize_students(r, course, key_dict):
 			
 		verify_submitter_for_course (r, user, course['key'])
 		
-	for currently_enrolled_student in currently_enrolled_students:
-		if not currently_enrolled_student in course['members']:
-			remove_unenrolled_student(r, currently_enrolled_student, course['key'])
+#	for currently_enrolled_student in currently_enrolled_students:
+#		if not currently_enrolled_student in course['members']:
+#			remove_unenrolled_student(r, currently_enrolled_student, course['key'])
 			
 			
 def synconize_instructors(r, course, key_dict):
@@ -518,9 +518,9 @@ def synconize_instructors(r, course, key_dict):
 			add_instructor_to_course(r, user, course['key'])
 			add_course_to_instructor(r, user, course['key'])
 		
-	for current_instructor in current_instructors:
-		if not current_instructor in course['members']:
-			remove_unenrolled_instructor(r, current_instructor, course['key'])
+#	for current_instructor in current_instructors:
+#		if not current_instructor in course['members']:
+#			remove_unenrolled_instructor(r, current_instructor, course['key'])
 
 
 def get_course_string(course_string): 

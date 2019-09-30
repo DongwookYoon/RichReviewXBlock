@@ -278,6 +278,10 @@ class AssignmentDatabaseHandler {
 
         let user_key = KeyDictionary.key_dictionary['user'] + user_id;
 
+        let assignment_data = await this.get_assignment_data('', assignment_key);
+        if(!(await AssignmentDatabaseHandler.user_has_permission_to_view(import_handler, user_key, assignment_data)))
+            throw new NotAuthorizedError('You are not authorized to submit this assignment');
+
         // Associate group with submission
         let submission_key = await this.get_users_submission_key(import_handler, user_key, assignment_key);
         let submission_data = await submission_db_handler.get_submission_data(submission_key);
@@ -336,6 +340,9 @@ class AssignmentDatabaseHandler {
         let data = {};
 
         if (permissions === 'student') {
+            let assignment_data = await this.get_assignment_data('', assignment_key);
+            if(!(await AssignmentDatabaseHandler.user_has_permission_to_view(import_handler, user_key, assignment_data)))
+                throw new NotAuthorizedError('You are not authorized to view this assignment');
             data = await this.get_assignment_for_students(import_handler, user_key, assignment_key);
         } else if (permissions === 'instructor' || permissions === 'ta') {
             data = await this.get_assignment_for_tas_and_instructors(import_handler, user_key, assignment_key);

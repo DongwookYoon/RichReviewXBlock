@@ -51,8 +51,7 @@ export default {
             this.$store.state.authUser = user.data
             this.$router.push('/edu/dashboard')
           }
-        } catch (e) {
-          console.warn(e)
+        } catch (err) {
           alert('Invalid Credentials')
         }
       }

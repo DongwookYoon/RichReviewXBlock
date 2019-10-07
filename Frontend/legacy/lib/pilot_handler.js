@@ -361,7 +361,7 @@ const localStrategyCB = (id_str, password, done) => {
           }
         ).then(() => {
          done(null, { id: id_str })
-      }).catch (() => {
+      }).catch ((e) => {
         console.log(`Login failed for ${id_str} ${password}`)
         console.log(e)
         done(null, false)

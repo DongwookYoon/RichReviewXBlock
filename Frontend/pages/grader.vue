@@ -71,6 +71,32 @@ export default {
   async asyncData(context) {
     if (!context.store.state.authUser) return
 
+    const permissions_res = await axios.get(
+      `https://${process.env.backend}:3000/courses/${
+        context.params.course_id
+        }/users/permissions`,
+      {
+        headers: {
+          Authorization: context.store.state.authUser.id
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+
+    const permissions = permissions_res.data.permissions
+
+    if (permissions !== 'instructor' && permissions !== 'ta') {
+      if (Object.keys(context.query).length === 0)
+        return context.res.redirect(`/edu/courses/${context.params.course_id}/assignments/${
+          context.params.assignment_id}`)
+      else
+        return context.res.redirect(`/edu/courses/${context.params.course_id}/assignments/${
+          context.params.assignment_id}/viewer?access_code=${context.query.access_code}&
+          docid=${context.query.docid}&groupid=${context.query.groupid}`)
+    }
+
     const assignment_res = await axios.get(
       `https://${process.env.backend}:3000/courses/${
         context.params.course_id

@@ -75,7 +75,8 @@ class GroupDatabaseHandler {
                 template_group_cmd: template_group_cmd
             },
             env: env.node_config.ENV,
-            cdn_endpoint: env.azure_config.cdn.endpoint
+            cdn_endpoint: env.azure_config.cdn.endpoint,
+            muted: group_data.muted
         }
     }
 
@@ -145,6 +146,7 @@ class GroupDatabaseHandler {
         await this.set_group_data(group_key, 'creationTime', creation_time);
         await this.set_group_data(group_key, 'name', `Group created at ${new Date()}`);
         await this.set_group_data(group_key, 'submission', '');
+        await this.set_group_data(group_key, 'muted', 'false');
 
         let participating = [];
         if (user_id !== '')
@@ -196,6 +198,19 @@ class GroupDatabaseHandler {
 
         await this.set_group_data(group_key, 'write_blocked', JSON.stringify(write_blocked));
     }
+
+
+
+    async mute_group (group_key) {
+        await this.set_group_data(group_key, 'muted', 'true');
+    }
+
+
+
+    async unmute_group (group_key) {
+        await this.set_group_data(group_key, 'muted', 'false');
+    }
+
 
 
 

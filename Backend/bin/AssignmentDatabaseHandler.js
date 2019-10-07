@@ -756,6 +756,11 @@ class AssignmentDatabaseHandler {
             let submission_data = await submission_db_handler.get_submission_data(submission_key);
             let submitter_data = await submitter_db_handler.get_submitter_data(submission_data['submitter']);
 
+            let group_data = {};
+
+            if (submission_data['group'] !== '')
+                group_data = await group_db_handler.get_group_data(submission_data['group']);
+
             let submitter_name = '';
             let name = '';
             if (submitter_data['course_group'] !== '') {
@@ -788,7 +793,8 @@ class AssignmentDatabaseHandler {
                     submitter_data['course_group']),
                 link: link,
                 submission_id: submission_data['id'],
-                name: name
+                name: name,
+                muted: Object.keys(group_data).length === 0 ? '' : group_data['muted']
             };
 
             assignment_submissions.push(assignment_submission);
@@ -1074,6 +1080,34 @@ class AssignmentDatabaseHandler {
             submission_status: submission_data['submission_status'],
             late: late.is_late(assignment_data, submission_data)
         };
+    }
+
+
+
+
+    async mute_all_submissions (import_handler, user_key, course_key, assignment_key) {
+        let group_db_handler = await import_handler.group_db_handler;
+
+        let submissions = await this.get_assignment_submissions(import_handler, user_key, course_key, assignment_key);
+        for (let submission of submissions) {
+            if (submission['group'] !== "") {
+                let group_key = submission['group'];
+                await group_db_handler.mute_group(group_key);
+            }
+        }
+    }
+
+
+    async unmute_all_submissions (import_handler, user_key, course_key, assignment_key) {
+        let group_db_handler = await import_handler.group_db_handler;
+
+        let submissions = await this.get_assignment_submissions(import_handler, user_key, course_key, assignment_key);
+        for (let submission of submissions) {
+            if (submission['group'] !== "") {
+                let group_key = submission['group'];
+                await group_db_handler.unmute_group(group_key);
+            }
+        }
     }
 
 

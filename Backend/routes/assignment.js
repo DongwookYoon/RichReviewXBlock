@@ -69,7 +69,8 @@ router.get('/:assignment_id/comment_submissions/:group_id', async function(req, 
 
         let data = {
             assignment: assignment_data,
-            submission: submission_data
+            submission: submission_data,
+            muted: group_data.muted
         };
 
         res.setHeader('Content-Type', 'application/json');
@@ -545,6 +546,91 @@ router.post('/:assignment_id/extensions', async function(req, res, next) {
     }
 });
 
+
+router.post('/:assignment_id/mute_all', async function(req, res, next) {
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let assignment_key = KeyDictionary.key_dictionary['assignment'] + req.params['assignment_id'];
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
+
+    let assignment_db_handler = await ImportHandler.assignment_db_handler;
+
+    try {
+        await assignment_db_handler.mute_all_submissions(ImportHandler, user_key, course_key, assignment_key);
+        res.sendStatus(200);
+
+    } catch (e) {
+        console.warn(e);
+        res.status(500).send({
+            message: e.message
+        });
+    }
+});
+
+
+router.post('/:assignment_id/unmute_all', async function(req, res, next) {
+    let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
+    let assignment_key = KeyDictionary.key_dictionary['assignment'] + req.params['assignment_id'];
+    let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];
+
+    let assignment_db_handler = await ImportHandler.assignment_db_handler;
+
+    try {
+        await assignment_db_handler.unmute_all_submissions(ImportHandler, user_key, course_key, assignment_key);
+        res.sendStatus(200);
+
+    } catch (e) {
+        console.warn(e);
+        res.status(500).send({
+            message: e.message
+        });
+    }
+});
+
+
+
+router.post('/:assignment_id/mute/:submission_id', async function(req, res, next) {
+    let submission_key = KeyDictionary.key_dictionary['submission'] + req.params['submission_id'];
+
+    let submission_db_handler = await ImportHandler.submission_db_handler;
+    let group_db_handler = await ImportHandler.group_db_handler;
+
+    try {
+        let submission_data = await submission_db_handler.get_submission_data(submission_key);
+        if (submission_data['group'])
+            await group_db_handler.mute_group(submission_data['group']);
+
+        res.sendStatus(200);
+
+    } catch (e) {
+        console.warn(e);
+        res.status(500).send({
+            message: e.message
+        });
+    }
+});
+
+
+
+router.post('/:assignment_id/unmute/:submission_id', async function(req, res, next) {
+    let submission_key = KeyDictionary.key_dictionary['submission'] + req.params['submission_id'];
+
+    let submission_db_handler = await ImportHandler.submission_db_handler;
+    let group_db_handler = await ImportHandler.group_db_handler;
+
+    try {
+        let submission_data = await submission_db_handler.get_submission_data(submission_key);
+        if (submission_data['group'])
+            await group_db_handler.unmute_group(submission_data['group']);
+
+        res.sendStatus(200);
+
+    } catch (e) {
+        console.warn(e);
+        res.status(500).send({
+            message: e.message
+        });
+    }
+});
 
 /*
  ** DELETE all course assignments

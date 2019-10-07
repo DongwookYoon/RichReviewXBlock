@@ -6,6 +6,9 @@
           {{ assignment_title }}
         </p>
       </div>
+      <div id="muted-div">
+        <p id="muted" v-if="this.muted === true">Submission is Muted</p>
+      </div>
       <div id="points-div">
         <input
           id="mark-input"
@@ -141,7 +144,7 @@ export default {
       }
     )
 
-    console.log(grader_res.data)
+    console.log(submissions_res.data)
     const assignment_data = assignment_res.data.assignment
     const submissions_list = submissions_res.data.submission_links_and_id
 
@@ -159,7 +162,8 @@ export default {
       mark: grader_res.data.submission_data.mark,
       submissions_list: submissions_list,
       selected: selected,
-      no_submission: false
+      no_submission: false,
+      muted: grader_res.muted
     }
   },
   data() {

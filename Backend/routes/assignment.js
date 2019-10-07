@@ -65,12 +65,19 @@ router.get('/:assignment_id/comment_submissions/:group_id', async function(req, 
             submission_data = await submission_db_handler.get_submission_data(submission_key);
         else submission_data = {};
 
+        let muted = '';
+        if (Object.keys(submission_data).length !== 0) {
+            if (submission_data['current_submission'] && submission_data['current_submission'] !== '') {
+                let cur_group_data = await group_db_handler.get_group_data(submission_data['current_submission']);
+                muted = cur_group_data['muted'];
+            }
+        }
         let assignment_data = await assignment_db_handler.get_assignment_data(user_key, assignment_key);
 
         let data = {
             assignment: assignment_data,
             submission: submission_data,
-            muted: group_data.muted
+            muted: muted
         };
 
         res.setHeader('Content-Type', 'application/json');

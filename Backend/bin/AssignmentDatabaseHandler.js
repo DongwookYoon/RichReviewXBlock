@@ -758,8 +758,8 @@ class AssignmentDatabaseHandler {
 
             let group_data = {};
 
-            if (submission_data['group'] !== '')
-                group_data = await group_db_handler.get_group_data(submission_data['group']);
+            if (submission_data['current_submission'] !== '')
+                group_data = await group_db_handler.get_group_data(submission_data['current_submission']);
 
             let submitter_name = '';
             let name = '';
@@ -794,7 +794,8 @@ class AssignmentDatabaseHandler {
                 link: link,
                 submission_id: submission_data['id'],
                 name: name,
-                muted: Object.keys(group_data).length === 0 ? '' : group_data['muted']
+                muted: Object.keys(group_data).length === 0 ? '' : group_data['muted'],
+                current_submission: submission_data['current_submission']
             };
 
             assignment_submissions.push(assignment_submission);
@@ -1090,8 +1091,8 @@ class AssignmentDatabaseHandler {
 
         let submissions = await this.get_assignment_submissions(import_handler, user_key, course_key, assignment_key);
         for (let submission of submissions) {
-            if (submission['group'] !== "") {
-                let group_key = submission['group'];
+            if (submission['current_submission'] && submission['current_submission'] !== "") {
+                let group_key = submission['current_submission'];
                 await group_db_handler.mute_group(group_key);
             }
         }
@@ -1103,8 +1104,8 @@ class AssignmentDatabaseHandler {
 
         let submissions = await this.get_assignment_submissions(import_handler, user_key, course_key, assignment_key);
         for (let submission of submissions) {
-            if (submission['group'] !== "") {
-                let group_key = submission['group'];
+            if (submission['current_submission'] && submission['current_submission'] !== "") {
+                let group_key = submission['current_submission'];
                 await group_db_handler.unmute_group(group_key);
             }
         }

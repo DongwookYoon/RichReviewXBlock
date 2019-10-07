@@ -596,8 +596,8 @@ router.post('/:assignment_id/mute/:submission_id', async function(req, res, next
 
     try {
         let submission_data = await submission_db_handler.get_submission_data(submission_key);
-        if (submission_data['group'])
-            await group_db_handler.mute_group(submission_data['group']);
+        if (submission_data['current_submission'])
+            await group_db_handler.mute_group(submission_data['current_submission']);
 
         res.sendStatus(200);
 
@@ -619,8 +619,8 @@ router.post('/:assignment_id/unmute/:submission_id', async function(req, res, ne
 
     try {
         let submission_data = await submission_db_handler.get_submission_data(submission_key);
-        if (submission_data['group'])
-            await group_db_handler.unmute_group(submission_data['group']);
+        if (submission_data['current_submission'])
+            await group_db_handler.unmute_group(submission_data['current_submission']);
 
         res.sendStatus(200);
 

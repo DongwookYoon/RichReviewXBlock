@@ -4,6 +4,8 @@
     <course-sidebar :name="name" />
     <div id="content">
       <nav-bar :course="course" :assignment="assignment" submissions="true" />
+      <button @click="mute_all_submissions" id="mute-all-button">Mute All</button>
+      <button @click="unmute_all_submissions" id="unmute-all-button">Unmute All</button>
       <table id="submissions-table">
         <thead id="submissions-header">
           <tr>
@@ -11,6 +13,8 @@
             <th id="status-header">Status</th>
             <th id="mark-header">Mark</th>
             <th id="submission-time-header">Submission Time</th>
+            <th id="muted-header">Muted</th>
+            <th id="grader-header">Grader</th>
           </tr>
         </thead>
         <tbody class="submissions-body">
@@ -18,7 +22,6 @@
             v-for="s in submissions"
             :key="s.key"
             class="submission-row"
-            @click="go_to_submission(s.submission_id, s.link)"
           >
             <td class="submission-name">{{ s.submitter_name }}</td>
             <td class="submission-status">
@@ -31,6 +34,15 @@
               {{
                 s.submission_time !== '' ? format_date(s.submission_time) : '-'
               }}
+            </td>
+            <td class="mute">
+              <button @click="unmute_submission(s.submission_id)"
+                      class="unmute-button" v-if="s.muted === true">Unmute</button>
+              <button @click="mute_submission(s.submission_id)"
+                      class="mute-button" v-if="s.muted === false">Mute</button>
+            </td>
+            <td class="grader">
+              <button class="grader-button" @click="go_to_submission(s.submission_id, s.link)">Grader</button>
             </td>
           </tr>
         </tbody>
@@ -101,6 +113,78 @@ export default {
             this.$route.params.assignment_id
           }/submissions/${submission_id}/grader?${link}`
         )
+    },
+    async mute_all_submissions () {
+      await axios.post(
+        `https://${process.env.backend}:3000/courses/${
+          this.$route.params.course_id
+          }/assignments/${this.$route.params.assignment_id}/mute_all`,
+        {},
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: this.$store.state.authUser.id
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+      )
+      window.location.reload(true)
+    },
+    async unmute_all_submissions () {
+      await axios.post(
+        `https://${process.env.backend}:3000/courses/${
+          this.$route.params.course_id
+          }/assignments/${this.$route.params.assignment_id}/unmute_all`,
+        {},
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: this.$store.state.authUser.id
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+      )
+      window.location.reload(true)
+    },
+    async mute_submission(submission_id) {
+      await axios.post(
+        `https://${process.env.backend}:3000/courses/${
+          this.$route.params.course_id
+          }/assignments/${this.$route.params.assignment_id}/mute/${submission_id}`,
+        {},
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: this.$store.state.authUser.id
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+      )
+      window.location.reload(true)
+    },
+    async unmute_submission(submission_id) {
+      await axios.post(
+        `https://${process.env.backend}:3000/courses/${
+          this.$route.params.course_id
+          }/assignments/${this.$route.params.assignment_id}/unmute/${submission_id}`,
+        {},
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: this.$store.state.authUser.id
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+      )
+      window.location.reload(true)
     }
   }
 }
@@ -124,6 +208,31 @@ thead {
 
 table {
   margin-bottom: 5vh;
+}
+
+#mute-all-button,
+#unmute-all-button,
+.mute-button,
+.unmute-button,
+.grader-button {
+  font-size: 2vh;
+  background-color: #0c2343;
+  border-radius: 0.5vh;
+  color: white;
+  padding-right: 0.5vw;
+  padding-left: 0.5vw;
+  height: 4.25vh;
+  margin-bottom: 0.5vw;
+}
+
+.mute-button {
+  background-color: #e01700;
+  color: white;
+}
+
+.unmute-button {
+  background-color: #32c51c;
+  color: white;
 }
 
 .submission-row:hover {
@@ -156,7 +265,7 @@ table {
 
 #name-header,
 .submission-name {
-  width: 25vw;
+  width: 20vw;
 }
 
 #status-header,
@@ -173,6 +282,18 @@ table {
 #submission-time-header,
 .submission-time {
   width: 15vw;
+  text-align: center;
+}
+
+#muted-header,
+.mute {
+  width: 6vw;
+  text-align: center;
+}
+
+#grader-header,
+.grader {
+  width: 7vw;
   text-align: center;
 }
 </style>

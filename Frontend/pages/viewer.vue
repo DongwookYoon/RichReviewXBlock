@@ -56,6 +56,10 @@ export default {
         })
       }
     )
+
+    if (res.data.muted)
+      return context.res.redirect(`/edu/courses/${context.params.course_id}/assignments/${context.params.assignment_id}`)
+
     const assignment_data = res.data.assignment
     return {
       assignment_id: assignment_data.id,
@@ -63,10 +67,9 @@ export default {
     }
   },
   fetch({ store, redirect }) {
-    console.log(store.state)
-    // if (!store.state.authUser) {
-    //   return redirect('/edu/login')
-    // }
+    if (!store.state.authUser) {
+      return redirect('/edu/login')
+    }
   },
   mounted: async function() {
     console.log(this.$store.state)

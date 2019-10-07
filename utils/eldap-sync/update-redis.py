@@ -26,9 +26,9 @@ def main():
 		operation = input('What operation would you like to perform?\n[1] Add/Modify\n[2] Delete\nPlease enter the corresponding number: ')
 			
 	table = 0
-	while (table not in ['1','2','3','4','5','6','7']):
-		table = input('What table would you like to edit?\n[1] Users\n[2] Courses\n[3] Assignments\n[4] Submissions\n[5] Submitters\n[6] Course Group Sets\n[7] Course Groups\nPlease enter the corresponding number: ')
-	table = ['usr:google*', 'crs:*', 'asm:*', 'sbm:*', 'smt:*', 'cgs:*', 'cgp:*'][int(table) - 1]
+	while (table not in ['1','2','3','4','5','6','7', '8']):
+		table = input('What table would you like to edit?\n[1] Users\n[2] Courses\n[3] Assignments\n[4] Submissions\n[5] Submitters\n[6] Course Group Sets\n[7] Course Groups\n[8] Groups\nPlease enter the corresponding number: ')
+	table = ['usr:google*', 'crs:*', 'asm:*', 'sbm:*', 'smt:*', 'cgs:*', 'cgp:*', 'grp:*'][int(table) - 1]
 	
 	field = input('What field would you like to add? (eg, email): ')
 	

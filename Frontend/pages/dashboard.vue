@@ -1,7 +1,7 @@
 <template>
   <div id="dashboard">
     <Loading :loading="isLoading ? true : false"/>
-    <sidebar :style="loadingCSS" :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
+    <sidebar id="sidebar" :style="loadingCSS" :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
     <div :style="loadingCSS" id="content">
       <div id="courses">
         <div v-if="taing.length > 0 || instructing.length > 0" id="teaching-div">
@@ -147,19 +147,28 @@ export default {
 </script>
 
 <style scoped>
+#dashboard {
+  overflow-y:scroll;
+}
+#sidebar {
+  position: fixed;
+  width: 100px;
+  z-index: 10;
+}
+#content {
+  padding-left: 120px;
+}
+.course-contents {
+  display: inline-grid;
+grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  padding: 10px;
+  grid-gap: 50px 50px;
+  height: 100%;
+  width: 70%;
+}
 hr,
 p {
   margin: 0;
-}
-
-#dashboard {
-  display: flex;
-  min-height: 100vh;
-}
-
-#content {
-  width: 100%;
-  display: flex;
 }
 
 #teaching-div {
@@ -171,37 +180,18 @@ p {
   color: #0c2343;
 }
 
-#courses {
-  /*display: grid;*/
-  margin-top: 5%;
-  margin-left: 7vw;
-  /*grid-template-columns: 20vw 20vw 20vw;*/
-  /*grid-column-gap: 1vw;*/
-  /*grid-row-gap: 6vh;*/
-  /*max-width: 60%;*/
-}
-
-.course-contents {
-  margin-top: 3vh;
-  display: grid;
-  grid-template-columns: 20vw 20vw 20vw;
-  grid-column-gap: 1vw;
-  grid-row-gap: 6vh;
-  max-width: 60%;
-}
-
 #student-contents {
   display: flex;
 }
 
 #upcoming-assignments {
-  position: absolute;
-  right: 0;
   display: inline-block;
   /*width: 20%;*/
   margin-right: 2vw;
+  margin-left: 2vw;
   font-size: 2.5vh;
   color: #0c2343;
+  margin-bottom: 50px;
 }
 
 #upcoming-assignments-title {
@@ -212,5 +202,14 @@ p {
 
 #no-assignments {
   color: #535353;
+}
+@media only screen and (max-width: 600px) {
+  #content {
+    padding-left: 100px;
+  }
+  #student-contents {
+    display: inline-block;
+    margin: auto;
+  }
 }
 </style>

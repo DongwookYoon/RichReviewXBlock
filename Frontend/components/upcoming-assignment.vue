@@ -71,6 +71,7 @@ export default {
 .upcoming-assignment {
   cursor: pointer;
   display: flex;
+  margin-bottom: 20px;
   align-items: center;
   margin-right: 50px;
 }

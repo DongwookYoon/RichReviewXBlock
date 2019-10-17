@@ -1,5 +1,6 @@
 <template>
   <div id="submissions">
+    <Loading :loading="isLoading ? true : false"/>
     <dashboard-sidebar :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
     <course-sidebar :name="name" />
     <div id="content">
@@ -61,10 +62,11 @@ import CourseSidebar from '../components/course_sidebar'
 import Footer from '../components/footer'
 import NavBar from '../components/nav_bar'
 import DashboardSidebar from '../components/dashboard_sidebar'
+import Loading from '../components/loading-icon'
 
 export default {
   name: 'AssignmentSubmissions',
-  components: { NavBar, Footer, CourseSidebar, 'dashboard-sidebar': DashboardSidebar },
+  components: { Loading, NavBar, Footer, CourseSidebar, 'dashboard-sidebar': DashboardSidebar },
   async asyncData(context) {
     if (!context.store.state.authUser) return
 
@@ -105,6 +107,11 @@ export default {
       return redirect('/edu/login')
     }
   },
+  data() {
+    return {
+      isLoading: false
+    }
+  },
   methods: {
     go_to_submission(submission_id, link) {
       if (link !== '')
@@ -115,6 +122,7 @@ export default {
         )
     },
     async mute_all_submissions () {
+      this.isLoading = true;
       await axios.post(
         `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
@@ -130,9 +138,12 @@ export default {
           })
         }
       )
+      this.isLoading = false
+      alert('All assigments muted.')
       window.location.reload(true)
     },
     async unmute_all_submissions () {
+      this.isLoading = true;
       await axios.post(
         `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
@@ -148,9 +159,12 @@ export default {
           })
         }
       )
+      this.isLoading = false;
+      alert('All assignments unmuted.')
       window.location.reload(true)
     },
     async mute_submission(submission_id) {
+      this.isLoading = true;
       await axios.post(
         `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
@@ -166,9 +180,11 @@ export default {
           })
         }
       )
+      this.isLoading = false;
       window.location.reload(true)
     },
     async unmute_submission(submission_id) {
+      this.isLoading = true;
       await axios.post(
         `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
@@ -184,6 +200,7 @@ export default {
           })
         }
       )
+      this.isLoading = false;
       window.location.reload(true)
     }
   }

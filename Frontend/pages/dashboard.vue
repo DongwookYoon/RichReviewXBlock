@@ -154,8 +154,6 @@ export default {
 #sidebar {
   float: left;
   width: 100px;
-  min-height: 750px;
-  height: 100%;
   z-index: 10;
 }
 #content {
@@ -209,6 +207,9 @@ p {
 @media only screen and (max-width: 600px) {
   #content {
     padding-left: 100px;
+  }
+  .courses-header {
+    padding-left: 10px;
   }
   #student-contents {
     display: inline-block;

@@ -4,7 +4,7 @@
     <v-clamp class="course-title" autoresize :max-lines="1">
       {{ title }}</v-clamp
     >
-    <v-clamp class="course-description" autoresize :max-lines="3">
+    <v-clamp class="course-description" autoresize :max-lines="2">
       {{ description }}</v-clamp
     >
     <div>
@@ -118,7 +118,7 @@ export default {
   /*margin-left: 2vw;*/
   background-color: #e8e8e8;
   min-height: 50px;
-  max-height: 80px;
+  max-height: 120px;
   /*width: 17vw;*/
   width: 262px;
   position: relative;

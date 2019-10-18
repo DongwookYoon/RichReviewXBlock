@@ -20,7 +20,7 @@
         </thead>
         <tbody class="submissions-body">
           <tr
-            v-for="s in submissions"
+            v-for="(s, index) in submissions"
             :key="s.key"
             class="submission-row"
           >
@@ -39,8 +39,9 @@
             <td class="mute">
               <ToggleButton
                 v-if="!(s.submission_status === 'Not Submitted')"
-                @change="s.muted ? unmute_submission(s.submission_id) : mute_submission(s.submission_id)"
+                @change="s.muted ? unmute_submission(s.submission_id, index) : mute_submission(s.submission_id, index)"
                 :value="s.muted"
+                :sync="true"
                 :labels="{checked: 'Muted', unchecked: 'Unmuted'}"
                 :width="90"
                 :height="27"
@@ -144,9 +145,14 @@ export default {
           })
         }
       )
+      for (let submission of this.submissions) {
+        if (submission.muted !== "")
+          submission.muted = true
+      }
+
       this.isLoading = false
       alert('All assigments muted.')
-      window.location.reload(true)
+      // window.location.reload(true)
     },
     async unmute_all_submissions () {
       this.isLoading = true;
@@ -165,11 +171,16 @@ export default {
           })
         }
       )
+      for (let submission of this.submissions) {
+        if (submission.muted !== "")
+          submission.muted = false
+      }
+
       this.isLoading = false;
       alert('All assignments unmuted.')
-      window.location.reload(true)
+      // window.location.reload(true)
     },
-    async mute_submission(submission_id) {
+    async mute_submission(submission_id, index) {
       this.isLoading = true;
       await axios.post(
         `https://${process.env.backend}:3000/courses/${
@@ -186,10 +197,11 @@ export default {
           })
         }
       )
+      this.submissions[index]['muted'] = true
       this.isLoading = false;
-      window.location.reload(true)
+      // window.location.reload(true)
     },
-    async unmute_submission(submission_id) {
+    async unmute_submission(submission_id, index) {
       this.isLoading = true;
       await axios.post(
         `https://${process.env.backend}:3000/courses/${
@@ -206,8 +218,9 @@ export default {
           })
         }
       )
+      this.submissions[index]['muted'] = false
       this.isLoading = false;
-      window.location.reload(true)
+      // window.location.reload(true)
     }
   }
 }

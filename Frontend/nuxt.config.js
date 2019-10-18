@@ -65,7 +65,9 @@ export default {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: ['./plugins/DateHelper'],
+  plugins: [{src: './plugins/DateHelper'}, {
+    src: './plugins/vue-js-toggle-button.js', ssr: false
+  }],
 
   /*
    ** Nuxt.js modules

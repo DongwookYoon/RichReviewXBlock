@@ -37,10 +37,15 @@
               }}
             </td>
             <td class="mute">
-              <button @click="unmute_submission(s.submission_id)"
-                      class="unmute-button" v-if="s.muted === true">Unmute</button>
-              <button @click="mute_submission(s.submission_id)"
-                      class="mute-button" v-if="s.muted === false">Mute</button>
+              <ToggleButton 
+                @change="s.muted ? unmute_submission(s.submission_id) : mute_submission(s.submission_id)"
+                :value="s.muted"
+                :labels="{checked: 'Unmute', unchecked: 'Mute'}"
+                width="85"
+                height="27"
+                font-size="14"
+                :color="{checked: '#32c51c', unchecked: '#e01700'}">
+                </ToggleButton>
             </td>
             <td class="grader">
               <button class="grader-button" @click="go_to_submission(s.submission_id, s.link)">Grader</button>
@@ -292,7 +297,7 @@ table {
 
 #mark-header,
 .submission-mark {
-  width: 15vw;
+  width: 6vw;
   text-align: center;
 }
 
@@ -304,7 +309,7 @@ table {
 
 #muted-header,
 .mute {
-  width: 6vw;
+  width: 15vw;
   text-align: center;
 }
 

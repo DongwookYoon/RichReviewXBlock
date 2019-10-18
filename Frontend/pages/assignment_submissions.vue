@@ -37,7 +37,8 @@
               }}
             </td>
             <td class="mute">
-              <ToggleButton 
+              <ToggleButton
+                v-if="!(s.submission_status === 'Not Submitted')"
                 @change="s.muted ? unmute_submission(s.submission_id) : mute_submission(s.submission_id)"
                 :value="s.muted"
                 :labels="{checked: 'Muted', unchecked: 'Unmuted'}"

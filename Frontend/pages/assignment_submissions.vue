@@ -40,11 +40,11 @@
               <ToggleButton 
                 @change="s.muted ? unmute_submission(s.submission_id) : mute_submission(s.submission_id)"
                 :value="s.muted"
-                :labels="{checked: 'Unmute', unchecked: 'Mute'}"
-                width="85"
-                height="27"
-                font-size="14"
-                :color="{checked: '#32c51c', unchecked: '#e01700'}">
+                :labels="{checked: 'Muted', unchecked: 'Unmuted'}"
+                :width="90"
+                :height="27"
+                :font-size="13"
+                :color="{checked: '#e01700', unchecked: '#32c51c'}">
                 </ToggleButton>
             </td>
             <td class="grader">

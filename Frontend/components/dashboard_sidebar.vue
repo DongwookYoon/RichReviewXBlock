@@ -38,7 +38,7 @@
           src="/course-white.png"
         />
         <p id="header-courses">
-          Courses
+          All Courses
         </p>
       </div>
       <div
@@ -56,7 +56,7 @@
           src="/assignment-white.png"
         />
         <p id="header-assignments">
-          Assignments
+          All Assignments
         </p>
       </div>
       <div
@@ -69,7 +69,7 @@
       >
         <img v-if="groups" id="group-icon" src="/group.png" />
         <img v-if="!groups" id="group-icon-white" src="/group-white.png" />
-        <p id="header-groups">Groups</p>
+        <p id="header-groups"> All Groups</p>
       </div>
       <div
         id="grades"
@@ -81,7 +81,7 @@
       >
         <img v-if="grades" id="grade-icon" src="/grade.png" />
         <img v-if="!grades" id="grade-icon-white" src="/grade-white.png" />
-        <p id="header-grades">Grades</p>
+        <p id="header-grades">All Grades</p>
       </div>
     </div>
     <div id="mySidenav" class="sidenav" v-bind:style="{ width: sidebar_width, padding: sidebar_padding }">

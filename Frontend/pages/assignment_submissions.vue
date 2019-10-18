@@ -1,5 +1,6 @@
 <template>
   <div id="submissions">
+    <Loading :loading="isLoading ? true : false"/>
     <dashboard-sidebar :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
     <course-sidebar :name="name" />
     <div id="content">
@@ -19,7 +20,7 @@
         </thead>
         <tbody class="submissions-body">
           <tr
-            v-for="s in submissions"
+            v-for="(s, index) in submissions"
             :key="s.key"
             class="submission-row"
           >
@@ -36,10 +37,19 @@
               }}
             </td>
             <td class="mute">
-              <button @click="unmute_submission(s.submission_id)"
-                      class="unmute-button" v-if="s.muted === true">Unmute</button>
-              <button @click="mute_submission(s.submission_id)"
-                      class="mute-button" v-if="s.muted === false">Mute</button>
+              <no-ssr placeholder="Loading...">
+                <ToggleButton
+                  v-if="!(s.submission_status === 'Not Submitted')"
+                  @change="s.muted ? unmute_submission(s.submission_id, index) : mute_submission(s.submission_id, index)"
+                  :value="s.muted"
+                  :sync="true"
+                  :labels="{checked: 'Muted', unchecked: 'Unmuted'}"
+                  :width="90"
+                  :height="27"
+                  :font-size="13"
+                  :color="{checked: '#e01700', unchecked: '#32c51c'}">
+                  </ToggleButton>
+                </no-ssr>
             </td>
             <td class="grader">
               <button class="grader-button" @click="go_to_submission(s.submission_id, s.link)">Grader</button>
@@ -61,10 +71,11 @@ import CourseSidebar from '../components/course_sidebar'
 import Footer from '../components/footer'
 import NavBar from '../components/nav_bar'
 import DashboardSidebar from '../components/dashboard_sidebar'
+import Loading from '../components/loading-icon'
 
 export default {
   name: 'AssignmentSubmissions',
-  components: { NavBar, Footer, CourseSidebar, 'dashboard-sidebar': DashboardSidebar },
+  components: { Loading, NavBar, Footer, CourseSidebar, 'dashboard-sidebar': DashboardSidebar },
   async asyncData(context) {
     if (!context.store.state.authUser) return
 
@@ -105,6 +116,11 @@ export default {
       return redirect('/edu/login')
     }
   },
+  data() {
+    return {
+      isLoading: false
+    }
+  },
   methods: {
     go_to_submission(submission_id, link) {
       if (link !== '')
@@ -115,6 +131,7 @@ export default {
         )
     },
     async mute_all_submissions () {
+      this.isLoading = true;
       await axios.post(
         `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
@@ -130,9 +147,16 @@ export default {
           })
         }
       )
-      window.location.reload(true)
+      for (let submission of this.submissions) {
+        if (submission.muted !== "")
+          submission.muted = true
+      }
+
+      this.isLoading = false
+      alert('All assigments muted.')
     },
     async unmute_all_submissions () {
+      this.isLoading = true;
       await axios.post(
         `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
@@ -148,9 +172,16 @@ export default {
           })
         }
       )
-      window.location.reload(true)
+      for (let submission of this.submissions) {
+        if (submission.muted !== "")
+          submission.muted = false
+      }
+
+      this.isLoading = false;
+      alert('All assignments unmuted.')
     },
-    async mute_submission(submission_id) {
+    async mute_submission(submission_id, index) {
+      this.isLoading = true;
       await axios.post(
         `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
@@ -166,9 +197,11 @@ export default {
           })
         }
       )
-      window.location.reload(true)
+      this.submissions[index]['muted'] = true
+      this.isLoading = false;
     },
-    async unmute_submission(submission_id) {
+    async unmute_submission(submission_id, index) {
+      this.isLoading = true;
       await axios.post(
         `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
@@ -184,7 +217,8 @@ export default {
           })
         }
       )
-      window.location.reload(true)
+      this.submissions[index]['muted'] = false
+      this.isLoading = false;
     }
   }
 }
@@ -275,7 +309,7 @@ table {
 
 #mark-header,
 .submission-mark {
-  width: 15vw;
+  width: 6vw;
   text-align: center;
 }
 
@@ -287,7 +321,7 @@ table {
 
 #muted-header,
 .mute {
-  width: 6vw;
+  width: 15vw;
   text-align: center;
 }
 

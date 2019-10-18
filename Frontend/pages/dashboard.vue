@@ -149,21 +149,24 @@ export default {
 <style scoped>
 #dashboard {
   overflow-y:scroll;
+  height: 100vh;
 }
 #sidebar {
-  position: fixed;
+  float: left;
   width: 100px;
+  min-height: 750px;
+  height: 100%;
   z-index: 10;
 }
 #content {
   padding-left: 120px;
+  height: 100%;
 }
 .course-contents {
   display: inline-grid;
 grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   padding: 10px;
-  grid-gap: 50px 50px;
-  height: 100%;
+  grid-gap: 50px 25px;
   width: 70%;
 }
 hr,
@@ -176,7 +179,7 @@ p {
 }
 
 .courses-header {
-  font-size: 2vh;
+  font-size: 1.5em;
   color: #0c2343;
 }
 
@@ -189,13 +192,13 @@ p {
   /*width: 20%;*/
   margin-right: 2vw;
   margin-left: 2vw;
-  font-size: 2.5vh;
+  font-size: 1.2em;
   color: #0c2343;
   margin-bottom: 50px;
 }
 
 #upcoming-assignments-title {
-  font-size: 3vh;
+  font-size: 1.5em;
   border-bottom: 1px solid #0c2343;
   margin: 0 1vw 0 0;
 }

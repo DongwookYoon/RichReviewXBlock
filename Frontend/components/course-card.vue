@@ -80,13 +80,13 @@ export default {
 }
 
 .course-title {
-  font-size: 3vh;
+  font-size: 1.2em;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .course-description {
-  font-size: 1.75vh;
+  font-size: 1em;
   overflow: hidden;
   text-overflow: ellipsis;
   min-height: 1rem;
@@ -94,7 +94,7 @@ export default {
 
 .course-role {
   font-style: italic;
-  font-size: 2vh;
+  font-size: 12px;
   position: relative;
   color: black;
   bottom: 0;
@@ -104,7 +104,7 @@ export default {
 }
 
 .course-assignment-count {
-  font-size: 2vh;
+  font-size: 12px;
   position: relative;
   bottom: 0;
   width: 100%;
@@ -117,13 +117,13 @@ export default {
   /*margin-bottom: 5vh;*/
   /*margin-left: 2vw;*/
   background-color: #e8e8e8;
-  min-height: 11vh;
-  max-height: 25vh;
+  min-height: 50px;
+  max-height: 80px;
   /*width: 17vw;*/
   width: 262px;
   position: relative;
   break-inside: avoid-column;
-  border-radius: 0.5vh;
+  border-radius: 0.5px;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   cursor: pointer;
 }

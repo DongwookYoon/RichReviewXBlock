@@ -37,17 +37,19 @@
               }}
             </td>
             <td class="mute">
-              <ToggleButton
-                v-if="!(s.submission_status === 'Not Submitted')"
-                @change="s.muted ? unmute_submission(s.submission_id, index) : mute_submission(s.submission_id, index)"
-                :value="s.muted"
-                :sync="true"
-                :labels="{checked: 'Muted', unchecked: 'Unmuted'}"
-                :width="90"
-                :height="27"
-                :font-size="13"
-                :color="{checked: '#e01700', unchecked: '#32c51c'}">
-                </ToggleButton>
+              <no-ssr placeholder="Loading...">
+                <ToggleButton
+                  v-if="!(s.submission_status === 'Not Submitted')"
+                  @change="s.muted ? unmute_submission(s.submission_id, index) : mute_submission(s.submission_id, index)"
+                  :value="s.muted"
+                  :sync="true"
+                  :labels="{checked: 'Muted', unchecked: 'Unmuted'}"
+                  :width="90"
+                  :height="27"
+                  :font-size="13"
+                  :color="{checked: '#e01700', unchecked: '#32c51c'}">
+                  </ToggleButton>
+                </no-ssr>
             </td>
             <td class="grader">
               <button class="grader-button" @click="go_to_submission(s.submission_id, s.link)">Grader</button>

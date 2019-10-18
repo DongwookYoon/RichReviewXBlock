@@ -152,7 +152,6 @@ export default {
 
       this.isLoading = false
       alert('All assigments muted.')
-      // window.location.reload(true)
     },
     async unmute_all_submissions () {
       this.isLoading = true;
@@ -178,7 +177,6 @@ export default {
 
       this.isLoading = false;
       alert('All assignments unmuted.')
-      // window.location.reload(true)
     },
     async mute_submission(submission_id, index) {
       this.isLoading = true;
@@ -199,7 +197,6 @@ export default {
       )
       this.submissions[index]['muted'] = true
       this.isLoading = false;
-      // window.location.reload(true)
     },
     async unmute_submission(submission_id, index) {
       this.isLoading = true;
@@ -220,7 +217,6 @@ export default {
       )
       this.submissions[index]['muted'] = false
       this.isLoading = false;
-      // window.location.reload(true)
     }
   }
 }

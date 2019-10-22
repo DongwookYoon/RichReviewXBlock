@@ -3,6 +3,7 @@ const AsyncRedisClient = require("./AsyncRedisClient");
 const RedisToJSONParser = require("./RedisToJSONParser");
 const RichReviewError = require('../errors/RichReviewError');
 const KeyDictionary = require('./KeyDictionary');
+const AssignmentDatabaseHandler = require('./AssignmentDatabaseHandler');
 
 class CourseDatabaseHandler {
 
@@ -501,9 +502,18 @@ class CourseDatabaseHandler {
             let filtered_assignments = [];
 
             for (let assignment_key of course_data['assignments']) {
+                let assignment_data = await assignment_db_handler.get_assignment_data('', assignment_key);
+
                 let submitter_exists = await submitter_db_handler.does_user_have_submitter(import_handler, user_key, assignment_key);
-                if (await assignment_db_handler.get_assignment_data(user_key, assignment_key))
-                    filtered_assignments.push(assignment_key);
+
+                try {
+                    let can_view = await AssignmentDatabaseHandler.user_has_permission_to_view(import_handler, user_key, assignment_data);
+                    if (submitter_exists && can_view)
+                        filtered_assignments.push(assignment_key);
+                } catch (e) {
+                    console.warn(e);
+                }
+
             }
 
             course_data['assignments'] = filtered_assignments;

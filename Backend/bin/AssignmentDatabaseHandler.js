@@ -1032,14 +1032,19 @@ class AssignmentDatabaseHandler {
 
         let user_db_handler = await import_handler.user_db_handler;
 
-        if(!(await user_db_handler.is_valid_user_key(user_key)))
+        if(!(await user_db_handler.is_valid_user_key(user_key))) {
+            console.log(`invalid user key ${user_key}`);
             throw new RichReviewError('Invalid user key');
+        }
 
         if (assignment_data['course'] === undefined ||
             assignment_data['hidden'] === undefined ||
             assignment_data['available_date'] === undefined ||
-            assignment_data['until_date'] === undefined)
+            assignment_data['until_date'] === undefined) {
+            console.log('Invalid assignment data');
+            console.log(assignment_data);
             throw new RichReviewError('Invalid assignment data');
+        }
 
         let user_data = await user_db_handler.get_user_data(user_key);
 

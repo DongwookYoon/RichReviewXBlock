@@ -32,6 +32,10 @@ export default {
     },
     methods: {
       async login() {
+        if (this.user === '' || this.password === ''){
+          alert('Invalid Credentials')
+          return
+        }
         try {
           const user = await axios.post(
             `/login_pilot`,
@@ -46,7 +50,6 @@ export default {
               })
             }
           )
-          console.log(user.data)
           if (user.data) {
             this.$store.state.authUser = user.data
             this.$router.push('/edu/dashboard')

@@ -52,6 +52,7 @@ exports.testMe = (req, res, next) => {
 exports.samlLogout = (req, res) => {
   js_utils.logUserAction(req, 'logging out of SAML...');
   delete req.session.authUser
+  req.session.destroy()
   try {
     req.user.nameID = req.user.saml.nameID;
     req.user.nameIDFormat = req.user.saml.nameIDFormat;

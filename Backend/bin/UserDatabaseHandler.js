@@ -525,6 +525,18 @@ class UserDatabaseHandler {
             return false;
         }
     }
+
+
+    async pilot_login (user_key, password) {
+        let pwd_data = await this.get_user_data('pwd');
+        console.log(pwd_data);
+
+        if (!pwd_data[user_key])
+            throw new Error('Invalid credentials');
+
+        if(pwd_data[user_key] !== password)
+            throw new Error('Invalid credentials');
+    }
 }
 
 module.exports = UserDatabaseHandler;

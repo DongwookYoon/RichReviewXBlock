@@ -39,10 +39,6 @@ export default {
     link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
     script: [
       {
-        src:
-          'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js'
-      },
-      {
         src: 'https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'
       },
       {

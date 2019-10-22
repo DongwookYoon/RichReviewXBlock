@@ -31,7 +31,7 @@ export default {
       return redirect('/edu/dashboard')
     }
     else {
-      return redirect('/login_ubc')
+      return redirect('/')
     }
   },
   methods: {

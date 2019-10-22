@@ -167,7 +167,7 @@ router.get(
 router.post(
   '/login_ubc_return',
   passport.authenticate('saml', {
-    failureRedirect: '/login_ubc',
+    failureRedirect: '/',
     failureFlash: true
   }),
   async function(req, res) {
@@ -277,7 +277,6 @@ router.get(
 router.post(
   '/login_pilot',
   passport.authenticate('local', {
-    failureRedirect: '/login_pilot',
     failureFlash: 'You failed to login',
     successFlash: 'You are logged in'
   }),

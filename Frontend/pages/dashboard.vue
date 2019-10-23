@@ -96,7 +96,6 @@ export default {
           rejectUnauthorized: false
         })
       })
-    console.log(res.data.user_name)
     let done = {}
     if (res.data.enrolments.length === 0 &&
         res.data.taing.length === 0 &&

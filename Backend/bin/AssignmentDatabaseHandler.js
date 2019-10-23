@@ -602,18 +602,20 @@ class AssignmentDatabaseHandler {
                 if (submitter_exists) {
                     let assignment_data = await this.get_assignment_data(user_key, assignment_key);
 
-                    if (assignment_data && (assignment_data['due_date'] === '' || new Date(assignment_data['due_date']) > new Date())) {
-                        let submission_status = await this.get_user_submission_status(import_handler, user_key, assignment_key);
+                    if((await AssignmentDatabaseHandler.user_has_permission_to_view(import_handler, user_key, assignment_data))) {
+                        if (assignment_data && (assignment_data['due_date'] === '' || new Date(assignment_data['due_date']) > new Date())) {
+                            let submission_status = await this.get_user_submission_status(import_handler, user_key, assignment_key);
 
-                        let data = {
-                            assignment_id: assignment_key.replace(KeyDictionary.key_dictionary['assignment'], ''),
-                            course_id: assignment_data['course'].replace(KeyDictionary.key_dictionary['course'], ''),
-                            title: assignment_data['title'],
-                            submission_status: submission_status.submission_status,
-                            late: submission_status.late
-                        };
+                            let data = {
+                                assignment_id: assignment_key.replace(KeyDictionary.key_dictionary['assignment'], ''),
+                                course_id: assignment_data['course'].replace(KeyDictionary.key_dictionary['course'], ''),
+                                title: assignment_data['title'],
+                                submission_status: submission_status.submission_status,
+                                late: submission_status.late
+                            };
 
-                        upcoming_assignments.push(data);
+                            upcoming_assignments.push(data);
+                        }
                     }
                 }
             }
@@ -643,7 +645,7 @@ class AssignmentDatabaseHandler {
             if (submitter_exists) {
                 let assignment_data = await this.get_assignment_data(user_key, assignment_key);
 
-                if (assignment_data && !assignment_data['hidden']) {
+                if (assignment_data && (await AssignmentDatabaseHandler.user_has_permission_to_view(import_handler, user_key, assignment_data))) {
                     let submission_key = await this.get_users_submission_key(import_handler, user_key, assignment_key);
                     let submission_data = await submission_db_handler.get_submission_data(submission_key);
                     let submission_status = await submission_db_handler.get_submission_status(submission_key);
@@ -1032,14 +1034,19 @@ class AssignmentDatabaseHandler {
 
         let user_db_handler = await import_handler.user_db_handler;
 
-        if(!(await user_db_handler.is_valid_user_key(user_key)))
+        if(!(await user_db_handler.is_valid_user_key(user_key))) {
+            console.log(`invalid user key ${user_key}`);
             throw new RichReviewError('Invalid user key');
+        }
 
         if (assignment_data['course'] === undefined ||
             assignment_data['hidden'] === undefined ||
             assignment_data['available_date'] === undefined ||
-            assignment_data['until_date'] === undefined)
+            assignment_data['until_date'] === undefined) {
+            console.log('Invalid assignment data');
+            console.log(assignment_data);
             throw new RichReviewError('Invalid assignment data');
+        }
 
         let user_data = await user_db_handler.get_user_data(user_key);
 

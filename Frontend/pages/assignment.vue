@@ -106,7 +106,7 @@
             </p>
           </div>
         </div>
-          <div class="assignment-details-row">
+          <div v-if="permissions === 'student'" class="assignment-details-row">
           <div id="multiple-submissions-div">
             <p id="multiple-submissions-header">Can I still submit?</p>
             <p id="multiple-submissions">

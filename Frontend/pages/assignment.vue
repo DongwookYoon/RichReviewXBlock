@@ -429,7 +429,7 @@ export default {
             })
           }
         )
-
+        alert('Assignment successfully submitted!')
         this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
       } catch (e) {
         this.loading = false

@@ -19,6 +19,13 @@
         <p id="slash">/</p>
         <p id="points">{{ points }}</p>
       </div>
+      <div v-if="new Date(due_date) < new Date(submission_data.submission_time)" class="due-div">
+        <p>
+          This assignment is past due. 
+          <br>
+          It is {{daysSince}} day(s) late.
+        </p>
+      </div>
       <div id="student-div">
         <!--<div id="hidden-div">-->
           <input id="hidden" v-model="hidden" type="checkbox" @change="change_hide_names" />
@@ -70,6 +77,14 @@ export default {
       },
       { src: '/my_viewer_helper.js', mode: 'client', body: true }
     ]
+  },
+  computed: {
+    daysSince(){
+      const date1 = new Date(this.due_date) 
+      const date2 = new Date(this.submission_data.submission_time)
+      const Difference_In_Time = date2.getTime() - date1.getTime() 
+      return Math.floor(Difference_In_Time / (1000 * 3600 * 24))
+    }
   },
   async asyncData(context) {
     if (!context.store.state.authUser) return
@@ -144,10 +159,8 @@ export default {
       }
     )
 
-    console.log(submissions_res.data)
     const assignment_data = assignment_res.data.assignment
     const submissions_list = submissions_res.data.submission_links_and_id
-
     const selected = grader_res.data.student_key
 
     return {
@@ -163,7 +176,9 @@ export default {
       submissions_list: submissions_list,
       selected: selected,
       no_submission: false,
-      muted: grader_res.muted
+      muted: grader_res.muted,
+      due_date: assignment_data.due_date,
+      submission_data: grader_res.data.submission_data
     }
   },
   data() {
@@ -290,6 +305,18 @@ export default {
 /*@import 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/smoothness/jquery-ui.css';*/
 /*@import 'https://richreview2ca.azureedge.net/richreview/stylesheets/style.css';*/
 /*@import '../static/nuxt_static_viewer/stylesheets/style.css';*/
+
+.due-div {
+    display: flex;
+    position: absolute;
+    color: white;
+    height: 4em;
+    font-size: 1.2em;
+    width: 20%;
+    right: 33%;
+    line-height: 1em;
+    margin-top: 0.5%;
+}
 
 p {
   margin: 0;

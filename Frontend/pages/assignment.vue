@@ -213,6 +213,9 @@ export default {
       if (this.assignment.end_date && new Date(this.assignment.end_date) < new Date()){
         return false
       }
+      if (this.extension_date && new Date(this.extension_date) < new Date()){
+        return false;
+      }
       return true
     },
     show_files: function() {

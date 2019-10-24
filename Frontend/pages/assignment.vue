@@ -204,7 +204,7 @@ export default {
   },
   computed: {
     canSubmit() {
-      if (this.submission_status && this.submission_status === 'submitted' && !this.assignment.allow_multiple_submissions){
+      if (this.submission_status && this.submission_status === 'Submitted' && !this.assignment.allow_multiple_submissions){
         return false
       }
       if (this.assignment.due_date && new Date(this.assignment.due_date) < new Date() && !this.assignment.allow_late_submissions){

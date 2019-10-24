@@ -251,8 +251,8 @@ export default {
     },
     async updateGrade(event) {
       const mark = event.target.value
-      if (mark > this.points * 1.5) {
-        alert('Mark is 150% of the max mark!')
+      if (mark > this.points * 1.2) {
+        alert(`Mark is ${100 * (mark / this.points)}% of the max mark!`)
       }
       for (let submission of this.submissions_list) {
         if (submission.key === this.student_key) {

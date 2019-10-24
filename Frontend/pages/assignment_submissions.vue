@@ -258,7 +258,12 @@ table {
   height: 4.25vh;
   margin-bottom: 0.5vw;
 }
-
+#mute-all-button {
+  background-color: rgb(224, 23, 0);
+}
+#unmute-all-button {
+  background-color: rgb(50, 197, 28)
+}
 .mute-button {
   background-color: #e01700;
   color: white;

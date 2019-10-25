@@ -195,6 +195,10 @@ export default {
     datetime: Datetime,
     'dashboard-sidebar': DashboardSidebar
   },
+  beforeRouteLeave(to, from, next) {
+    if (this.files.length > 0 && !confirm('You haven\'t submitted your assignment! Press cancel to stay on this page and OK to leave.')) next(false)
+    else next()
+  },
   data: function() {
     return {
       selected_style: { color: 'white', 'background-color': '#0c2343' },

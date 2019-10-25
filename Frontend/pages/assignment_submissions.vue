@@ -264,6 +264,10 @@ table {
 #unmute-all-button {
   background-color: rgb(50, 197, 28)
 }
+#mute-all-button,
+#unmute-all-button {
+  border-radius: 10px;
+}
 .mute-button {
   background-color: #e01700;
   color: white;

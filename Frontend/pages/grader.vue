@@ -311,11 +311,11 @@ export default {
     position: absolute;
     color: white;
     height: 4em;
-    font-size: 1.2em;
+    font-size: 2vh;
     width: 20%;
-    right: 33%;
+    left: 12%;
     line-height: 1em;
-    margin-top: 0.5%;
+    margin-top: 0.2%;
 }
 
 p {
@@ -348,6 +348,10 @@ p {
 #assignment-title-div {
   position: absolute;
   left: 1vw;
+  width: 10%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 #points-div {

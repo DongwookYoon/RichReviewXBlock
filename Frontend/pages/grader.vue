@@ -339,6 +339,13 @@ p {
   font-size: 2.5vh;
 }
 
+#assignment-title {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+
+}
+
 #assignment-title-div,
 #points-div,
 #student-div {
@@ -349,9 +356,6 @@ p {
   position: absolute;
   left: 1vw;
   width: 10%;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
 }
 
 #points-div {

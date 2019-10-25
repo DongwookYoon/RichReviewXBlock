@@ -203,5 +203,8 @@ hr {
 
 .assignment-course {
   padding-right: 5vw;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 </style>

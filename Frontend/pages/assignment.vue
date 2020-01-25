@@ -106,6 +106,16 @@
             </p>
           </div>
         </div>
+          <div v-if="permissions === 'student'" class="assignment-details-row">
+          <div id="multiple-submissions-div">
+            <p id="multiple-submissions-header">Can I still submit?</p>
+            <p id="multiple-submissions">
+              {{
+                canSubmit === true ? 'Yes' : 'No'
+              }}
+            </p>
+          </div>
+          </div>
       </div>
       <hr />
       <p id="assignment-description">{{ assignment.description }}</p>
@@ -185,6 +195,10 @@ export default {
     datetime: Datetime,
     'dashboard-sidebar': DashboardSidebar
   },
+  beforeRouteLeave(to, from, next) {
+    if (this.files.length > 0 && !confirm('You haven\'t submitted your assignment! Press cancel to stay on this page and OK to leave.')) next(false)
+    else next()
+  },
   data: function() {
     return {
       selected_style: { color: 'white', 'background-color': '#0c2343' },
@@ -193,6 +207,21 @@ export default {
     }
   },
   computed: {
+    canSubmit() {
+      if (this.submission_status && this.submission_status === 'Submitted' && !this.assignment.allow_multiple_submissions){
+        return false
+      }
+      if (this.assignment.due_date && new Date(this.assignment.due_date) < new Date() && !this.assignment.allow_late_submissions){
+        return false
+      }
+      if (this.assignment.end_date && new Date(this.assignment.end_date) < new Date()){
+        return false
+      }
+      if (this.extension_date && new Date(this.extension_date) < new Date()){
+        return false;
+      }
+      return true
+    },
     show_files: function() {
       return (
         this.assignment.type === 'document_submission' &&
@@ -429,7 +458,7 @@ export default {
             })
           }
         )
-
+        alert('Assignment successfully submitted!')
         this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
       } catch (e) {
         this.loading = false

@@ -49,6 +49,8 @@ class CmdDatabaseHandler {
 
 
     async update_cmd (cmd_key, cmd_str) {
+        await this.remove_deleted_waveform(cmd_key, cmd_str);
+
         return new Promise((resolve, reject) => {
             this.db_handler.client.rpush(cmd_key, cmd_str, async (error, result) => {
                 if (error) {
@@ -60,6 +62,46 @@ class CmdDatabaseHandler {
             });
         })
     }
+
+
+
+    async replace_cmd (cmd_key, index, cmd_str) {
+        return new Promise((resolve, reject) => {
+            this.db_handler.client.lset(cmd_key, index, cmd_str, async (error, result) => {
+                if (error) {
+                    console.log(error);
+                    reject(error);
+                }
+
+                resolve();
+            });
+        })
+    }
+
+
+
+    async remove_deleted_waveform(cmd_key, cmd_str) {
+
+        let cmd = JSON.parse(cmd_str);
+        if (cmd['op'] !== 'DeleteComment' || !cmd['target'] || cmd['target']['type'] !== 'CommentAudio')
+            return;
+
+        let cmd_data = await this.get_cmd_data(cmd_key, 0);
+
+        for (let i = 0; i < cmd_data.length; i++) {
+            let op = cmd_data[i];
+
+            if (op['op'] === 'CreateComment' && op['type'] === "CommentAudio") {
+                if (op['user'] === cmd['user']) {
+                    if (cmd['target']['aid'] === op['data']['aid']) {
+                        op['data']['waveform_sample'] = [];
+                        await this.replace_cmd(cmd_key, i, JSON.stringify(op));
+                    }
+                }
+            }
+        }
+    }
+
 
 
 
@@ -123,14 +165,8 @@ class CmdDatabaseHandler {
 
 module.exports = CmdDatabaseHandler;
 
-const env = require('../env');
-const AzureHandler = require('./AzureHandler');
 const RedisClient = require("./RedisClient");
-const KeyDictionary = require("./KeyDictionary");
 const RedisToJSONParser = require("./RedisToJSONParser");
-const UserDatabaseHandler = require("./UserDatabaseHandler");
-const DocumentDatabaseHandler = require("./DocumentDatabaseHandler");
-const NotAuthorizedError = require("../errors/NotAuthorizedError");
 
 
 

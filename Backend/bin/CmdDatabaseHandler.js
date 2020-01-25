@@ -95,6 +95,7 @@ class CmdDatabaseHandler {
                 if (op['user'] === cmd['user']) {
                     if (cmd['target']['aid'] === op['data']['aid']) {
                         op['data']['waveform_sample'] = [];
+                        op['data']['Spotlights'] = [];
                         await this.replace_cmd(cmd_key, i, JSON.stringify(op));
                     }
                 }

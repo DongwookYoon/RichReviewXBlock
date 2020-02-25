@@ -114,17 +114,26 @@ class UserDatabaseHandler {
 
         let student_list = await Promise.all(student_keys.map (async (student_key) => {
             let student_data = await this.get_user_data(student_key);
-            return { id: student_data.id, name: student_data.display_name || 'UBC User' };
+            let name = student_data.display_name || 'UBC User';
+            if (name === 'UBC User')
+                name = 'UBC Student';
+            return { id: student_data.id, name: name };
         }));
 
         let ta_list = await Promise.all(ta_keys.map (async (ta_key) => {
             let ta_data = await this.get_user_data(ta_key);
-            return { id: ta_data.id, name: ta_data.display_name || 'UBC User' };
+            let name = ta_data.display_name || 'UBC User';
+            if (name === 'UBC User')
+                name = 'UBC Ta';
+            return { id: ta_data.id, name: name };
         }));
 
         let instructor_list = await Promise.all(instructor_keys.map (async (instructor_key) => {
             let instructor_data = await this.get_user_data(instructor_key);
-            return { id: instructor_data.id, name: instructor_data.display_name || 'UBC User' };
+            let name = instructor_data.display_name || 'UBC User';
+            if (name === 'UBC User')
+                name = 'UBC Instructor';
+            return { id: instructor_data.id, name: name };
         }));
 
         return {

@@ -74,15 +74,15 @@
           />
           <label id="late-submissions-label">Allow late submissions</label>
         </div>
-        <div id="group-assignment-div">
-          <input
-            id="group-assignment"
-            v-model="edits.group_assignment"
-            type="checkbox"
-            @change="changed"
-          />
-          <label id="group-assignment-label">Group assignment</label>
-        </div>
+        <!--<div id="group-assignment-div">-->
+          <!--<input-->
+            <!--id="group-assignment"-->
+            <!--v-model="edits.group_assignment"-->
+            <!--type="checkbox"-->
+            <!--@change="changed"-->
+          <!--/>-->
+          <!--<label id="group-assignment-label">Group assignment</label>-->
+        <!--</div>-->
         <div id="hidden-div">
           <input
             id="hidden"

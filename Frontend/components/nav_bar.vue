@@ -197,6 +197,10 @@ export default {
 
 .nav-bar-component {
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 10vw;
 }
 
 #nav-bar-div {

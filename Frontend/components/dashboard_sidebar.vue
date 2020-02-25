@@ -256,7 +256,7 @@ p {
 
 #sidebar {
   width: 100px;
-  height: 110vh;
+  height: 100%;
   background-color: #0c2343;
   color: #0c2343;
 }

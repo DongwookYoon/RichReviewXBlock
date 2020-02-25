@@ -255,6 +255,8 @@ table {
   overflow: hidden;
   text-overflow: ellipsis;
   padding-right: 5vw;
+  display: inline-block;
+
 }
 
 .assignment-status,

@@ -20,6 +20,7 @@ router.get('/', async function(req, res, next) {
         let users = await user_db_handler.get_all_course_users(
             ImportHandler,
             course_key);
+
         users['students'] = users['students'].map(user => { return { name: user.name }});
         users['tas'] = users['tas'].map(user => { return { name: user.name }});
         users['instructors'] = users['instructors'].map(user => { return { name: user.name }});

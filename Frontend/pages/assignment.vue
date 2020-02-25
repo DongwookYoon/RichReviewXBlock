@@ -527,6 +527,10 @@ hr {
   font-size: 3vh;
   color: #0c2343;
   margin-bottom: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 23vw;
 }
 
 .assignment-details-row {

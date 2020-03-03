@@ -552,7 +552,7 @@ def get_all_courses(l, eldap_config, key_dict):
 	searchScope = ldap.SCOPE_SUBTREE
 	
 	try:
-		results = l.search_s(eldap_config['dn'], searchScope, searchFilter, searchAttribute) 
+		results = l.search_s(eldap_config['dn'], searchScope, searchFilter, searchAttribute)
 		courses = []
 
 		for result in results:
@@ -570,8 +570,11 @@ def get_all_courses(l, eldap_config, key_dict):
 	except Exception as error:
 		print (error)
 		f = open("eldap-sync-log.txt","a+")
+		f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': Encountered an error getting all courses from ldap\n')
 		f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': ' + str(error) + '\n')
+		f.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ': Attempting to restart the connection...\n')
 		f.close()
+		os.execl(sys.executable, sys.executable, * sys.argv)
 	
 
 def sync_redis_with_ldap(r, l, eldap_config):

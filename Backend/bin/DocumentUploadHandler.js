@@ -2,8 +2,8 @@
 class DocumentUploadHandler {
 
     constructor(){
-        this.path0 = '/tmp/richreview';
-        this.path = '/tmp/richreview/pdfs/';
+        this.path0 = `${path.sep}tmp${path.sep}richreview`;
+        this.path = `${path.sep}tmp${path.sep}richreview${path.sep}pdfs${path.sep}`;
     }
 
 
@@ -12,12 +12,12 @@ class DocumentUploadHandler {
         if (this.instance)
             return this.instance;
 
-        if (!fs.existsSync('/tmp'))
-            fs.mkdirSync('/tmp');
-        if (!fs.existsSync('/tmp/richreview'))
-            fs.mkdirSync('/tmp/richreview');
-        if (!fs.existsSync('/tmp/richreview/pdfs'))
-            fs.mkdirSync('/tmp/richreview/pdfs');
+        if (!fs.existsSync(`${path.sep}tmp`))
+            fs.mkdirSync(`${path.sep}tmp`);
+        if (!fs.existsSync(`${path.sep}tmp${path.sep}richreview`))
+            fs.mkdirSync(`${path.sep}tmp${path.sep}richreview`);
+        if (!fs.existsSync(`${path.sep}tmp${path.sep}richreview${path.sep}pdfs`))
+            fs.mkdirSync(`${path.sep}tmp${path.sep}richreview${path.sep}pdfs`);
 
         this.instance = await new DocumentUploadHandler();
         return this.instance;
@@ -85,7 +85,7 @@ class DocumentUploadHandler {
 
 
     async upload_pdf_to_azure (uuid) {
-        let pdf_path = `${this.path}${uuid}/merged.pdf`;
+        let pdf_path = `${this.path}${uuid}${path.sep}merged.pdf`;
 
         let pdf = await fs.readFileSync(pdf_path, {encoding: 'binary'});
 
@@ -115,7 +115,7 @@ class DocumentUploadHandler {
 
 
     async upload_vs_doc_to_azure (context) {
-        let vs_doc = JSON.parse(fs.readFileSync(`${this.path}${context['uuid']}/doc.vs_doc`, 'utf8'));
+        let vs_doc = JSON.parse(fs.readFileSync(`${this.path}${context['uuid']}${path.sep}doc.vs_doc`, 'utf8'));
         let azure_handler = await AzureHandler.get_instance();
         await azure_handler.create_block_blob_from_text(context, vs_doc);
     }
@@ -147,7 +147,7 @@ class DocumentUploadHandler {
 
     get_uuid () {
         let uuid = uuidv1();
-        while (fs.existsSync(`./cache/${uuid}`)) {
+        while (fs.existsSync(`.${path.sep}cache${path.sep}${uuid}`)) {
             uuid = uuidv1();
         }
         console.log(`Generated uuid: ${uuid}`);
@@ -172,7 +172,7 @@ class DocumentUploadHandler {
 
             let file_count = fs.readdirSync(dir).length;
 
-            fs.writeFileSync(`${dir}/${file_count}.pdf`, data, 'binary');
+            fs.writeFileSync(`${dir}${path.sep}${file_count}.pdf`, data, 'binary');
         } catch(e) {
             console.warn('Failure while caching document');
             console.warn(e);
@@ -185,7 +185,7 @@ class DocumentUploadHandler {
         try {
             let dir = this.path + uuid;
 
-            fs.writeFileSync(`${dir}/doc.vs_doc`, JSON.stringify(updated_vs_doc), 'utf8');
+            fs.writeFileSync(`${dir}${path.sep}doc.vs_doc`, JSON.stringify(updated_vs_doc), 'utf8');
         } catch(e) {
             console.warn('Failure while updating vs document');
             console.warn(e);
@@ -202,3 +202,4 @@ const crypto = require('crypto');
 const AzureHandler = require('./AzureHandler');
 const RichReviewError = require('../errors/RichReviewError');
 const MuplaHandler = require('./MuplaHandler');
+const path = require('path');

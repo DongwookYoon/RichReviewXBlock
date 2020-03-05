@@ -64,7 +64,7 @@ def JsonifyDoc(doc):
         js_doc.append(JsonifyPage(doc.pages[i]))
     return js_doc
 
-path = os.path.dirname(os.path.realpath(__file__)) + '/mupla.so'
+path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'mupla.so')
 libmupla = cdll.LoadLibrary(path)
 ft = CFUNCTYPE(MuPlaDoc, POINTER(c_char))
 libmupla.MuPlaRun.restype = MuPlaDoc

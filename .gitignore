@@ -83,3 +83,5 @@ dist/
 redis/dump.rdb
 
 utils/redis_backup_Jan_24.rdb
+
+utils/eldap-sync/run-local.sh

@@ -2,7 +2,7 @@
 class MuplaHandler {
 
     constructor(){
-        this.path = '/tmp/richreview/pdfs/';
+        this.path = `${path.sep}tmp${path.sep}richreview${path.sep}pdfs${path.sep}`;
 
         const dom = new JSDOM(`<!DOCTYPE html>`);
 
@@ -60,7 +60,7 @@ class MuplaHandler {
 
 
     get_mupla_from_vs_doc (context) {
-        return JSON.parse(fs.readFileSync(`${this.path}${context['uuid']}/merged.js`, 'utf8'));
+        return JSON.parse(fs.readFileSync(`${this.path}${context['uuid']}${path.sep}merged.js`, 'utf8'));
     }
 
 
@@ -248,5 +248,6 @@ const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 const pdfjsLib = require('pdfjs-dist');
 const multicolumn = require('./multicolumn');
+const path = require('path');
 
 

@@ -291,6 +291,10 @@ class AssignmentDatabaseHandler {
                 Date.now() > new Date(assignment_data['until_date']))
             throw new NotAuthorizedError('You are not authorized to submit this assignment');
 
+        if (assignment_data['available_date'] !== '' &&
+                Date.now() < new Date(assignment_data['available_date']))
+            throw new NotAuthorizedError('You are not authorized to submit this assignment');
+
         // Associate group with submission
         let submission_key = await this.get_users_submission_key(import_handler, user_key, assignment_key);
         let submission_data = await submission_db_handler.get_submission_data(submission_key);

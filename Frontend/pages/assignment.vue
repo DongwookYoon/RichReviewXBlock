@@ -124,7 +124,7 @@
         "
       ></div>
       <div v-if="permissions === 'student' && !canSubmit" class="assignment-details-row">
-        <p>This assignment has closed</p>
+        <p>This assignment is closed</p>
       </div>
       <div v-if="show_files">
         <div id="files-div">
@@ -212,6 +212,9 @@ export default {
       if (this.assignment.until_date && new Date(this.assignment.until_date) < new Date()) {
         return false
       }
+      if (this.assignment.available_date && new Date(this.assignment.available_date) > new Date()) {
+        return false
+      }
       if (this.extension_date && new Date(this.extension_date) < new Date()){
         return false;
       }
@@ -225,6 +228,9 @@ export default {
         return false
 
       if (this.submission_status === 'Submitted' && !this.assignment.allow_multiple_submissions)
+        return false
+
+      if (this.assignment.available_date && new Date(this.assignment.available_date) > new Date())
         return false
 
       if (this.assignment.extension_date && Date.now() < new Date(this.assignment.extension_date))
@@ -252,6 +258,9 @@ export default {
         return false
 
       if (this.submission_status === 'Submitted' && !this.assignment.allow_multiple_submissions)
+        return false
+
+      if (this.assignment.available_date && new Date(this.assignment.available_date) > new Date())
         return false
 
       if (this.assignment.extension_date && Date.now() < new Date(this.assignment.extension_date))

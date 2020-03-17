@@ -106,16 +106,6 @@
             </p>
           </div>
         </div>
-          <div v-if="permissions === 'student'" class="assignment-details-row">
-          <div id="multiple-submissions-div">
-            <p id="multiple-submissions-header">Can I still submit?</p>
-            <p id="multiple-submissions">
-              {{
-                canSubmit === true ? 'Yes' : 'No'
-              }}
-            </p>
-          </div>
-          </div>
       </div>
       <hr />
       <p id="assignment-description">{{ assignment.description }}</p>
@@ -133,6 +123,9 @@
             permissions === 'student'
         "
       ></div>
+      <div v-if="permissions === 'student' && !canSubmit" class="assignment-details-row">
+        <p>This assignment has closed</p>
+      </div>
       <div v-if="show_files">
         <div id="files-div">
           <div class="large-12 medium-12 small-12 cell">
@@ -196,8 +189,10 @@ export default {
     'dashboard-sidebar': DashboardSidebar
   },
   beforeRouteLeave(to, from, next) {
-    if (this.files.length > 0 && !confirm('You haven\'t submitted your assignment! Press cancel to stay on this page and OK to leave.')) next(false)
-    else next()
+    if (this.files.length > 0 && !this.submitted && !confirm('You haven\'t submitted your assignment! Press cancel to stay on this page and OK to leave.'))
+      next(false)
+    else
+      next()
   },
   data: function() {
     return {
@@ -214,7 +209,7 @@ export default {
       if (this.assignment.due_date && new Date(this.assignment.due_date) < new Date() && !this.assignment.allow_late_submissions){
         return false
       }
-      if (this.assignment.end_date && new Date(this.assignment.end_date) < new Date()){
+      if (this.assignment.until_date && new Date(this.assignment.until_date) < new Date()) {
         return false
       }
       if (this.extension_date && new Date(this.extension_date) < new Date()){
@@ -223,31 +218,55 @@ export default {
       return true
     },
     show_files: function() {
-      return (
-        this.assignment.type === 'document_submission' &&
-        this.permissions === 'student' &&
-        (this.submission_status === 'Not Submitted' ||
-          this.assignment.allow_multiple_submissions) &&
-        (this.assignment.due_date === '' ||
-          (this.assignment.due_date !== '' &&
-            Date.now() < new Date(this.assignment.due_date)) ||
-          this.assignment.allow_late_submissions ||
-          (this.extension_date && Date.now() < new Date(this.extension_date)))
-      )
+      if (this.assignment.type !== 'document_submission')
+        return false
+
+      if (this.permissions !== 'student')
+        return false
+
+      if (this.submission_status === 'Submitted' && !this.assignment.allow_multiple_submissions)
+        return false
+
+      if (this.assignment.extension_date && Date.now() < new Date(this.assignment.extension_date))
+        return true
+
+      if (this.assignment.until_date && Date.now() > new Date(this.assignment.until_date))
+        return false
+
+      if (this.assignment.due_date === '')
+        return true
+
+      if (this.assignment.allow_late_submissions)
+        return true
+
+      return Date.now() < new Date(this.due_date)
     },
     show_start_assignment: function() {
-      return (
-        this.viewer_link !== '' &&
-        this.assignment.type === 'comment_submission' &&
-        this.permissions === 'student' &&
-        (this.submission_status === 'Not Submitted' ||
-          this.assignment.allow_multiple_submissions) &&
-        (this.assignment.due_date === '' ||
-          (this.assignment.due_date !== '' &&
-            Date.now() < new Date(this.assignment.due_date)) ||
-          this.assignment.allow_late_submissions ||
-          (this.extension_date && Date.now() < new Date(this.extension_date)))
-      )
+      if (this.viewer_link === '')
+        return false
+
+      if (this.assignment.type !== 'comment_submission')
+        return false
+
+      if (this.permissions !== 'student')
+        return false
+
+      if (this.submission_status === 'Submitted' && !this.assignment.allow_multiple_submissions)
+        return false
+
+      if (this.assignment.extension_date && Date.now() < new Date(this.assignment.extension_date))
+        return true
+
+      if (this.assignment.until_date && Date.now() > new Date(this.assignment.until_date))
+        return false
+
+      if (this.assignment.due_date === '')
+        return true
+
+      if (this.assignment.allow_late_submissions)
+        return true
+
+      return Date.now() < new Date(this.due_date)
     }
   },
   async asyncData(context) {
@@ -296,7 +315,8 @@ export default {
       name: res.data.user_name,
       enrolments: course_res.data.enrolments,
       taing: course_res.data.taing,
-      instructing: course_res.data.teaching
+      instructing: course_res.data.teaching,
+      submitted: false
     }
   },
   fetch({ store, redirect }) {
@@ -459,6 +479,7 @@ export default {
           }
         )
         alert('Assignment successfully submitted!')
+        this.submitted = true
         this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
       } catch (e) {
         this.loading = false

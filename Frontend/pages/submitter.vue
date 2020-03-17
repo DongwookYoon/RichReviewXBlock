@@ -113,6 +113,9 @@ export default {
       )
     },
     async submit() {
+      if (!confirm("Are you sure you wish to submit?"))
+        return
+
       await axios.post(
         `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
@@ -131,6 +134,7 @@ export default {
           })
         }
       )
+      alert('Assignment successfully submitted!')
       this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
     }
   }

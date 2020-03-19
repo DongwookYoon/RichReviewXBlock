@@ -203,21 +203,24 @@ export default {
   },
   computed: {
     canSubmit() {
-      if (this.submission_status && this.submission_status === 'Submitted' && !this.assignment.allow_multiple_submissions){
+      if (this.permissions !== 'student')
         return false
-      }
-      if (this.assignment.due_date && new Date(this.assignment.due_date) < new Date() && !this.assignment.allow_late_submissions){
+
+      if (this.submission_status && this.submission_status === 'Submitted' && !this.assignment.allow_multiple_submissions)
         return false
-      }
-      if (this.assignment.until_date && new Date(this.assignment.until_date) < new Date()) {
+
+      if (this.assignment.available_date && new Date(this.assignment.available_date) > new Date())
         return false
-      }
-      if (this.assignment.available_date && new Date(this.assignment.available_date) > new Date()) {
+
+      if (this.extension_date && Date.now() < new Date(this.extension_date))
+        return true
+
+      if (this.assignment.due_date && new Date(this.assignment.due_date) < new Date() && !this.assignment.allow_late_submissions)
         return false
-      }
-      if (this.extension_date && new Date(this.extension_date) < new Date()){
-        return false;
-      }
+
+      if (this.assignment.until_date && new Date(this.assignment.until_date) < new Date())
+        return false
+
       return true
     },
     show_files: function() {
@@ -233,7 +236,7 @@ export default {
       if (this.assignment.available_date && new Date(this.assignment.available_date) > new Date())
         return false
 
-      if (this.assignment.extension_date && Date.now() < new Date(this.assignment.extension_date))
+      if (this.extension_date && Date.now() < new Date(this.extension_date))
         return true
 
       if (this.assignment.until_date && Date.now() > new Date(this.assignment.until_date))
@@ -245,7 +248,7 @@ export default {
       if (this.assignment.allow_late_submissions)
         return true
 
-      return Date.now() < new Date(this.due_date)
+      return Date.now() < new Date(this.assignment.due_date)
     },
     show_start_assignment: function() {
       if (this.viewer_link === '')
@@ -263,7 +266,7 @@ export default {
       if (this.assignment.available_date && new Date(this.assignment.available_date) > new Date())
         return false
 
-      if (this.assignment.extension_date && Date.now() < new Date(this.assignment.extension_date))
+      if (this.extension_date && Date.now() < new Date(this.extension_date))
         return true
 
       if (this.assignment.until_date && Date.now() > new Date(this.assignment.until_date))
@@ -275,7 +278,7 @@ export default {
       if (this.assignment.allow_late_submissions)
         return true
 
-      return Date.now() < new Date(this.due_date)
+      return Date.now() < new Date(this.assignment.due_date)
     }
   },
   async asyncData(context) {

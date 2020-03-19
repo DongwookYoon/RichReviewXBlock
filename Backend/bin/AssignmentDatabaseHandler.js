@@ -279,7 +279,23 @@ class AssignmentDatabaseHandler {
         let user_key = KeyDictionary.key_dictionary['user'] + user_id;
 
         let assignment_data = await this.get_assignment_data('', assignment_key);
+
         if(!(await AssignmentDatabaseHandler.user_has_permission_to_view(import_handler, user_key, assignment_data)))
+            throw new NotAuthorizedError('You are not authorized to submit this assignment');
+
+        let has_extension = await this.has_extension(assignment_key, user_key);
+
+        if (!has_extension && assignment_data['due_date'] !== '' &&
+                Date.now() > new Date(assignment_data['due_date']) &&
+                !assignment_data['allow_late_submissions'])
+            throw new NotAuthorizedError('You are not authorized to submit this assignment');
+
+        if (!has_extension && assignment_data['until_date'] !== '' &&
+                Date.now() > new Date(assignment_data['until_date']))
+            throw new NotAuthorizedError('You are not authorized to submit this assignment');
+
+        if (assignment_data['available_date'] !== '' &&
+                Date.now() < new Date(assignment_data['available_date']))
             throw new NotAuthorizedError('You are not authorized to submit this assignment');
 
         // Associate group with submission
@@ -603,18 +619,20 @@ class AssignmentDatabaseHandler {
                     let assignment_data = await this.get_assignment_data(user_key, assignment_key);
 
                     if((await AssignmentDatabaseHandler.user_has_permission_to_view(import_handler, user_key, assignment_data))) {
-                        if (assignment_data && (assignment_data['due_date'] === '' || new Date(assignment_data['due_date']) > new Date())) {
-                            let submission_status = await this.get_user_submission_status(import_handler, user_key, assignment_key);
+                        if (assignment_data && (assignment_data['due_date'] === '' || new Date(assignment_data['due_date']) > new Date() || assignment_data['allow_late_submissions'])) {
+                            if (assignment_data['until_date'] === '' || new Date(assignment_data['until_date']) > new Date()) {
+                                let submission_status = await this.get_user_submission_status(import_handler, user_key, assignment_key);
 
-                            let data = {
-                                assignment_id: assignment_key.replace(KeyDictionary.key_dictionary['assignment'], ''),
-                                course_id: assignment_data['course'].replace(KeyDictionary.key_dictionary['course'], ''),
-                                title: assignment_data['title'],
-                                submission_status: submission_status.submission_status,
-                                late: submission_status.late
-                            };
+                                let data = {
+                                    assignment_id: assignment_key.replace(KeyDictionary.key_dictionary['assignment'], ''),
+                                    course_id: assignment_data['course'].replace(KeyDictionary.key_dictionary['course'], ''),
+                                    title: assignment_data['title'],
+                                    submission_status: submission_status.submission_status,
+                                    late: submission_status.late
+                                };
 
-                            upcoming_assignments.push(data);
+                                upcoming_assignments.push(data);
+                            }
                         }
                     }
                 }
@@ -1057,17 +1075,16 @@ class AssignmentDatabaseHandler {
         if (assignment_data['hidden'])
             return false;
 
-        if (assignment_data['available_date'] !== 'Invalid Date' &&
-                Date.parse(assignment_data['available_date']) > Date.now())
-            return false;
-
-        if (assignment_data['until_date'] !== 'Invalid Date' &&
-                Date.parse(assignment_data['until_date']) < Date.now())
-            return false;
+        // if (assignment_data['available_date'] !== 'Invalid Date' &&
+        //         Date.parse(assignment_data['available_date']) > Date.now())
+        //     return false;
+        //
+        // if (assignment_data['until_date'] !== 'Invalid Date' &&
+        //         Date.parse(assignment_data['until_date']) < Date.now())
+        //     return false;
 
         return true;
     }
-
 
 
     async get_user_submission_status (import_handler, user_key, assignment_key) {
@@ -1146,6 +1163,18 @@ class AssignmentDatabaseHandler {
                 resolve(true);
             });
         })
+    }
+
+
+    async has_extension (assignment_key, user_key) {
+        let assignment_data = await this.get_assignment_data('', assignment_key);
+
+        for (let extension of assignment_data['extensions']) {
+            if (extension['user'] === user_key)
+                return true;
+        }
+
+        return false;
     }
 }
 

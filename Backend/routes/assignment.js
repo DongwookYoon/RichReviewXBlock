@@ -528,6 +528,27 @@ router.post('/:assignment_id/comment_submissions', async function(req, res, next
             });
         }
 
+        let has_extension = await assignment_db_handler.has_extension(assignment_key, user_key);
+
+        if (!has_extension && assignment_data['due_date'] !== '' &&
+                Date.now() > new Date(assignment_data['due_date']) &&
+                !assignment_data['allow_late_submissions'])
+            return res.status(401).send({
+                message: 'You do not have permission to submit this assignment'
+            });
+
+        if (!has_extension && assignment_data['until_date'] !== '' &&
+                Date.now() > new Date(assignment_data['until_date']))
+            return res.status(401).send({
+                message: 'You do not have permission to submit this assignment'
+            });
+
+        if (assignment_data['available_date'] !== '' &&
+                Date.now() < new Date(assignment_data['available_date']))
+            return res.status(401).send({
+                message: 'You do not have permission to submit this assignment'
+            });
+
         // await submission_db_handler.set_submission_status_to_submitted(submission_key);
         await submission_db_handler.submit_comment_submission(
             ImportHandler,

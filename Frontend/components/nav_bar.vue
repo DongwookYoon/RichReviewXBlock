@@ -200,7 +200,7 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 10vw;
+  max-width: 15vw;
 }
 
 #nav-bar-div {

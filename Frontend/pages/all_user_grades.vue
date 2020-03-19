@@ -184,4 +184,9 @@ hr {
 .grade-mark {
   padding-right: 10vw;
 }
+.grade-course {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
 </style>

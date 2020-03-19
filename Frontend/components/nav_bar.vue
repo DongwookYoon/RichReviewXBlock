@@ -17,7 +17,7 @@
     </p>
     <p
       v-if="assignment !== ''"
-      class="nav-bar-component"
+      class="nav-bar-component assignment-title"
       :style="{ color: assignment_color }"
       @click="go_to_assignment"
     >
@@ -210,5 +210,10 @@ export default {
   margin-left: -3vw;
   margin-bottom: 3vh;
   margin-top: -2vh;
+}
+.assignment-title {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 </style>

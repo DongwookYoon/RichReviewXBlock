@@ -513,6 +513,15 @@ hr {
   margin-top: 5vh;
 }
 
+#assignment-header {
+  width: 30%;
+}
+#assignment-title {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 #assignment-header,
 .assignment-controls {
   display: flex;

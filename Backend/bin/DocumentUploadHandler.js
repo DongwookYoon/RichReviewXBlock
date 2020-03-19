@@ -49,11 +49,12 @@ class DocumentUploadHandler {
 
         /*Check if a merge succeeded  */
         try {
-             await check_merge_success(uuid);
+             await this.check_merge_success(uuid);
         } catch (e)
         {
-            console.log(`PDF merge failed for ${uuid}`);
-            throw new PDFFormatError(`PDF merge failed, no merged file for uuid ${uuid}. Uploaded file is corrupt or format is invalid`);
+            console.warn(`PDF merge failed for ${uuid}`);
+            console.warn(e);
+            throw new PDFFormatError();
         } 
         
                
@@ -75,11 +76,11 @@ class DocumentUploadHandler {
         return new Promise((resolve, reject) => {
 
         fs.access(`${this.path}${uuid}${path.sep}merged.js`, fs.constants.F_OK, (err)=> {
-           if (!err)
-                resolve(true);
-            else
-                reject(err);
-            });
+                if (err)
+                     reject(err);
+                else
+                    resolve(true);
+           });
         });
     }
 

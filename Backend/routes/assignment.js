@@ -427,21 +427,21 @@ router.post('/comment_submission_assignment', async function(req, res, next) {
             res.sendStatus(200);
         } catch (e) {
             console.warn(e);
-            if (e.name === 'NotAuthorizedError')
-                res.status(401).send({
-                    message: 'You are not authorized to create an assignment'
-                });
-            else if (e.name === "PDFFormatError")
-                res.status(533).send({
-                    message: 'Could not process PDF. The file is corrupt or has an invalid format.' +
-                    'Please contact the RichReview deployment facilitator for help with this error.'
-                });
-            else
-            {
-                res.status(500).send({
-                    message: e.message
-                });
+            let code = 1;
+            let message = '';
+            if (e.name === 'NotAuthorizedError') {
+                code = 401;
+                message = 'You are not authorized to create an assignment';
             }
+            else if (e.name === "PDFFormatError") {
+               code = 533;
+               message = e.message;
+            }
+            else {
+                code = 500;
+                message = e.message;
+            }
+            res.status(code).send({message : message});
         }
     });
 });
@@ -485,8 +485,7 @@ router.post('/:assignment_id/document_submissions', async function(req, res, nex
 
             if (e.name === "PDFFormatError") {
                 res.status(533).send({
-                    message: 'Could not process PDF. The file is corrupt or has an invalid format.' + 
-                    'Please contact the RichReview deployment facilitator for help with this error.'
+                    message: e.message
                 });
             }
             else {

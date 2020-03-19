@@ -279,15 +279,18 @@ class AssignmentDatabaseHandler {
         let user_key = KeyDictionary.key_dictionary['user'] + user_id;
 
         let assignment_data = await this.get_assignment_data('', assignment_key);
+
         if(!(await AssignmentDatabaseHandler.user_has_permission_to_view(import_handler, user_key, assignment_data)))
             throw new NotAuthorizedError('You are not authorized to submit this assignment');
 
-        if (assignment_data['due_date'] !== '' &&
+        let has_extension = await this.has_extension(assignment_key, user_key);
+
+        if (!has_extension && assignment_data['due_date'] !== '' &&
                 Date.now() > new Date(assignment_data['due_date']) &&
                 !assignment_data['allow_late_submissions'])
             throw new NotAuthorizedError('You are not authorized to submit this assignment');
 
-        if (assignment_data['until_date'] !== '' &&
+        if (!has_extension && assignment_data['until_date'] !== '' &&
                 Date.now() > new Date(assignment_data['until_date']))
             throw new NotAuthorizedError('You are not authorized to submit this assignment');
 
@@ -1160,6 +1163,18 @@ class AssignmentDatabaseHandler {
                 resolve(true);
             });
         })
+    }
+
+
+    async has_extension (assignment_key, user_key) {
+        let assignment_data = await this.get_assignment_data('', assignment_key);
+
+        for (let extension of assignment_data['extensions']) {
+            if (extension['user'] === user_key)
+                return true;
+        }
+
+        return false;
     }
 }
 

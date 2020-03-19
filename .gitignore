@@ -79,9 +79,14 @@ dist/
 .eslintrc.js
 .prettierrc
 
-
 redis/dump.rdb
 
 utils/redis_backup_Jan_24.rdb
 
 utils/eldap-sync/run-local.sh
+
+#win dev-env scripts
+.ps1
+PsScripts/
+mupla_core/Dockerfile
+mupla_core/mupla/mupla/.vscode/c_cpp_properties.json

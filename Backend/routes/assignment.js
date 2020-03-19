@@ -427,14 +427,21 @@ router.post('/comment_submission_assignment', async function(req, res, next) {
             res.sendStatus(200);
         } catch (e) {
             console.warn(e);
-            if (e.name === 'NotAuthorizedError')
-                res.status(401).send({
-                    message: 'You are not authorized to create an assignment'
-                });
-            else
-                res.status(500).send({
-                    message: e.message
-                });
+            let code = 1;
+            let message = '';
+            if (e.name === 'NotAuthorizedError') {
+                code = 401;
+                message = 'You are not authorized to create an assignment';
+            }
+            else if (e.name === "PDFFormatError") {
+               code = 533;
+               message = e.message;
+            }
+            else {
+                code = 500;
+                message = e.message;
+            }
+            res.status(code).send({message : message});
         }
     });
 });
@@ -475,9 +482,17 @@ router.post('/:assignment_id/document_submissions', async function(req, res, nex
             res.sendStatus(200);
         } catch (e) {
             console.warn(e);
-            res.status(400).send({
-                message: e.message
-            });
+
+            if (e.name === "PDFFormatError") {
+                res.status(533).send({
+                    message: e.message
+                });
+            }
+            else {
+                res.status(400).send({
+                    message: e.message
+                });
+            }
         }
     });
 });
@@ -513,14 +528,16 @@ router.post('/:assignment_id/comment_submissions', async function(req, res, next
             });
         }
 
-        if (assignment_data['due_date'] !== '' &&
+        let has_extension = await assignment_db_handler.has_extension(assignment_key, user_key);
+
+        if (!has_extension && assignment_data['due_date'] !== '' &&
                 Date.now() > new Date(assignment_data['due_date']) &&
                 !assignment_data['allow_late_submissions'])
             return res.status(401).send({
                 message: 'You do not have permission to submit this assignment'
             });
 
-        if (assignment_data['until_date'] !== '' &&
+        if (!has_extension && assignment_data['until_date'] !== '' &&
                 Date.now() > new Date(assignment_data['until_date']))
             return res.status(401).send({
                 message: 'You do not have permission to submit this assignment'

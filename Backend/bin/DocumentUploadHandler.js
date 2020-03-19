@@ -33,7 +33,7 @@ class DocumentUploadHandler {
 
 
         let uuid = this.get_uuid();
-
+                
         for (let key in files) {
             let file = files[key];
             await this.upload_document(uuid, file);
@@ -45,6 +45,20 @@ class DocumentUploadHandler {
             console.warn(e);
             throw new RichReviewError('Unable to connect to MUPLA server');
         }
+
+
+        /*Check if a merge succeeded  */
+        try {
+             await this.check_merge_success(uuid);
+        } catch (e)
+        {
+            console.warn(`PDF merge failed for ${uuid}`);
+            console.warn(e);
+            throw new PDFFormatError();
+        } 
+        
+               
+
         let context = await this.upload_pdf_to_azure(uuid);
 
         let mupla_handler = await MuplaHandler.get_instance();
@@ -58,6 +72,18 @@ class DocumentUploadHandler {
     }
 
 
+    async check_merge_success (uuid) {
+        return new Promise((resolve, reject) => {
+
+        fs.access(`${this.path}${uuid}${path.sep}merged.js`, fs.constants.F_OK, (err)=> {
+                if (err)
+                     reject(err);
+                else
+                    resolve(true);
+           });
+        });
+    }
+
 
     upload_document (uuid, file) {
         let data = fs.readFileSync(file.path);
@@ -67,7 +93,7 @@ class DocumentUploadHandler {
 
 
     merge_pdfs (params) {
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject)=> {
             request.post(
                 params,
                 function(err, httpResponse, body){
@@ -78,7 +104,7 @@ class DocumentUploadHandler {
                         resolve({httpResponse: httpResponse, body: body});
                     }
                 }
-            )
+            );
         });
     }
 
@@ -201,5 +227,6 @@ const request = require('request');
 const crypto = require('crypto');
 const AzureHandler = require('./AzureHandler');
 const RichReviewError = require('../errors/RichReviewError');
+const PDFFormatError = require ('../errors/PDFFormatError');
 const MuplaHandler = require('./MuplaHandler');
 const path = require('path');

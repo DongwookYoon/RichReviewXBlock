@@ -479,6 +479,10 @@ hr {
   font-size: 1.75vh;
 }
 
+#hidden-div {
+  display: none;
+}
+
 #description {
   height: 20vh;
   border: 1px solid lightgrey;

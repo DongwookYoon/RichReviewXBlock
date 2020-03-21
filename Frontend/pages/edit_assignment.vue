@@ -367,6 +367,10 @@ hr {
   margin-left: 13.4vw;
 }
 
+#hidden {
+  display: none;
+}
+
 #due-date-div,
 #available-date-div,
 #until-date-div {

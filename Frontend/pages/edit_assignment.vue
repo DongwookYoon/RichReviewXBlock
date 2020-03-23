@@ -229,10 +229,6 @@ export default {
           rejectUnauthorized: false
         })
       })
-
-        
-    
-  
     return {
       course: res.data.course_title,
       course_group_sets: [{
@@ -249,7 +245,8 @@ export default {
         allow_multiple_submissions: res.data.allow_multiple_submissions,
         allow_late_submissions: res.data.allow_late_submissions,
         group_assignment: res.data.group_assignment,
-        course_group_set: res.data.course_group_set,       
+        course_group_set: res.data.course_group_set,
+        type: res.data.type,       
         hidden: res.data.hidden,
         due_date: context.app.is_date(res.data.due_date)
           ? new Date(res.data.due_date).toISOString()
@@ -306,6 +303,11 @@ export default {
       )
     },
     async edit() {
+      if ( this.edits.group_assignment && this.edits.course_group_set === 'default') {
+        alert('A group assignment requires a group set')
+        return
+      }
+      
       this.changesSaved = true
       await axios.put(
         `https://${process.env.backend}:3000/courses/${

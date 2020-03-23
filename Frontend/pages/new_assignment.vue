@@ -313,9 +313,7 @@ export default {
       try {
         if (this.assignment_data.type === 'comment_submission') {
           if (this.files.length === 0) {
-            alert(
-              'One or more files is required for a comment submission assignment'
-            )
+            alert('One or more files is required for a comment submission assignment')
             return
           }
           this.loading = true

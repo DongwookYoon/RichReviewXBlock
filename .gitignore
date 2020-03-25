@@ -90,3 +90,7 @@ utils/eldap-sync/run-local.sh
 PsScripts/
 mupla_core/Dockerfile
 mupla_core/mupla/mupla/.vscode/c_cpp_properties.json
+
+
+#.vscode
+.vscode/

@@ -734,9 +734,11 @@ class CourseDatabaseHandler {
     }
 
 
-    async move_assignment_to_deleted_assignments (course_key, assignment_key) {
+    async move_assignment_to_deleted_assignments (course_key, assignment_key,) {
         
-        await delete_assignment_from_course(course_key, assignment_key);
+        let course_data = await this.get_course_data(course_key);
+        
+        await this.delete_assignment_from_course(course_key, assignment_key);
 
         let deleted_assignments = course_data['deleted_assignments'];
         deleted_assignments.push(assignment_key);

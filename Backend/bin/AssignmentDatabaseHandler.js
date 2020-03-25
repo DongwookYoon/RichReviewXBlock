@@ -51,12 +51,17 @@ class AssignmentDatabaseHandler {
         let group_db_handler = await import_handler.group_db_handler;
         let user_data = await user_db_handler.get_user_data(user_key);
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+
+        /*Avoid using deprecated redis array toString() functionality*/
+        assignment_data['submissions'] = JSON.stringify(assignment_data['submissions']);
+        assignment_data['extensions'] = JSON.stringify(assignment_data['extensions']);
         
         let course_key = assignment_data['course'];
-        
+
+                
         if(assignment_data === undefined ||
-            (!user_data['teaching'].includes(assignment_data['course']) &&
-            !user_data['taing'].includes(assignment_data['course'])))
+            (!user_data['teaching'].includes(course_key) &&
+            !user_data['taing'].includes(course_key)))
             throw new NotAuthorizedError('You are not authorized to edit this assignment');
 
         /*If we are NOT changing to a group assignment or vice versa, 
@@ -74,29 +79,41 @@ class AssignmentDatabaseHandler {
 
             return;
         }
+
+        /*Otherwise, we need to recreate the assignment using identical id
+          and with modified group_assignment field. */
+        assignment_data['group_assignment'] = edits['group_assignment'];
         
-        /*Otherwise, delete existing assignment and associated keys */
+        if(assignment_data['group_assignment'] === true) {
+            assignment_data['course_group_set'] = edits['course_group_set'];
+        }
+
+
+
+        /*Delete existing assignment and associated keys */
         await course_db_handler.delete_assignment_from_course(course_key, assignment_key);
         await this.delete_assignment(import_handler, user_key, course_key, assignment_key);
                
 
-        /*Recreate the correct type of assignment */
-        if (assignment_type === 'document_submission') {
+        /*Recreate the correct type of assignment with the existing id */
+        if (assignment_data['type'] === 'document_submission') {
+            console.log('recreating document assignment');
             await this.create_document_submission_assignment(import_handler, 
-                assignment_data['course'],
                 course_key, 
-                assignment_data);
+                assignment_data,
+                assignment_data['id']);
         }
 
         else {
-            let doc_key = await group_db_handler.get_doc_key(assignment_data['template_group']);
+            let group_data = await group_db_handler.get_group_data(assignment_data['template_group'])
 
-            this.create_comment_submission_assignment(import_handler, 
+            await this.create_comment_submission_assignment(import_handler, 
                 user_key, 
                 course_key, 
                 assignment_data, 
-                null, 
-                doc_key);
+                null,
+                assignment_data['id'], 
+                group_data['docid']);
         }
 
     }
@@ -120,7 +137,7 @@ class AssignmentDatabaseHandler {
 
 
 
-    async create_assignment (import_handler, course_key, assignment_data) {
+    async create_assignment (import_handler, course_key, assignment_data, existing_assignment_key = null) {
         if(!this.is_valid_assignment_data(assignment_data))
             throw new RichReviewError('Invalid assignment data');
 
@@ -129,8 +146,20 @@ class AssignmentDatabaseHandler {
         if (!(await course_db_handler.is_valid_course_key(course_key)))
             throw new RichReviewError('Invalid course key');
 
-        let id = `${course_key.replace(KeyDictionary.key_dictionary['course'], '')}_${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`;
-        let assignment_key = KeyDictionary.key_dictionary['assignment'] + id;
+        let id = '';
+        let assignment_key = '';
+
+        /*Generate an assignment key if no existing key is provided */
+        if (existing_assignment_key === null) {
+            id = `${course_key.replace(KeyDictionary.key_dictionary['course'], '')}_${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`;
+        }
+        else {
+            if (this.is_valid_assignment_key(existing_assignment_key) === false)
+                throw new RichReviewError(`Invalid assignment key provided as existing key: ${existing_assignment_key}`);
+            id = existing_assignment_key.replace(KeyDictionary.key_dictionary['assignment'], '');
+        }
+
+        assignment_key = KeyDictionary.key_dictionary['assignment'] + id;
 
         for (const field in assignment_data) {
             let value = assignment_data[field];
@@ -155,7 +184,7 @@ class AssignmentDatabaseHandler {
 
 
 
-    async create_document_submission_assignment (import_handler, course_key, assignment_data) {
+    async create_document_submission_assignment (import_handler, course_key, assignment_data, existing_key = null) {
 
         let course_db_handler = await import_handler.course_db_handler;
 
@@ -169,8 +198,7 @@ class AssignmentDatabaseHandler {
         if (assignment_data['group_assignment'] && assignment_data['course_group_set'] === 'default')
             throw new RichReviewError('No course group set selected');
 
-
-        let assignment_key = await this.create_assignment(import_handler, course_key, assignment_data);
+        let assignment_key = await this.create_assignment(import_handler, course_key, assignment_data, existing_key);
 
         // Create submissions / submitters for each user/group
         let submission_db_handler = await import_handler.submission_db_handler;
@@ -198,7 +226,7 @@ class AssignmentDatabaseHandler {
 
 
 
-    async create_comment_submission_assignment (import_handler, user_key, course_key, assignment_data, files = null, doc_key = null) {
+    async create_comment_submission_assignment (import_handler, user_key, course_key, assignment_data, files = null, existing_key = null, doc_key = null) {
 
         let course_db_handler = await import_handler.course_db_handler;
         let user_db_handler = await import_handler.user_db_handler;
@@ -245,7 +273,7 @@ class AssignmentDatabaseHandler {
         await document_db_handler.add_group_to_doc(doc_key, template_group_key);
         await user_db_handler.add_group_to_user(user_key, template_group_key);
 
-        let assignment_key = await this.create_assignment(import_handler, course_key, assignment_data);
+        let assignment_key = await this.create_assignment(import_handler, course_key, assignment_data, existing_key);
 
         await this.set_assignment_data(assignment_key, 'template_group', template_group_key);
 

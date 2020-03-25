@@ -119,14 +119,6 @@ class GroupDatabaseHandler {
         })
     }
 
-    async get_doc_key (group_key) {
-        let doc_key = null;
-        get_group_data (group_key).then(group_data => {
-            doc_key = group_data.docid;
-        });
-
-        return doc_key;
-    }
 
 
     async add_user_to_group (user_id, group_key) {

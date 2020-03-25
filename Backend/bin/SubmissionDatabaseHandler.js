@@ -59,6 +59,7 @@ class SubmissionDatabaseHandler {
         let students = await course_db_handler.get_course_active_student_keys(course_key);
         let submission_keys = [];
 
+      
         for (let student of students) {
             let id = `${course_key.replace(KeyDictionary.key_dictionary['course'], '')}_${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`;
             let submission_key = KeyDictionary.key_dictionary['submission'] + id;
@@ -92,7 +93,7 @@ class SubmissionDatabaseHandler {
     async create_submission_for_each_course_group_and_return_keys (import_handler, course_key, assignment_key, course_group_set_key) {
         let course_group_db_handler = await import_handler.course_group_db_handler;
         let submitter_db_handler = await import_handler.submitter_db_handler;
-
+   
         let submission_keys = [];
 
         let course_group_set = await course_group_db_handler.get_course_group_data(course_group_set_key);

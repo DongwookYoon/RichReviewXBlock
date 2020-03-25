@@ -49,16 +49,18 @@ class AssignmentDatabaseHandler {
         let user_db_handler = await import_handler.user_db_handler;
         let course_db_handler = await import_handler.course_db_handler;
         let group_db_handler = await import_handler.group_db_handler;
+        let submission_db_handler = await import_handler.submission_db_handler;
+
         let user_data = await user_db_handler.get_user_data(user_key);
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+        let group_data = await group_db_handler.get_group_data(assignment_data['template_group']);
+        let course_key = assignment_data['course'];
+        let submissions = assignment_data['submissions'];
 
-        /*Avoid using deprecated redis array toString() functionality*/
-        assignment_data['submissions'] = JSON.stringify(assignment_data['submissions']);
+        /*Avoid using deprecated redis array toString() approach*/
+        assignment_data['submissions'] = JSON.stringify(submissions);
         assignment_data['extensions'] = JSON.stringify(assignment_data['extensions']);
         
-        let course_key = assignment_data['course'];
-
-                
         if(assignment_data === undefined ||
             (!user_data['teaching'].includes(course_key) &&
             !user_data['taing'].includes(course_key)))
@@ -72,7 +74,6 @@ class AssignmentDatabaseHandler {
 
                 if (DateHelper.is_date(field))
                     value = DateHelper.format_date(value);
-
 
                 await this.set_assignment_data(assignment_key, field, value);
             }
@@ -88,24 +89,24 @@ class AssignmentDatabaseHandler {
             assignment_data['course_group_set'] = edits['course_group_set'];
         }
 
-
-
-        /*Delete existing assignment and associated keys */
-        await course_db_handler.delete_assignment_from_course(course_key, assignment_key);
-        await this.delete_assignment(import_handler, user_key, course_key, assignment_key);
+        /*Delete existing assignment and associated keys. 
+          Note that edit operation can continue, even if error occurs during delete.*/
+        try {
+            await course_db_handler.delete_assignment_from_course(course_key, assignment_key);
+            await this.delete_assignment(import_handler, user_key, course_key, assignment_key);
+        } catch (err) {
+            console.warn(err);
+        }
                
-
         /*Recreate the correct type of assignment with the existing id */
         if (assignment_data['type'] === 'document_submission') {
-            console.log('recreating document assignment');
             await this.create_document_submission_assignment(import_handler, 
                 course_key, 
                 assignment_data,
                 assignment_data['id']);
         }
-
         else {
-            let group_data = await group_db_handler.get_group_data(assignment_data['template_group'])
+            let docid = group_data['docid'];
 
             await this.create_comment_submission_assignment(import_handler, 
                 user_key, 
@@ -1085,6 +1086,7 @@ class AssignmentDatabaseHandler {
         let user_db_handler = await import_handler.user_db_handler;
         let course_db_handler = await import_handler.course_db_handler;
         let submission_db_handler = await import_handler.submission_db_handler;
+        let group_db_handler = await import_handler.group_db_handler;
 
         let user_permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
@@ -1101,6 +1103,14 @@ class AssignmentDatabaseHandler {
         let assignment_data = await this.get_assignment_data(user_key, assignment_key);
         let submissions = assignment_data['submissions'];
 
+        try {
+            await submission_db_handler.delete_all_groups_for_submissions(import_handler, submissions);
+            if (assignment_data['template_group'])
+                 await group_db_handler.delete_group(assignment_data['template_group']);
+        } catch (err ) {
+            console.warn(err);
+        }
+        
         for (let submission of submissions) {
             try {
                 await submission_db_handler.delete_submission(import_handler, submission);

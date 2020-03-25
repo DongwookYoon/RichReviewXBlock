@@ -425,6 +425,26 @@ class SubmissionDatabaseHandler {
 
         return await submitter_db_handler.is_course_group_owner_of_submitter(course_group_key, submitter_key);
     }
+
+
+    async delete_all_groups_for_submissions(import_handler, submission_keys) {
+        let group_db_handler = await import_handler.group_db_handler;
+
+        await (async () => {
+            for (let submission_key of submission_keys) {
+                let submission_data = await this.get_submission_data(submission_key);
+           
+                if (submission_data.group) {
+                    group_db_handler.delete_group(submission_data.group);    //Fire and forget so groups are deleted concurrently.
+                }
+                
+            }
+        })().catch(err => {
+            throw(err);
+        });
+    }
+
+
 }
 
 module.exports = SubmissionDatabaseHandler;

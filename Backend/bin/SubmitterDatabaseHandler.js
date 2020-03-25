@@ -227,6 +227,8 @@ class SubmitterDatabaseHandler {
         let submitter_data = await this.get_submitter_data(submitter_key);
         return course_group_key === submitter_data['course_group'];
     }
+
+
 }
 
 module.exports = SubmitterDatabaseHandler;

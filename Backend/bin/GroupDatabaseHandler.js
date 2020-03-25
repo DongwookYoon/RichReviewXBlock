@@ -228,10 +228,24 @@ class GroupDatabaseHandler {
         })
     }
 
+    
 
     async user_has_permission_to_view_group (user_key, course_key, group_data) {
         return true;
     }
+
+
+    
+    async delete_group(group_key) {
+        await this.db_handler.client.del(group_key, (error, result) => {
+            if (error) {
+                console.log(error);
+                throw error;
+            }
+            
+        });
+    }    
+    
 }
 
 module.exports = GroupDatabaseHandler;

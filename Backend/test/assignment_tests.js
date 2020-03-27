@@ -82,7 +82,7 @@ describe('Assignments', function() {
             let user_db_handler = await ImportHandler.user_db_handler;
             let course_db_handler = await ImportHandler.course_db_handler;
 
-            let file = new File("./test/complex_pdf.pdf");
+            let file = new File("./complex_pdf.pdf");
 
             let assignment_data = {
                 title: 'test assignment',
@@ -167,7 +167,7 @@ describe('Assignments', function() {
         it('Should fail in creating a group comment submission assignment - no course groups', async function() {
             let assignment_db_handler = await ImportHandler.assignment_db_handler;
 
-            let file = new File("./test/complex_pdf.pdf");
+            let file = new File("./complex_pdf.pdf");
 
             let assignment_data = {
                 title: 'test assignment',
@@ -398,7 +398,7 @@ describe('Assignments', function() {
         it('Should fail in creating a comment assignment - invalid assignment data', async function() {
             let assignment_db_handler = await ImportHandler.assignment_db_handler;
 
-            let file = new File("./test/complex_pdf.pdf");
+            let file = new File("./complex_pdf.pdf");
 
             let assignment_data = {
                 type: 'document_submission',
@@ -713,7 +713,7 @@ describe('Assignments', function() {
                 type: 'document_submission',
                 count_toward_final_grade: false,
                 allow_multiple_submissions: false,
-                group_assignment: true,
+                group_assignment: false,
                 hidden: true,
                 due_date: new Date().toISOString(),
                 available_date: new Date().toISOString(),
@@ -2284,7 +2284,7 @@ describe('Assignments', function() {
 
             let user_id = this.student_key.replace(KeyDictionary.key_dictionary['user'], '');
 
-            let file = new File("./test/complex_pdf.pdf");
+            let file = new File("./complex_pdf.pdf");
 
             try {
 
@@ -2314,7 +2314,7 @@ describe('Assignments', function() {
 
             let user_id = this.student_key.replace(KeyDictionary.key_dictionary['user'], '');
 
-            let file = new File("./test/complex_pdf.pdf");
+            let file = new File("./complex_pdf.pdf");
 
             try {
 
@@ -2348,7 +2348,7 @@ describe('Assignments', function() {
 
             let user_id = this.student_key.replace(KeyDictionary.key_dictionary['user'], '');
 
-            let file = new File("./test/complex_pdf.pdf");
+            let file = new File("./complex_pdf.pdf");
 
             try {
                 await assignment_db_handler.set_assignment_data(
@@ -2394,7 +2394,7 @@ describe('Assignments', function() {
 
             let user_id = this.student_key.replace(KeyDictionary.key_dictionary['user'], '');
 
-            let file = new File("./test/complex_pdf.pdf");
+            let file = new File("./complex_pdf.pdf");
 
             try {
 
@@ -2427,7 +2427,7 @@ describe('Assignments', function() {
 
             let user_id = this.student_key.replace(KeyDictionary.key_dictionary['user'], '');
 
-            let file = new File("./test/complex_pdf.pdf");
+            let file = new File("./complex_pdf.pdf");
 
             try {
 
@@ -2459,7 +2459,7 @@ describe('Assignments', function() {
 
             let user_id = this.student_key.replace(KeyDictionary.key_dictionary['user'], '');
 
-            let file = new File("./test/complex_pdf.pdf");
+            let file = new File("./complex_pdf.pdf");
 
             try {
 
@@ -2493,7 +2493,7 @@ describe('Assignments', function() {
 
             let user_id = this.student_key.replace(KeyDictionary.key_dictionary['user'], '');
 
-            let file = new File("./test/complex_pdf.pdf");
+            let file = new File("./complex_pdf.pdf");
 
             try {
 
@@ -2627,7 +2627,7 @@ describe('Assignments', function() {
             let course_db_handler = await ImportHandler.course_db_handler;
             let course_group_db_handler = await ImportHandler.course_group_db_handler;
 
-            let file = new File("./test/complex_pdf.pdf");
+            let file = new File("./complex_pdf.pdf");
 
             let assignment_data = {
                 title: 'test assignment',
@@ -2659,11 +2659,17 @@ describe('Assignments', function() {
                 let course_group_data = await course_group_db_handler.get_course_group_data(this.course_group_key);
 
                 assert(user_data['submitters'].includes(submission_data['submitter']));
+                console.log("got to here!");
                 assert (submitter_data['members'].includes(this.student_key));
+                console.log("got to here!");
                 assert (submission_data['group'] !== '' && submission_data['group'] !== undefined);
+                console.log("got to here!");
                 assert(user_data2['submitters'].includes(submission_data['submitter']));
+                console.log("got to here!");
                 assert (submitter_data['members'].includes(this.student_key2));
+                console.log("got to here!");
                 assert(course_group_data['submitters'].includes(submission_data['submitter']));
+                console.log("got to here!");
 
                 await course_db_handler.move_assignment_to_deleted_assignments(this.course_key, assignment_key);
                 await assignment_db_handler.delete_assignment(
@@ -2685,7 +2691,7 @@ describe('Assignments', function() {
 
             let user_id = this.student_key.replace(KeyDictionary.key_dictionary['user'], '');
 
-            let file = new File("./test/complex_pdf.pdf");
+            let file = new File("./complex_pdf.pdf");
 
             try {
 
@@ -2717,7 +2723,7 @@ describe('Assignments', function() {
 
             let user_id = this.student_key.replace(KeyDictionary.key_dictionary['user'], '');
 
-            let file = new File("./test/complex_pdf.pdf");
+            let file = new File("./complex_pdf.pdf");
 
             let assignment_data = {
                 title: 'test assignment',

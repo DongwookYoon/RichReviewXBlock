@@ -734,7 +734,7 @@ class CourseDatabaseHandler {
     }
 
 
-    async move_assignment_to_deleted_assignments (course_key, assignment_key,) {
+    async move_assignment_to_deleted_assignments (course_key, assignment_key) {
         
         let course_data = await this.get_course_data(course_key);
         

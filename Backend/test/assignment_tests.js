@@ -1,6 +1,6 @@
 let mocha = require('mocha');
 let assert = require('assert');
-let describe = mocha.describe;
+
 let ImportHandler = require('../bin/ImportHandler');
 const KeyDictionary = require("../bin/KeyDictionary");
 const fs = require('fs');

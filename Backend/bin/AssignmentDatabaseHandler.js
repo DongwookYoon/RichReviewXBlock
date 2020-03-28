@@ -207,6 +207,7 @@ class AssignmentDatabaseHandler {
         let submission_keys = [];
 
         if (!assignment_data['group_assignment']) {
+            console.log(JSON.stringify(assignment_data));
             submission_keys = await submission_db_handler.create_submission_for_each_user_and_return_keys(
                 import_handler,
                 course_key,
@@ -288,6 +289,7 @@ class AssignmentDatabaseHandler {
                 assignment_key);
 
         } else {
+
             submission_keys = await submission_db_handler.create_submission_for_each_course_group_and_return_keys(
                 import_handler,
                 course_key,
@@ -301,7 +303,6 @@ class AssignmentDatabaseHandler {
             let submission_data = await submission_db_handler.get_submission_data(submission_key);
 
             let submitter_key = submission_data['submitter'];
-
             let submitter_data = await submitter_db_handler.get_submitter_data(submitter_key);
 
             let members = submitter_data['members'];
@@ -1153,17 +1154,23 @@ class AssignmentDatabaseHandler {
                 user_data['taing'].includes(assignment_data['course']))
             return true;
 
-        if (assignment_data['hidden'])
+        if (assignment_data['hidden']) {
+            console.log('User does not have permission to view hidden assignment');
             return false;
+        }
+            
 
-        // if (assignment_data['available_date'] !== 'Invalid Date' &&
-        //         Date.parse(assignment_data['available_date']) > Date.now())
-        //     return false;
-        //
-        // if (assignment_data['until_date'] !== 'Invalid Date' &&
-        //         Date.parse(assignment_data['until_date']) < Date.now())
-        //     return false;
+         if (assignment_data['available_date'] !== 'Invalid Date' &&
+                 Date.parse(assignment_data['available_date']) > Date.now()) {
+                 console.log('User does have permission to view assignment that is not yet available');
+             return false;
+        }
 
+         if (assignment_data['until_date'] !== 'Invalid Date' &&
+                 Date.parse(assignment_data['until_date']) < Date.now()) {
+                 console.log('User does have permission to view assignment after assignment is closed');
+             return false;
+        }
         return true;
     }
 

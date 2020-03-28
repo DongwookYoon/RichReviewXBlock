@@ -531,6 +531,7 @@ class UserDatabaseHandler {
             await this.get_user_data(user_key);
             return true;
         } catch (e) {
+            console.log(`not a valid user key: ${user_key}`);
             return false;
         }
     }

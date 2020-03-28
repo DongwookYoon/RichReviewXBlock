@@ -537,7 +537,7 @@ router.post('/:assignment_id/comment_submissions', async function(req, res, next
                 message: 'You do not have permission to submit this assignment'
             });
 
-        if (!has_extension && assignment_data['until_date'] !== '' &&
+         if (!has_extension && assignment_data['until_date'] !== '' &&
                 Date.now() > new Date(assignment_data['until_date']))
             return res.status(401).send({
                 message: 'You do not have permission to submit this assignment'

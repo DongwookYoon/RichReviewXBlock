@@ -23,7 +23,7 @@ class CourseGroupDatabaseHandler {
     }
 
 
-    // todo delete deleted course_groups, create submitters for students if needed
+    // todo create submitters for students if needed
     async update_course_group_sets (import_handler, user_key, course_key, course_group_sets) {
         let course_db_handler = await import_handler.course_db_handler;
 
@@ -35,10 +35,12 @@ class CourseGroupDatabaseHandler {
                 await this.update_existing_course_group_set(import_handler, user_key, course_key, course_group_set);
 
             } else {
+                
                 let course_group_set_key = await this.update_new_course_group_set(import_handler,
                     user_key, course_key, course_group_set);
 
                 await course_db_handler.add_course_group_set_to_course(course_group_set_key, course_key);
+                
             }
         }
     }
@@ -50,7 +52,10 @@ class CourseGroupDatabaseHandler {
 
         await this.set_course_group_set_data(course_group_set_key, 'name', course_group_set['name']);
 
+    
+
         for (let course_group of course_group_set['course_groups']) {
+            console.log(`current course group ${course_group}`);
             course_group.users = course_group.users.map(user => { return user.key });
 
             if (course_group['id'].startsWith('placeholder')) {
@@ -69,17 +74,36 @@ class CourseGroupDatabaseHandler {
 
         await this.set_course_group_set_data(course_group_set_key, 'course_groups',
             JSON.stringify(course_group_set_data['course_groups']));
+
+        return course_group_set_key;
     }
 
 
 
+    /**
+     * Creates a course group set with new course groups for the user objects in array
+     * course_group_set.users.
+     * 
+     * User objects should have format {key: 'key_value', name: 'user_name'}
+     * @param {*} import_handler 
+     * @param {*} user_key Key for user with permission to create course group
+     * @param {*} course_key 
+     * @param {*} course_group_set 
+     */
     async update_new_course_group_set (import_handler, user_key, course_key, course_group_set) {
         let course_group_set_key = await this.create_course_group_set(import_handler, course_key,
             {name: course_group_set['name']});
 
         let course_groups = [];
+        
         for (let course_group of course_group_set['course_groups']) {
-            course_group.users = course_group.users.map(member => { return member.key });
+
+            course_group.users = course_group.users.map(member => {  return member.key });
+           
+
+            for (let prop in course_group) {
+                console.log(`${prop}: ${course_group[prop]}`);
+            }
 
             let course_group_key = await this.create_course_group(import_handler,
                 user_key, course_key, course_group_set_key, {
@@ -120,6 +144,8 @@ class CourseGroupDatabaseHandler {
     async remove_deleted_course_groups (import_handler, user_key, course_key, course_group_sets) {
         let course_db_handler = await import_handler.course_db_handler;
         let course_data = await course_db_handler.get_course_data(course_key);
+
+        console.log(course_data);
 
         let cur_course_group_sets = await Promise.all(course_data['course_group_sets'].map(async course_group_set => {
             return await this.get_course_group_set_data(course_group_set);
@@ -378,8 +404,10 @@ class CourseGroupDatabaseHandler {
             let user_db_handler = await import_handler.user_db_handler;
             let user_permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
 
-            if (user_permissions !== 'ta' && user_permissions !== 'instructor')
+            if (user_permissions !== 'ta' && user_permissions !== 'instructor') {
                 throw new NotAuthorizedError('You are not authorized to create a group');
+            }
+                
 
             let id = `${course_key.replace(KeyDictionary.key_dictionary['course'], '')}_${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`;
             let course_group_key = KeyDictionary.key_dictionary['course_group'] + id;

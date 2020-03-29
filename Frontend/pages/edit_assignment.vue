@@ -74,15 +74,31 @@
           />
           <label id="late-submissions-label">Allow late submissions</label>
         </div>
-        <!--<div id="group-assignment-div">-->
-          <!--<input-->
-            <!--id="group-assignment"-->
-            <!--v-model="edits.group_assignment"-->
-            <!--type="checkbox"-->
-            <!--@change="changed"-->
-          <!--/>-->
-          <!--<label id="group-assignment-label">Group assignment</label>-->
-        <!--</div>-->
+        
+        <div id="group-assignment-div">
+          <input
+            id="group-assignment"
+            v-model="edits.group_assignment"
+            type="checkbox"
+            @change="changed"
+          />
+          <label id="group-assignment-label">Group assignment</label>
+          <div v-if="edits.group_assignment" id="course-group-set-div">
+          <select
+            id="course-group-set-select"
+            v-model="edits.course_group_set"
+          >
+            <option
+              v-for="option in course_group_sets"
+              :key="option.key"
+              :value="option.key"
+            >
+              {{ option.name }}
+            </option>
+          </select>
+        </div>
+                   
+        </div>
         <div id="hidden-div">
           <input
             id="hidden"
@@ -175,7 +191,8 @@ export default {
     'dashboard-sidebar': DashboardSidebar
   },
   async asyncData(context) {
-    if (!context.store.state.authUser) return
+    if (!context.store.state.authUser) 
+      return;
 
     const res = await axios.get(
       `https://${process.env.backend}:3000/courses/${
@@ -190,7 +207,20 @@ export default {
         })
       }
     )
-    const course_res = await axios
+    
+    const course_res = await axios.get(
+      `https://${process.env.backend}:3000/courses/${context.params.course_id}`,
+      {
+        headers: {
+          Authorization: context.store.state.authUser.id
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+
+    const enrolment_res = await axios
       .get(`https://${process.env.backend}:3000/courses`, {
         headers: {
           Authorization: context.store.state.authUser.id
@@ -201,6 +231,10 @@ export default {
       })
     return {
       course: res.data.course_title,
+      course_group_sets: [{
+      key: 'default',
+      name: 'Please select a group set'
+        }].concat(course_res.data.course.course_group_sets),
       edits: {
         title: res.data.title,
         description: res.data.description,
@@ -211,6 +245,8 @@ export default {
         allow_multiple_submissions: res.data.allow_multiple_submissions,
         allow_late_submissions: res.data.allow_late_submissions,
         group_assignment: res.data.group_assignment,
+        course_group_set: res.data.course_group_set,
+        type: res.data.type,       
         hidden: res.data.hidden,
         due_date: context.app.is_date(res.data.due_date)
           ? new Date(res.data.due_date).toISOString()
@@ -235,9 +271,9 @@ export default {
       changesSaved: false,
       assignment_changed: false,
       name: res.data.user_name || '',
-      enrolments: course_res.data.enrolments,
-      taing: course_res.data.taing,
-      instructing: course_res.data.teaching
+      enrolments: enrolment_res.data.enrolments,
+      taing: enrolment_res.data.taing,
+      instructing: enrolment_res.data.teaching
 
     }
   },
@@ -267,6 +303,11 @@ export default {
       )
     },
     async edit() {
+      if ( this.edits.group_assignment && this.edits.course_group_set === 'default') {
+        alert('A group assignment requires a group set')
+        return
+      }
+      
       this.changesSaved = true
       await axios.put(
         `https://${process.env.backend}:3000/courses/${
@@ -353,7 +394,7 @@ hr {
   border: 1px solid lightgrey;
 }
 
-#points-div {
+#points-div, #weight-div {
   margin-left: 10vw;
   margin-bottom: 1vh;
   margin-top: 1vh;
@@ -363,8 +404,13 @@ hr {
 #multiple-submissions,
 #late-submissions,
 #group-assignment,
+#course-group-set-select,
 #hidden {
   margin-left: 13.4vw;
+}
+
+#hidden-div {
+  display: none;
 }
 
 #due-date-div,

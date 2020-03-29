@@ -59,6 +59,7 @@ class SubmissionDatabaseHandler {
         let students = await course_db_handler.get_course_active_student_keys(course_key);
         let submission_keys = [];
 
+      
         for (let student of students) {
             let id = `${course_key.replace(KeyDictionary.key_dictionary['course'], '')}_${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`;
             let submission_key = KeyDictionary.key_dictionary['submission'] + id;
@@ -92,7 +93,7 @@ class SubmissionDatabaseHandler {
     async create_submission_for_each_course_group_and_return_keys (import_handler, course_key, assignment_key, course_group_set_key) {
         let course_group_db_handler = await import_handler.course_group_db_handler;
         let submitter_db_handler = await import_handler.submitter_db_handler;
-
+   
         let submission_keys = [];
 
         let course_group_set = await course_group_db_handler.get_course_group_data(course_group_set_key);
@@ -424,6 +425,26 @@ class SubmissionDatabaseHandler {
 
         return await submitter_db_handler.is_course_group_owner_of_submitter(course_group_key, submitter_key);
     }
+
+
+    async delete_all_groups_for_submissions(import_handler, submission_keys) {
+        let group_db_handler = await import_handler.group_db_handler;
+
+        await (async () => {
+            for (let submission_key of submission_keys) {
+                let submission_data = await this.get_submission_data(submission_key);
+           
+                if (submission_data.group) {
+                    group_db_handler.delete_group(submission_data.group);    //Fire and forget so groups are deleted concurrently.
+                }
+                
+            }
+        })().catch(err => {
+            throw(err);
+        });
+    }
+
+
 }
 
 module.exports = SubmissionDatabaseHandler;

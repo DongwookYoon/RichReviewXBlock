@@ -1,4 +1,3 @@
-
 class DocumentUploadHandler {
 
     constructor(){

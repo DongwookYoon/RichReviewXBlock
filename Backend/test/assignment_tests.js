@@ -695,16 +695,7 @@ describe('Assignments', function() {
                     this.instructor_key,
                     assignment_key);
 
-                assert(edited_assignment_data.title === edits.title);
-                assert(edited_assignment_data.description === edits.description);
-                assert(edited_assignment_data.type === edits.type);
-                assert(edited_assignment_data.count_toward_final_grade === edits.count_toward_final_grade);
-                assert(edited_assignment_data.allow_multiple_submissions === edits.allow_multiple_submissions);
-                assert(edited_assignment_data.group_assignment === edits.group_assignment);
-                assert(edited_assignment_data.hidden === edits.hidden);
-                assert(edited_assignment_data.due_date.toString() === new Date(edits.due_date).toString());
-                assert(edited_assignment_data.available_date.toString() === new Date(edits.available_date).toString());
-                assert(edited_assignment_data.until_date.toString() === new Date(edits.until_date).toString());
+                assert(edit_success(edited_assignment_data, edits));
 
                 await course_db_handler.move_assignment_to_deleted_assignments(this.course_key, assignment_key);
                 await assignment_db_handler.delete_assignment(
@@ -717,7 +708,6 @@ describe('Assignments', function() {
                 assert(false);
             }
         });
-
 
 
         it('Should fail in editing an assignment - invalid assignment key', async function() {
@@ -2206,6 +2196,10 @@ describe('Assignments', function() {
                 assert(true);
             }
         });
+
+       
+
+
     });
 
 
@@ -2218,7 +2212,8 @@ describe('Assignments', function() {
             this.ta_key = await create_test_ta();
             this.student_key = await create_test_student();
             this.course_key = await create_test_course([this.instructor_key], [this.ta_key], [this.student_key]);
-            this.assignment_key = await create_assignment(this.course_key);
+
+            this.assignment_key = await create_doc_assignment(this.course_key, false);
 
             let user_db_handler = await ImportHandler.user_db_handler;
 
@@ -2307,6 +2302,34 @@ describe('Assignments', function() {
         });
 
 
+        it ('Should fail in submitting assignment after due date - no extension', async function() {
+            let assignment_db_handler = await ImportHandler.assignment_db_handler;
+            
+            try {
+             /*Change the due date after submit, otherwise submit will fail */
+             await assignment_db_handler.set_assignment_data(
+                this.assignment_key,
+                'due_date',
+                '1900-07-05T17:34:42.980Z');
+
+             let submission_key = await assignment_db_handler.submit_document_assignment(
+                   ImportHandler,
+                   user_id,
+                   this.course_key,
+                   this.assignment_key,
+                   {'file-0': file});
+                
+                assert(false, 'User should not be able to submit assignment after due date');
+             } catch(err) {
+                await assignment_db_handler.set_assignment_data(
+                    this.assignment_key,
+                    'due_date',
+                    '' 
+                );
+                assert(true);
+             }
+        
+        });
 
         it('Should succeed in getting assignment submissions after due date', async function() {
             let assignment_db_handler = await ImportHandler.assignment_db_handler;
@@ -2316,18 +2339,19 @@ describe('Assignments', function() {
             let file = new File("./complex_pdf.pdf");
 
             try {
-                await assignment_db_handler.set_assignment_data(
-                    this.assignment_key,
-                    'due_date',
-                    '1900-07-05T17:34:42.980Z'
-                );
-
                 let submission_key = await assignment_db_handler.submit_document_assignment(
                     ImportHandler,
                     user_id,
                     this.course_key,
                     this.assignment_key,
                     {'file-0': file});
+
+                /*Change the due date after submit, otherwise submit will fail */
+                await assignment_db_handler.set_assignment_data(
+                        this.assignment_key,
+                        'due_date',
+                        '1900-07-05T17:34:42.980Z'
+                );
 
                 let submissions = await assignment_db_handler.get_assignment_submissions(
                     ImportHandler,
@@ -2727,7 +2751,72 @@ describe('Assignments', function() {
                 console.log(e);
                 assert(false);
             }
+           
         });
+
+        it ('Should succeed in editing assignment - change from an individual document submission assignment to group assignment', async function() {
+            let assignment_db_handler = await ImportHandler.assignment_db_handler;
+            
+            let assignment_key = await create_doc_assignment(this.course_key);
+            let edits = await assignment_db_handler.get_assignment_data(this.instructor_key, assignment_key);
+            
+            try {
+
+                edits['group_assignment'] = true;
+                edits['course_group_set'] = this.course_group_set_key;
+                
+                await assignment_db_handler.edit_assignment(ImportHandler, this.instructor_key, assignment_key, edits);
+
+                let post_edit_data = await assignment_db_handler.get_assignment_data(this.instructor_key, assignment_key);
+
+                assert(edit_success(post_edit_data, edits));
+
+                console.log(post_edit_data);
+            } catch(err) {
+                assert(false, err);
+            } 
+            finally {
+               await assignment_db_handler.delete_assignment(
+                    ImportHandler,
+                    this.instructor_key,
+                    this.course_key,
+                    assignment_key);
+            }
+        });
+
+
+        it ('Should succeed in editing assignment - change from a group document submission assignment to an individual assignment', async function () {
+            let assignment_db_handler = await ImportHandler.assignment_db_handler;
+            let assignment_key = await create_doc_assignment(this.course_key, true, this.course_group_set_key);
+            let edits = await assignment_db_handler.get_assignment_data(this.instructor_key, assignment_key);
+
+            try {
+
+                edits['group_assignment'] = false;
+                
+                
+                await assignment_db_handler.edit_assignment(ImportHandler, this.instructor_key, assignment_key, edits);
+
+                let post_edit_data = await assignment_db_handler.get_assignment_data(this.instructor_key, assignment_key);
+
+                assert(edit_success(post_edit_data, edits));
+
+            } catch(err) {
+                assert(false, err);
+            } 
+            finally {
+               await assignment_db_handler.delete_assignment(
+                    ImportHandler,
+                    this.instructor_key,
+                    this.course_key,
+                    assignment_key);
+            }
+
+
+        });
+
+
+
     });
 });
 
@@ -2835,7 +2924,7 @@ async function create_test_course(instructor_keys, ta_keys, student_keys) {
     return course_key;
 }
 
-async function create_assignment(course_key) {
+async function create_doc_assignment(course_key, isGroup = false, group_set_key = null) {
     let assignment_db_handler = await ImportHandler.assignment_db_handler;
 
     let now = new Date();
@@ -2846,19 +2935,29 @@ async function create_assignment(course_key) {
     let tenDaysAhead = new Date();
     tenDaysAhead.setDate(now.getDate() + 10);
 
-    let assignment_data = {
-        title: 'test assignment',
-        description: 'test assignment description',
-        points: 5,
-        type: 'document_submission',
-        count_toward_final_grade: true,
-        allow_multiple_submissions: true,
-        group_assignment: false,
-        hidden: false,
-        due_date: tenDaysAhead.toISOString(),
-        available_date: tenDaysAgo.toISOString(),
-        until_date: tenDaysAhead.toISOString()
-    };
+    let assignment_data = {};
+    if (isGroup === false) {
+        assignment_data = {
+            title: 'test assignment',
+            description: 'test assignment description',
+            points: 5,
+            type: 'document_submission',
+            count_toward_final_grade: true,
+            allow_multiple_submissions: true,
+            group_assignment: false,
+            hidden: false,
+            due_date: tenDaysAhead.toISOString(),
+            available_date: tenDaysAgo.toISOString(),
+            until_date: tenDaysAhead.toISOString()
+        };
+    }
+    else {
+        if (group_set_key === null)
+            throw new Error('Group set key should not be null when generating a group assignment');
+
+        assignment_data = generate_group_assignment_data(group_set_key, 'document_submission');
+    }
+
 
     return await assignment_db_handler.create_document_submission_assignment(
         ImportHandler,
@@ -2953,4 +3052,18 @@ function generate_group_assignment_data(group_set_key, type) {
     };
 
     return assignment_data;
+}
+
+function edit_success(edited_assignment_data, edits) {
+    return ( (edited_assignment_data.title === edits.title) &&
+    (edited_assignment_data.description === edits.description) &&
+    (edited_assignment_data.type === edits.type) &&
+    (edited_assignment_data.count_toward_final_grade === edits.count_toward_final_grade) &&
+    (edited_assignment_data.allow_multiple_submissions === edits.allow_multiple_submissions) &&
+    (edited_assignment_data.group_assignment === edits.group_assignment) &&
+    (edited_assignment_data.hidden === edits.hidden) &&
+    (edited_assignment_data.due_date.toString() === new Date(edits.due_date).toString()) &&
+    (edited_assignment_data.available_date.toString() === new Date(edits.available_date).toString()) &&
+    (edited_assignment_data.until_date.toString() === new Date(edits.until_date).toString()) );
+    
 }

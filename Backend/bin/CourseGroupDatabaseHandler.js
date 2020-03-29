@@ -55,7 +55,6 @@ class CourseGroupDatabaseHandler {
     
 
         for (let course_group of course_group_set['course_groups']) {
-            console.log(`current course group ${course_group}`);
             course_group.users = course_group.users.map(user => { return user.key });
 
             if (course_group['id'].startsWith('placeholder')) {
@@ -99,12 +98,7 @@ class CourseGroupDatabaseHandler {
         for (let course_group of course_group_set['course_groups']) {
 
             course_group.users = course_group.users.map(member => {  return member.key });
-           
-
-            for (let prop in course_group) {
-                console.log(`${prop}: ${course_group[prop]}`);
-            }
-
+                      
             let course_group_key = await this.create_course_group(import_handler,
                 user_key, course_key, course_group_set_key, {
                     name: course_group.name,
@@ -144,8 +138,6 @@ class CourseGroupDatabaseHandler {
     async remove_deleted_course_groups (import_handler, user_key, course_key, course_group_sets) {
         let course_db_handler = await import_handler.course_db_handler;
         let course_data = await course_db_handler.get_course_data(course_key);
-
-        console.log(course_data);
 
         let cur_course_group_sets = await Promise.all(course_data['course_group_sets'].map(async course_group_set => {
             return await this.get_course_group_set_data(course_group_set);

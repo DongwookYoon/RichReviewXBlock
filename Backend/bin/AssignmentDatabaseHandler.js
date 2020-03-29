@@ -139,8 +139,9 @@ class AssignmentDatabaseHandler {
 
 
     async create_assignment (import_handler, course_key, assignment_data, existing_assignment_key = null) {
+
         if(!this.is_valid_assignment_data(assignment_data))
-            throw new RichReviewError('Invalid assignment data');
+            throw new RichReviewError(`Invalid assignment data:\n ${assignment_data}`);
 
         let course_db_handler = await import_handler.course_db_handler;
 
@@ -207,7 +208,7 @@ class AssignmentDatabaseHandler {
         let submission_keys = [];
 
         if (!assignment_data['group_assignment']) {
-            console.log(JSON.stringify(assignment_data));
+            
             submission_keys = await submission_db_handler.create_submission_for_each_user_and_return_keys(
                 import_handler,
                 course_key,

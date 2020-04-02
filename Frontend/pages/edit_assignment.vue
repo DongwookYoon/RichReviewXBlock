@@ -74,13 +74,13 @@
           />
           <label id="late-submissions-label">Allow late submissions</label>
         </div>
-        
+
         <div id="group-assignment-div">
           <input
             id="group-assignment"
             v-model="edits.group_assignment"
             type="checkbox"
-            @change="changed"
+            @change="toggle_group_assignment"
           />
           <label id="group-assignment-label">Group assignment</label>
           <div v-if="edits.group_assignment" id="course-group-set-div">
@@ -97,7 +97,7 @@
             </option>
           </select>
         </div>
-                   
+
         </div>
         <div id="hidden-div">
           <input
@@ -106,7 +106,7 @@
             type="checkbox"
             @change="changed"
           />
-          <label id="hidden-label">Hidden</label>
+          <label id="hidden-label">Hide Assignment</label>
         </div>
         <div id="due-date-div">
           <label id="due-date-label">Due date</label>
@@ -191,7 +191,7 @@ export default {
     'dashboard-sidebar': DashboardSidebar
   },
   async asyncData(context) {
-    if (!context.store.state.authUser) 
+    if (!context.store.state.authUser)
       return;
 
     const res = await axios.get(
@@ -207,7 +207,7 @@ export default {
         })
       }
     )
-    
+
     const course_res = await axios.get(
       `https://${process.env.backend}:3000/courses/${context.params.course_id}`,
       {
@@ -246,7 +246,7 @@ export default {
         allow_late_submissions: res.data.allow_late_submissions,
         group_assignment: res.data.group_assignment,
         course_group_set: res.data.course_group_set,
-        type: res.data.type,       
+        type: res.data.type,
         hidden: res.data.hidden,
         due_date: context.app.is_date(res.data.due_date)
           ? new Date(res.data.due_date).toISOString()
@@ -273,7 +273,8 @@ export default {
       name: res.data.user_name || '',
       enrolments: enrolment_res.data.enrolments,
       taing: enrolment_res.data.taing,
-      instructing: enrolment_res.data.teaching
+      instructing: enrolment_res.data.teaching,
+      changed_group_assignment: false
 
     }
   },
@@ -285,6 +286,10 @@ export default {
   methods: {
     changed() {
       this.assignment_changed = true
+    },
+    toggle_group_assignment() {
+      this.changed()
+      this.changed_group_assignment = !this.changed_group_assignment
     },
     clear_due_date() {
       this.edits.due_date = ''
@@ -307,7 +312,11 @@ export default {
         alert('A group assignment requires a group set')
         return
       }
-      
+
+      if (this.changed_group_assignment) {
+        if (!confirm('This will delete all current submissions. Do you wish to continue?'))
+          return
+      }
       this.changesSaved = true
       await axios.put(
         `https://${process.env.backend}:3000/courses/${
@@ -407,10 +416,6 @@ hr {
 #course-group-set-select,
 #hidden {
   margin-left: 13.4vw;
-}
-
-#hidden-div {
-  display: none;
 }
 
 #due-date-div,

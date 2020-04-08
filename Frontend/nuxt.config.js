@@ -5,7 +5,8 @@ export default {
   mode: 'universal',
   serverMiddleware: [
     // Will register file from project legacy directory to handle /legacy/* requires
-    { path: '/', handler: '~/legacy/app.js' }
+    // Add middleware in ~/modules/LoadServerMiddleware module instead to prevent loading middleware during build
+    //{ path: '/', handler: '~/legacy/app.js' }
   ],
 
   /*
@@ -73,6 +74,7 @@ export default {
     '@nuxtjs/axios',
     // '@nuxtjs/auth',
     '@nuxtjs/router',
+    '~/modules/LoadServerMiddleware'
   ],
 
   /*

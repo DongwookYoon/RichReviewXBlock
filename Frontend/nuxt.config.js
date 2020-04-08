@@ -117,11 +117,19 @@ export default {
     // extractCSS: true,
 
     /*
-     ** You can extend webpack config here
+     **Experimental build optimizations. Enable by setting NUXT_EXP=true.
+    */
+    useExperimental: (process.env.NUXT_OPTIMIZE) && process.env.NUXT_OPTIMIZE.toUpperCase() === "TRUE",
+    //Enabled parallel webpack building
+    parallel: this.useExperimental,
+    //Enable webpack caching.
+    cache: this.useExperimental,
+    //Improved caching with an intermediate caching step
+    hardSource: this.useExperimental,
+
+    /*
+     ** You can extend webpack config here.
      */
-    // parallel: true,
-    // hardSource: true,
-    // cache: true,
     extend(config, ctx) {
       // Run ESLint on save
       if (ctx.isDev && ctx.isClient) {

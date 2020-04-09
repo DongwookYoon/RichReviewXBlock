@@ -6,8 +6,11 @@
   "private": true,
   "scripts": {
     "dev": "nuxt",
+    "dev-optimized": "NUXT_OPTIMIZE=true && nuxt",
+    "dev-optimized-win": "set NUXT_OPTIMIZE=true && nuxt",
     "build": "nuxt build",
-    "build-optimized": "NUXT_EXP=true nuxt build",
+    "build-optimized": "NUXT_OPTIMIZE=true nuxt build",
+    "build-optimized-win": "set NUXT_OPTIMIZE=true && nuxt build",
     "start": "NODE_ENV=production nuxt start",
     "generate": "nuxt generate",
     "lint": "eslint --ext .js,.vue --ignore-path .gitignore .",
@@ -25,6 +28,7 @@
     "bootstrap": "^4.3.1",
     "bootstrap-vue": "^2.0.0-rc.19",
     "bunyan": "^1.8.12",
+    "cache-loader": "^4.1.0",
     "cache-manager": "^2.10.0",
     "chai": "^4.2.0",
     "compression": "latest",
@@ -43,6 +47,7 @@
     "formidable": "^1.2.1",
     "fs": "0.0.1-security",
     "gsap": "^2.1.2",
+    "hard-source-webpack-plugin": "^0.13.1",
     "jquery": "^3.4.1",
     "luxon": "^1.13.2",
     "mkdirp": "latest",
@@ -95,7 +100,10 @@
   },
   "devDependencies": {
     "@nuxtjs/eslint-config": "^0.0.1",
+    "@vue/cli": "^4.3.1",
+    "@vue/cli-service-global": "^4.3.1",
     "babel-eslint": "^10.0.1",
+    "core-js": "^2.6.11",
     "eslint": "^5.16.0",
     "eslint-config-prettier": "^4.1.0",
     "eslint-config-standard": ">=12.0.0",
@@ -109,9 +117,12 @@
     "eslint-plugin-standard": ">=4.0.0",
     "eslint-plugin-vue": "^5.2.2",
     "nodemon": "^1.18.9",
+    "parallel-webpack": "^2.6.0",
     "prettier": "^1.16.4",
     "pug": "^2.0.4",
     "pug-plain-loader": "^1.0.0",
+    "terser-webpack-plugin": "^2.3.5",
+    "thread-loader": "^2.1.3",
     "vue2-slideout-panel": "^2.2.3"
   }
 }

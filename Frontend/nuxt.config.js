@@ -1,7 +1,10 @@
 import pkg from './package'
 import * as certs from './ssl/certs'
 
-export default {
+
+let optimizeBuild = (process.env.NUXT_OPTIMIZE !== undefined) && process.env.NUXT_OPTIMIZE.trim().toUpperCase() === 'TRUE';
+
+var config =  {
   mode: 'universal',
   serverMiddleware: [
     // Will register file from project legacy directory to handle /legacy/* requires
@@ -119,13 +122,12 @@ export default {
     /*
      **Experimental build optimizations. Enable by setting NUXT_EXP=true.
     */
-    useExperimental: (process.env.NUXT_OPTIMIZE) && process.env.NUXT_OPTIMIZE.toUpperCase() === "TRUE",
-    //Enabled parallel webpack building
-    parallel: this.useExperimental,
+    //Enabled parallel webpack building. Not recommended as this causes Nuxt build warning.
+    //parallel: optimizeBuild,
     //Enable webpack caching.
-    cache: this.useExperimental,
+    cache: optimizeBuild,
     //Improved caching with an intermediate caching step
-    hardSource: this.useExperimental,
+    hardSource: optimizeBuild,
 
     /*
      ** You can extend webpack config here.
@@ -146,4 +148,13 @@ export default {
       }
     }
   }
-}
+};
+ 
+
+//Build messages
+console.log(`***Build optimizations***
+Webpack parallelization with thread-loader: ${config.build.parallel ? 'enabled' : 'disabled'}
+Caching with terser-webpack-plugin and cache-loader ${config.build.cache ? 'enabled' : 'disabled'}
+Intermediate caching with hard-source-webpack-plugin: ${config.build.hardSource ? 'enabled' : 'disabled'}\n`);
+
+export default config;

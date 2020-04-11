@@ -36,7 +36,7 @@ class DocumentDatabaseHandler {
         let doc_data = await this.get_doc_data(doc_key);
         let groups = doc_data['groups'];
 
-        if (!groups.includes(group_key)) {
+        if (groups && !groups.includes(group_key)) {
             groups.push(group_key);
             await this.set_document_data(doc_key, 'groups', JSON.stringify(groups));
         }

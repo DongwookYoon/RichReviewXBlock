@@ -229,7 +229,14 @@ class AssignmentDatabaseHandler {
 
 
 
-    async create_comment_submission_assignment (import_handler, user_key, course_key, assignment_data, files = null, existing_key = null, doc_key = null) {
+    async create_comment_submission_assignment (import_handler,
+         user_key,
+         course_key, 
+         assignment_data, 
+         files = null, 
+         existing_key = null, 
+         doc_key = null,
+         upload = true) {
 
         let course_db_handler = await import_handler.course_db_handler;
         let user_db_handler = await import_handler.user_db_handler;
@@ -265,7 +272,7 @@ class AssignmentDatabaseHandler {
         let user_id = user_key.replace(KeyDictionary.key_dictionary['user'], '');
 
         /*No existing doc_key accessible through doc_key, so upload files and get a doc_key */
-        if (doc_key == null) {
+        if (doc_key == null && upload == true) {
             // Upload pdf to azure
             let main_context = await document_upload_handler.upload_documents(files);
             doc_key = await document_db_handler.create_doc(user_id, main_context.container);
@@ -339,16 +346,14 @@ class AssignmentDatabaseHandler {
 
 
 
-
-    async submit_document_assignment (import_handler, user_id, course_key, assignment_key, files) {
+    async submit_document_assignment (import_handler, user_id, course_key, assignment_key, files, upload = true) {
         let document_upload_handler = await import_handler.doc_upload_handler;
         let document_db_handler = await import_handler.doc_db_handler;
         let group_db_handler = await import_handler.group_db_handler;
         let user_db_handler = await import_handler.user_db_handler;
         let submission_db_handler = await import_handler.submission_db_handler;
         let submitter_db_handler = await import_handler.submitter_db_handler;
-        let course_db_handler = await import_handler.course_db_handler;
-
+        
         let user_key = KeyDictionary.key_dictionary['user'] + user_id;
 
         let assignment_data = await this.get_assignment_data('', assignment_key);
@@ -381,8 +386,11 @@ class AssignmentDatabaseHandler {
                 throw new RichReviewError('This assignment doesn\'t allow multiple submissions');
         }
 
-        let context = await document_upload_handler.upload_documents(files);
+        let context = '_';
 
+        if (upload === true)
+            context = await document_upload_handler.upload_documents(files);
+        
         // Add doc and grp to redis
         let doc_key = await document_db_handler.create_doc(user_id, context.container);
         let group_key = await group_db_handler.create_group(user_id, doc_key);

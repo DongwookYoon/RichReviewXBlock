@@ -13,6 +13,7 @@ describe('Assignments', function() {
 
         before(async function() {
 
+            this.upload = false;
             this.instructor_key = await create_test_instructor();
             this.ta_key = await create_test_ta();
             this.student_key = await create_test_student();
@@ -82,7 +83,7 @@ describe('Assignments', function() {
             let user_db_handler = await ImportHandler.user_db_handler;
             let course_db_handler = await ImportHandler.course_db_handler;
 
-            let file = new File("./complex_pdf.pdf");
+            let file = new File(`${__dirname}/complex_pdf.pdf`);
 
             let assignment_data = {
                 title: 'test assignment',
@@ -104,7 +105,10 @@ describe('Assignments', function() {
                     this.instructor_key,
                     this.course_key,
                     assignment_data,
-                    {'file-0': file});
+                    {'file-0': file},
+                    null,
+                    null,
+                    this.upload);
 
                 let assign_data = await assignment_db_handler.get_assignment_data(this.instructor_key, assignment_key);
                 let submission_data = await submission_db_handler.get_submission_data(assign_data['submissions'][0]);
@@ -167,7 +171,7 @@ describe('Assignments', function() {
         it('Should fail in creating a group comment submission assignment - no course groups', async function() {
             let assignment_db_handler = await ImportHandler.assignment_db_handler;
 
-            let file = new File("./complex_pdf.pdf");
+            let file = new File(`${__dirname}/complex_pdf.pdf`);
 
             let assignment_data = {
                 title: 'test assignment',
@@ -190,7 +194,8 @@ describe('Assignments', function() {
                     this.instructor_key,
                     this.course_key,
                     assignment_data,
-                    {'file-0': file});
+                    {'file-0': file},
+                    this.upload);
 
                 assert(false)
             } catch (e) {
@@ -257,7 +262,7 @@ describe('Assignments', function() {
                     this.instructor_key,
                     this.course_key,
                     assignment_data,
-                    {});
+                    {},);
 
                 assert(false);
             } catch (e) {
@@ -398,7 +403,7 @@ describe('Assignments', function() {
         it('Should fail in creating a comment assignment - invalid assignment data', async function() {
             let assignment_db_handler = await ImportHandler.assignment_db_handler;
 
-            let file = new File("./complex_pdf.pdf");
+            let file = new File(`${__dirname}/complex_pdf.pdf`);
 
             let assignment_data = {
                 type: 'document_submission',
@@ -2208,6 +2213,7 @@ describe('Assignments', function() {
 
         before(async function () {
 
+            this.upload = false;
             this.instructor_key = await create_test_instructor();
             this.ta_key = await create_test_ta();
             this.student_key = await create_test_student();
@@ -2244,7 +2250,7 @@ describe('Assignments', function() {
 
             let user_id = this.student_key.replace(KeyDictionary.key_dictionary['user'], '');
 
-            let file = new File("./complex_pdf.pdf");
+            let file = new File(`${__dirname}/complex_pdf.pdf`);
 
             try {
 
@@ -2253,7 +2259,8 @@ describe('Assignments', function() {
                     user_id,
                     this.course_key,
                     this.assignment_key,
-                    {'file-0': file});
+                    {'file-0': file},
+                    this.upload);
 
                 let submission_data = await submission_db_handler.get_submission_data(submission_key);
 
@@ -2274,7 +2281,7 @@ describe('Assignments', function() {
 
             let user_id = this.student_key.replace(KeyDictionary.key_dictionary['user'], '');
 
-            let file = new File("./complex_pdf.pdf");
+            let file = new File(`${__dirname}/complex_pdf.pdf`);
 
             try {
 
@@ -2283,7 +2290,8 @@ describe('Assignments', function() {
                     user_id,
                     this.course_key,
                     this.assignment_key,
-                    {'file-0': file});
+                    {'file-0': file},
+                    this.upload);
 
                 let submissions = await assignment_db_handler.get_assignment_submissions(
                     ImportHandler,
@@ -2317,7 +2325,8 @@ describe('Assignments', function() {
                    user_id,
                    this.course_key,
                    this.assignment_key,
-                   {'file-0': file});
+                   {'file-0': file},
+                   this.upload);
                 
                 assert(false, 'User should not be able to submit assignment after due date');
              } catch(err) {
@@ -2336,7 +2345,7 @@ describe('Assignments', function() {
 
             let user_id = this.student_key.replace(KeyDictionary.key_dictionary['user'], '');
 
-            let file = new File("./complex_pdf.pdf");
+            let file = new File(`${__dirname}/complex_pdf.pdf`);
 
             try {
                 let submission_key = await assignment_db_handler.submit_document_assignment(
@@ -2344,7 +2353,8 @@ describe('Assignments', function() {
                     user_id,
                     this.course_key,
                     this.assignment_key,
-                    {'file-0': file});
+                    {'file-0': file},
+                    this.upload);
 
                 /*Change the due date after submit, otherwise submit will fail */
                 await assignment_db_handler.set_assignment_data(
@@ -2383,7 +2393,7 @@ describe('Assignments', function() {
 
             let user_id = this.student_key.replace(KeyDictionary.key_dictionary['user'], '');
 
-            let file = new File("./complex_pdf.pdf");
+            let file = new File(`${__dirname}/complex_pdf.pdf`);
 
             try {
 
@@ -2392,7 +2402,8 @@ describe('Assignments', function() {
                     user_id,
                     this.course_key,
                     this.assignment_key,
-                    {'file-0': file});
+                    {'file-0': file},
+                    this.upload);
 
                 let links_and_ids = await assignment_db_handler.get_assignment_submission_links_and_id(
                     ImportHandler,
@@ -2416,7 +2427,7 @@ describe('Assignments', function() {
 
             let user_id = this.student_key.replace(KeyDictionary.key_dictionary['user'], '');
 
-            let file = new File("./complex_pdf.pdf");
+            let file = new File(`${__dirname}/complex_pdf.pdf`);
 
             try {
 
@@ -2425,7 +2436,8 @@ describe('Assignments', function() {
                     user_id,
                     this.course_key,
                     this.assignment_key,
-                    {'file-0': file});
+                    {'file-0': file},
+                    this.upload);
 
                 let links_and_ids = await assignment_db_handler.get_first_assignment_submission_link_and_id(
                     ImportHandler,
@@ -2448,7 +2460,7 @@ describe('Assignments', function() {
 
             let user_id = this.student_key.replace(KeyDictionary.key_dictionary['user'], '');
 
-            let file = new File("./complex_pdf.pdf");
+            let file = new File(`${__dirname}/complex_pdf.pdf`);
 
             try {
 
@@ -2457,7 +2469,8 @@ describe('Assignments', function() {
                     user_id,
                     this.course_key,
                     this.assignment_key,
-                    {'file-0': file});
+                    {'file-0': file},
+                    this.upload);
 
                 let links_and_ids = await assignment_db_handler.get_previous_assignment_submission_link(
                     ImportHandler,
@@ -2482,7 +2495,7 @@ describe('Assignments', function() {
 
             let user_id = this.student_key.replace(KeyDictionary.key_dictionary['user'], '');
 
-            let file = new File("./complex_pdf.pdf");
+            let file = new File(`${__dirname}/complex_pdf.pdf`);
 
             try {
 
@@ -2491,7 +2504,8 @@ describe('Assignments', function() {
                     user_id,
                     this.course_key,
                     this.assignment_key,
-                    {'file-0': file});
+                    {'file-0': file},
+                    this.upload);
 
                 let links_and_ids = await assignment_db_handler.get_next_assignment_submission_link(
                     ImportHandler,
@@ -2516,6 +2530,7 @@ describe('Assignments', function() {
     describe('Submissions and Course Group', function () {
 
         before(async function () {
+            this.upload = false;
             let course_db_handler = await ImportHandler.course_db_handler;
             let user_db_handler = await ImportHandler.user_db_handler;
             let course_group_db_handler = await ImportHandler.course_group_db_handler;
@@ -2554,7 +2569,7 @@ describe('Assignments', function() {
 
 
 
-        it('Should succeed in creating an group document submission assignment', async function() {
+        it('Should succeed in creating a group document submission assignment', async function() {
             let assignment_db_handler = await ImportHandler.assignment_db_handler;
             let submission_db_handler = await ImportHandler.submission_db_handler;
             let submitter_db_hander = await ImportHandler.submitter_db_handler;
@@ -2610,7 +2625,7 @@ describe('Assignments', function() {
             let course_db_handler = await ImportHandler.course_db_handler;
             let course_group_db_handler = await ImportHandler.course_group_db_handler;
 
-            let file = new File("./complex_pdf.pdf");
+            let file = new File(`${__dirname}/complex_pdf.pdf`);
 
             let assignment_data = generate_group_assignment_data(this.course_group_set_key, 'comment_submission');
 
@@ -2620,7 +2635,10 @@ describe('Assignments', function() {
                     this.instructor_key,
                     this.course_key,
                     assignment_data,
-                    {'file-0': file});
+                    {'file-0': file},
+                    null,
+                    null,
+                    this.upload);
 
                 let assign_data = await assignment_db_handler.get_assignment_data(this.instructor_key, assignment_key);
                 let submission_data = await submission_db_handler.get_submission_data(assign_data['submissions'][0]);
@@ -2667,7 +2685,7 @@ describe('Assignments', function() {
 
             let assign_data = generate_group_assignment_data(this.course_group_set_key, 'document_submission');
 
-            let file = new File("./complex_pdf.pdf");
+            let file = new File(`${__dirname}/complex_pdf.pdf`);
 
             try {
                 let assignment_key = await assignment_db_handler.create_document_submission_assignment(
@@ -2680,7 +2698,8 @@ describe('Assignments', function() {
                     user_id,
                     this.course_key,
                     assignment_key,
-                    {'file-0': file});
+                    {'file-0': file},
+                    this.upload);
 
                 let name = await assignment_db_handler.get_course_group_assignment_submission_name(
                     ImportHandler,
@@ -2716,7 +2735,7 @@ describe('Assignments', function() {
             let user_id = this.student_key.replace(KeyDictionary.key_dictionary['user'], '');
 
 
-            let file = new File("./complex_pdf.pdf");
+            let file = new File(`${__dirname}/complex_pdf.pdf`);
 
             
 
@@ -2731,7 +2750,8 @@ describe('Assignments', function() {
                     user_id,
                     this.course_key,
                     assignment_key,
-                    {'file-0': file});
+                    {'file-0': file},
+                    this.upload);
 
                 let sub_key = await assignment_db_handler.get_course_groups_submission_key(
                     ImportHandler,

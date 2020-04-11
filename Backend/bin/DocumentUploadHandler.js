@@ -23,7 +23,7 @@ class DocumentUploadHandler {
     }
 
 
-    async upload_documents (files) {
+    async upload_documents (files, upload) {
 
         if (!this.files_are_pdfs(files))
             throw new RichReviewError('Files must be pdfs');
@@ -56,8 +56,7 @@ class DocumentUploadHandler {
             throw new PDFFormatError();
         } 
         
-               
-
+        
         let context = await this.upload_pdf_to_azure(uuid);
 
         let mupla_handler = await MuplaHandler.get_instance();

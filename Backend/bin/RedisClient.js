@@ -7,7 +7,7 @@ class RedisClient {
     }
 
     async init() {
-        if(env.node_config.ENV === 'production') {
+        if(env.node_config && env.node_config.ENV === 'production') {
             console.log('using redis cache for RichReview CA VM');
             this.client = await redis.createClient(
                 env.redis_config.redis_cache.port,
@@ -21,7 +21,8 @@ class RedisClient {
             );
         } else {
             console.log('using local redis server');
-            this.client = await redis.createClient(env.redis_config.port);
+            let port = env.redis_config ? env.redis_config.port : 6379;
+            this.client = await redis.createClient(port);
         }
 
         this.client.on('connect', function() {

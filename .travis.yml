@@ -8,12 +8,12 @@ services:
 before_script: 
     - chmod +x Backend/test/redis/RunRedis.sh
     - Backend/test/redis/RunRedis.sh
-    - chmod +x Backend/test/redis/RunDjangoServer.sh
-    - Backend/test/redis/RunDjangoServer.sh
+    - chmod +x Backend/test/django/RunDjangoServer.sh
+    - Backend/test/django/RunDjangoServer.sh
     
 jobs:
     include:
-        - stage: 
+        - stage: Test-Backend
           language: node_js
           node_js: '13'
           install: 
@@ -22,5 +22,5 @@ jobs:
             - cd ..
             - npm install mocha -g
           script: 
-            - mocha Backend/test/assignment_tests.js -t 10000
+            - mocha Backend/test/assignment_tests.js
             

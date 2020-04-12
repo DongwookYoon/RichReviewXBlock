@@ -79,10 +79,9 @@ dist/
 .eslintrc.js
 .prettierrc
 
+#redis
 redis/dump.rdb
-
 utils/redis_backup_Jan_24.rdb
-
 utils/eldap-sync/run-local.sh
 
 #win dev-env scripts

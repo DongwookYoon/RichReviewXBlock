@@ -527,11 +527,7 @@ hr {
   margin-top: 5vh;
 }
 
-#assignment-control-div {
-  display: inline-block;
-}
 
-#assignment-header,
 .assignment-controls {
   display: flex;
 }
@@ -564,7 +560,6 @@ hr {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 23vw;
 }
 
 .assignment-details-row {
@@ -594,6 +589,8 @@ hr {
 #group-assignment {
   margin-right: 2vw;
 }
+
+
 
 #due-date,
 #points,

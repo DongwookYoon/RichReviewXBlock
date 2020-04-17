@@ -9,10 +9,12 @@
       <nav-bar :course="course" :assignment="assignment.title.toString() || 'Untitled Assignment'" />
       <div id="assignment-header">
         <p id="assignment-title">{{ assignment.title || 'Untitled Assignment'}}</p>
+        <div id="assignment-control-div">
         <div
           v-if="permissions === 'instructor' || permissions === 'ta'"
           class="assignment-controls"
         >
+        </div>
           <button v-if="template_link !== ''" id="template-button" @click="go_to_template">Template</button>
           <button id="extension-button" @click="show">Extensions</button>
           <button id="edit-button" @click="go_to_edit_assignment">Edit</button>
@@ -525,6 +527,10 @@ hr {
   margin-top: 5vh;
 }
 
+#assignment-control-div {
+  display: inline-block;
+}
+
 #assignment-header,
 .assignment-controls {
   display: flex;
@@ -533,9 +539,7 @@ hr {
 .assignment-controls {
   margin-top: 0.65vh;
   right: 0;
-  position: absolute;
-  margin-right: 22vw;
-}
+ }
 
 #template-button,
 #extension-button,
@@ -545,19 +549,16 @@ hr {
 #delete-button,
 #view-submission-button,
 #start-assignment-button {
-  font-size: 2vh;
+  font-size: 1rem;
   background-color: #0c2343;
   border-radius: 0.5vh;
   color: white;
-  padding-right: 0.5vw;
-  padding-left: 0.5vw;
-  margin-bottom: 0;
-  height: 4.25vh;
-  margin-left: 0.5vw;
+  padding: 0.08em 0.33em;
+  margin-left: 0.1vw;
 }
 
 #assignment-title {
-  font-size: 3vh;
+  font-size: 1.5rem;
   color: #0c2343;
   margin-bottom: 0;
   white-space: nowrap;
@@ -586,7 +587,7 @@ hr {
 #multiple-submissions-header {
   font-weight: bold;
   margin-right: 0.5vw;
-  font-size: 2vh;
+  font-size: 0.85rem;
 }
 
 #due-date,
@@ -597,10 +598,11 @@ hr {
 #due-date,
 #points,
 #available-date,
+#until-date,
 #available-divider,
 #group-assignment,
 #multiple-submissions {
-  font-size: 2vh;
+  font-size: 0.85rem;
 }
 
 #available-divider {

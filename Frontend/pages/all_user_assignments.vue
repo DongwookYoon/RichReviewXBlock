@@ -143,22 +143,22 @@ hr {
 }
 
 #all-assignments-header {
-  font-size: 3vh;
+  font-size: 1.1rem;
   color: #0c2343;
 }
 
 #assignments {
-  font-size: 2vh;
+  font-size: 1rem;
   color: #0c2343;
-  margin-top: 5vh;
+  margin-top: 1.5rem;
 }
 
 #assignments-header {
-  font-size: 2.75vh;
+  font-size: 1rem;
 }
 
 .assignments-body {
-  font-size: 2.5vh;
+  font-size: 1rem;
 }
 
 #name-header {

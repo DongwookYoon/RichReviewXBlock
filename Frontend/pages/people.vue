@@ -228,7 +228,7 @@ table {
 #divider,
 #group-button,
 #edit-group-button {
-  font-size: 2.5vh;
+  font-size: 1rem;
   margin-right: 1vw;
 }
 
@@ -265,7 +265,7 @@ table {
 #group-name-header,
 #course-group-set-header,
 #user-count-header {
-  font-size: 2.5vh;
+  font-size: 1.1rem;
   color: #0c2343;
 }
 
@@ -280,7 +280,7 @@ table {
 .group-name,
 .course-group-set,
 .user-count {
-  font-size: 2vh;
+  font-size: 1rem;
   color: #0c2343;
   white-space: nowrap;
   overflow: hidden;

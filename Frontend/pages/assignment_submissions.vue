@@ -249,13 +249,12 @@ table {
 .mute-button,
 .unmute-button,
 .grader-button {
-  font-size: 2vh;
+  font-size: 1rem;
   background-color: #0c2343;
   border-radius: 0.5vh;
   color: white;
-  padding-right: 0.5vw;
-  padding-left: 0.5vw;
-  height: 4.25vh;
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
   margin-bottom: 0.5vw;
 }
 #mute-all-button {
@@ -299,11 +298,11 @@ table {
 }
 
 #submissions-header {
-  font-size: 2.75vh;
+  font-size: 1.25rem;
 }
 
 .submissions-body {
-  font-size: 2.5vh;
+  font-size: 1.2rem;
 }
 
 #name-header,

@@ -193,7 +193,7 @@ thead {
 }
 
 #assignments-header {
-  font-size: 2.75vh;
+  font-size: 1.2rem;
 }
 
 #name-header,
@@ -202,7 +202,7 @@ thead {
 }
 
 .assignments-body {
-  font-size: 2.5vh;
+  font-size: 1.1rem;
 }
 
 .assignment-title {

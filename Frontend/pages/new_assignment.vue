@@ -462,7 +462,7 @@ hr {
 
 #assignment-grid {
   display: block;
-  font-size: 2vh;
+  font-size: 0.85rem;
   color: #0c2343;
 }
 
@@ -474,7 +474,7 @@ hr {
 #title,
 #description {
   width: 40vw;
-  font-size: 1.75vh;
+  font-size: 0.9rem;
 }
 
 #hidden-div {
@@ -486,10 +486,17 @@ hr {
   border: 1px solid lightgrey;
 }
 
-#points-div {
-  margin-left: 10vw;
+#points-div, #weight-div {
   margin-bottom: 1vh;
   margin-top: 1vh;
+}
+
+#points-div {
+  margin-left: 10vw;
+}
+
+#weight-div {
+  margin-left: 9.75vw;
 }
 
 #type-div {

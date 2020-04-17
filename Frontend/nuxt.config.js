@@ -6,9 +6,10 @@ let optimizeBuild = (process.env.NUXT_OPTIMIZE !== undefined) && process.env.NUX
 
 var config =  {
   mode: 'universal',
+  
   serverMiddleware: [
     // Will register file from project legacy directory to handle /legacy/* requires
-    // Add middleware in ~/modules/LoadServerMiddleware module instead to prevent loading middleware during build
+    // Added middleware in ~/modules/LoadServerMiddleware module instead to prevent loading middleware during build.
     //{ path: '/', handler: '~/legacy/app.js' }
   ],
 

@@ -205,7 +205,7 @@ export default {
 
 #nav-bar-div {
   display: flex;
-  font-size: 3vh;
+  font-size: 1.2rem;
   color: #0c2343;
   margin-left: -3vw;
   margin-bottom: 3vh;

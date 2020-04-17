@@ -204,7 +204,7 @@ table {
 #deleted-assignments {
   margin-right: 1vw;
   background-color: #0c2343;
-  font-size: 2.5vh;
+  font-size: 1rem;
   color: white;
   padding-left: 0.5vw;
   padding-right: 0.5vw;
@@ -213,17 +213,17 @@ table {
 }
 
 #assignments {
-  font-size: 2vh;
+  font-size: 1rem;
   color: #0c2343;
   margin-top: 2vh;
 }
 
 #assignments-header {
-  font-size: 2.75vh;
+  font-size: 1.1rem;
 }
 
 .assignments-body {
-  font-size: 2.5vh;
+  font-size: 1rem;
 }
 
 #name-header {

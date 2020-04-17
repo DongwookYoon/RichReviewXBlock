@@ -284,7 +284,7 @@ td {
   cursor: pointer;
   color: white;
   background-color: #0c2343;
-  font-size: 2vh;
+  font-size: 1rem;
   text-align: center;
   margin-bottom: 1vh;
 }

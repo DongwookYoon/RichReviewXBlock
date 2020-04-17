@@ -310,6 +310,10 @@ p {
   padding-top: 5px;
 }
 
+#grades {
+  padding-bottom: 50px;
+}
+
 #sb_dashboard {
   margin-top: 20px;
 }

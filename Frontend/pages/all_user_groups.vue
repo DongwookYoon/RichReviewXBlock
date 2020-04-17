@@ -134,23 +134,23 @@ hr {
 }
 
 #all-groups-header {
-  font-size: 3vh;
+  font-size: 1.6rem;
   color: #0c2343;
 }
 
 #groups-table {
-  font-size: 2vh;
+  font-size: 1rem;
   color: #0c2343;
   margin-top: 5vh;
 }
 
 #groups-header {
-  font-size: 2.75vh;
+  font-size: 1.2rem;
   padding-right: 3vw;
 }
 
 .groups-body {
-  font-size: 2.5vh;
+  font-size: 1.1rem;
 }
 
 #name-header {

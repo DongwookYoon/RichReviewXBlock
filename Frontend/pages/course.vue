@@ -215,7 +215,7 @@ table {
 #assignments {
   font-size: 1rem;
   color: #0c2343;
-  margin-top: 2vh;
+  margin: 1rem 2rem 1rem 0;
 }
 
 #assignments-header {
@@ -228,6 +228,7 @@ table {
 
 #name-header {
   width: 25vw;
+  padding-right: 5vw;
 }
 
 #status-header,
@@ -250,7 +251,7 @@ table {
 }
 
 .assignment-title {
-  width: 25vw;
+  max-width: 25vw;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

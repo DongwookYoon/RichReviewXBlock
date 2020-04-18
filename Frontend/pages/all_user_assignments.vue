@@ -150,7 +150,7 @@ hr {
 #assignments {
   font-size: 1rem;
   color: #0c2343;
-  margin-top: 1.5rem;
+  margin: 1rem 2rem 1rem 0;
 }
 
 #assignments-header {

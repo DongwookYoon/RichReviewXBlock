@@ -141,7 +141,7 @@ hr {
 #grades-table {
   font-size: 1rem;
   color: #0c2343;
-  margin-top: 5vh;
+  margin: 1rem 2rem 1rem 0;
 }
 
 #grades-header {

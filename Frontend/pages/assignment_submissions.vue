@@ -232,8 +232,8 @@ p {
 }
 
 td {
-  padding-top: 1vh;
-  padding-bottom: 1vh;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
 thead {
@@ -241,8 +241,9 @@ thead {
 }
 
 table {
-  margin-bottom: 5vh;
+  margin: 0.5rem 2rem 1rem 0;
 }
+
 
 #mute-all-button,
 #unmute-all-button,
@@ -255,7 +256,7 @@ table {
   color: white;
   padding-right: 0.5rem;
   padding-left: 0.5rem;
-  margin-bottom: 0.5vw;
+  margin-bottom: 1rem;
 }
 #mute-all-button {
   background-color: rgb(224, 23, 0);
@@ -293,7 +294,7 @@ table {
 }
 
 #submissions-table {
-  font-size: 2vh;
+  font-size: 1rem;
   color: #0c2343;
 }
 
@@ -308,34 +309,43 @@ table {
 #name-header,
 .submission-name {
   width: 20vw;
+  padding-right: 1rem;
 }
 
 #status-header,
 .submission-status {
   width: 10vw;
+  padding-right: 2rem;
 }
 
 #mark-header,
 .submission-mark {
   width: 6vw;
   text-align: center;
+  padding-right: 2rem;
 }
 
 #submission-time-header,
 .submission-time {
   width: 15vw;
   text-align: center;
+  padding-right: 2rem;
 }
 
 #muted-header,
 .mute {
-  width: 15vw;
+  width: 12vw;
   text-align: center;
+  padding-right: 1rem;
 }
 
 #grader-header,
 .grader {
   width: 7vw;
   text-align: center;
+  padding-right: 1rem;
 }
+
+
+
 </style>

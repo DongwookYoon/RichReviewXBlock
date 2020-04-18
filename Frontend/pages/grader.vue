@@ -346,27 +346,26 @@ p {
 }
 
 #assignment-title-div {
-  position: absolute;
-  left: 1vw;
-  width: 10%;
+  min-width: 100px;
+  width: 20%;
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
 }
 
 #points-div {
-  position: absolute;
-  left: 40%;
-  margin-right: -40%;
-  transform: translate(-40%, 0);
+  margin-left: 15%;
 }
 
 #hidden {
-  margin-top: 1.8vh;
+  width: 1.2vw;
+  height: 1.2vw;
+  margin-top: 1.5vh;
   margin-right: 0.5vw;
 }
 
 #hidden-label {
+  font-size: 2vh;
   margin-top: 1vh;
   color: white;
   margin-right: 4vw;
@@ -380,9 +379,9 @@ p {
 }
 
 #mark-input {
-  height: 90%;
+  height: 68%;
   width: 5vw;
-  margin-top: 0.75vh;
+  margin-top: 0.6vh;
   text-align: right;
   margin-right: 1vw;
   color: #0c2343;

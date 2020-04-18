@@ -206,7 +206,7 @@ thead {
 }
 
 table {
-  margin-bottom: 5vh;
+  margin: 1rem 2rem 1rem 0;
 }
 
 #people-page {

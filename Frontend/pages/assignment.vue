@@ -9,12 +9,12 @@
       <nav-bar :course="course" :assignment="assignment.title.toString() || 'Untitled Assignment'" />
       <div id="assignment-header">
         <p id="assignment-title">{{ assignment.title || 'Untitled Assignment'}}</p>
-        <div id="assignment-control-div">
+        
         <div
           v-if="permissions === 'instructor' || permissions === 'ta'"
           class="assignment-controls"
         >
-        </div>
+        
           <button v-if="template_link !== ''" id="template-button" @click="go_to_template">Template</button>
           <button id="extension-button" @click="show">Extensions</button>
           <button id="edit-button" @click="go_to_edit_assignment">Edit</button>
@@ -530,12 +530,11 @@ hr {
 
 .assignment-controls {
   display: flex;
-}
-
-.assignment-controls {
   margin-top: 0.65vh;
   right: 0;
- }
+}
+
+
 
 #template-button,
 #extension-button,

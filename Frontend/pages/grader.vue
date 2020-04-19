@@ -326,7 +326,7 @@ p {
   display: flex;
   background-color: #0c2343;
   width: 100%;
-  height: 5vh;
+  min-height: 5vh;
 }
 
 #assignment-title,
@@ -336,7 +336,7 @@ p {
 #slash,
 #points {
   color: white;
-  font-size: 2.5vh;
+  font-size: 1rem;
 }
 
 #assignment-title-div,
@@ -358,15 +358,15 @@ p {
 }
 
 #hidden {
-  width: 1.2vw;
-  height: 1.2vw;
-  margin-top: 1.5vh;
+  min-height: 1vh;
+  margin-top: 0.7rem;
   margin-right: 0.5vw;
 }
 
 #hidden-label {
-  font-size: 2vh;
-  margin-top: 1vh;
+  min-height: 1vh;
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
   color: white;
   margin-right: 4vw;
 }
@@ -379,9 +379,10 @@ p {
 }
 
 #mark-input {
-  height: 68%;
+  min-width: 2rem;
+  height: 1.5rem;
   width: 5vw;
-  margin-top: 0.6vh;
+  margin-top: 0.15rem;
   text-align: right;
   margin-right: 1vw;
   color: #0c2343;
@@ -403,7 +404,7 @@ p {
 
 #student-select {
   color: #0c2343;
-  font-size: 2vh;
+  font-size: 0.9rem;
   height: 95%;
   margin-top: 0.75vh;
   cursor: pointer;

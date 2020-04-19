@@ -156,20 +156,24 @@ p {
 #top-bar {
   display: flex;
   background-color: #0c2343;
-}
+ }
 
 #assignment-title {
   color: white;
-  font-size: 2.5vh;
+  font-size: 1.5rem;
   margin-left: 1vw;
 }
 
 #submit-button {
+  font-size: 1rem;
+  text-align:center;
   position: fixed;
   right: 0;
-  margin-right: 0.25vw;
+  margin-right: 1rem;
   margin-top: 0.4vh;
 }
+
+
 
 body {
   overflow: hidden;

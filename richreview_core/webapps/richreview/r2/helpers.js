@@ -342,69 +342,96 @@
         return pub;
     }());
 
-    r2.commentHistory = (function(){
-        var pub = {};
-
-        function addItem(userid, type, annotid){
-            var container = $('#dashboard-comment-history')[0];
-            var $a = $(document.createElement('a'));
-            $a.attr('userid', userid);
-            $a.attr('annotid', annotid);
-            $a.attr('href', 'javascript:void(0);');
-            $a.addClass('dashboard-comments-icon');
-            $a.addClass('btn-dashboard');
-
-            var $i = $(document.createElement('i'));
-            $i.addClass('fa');
-            $i.addClass('fa-lg');
-            $i.css('color', r2.userGroup.GetUser(userid).color_meta_comment_list_normal);
-            $a.append($i);
-            $i.hover(
-                function () {
-                    $i.css('color', r2.userGroup.GetUser(userid).color_meta_comment_list_hover);
-                },
-                function () {
-                    $i.css('color', r2.userGroup.GetUser(userid).color_meta_comment_list_normal);
-                }
-            );
-
-            if(type==='audio'){
-                $a.attr('aria-label', 'audio comment');
-                $i.toggleClass('fa-volume-up');
-                $(container).prepend($a);
-                $a.click(function(){
-                    var searchresult = r2App.doc.SearchPieceByAnnotId(annotid);
-                    if(searchresult){
-                        var $piece_group = r2.turnPageAndSetFocus(searchresult, annotid);
-                        r2.log.Log_CommentHistory("audio", annotid);
-                        highlight($a, $piece_group);
-                    }
-                });
+    r2.commentHistory = (function() {
+        const pub = {}
+    
+        function addItem(userid, type, annotid) {
+          const container = $('#dashboard-comment-history')[0]
+          const $a = $(document.createElement('a'))
+          $a.attr('userid', userid)
+          $a.attr('annotid', annotid)
+          $a.attr('href', 'javascript:void(0);')
+          $a.addClass('dashboard-comments-icon')
+          $a.addClass('btn-dashboard')
+    
+          /*Check browser localStorage to see if comment has already been accessed */
+          let accessed = localStorage.getItem(annotid);
+    
+          if (accessed === null) {
+            localStorage.setItem(annotid, 'false');                  //Mark as a new comment
+          }
+          else if (accessed === 'true') {
+            $a.addClass('accessed');
+          }
+    
+          const $i = $(document.createElement('i'))
+          $i.addClass('fa')
+          $i.addClass('fa-lg')
+          $i.css(
+            'color',
+            r2.userGroup.GetUser(userid).color_meta_comment_list_normal
+          )
+          $a.append($i)
+          $i.hover(
+            function() {
+              $i.css(
+                'color',
+                r2.userGroup.GetUser(userid).color_meta_comment_list_hover
+              )
+            },
+            function() {
+              $i.css(
+                'color',
+                r2.userGroup.GetUser(userid).color_meta_comment_list_normal
+              )
             }
-            else if(type==='text'){
-                $a.attr('aria-label', 'text comment');
-                $i.toggleClass('fa-edit');
-                $(container).prepend($a);
-                $a.click(function(){
-                    var searchresult = r2App.doc.SearchPieceByAnnotId(annotid);
-                    if(searchresult){
-                        var $piece_group = r2.turnPageAndSetFocus(searchresult, annotid);
-                        r2.log.Log_CommentHistory('text', annotid);
-                        highlight($a, $piece_group);
-                    }
-                });
-            }
+          )
+    
+          if (type === 'audio') {
+            $a.attr('aria-label', 'audio comment')
+            $i.toggleClass('fa-volume-up')
+            $(container).prepend($a)
+            $a.click(function() {
+              const searchresult = r2App.doc.SearchPieceByAnnotId(annotid)
+              if (searchresult) {
+                const $piece_group = r2.turnPageAndSetFocus(searchresult, annotid)
+                r2.log.Log_CommentHistory('audio', annotid)
+                highlight($a, $piece_group)
+                $a.addClass('accessed')                                        //Mark comment as accessed.
+                localStorage.setItem(annotid, 'true');            
+              }
+            })
+          } else if (type === 'text') {
+            $a.attr('aria-label', 'text comment')
+            $i.toggleClass('fa-edit')
+            $(container).prepend($a)
+            $a.click(function() {
+              const searchresult = r2App.doc.SearchPieceByAnnotId(annotid)
+              if (searchresult) {
+                const $piece_group = r2.turnPageAndSetFocus(searchresult, annotid)
+                r2.log.Log_CommentHistory('text', annotid)
+                highlight($a, $piece_group)
+                $a.addClass('accessed')                                        //Mark comment as accessed.
+                localStorage.setItem(annotid, 'true');
+              }
+            })
+          }
+         
         }
-
-        function removeItem(userid, annotid){
-            var container = $("#dashboard-comment-history")[0];
-            for(var i = 0; i < container.childNodes.length; ++i){
-                if(container.childNodes[i].nodeName.toLowerCase() == "a" && container.childNodes[i].getAttribute("userid") == userid &&
-                    container.childNodes[i].getAttribute("annotid") == annotid ){
-                    container.removeChild(container.childNodes[i]);
-                    return;
-                }
+    
+        function removeItem(userid, annotid) {
+          localStorage.removeItem(annotid);                               //Remove key-value pair from local storage
+          const container = $('#dashboard-comment-history')[0]
+          for (let i = 0; i < container.childNodes.length; ++i) {
+            if (
+              container.childNodes[i].nodeName.toLowerCase() == 'a' &&
+              container.childNodes[i].getAttribute('userid') == userid &&
+              container.childNodes[i].getAttribute('annotid') == annotid
+            ) {
+              container.removeChild(container.childNodes[i])
+              return
             }
+          }
         }
 
         var $highlight_a = null;

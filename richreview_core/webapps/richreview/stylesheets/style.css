@@ -770,6 +770,15 @@ a:active {
   margin-top: 4px;
   padding:4px 2px;
 }
+
+a.dashboard-comments-icon > i{
+  border-bottom: 0.2em solid lightgreen;
+}
+
+a.dashboard-comments-icon.accessed > i{
+  border-bottom: none;
+}
+
 .dashboard-comments-icon.highlight{
   background: lightgray;
   border-radius: 8px;

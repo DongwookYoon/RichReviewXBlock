@@ -155,6 +155,9 @@ p {
 
 #top-bar {
   display: flex;
+  flex-flow: row wrap;
+  justify-content: space-between;
+  align-content: center;
   background-color: #0c2343;
  }
 
@@ -166,11 +169,8 @@ p {
 
 #submit-button {
   font-size: 1rem;
-  text-align:center;
-  position: fixed;
-  right: 0;
-  margin-right: 1rem;
-  margin-top: 0.4vh;
+  text-align: center;
+  margin: 0.25rem 1rem;
 }
 
 

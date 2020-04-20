@@ -401,6 +401,16 @@
       $a.addClass('dashboard-comments-icon')
       $a.addClass('btn-dashboard')
 
+      /*Check browser localStorage to see if comment has already been accessed */
+      let accessed = localStorage.getItem(annotid);
+
+      if (accessed === null) {
+        localStorage.setItem(annotid, 'false');                  //Mark as a new comment
+      }
+      else if (accessed === 'true') {
+        $a.addClass('accessed');
+      }
+
       const $i = $(document.createElement('i'))
       $i.addClass('fa')
       $i.addClass('fa-lg')
@@ -434,6 +444,8 @@
             const $piece_group = r2.turnPageAndSetFocus(searchresult, annotid)
             r2.log.Log_CommentHistory('audio', annotid)
             highlight($a, $piece_group)
+            $a.addClass('accessed')                                        //Mark comment as accessed.
+            localStorage.setItem(annotid, 'true');            
           }
         })
       } else if (type === 'text') {
@@ -446,12 +458,16 @@
             const $piece_group = r2.turnPageAndSetFocus(searchresult, annotid)
             r2.log.Log_CommentHistory('text', annotid)
             highlight($a, $piece_group)
+            $a.addClass('accessed')                                        //Mark comment as accessed.
+            localStorage.setItem(annotid, 'true');
           }
         })
       }
+     
     }
 
     function removeItem(userid, annotid) {
+      localStorage.removeItem(annotid);                               //Remove key-value pair from local storage
       const container = $('#dashboard-comment-history')[0]
       for (let i = 0; i < container.childNodes.length; ++i) {
         if (

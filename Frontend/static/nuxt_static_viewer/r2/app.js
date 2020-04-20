@@ -506,7 +506,8 @@
 
       // prevent data loss
       window.onbeforeunload = function () {
-        localStorage.clear();
+        localStorage.removeItem('currentModel');
+        localStorage.removeItem('sessionPermissions');
         r2.log.Log_Simple('CloseBrowser');
         r2.log.Consume(false); // delayed
         var now_typing = r2.keyboard.getMode() === r2.KeyboardModeEnum.TEXTBOX &&

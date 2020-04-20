@@ -517,7 +517,8 @@
 
       // prevent data loss
       window.onbeforeunload = function() {
-        localStorage.clear()
+        localStorage.removeItem('currentModel');
+        localStorage.removeItem('sessionPermissions');
         r2.log.Log_Simple('CloseBrowser')
         r2.log.Consume(false) // delayed
         const now_typing =

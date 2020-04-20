@@ -322,10 +322,15 @@ p {
   margin: 0;
 }
 
-#top-bar {
+#top-bar {  
   display: flex;
+  flex-flow: row wrap;
+  
+  justify-content: space-between;
+  align-items: center;
   background-color: #0c2343;
   width: 100%;
+  max-width: 100%;
   min-height: 5vh;
 }
 
@@ -346,45 +351,43 @@ p {
 }
 
 #assignment-title-div {
-  min-width: 100px;
-  width: 20%;
+  flex: 0.5 1 25%;
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
 }
 
 #points-div {
-  margin-left: 15%;
+   flex: 1 1 15%;
+   justify-content: center;
 }
 
 #hidden {
-  min-height: 1vh;
-  margin-top: 0.7rem;
+  min-height: 2vh;
   margin-right: 0.5vw;
 }
 
 #hidden-label {
-  min-height: 1vh;
+  min-height: 2vh;
   font-size: 0.8rem;
-  margin-top: 0.3rem;
   color: white;
-  margin-right: 4vw;
+  margin: 0.25rem 3vw auto 0;
+  line-height: 0.75rem;
+  
 }
 
 #student-div {
-  position: absolute;
-  left: 99%;
-  margin-right: -99%;
-  transform: translate(-99%, 0);
+    flex: 1 1.25 25%;
+    justify-content: flex-end;
+    min-height: 3vh;
+    margin: 0 1vw 0 10vw;
 }
 
 #mark-input {
-  min-width: 2rem;
-  height: 1.5rem;
-  width: 5vw;
-  margin-top: 0.15rem;
+  height: 1.2rem;
+  width: 2rem;
   text-align: right;
-  margin-right: 1vw;
+  margin: auto 1vw auto 0;
   color: #0c2343;
 }
 
@@ -405,9 +408,8 @@ p {
 #student-select {
   color: #0c2343;
   font-size: 0.9rem;
-  height: 95%;
-  margin-top: 0.75vh;
   cursor: pointer;
+  max-height: 1.5rem;
 }
 
 body {

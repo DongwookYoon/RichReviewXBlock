@@ -445,7 +445,10 @@
             r2.log.Log_CommentHistory('audio', annotid)
             highlight($a, $piece_group)
             $a.addClass('accessed')                                        //Mark comment as accessed.
-            localStorage.setItem(annotid, 'true');            
+            localStorage.setItem(annotid, 'true')   
+
+            r2App.cur_annot_id = annotid
+            r2.clickPlay()                                                //Play the comment.         
           }
         })
       } else if (type === 'text') {

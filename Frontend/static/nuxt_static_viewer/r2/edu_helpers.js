@@ -2018,8 +2018,8 @@
     }
 
     pub.setScroll = function(x, y) {
-      $(view).scrollLeft(x)
-      $(view).scrollTop(y)
+      $(view).scrollLeft(x);
+      $(view).scrollTop(y);
     }
 
     pub.getScroll = function() {

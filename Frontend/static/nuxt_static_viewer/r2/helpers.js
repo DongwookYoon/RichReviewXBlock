@@ -1571,7 +1571,11 @@
       return app_container_size;
     };
 
+    /*Scroll to center viewport on p */
     pub.setToFocus = function(p){
+       let vec = new Vec2(p.x, p.y);
+       
+
     };
 
     pub.mapDocToDom = function(p){
@@ -1752,7 +1756,7 @@
 
     pub.setScroll = function(x, y){
       $(view).scrollLeft(x);
-      $(view).scrollTop(y);
+      $(view).scrollTop(500);
     };
 
     pub.getScroll = function(){

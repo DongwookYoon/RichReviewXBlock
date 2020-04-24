@@ -201,8 +201,12 @@
     r2.turnPageAndSetFocus = function(searchresult, annotid){
         var piece = searchresult["piece"];
         r2.booklet.goToAbsPage(searchresult["page_n"]);
-        r2.viewCtrl.setToFocus(new Vec2(piece.pos.x+ piece.GetContentSize().x/2, piece.pos.y));
         r2App.pieceSelector.set(searchresult["piece"]);
+        let canvas_x = (piece.pos.x + piece.GetContentSize().x / 2.0) * r2.dom.getCanvasWidth();   //x center
+        let canvas_y = piece.pos.y * r2.dom.getCanvasWidth();                                      //y top
+
+        /*Scroll to make annotation visible within view*/
+        r2.dom.setScroll(canvas_x, canvas_y);
         return r2.dom_model.focusCtrl.focusAnnot(annotid);
     };
 

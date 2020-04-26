@@ -202,11 +202,7 @@
         var piece = searchresult["piece"];
         r2.booklet.goToAbsPage(searchresult["page_n"]);
         r2App.pieceSelector.set(searchresult["piece"]);
-        let canvas_x = (piece.pos.x + piece.GetContentSize().x / 2.0) * r2.dom.getCanvasWidth();   //x center
-        let canvas_y = piece.pos.y * r2.dom.getCanvasWidth();                                      //y top
-
-        /*Scroll to make annotation visible within view*/
-        r2.dom.setScroll(canvas_x, canvas_y);
+        
         return r2.dom_model.focusCtrl.focusAnnot(annotid);
     };
 
@@ -229,13 +225,15 @@
         r2.viewCtrl.resizeView(app_container_size, doc_yx_ratio, {left:0.0, rght:0.0});
         r2.dom_model.resize(r2.viewCtrl.page_size_scaled.x);
 
-        r2.dom.resizeDom(scale, app_container_size, r2.viewCtrl.page_size_scaled, r2.viewCtrl.page_margins, r2.viewCtrl.canv_px_size);
+        var dashboard_height = r2.dom.resizeDom(scale, app_container_size, r2.viewCtrl.page_size_scaled, r2.viewCtrl.page_margins, r2.viewCtrl.canv_px_size);
 
         if(r2App.cur_page){
             r2App.cur_page.RunRecursive("ResizeDom", []);
         }
         r2App.invalidate_static_scene = true;
         r2App.invalidate_dynamic_scene = true;
+
+        return dashboard_height;
     };
 
     r2.speechUi = (function(){

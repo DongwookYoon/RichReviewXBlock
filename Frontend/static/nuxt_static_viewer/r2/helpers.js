@@ -378,6 +378,7 @@
             var $piece_group = r2.turnPageAndSetFocus(searchresult, annotid);
             r2.log.Log_CommentHistory("audio", annotid);
             highlight($a, $piece_group);
+          
           }
         });
       }
@@ -1658,7 +1659,7 @@
     };
 
     /**
-     * Adopt HTML DOM size to the giveen setting
+     * Adopt HTML DOM size to the given setting
      * @returns {Vec2}
      */
     pub.resizeDom = function(scale, app_container_size, page_size, page_margins, canv_px_size){
@@ -1685,6 +1686,8 @@
       annot_canvas.height = canv_px_size.y;
 
       updateScroll();
+
+      return dashboard_height;
 
     };
 
@@ -1756,7 +1759,8 @@
 
     pub.setScroll = function(x, y){
       $(view).scrollLeft(x);
-      $(view).scrollTop(500);
+      $(view).scrollTop(y);
+      console.log('scrolling');
     };
 
     pub.getScroll = function(){

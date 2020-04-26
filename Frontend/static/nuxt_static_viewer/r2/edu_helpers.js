@@ -434,6 +434,7 @@
         }
       )
 
+      
       if (type === 'audio') {
         $a.attr('aria-label', 'audio comment')
         $i.toggleClass('fa-volume-up')
@@ -441,14 +442,45 @@
         $a.click(function() {
           const searchresult = r2App.doc.SearchPieceByAnnotId(annotid)
           if (searchresult) {
-            const $piece_group = r2.turnPageAndSetFocus(searchresult, annotid)
-            r2.log.Log_CommentHistory('audio', annotid)
-            highlight($a, $piece_group)
-            $a.addClass('accessed')                                        //Mark comment as accessed.
-            localStorage.setItem(annotid, 'true')   
+            const $piece_group = r2.turnPageAndSetFocus(searchresult, annotid);
+            r2.log.Log_CommentHistory('audio', annotid);
+            highlight($a, $piece_group);
 
-            r2App.cur_annot_id = annotid
-            r2.clickPlay()                                                //Play the comment.         
+            $a.addClass('accessed');                                        //Mark comment as accessed.
+            localStorage.setItem(annotid, 'true');   
+                  
+            let piece = searchresult["piece"];
+            
+            let left = piece.pos.x;
+            let top = piece.pos.y
+            
+            /*If we don't have coordinates set on the piece */
+            if (left == 0 && top == 0) {
+              let dashboard_height = r2.resizeWindow();
+              let piece_group = $($piece_group[0]);
+              let offset = piece_group.offset();
+              let height = piece_group.height();
+
+              left = (offset.left + $piece_group[0].clientWidth / 2.0);   
+              top = offset.top - dashboard_height - height;
+            }
+
+            else {
+              left = (left + piece.GetContentSize().x / 2.0) * r2.dom.getCanvasWidth(); 
+              top *= r2.dom.getCanvasWidth();
+            }
+                                                              
+            r2.dom.setScroll(left, top);
+
+            console.log('top' + top);
+            console.log('left' + left);
+
+            //r2App.cur_annot_id = annotid
+            //r2.app.stop();
+            //r2App.play();
+            
+
+            console.log('yoo');
           }
         })
       } else if (type === 'text') {
@@ -456,9 +488,10 @@
         $i.toggleClass('fa-edit')
         $(container).prepend($a)
         $a.click(function() {
-          const searchresult = r2App.doc.SearchPieceByAnnotId(annotid)
+          var searchresult = r2App.doc.SearchPieceByAnnotId(annotid)
+          console.log(searchresult);
           if (searchresult) {
-            const $piece_group = r2.turnPageAndSetFocus(searchresult, annotid)
+            var $piece_group = r2.turnPageAndSetFocus(searchresult, annotid)
             r2.log.Log_CommentHistory('text', annotid)
             highlight($a, $piece_group)
             $a.addClass('accessed')                                        //Mark comment as accessed.
@@ -1949,6 +1982,8 @@
       annot_canvas.height = canv_px_size.y
 
       updateScroll()
+
+      return dashboard_height;
     }
 
     pub.calcAppContainerSize = function() {

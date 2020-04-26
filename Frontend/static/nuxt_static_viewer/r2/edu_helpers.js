@@ -440,46 +440,16 @@
         $i.toggleClass('fa-volume-up')
         $(container).prepend($a)
         $a.click(function() {
-          const searchresult = r2App.doc.SearchPieceByAnnotId(annotid)
-          if (searchresult) {
-            const $piece_group = r2.turnPageAndSetFocus(searchresult, annotid);
+         
+          if (r2.commentHistory.scrollToComment($a, annotid)) {
             r2.log.Log_CommentHistory('audio', annotid);
-            highlight($a, $piece_group);
-
             $a.addClass('accessed');                                        //Mark comment as accessed.
             localStorage.setItem(annotid, 'true');   
                   
-            let piece = searchresult["piece"];
+            r2App.cur_annot_id = annotid;
+            r2.app.stop();
+            r2App.play();
             
-            let left = piece.pos.x;
-            let top = piece.pos.y
-            
-            /*If we don't have coordinates set on the piece */
-            if (left == 0 && top == 0) {
-              let dashboard_height = r2.resizeWindow();
-              let piece_group = $($piece_group[0]);
-              let offset = piece_group.offset();
-              let height = piece_group.height();
-
-              left = (offset.left + $piece_group[0].clientWidth / 2.0);   
-              top = offset.top - dashboard_height - height;
-            }
-
-            else {
-              left = (left + piece.GetContentSize().x / 2.0) * r2.dom.getCanvasWidth(); 
-              top *= r2.dom.getCanvasWidth();
-            }
-                                                              
-            r2.dom.setScroll(left, top);
-
-            console.log('top' + top);
-            console.log('left' + left);
-
-            //r2App.cur_annot_id = annotid
-            //r2.app.stop();
-            //r2App.play();
-            
-
             console.log('yoo');
           }
         })
@@ -488,12 +458,8 @@
         $i.toggleClass('fa-edit')
         $(container).prepend($a)
         $a.click(function() {
-          var searchresult = r2App.doc.SearchPieceByAnnotId(annotid)
-          console.log(searchresult);
-          if (searchresult) {
-            var $piece_group = r2.turnPageAndSetFocus(searchresult, annotid)
+          if (r2.commentHistory.scrollToComment($a, annotid)) {
             r2.log.Log_CommentHistory('text', annotid)
-            highlight($a, $piece_group)
             $a.addClass('accessed')                                        //Mark comment as accessed.
             localStorage.setItem(annotid, 'true');
           }
@@ -535,6 +501,45 @@
         container.removeChild(container.childNodes[i])
       }
     }
+
+
+    pub.scrollToComment = function($a, annotid) {
+      
+      let searchResult = r2App.doc.SearchPieceByAnnotId(annotid)
+
+      if(!searchResult) {
+        return false;
+      }
+
+      let $piece_group = r2.turnPageAndSetFocus(searchResult, annotid);
+      highlight($a, $piece_group);
+      let piece = searchResult["piece"];
+            
+      let left = piece.pos.x;
+      let top = piece.pos.y
+      
+      /*If we don't have coordinates set on the piece */
+      if (left == 0 && top == 0) {
+        let dashboard_height = r2.resizeWindow();
+        let pieceGroup = $($piece_group[0]);
+        let offset = pieceGroup.offset();
+        let height = pieceGroup.height();
+
+        left = (offset.left + pieceGroup.clientWidth / 2.0);   
+        top = offset.top - dashboard_height - height;
+      }
+
+      else {
+        left = (left + searchResult["piece"].GetContentSize().x / 2.0) * r2.dom.getCanvasWidth(); 
+        top *= r2.dom.getCanvasWidth();
+      }
+                                                        
+      r2.dom.setScroll(left, top);
+
+      return true;
+
+    }
+
 
     pub.consumeCmd = function(cmd) {
       if (cmd.op == 'CreateComment') {
@@ -715,6 +720,7 @@
       }
     }
 
+   
     return pub
   })()
 

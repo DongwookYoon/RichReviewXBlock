@@ -433,27 +433,26 @@
           )
         }
       )
-
       
       if (type === 'audio') {
         $a.attr('aria-label', 'audio comment')
         $i.toggleClass('fa-volume-up')
         $(container).prepend($a)
         $a.click(function() {
-         
           if (r2.commentHistory.scrollToComment($a, annotid)) {
-            r2.log.Log_CommentHistory('audio', annotid);
-            $a.addClass('accessed');                                        //Mark comment as accessed.
-            localStorage.setItem(annotid, 'true');   
-                  
-            r2App.cur_annot_id = annotid;
-            r2.app.stop();
-            r2App.play();
-            
-            console.log('yoo');
+              r2App.cur_annot_id = annotid
+               /*This causes comment history replay to fail after page turn if a comment
+              is already playing, i.e. r2App.mode == r2App.AppModeEnum.REPLAYING */
+           
+              r2.rich_audio.play(r2App.cur_annot_id, -1)
+              $a.addClass('accessed')                                        //Mark comment as accessed.
+              localStorage.setItem(annotid, 'true')
           }
+          else
+            console.warn('Scroll to comment failed for ' + annotid);
         })
-      } else if (type === 'text') {
+      } 
+      else if (type === 'text') {
         $a.attr('aria-label', 'text comment')
         $i.toggleClass('fa-edit')
         $(container).prepend($a)
@@ -461,7 +460,7 @@
           if (r2.commentHistory.scrollToComment($a, annotid)) {
             r2.log.Log_CommentHistory('text', annotid)
             $a.addClass('accessed')                                        //Mark comment as accessed.
-            localStorage.setItem(annotid, 'true');
+            localStorage.setItem(annotid, 'true')
           }
         })
       }
@@ -504,19 +503,17 @@
 
 
     pub.scrollToComment = function($a, annotid) {
-      
       let searchResult = r2App.doc.SearchPieceByAnnotId(annotid)
-
       if(!searchResult) {
         return false;
       }
 
       let $piece_group = r2.turnPageAndSetFocus(searchResult, annotid);
       highlight($a, $piece_group);
+      
       let piece = searchResult["piece"];
-            
       let left = piece.pos.x;
-      let top = piece.pos.y
+      let top = piece.pos.y;
       
       /*If we don't have coordinates set on the piece */
       if (left == 0 && top == 0) {
@@ -528,16 +525,13 @@
         left = (offset.left + pieceGroup.clientWidth / 2.0);   
         top = offset.top - dashboard_height - height;
       }
-
       else {
         left = (left + searchResult["piece"].GetContentSize().x / 2.0) * r2.dom.getCanvasWidth(); 
         top *= r2.dom.getCanvasWidth();
       }
                                                         
       r2.dom.setScroll(left, top);
-
       return true;
-
     }
 
 
@@ -1113,11 +1107,13 @@
             booklet_n = i
           }
         }
+       
       }
       if (typeof booklet_n !== 'undefined') {
         if (booklet_n < groups.length) {
           const group = groups[booklet_n]
           group.cur_pagen = n - group.page_range[0]
+
           gelectGroup(booklet_n)
         }
       }
@@ -1207,23 +1203,23 @@
 
     function gelectGroup(i) {
       groups[cur_groupn].$btn.toggleClass('btn-primary', false)
-
       cur_groupn = i
       groups[cur_groupn].$btn.toggleClass('btn-primary', true)
-
       SetPdfPageN(getCurPdfPageN())
     }
 
     function SetPdfPageN(n) {
-      r2.log.Log_Nav('SetPdfPageN_' + n)
-      if (r2App.mode == r2App.AppModeEnum.REPLAYING) {
-        r2.log.Log_AudioStop(
-          'SetPdfPageN',
-          r2.audioPlayer.getCurAudioFileId(),
-          r2.audioPlayer.getPlaybackTime()
-        )
-        r2.rich_audio.stop()
-      }
+      //r2.log.Log_Nav('SetPdfPageN_' + n)
+      /*This causes comment history replay to fail after page turn if a comment
+        is already playing, i.e. r2App.mode == r2App.AppModeEnum.REPLAYING */
+      //if (r2App.mode == r2App.AppModeEnum.REPLAYING) {
+      //  r2.log.Log_AudioStop(
+      //    'SetPdfPageN',
+      //    r2.audioPlayer.getCurAudioFileId(),
+      //    r2.audioPlayer.getPlaybackTime()
+      //  )
+        //r2.rich_audio.stop()
+      //}
 
       r2.dom_model.setCurPage(n)
 

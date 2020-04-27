@@ -875,6 +875,7 @@
 
     pub.goToAbsPage = function(n, booklet_n){
       if(typeof booklet_n === 'undefined'){
+        console.log('turnin here');
         for(var i = 0; i < groups.length; ++i){
           if(groups[i].page_range[0] <= n && groups[i].page_range[1] >= n){
             booklet_n = i;
@@ -882,6 +883,7 @@
         }
       }
       if(typeof booklet_n !== 'undefined'){
+        console.log('no actually turnin here');
         if(booklet_n < groups.length) {
           var group = groups[booklet_n];
           group.cur_pagen = n - group.page_range[0];

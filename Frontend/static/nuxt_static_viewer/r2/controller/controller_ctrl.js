@@ -66,6 +66,10 @@
         if(r2App.mode == r2App.AppModeEnum.IDLE && r2App.cur_annot_id != null){
             r2.rich_audio.play(r2App.cur_annot_id, -1);
             r2.log.Log_AudioPlay('indexing_panel', r2App.cur_annot_id, r2.audioPlayer.getPlaybackTime());
+            console.log('clicked play main and did play !')
+        }
+        else {
+             console.log('ddid click button but no fire')
         }
     };
 
@@ -200,7 +204,9 @@
     /** controller functions */
     r2.turnPageAndSetFocus = function(searchresult, annotid){
         var piece = searchresult["piece"];
-        r2.booklet.goToAbsPage(searchresult["page_n"]);
+        if (r2App.cur_pdf_pagen !== searchresult["page_n"]) {
+            r2.booklet.goToAbsPage(searchresult["page_n"]);
+        }
         r2App.pieceSelector.set(searchresult["piece"]);
         
         return r2.dom_model.focusCtrl.focusAnnot(annotid);

@@ -433,36 +433,34 @@
           )
         }
       )
-
+      
       if (type === 'audio') {
         $a.attr('aria-label', 'audio comment')
         $i.toggleClass('fa-volume-up')
         $(container).prepend($a)
         $a.click(function() {
-          const searchresult = r2App.doc.SearchPieceByAnnotId(annotid)
-          if (searchresult) {
-            const $piece_group = r2.turnPageAndSetFocus(searchresult, annotid)
-            r2.log.Log_CommentHistory('audio', annotid)
-            highlight($a, $piece_group)
-            $a.addClass('accessed')                                        //Mark comment as accessed.
-            localStorage.setItem(annotid, 'true')   
-
-            r2App.cur_annot_id = annotid
-            r2.clickPlay()                                                //Play the comment.         
+          if (r2.commentHistory.scrollToComment($a, annotid)) {
+              r2App.cur_annot_id = annotid
+               /*This causes comment history replay to fail after page turn if a comment
+              is already playing, i.e. r2App.mode == r2App.AppModeEnum.REPLAYING */
+           
+              r2.rich_audio.play(r2App.cur_annot_id, -1)
+              $a.addClass('accessed')                                        //Mark comment as accessed.
+              localStorage.setItem(annotid, 'true')
           }
+          else
+            console.warn('Scroll to comment failed for ' + annotid);
         })
-      } else if (type === 'text') {
+      } 
+      else if (type === 'text') {
         $a.attr('aria-label', 'text comment')
         $i.toggleClass('fa-edit')
         $(container).prepend($a)
         $a.click(function() {
-          const searchresult = r2App.doc.SearchPieceByAnnotId(annotid)
-          if (searchresult) {
-            const $piece_group = r2.turnPageAndSetFocus(searchresult, annotid)
+          if (r2.commentHistory.scrollToComment($a, annotid)) {
             r2.log.Log_CommentHistory('text', annotid)
-            highlight($a, $piece_group)
             $a.addClass('accessed')                                        //Mark comment as accessed.
-            localStorage.setItem(annotid, 'true');
+            localStorage.setItem(annotid, 'true')
           }
         })
       }
@@ -502,6 +500,40 @@
         container.removeChild(container.childNodes[i])
       }
     }
+
+
+    pub.scrollToComment = function($a, annotid) {
+      let searchResult = r2App.doc.SearchPieceByAnnotId(annotid)
+      if(!searchResult) {
+        return false;
+      }
+
+      let $piece_group = r2.turnPageAndSetFocus(searchResult, annotid);
+      highlight($a, $piece_group);
+      
+      let piece = searchResult["piece"];
+      let left = piece.pos.x;
+      let top = piece.pos.y;
+      
+      /*If we don't have coordinates set on the piece */
+      if (left == 0 && top == 0) {
+        let dashboard_height = r2.resizeWindow();
+        let pieceGroup = $($piece_group[0]);
+        let offset = pieceGroup.offset();
+        let height = pieceGroup.height();
+
+        left = (offset.left + pieceGroup.clientWidth / 2.0);   
+        top = offset.top - dashboard_height - height;
+      }
+      else {
+        left = (left + searchResult["piece"].GetContentSize().x / 2.0) * r2.dom.getCanvasWidth(); 
+        top *= r2.dom.getCanvasWidth();
+      }
+                                                        
+      r2.dom.setScroll(left, top);
+      return true;
+    }
+
 
     pub.consumeCmd = function(cmd) {
       if (cmd.op == 'CreateComment') {
@@ -682,6 +714,7 @@
       }
     }
 
+   
     return pub
   })()
 
@@ -1074,11 +1107,13 @@
             booklet_n = i
           }
         }
+       
       }
       if (typeof booklet_n !== 'undefined') {
         if (booklet_n < groups.length) {
           const group = groups[booklet_n]
           group.cur_pagen = n - group.page_range[0]
+
           gelectGroup(booklet_n)
         }
       }
@@ -1168,23 +1203,23 @@
 
     function gelectGroup(i) {
       groups[cur_groupn].$btn.toggleClass('btn-primary', false)
-
       cur_groupn = i
       groups[cur_groupn].$btn.toggleClass('btn-primary', true)
-
       SetPdfPageN(getCurPdfPageN())
     }
 
     function SetPdfPageN(n) {
-      r2.log.Log_Nav('SetPdfPageN_' + n)
-      if (r2App.mode == r2App.AppModeEnum.REPLAYING) {
-        r2.log.Log_AudioStop(
-          'SetPdfPageN',
-          r2.audioPlayer.getCurAudioFileId(),
-          r2.audioPlayer.getPlaybackTime()
-        )
-        r2.rich_audio.stop()
-      }
+      //r2.log.Log_Nav('SetPdfPageN_' + n)
+      /*This causes comment history replay to fail after page turn if a comment
+        is already playing, i.e. r2App.mode == r2App.AppModeEnum.REPLAYING */
+      //if (r2App.mode == r2App.AppModeEnum.REPLAYING) {
+      //  r2.log.Log_AudioStop(
+      //    'SetPdfPageN',
+      //    r2.audioPlayer.getCurAudioFileId(),
+      //    r2.audioPlayer.getPlaybackTime()
+      //  )
+        //r2.rich_audio.stop()
+      //}
 
       r2.dom_model.setCurPage(n)
 
@@ -1949,6 +1984,8 @@
       annot_canvas.height = canv_px_size.y
 
       updateScroll()
+
+      return dashboard_height;
     }
 
     pub.calcAppContainerSize = function() {

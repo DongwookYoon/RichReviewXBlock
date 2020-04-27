@@ -378,6 +378,7 @@
             var $piece_group = r2.turnPageAndSetFocus(searchresult, annotid);
             r2.log.Log_CommentHistory("audio", annotid);
             highlight($a, $piece_group);
+          
           }
         });
       }
@@ -874,6 +875,7 @@
 
     pub.goToAbsPage = function(n, booklet_n){
       if(typeof booklet_n === 'undefined'){
+        console.log('turnin here');
         for(var i = 0; i < groups.length; ++i){
           if(groups[i].page_range[0] <= n && groups[i].page_range[1] >= n){
             booklet_n = i;
@@ -881,6 +883,7 @@
         }
       }
       if(typeof booklet_n !== 'undefined'){
+        console.log('no actually turnin here');
         if(booklet_n < groups.length) {
           var group = groups[booklet_n];
           group.cur_pagen = n - group.page_range[0];
@@ -1658,7 +1661,7 @@
     };
 
     /**
-     * Adopt HTML DOM size to the giveen setting
+     * Adopt HTML DOM size to the given setting
      * @returns {Vec2}
      */
     pub.resizeDom = function(scale, app_container_size, page_size, page_margins, canv_px_size){
@@ -1685,6 +1688,8 @@
       annot_canvas.height = canv_px_size.y;
 
       updateScroll();
+
+      return dashboard_height;
 
     };
 
@@ -1756,7 +1761,8 @@
 
     pub.setScroll = function(x, y){
       $(view).scrollLeft(x);
-      $(view).scrollTop(500);
+      $(view).scrollTop(y);
+      console.log('scrolling');
     };
 
     pub.getScroll = function(){

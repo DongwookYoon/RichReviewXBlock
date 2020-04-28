@@ -2698,8 +2698,14 @@
 
 
     r2.Ink.Cache.prototype.GetPlayback = function(pt) {
-        let piece = r2App.doc.SearchPieceByAnnotId(this._annot.GetId())["piece"];
-        let splightWidth = r2.Spotlight.calcWidth(piece);
+        let searchResult = r2App.doc.SearchPieceByAnnotId(this._annot.GetId());
+        let splightWidth = 0;
+         
+        if (searchResult === null)
+             splightWidth = r2.Spotlight.calcWidth();
+        else
+            splightWidth = r2.Spotlight.calcWidth(searchResult["piece"]);
+        
         if(this._pts.length>1 && this._annot != null && this._t_end > this._t_bgn){
             for(var i = 0; i < this._pts.length-1; ++i){
                 if(r2.util.linePointDistance(this._pts[i], this._pts[i+1], pt) < splightWidth/2){
@@ -2738,10 +2744,11 @@
         /*If no piece specified, use lineheight property on doc */
         if (!piece) {
             /*Both line height and canvas width grow linearly, proportional to UI zoom level.  */
-            let computedWidth = r2.dom_model.getLineHeightPx() / r2.dom.getCanvasWidth() * r2Const.SPLGHT_WIDTH_SCALE;
+            computedWidth = r2.dom_model.getLineHeightPx() / r2.dom.getCanvasWidth() * r2Const.SPLGHT_WIDTH_SCALE;
         }
+        /*Otherwise use piece height for more accurate line height*/
         else {
-
+            computedWidth = piece.size.y * 1.2;
         }
         return Math.min(computedWidth, r2Const.SPLGHT_WIDTH_MAX);
     };
@@ -2794,11 +2801,16 @@
         }
 
         var color;
-        let piece = r2App.doc.SearchPieceByAnnotId(annotid)["piece"];
-        let splightWidth = r2.Spotlight.calcWidth(piece);
+        let width = 0;
+        let searchResult = r2App.doc.SearchPieceByAnnotId(r2App.cur_annot_id);
+        if (searchResult === null)
+            width = r2.Spotlight.calcWidth();
+        else
+            width = r2.Spotlight.calcWidth(searchResult["piece"]);
+        
         color = r2.userGroup.GetUser(this.username).color_splight_static;
         canvas_ctx.strokeStyle = color;
-        canvas_ctx.lineWidth = r2.Spotlight.calcWidth();
+        canvas_ctx.lineWidth = width;
         canvas_ctx.lineCap = 'round';
         canvas_ctx.lineJoin = 'round';
         canvas_ctx.stroke();
@@ -2882,9 +2894,18 @@
         this._pts = pts;
 
         this._user = this._annot.GetUser();
+        var width = 0;
         var max = new Vec2(Number.MIN_VALUE, Number.MIN_VALUE);
         var min = new Vec2(Number.MAX_VALUE, Number.MAX_VALUE);
-        var width = r2.Spotlight.calcWidth();
+        let searchResult = r2App.doc.SearchPieceByAnnotId(annot.GetId());
+        if (searchResult === null) {
+            width = r2.Spotlight.calcWidth();
+        }
+        else {
+            width = r2.Spotlight.calcWidth(searchResult["piece"]);
+        }
+
+        
         for(var i = 0; i < this._pts.length; ++i){
             var v = this._pts[i];
             max.x = Math.max(max.x, v.x);
@@ -2906,10 +2927,20 @@
             ctx.lineTo(this._pts[i].x*ratio, this._pts[i].y*ratio);
         }
 
-        var color;
         var width;
+        var color;
+        let searchResult = r2App.doc.SearchPieceByAnnotId(this._annot.GetId());
+
+        if (searchResult === null) {
+            width = r2.Spotlight.calcWidth()
+        }
+        else {
+            width = r2.Spotlight.calcWidth(searchResult["piece"]);
+        }
         color = this._user.color_splight_static;
-        width = Math.floor(r2.Spotlight.calcWidth()*ratio);
+
+
+        width = Math.floor(width * ratio);
 
         ctx.strokeStyle = color;
         ctx.lineWidth = width;
@@ -2940,7 +2971,8 @@
                     p1,
                     false,  // forprivate
                     this._user.color_splight_dynamic,  // color,
-                    canvas_ctx
+                    canvas_ctx,
+                    r2App.cur_annot_id
                 );
             }
         }
@@ -2955,22 +2987,37 @@
         }
 
         var color;
+        var width;
         color = this._user.color_splight_dynamic_newspeak;
-        
+        let searchResult = r2App.doc.SearchPieceByAnnotId(this._annot.GetId());
+
+        if (searchResult === null) {
+            width = r2.Spotlight.calcWidth()
+        }
+        else {
+            width = r2.Spotlight.calcWidth(searchResult["piece"]);
+        }        
+        let piece = r2App.doc.SearchPieceByAnnotId(r2App.cur_annot_id)["piece"];
         ctx.strokeStyle = color;
-        ctx.lineWidth = r2.Spotlight.calcWidth();
+        ctx.lineWidth = width;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.stroke();
     };
 
-    r2.Spotlight.Cache.prototype.drawMovingBlob = function(p0, p1, forprivate, color, canvas_ctx){
+    r2.Spotlight.Cache.prototype.drawMovingBlob = function(p0, p1, forprivate, color, canvas_ctx, annotid){
         var line_width = 0;
         if(forprivate){
             line_width = r2Const.SPLGHT_PRIVATE_WIDTH;
         }
         else{
-            line_width = r2.Spotlight.calcWidth();
+            if (!annotid) {
+                line_width = r2.Spotlight.calcWidth();
+            }
+            else {
+                let piece = r2App.doc.SearchPieceByAnnotId(annotid)["piece"];
+                line_width = r2.Spotlight.calcWidth(piece);
+            }
         }
         if(p0.distance(p1) < 0.02){
             canvas_ctx.beginPath();
@@ -3000,8 +3047,13 @@
         }
     };
     r2.Spotlight.Cache.prototype.GetPlayback = function(pt) {
-        let piece = r2App.doc.SearchPieceByAnnotId(this._annot.GetId())["piece"];
-        let splightWidth = r2.Spotlight.calcWidth(piece);
+        let searchResult = r2App.doc.SearchPieceByAnnotId(this._annot.GetId());
+        let splightWidth = 0;
+        if (searchResult === null)
+            splightWidth = r2.Spotlight.calcWidth();
+        else
+            splightWidth = r2.Spotlight.calcWidth(searchResult["piece"]);
+       
         if(this._pts.length>1 && this._annot != null && this._t_end > this._t_bgn){
             for(var i = 0; i < this._pts.length-1; ++i){
                 if(r2.util.linePointDistance(this._pts[i], this._pts[i+1], pt) < splightWidth/2){

@@ -1238,7 +1238,8 @@ var r2Ctrl = {};
                     cur_recording_spotlight_pt,
                     isprivate,
                     color,
-                    canv_ctx
+                    canv_ctx,
+                    r2App.cur_annot_id
                 );
             }
             if(cur_recording_spotlight){

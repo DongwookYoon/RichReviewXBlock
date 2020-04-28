@@ -24,7 +24,7 @@ var r2Const = (function () {
     // spotlight
     pub.SPLGHT_WIDTH_MAX = 0.04;
     pub.SPLGHT_PRIVATE_WIDTH = 0.025;
-    pub.SPLGHT_WIDTH_SCALE = 0.8;
+    pub.SPLGHT_WIDTH_SCALE = 0.65;
 
     // inks
     pub.INK_WIDTH = 0.001;

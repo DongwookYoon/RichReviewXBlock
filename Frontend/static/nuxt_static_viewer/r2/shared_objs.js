@@ -22,8 +22,9 @@ var r2Const = (function () {
     pub.PIECEKEYBOARD_FONTSIZE = 13/920;
 
     // spotlight
-    pub.SPLGHT_WIDTH = 0.04;
+    pub.SPLGHT_WIDTH_MAX = 0.04;
     pub.SPLGHT_PRIVATE_WIDTH = 0.025;
+    pub.SPLGHT_WIDTH_SCALE = 0.8;
 
     // inks
     pub.INK_WIDTH = 0.001;

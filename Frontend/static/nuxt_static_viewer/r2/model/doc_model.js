@@ -2698,7 +2698,8 @@
 
 
     r2.Ink.Cache.prototype.GetPlayback = function(pt) {
-        var splightWidth =  r2.Spotlight.calcWidth();
+        let piece = r2App.doc.SearchPieceByAnnotId(this._annot.GetId())["piece"];
+        let splightWidth = r2.Spotlight.calcWidth(piece);
         if(this._pts.length>1 && this._annot != null && this._t_end > this._t_bgn){
             for(var i = 0; i < this._pts.length-1; ++i){
                 if(r2.util.linePointDistance(this._pts[i], this._pts[i+1], pt) < splightWidth/2){
@@ -2728,10 +2729,21 @@
         this.segments = [];
     };
 
-    r2.Spotlight.calcWidth = function() {
-        let width = r2.dom_model.getLineHeightPx() / r2.dom.getCanvasHeight() * 1.2;
-        console.log('spotliggt width:' + width);
-        return width;
+    /**
+     * Calc spotlight width for a particular piece.
+     */
+    r2.Spotlight.calcWidth = function(piece) {
+        let computedWidth = 0.0;
+
+        /*If no piece specified, use lineheight property on doc */
+        if (!piece) {
+            /*Both line height and canvas width grow linearly, proportional to UI zoom level.  */
+            let computedWidth = r2.dom_model.getLineHeightPx() / r2.dom.getCanvasWidth() * r2Const.SPLGHT_WIDTH_SCALE;
+        }
+        else {
+
+        }
+        return Math.min(computedWidth, r2Const.SPLGHT_WIDTH_MAX);
     };
 
     
@@ -2782,6 +2794,8 @@
         }
 
         var color;
+        let piece = r2App.doc.SearchPieceByAnnotId(annotid)["piece"];
+        let splightWidth = r2.Spotlight.calcWidth(piece);
         color = r2.userGroup.GetUser(this.username).color_splight_static;
         canvas_ctx.strokeStyle = color;
         canvas_ctx.lineWidth = r2.Spotlight.calcWidth();
@@ -2986,7 +3000,8 @@
         }
     };
     r2.Spotlight.Cache.prototype.GetPlayback = function(pt) {
-        var splightWidth = r2.Spotlight.calcWidth();
+        let piece = r2App.doc.SearchPieceByAnnotId(this._annot.GetId())["piece"];
+        let splightWidth = r2.Spotlight.calcWidth(piece);
         if(this._pts.length>1 && this._annot != null && this._t_end > this._t_bgn){
             for(var i = 0; i < this._pts.length-1; ++i){
                 if(r2.util.linePointDistance(this._pts[i], this._pts[i+1], pt) < splightWidth/2){

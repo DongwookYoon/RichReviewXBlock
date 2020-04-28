@@ -35,6 +35,22 @@
       return $tc_cur_page
     }
 
+    /**
+     * Get the doc line height in pixels as a floating-point value
+     **/
+    pub.getLineHeightPx = function() {
+      let cssLineHeight = $tc_cur_page.css('line-height');
+      return parseFloat(cssLineHeight.replace(/[A-z]/gi, ''));
+    }
+
+    /**
+     * Get the doc font size in pixels as a floating-point value
+     **/
+    pub.getFontSizePx = function () {
+      let cssFontSize = $tc_cur_page.css('font-size');
+      return parseFloat(cssFontSize.replace(/[A-z]/gi, ''));
+    }
+
     pub.cbAudioPlay = function(annot_id) {
       r2.radialMenu.changeCenterIcon(
         'rm_' + r2.util.escapeDomId(annot_id),
@@ -48,6 +64,7 @@
         'fa-play'
       )
     }
+    
 
     pub.cbRecordingStop = function(annot_id) {
       r2.radialMenu.changeCenterIcon(

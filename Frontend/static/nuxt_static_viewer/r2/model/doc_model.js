@@ -2698,9 +2698,10 @@
 
 
     r2.Ink.Cache.prototype.GetPlayback = function(pt) {
+        var splightWidth =  r2.Spotlight.calcWidth();
         if(this._pts.length>1 && this._annot != null && this._t_end > this._t_bgn){
             for(var i = 0; i < this._pts.length-1; ++i){
-                if(r2.util.linePointDistance(this._pts[i], this._pts[i+1], pt) < r2Const.SPLGHT_WIDTH/2){
+                if(r2.util.linePointDistance(this._pts[i], this._pts[i+1], pt) < splightWidth/2){
                     var rtn = {};
                     rtn.annot = this._annot.GetId();
                     rtn.t = this._t_bgn + (i/this._pts.length)*(this._t_end-this._t_bgn);
@@ -2724,9 +2725,16 @@
         this.time = 0;
         this.t_bgn = 0;
         this.t_end = 0;
-
         this.segments = [];
     };
+
+    r2.Spotlight.calcWidth = function() {
+        let width = r2.dom_model.getLineHeightPx() / r2.dom.getCanvasHeight() * 1.2;
+        console.log('spotliggt width:' + width);
+        return width;
+    };
+
+    
     r2.Spotlight.prototype.ExportToCmd = function(){
         //Spotlight: {t_bgn:..., t_end:..., npage: 0, segments: [Segment, Segment, ...]}
         var cmd = {};
@@ -2740,6 +2748,7 @@
         });
         return cmd;
     };
+    
     r2.Spotlight.prototype.GetPage = function(){
         return this.npage;
     };
@@ -2773,11 +2782,9 @@
         }
 
         var color;
-        var width;
         color = r2.userGroup.GetUser(this.username).color_splight_static;
-        width = r2Const.SPLGHT_WIDTH;
         canvas_ctx.strokeStyle = color;
-        canvas_ctx.lineWidth = width;
+        canvas_ctx.lineWidth = r2.Spotlight.calcWidth();
         canvas_ctx.lineCap = 'round';
         canvas_ctx.lineJoin = 'round';
         canvas_ctx.stroke();
@@ -2843,6 +2850,7 @@
     };
 
 
+
     /*
      * Spotlight.Cache
      */
@@ -2862,6 +2870,7 @@
         this._user = this._annot.GetUser();
         var max = new Vec2(Number.MIN_VALUE, Number.MIN_VALUE);
         var min = new Vec2(Number.MAX_VALUE, Number.MAX_VALUE);
+        var width = r2.Spotlight.calcWidth();
         for(var i = 0; i < this._pts.length; ++i){
             var v = this._pts[i];
             max.x = Math.max(max.x, v.x);
@@ -2869,10 +2878,11 @@
             min.x = Math.min(min.x, v.x);
             min.y = Math.min(min.y, v.y);
         }
-        max.x+=r2Const.SPLGHT_WIDTH/2;max.y+=r2Const.SPLGHT_WIDTH/2;
-        min.x-=r2Const.SPLGHT_WIDTH/2;min.y-=r2Const.SPLGHT_WIDTH/2;
+        max.x+=width/2;max.y+=width/2;
+        min.x-=width/2;min.y-=width/2;
         this._bb = [min, max];
     };
+
     r2.Spotlight.Cache.prototype.preRender = function(ctx, ratio){
         if(this._pts.length == 0){return;}
 
@@ -2885,7 +2895,7 @@
         var color;
         var width;
         color = this._user.color_splight_static;
-        width = Math.floor(r2Const.SPLGHT_WIDTH*ratio);
+        width = Math.floor(r2.Spotlight.calcWidth()*ratio);
 
         ctx.strokeStyle = color;
         ctx.lineWidth = width;
@@ -2893,6 +2903,7 @@
         ctx.lineJoin = 'round';
         ctx.stroke();
     };
+
     r2.Spotlight.Cache.prototype.drawReplayBlob = function(canvas_ctx){
         if(this._annot.GetId() === r2App.cur_annot_id){
             if(this._pts.length &&
@@ -2930,23 +2941,22 @@
         }
 
         var color;
-        var width;
         color = this._user.color_splight_dynamic_newspeak;
-        width = r2Const.SPLGHT_WIDTH;
-
+        
         ctx.strokeStyle = color;
-        ctx.lineWidth = width;
+        ctx.lineWidth = r2.Spotlight.calcWidth();
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.stroke();
     };
+
     r2.Spotlight.Cache.prototype.drawMovingBlob = function(p0, p1, forprivate, color, canvas_ctx){
         var line_width = 0;
         if(forprivate){
             line_width = r2Const.SPLGHT_PRIVATE_WIDTH;
         }
         else{
-            line_width = r2Const.SPLGHT_WIDTH;
+            line_width = r2.Spotlight.calcWidth();
         }
         if(p0.distance(p1) < 0.02){
             canvas_ctx.beginPath();
@@ -2976,9 +2986,10 @@
         }
     };
     r2.Spotlight.Cache.prototype.GetPlayback = function(pt) {
+        var splightWidth = r2.Spotlight.calcWidth();
         if(this._pts.length>1 && this._annot != null && this._t_end > this._t_bgn){
             for(var i = 0; i < this._pts.length-1; ++i){
-                if(r2.util.linePointDistance(this._pts[i], this._pts[i+1], pt) < r2Const.SPLGHT_WIDTH/2){
+                if(r2.util.linePointDistance(this._pts[i], this._pts[i+1], pt) < splightWidth/2){
                     var rtn = {};
                     rtn.annot = this._annot.GetId();
                     rtn.t = this._t_bgn + (i/this._pts.length)*(this._t_end-this._t_bgn);

@@ -2736,7 +2736,7 @@
     };
 
     /**
-     * Calc spotlight width for a particular piece.
+     * Calc spotlight width
      */
     r2.Spotlight.calcWidth = function(piece) {
         let computedWidth = 0.0;

@@ -175,6 +175,9 @@
                     case 'DeleteComment':
                         success = deleteComment(doc, cmd);
                         break;
+                    case 'FlagAccessedComment':
+                        success = true;     //Dont process here. The cmd will be handled in r2.commentHistory.consumeCmd()
+                        break;
                     default:
                         console.error('Unknown Cmd Error:', JSON.stringify(cmd));
                 }
@@ -750,6 +753,9 @@
             }
             return false;
         };
+
+        
+        
 
         return pub;
     }());

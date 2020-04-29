@@ -392,7 +392,7 @@
   r2.commentHistory = (function() {
     const pub = {}
 
-    function addItem(userid, type, annotid) {
+    function addItem(userid, type, annotid, cmd) {
       const container = $('#dashboard-comment-history')[0]
       const $a = $(document.createElement('a'))
       $a.attr('userid', userid)
@@ -400,16 +400,6 @@
       $a.attr('href', 'javascript:void(0);')
       $a.addClass('dashboard-comments-icon')
       $a.addClass('btn-dashboard')
-
-      /*Check browser localStorage to see if comment has already been accessed */
-      let accessed = localStorage.getItem(annotid);
-
-      if (accessed === null) {
-        localStorage.setItem(annotid, 'false');                  //Mark as a new comment
-      }
-      else if (accessed === 'true') {
-        $a.addClass('accessed');
-      }
 
       const $i = $(document.createElement('i'))
       $i.addClass('fa')
@@ -441,15 +431,15 @@
         $a.click(function() {
           if (r2.commentHistory.scrollToComment($a, annotid)) {
               r2App.cur_annot_id = annotid
-               /*This causes comment history replay to fail after page turn if a comment
-              is already playing, i.e. r2App.mode == r2App.AppModeEnum.REPLAYING */
-           
               r2.rich_audio.play(r2App.cur_annot_id, -1)
-              $a.addClass('accessed')                                        //Mark comment as accessed.
-              localStorage.setItem(annotid, 'true')
+              if ($a.hasClass('accessed') === false) {
+                $a.addClass('accessed')
+                storeAccessedStatus(cmd)
+              }
           }
-          else
+          else {
             console.warn('Scroll to comment failed for ' + annotid);
+          }
         })
       } 
       else if (type === 'text') {
@@ -459,12 +449,16 @@
         $a.click(function() {
           if (r2.commentHistory.scrollToComment($a, annotid)) {
             r2.log.Log_CommentHistory('text', annotid)
-            $a.addClass('accessed')                                        //Mark comment as accessed.
-            localStorage.setItem(annotid, 'true')
+            if ($a.hasClass('accessed') === false) {
+                $a.addClass('accessed')
+                storeAccessedStatus(cmd)
+            }
+          }
+          else {
+            console.warn('Scroll to comment failed for ' + annotid);
           }
         })
       }
-     
     }
 
     function removeItem(userid, annotid) {
@@ -480,6 +474,14 @@
           return
         }
       }
+    }
+
+    function storeAccessedStatus(cmd) {
+      let historyCmd = JSON.parse(JSON.stringify(cmd));
+      historyCmd.time = new Date().toISOString();
+      historyCmd.op = 'FlagAccessedComment';
+      //console.log(`uploading history cmd with op: ` + historyCmd.op + ' \nand aid ' + historyCmd.data.aid);
+      r2Sync.uploader.pushCmd(historyCmd);
     }
 
     let $highlight_a = null
@@ -536,34 +538,39 @@
 
 
     pub.consumeCmd = function(cmd) {
+      /*Add comment to UI */
       if (cmd.op == 'CreateComment') {
         if (cmd.type == 'CommentAudio') {
-          addItem(cmd.user, 'audio', cmd.data.aid)
+          addItem(cmd.user, 'audio', cmd.data.aid, cmd);
         }
-        if (cmd.type == 'CommentText') {
-          if (
-            cmd.data.isprivate == false ||
-            (cmd.data.isprivate && cmd.user == r2.userGroup.cur_user.name)
-          )
-            addItem(cmd.user, 'text', cmd.data.aid)
+        if ( (cmd.type == 'CommentText') &&  (cmd.data.isprivate == false ||
+            (cmd.data.isprivate && cmd.user == r2.userGroup.cur_user.name)) ) {
+            addItem(cmd.user, 'text', cmd.data.aid, cmd);
         }
         if (cmd.type == 'CommentNewSpeak') {
-          addItem(cmd.user, 'audio', cmd.data.aid)
+          addItem(cmd.user, 'audio', cmd.data.aid, cmd);
         }
-      } else if (cmd.op == 'DeleteComment') {
+      } 
+      /*Delete comment */
+      else if (cmd.op == 'DeleteComment') {
         if (cmd.target.type == 'PieceKeyboard') {
-          removeItem(cmd.user, cmd.target.aid)
+          removeItem(cmd.user, cmd.target.aid);
         }
         if (cmd.target.type == 'CommentAudio') {
-          removeItem(cmd.user, cmd.target.aid)
+          removeItem(cmd.user, cmd.target.aid);
         }
         if (cmd.target.type == 'PieceNewSpeak') {
-          removeItem(cmd.user, cmd.target.aid)
+          removeItem(cmd.user, cmd.target.aid);
         }
+      }
+      /*Mark comment as accessed in comment history UI*/
+      else if (cmd.op == 'FlagAccessedComment')
+      {
+        $(`a[annotid="${cmd.data.aid}"]`).addClass('accessed');
       }
     }
 
-    return pub
+    return pub;
   })()
 
   /** Logger */
@@ -2118,6 +2125,7 @@
     this._modified = true
     this._time_last_modified = r2App.cur_time
   }
+  
   r2.CmdTimedUploader.prototype.getCmdsToUpload = function() {
     if (
       this._modified &&

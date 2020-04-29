@@ -143,7 +143,8 @@ const r2Sync = (function() {
               if (!(cmds[i].user + '_' + cmds[i].time in my_cmds)) {
                 if (r2.cmd.executeCmd(r2App.doc, cmds[i], false)) {
                   r2.commentHistory.consumeCmd(cmds[i])
-                } else {
+                } 
+                else {
                   console.error(
                     'Skipped an invalid cmd : ' + JSON.stringify(cmds[i])
                   )
@@ -203,7 +204,7 @@ const r2Sync = (function() {
         q.push(upload_audio_cmd)
       }
       q.push(cmd)
-      r2.commentHistory.consumeCmd(cmd)
+      r2.commentHistory.consumeCmd(cmd)                            //Pushing commenthistory cmd also consumes it
     }
 
     const uploadCmd = function(cmd) {

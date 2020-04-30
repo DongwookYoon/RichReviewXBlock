@@ -467,6 +467,7 @@ hr {
 }
 
 #title {
+  min-height: 1.3rem;
   margin-bottom: 1vh;
   height: 3.75vh;
 }
@@ -482,6 +483,7 @@ hr {
 }
 
 #description {
+  min-height: 4rem;
   height: 20vh;
   border: 1px solid lightgrey;
 }

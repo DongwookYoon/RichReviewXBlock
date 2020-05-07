@@ -1272,8 +1272,8 @@ var r2Ctrl = {};
                 cur_recording_spotlight_segment = segment;
                 cur_recording_spotlight_segment_piece = piece;
                 cur_recording_spotlight_pt = pt;
+                cur_annot = target_annot;
                 curSplghtWidth = r2.Spotlight.calcWidth(cur_recording_spotlight_segment_piece);
-                console.log('width changed to ' + curSplghtWidth);
             }
         };
 
@@ -1319,6 +1319,14 @@ var r2Ctrl = {};
                     target_annot.AddSpotlight(cur_recording_spotlight, toupload = true);
                 }
                 cur_recording_spotlight_pt = null;
+
+                /*DO NOT update the width again if it has already been set for this annotation*/
+                if (r2App.cur_page.checkSpotlightWidthSetForAnnot(target_annot.GetId()) === false) {
+                    r2App.cur_page.setSpotlightWidthForAnnot(target_annot.GetId(), curSplghtWidth);
+                    console.warn('trigger up; width is now: ' + curSplghtWidth);
+                }
+                
+
                 r2App.cur_page.refreshSpotlightPrerender();
 
                 cur_recording_spotlight = null;

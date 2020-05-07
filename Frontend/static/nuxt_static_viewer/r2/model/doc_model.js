@@ -218,6 +218,7 @@
      */
     r2.Page = function() {
         r2.Obj.call(this);
+        this._annot_spotlight_widths = new Map();
     };
     r2.Page.prototype = Object.create(r2.Obj.prototype);
 
@@ -259,6 +260,23 @@
 
         return this.size;
     };
+
+    r2.Page.prototype.setSpotlightWidthForAnnot = function (annotid, width) {
+        this._annot_spotlight_widths.set(annotid, width);
+    }
+
+    r2.Page.prototype.getSpotlightWidthByAnnot = function (annotid) {
+        let val = this._annot_spotlight_widths.get(annotid);
+        if (!val) {
+            val = null;
+        }
+        return val;
+    };
+
+    r2.Page.prototype.checkSpotlightWidthSetForAnnot = function (annotid) {
+        return this._annot_spotlight_widths.has(annotid);
+    };
+
     r2.Page.prototype.refreshSpotlightPrerender = function(){
         this._spotlight_cache = [];
         var i, spotlight, cache;
@@ -314,7 +332,6 @@
         for(i = 0; spotlight = this._spotlight_cache[i]; ++i){
             spotlight.preRender(r2.spotlightRenderer.getCanvCtx(), r2.spotlightRenderer.getCanvWidth()); // ctx, ratio
             
-            console.log('Prerendering ' + i + 'width spotlight width: ' + this._spotlight_cache[i]._splghtWidth);
         }
     };
     r2.Page.prototype.refreshSpotlightPrerenderNewspeak = function(){
@@ -2758,6 +2775,10 @@
             computedWidth = piece._cnt_size.y;
             console.log('using piece size: ' + computedWidth);
         }
+
+        //Limit spotlight height to 20% of canvas width.
+        let max = r2.dom.getCanvasHeight() * 0.2 / r2.dom.getCanvasWidth();
+        console.log('Max spotlight height: ' + max);
         return Math.min(computedWidth);
     };
 
@@ -2915,7 +2936,7 @@
         max.x+=width/2;max.y+=width/2;
         min.x-=width/2;min.y-=width/2;
         this._bb = [min, max];
-        this._splghtWidth = width;
+        
     };
 
     r2.Spotlight.Cache.prototype.preRender = function(ctx, ratio){
@@ -2927,8 +2948,7 @@
             ctx.lineTo(this._pts[i].x*ratio, this._pts[i].y*ratio);
         }
 
-        var width;
-        var color;
+        
         
         /*
         if (!this._splghtWidth) {
@@ -2952,11 +2972,19 @@
         }
         */
        
+        var width;
+        var color;
         color = this._user.color_splight_static;
-        width = this._splghtWidth * ratio;
+        width = r2App.cur_page.getSpotlightWidthByAnnot(this._annot.GetId());
+        if(width === null) {
+            console.warn('spotlight width was null. Using fallback');
+            width = r2Const.SPLGHT_PRIVATE_WIDTH;
+        }
+        
 
+        console.log('prerender width for ' + this._annot.GetId() + ': ' + width);
         ctx.strokeStyle = color;
-        ctx.lineWidth = width;
+        ctx.lineWidth = width * ratio;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.stroke();
@@ -3024,23 +3052,11 @@
         }
         else if (width) {
             line_width = width;
-            this._splghtWidth = width;
         }
-        else{
-            if (!this._splghtWidth) {
-                let piece = null;
-                piece = r2App.cur_page.getPieceAtMousePointer();
-                line_width = piece !== null ? r2.Spotlight.calcWidth(piece) : r2.Spotlight.calcWidth();
-                this._splghtWidth = line_width;
-                console.log('updating' + this._splghtWidth);
-            }
-            else {
-                line_width = this._splghtWidth;
-            }
+        else {
+            width = r2.Spotlight.calcWidth();
         }
-
-        console.log(line_width);
-
+             
         
         if(p0.distance(p1) < 0.02){
             canvas_ctx.beginPath();

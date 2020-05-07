@@ -490,6 +490,10 @@
         return rtn;
     };
 
+    r2.Page.prototype.getPieceAtMousePointer = function() {
+        return this.GetPieceByHitTest(r2.viewCtrl.mapScrToDoc(r2App.cur_mouse_pt));
+    };
+
     /*
      * Region
      */
@@ -2733,6 +2737,7 @@
         this.t_bgn = 0;
         this.t_end = 0;
         this.segments = [];
+        this.drawPieces = [];
     };
 
     /**
@@ -2748,9 +2753,10 @@
         }
         /*Otherwise use piece height for more accurate line height*/
         else {
-            computedWidth = piece.size.y * 1.2;
+            computedWidth = piece._cnt_size.y;
+            console.log('using piece size: ' + computedWidth);
         }
-        return Math.min(computedWidth, r2Const.SPLGHT_WIDTH_MAX);
+        return Math.min(computedWidth);
     };
 
     
@@ -2792,7 +2798,7 @@
         }
         return rtn;
     };
-    r2.Spotlight.prototype.Draw = function(canvas_ctx){
+    r2.Spotlight.prototype.Draw = function(canvas_ctx, piece){
         canvas_ctx.beginPath();
         var i, segment;
         var wasbgn = false;
@@ -2802,11 +2808,16 @@
 
         var color;
         let width = 0;
-        let searchResult = r2App.doc.SearchPieceByAnnotId(r2App.cur_annot_id);
-        if (searchResult === null)
+        
+        if (!piece) {
             width = r2.Spotlight.calcWidth();
-        else
-            width = r2.Spotlight.calcWidth(searchResult["piece"]);
+            console.log('no piece set for draw');
+        }
+        else {
+            console.log('We got a piece during draw!');
+            width = r2.Spotlight.calcWidth(piece);
+            console.warn(piece);
+        }
         
         color = r2.userGroup.GetUser(this.username).color_splight_static;
         canvas_ctx.strokeStyle = color;
@@ -2886,6 +2897,7 @@
         this._t_end = 0;
         this._pts = [];
         this._bb = [];
+        this._splghtWidth = null;
     };
     r2.Spotlight.Cache.prototype.setCache = function(annot, t_bgn, t_end, pts){
         this._annot = annot;
@@ -2929,17 +2941,29 @@
 
         var width;
         var color;
-        let searchResult = r2App.doc.SearchPieceByAnnotId(this._annot.GetId());
+        
 
-        if (searchResult === null) {
-            width = r2.Spotlight.calcWidth()
+        if (!this._splghtWidth) {
+            let searchResult = r2App.doc.SearchPieceByAnnotId(this._annot.GetId());
+            if (searchResult === null) {
+                console.log('nulligs');
+                width = r2.Spotlight.calcWidth()
+            }
+            else {
+                console.warn(searchResult["piece"]);
+                width = r2.Spotlight.calcWidth(searchResult["piece"]._parent);
+                
+            }
+            console.log('recalcwidth ' + width);
+            this._splghtWidth = width;
         }
+
         else {
-            width = r2.Spotlight.calcWidth(searchResult["piece"]);
+            console.log('precalculaed ' + this._splghtWidth);
+            width = this._splghtWidth;
         }
+
         color = this._user.color_splight_static;
-
-
         width = Math.floor(width * ratio);
 
         ctx.strokeStyle = color;
@@ -3006,19 +3030,26 @@
     };
 
     r2.Spotlight.Cache.prototype.drawMovingBlob = function(p0, p1, forprivate, color, canvas_ctx, annotid){
-        var line_width = 0;
+        var line_width = 0.0;
         if(forprivate){
             line_width = r2Const.SPLGHT_PRIVATE_WIDTH;
         }
         else{
-            if (!annotid) {
-                line_width = r2.Spotlight.calcWidth();
+            if (!this._splghtWidth) {
+                let piece = null;
+                piece = r2App.cur_page.getPieceAtMousePointer();
+                line_width = piece !== null ? r2.Spotlight.calcWidth(piece) : r2.Spotlight.calcWidth();
+                this._splghtWidth = line_width;
+                console.log('updating' + this._splghtWidth);
             }
             else {
-                let piece = r2App.doc.SearchPieceByAnnotId(annotid)["piece"];
-                line_width = r2.Spotlight.calcWidth(piece);
+                line_width = this._splghtWidth;
             }
         }
+
+        console.log(line_width);
+
+        
         if(p0.distance(p1) < 0.02){
             canvas_ctx.beginPath();
             canvas_ctx.arc(p0.x, p0.y, line_width*0.5, 0, 2 * Math.PI, false);

@@ -1238,12 +1238,11 @@ var r2Ctrl = {};
                     cur_recording_spotlight_pt,
                     isprivate,
                     color,
-                    canv_ctx,
-                    r2App.cur_annot_id
+                    canv_ctx
                 );
             }
             if(cur_recording_spotlight){
-                cur_recording_spotlight.Draw(canv_ctx);
+                cur_recording_spotlight.Draw(canv_ctx, cur_recording_spotlight_segment_piece);
             }
             if(cur_recording_spotlight_segment){
                 //cur_recording_spotlight_segment.Draw(canv_ctx, true);

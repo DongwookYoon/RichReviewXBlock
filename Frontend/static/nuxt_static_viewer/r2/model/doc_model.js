@@ -313,6 +313,8 @@
         r2.spotlightRenderer.setCanvCtx(r2.viewCtrl.page_width_noscale, this.size.y/this.size.x);
         for(i = 0; spotlight = this._spotlight_cache[i]; ++i){
             spotlight.preRender(r2.spotlightRenderer.getCanvCtx(), r2.spotlightRenderer.getCanvWidth()); // ctx, ratio
+            
+            console.log('Prerendering ' + i + 'width spotlight width: ' + this._spotlight_cache[i]._splghtWidth);
         }
     };
     r2.Page.prototype.refreshSpotlightPrerenderNewspeak = function(){
@@ -2798,7 +2800,7 @@
         }
         return rtn;
     };
-    r2.Spotlight.prototype.Draw = function(canvas_ctx, piece){
+    r2.Spotlight.prototype.Draw = function(canvas_ctx, width){
         canvas_ctx.beginPath();
         var i, segment;
         var wasbgn = false;
@@ -2807,18 +2809,7 @@
         }
 
         var color;
-        let width = 0;
-        
-        if (!piece) {
-            width = r2.Spotlight.calcWidth();
-            console.log('no piece set for draw');
-        }
-        else {
-            console.log('We got a piece during draw!');
-            width = r2.Spotlight.calcWidth(piece);
-            console.warn(piece);
-        }
-        
+               
         color = r2.userGroup.GetUser(this.username).color_splight_static;
         canvas_ctx.strokeStyle = color;
         canvas_ctx.lineWidth = width;
@@ -2906,17 +2897,13 @@
         this._pts = pts;
 
         this._user = this._annot.GetUser();
-        var width = 0;
+
+        var width = r2.spotlightCtrl.getSpotlightWidth();
+
+
         var max = new Vec2(Number.MIN_VALUE, Number.MIN_VALUE);
         var min = new Vec2(Number.MAX_VALUE, Number.MAX_VALUE);
-        let searchResult = r2App.doc.SearchPieceByAnnotId(annot.GetId());
-        if (searchResult === null) {
-            width = r2.Spotlight.calcWidth();
-        }
-        else {
-            width = r2.Spotlight.calcWidth(searchResult["piece"]);
-        }
-
+              
         
         for(var i = 0; i < this._pts.length; ++i){
             var v = this._pts[i];
@@ -2928,6 +2915,7 @@
         max.x+=width/2;max.y+=width/2;
         min.x-=width/2;min.y-=width/2;
         this._bb = [min, max];
+        this._splghtWidth = width;
     };
 
     r2.Spotlight.Cache.prototype.preRender = function(ctx, ratio){
@@ -2942,7 +2930,7 @@
         var width;
         var color;
         
-
+        /*
         if (!this._splghtWidth) {
             let searchResult = r2App.doc.SearchPieceByAnnotId(this._annot.GetId());
             if (searchResult === null) {
@@ -2962,9 +2950,10 @@
             console.log('precalculaed ' + this._splghtWidth);
             width = this._splghtWidth;
         }
-
+        */
+       
         color = this._user.color_splight_static;
-        width = Math.floor(width * ratio);
+        width = this._splghtWidth * ratio;
 
         ctx.strokeStyle = color;
         ctx.lineWidth = width;
@@ -2996,7 +2985,6 @@
                     false,  // forprivate
                     this._user.color_splight_dynamic,  // color,
                     canvas_ctx,
-                    r2App.cur_annot_id
                 );
             }
         }
@@ -3029,10 +3017,14 @@
         ctx.stroke();
     };
 
-    r2.Spotlight.Cache.prototype.drawMovingBlob = function(p0, p1, forprivate, color, canvas_ctx, annotid){
+    r2.Spotlight.Cache.prototype.drawMovingBlob = function(p0, p1, forprivate, color, canvas_ctx, width){
         var line_width = 0.0;
         if(forprivate){
             line_width = r2Const.SPLGHT_PRIVATE_WIDTH;
+        }
+        else if (width) {
+            line_width = width;
+            this._splghtWidth = width;
         }
         else{
             if (!this._splghtWidth) {

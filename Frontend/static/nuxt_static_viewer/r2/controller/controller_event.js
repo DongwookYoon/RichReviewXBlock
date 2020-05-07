@@ -1221,7 +1221,8 @@ var r2Ctrl = {};
 
     r2.spotlightCtrl = (function(){
         var pub = {};
-
+ 
+        var curSplghtWidth = 0.0;
         var cur_recording_spotlight = null;
         var cur_recording_spotlight_segment = null;
         var cur_recording_spotlight_segment_piece = null;
@@ -1232,17 +1233,18 @@ var r2Ctrl = {};
         };
 
         pub.drawDynamicSceneBlob = function(canv_ctx, isprivate, color){
-            if(cur_recording_spotlight_pt){
-                r2.Spotlight.Cache.prototype.drawMovingBlob(
+           if(cur_recording_spotlight_pt){
+             r2.Spotlight.Cache.prototype.drawMovingBlob(
                     cur_recording_spotlight_pt,
                     cur_recording_spotlight_pt,
                     isprivate,
                     color,
-                    canv_ctx
+                    canv_ctx,
+                    curSplghtWidth
                 );
             }
             if(cur_recording_spotlight){
-                cur_recording_spotlight.Draw(canv_ctx, cur_recording_spotlight_segment_piece);
+                cur_recording_spotlight.Draw(canv_ctx, curSplghtWidth);
             }
             if(cur_recording_spotlight_segment){
                 //cur_recording_spotlight_segment.Draw(canv_ctx, true);
@@ -1270,6 +1272,8 @@ var r2Ctrl = {};
                 cur_recording_spotlight_segment = segment;
                 cur_recording_spotlight_segment_piece = piece;
                 cur_recording_spotlight_pt = pt;
+                curSplghtWidth = r2.Spotlight.calcWidth(cur_recording_spotlight_segment_piece);
+                console.log('width changed to ' + curSplghtWidth);
             }
         };
 
@@ -1332,6 +1336,10 @@ var r2Ctrl = {};
             cur_recording_spotlight_segment = null;
             cur_recording_spotlight_pt = null;
             cur_recording_spotlight = null;
+        };
+
+        pub.getSpotlightWidth = function() {
+            return curSplghtWidth;
         };
 
         return pub;

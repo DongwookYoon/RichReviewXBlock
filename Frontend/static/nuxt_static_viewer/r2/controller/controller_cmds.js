@@ -359,6 +359,7 @@
             //           {type: 'PieceTeared', id: pid, page: 2}
             //           {type: 'CommentAudio', id: annotId, page: 2, time: [t0, t1]}
             // data: {aid: ..., duration: t, waveform_sample: [0, 100, 99, 98 ...], Spotlights: [Spotlight, Spotlight, ...] };
+            //splght_width: 0.012345...
             // Spotlight: {t_bgn:..., t_end:..., npage: 0, segments: [Segment, Segment, ...]}
             // Spotlight.Segment: {pid: ..., pts: [Vec2, Vec2, ...]}
 
@@ -367,11 +368,15 @@
 
             if(anchorpiece){
                 var annot = new r2.Annot();
-                annot.SetAnnot(cmd.data.aid, anchorpiece.GetId(), cmd.time, cmd.data.duration, cmd.data.waveform_sample, cmd.user, cmd.data.audiofileurl,
-                    cmd.data.ui_type);
+                annot.SetAnnot(cmd.data.aid, anchorpiece.GetId(), cmd.time, cmd.data.duration, cmd.data.waveform_sample, 
+                    cmd.user, cmd.data.audiofileurl, cmd.data.ui_type, cmd.splght_width);
+                
                 if(cmd.data.is_base_annot){
                     annot.setIsBaseAnnot();
                 }
+
+                console.warn(annot);
+
                 r2App.annots[cmd.data.aid] = annot;
                 r2.dom_model.createCommentVoice(annot, cmd.anchorTo.page, false); /* live_recording = false */
 

@@ -330,7 +330,7 @@
 
         r2.spotlightRenderer.setCanvCtx(r2.viewCtrl.page_width_noscale, this.size.y/this.size.x);
         for(i = 0; spotlight = this._spotlight_cache[i]; ++i){
-            spotlight.preRender(r2.spotlightRenderer.getCanvCtx(), r2.spotlightRenderer.getCanvWidth()); // ctx, ratio
+            spotlight.preRender(r2.spotlightRenderer.getCanvCtx(), r2.spotlightRenderer.getCanvWidth(), this._spotlight_cache[i]._annot); // ctx, ratio
             
         }
     };
@@ -2192,6 +2192,7 @@
         this._audiofileurl = "";
         this._is_base_annot = false;
         this._ui_type = null;
+        this._splght_width = null;
     };
 
     r2.Annot.prototype.ExportToCmd = function(){
@@ -2199,6 +2200,7 @@
         // user: 'red user'
         // op: 'CreateComment'
         // type: CommentAudio
+        // splght_width: 0.01234...
         // anchorTo: {type: 'PieceText', id: pid, page: 2} or
         //           {type: 'PieceTeared', id: pid, page: 2}
         //           {type: 'CommentAudio', id: annotId, page: 2, time: [t0, t1]}
@@ -2213,6 +2215,7 @@
         cmd.data.aid = this._id;
         cmd.data.duration = this._duration;
         cmd.data.waveform_sample = this._ui_type === 'new_speak' ? [] : this._audio_dbs;
+        cmd.splght_width = this._splght_width;
         cmd.data.Spotlights = [];
         this._spotlights.forEach(function(splght){
             cmd.data.Spotlights.push(splght.ExportToCmd());
@@ -2279,7 +2282,13 @@
     r2.Annot.prototype.GetUsername = function(){
         return this._username;
     };
-    r2.Annot.prototype.SetAnnot = function(id, anchorpid, t_bgn, duration, audio_dbs, username, audiofileurl, ui_type){
+    r2.Annot.prototype.GetSpotlightWidth = function(){
+        return this._splght_width;
+    }
+    r2.Annot.prototype.SetSpotlightWidth = function(width){
+        this._splght_width = width;
+    }
+    r2.Annot.prototype.SetAnnot = function(id, anchorpid, t_bgn, duration, audio_dbs, username, audiofileurl, ui_type, splght_width){
         this._id = id;
         this._anchorpid = anchorpid;
         this._bgn_time = t_bgn;
@@ -2290,6 +2299,7 @@
         this._audiofileurl = audiofileurl;
         this._reacordingaudioblob = null;
         this._ui_type = ui_type;
+        this._splght_width = (splght_width === null || splght_width === undefined) ? null : splght_width;
     };
     r2.Annot.prototype.AddSpotlight = function(spotlight, toupload){
         this._spotlights.push(spotlight);
@@ -2778,8 +2788,7 @@
 
         //Limit spotlight height to 20% of canvas width.
         let max = r2.dom.getCanvasHeight() * 0.2 / r2.dom.getCanvasWidth();
-        console.log('Max spotlight height: ' + max);
-        return Math.min(computedWidth);
+        return Math.min(computedWidth, max);
     };
 
     
@@ -2916,15 +2925,11 @@
         this._t_bgn = t_bgn;
         this._t_end = t_end;
         this._pts = pts;
-
         this._user = this._annot.GetUser();
 
-        var width = r2.spotlightCtrl.getSpotlightWidth();
-
-
+        var width = annot.GetSpotlightWidth();
         var max = new Vec2(Number.MIN_VALUE, Number.MIN_VALUE);
         var min = new Vec2(Number.MAX_VALUE, Number.MAX_VALUE);
-              
         
         for(var i = 0; i < this._pts.length; ++i){
             var v = this._pts[i];
@@ -2975,14 +2980,14 @@
         var width;
         var color;
         color = this._user.color_splight_static;
-        width = r2App.cur_page.getSpotlightWidthByAnnot(this._annot.GetId());
+        width = this._annot.GetSpotlightWidth();
         if(width === null) {
             console.warn('spotlight width was null. Using fallback');
             width = r2Const.SPLGHT_PRIVATE_WIDTH;
         }
-        
-
         console.log('prerender width for ' + this._annot.GetId() + ': ' + width);
+
+
         ctx.strokeStyle = color;
         ctx.lineWidth = width * ratio;
         ctx.lineCap = 'round';

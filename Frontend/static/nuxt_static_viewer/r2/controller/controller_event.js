@@ -1321,8 +1321,8 @@ var r2Ctrl = {};
                 cur_recording_spotlight_pt = null;
 
                 /*DO NOT update the width again if it has already been set for this annotation*/
-                if (r2App.cur_page.checkSpotlightWidthSetForAnnot(target_annot.GetId()) === false) {
-                    r2App.cur_page.setSpotlightWidthForAnnot(target_annot.GetId(), curSplghtWidth);
+                if (target_annot.GetSpotlightWidth() === null) {
+                    target_annot.SetSpotlightWidth(curSplghtWidth);
                     console.warn('trigger up; width is now: ' + curSplghtWidth);
                 }
                 

@@ -66,6 +66,10 @@
         if(r2App.mode == r2App.AppModeEnum.IDLE && r2App.cur_annot_id != null){
             r2.rich_audio.play(r2App.cur_annot_id, -1);
             r2.log.Log_AudioPlay('indexing_panel', r2App.cur_annot_id, r2.audioPlayer.getPlaybackTime());
+            console.log('clicked play main and did play !')
+        }
+        else {
+             console.log('ddid click button but no fire')
         }
     };
 
@@ -200,9 +204,11 @@
     /** controller functions */
     r2.turnPageAndSetFocus = function(searchresult, annotid){
         var piece = searchresult["piece"];
-        r2.booklet.goToAbsPage(searchresult["page_n"]);
-        r2.viewCtrl.setToFocus(new Vec2(piece.pos.x+ piece.GetContentSize().x/2, piece.pos.y));
+        if (r2App.cur_pdf_pagen !== searchresult["page_n"]) {
+            r2.booklet.goToAbsPage(searchresult["page_n"]);
+        }
         r2App.pieceSelector.set(searchresult["piece"]);
+        
         return r2.dom_model.focusCtrl.focusAnnot(annotid);
     };
 
@@ -225,13 +231,15 @@
         r2.viewCtrl.resizeView(app_container_size, doc_yx_ratio, {left:0.0, rght:0.0});
         r2.dom_model.resize(r2.viewCtrl.page_size_scaled.x);
 
-        r2.dom.resizeDom(scale, app_container_size, r2.viewCtrl.page_size_scaled, r2.viewCtrl.page_margins, r2.viewCtrl.canv_px_size);
+        var dashboard_height = r2.dom.resizeDom(scale, app_container_size, r2.viewCtrl.page_size_scaled, r2.viewCtrl.page_margins, r2.viewCtrl.canv_px_size);
 
         if(r2App.cur_page){
             r2App.cur_page.RunRecursive("ResizeDom", []);
         }
         r2App.invalidate_static_scene = true;
         r2App.invalidate_dynamic_scene = true;
+
+        return dashboard_height;
     };
 
     r2.speechUi = (function(){

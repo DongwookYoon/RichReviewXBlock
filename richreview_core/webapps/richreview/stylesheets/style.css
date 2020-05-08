@@ -1,8 +1,8 @@
-body{
+body {
   -ms-content-zooming: none;
 }
 
-#r2_app_container{
+#r2_app_container {
   overflow: scroll;
   #position: absolute;
 }
@@ -51,7 +51,7 @@ body{
 }
 
 
-#main_progress_bar{
+#main_progress_bar {
   overflow: hidden;
   height: 3px;
   margin-bottom: 0;
@@ -66,7 +66,7 @@ body{
 
 
 #cover_msg {
-  display: table;
+  display: none;
   position: absolute;
   left: 0;
   top: 0;
@@ -107,22 +107,17 @@ body{
   border: dashed 1px black;
 }
 #cover_msg .cover_msg_img{
-  margin: 0;
-  margin-top: 4px;
+  margin: 4px 0 0;
 }
 #cover_msg li p{
-  margin: 0;
-  margin-top: 10px;
+  margin: 10px 0 0;
 }
 #cover_msg  p{
-  margin: 0;
-  margin-top: 12px;
+  margin: 12px 0 0;
 }
 #cover_msg ul,
 #cover_msg ol {
-  margin: 0;
-  margin-top: 12px;
-  margin-bottom: 0;
+  margin: 12px 0 0;
 }
 
 .unselectable {
@@ -543,7 +538,7 @@ a:active {
 #onscrbtns_static{
   position: absolute;
   z-index: 3;
-  font-size: 0.45em;
+  font-size: 0.65em;
   right: 0;
   bottom: 0;
   color: black;
@@ -729,7 +724,7 @@ a:active {
 }
 
 #dashboard > #main_row {
-  width: 100%; height:auto; text-align:center;
+  width: 100%; height:auto; text-align:center; display: block;
 }
 
 #dashboard > #browse_row > #dashboard_users {
@@ -758,6 +753,12 @@ a:active {
   color: black;
 }
 
+#dashboard-comment-history {
+  width: 61vw;
+  overflow-y: hidden;
+  margin-top: 9px
+}
+
 .dashboard-btn > a,
 .dashboard-btn > a:hover,
 .dashboard-btn > a:active {
@@ -772,11 +773,11 @@ a:active {
 }
 
 a.dashboard-comments-icon > i{
-  border-bottom: 0.2em solid lightgreen;
+   border-bottom: 0.2em solid lightgreen;
 }
 
 a.dashboard-comments-icon.accessed > i{
-  border-bottom: none;
+   border-bottom: none;
 }
 
 .dashboard-comments-icon.highlight{
@@ -799,6 +800,7 @@ a.dashboard-comments-icon.accessed > i{
 
 
 #page_nav_input {
+  font-size: 13px;
   width: 33px;
   text-align: center;
   vertical-align: middle;
@@ -1262,7 +1264,7 @@ body::-webkit-scrollbar-corner {
 }
 
 .rm_btn:focus {
-  outline-color: rgba(77, 144, 254, 0.5); // #4D90FE
+  outline-color: rgba(77, 144, 254, 0.5); /*#4D90FE*/
   outline-offset: -2px;
   outline-style: auto;
   outline-width: 3px;
@@ -1442,4 +1444,8 @@ div.tooltip_audio_waveform div.arrow_up {
   padding-bottom: 0;
   padding-top: 0.6em;
   text-align: justify;
+}
+
+.btn_ubc{
+
 }

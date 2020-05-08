@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 /**
  * Created by dongwookyoon on 6/25/15.
  */
@@ -72,7 +71,6 @@
             cur_cmd = cmd;
 
             m_audio = new Audio(cmd.param_url);
-            m_audio.crossOrigin = 'use-credentials';
             m_audio.preload = "auto";
             m_audio.loop = false;
             m_audio.addEventListener('ended', function() {
@@ -364,22 +362,23 @@
         var recorder = null;
         var audio_context = null;
 
-        var initialized = null;
-        var init_inprogress = null;
-
         pub.Init = function(){
-            init_inprogress = true;
             return new Promise(function(resolve, reject){
                 try {
                     // webkit shim
                     window.AudioContext = window.AudioContext || window.webkitAudioContext;
                     navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.mediaDevices.getUserMedia;
-
+                    
                     audio_context = new AudioContext;
-
-                    if (audio_context.state !== 'running') {
-                        audio_context.resume();
-                    }
+                    
+                    // Prevent: The AudioContext was not allowed to start.
+                    // It must be resumed (or created) after a user gesture on the page.
+                    document.documentElement.addEventListener(
+                        "mousedown", function(){
+                            if (audio_context.state !== 'running') {
+                                audio_context.resume();
+                            }})
+                    // Ends
 
                 } catch (e) {
                     reject(new Error("No web audio support in this browser"));
@@ -391,7 +390,6 @@
                         r2.makeLocalJs(r2.CDN_SUBURL + '/lib_ext/recorder/recorderWorker.js')
                             .then(function(local_url){
                                 var src = audio_context.createMediaStreamSource(stream);
-                                console.log("src", src)
                                 window.leakMyAudioNodes = [src];
                                 recorder = new Recorder(
                                     src,
@@ -401,26 +399,17 @@
                                         downsample_ratio: src.context.sampleRate < 44100 ? 1 : 2
                                     }
                                 );
-                                initialized = true;
-                                init_inprogress = false;
                                 resolve();
                             });
                     },
                     function(err){
-                        console.error('Failed to initialize the microphone');
+                        var err = new Error('Failed to initialize the microphone');
                         console.error(err);
                         err.silent = true;
                         reject(err);
                     }
                 );
             });
-        };
-
-        pub.isInitialized = function(){
-            return initialized;
-        };
-        pub.initInProgress = function(){
-            return init_inprogress;
         };
 
         pub.BgnRecording = function(){

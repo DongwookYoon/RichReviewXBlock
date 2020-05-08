@@ -367,13 +367,11 @@
 
             if(anchorpiece){
                 var annot = new r2.Annot();
-                annot.SetAnnot(cmd.data.aid, anchorpiece.GetId(), cmd.time, cmd.data.duration, cmd.data.waveform_sample, 
-                    cmd.user, cmd.data.audiofileurl, cmd.data.ui_type);
-                
+                annot.SetAnnot(cmd.data.aid, anchorpiece.GetId(), cmd.time, cmd.data.duration, cmd.data.waveform_sample, cmd.user, cmd.data.audiofileurl,
+                    cmd.data.ui_type);
                 if(cmd.data.is_base_annot){
                     annot.setIsBaseAnnot();
                 }
-                
                 r2App.annots[cmd.data.aid] = annot;
                 r2.dom_model.createCommentVoice(annot, cmd.anchorTo.page, false); /* live_recording = false */
 
@@ -408,8 +406,7 @@
                         cmd_spotlight.npage,
                         spotlight_time,
                         cmd_spotlight.t_bgn,
-                        cmd_spotlight.t_end,
-                        cmd_spotlight.splght_width);
+                        cmd_spotlight.t_end);
                     for(var j = 0; j < cmd_spotlight.segments.length; ++j){
                         if(r2App.pieces_cache.hasOwnProperty(cmd_spotlight.segments[j].pid)){
                             var segment = new r2.Spotlight.Segment();
@@ -537,8 +534,7 @@
                     cmd_spotlight.npage,
                     spotlight_time,
                     cmd_spotlight.t_bgn,
-                    cmd_spotlight.t_end,
-                    cmd_spotlight.splght_width);
+                    cmd_spotlight.t_end);
                 for(var j = 0; j < cmd_spotlight.segments.length; ++j){
                     if(r2App.pieces_cache.hasOwnProperty(cmd_spotlight.segments[j].pid)){
                         var segment = new r2.Spotlight.Segment();
@@ -618,7 +614,6 @@
             // op: 'CreateComment'
             // type: PrivateHighlight
             // data: {Spotlights: [Spotlight, Spotlight, ...] };
-            // splght_width: 0.01234...
 
             if(cmd.user == r2.userGroup.cur_user.name &&
                 (new Date(cmd.time)).getTime() > r2App.annot_private_spotlight.timeLastChanged)
@@ -635,8 +630,7 @@
                         cmd_spotlight.npage,
                         spotlight_time,
                         cmd_spotlight.t_bgn,
-                        cmd_spotlight.t_end,
-                        cmd.splght_width);
+                        cmd_spotlight.t_end);
                     for(var j = 0; j < cmd_spotlight.segments.length; ++j){
                         if(r2App.pieces_cache.hasOwnProperty(cmd_spotlight.segments[j].pid)){
                             var segment = new r2.Spotlight.Segment();

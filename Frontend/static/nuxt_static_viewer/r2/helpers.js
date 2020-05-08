@@ -1321,10 +1321,6 @@
       return canv.width;
     };
 
-    pub.getCanvHeight = function(){
-      return canv.height;
-    }
-
     pub.getCanvRatio = function(){
       return canv.height/canv.width;
     };
@@ -1788,7 +1784,6 @@
       return page_canvas.dom_width;
     };
 
-   
     /** helper */
     function getDomWidth(dom){
       return dom.getBoundingClientRect().width;
@@ -1798,8 +1793,6 @@
     function getDomheight(dom){
       return dom.getBoundingClientRect().height;
     }
-
-   
 
     function updateScroll(){
       page_offset.x = $(content).offset().left + r2.viewCtrl.page_margins.left*r2.viewCtrl.scale;

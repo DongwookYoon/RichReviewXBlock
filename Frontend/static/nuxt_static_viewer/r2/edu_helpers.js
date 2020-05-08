@@ -2085,9 +2085,6 @@
       return page_canvas.dom_width
     }
 
-    pub.getCanvasHeight = function() {
-      return page_canvas.height;
-    };
   
     /** helper */
     function getDomWidth(dom) {

@@ -261,22 +261,6 @@
         return this.size;
     };
 
-    r2.Page.prototype.setSpotlightWidthForAnnot = function (annotid, width) {
-        this._annot_spotlight_widths.set(annotid, width);
-    }
-
-    r2.Page.prototype.getSpotlightWidthByAnnot = function (annotid) {
-        let val = this._annot_spotlight_widths.get(annotid);
-        if (!val) {
-            val = null;
-        }
-        return val;
-    };
-
-    r2.Page.prototype.checkSpotlightWidthSetForAnnot = function (annotid) {
-        return this._annot_spotlight_widths.has(annotid);
-    };
-
     r2.Page.prototype.refreshSpotlightPrerender = function(){
         this._spotlight_cache = [];
         var i, spotlight, cache;
@@ -289,6 +273,7 @@
                 var spotlights_of_page = annot.GetSpotlightsByNumPage(this._num);
 
                 for(i = 0; spotlight = spotlights_of_page[i]; ++i){
+                    let splght_width = spotlight.getWidth(); 
                     var segments = spotlight.getValidSegments();
                     if(segments.length > 0){
                         var n_total_pts = segments.reduce(function(sum, item){return sum+item.GetNumPts();}, 0);
@@ -308,7 +293,8 @@
                                     annot,
                                     cache_tbgn,
                                     t_end_segment,
-                                    cache_pts);
+                                    cache_pts,
+                                    splght_width);
                                 this._spotlight_cache.push(cache);
                                 cache_pts = [];
                                 cache_tbgn = t_end_segment;
@@ -321,7 +307,8 @@
                             annot,
                             cache_tbgn,
                             spotlight.t_end,
-                            cache_pts);
+                            cache_pts,
+                            splght_width);
                         this._spotlight_cache.push(cache);
                     }
                 }
@@ -330,10 +317,11 @@
 
         r2.spotlightRenderer.setCanvCtx(r2.viewCtrl.page_width_noscale, this.size.y/this.size.x);
         for(i = 0; spotlight = this._spotlight_cache[i]; ++i){
-            spotlight.preRender(r2.spotlightRenderer.getCanvCtx(), r2.spotlightRenderer.getCanvWidth(), this._spotlight_cache[i]._annot); // ctx, ratio
+            spotlight.preRender(r2.spotlightRenderer.getCanvCtx(), r2.spotlightRenderer.getCanvWidth()); // ctx, ratio
             
         }
     };
+
     r2.Page.prototype.refreshSpotlightPrerenderNewspeak = function(){
         this._spotlight_cache_newspeak = [];
         var i, spotlight, cache;
@@ -345,6 +333,8 @@
 
                 for(i = 0; spotlight = spotlights_of_page[i]; ++i){
                     var segments = spotlight.getValidSegments();
+                    let splght_width = spotlight.getSpotlightWidth();
+
                     if(segments.length > 0){
                         var n_total_pts = segments.reduce(function(sum, item){return sum+item.GetNumPts();}, 0);
                         var t_step = (spotlight.t_end-spotlight.t_bgn)/n_total_pts;
@@ -363,7 +353,8 @@
                                     annot,
                                     cache_tbgn,
                                     t_end_segment,
-                                    cache_pts);
+                                    cache_pts,
+                                    splght_width);
                                 this._spotlight_cache_newspeak.push(cache);
                                 cache_pts = [];
                                 cache_tbgn = t_end_segment;
@@ -376,7 +367,8 @@
                             annot,
                             cache_tbgn,
                             spotlight.t_end,
-                            cache_pts);
+                            cache_pts,
+                            splght_width);
                         this._spotlight_cache_newspeak.push(cache);
                     }
                 }
@@ -2192,7 +2184,6 @@
         this._audiofileurl = "";
         this._is_base_annot = false;
         this._ui_type = null;
-        this._splght_width = null;
     };
 
     r2.Annot.prototype.ExportToCmd = function(){
@@ -2200,7 +2191,6 @@
         // user: 'red user'
         // op: 'CreateComment'
         // type: CommentAudio
-        // splght_width: 0.01234...
         // anchorTo: {type: 'PieceText', id: pid, page: 2} or
         //           {type: 'PieceTeared', id: pid, page: 2}
         //           {type: 'CommentAudio', id: annotId, page: 2, time: [t0, t1]}
@@ -2215,7 +2205,6 @@
         cmd.data.aid = this._id;
         cmd.data.duration = this._duration;
         cmd.data.waveform_sample = this._ui_type === 'new_speak' ? [] : this._audio_dbs;
-        cmd.splght_width = this._splght_width;
         cmd.data.Spotlights = [];
         this._spotlights.forEach(function(splght){
             cmd.data.Spotlights.push(splght.ExportToCmd());
@@ -2282,13 +2271,8 @@
     r2.Annot.prototype.GetUsername = function(){
         return this._username;
     };
-    r2.Annot.prototype.GetSpotlightWidth = function(){
-        return this._splght_width;
-    }
-    r2.Annot.prototype.SetSpotlightWidth = function(width){
-        this._splght_width = width;
-    }
-    r2.Annot.prototype.SetAnnot = function(id, anchorpid, t_bgn, duration, audio_dbs, username, audiofileurl, ui_type, splght_width){
+   
+    r2.Annot.prototype.SetAnnot = function(id, anchorpid, t_bgn, duration, audio_dbs, username, audiofileurl, ui_type){
         this._id = id;
         this._anchorpid = anchorpid;
         this._bgn_time = t_bgn;
@@ -2299,7 +2283,6 @@
         this._audiofileurl = audiofileurl;
         this._reacordingaudioblob = null;
         this._ui_type = ui_type;
-        this._splght_width = (splght_width === null || splght_width === undefined) ? null : splght_width;
     };
     r2.Annot.prototype.AddSpotlight = function(spotlight, toupload){
         this._spotlights.push(spotlight);
@@ -2755,7 +2738,7 @@
     /*
      * Spotlight
      */
-    // Spotlight: {t_bgn:..., t_end:..., npage: 0, segments: [Segment, Segment, ...]}
+    // Spotlight: {t_bgn:..., t_end:..., npage: 0, segments: [Segment, Segment, ...], width: null}
     // Spotlight.Segment: {pid: ..., pts: [Vec2, Vec2, ...]}
 
     r2.Spotlight = function(){
@@ -2767,6 +2750,7 @@
         this.t_end = 0;
         this.segments = [];
         this.drawPieces = [];
+        this.width = null;
     };
 
     /**
@@ -2786,14 +2770,13 @@
             console.log('using piece size: ' + computedWidth);
         }
 
-        //Limit spotlight height to 20% of canvas width.
-        let max = r2.dom.getCanvasHeight() * 0.2 / r2.dom.getCanvasWidth();
+        let max = r2.dom.getCanvasHeight() * 0.2 / r2.dom.getCanvasWidth();     //Limit spotlight height to 20% of canvas width.
         return Math.min(computedWidth, max);
     };
 
     
     r2.Spotlight.prototype.ExportToCmd = function(){
-        //Spotlight: {t_bgn:..., t_end:..., npage: 0, segments: [Segment, Segment, ...]}
+        //Spotlight: {t_bgn:..., t_end:..., npage: 0, segments: [Segment, Segment, ...], splght_width}
         var cmd = {};
         cmd.time = this.time;
         cmd.t_bgn = this.t_bgn;
@@ -2803,19 +2786,31 @@
         this.segments.forEach(function(sgmnt){
             cmd.segments.push(sgmnt.ExportToCmd());
         });
+        cmd.splght_width = this.width;
         return cmd;
     };
     
+
+    r2.Spotlight.prototype.setWidth = function(splght_width) {
+        this.width = splght_width;
+    };
+
+    r2.Spotlight.prototype.getWidth = function(){
+        return this.width;
+    };
+
+
     r2.Spotlight.prototype.GetPage = function(){
         return this.npage;
     };
-    r2.Spotlight.prototype.SetSpotlight = function(username, annotid, npage, time, t_bgn, t_end){
+    r2.Spotlight.prototype.SetSpotlight = function(username, annotid, npage, time, t_bgn, t_end, splght_width){
         this.username = username;
         this.annotid = annotid;
         this.npage = npage;
         this.time = time;
         this.t_bgn = t_bgn;
         this.t_end = t_end;
+        this.width = splght_width;
     };
     r2.Spotlight.prototype.AddSegment = function(segment){
         this.segments.push(segment);
@@ -2918,16 +2913,16 @@
         this._t_end = 0;
         this._pts = [];
         this._bb = [];
-        this._splghtWidth = null;
+        this._splght_width = null;
     };
-    r2.Spotlight.Cache.prototype.setCache = function(annot, t_bgn, t_end, pts){
+    r2.Spotlight.Cache.prototype.setCache = function(annot, t_bgn, t_end, pts, splght_width){
         this._annot = annot;
         this._t_bgn = t_bgn;
         this._t_end = t_end;
         this._pts = pts;
         this._user = this._annot.GetUser();
-
-        var width = annot.GetSpotlightWidth();
+        this._splght_width = splght_width;
+        
         var max = new Vec2(Number.MIN_VALUE, Number.MIN_VALUE);
         var min = new Vec2(Number.MAX_VALUE, Number.MAX_VALUE);
         
@@ -2938,8 +2933,8 @@
             min.x = Math.min(min.x, v.x);
             min.y = Math.min(min.y, v.y);
         }
-        max.x+=width/2;max.y+=width/2;
-        min.x-=width/2;min.y-=width/2;
+        max.x+=splght_width/2;max.y+=splght_width/2;
+        min.x-=splght_width/2;min.y-=splght_width/2;
         this._bb = [min, max];
         
     };
@@ -2953,40 +2948,16 @@
             ctx.lineTo(this._pts[i].x*ratio, this._pts[i].y*ratio);
         }
 
-        
-        
-        /*
-        if (!this._splghtWidth) {
-            let searchResult = r2App.doc.SearchPieceByAnnotId(this._annot.GetId());
-            if (searchResult === null) {
-                console.log('nulligs');
-                width = r2.Spotlight.calcWidth()
-            }
-            else {
-                console.warn(searchResult["piece"]);
-                width = r2.Spotlight.calcWidth(searchResult["piece"]._parent);
-                
-            }
-            console.log('recalcwidth ' + width);
-            this._splghtWidth = width;
-        }
-
-        else {
-            console.log('precalculaed ' + this._splghtWidth);
-            width = this._splghtWidth;
-        }
-        */
-       
-        var width;
+        var width = this._splght_width;
         var color;
         color = this._user.color_splight_static;
-        width = this._annot.GetSpotlightWidth();
+       
         if(width === null) {
             console.warn('spotlight width was null. Using fallback');
             width = r2Const.SPLGHT_PRIVATE_WIDTH;
         }
-        console.log('prerender width for ' + this._annot.GetId() + ': ' + width);
 
+        console.log('prerender width for ' + this._annot.GetId() + ': ' + width);
 
         ctx.strokeStyle = color;
         ctx.lineWidth = width * ratio;
@@ -3018,6 +2989,7 @@
                     false,  // forprivate
                     this._user.color_splight_dynamic,  // color,
                     canvas_ctx,
+                    this._splght_width
                 );
             }
         }

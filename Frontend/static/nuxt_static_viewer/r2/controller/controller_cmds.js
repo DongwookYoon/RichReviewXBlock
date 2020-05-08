@@ -359,7 +359,6 @@
             //           {type: 'PieceTeared', id: pid, page: 2}
             //           {type: 'CommentAudio', id: annotId, page: 2, time: [t0, t1]}
             // data: {aid: ..., duration: t, waveform_sample: [0, 100, 99, 98 ...], Spotlights: [Spotlight, Spotlight, ...] };
-            //splght_width: 0.012345...
             // Spotlight: {t_bgn:..., t_end:..., npage: 0, segments: [Segment, Segment, ...]}
             // Spotlight.Segment: {pid: ..., pts: [Vec2, Vec2, ...]}
 
@@ -369,14 +368,12 @@
             if(anchorpiece){
                 var annot = new r2.Annot();
                 annot.SetAnnot(cmd.data.aid, anchorpiece.GetId(), cmd.time, cmd.data.duration, cmd.data.waveform_sample, 
-                    cmd.user, cmd.data.audiofileurl, cmd.data.ui_type, cmd.splght_width);
+                    cmd.user, cmd.data.audiofileurl, cmd.data.ui_type);
                 
                 if(cmd.data.is_base_annot){
                     annot.setIsBaseAnnot();
                 }
-
-                console.warn(annot);
-
+                
                 r2App.annots[cmd.data.aid] = annot;
                 r2.dom_model.createCommentVoice(annot, cmd.anchorTo.page, false); /* live_recording = false */
 
@@ -411,7 +408,8 @@
                         cmd_spotlight.npage,
                         spotlight_time,
                         cmd_spotlight.t_bgn,
-                        cmd_spotlight.t_end);
+                        cmd_spotlight.t_end,
+                        cmd_spotlight.splght_width);
                     for(var j = 0; j < cmd_spotlight.segments.length; ++j){
                         if(r2App.pieces_cache.hasOwnProperty(cmd_spotlight.segments[j].pid)){
                             var segment = new r2.Spotlight.Segment();
@@ -539,7 +537,8 @@
                     cmd_spotlight.npage,
                     spotlight_time,
                     cmd_spotlight.t_bgn,
-                    cmd_spotlight.t_end);
+                    cmd_spotlight.t_end,
+                    cmd_spotlight.splght_width);
                 for(var j = 0; j < cmd_spotlight.segments.length; ++j){
                     if(r2App.pieces_cache.hasOwnProperty(cmd_spotlight.segments[j].pid)){
                         var segment = new r2.Spotlight.Segment();
@@ -619,6 +618,7 @@
             // op: 'CreateComment'
             // type: PrivateHighlight
             // data: {Spotlights: [Spotlight, Spotlight, ...] };
+            // splght_width: 0.01234...
 
             if(cmd.user == r2.userGroup.cur_user.name &&
                 (new Date(cmd.time)).getTime() > r2App.annot_private_spotlight.timeLastChanged)
@@ -635,7 +635,8 @@
                         cmd_spotlight.npage,
                         spotlight_time,
                         cmd_spotlight.t_bgn,
-                        cmd_spotlight.t_end);
+                        cmd_spotlight.t_end,
+                        cmd.splght_width);
                     for(var j = 0; j < cmd_spotlight.segments.length; ++j){
                         if(r2App.pieces_cache.hasOwnProperty(cmd_spotlight.segments[j].pid)){
                             var segment = new r2.Spotlight.Segment();

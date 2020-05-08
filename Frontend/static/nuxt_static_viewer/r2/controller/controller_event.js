@@ -1222,7 +1222,7 @@ var r2Ctrl = {};
     r2.spotlightCtrl = (function(){
         var pub = {};
  
-        var curSplghtWidth = 0.0;
+        var curSplghtWidth = r2Const.SPLGHT_PRIVATE_WIDTH;
         var cur_recording_spotlight = null;
         var cur_recording_spotlight_segment = null;
         var cur_recording_spotlight_segment_piece = null;
@@ -1255,13 +1255,16 @@ var r2Ctrl = {};
             var piece = r2App.cur_page.GetPieceByHitTest(pt);
             if(piece){
                 var spotlight = new r2.Spotlight();
+                curSplghtWidth = r2.Spotlight.calcWidth(piece);
+
                 spotlight.SetSpotlight(
                     target_annot.GetUsername(),
                     target_annot.GetId(),
                     r2App.cur_pdf_pagen,
                     r2App.cur_time,
                     r2App.cur_time-target_annot.GetBgnTime()-r2App.cur_recording_asyn_delta_t,
-                    r2App.cur_time-target_annot.GetBgnTime()-r2App.cur_recording_asyn_delta_t);
+                    r2App.cur_time-target_annot.GetBgnTime()-r2App.cur_recording_asyn_delta_t,
+                    curSplghtWidth);
 
                 var segment  = new r2.Spotlight.Segment();
                 segment.SetSegment(piece.GetId(), [pt.subtract(piece.pos, true)]);
@@ -1273,7 +1276,7 @@ var r2Ctrl = {};
                 cur_recording_spotlight_segment_piece = piece;
                 cur_recording_spotlight_pt = pt;
                 cur_annot = target_annot;
-                curSplghtWidth = r2.Spotlight.calcWidth(cur_recording_spotlight_segment_piece);
+                
             }
         };
 
@@ -1321,12 +1324,11 @@ var r2Ctrl = {};
                 cur_recording_spotlight_pt = null;
 
                 /*DO NOT update the width again if it has already been set for this annotation*/
-                if (target_annot.GetSpotlightWidth() === null) {
-                    target_annot.SetSpotlightWidth(curSplghtWidth);
-                    console.warn('trigger up; width is now: ' + curSplghtWidth);
-                }
+                //if (target_annot.GetSpotlightWidth() === null) {
+                //    target_annot.SetSpotlightWidth(curSplghtWidth);
+                //    console.warn('trigger up; width is now: ' + curSplghtWidth);
+                //}
                 
-
                 r2App.cur_page.refreshSpotlightPrerender();
 
                 cur_recording_spotlight = null;

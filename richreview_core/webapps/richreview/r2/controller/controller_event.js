@@ -1221,7 +1221,8 @@ var r2Ctrl = {};
 
     r2.spotlightCtrl = (function(){
         var pub = {};
-
+ 
+        var curSplghtWidth = r2Const.SPLGHT_PRIVATE_WIDTH;
         var cur_recording_spotlight = null;
         var cur_recording_spotlight_segment = null;
         var cur_recording_spotlight_segment_piece = null;
@@ -1232,17 +1233,18 @@ var r2Ctrl = {};
         };
 
         pub.drawDynamicSceneBlob = function(canv_ctx, isprivate, color){
-            if(cur_recording_spotlight_pt){
-                r2.Spotlight.Cache.prototype.drawMovingBlob(
+           if(cur_recording_spotlight_pt){
+             r2.Spotlight.Cache.prototype.drawMovingBlob(
                     cur_recording_spotlight_pt,
                     cur_recording_spotlight_pt,
                     isprivate,
                     color,
-                    canv_ctx
+                    canv_ctx,
+                    curSplghtWidth * r2Const.SPLGHT_BLOB_SCALE
                 );
             }
             if(cur_recording_spotlight){
-                cur_recording_spotlight.Draw(canv_ctx);
+                cur_recording_spotlight.Draw(canv_ctx, curSplghtWidth);
             }
             if(cur_recording_spotlight_segment){
                 //cur_recording_spotlight_segment.Draw(canv_ctx, true);
@@ -1253,13 +1255,22 @@ var r2Ctrl = {};
             var piece = r2App.cur_page.GetPieceByHitTest(pt);
             if(piece){
                 var spotlight = new r2.Spotlight();
+                /*
+                 * Get spotlight width based on mean lineheight for page 
+                 * TODO: Change this to calc spotlight width dynamically, 
+                 * based on piece height the spotlight is currently hovering over.
+                 * e.g. curSplghtWidth = r2.Spotlight.calcWidth(piece)
+                 */
+                curSplghtWidth = r2.Spotlight.calcWidth(); 
+                
                 spotlight.SetSpotlight(
                     target_annot.GetUsername(),
                     target_annot.GetId(),
                     r2App.cur_pdf_pagen,
                     r2App.cur_time,
                     r2App.cur_time-target_annot.GetBgnTime()-r2App.cur_recording_asyn_delta_t,
-                    r2App.cur_time-target_annot.GetBgnTime()-r2App.cur_recording_asyn_delta_t);
+                    r2App.cur_time-target_annot.GetBgnTime()-r2App.cur_recording_asyn_delta_t,
+                    curSplghtWidth);
 
                 var segment  = new r2.Spotlight.Segment();
                 segment.SetSegment(piece.GetId(), [pt.subtract(piece.pos, true)]);
@@ -1270,6 +1281,8 @@ var r2Ctrl = {};
                 cur_recording_spotlight_segment = segment;
                 cur_recording_spotlight_segment_piece = piece;
                 cur_recording_spotlight_pt = pt;
+                cur_annot = target_annot;
+                
             }
         };
 
@@ -1315,6 +1328,7 @@ var r2Ctrl = {};
                     target_annot.AddSpotlight(cur_recording_spotlight, toupload = true);
                 }
                 cur_recording_spotlight_pt = null;
+                
                 r2App.cur_page.refreshSpotlightPrerender();
 
                 cur_recording_spotlight = null;
@@ -1332,6 +1346,10 @@ var r2Ctrl = {};
             cur_recording_spotlight_segment = null;
             cur_recording_spotlight_pt = null;
             cur_recording_spotlight = null;
+        };
+
+        pub.getSpotlightWidth = function() {
+            return curSplghtWidth;
         };
 
         return pub;

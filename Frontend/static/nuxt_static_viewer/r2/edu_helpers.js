@@ -1229,7 +1229,6 @@
       //}
 
       r2.dom_model.setCurPage(n)
-
       r2App.pieceSelector.reset()
 
       r2App.SetCurPdfPageN(n)
@@ -1239,6 +1238,8 @@
       r2App.invalidate_page_layout = true
 
       updatePageNavBar()
+      r2App.cur_page.refreshPageSpotlightWidth();         //Calc spotlight width for this page
+      
     }
 
     function updatePageNavBar() {
@@ -2085,6 +2086,9 @@
       return page_canvas.dom_width
     }
 
+    pub.getCanvasHeight = function() {
+      return page_canvas.height;
+    };
   
     /** helper */
     function getDomWidth(dom) {

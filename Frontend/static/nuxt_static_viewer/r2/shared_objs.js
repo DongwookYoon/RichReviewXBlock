@@ -22,10 +22,11 @@ var r2Const = (function () {
     pub.PIECEKEYBOARD_FONTSIZE = 13/920;
 
     // spotlight
-    pub.SPLGHT_WIDTH_MAX = 0.04;
+    pub.SPLGHT_WIDTH_MAX = 0.06;
+    pub.SPLGHT_WIDTH_MIN = 0.01;
     pub.SPLGHT_PRIVATE_WIDTH = 0.025;
-    pub.SPLGHT_WIDTH_SCALE = 0.65;
-
+    pub.SPLGHT_BLOB_SCALE = 1.2;
+        
     // inks
     pub.INK_WIDTH = 0.001;
     pub.ERASER_RADIUS = 0.01;
@@ -69,6 +70,7 @@ var r2Const = (function () {
     pub.INTERVAL_CMD_UPLOAD_RETRY = 3*1000;
     pub.N_CMD_UPLOAD_RETRY = 3;
     pub.DB_SYNC_POLLING_INTERVAL = 1*10*1000; // 3 mins
+    
 
     // error message
     pub.ERROR_MSG =

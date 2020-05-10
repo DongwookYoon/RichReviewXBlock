@@ -1240,7 +1240,7 @@ var r2Ctrl = {};
                     isprivate,
                     color,
                     canv_ctx,
-                    curSplghtWidth
+                    curSplghtWidth * r2Const.SPLGHT_BLOB_SCALE
                 );
             }
             if(cur_recording_spotlight){
@@ -1255,8 +1255,14 @@ var r2Ctrl = {};
             var piece = r2App.cur_page.GetPieceByHitTest(pt);
             if(piece){
                 var spotlight = new r2.Spotlight();
-                curSplghtWidth = r2.Spotlight.calcWidth(piece);
-
+                /*
+                 * Get spotlight width based on mean lineheight for page 
+                 * TODO: Change this to calc spotlight width dynamically, 
+                 * based on piece height the spotlight is currently hovering over.
+                 * e.g. curSplghtWidth = r2.Spotlight.calcWidth(piece)
+                 */
+                curSplghtWidth = r2.Spotlight.calcWidth(); 
+                
                 spotlight.SetSpotlight(
                     target_annot.GetUsername(),
                     target_annot.GetId(),
@@ -1322,12 +1328,6 @@ var r2Ctrl = {};
                     target_annot.AddSpotlight(cur_recording_spotlight, toupload = true);
                 }
                 cur_recording_spotlight_pt = null;
-
-                /*DO NOT update the width again if it has already been set for this annotation*/
-                //if (target_annot.GetSpotlightWidth() === null) {
-                //    target_annot.SetSpotlightWidth(curSplghtWidth);
-                //    console.warn('trigger up; width is now: ' + curSplghtWidth);
-                //}
                 
                 r2App.cur_page.refreshSpotlightPrerender();
 

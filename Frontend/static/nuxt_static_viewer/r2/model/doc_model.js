@@ -218,7 +218,7 @@
      */
     r2.Page = function() {
         r2.Obj.call(this);
-        this._annot_spotlight_widths = new Map();
+        this._spotlightWidth = r2Const.SPLGHT_PRIVATE_WIDTH;
     };
     r2.Page.prototype = Object.create(r2.Obj.prototype);
 
@@ -376,6 +376,80 @@
         }
 
     };
+
+    r2.Page.prototype.refreshPageSpotlightWidth = function(){
+        let total = 0;
+        let width = 0;
+        let pieceHeights = [];
+        if (r2App.pieces_cache){
+            for (let pieceId in r2App.pieces_cache){
+                let curPiece =  r2App.pieces_cache[pieceId];
+                /*Only include text pieces on the current page. */
+                if (curPiece.GetNumPage() === this._num) {
+                    pieceHeights.push(curPiece.GetContentSize().y);
+                }
+            }
+            /*Calc mean line height for pieces */
+            width = calcPieceSizeAvg(pieceHeights);
+            if (width === 0) {
+                width = r2Const.SPLGHT_PRIVATE_WIDTH;
+            }
+        }
+        
+        else {
+            width = r2Const.SPLGHT_PRIVATE_WIDTH;
+        }
+
+        this._spotlightWidth = width;                   //Set spotlight width for this page.        
+        return this._spotlightWidth;
+    };
+
+    /**
+     * Calculate mean of heights, only considering values 
+     *  Q1 - IQR * 1.5 <= h <= Q3 + IQR * 1.5
+     * 
+     * @param {number[]} heights 
+     */
+    function calcPieceSizeAvg(heights) {
+        if (heights.length === 0)
+            return 0;
+        
+        if (heights.length === 1)
+            return heights[0];
+        
+        /*Sort heights ascending */
+        heights = heights.sort(function(x, y) {
+            if (x < y)
+                return -1;
+            else if (x > y)
+                return 1;
+
+            return 0;
+        });
+
+        let medianIndex = Math.floor(heights.length / 2);
+        let q1Index = Math.floor(medianIndex / 2);
+        let q3Index = medianIndex + q1Index;
+        let iqr = heights[q3Index] - heights[q1Index];
+        let sum = 0;
+        let n = 0;
+        const max = heights[q3Index] + iqr * 1.5;
+        const min = heights[q1Index] + iqr * -1.5;
+
+        for (let h of heights){
+            if (h > 0 && h >= min && h <= max ){
+                sum += h;
+                n++;
+            }
+        }
+          
+        return sum/n;
+    }
+
+    r2.Page.prototype.getPageSpotlightWidth = function() {
+        return this._spotlightWidth;
+    };
+
     r2.Page.prototype.dynamicSpotlightNewspeak = function(canvas_ctx, word_gestures, first){
 
         var spotlight;
@@ -2714,14 +2788,8 @@
 
 
     r2.Ink.Cache.prototype.GetPlayback = function(pt) {
-        let searchResult = r2App.doc.SearchPieceByAnnotId(this._annot.GetId());
-        let splightWidth = 0;
-         
-        if (searchResult === null)
-             splightWidth = r2.Spotlight.calcWidth();
-        else
-            splightWidth = r2.Spotlight.calcWidth(searchResult["piece"]);
-        
+        let splightWidth = r2.Spotlight.calcWidth();
+                
         if(this._pts.length>1 && this._annot != null && this._t_end > this._t_bgn){
             for(var i = 0; i < this._pts.length-1; ++i){
                 if(r2.util.linePointDistance(this._pts[i], this._pts[i+1], pt) < splightWidth/2){
@@ -2759,19 +2827,17 @@
     r2.Spotlight.calcWidth = function(piece) {
         let computedWidth = 0.0;
 
-        /*If no piece specified, use lineheight property on doc */
+        /*If no piece specified, use mean of line heights that has been pre-calculated for cur page */
         if (!piece) {
-            /*Both line height and canvas width grow linearly, proportional to UI zoom level.  */
-            computedWidth = r2.dom_model.getLineHeightPx() / r2.dom.getCanvasWidth() * r2Const.SPLGHT_WIDTH_SCALE;
+            computedWidth = r2App.cur_page.getPageSpotlightWidth() || r2Const.SPLGHT_PRIVATE_WIDTH;
         }
         /*Otherwise use piece height for more accurate line height*/
         else {
             computedWidth = piece._cnt_size.y;
-            console.log('using piece size: ' + computedWidth);
         }
 
-        let max = r2.dom.getCanvasHeight() * 0.2 / r2.dom.getCanvasWidth();     //Limit spotlight height to 20% of canvas width.
-        return Math.min(computedWidth, max);
+        return computedWidth < r2Const.SPLGHT_WIDTH_MIN ? 
+            r2Const.SPLGHT_WIDTH_MIN : Math.min(computedWidth, r2Const.SPLGHT_WIDTH_MAX);
     };
 
     
@@ -2956,9 +3022,7 @@
             console.warn('spotlight width was null. Using fallback');
             width = r2Const.SPLGHT_PRIVATE_WIDTH;
         }
-
-        console.log('prerender width for ' + this._annot.GetId() + ': ' + width);
-
+       
         ctx.strokeStyle = color;
         ctx.lineWidth = width * ratio;
         ctx.lineCap = 'round';
@@ -3003,18 +3067,9 @@
             ctx.lineTo(this._pts[i].x, this._pts[i].y);
         }
 
-        var color;
-        var width;
-        color = this._user.color_splight_dynamic_newspeak;
-        let searchResult = r2App.doc.SearchPieceByAnnotId(this._annot.GetId());
-
-        if (searchResult === null) {
-            width = r2.Spotlight.calcWidth()
-        }
-        else {
-            width = r2.Spotlight.calcWidth(searchResult["piece"]);
-        }        
-        let piece = r2App.doc.SearchPieceByAnnotId(r2App.cur_annot_id)["piece"];
+        var color = this._user.color_splight_dynamic_newspeak;
+        var width = this._splght_width || r2.Spotlight.calcWidth();
+        
         ctx.strokeStyle = color;
         ctx.lineWidth = width;
         ctx.lineCap = 'round';
@@ -3031,7 +3086,7 @@
             line_width = width;
         }
         else {
-            width = r2.Spotlight.calcWidth();
+            width = this._splght_width || r2.Spotlight.calcWidth();
         }
              
         
@@ -3063,13 +3118,9 @@
         }
     };
     r2.Spotlight.Cache.prototype.GetPlayback = function(pt) {
-        let searchResult = r2App.doc.SearchPieceByAnnotId(this._annot.GetId());
-        let splightWidth = 0;
-        if (searchResult === null)
-            splightWidth = r2.Spotlight.calcWidth();
-        else
-            splightWidth = r2.Spotlight.calcWidth(searchResult["piece"]);
-       
+        
+        let splightWidth = this._splght_width || r2.Spotlight.calcWidth();
+               
         if(this._pts.length>1 && this._annot != null && this._t_end > this._t_bgn){
             for(var i = 0; i < this._pts.length-1; ++i){
                 if(r2.util.linePointDistance(this._pts[i], this._pts[i+1], pt) < splightWidth/2){

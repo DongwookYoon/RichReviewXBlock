@@ -63,11 +63,9 @@ utils/eldap-sync/nohup.out
 utils/pdf_batch/data/
 utils/backup/down/
 
-#Backend
+
 node-modules/
 ssl/
-
-
 Backend/node_modules/
 
 

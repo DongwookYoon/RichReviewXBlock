@@ -1,0 +1,12 @@
+extends __layout_cprght
+
+block content_with_cprght
+    link(rel='stylesheet', href='/stylesheets/login.css')
+
+    form.form-login(action="/login_pilot" method="POST")
+        h2.for-login-heading Login
+        label.sr-only(for="input_id") User ID
+        input(type="text" id="input_id" name="id_str" class="form-control" placeholder="User ID" required autofocus)
+        label.sr-only(for="input_password") Password
+        input(type="password" id="input_password" name="password" class="form-control" placeholder="Password" required)
+        button.btn.btn-lg.btn-primary.btn-block(type="submit") Login

@@ -1,0 +1,32 @@
+- should_show_login = (cur_page !== "account" && cur_page !== "login" && !user)
+if should_show_login
+    li
+        a.cwl_login_button(href="/login_ubc", role="button") UBC&nbsp
+    li.dropdown
+        a.dropdown-toggle(id="loginDropdown", role="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true")
+            i.fa.fa-list-ul
+        ul.dropdown-menu(aria-labelledby="loginDropdown")
+            li
+                p Other login types:
+            li
+                a(href="/login_google")
+                    i.fa.fa-google
+                    | &nbspGoogle Login
+            li
+                a(href="/login_pilot")
+                    i.fa.fa-plane
+                    | &nbspPilot Login
+            li
+              a(href="/ubc-pilot")
+                i.fa.fa-plane
+                | &nbspUBC Pilot
+if user
+    li
+        a(href="/account")
+            i.fa.fa-user
+            | &nbsp#{user.nick}
+            include _auth_indicator
+    li
+        a(href="/logout_saml")
+            i.fa.fa-sign-out
+            | &nbspLogout

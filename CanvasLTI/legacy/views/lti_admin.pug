@@ -1,0 +1,50 @@
+doctype html(lang='en')
+head(profile='http://www.w3.org/2005/10/profile')
+    script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js')
+    link(rel='shortcut icon', href=cdn_endpoint+'/favicon.ico', type='image/x-icon')
+    link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css')
+    script(src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js')
+    meta(charset='UTF-8')
+    title LTI Admin Panel
+    style
+        |.table{
+        |margin-bottom:0;
+        |}
+        |.dropdown-menu{
+        |padding: 5px 5px;
+        |}
+        |h1{
+        |margin-top: 10px;
+        |}
+body
+    .well
+        h1 Users
+        table.table.table-condensed
+            thead
+                tr#thead_tr_users
+            tbody#tbody_users
+    .well
+        h1 RichReview Groups
+        p#rr_groups_text
+        table.table.table-condensed#table_rr
+            thead
+                tr#thead_tr_rr
+            tbody#tbody_rr
+    .well
+        h1 BBS Groups
+        p#bb_groups_text
+        table.table.table-condensed#table_bb
+            thead
+                tr#thead_tr_bb
+            tbody#tbody_bb
+    if is_manager
+        .well
+            h1 Grading
+            form#grading_form
+                textarea#grading_form_textarea(class='form-control' rows='5' name='texts')
+                button.btn.btn-sm.btn-default#grading_form_btn Submit
+
+    script
+        include ./lti_admin.js
+        |run('#{data_str}', #{is_manager});
+

@@ -1,0 +1,10 @@
+extends __layout
+
+block content
+    //   Created by Dongwook Yoon on 12/6/14.
+    #r2_app_page(align="center")
+        #r2_app_container(align="left")
+
+        script(type='text/javascript', src="/js/viewer_helper.js")
+        script.
+            loadRichReview("#{r2_ctx}", "#{env}", "#{cdn_endpoint}", false);

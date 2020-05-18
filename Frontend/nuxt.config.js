@@ -121,7 +121,7 @@ var config =  {
     // extractCSS: true,
 
     /*
-     **Experimental build optimizations. Enable by setting NUXT_EXP=true.
+     **Experimental build optimizations. Enable by setting NUXT_OPTIMIZE=true.
     */
     //Enabled parallel webpack building. Not recommended as this causes Nuxt build warning.
     //parallel: optimizeBuild,

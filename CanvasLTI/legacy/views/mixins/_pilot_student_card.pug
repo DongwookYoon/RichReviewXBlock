@@ -1,0 +1,17 @@
+mixin pilotStudentCard(pilot_user = {})
+    if pilot_user.is_admin === "false"
+        - var is_it_blocked = pilot_user.is_active === "false"
+        - var div_id = pilot_user.email.replace(/\.|\@/g,'_')
+        div(id=div_id).pilot_mgmt_user
+            section.email_view
+                p= pilot_user.email
+            .vertical_line
+            section.pswd_input
+                a(href="#" id="password")= pilot_user.password
+                script.
+                    makePasswordEditable("#{div_id}", "#{pilot_user.email}", "#{pilot_user.password}");
+            .vertical_line
+            section.is_active_input
+                a(href="#" id="is_active")= (is_it_blocked ? "yes" : "no")
+                script.
+                    makeBlockedSelector("#{div_id}", "#{pilot_user.email}", #{is_it_blocked});

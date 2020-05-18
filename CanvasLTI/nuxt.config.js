@@ -86,10 +86,6 @@ export default {
     ]
   },
 
-  router: {
-    base: 'lti'
-  },
-
   /*
   ** vuetify module configuration
   ** https://github.com/nuxt-community/vuetify-module

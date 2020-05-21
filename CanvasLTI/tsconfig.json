@@ -12,8 +12,10 @@
     "allowJs": true,
     "sourceMap": true,
     "strict": true,
+    "importHelpers": true,
     "noEmit": true,
     "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": false,
     "baseUrl": ".",
     "paths": {
       "~/*": [
@@ -25,7 +27,8 @@
     },
     "types": [
       "@types/node",
-      "@nuxt/types"
+      "@nuxt/types",
+      "node"
     ],
     "skipLibCheck" : true
   },

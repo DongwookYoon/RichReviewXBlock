@@ -32,25 +32,26 @@
 </template>
 
 <script lang = "ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue } from 'nuxt-property-decorator';
 import $axios from 'axios';
 import { Route } from 'vue-router';
 import * as https from 'https';
 import * as authStore from '../../store';        //Pre-initialized store.
 import AuthStore from '../../store/auth-store';
 
-// @ts-ignore
-const ltiAuthStore = authStore.ltiAuth as AuthStore;
-
-
 @Component
 export default class CreateAssignment extends Vue {
+
+  // @ts-ignore
+  private const ltiAuthStore = authStore.ltiAuth as AuthStore;
 
   /* Component data */
   private saved: boolean = true;
   private assignmentType : string = 'document_submission';
   private files : File [] = [];
   /* End data */
+
+  //middleware: TODO Authentication middleware
 
   /* Component methods */
   public addFile () {
@@ -101,7 +102,7 @@ export default class CreateAssignment extends Vue {
             {
               headers: {
                 'Content-Type': 'multipart/form-data',
-                Authorization: ltiAuthStore.userID
+                Authorization: this.ltiAuthStore.userID
               },
               httpsAgent: new https.Agent({
                 rejectUnauthorized: false
@@ -120,7 +121,7 @@ export default class CreateAssignment extends Vue {
             { assignment_type: this.assignmentType, lti: true},
             {
               headers: {
-                Authorization: ltiAuthStore.userID
+                Authorization: this.ltiAuthStore.userID
               },
               httpsAgent: new https.Agent({
                 rejectUnauthorized: false
@@ -141,7 +142,7 @@ export default class CreateAssignment extends Vue {
    *  Take user back to the LTI platform
    */
   public cancel () {
-      console.log(ltiAuthStore);
+      console.log(this.ltiAuthStore);
   }
 
   /* End methods */

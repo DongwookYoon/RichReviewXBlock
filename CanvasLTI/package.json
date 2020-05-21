@@ -45,6 +45,7 @@
     "node-uuid": "^1.4.8",
     "nodemailer": "^6.3.0",
     "nuxt": "^2.1.0",
+    "nuxt-property-decorator": "^2.7.2",
     "nuxt-start": "^2.9.1",
     "oauth-1.0a": "^2.2.4",
     "objects-to-csv": "^1.2.1",

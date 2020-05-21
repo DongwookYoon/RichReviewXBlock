@@ -6,6 +6,11 @@ interface IAuthPayload {
   randomData: any
 }
 
+interface IUser {
+  userID: string;
+  //possibly add other data as well.
+}
+
 @Module({
   name: 'AuthStore',
   stateFactory: true,
@@ -19,7 +24,14 @@ export default class AuthStore extends VuexModule {
 
   get authorized () : boolean  {
     //TODO really check token and data against data from LTI request
-    return this.token !== null && this.randomData != null;
+    console.warn('No authentication check. Do not run like this in prod!');
+    return true;
+  }
+
+  get authUser () : IUser {
+    //TODO Return a User object representing authenticated user
+    let user : IUser = {userID : '0'};
+    return user;
   }
 
   @Mutation

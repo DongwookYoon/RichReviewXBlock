@@ -15,18 +15,15 @@
 </template>
 
 <script lang="ts">
+import * as https from 'https';
 import { Component, Prop, Vue } from 'nuxt-property-decorator';
 import $axios from 'axios';
 import { Route } from 'vue-router';
-import * as https from 'https';
-import * as authStore from '../../store';        //Pre-initialized store.
-import AuthStore from '../../store/auth-store';
+import {ltiAuth} from '~/store';        //Pre-initialized store.
 
 @Component
 export default class Assignment extends Vue {
 
-  // @ts-ignore
-  private const ltiAuthStore = authStore.ltiAuth as AuthStore;
 
   private submitted: boolean = false;
   private isCreated: boolean = false;

@@ -32,18 +32,14 @@
 </template>
 
 <script lang = "ts">
-import { Component, Prop, Vue } from 'nuxt-property-decorator';
-import $axios from 'axios';
-import { Route } from 'vue-router';
-import * as https from 'https';
-import * as authStore from '../../store';        //Pre-initialized store.
-import AuthStore from '../../store/auth-store';
+import * as https from 'https'
+import { Component, Prop, Vue } from 'nuxt-property-decorator'
+import $axios from 'axios'
+import {ltiAuth} from '~/store' // Pre-initialized store.
 
 @Component
 export default class CreateAssignment extends Vue {
 
-  // @ts-ignore
-  private const ltiAuthStore = authStore.ltiAuth as AuthStore;
 
   /* Component data */
   private saved: boolean = true;
@@ -51,50 +47,52 @@ export default class CreateAssignment extends Vue {
   private files : File [] = [];
   /* End data */
 
-  //middleware: TODO Authentication middleware
+  // middleware: TODO Authentication middleware
 
   /* Component methods */
   public addFile () {
-    let filesInput : any = this.$refs.files;
-    filesInput.click();          //Simulate click on the upload button so enable 1 button add+open file system UI
+    const filesInput : any = this.$refs.files
+    filesInput.click() // Simulate click on the upload button so enable 1 button add+open file system UI
   }
 
   public uploadFile () {
-    let filesInput : any = this.$refs.files;
-    const uploadedFiles : FileList = filesInput.files;
+    const filesInput : any = this.$refs.files
+    const uploadedFiles : FileList = filesInput.files
 
     for (let i = 0; i < uploadedFiles.length; i++) {
-        this.files.push(uploadedFiles[i]);
+      this.files.push(uploadedFiles[i])
     }
   }
 
   public removeFile (key: number) : any {
-    this.files.splice(key, 1);
+    this.files.splice(key, 1)
   }
 
   public async save () {
-   this.saved = true;
-   try {
-         if (this.assignmentType === 'comment_submission') {
-          if (this.files.length === 0) {
-            alert('One or more files is required for a comment submission assignment');
+    this.saved = true
+    try {
+      if (this.assignmentType === 'comment_submission') {
+        if (this.files.length === 0) {
+          alert('One or more files is required for a comment submission assignment')
+          return;
+        }
+
+        const formData = new FormData()
+        for (let i = 0; i < this.files.length; i++) {
+          const file : File = this.files[i]
+          if (file.type !== 'application/pdf') {
+            alert('Files must be in pdf format')
             return;
           }
+          formData.append(`file-${i}`, file)
+        }
 
-          const formData = new FormData();
-          for (let i = 0; i < this.files.length; i++) {
-            const file : File = this.files[i];
-            if (file.type !== 'application/pdf') {
-              alert('Files must be in pdf format');
-              return;
-            }
-            formData.append(`file-${i}`, file);
-          }
+        formData.append('assignment_data', JSON.stringify({
+          assignment_type: this.assignmentType,
+          lti: true
+        }))
 
-          formData.append('assignment_data', JSON.stringify({ assignment_type: this.assignmentType ,
-                                                              lti: true}));
-
-          await $axios.post(
+        await $axios.post(
             `https://${process.env.backend}:3000/courses/${
               this.$route.params.course_id
               }/assignments/comment_submission_assignment`,
@@ -102,52 +100,52 @@ export default class CreateAssignment extends Vue {
             {
               headers: {
                 'Content-Type': 'multipart/form-data',
-                Authorization: this.ltiAuthStore.userID
+                Authorization: ltiAuth.userID
               },
               httpsAgent: new https.Agent({
                 rejectUnauthorized: false
               })
             }
-          )
-          //this.$router.push(`/edu/courses/${this.$route.params.course_id}`);
-          this.postBackToPlatform();
-        } //End-if
+        )
+        // this.$router.push(`/edu/courses/${this.$route.params.course_id}`);
+        this.postBackToPlatform()
+      } // End-if
 
-        else {
-          await $axios.post(
+      else {
+        await $axios.post(
             `https://${process.env.backend}:3000/courses/${
               this.$route.params.course_id
               }/assignments/document_submission_assignment`,
-            { assignment_type: this.assignmentType, lti: true},
+            { assignment_type: this.assignmentType, lti: true },
             {
               headers: {
-                Authorization: this.ltiAuthStore.userID
+                Authorization: ltiAuth.userID
               },
               httpsAgent: new https.Agent({
                 rejectUnauthorized: false
               })
             }
-          )
-          //this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
-          this.postBackToPlatform();
-        }
-
-      } catch (e) {
-        this.saved = false;
-        window.alert(e.response.data.message);
+        )
+        // this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
+        this.postBackToPlatform()
       }
+
+    } catch (e) {
+      this.saved = false
+      window.alert(e.response.data.message)
+    }
   }
 
   /**
    *  Take user back to the LTI platform
    */
   public cancel () {
-      console.log(this.ltiAuthStore);
+    console.log(ltiAuth)
   }
 
   /* End methods */
 
-  private postBackToPlatform() {
+  private postBackToPlatform () {
 
   }
 

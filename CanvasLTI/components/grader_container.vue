@@ -1,12 +1,13 @@
 <template>
-<div>
-  <no-ssr>
+  <div>
+    <no-ssr>
       <body>
         <div class="content_body">
-          <base href="/" />
+          <!--TODO Check that base is correct -->
+          <base href="/lti">
           <div id="r2_app_page" align="'center">
             <div id="r2_app_container" align="left">
-              <p v-if="submitted===false" id="no-submission-text">
+              <p id="no-submission-text" v-if="submitted===false">
                 This student has not submitted the assignment
               </p>
             </div>
@@ -14,27 +15,22 @@
         </div>
       </body>
     </no-ssr>
-</div>
+  </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'nuxt-property-decorator';
-import $axios from 'axios';
-import https from 'https';
-import * as authStore from '../store';        //Pre-initialized store.
-import AuthStore from '../store/auth-store';
+import https from 'https'
+import { Component, Prop, Vue } from 'nuxt-property-decorator'
+import $axios from 'axios'
+import { ltiAuth } from '~/store'
 
 if (typeof window !== 'undefined') {
-  require('../static/my_viewer_helper');          //Only load RR viewer helper on client.
+  require('../static/my_viewer_helper') // Only load RR viewer helper on client.
 }
 
 @Component
 export default class GraderContainer extends Vue {
-
   @Prop({ type: Boolean, required: true }) readonly submitted !: Boolean;
-
-  // @ts-ignore
-  private const ltiAuthStore = authStore.ltiAuth as AuthStore;
 
   head: any = {
     script: [
@@ -47,27 +43,26 @@ export default class GraderContainer extends Vue {
   }
 
   asyncData () : Promise<any> {
-    return null;
+    return null
   }
 
-  fetch ({redirect}) : any {
-    if (this.ltiAuthStore.authorized === false) {
-      return redirect('/lti');      //Redirect to root if auth fails.
+  fetch ({ redirect }) : any {
+    if (ltiAuth.authorized === false) {
+      return redirect('/lti') // Redirect to root if auth fails.
     }
   }
 
   async mounted () : Promise<any> {
-    /*Only show RichReview UI if the assignment has been submitted */
+    /* Only show RichReview UI if the assignment has been submitted */
     if (this.submitted === true) {
-
-      /*TODO Check if group id is a valid identifier when lti is used */
+      /* TODO Check if group id is a valid identifier when lti is used */
       const res = await $axios.get(
         `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
         }/groups/${this.$route.query.groupid}`,
         {
           headers: {
-            Authorization: this.ltiAuthStore.userID
+            Authorization: ltiAuth.userID
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false
@@ -75,34 +70,26 @@ export default class GraderContainer extends Vue {
         }
       )
 
-      const r2_ctx = res.data.r2_ctx;
-      //r2_ctx.auth = this.$store.state.authUser;
-      r2_ctx.auth = this.ltiAuthStore.authUser;
-      const cdn_endpoint = res.data.cdn_endpoint;
+      const r2_ctx = res.data.r2_ctx
+      // r2_ctx.auth = this.$store.state.authUser;
+      r2_ctx.auth = this.ltiAuthStore.authUser
+      const cdn_endpoint = res.data.cdn_endpoint
 
-      /*Helper function from my_viewer_helper.js*/
+      /* Helper function from my_viewer_helper.js */
       loadRichReview(
-          encodeURIComponent(JSON.stringify(r2_ctx)),
-          res.data.env,
-          cdn_endpoint,
-          true
-      );
+        encodeURIComponent(JSON.stringify(r2_ctx)),
+        res.data.env,
+        cdn_endpoint,
+        true
+      )
     }
-
   }
-
-
-
 }
 
 </script>
 
-
-
-
 <style scoped>
 @import 'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/css/bootstrap.min.css';
-
 
 .due-div {
     display: flex;

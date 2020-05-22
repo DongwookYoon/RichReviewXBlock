@@ -2,31 +2,44 @@
   <div id="create-assignment">
     <div id="assignment-details">
       <div id="assignment-type-section">
-
         <label id="assignment-type-label" for="assignment-type">Assignment type</label>
         <select id="assignment-type-selection" v-model="assignmentType" @change="saved = false">
-          <option value="document_submission">PDF Document Submission</option>
-          <option value="comment_submission">RichReview Comment Submission</option>
+          <option value="document_submission">
+            PDF Document Submission
+          </option>
+          <option value="comment_submission">
+            RichReview Comment Submission
+          </option>
         </select>
       </div>
 
       <div id="file-upload-section" v-if="assignmentType === 'comment_submission'">
         <div>
-          <h2 id="files-header" for="files">Files </h2>
-          <input ref="files" @change="handleFileUpload()" type="file" multiple >
+          <h2 id="files-header" for="files">
+            Files
+          </h2>
+          <input ref="files" @change="handleFileUpload()" type="file" multiple>
         </div>
 
         <div v-for="(file, key) in files" :key="key" class="file-listing">
-          <p class="file">{{ file.name }} <span @click="removeFile(key)" class="remove-file">Remove</span></p>
+          <p class="file">
+            {{ file.name }} <span @click="removeFile(key)" class="remove-file">Remove</span>
+          </p>
         </div>
 
-        <button class="modal-button" id="add-file-button" @click="addFile">Add Files</button>
+        <button id="add-file-button" @click="addFile" class="modal-button">
+          Add Files
+        </button>
       </div>
     </div>
 
     <div id="finish-button-section">
-      <button id="save-button" @click="save" class="modal-button" value="Save">Ok</button>
-      <button id="cancel-button" @click="cancel" class="modal-button" value="Cancel">Cancel</button>
+      <button id="save-button" @click="save" class="modal-button" value="Save">
+        Ok
+      </button>
+      <button id="cancel-button" @click="cancel" class="modal-button" value="Cancel">
+        Cancel
+      </button>
     </div>
   </div>
 </template>
@@ -35,19 +48,17 @@
 import * as https from 'https'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import $axios from 'axios'
-import {ltiAuth} from '~/store' // Pre-initialized store.
+import { ltiAuth } from '~/store' // Pre-initialized store.
 
 @Component
 export default class CreateAssignment extends Vue {
-
-
   /* Component data */
   private saved: boolean = true;
   private assignmentType : string = 'document_submission';
   private files : File [] = [];
   /* End data */
 
-  // middleware: TODO Authentication middleware
+  middleware = 'auth'
 
   /* Component methods */
   public addFile () {
@@ -74,7 +85,7 @@ export default class CreateAssignment extends Vue {
       if (this.assignmentType === 'comment_submission') {
         if (this.files.length === 0) {
           alert('One or more files is required for a comment submission assignment')
-          return;
+          return
         }
 
         const formData = new FormData()
@@ -82,7 +93,7 @@ export default class CreateAssignment extends Vue {
           const file : File = this.files[i]
           if (file.type !== 'application/pdf') {
             alert('Files must be in pdf format')
-            return;
+            return
           }
           formData.append(`file-${i}`, file)
         }
@@ -129,7 +140,6 @@ export default class CreateAssignment extends Vue {
         // this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
         this.postBackToPlatform()
       }
-
     } catch (e) {
       this.saved = false
       window.alert(e.response.data.message)
@@ -149,22 +159,18 @@ export default class CreateAssignment extends Vue {
 
   }
 
-
-
   /* Vuex route leave handler. Gives user chance to save if
   changes are not saved. */
   beforeRouteLeave (to: any, from : any, next : any) {
     if (this.saved === false) {
       if (confirm('Do you want to exit this? Changes you made may not be saved.') === true) {
         return next()
-      }
-      else {
+      } else {
         return next(false)
       }
     }
     return next()
   }
-
 }
 
 </script>
@@ -221,7 +227,5 @@ export default class CreateAssignment extends Vue {
   color: red;
   cursor: pointer;
 }
-
-
 
 </style>

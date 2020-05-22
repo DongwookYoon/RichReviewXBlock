@@ -51,7 +51,7 @@ export default class CommentSubmitter extends Vue {
     ]
   }
 
-  // TODO change this to use data from LTI instead.
+  // TODO May need to change this to get assignment data from LTI instead.
   async asyncData (context: any) {
     if (!ltiAuth.authorized) {
       return

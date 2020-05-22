@@ -42,9 +42,7 @@ export default class GraderContainer extends Vue {
     ]
   }
 
-  asyncData () : Promise<any> {
-    return null
-  }
+
 
   fetch ({ redirect }) : any {
     if (ltiAuth.authorized === false) {

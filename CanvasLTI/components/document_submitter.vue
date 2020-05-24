@@ -1,11 +1,11 @@
 <template>
   <div id="document-submitter">
-    <div id="file-upload-section" v-if="assignmentType === 'comment_submission'">
+    <div id="file-upload-section">
       <div>
-        <h2 id="files-header" for="files">
-          Files
+        <h2 id="files-header">
+          Assignment Files
         </h2>
-        <input ref="files" @change="handleFileUpload()" type="file" multiple>
+        <input ref="files" @change="handleFileUpload()" class="file-input" type="file" multiple>
       </div>
 
       <div v-for="(file, key) in files" :key="key" class="file-listing">
@@ -31,9 +31,9 @@
 
 import * as https from 'https'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
-import $axios from 'axios'
-import { Route } from 'vue-router'
-import { ltiAuth } from '~/store' // Pre-initialized store for authentication.
+// import $axios from 'axios'
+// import { Route } from 'vue-router'
+// import { ltiAuth } from '~/store' // Pre-initialized store for authentication.
 
 @Component
 export default class DocumentSubmitter extends Vue {
@@ -46,9 +46,12 @@ export default class DocumentSubmitter extends Vue {
     this.isSubmitted = this.submitted
   }
 
-  private async submitAssignment () : Promise<any> {
+  private submitAssignment () {
     if (this.files.length === 0) {
       alert('One or more files is required for a submission.')
+      return
+    }
+    if (confirm('Are you sure you want to submit this assignment?') === false) {
       return
     }
     const formData = new FormData()
@@ -60,7 +63,8 @@ export default class DocumentSubmitter extends Vue {
       }
       formData.append('files[' + i + ']', file)
     }
-
+    /* TODO Submit to Canvas and mark associated assignment as marked in RichReview */
+    /*
     try {
       await $axios.post(
           `https://${process.env.backend}:3000/courses/${
@@ -77,15 +81,16 @@ export default class DocumentSubmitter extends Vue {
             })
           }
       )
-      alert('Assignment successfully submitted!')
-      this.isSubmitted = true
-      this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
-    } catch (e) {
+    } catch (e: any) {
       window.alert(e.response.data.message)
+      return
     }
+    */
+    alert('Assignment successfully submitted!')
+    this.isSubmitted = true
   }
 
-  private addFiles () : void {
+  private addFile () : void {
     const filesInput : any = this.$refs.files
     filesInput.click()
   }
@@ -131,32 +136,49 @@ export default class DocumentSubmitter extends Vue {
 #file-upload-section {
   margin-top: 1.5rem;
   width: 25%;
-  min-width: 20vw;
+  min-width: 200px;
 }
 
 #files-header {
-  font-size: 0.95rem;
+  font-size: 1.75rem;
+  font-weight: bold;
   border-bottom: 1px solid black;
 }
 
 #add-file-button {
   margin-top: 1rem;
+  font-size: 1.2rem;
 }
 
 .assignment-button {
   color: white;
   background-color: #0c2343;
-  border-radius: 0.2rem;
-  width: 5rem;
+  border-radius: 0.3rem;
+  min-width: 5rem;
+  min-height: 1rem;
   text-align: center;
   cursor: pointer;
-  font-size: 0.9rem;
-  padding:0.1rem;
+  font-size: 1.2rem;
+  padding:0.1 0.2rem;
+}
+
+.file {
+  margin: 0;
 }
 
 .remove-file {
   color: red;
   cursor: pointer;
+  margin-left: 3rem;
+}
+
+.file-input {
+  display: none;
+}
+
+#submit-button{
+  margin-top: 8rem;
+  font-size: 1.5rem;
 }
 
 </style>

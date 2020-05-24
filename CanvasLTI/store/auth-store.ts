@@ -25,13 +25,13 @@ export default class AuthStore extends VuexModule {
   get authorized () : boolean  {
     //TODO really check token and data against data from LTI request
     console.warn('No authentication check. Do not run like this in prod!');
-    return true;
+    return true
   }
 
   get authUser () : IUser {
     //TODO Return a User object representing authenticated user
-    let user : IUser = {userID : '0'};
-    return user;
+    const user : IUser = {userID : '0'}
+    return user
   }
 
   @Mutation

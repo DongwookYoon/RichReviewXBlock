@@ -33,7 +33,7 @@ export default {
     '@nuxtjs/pwa',
     // Doc: https://github.com/nuxt-community/dotenv-module
     '@nuxtjs/dotenv',
-    '@nuxtjs/auth',
+    // Doc: https://auth.nuxtjs.org/guide/setup.html
     // '@nuxtjs/router',
     '~/modules/LoadServerMiddleware'
   ],
@@ -44,6 +44,14 @@ export default {
   */
   axios: {
   },
+
+  /*
+  ** Auth module configuration
+  ** See https://auth.nuxtjs.org/#getting-started
+  */
+ auth: {
+
+ },
 
   /*
   ** Nuxt server settings

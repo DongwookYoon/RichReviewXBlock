@@ -7,9 +7,10 @@
           <base href="/lti">
           <div id="r2_app_page" align="'center">
             <div id="r2_app_container" align="left">
-              <p id="no-submission-text" v-if="submitted===false">
+              <p v-if="submitted===false" id="no-submission-text">
                 This student has not submitted the assignment
               </p>
+              <p v-else>Show the RichReview UI here for grading</p>
             </div>
           </div>
         </div>
@@ -42,18 +43,12 @@ export default class GraderContainer extends Vue {
     ]
   }
 
-
-
-  fetch ({ redirect }) : any {
-    if (ltiAuth.authorized === false) {
-      return redirect('/lti') // Redirect to root if auth fails.
-    }
-  }
-
-  async mounted () : Promise<any> {
+  mounted () {
     /* Only show RichReview UI if the assignment has been submitted */
     if (this.submitted === true) {
-      /* TODO Check if group id is a valid identifier when lti is used */
+      /* TODO Check if group id is a valid identifier when lti is used and get
+      all required data to display assignment from the lti launch request */
+      /*
       const res = await $axios.get(
         `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
@@ -70,17 +65,18 @@ export default class GraderContainer extends Vue {
 
       const r2_ctx = res.data.r2_ctx
       // r2_ctx.auth = this.$store.state.authUser;
-      r2_ctx.auth = this.ltiAuthStore.authUser
+      r2_ctx.auth = ltiAuth.authUser
       const cdn_endpoint = res.data.cdn_endpoint
 
-      /* Helper function from my_viewer_helper.js */
       loadRichReview(
         encodeURIComponent(JSON.stringify(r2_ctx)),
         res.data.env,
         cdn_endpoint,
         true
       )
+      */
     }
+
   }
 }
 

@@ -2,9 +2,9 @@
   <div>
     <div id="top-bar">
       <p id="assignment-title">
-        {{ assignment_title }}
+        {{ title }}
       </p>
-      <button id="submit-button" v-if="showSubmitButton" @click="submit">
+      <button id="submit-button" @click="submit">
         Submit
       </button>
     </div>
@@ -36,10 +36,11 @@ if (typeof window !== 'undefined') {
 @Component
 export default class CommentSubmitter extends Vue {
   @Prop({ type: Boolean, required: true }) readonly submitted !: Boolean;
+  @Prop({ type: String, required: true }) readonly title !: string;
+  @Prop({ type: String, required: true }) readonly userid !: string;
 
   private showSubmitButton : boolean = false;
   private assignmentId: string = '';
-  private assignmentTitle : string = '';
 
   head = {
     script: [
@@ -65,7 +66,7 @@ export default class CommentSubmitter extends Vue {
         }/comment_submissions/${context.query.groupid}`,
       {
         headers: {
-          Authorization: context.store.state.authUser.id
+          Authorization: this.userID
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -75,26 +76,24 @@ export default class CommentSubmitter extends Vue {
     const assignment_data = res.data.assignment
     const submission_data = res.data.submission
     console.log(res.data)
-    const showSubmitButton =
-      assignment_data.type === 'document_submission'
-        ? false
-        : assignment_data.allow_multiple_submissions
-          ? true
-          : submission_data.submission_time === ''
 
-    this.showSubmitButton = showSubmitButton
-    this.assignmentId = assignment_data.id
-    this.assignmentTitle = assignment_data.title
+    // this.assignmentId = assignment_data.id
+
   }
 
   async mounted () {
+  // TODO update this to get get the required data based on lti launch request from Canvas
+  // To simplify this, consider changing backend so that it is possible to get the data
+  // for the document based only on group id. It is simple to include the group id and
+  // other data in the launch URL
+  /*
     const res = await $axios.get(
       `https://${process.env.backend}:3000/courses/${
         this.$route.params.course_id
       }/groups/${this.$route.query.groupid}`,
       {
         headers: {
-          Authorization: this.$store.state.authUser.id
+          Authorization: this.userID
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -111,11 +110,13 @@ export default class CommentSubmitter extends Vue {
       cdn_endpoint,
       true
     )
+    */
   }
 
   public async submit () {
     if (!confirm('Are you sure you wish to submit?')) { return }
 
+    /* TODO Update this to submit based on data in the lti launch request and url
     await $axios.post(
         `https://${process.env.backend}:3000/courses/${
           this.$route.params.course_id
@@ -134,8 +135,8 @@ export default class CommentSubmitter extends Vue {
           })
         }
     )
+    */
     alert('Assignment successfully submitted!')
-    this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
   }
 }
 

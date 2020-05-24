@@ -18,7 +18,7 @@
           <h2 id="files-header" for="files">
             Files
           </h2>
-          <input ref="files" @change="handleFileUpload()" type="file" multiple>
+          <input ref="files" @change="uploadFile()" class="doc-file-input" type="file" multiple>
         </div>
 
         <div v-for="(file, key) in files" :key="key" class="file-listing">
@@ -57,8 +57,6 @@ export default class CreateAssignment extends Vue {
   private assignmentType : string = 'document_submission';
   private files : File [] = [];
   /* End data */
-
-  middleware = 'auth'
 
   /* Component methods */
   public addFile () {
@@ -150,26 +148,19 @@ export default class CreateAssignment extends Vue {
    *  Take user back to the LTI platform
    */
   public cancel () {
-    console.log(ltiAuth)
+    if (this.saved === false) {
+      if (confirm('Do you want to exit this? Changes you made may not be saved.') === true) {
+        this.postBackToPlatform()
+      }
+    } else {
+      this.postBackToPlatform()
+    }
   }
 
   /* End methods */
 
   private postBackToPlatform () {
-
-  }
-
-  /* Vuex route leave handler. Gives user chance to save if
-  changes are not saved. */
-  beforeRouteLeave (to: any, from : any, next : any) {
-    if (this.saved === false) {
-      if (confirm('Do you want to exit this? Changes you made may not be saved.') === true) {
-        return next()
-      } else {
-        return next(false)
-      }
-    }
-    return next()
+    window.location.replace('/')
   }
 }
 
@@ -226,6 +217,15 @@ export default class CreateAssignment extends Vue {
 .remove-file {
   color: red;
   cursor: pointer;
+  margin-left: 2rem;
+}
+
+.file {
+  margin: 0;
+}
+
+.doc-file-input {
+  display: none;
 }
 
 </style>

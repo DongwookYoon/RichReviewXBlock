@@ -66,7 +66,7 @@ export default class CommentSubmitter extends Vue {
         }/comment_submissions/${context.query.groupid}`,
       {
         headers: {
-          Authorization: this.userID
+          Authorization: this.userid
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false

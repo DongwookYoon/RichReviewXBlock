@@ -13,31 +13,31 @@
         </select>
       </div>
 
-      <div id="file-upload-section" v-if="assignmentType === 'comment_submission'">
+      <div v-if="assignmentType === 'comment_submission'" id="file-upload-section">
         <div>
           <h2 id="files-header" for="files">
             Files
           </h2>
-          <input ref="files" @change="uploadFile()" class="doc-file-input" type="file" multiple>
+          <input ref="files" class="doc-file-input" type="file" multiple @change="uploadFile()">
         </div>
 
         <div v-for="(file, key) in files" :key="key" class="file-listing">
           <p class="file">
-            {{ file.name }} <span @click="removeFile(key)" class="remove-file">Remove</span>
+            {{ file.name }} <span class="remove-file" @click="removeFile(key)">Remove</span>
           </p>
         </div>
 
-        <button id="add-file-button" @click="addFile" class="modal-button">
+        <button id="add-file-button" class="modal-button" @click="addFile">
           Add Files
         </button>
       </div>
     </div>
 
     <div id="finish-button-section">
-      <button id="save-button" @click="save" class="modal-button" value="Save">
+      <button id="save-button" class="modal-button" value="Save" @click="save">
         Ok
       </button>
-      <button id="cancel-button" @click="cancel" class="modal-button" value="Cancel">
+      <button id="cancel-button" class="modal-button" value="Cancel" @click="cancel">
         Cancel
       </button>
     </div>
@@ -46,25 +46,40 @@
 
 <script lang = "ts">
 import * as https from 'https'
+import jwt_decode from 'jwt-decode'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import $axios from 'axios'
 import { ltiAuth } from '~/store' // Pre-initialized store.
 
-@Component
+@Component({
+  asyncData ({ req }: any) : any {
+    if (process.server === true) {
+      const jwt : any = req.body
+      const ltiMessage : any = jwt_decode(jwt)
+
+      if (CreateAssignment.validateToken(ltiMessage) === true) {
+        return { ltiMessage } // Inject into CreateAssignment instance data
+      } else {
+        console.warn('Invalid ltiDeepLinkRequest\n' + ltiMessage)
+      }
+    }
+  }
+})
 export default class CreateAssignment extends Vue {
   /* Component data */
-  private saved: boolean = true;
-  private assignmentType : string = 'document_submission';
-  private files : File [] = [];
+  private saved: boolean = true
+  private assignmentType : string = 'document_submission'
+  private files : File [] = []
+  ltiMessage ?: any
   /* End data */
 
-  /* Component methods */
-  public addFile () {
+  /* Component-level methods */
+  public addFile () : void {
     const filesInput : any = this.$refs.files
     filesInput.click() // Simulate click on the upload button so enable 1 button add+open file system UI
   }
 
-  public uploadFile () {
+  public uploadFile () : void {
     const filesInput : any = this.$refs.files
     const uploadedFiles : FileList = filesInput.files
 
@@ -79,6 +94,7 @@ export default class CreateAssignment extends Vue {
 
   public async save () {
     this.saved = true
+    /* Create a record of the assignment record in RichReview first */
     try {
       if (this.assignmentType === 'comment_submission') {
         if (this.files.length === 0) {
@@ -100,10 +116,11 @@ export default class CreateAssignment extends Vue {
           assignment_type: this.assignmentType,
           lti: true
         }))
-
+        //TODO change this to create the assignment without associating it with a course id;
+        // need to change the route and handler on backend
         await $axios.post(
             `https://${process.env.backend}:3000/courses/${
-              this.$route.params.course_id
+              this.courseID
               }/assignments/comment_submission_assignment`,
             formData,
             {
@@ -117,13 +134,14 @@ export default class CreateAssignment extends Vue {
             }
         )
         // this.$router.push(`/edu/courses/${this.$route.params.course_id}`);
-        this.postBackToPlatform()
       } // End-if
 
       else {
+        //TODO change this to create the assignment without associating it with a course id;
+        // need to change the route and handler on backend
         await $axios.post(
             `https://${process.env.backend}:3000/courses/${
-              this.$route.params.course_id
+              this.courseID
               }/assignments/document_submission_assignment`,
             { assignment_type: this.assignmentType, lti: true },
             {
@@ -136,8 +154,9 @@ export default class CreateAssignment extends Vue {
             }
         )
         // this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
-        this.postBackToPlatform()
-      }
+      }// end-else
+      await this.sendConsumerResponse()
+      this.navigateToPlatform()
     } catch (e) {
       this.saved = false
       window.alert(e.response.data.message)
@@ -147,19 +166,38 @@ export default class CreateAssignment extends Vue {
   /**
    *  Take user back to the LTI platform
    */
-  public cancel () {
+  public cancel () : void {
     if (this.saved === false) {
       if (confirm('Do you want to exit this? Changes you made may not be saved.') === true) {
-        this.postBackToPlatform()
+        this.navigateToPlatform()
       }
     } else {
-      this.postBackToPlatform()
+      this.navigateToPlatform()
     }
   }
+  /* End component-level methods */
 
-  /* End methods */
 
-  private postBackToPlatform () {
+  /**
+   * TODO Validate the jwt token
+   */
+  private static validateToken (jwt: Object) : boolean {
+    console.log(jwt)
+    return true
+  }
+
+  /**
+   * Sends the required POST ltiDeepLinkResponse back to the tool consumer (platform)
+   */
+  private async sendConsumerResponse () {
+
+  }
+
+  /**
+   * Sends client browser back to the URL specified in LTI request.
+   * This is typically the LMS consumer assignment creation page
+   */
+  private navigateToPlatform () : void {
     window.location.replace('/')
   }
 }

@@ -312,8 +312,12 @@ class SubmissionDatabaseHandler {
     }
 
 
+    async submit_comment_submission_lti (import_handler, submission_key, group_key) {
+        await this.submit_comment_submission (import_handler, submission_key, group_key, lti = true);
+    }
 
-    async submit_comment_submission (import_handler, submission_key, group_key) {
+
+    async submit_comment_submission (import_handler, submission_key, group_key, lti = false) {
         let doc_db_handler = await import_handler.doc_db_handler;
         let group_db_handler = await import_handler.group_db_handler;
         let cmd_db_handler = await import_handler.cmd_db_handler;
@@ -365,7 +369,9 @@ class SubmissionDatabaseHandler {
         for (let member of submitter_data['members']) {
             let member_id = member.replace(KeyDictionary.key_dictionary['user'], '');
             await group_db_handler.add_user_to_group(member_id, new_group_key);
-            await user_db_handler.add_group_to_user(member, new_group_key);
+            if (lti === false) {
+                await user_db_handler.add_group_to_user(member, new_group_key);
+            }
             await group_db_handler.remove_user_write_permissions(member_id, new_group_key);
         }
     }
@@ -442,6 +448,86 @@ class SubmissionDatabaseHandler {
         })().catch(err => {
             throw(err);
         });
+    }
+
+    async ensure_submission_initialized(import_handler, user_key, assignment_key) {
+        let assignment_db_handler = await import_handler.assignment_db_handler;
+        let submitter_db_handler = await import_handler.submitter_db_handler;
+        let assignment_data = await assignment_db_handler.get_assignment_data(user_key, assignment_key);
+       
+        /*If this submission for this user and assignment key already exists, simply return that
+          submission key */
+        let existing_submissions = await this.get_all_submissions (assignment_data['submissions']);
+        
+        for (let curSubmission of existing_submissions) {
+            if ( (curSubmission['assignment'].replace(KeyDictionary.key_dictionary.assignment, '')) === assignment_key) {
+                let curSubmitterKey = curSubmission['submitter'].replace(KeyDictionary.key_dictionary.submitter, '');
+                let submitter_data = (await submitter_db_handler.get_all_submitters([curSubmitterKey]))[0];
+                
+                for (let curUser of submitter_data['members']) {
+                    if (curUser.replace(KeyDictionary.key_dictionary.user, '') === user_key) {
+                        return curSubmission['id'];
+                    }
+                }
+            }
+           
+        }
+
+        
+        let id = `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`;
+        let submission_key = KeyDictionary.key_dictionary['submission'] + id;
+       
+        await this.set_submission_data(submission_key, 'id', id);
+        await this.set_submission_data(submission_key, 'submission_status', 'Not Submitted');
+        await this.set_submission_data(submission_key, 'mark', '');
+        await this.set_submission_data(submission_key, 'submission_time', '');
+        await this.set_submission_data(submission_key, 'assignment', assignment_key);
+        await this.set_submission_data(submission_key, 'group', '');
+        await this.set_submission_data(submission_key, 'current_submission', '');
+        await this.set_submission_data(submission_key, 'past_submissions', '[]');
+
+        let submitter_key = await submitter_db_handler.create_submitter_and_return_key(
+            import_handler,
+            course_key,
+            [user_key],
+            submission_key,
+        '');
+
+        await this.set_submission_data(submission_key, 'submitter', submitter_key);
+
+        if (assignment_data['type'] === 'comment_submission') {
+                let submission_data = await submission_db_handler.get_submission_data(submission_key);
+        
+                let submitter_key = submission_data['submitter'];
+                let submitter_data = await submitter_db_handler.get_submitter_data(submitter_key);
+        
+                let members = submitter_data['members'];
+        
+                let first_student = members.pop();
+                let first_student_id = first_student.replace(KeyDictionary.key_dictionary['user'], '');
+        
+                let group_key = await group_db_handler.create_group(first_student_id, doc_key, template_group_key);
+                await group_db_handler.add_submission_to_group(group_key, submission_key);
+        
+                await document_db_handler.add_group_to_doc(doc_key, group_key);
+        
+                await user_db_handler.add_group_to_user(first_student, group_key);
+                    try {
+                    await submission_db_handler.add_group_to_comment_submission(submission_key, group_key);
+                } catch (e) {
+                    console.warn(e);
+                }   
+        
+            for (let member of members) {
+                    await user_db_handler.add_group_to_user(member, group_key);
+                    let member_id = member.replace(KeyDictionary.key_dictionary['user'], '');
+                    await group_db_handler.add_user_to_group(member_id, group_key);
+            }
+        }
+    
+        await assignment_db_handler.set_assignment_data(assignment_key, 'submissions', JSON.stringify([submission_key]));
+              
+        return submission_key;
     }
 
 

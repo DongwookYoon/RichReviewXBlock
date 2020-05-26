@@ -70,6 +70,7 @@ export default class CreateAssignment extends Vue {
   private saved: boolean = true
   private assignmentType : string = 'document_submission'
   private files : File [] = []
+  private viewerLink : string
   ltiMessage ?: any
   /* End data */
 
@@ -94,6 +95,7 @@ export default class CreateAssignment extends Vue {
 
   public async save () {
     this.saved = true
+    const assignment_key: string = `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`
     /* Create a record of the assignment record in RichReview first */
     try {
       if (this.assignmentType === 'comment_submission') {
@@ -114,39 +116,33 @@ export default class CreateAssignment extends Vue {
 
         formData.append('assignment_data', JSON.stringify({
           assignment_type: this.assignmentType,
-          lti: true
+          assignment_key
         }))
-        //TODO change this to create the assignment without associating it with a course id;
-        // need to change the route and handler on backend
+
+
         await $axios.post(
-            `https://${process.env.backend}:3000/courses/${
-              this.courseID
-              }/assignments/comment_submission_assignment`,
+            `https://${process.env.backend}:3000/lti/assignments/comment_submission_assignment`,
             formData,
             {
               headers: {
                 'Content-Type': 'multipart/form-data',
-                Authorization: ltiAuth.userID
+                Authorization: this.ltiMessage.sub      // TODO make 100% sure that sub is an imutable GUID
               },
               httpsAgent: new https.Agent({
                 rejectUnauthorized: false
               })
             }
         )
-        // this.$router.push(`/edu/courses/${this.$route.params.course_id}`);
       } // End-if
 
       else {
-        //TODO change this to create the assignment without associating it with a course id;
-        // need to change the route and handler on backend
+
         await $axios.post(
-            `https://${process.env.backend}:3000/courses/${
-              this.courseID
-              }/assignments/document_submission_assignment`,
-            { assignment_type: this.assignmentType, lti: true },
+            `https://${process.env.backend}:3000/lti/assignments/document_submission_assignment`,
+            { assignment_key },
             {
               headers: {
-                Authorization: ltiAuth.userID
+                Authorization: this.ltiMessage.sub     // TODO make 100% sure that sub is an imutable GUID
               },
               httpsAgent: new https.Agent({
                 rejectUnauthorized: false

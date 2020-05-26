@@ -10,6 +10,7 @@ const logger = require('morgan');
 const indexRouter = require('./routes/index');
 const courseRouter = require('./routes/course');
 const assignmentRouter = require('./routes/assignment');
+const ltiAssignmentRouter = require('./routes/lti_assignment');
 const userRouter = require('./routes/user');
 const loginRouter = require('./routes/login');
 const course_groupRouter = require('./routes/course_group');
@@ -54,6 +55,7 @@ app.use('/dbs', dbsRouter);
 app.use('/login', loginRouter);
 app.use('/bluemix_stt_auth', bluemixRouter);
 app.use('/admin', adminRouter);
+app.use('/', ltiAssignmentRouter)
 app.use('/courses', courseRouter);
 app.use('/courses/:course_id/assignments', assignmentRouter);
 app.use('/courses/:course_id/users', userRouter);

@@ -23,6 +23,7 @@ export default {
   */
   buildModules: [
     '@nuxt/typescript-build',
+    '@nuxtjs/router-extras'
   ],
   /*
   ** Nuxt.js modules
@@ -62,11 +63,12 @@ export default {
       cert: certs.cert,
       ca: [certs.ca]
     },
-    port: certs.port,   //default: 3000
-    host: certs.host    //default: localhost
+    port: certs.port,   // default: 3000
+    host: certs.host    // default: localhost
   },
 
   env: {
+    deployment_id: 'Add Canvas deployment id', // Canvas deployment id
     backend:
       process.env.NODE_ENV !== 'production' ? 'localhost' : 'richreview.net'
   },

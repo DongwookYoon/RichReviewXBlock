@@ -619,7 +619,117 @@ class AssignmentDatabaseHandler {
         return data
     }
 
+
+    async get_assignment_lti (import_handler, assignment_key, user_key, is_instructor_or_ta) {
+        let user_db_handler = await import_handler.user_db_handler;
+                
+        let data = {};
+
+        if (!is_instructor_or_ta) {
+            let assignment_data = await this.get_assignment_data('', assignment_key);
+            
+            data = await this.get_assignment_for_students_lti(import_handler, user_key, assignment_key);
+        } else  {
+            data = await this.get_assignment_for_tas_and_instructors_lti(import_handler, user_key, assignment_key);
+        }
+
+        
+        return data
+    }
     
+
+    async get_assignment_for_students_lti (import_handler, user_key, assignment_key) {
+        let submission_db_handler = await import_handler.submission_db_handler;
+        let group_db_handler = await import_handler.group_db_handler;
+        
+        let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+       
+        delete assignment_data['extensions'];
+        delete assignment_data['display_grade_as'];
+        delete assignment_data['count_toward_final_grade'];
+        delete assignment_data['creation_date'];
+        delete assignment_data['submissions'];
+
+        let submission_key = await this.get_users_submission_key(
+            import_handler,
+            user_key,
+            assignment_key);
+
+        let link = '';
+        let submission_status;
+
+        if (submission_key) {
+            let submission_data = await submission_db_handler.get_submission_data(submission_key);
+
+            if (submission_data)
+                submission_status = submission_data['submission_status'];
+
+            if (submission_data['group'] && submission_data['group'] !== '') {
+                link = await group_db_handler.get_group_link(import_handler, submission_data['group'])
+            }
+        }
+
+        return {
+            assignment: assignment_data,
+            grader_link: '',
+            link: link,
+            submission_status,
+            extension_date
+        };
+    }
+    
+
+    async get_assignment_for_tas_and_instructors_lti (import_handler, user_key, assignment_key) {
+        // let course_db_handler = await import_handler.course_db_handler;
+        // let course_group_db_handler = await import_handler.course_group_db_handler;
+        let group_db_handler = await import_handler.group_db_handler;
+
+        let assignment_data = await this.get_assignment_data(user_key, assignment_key);
+        delete assignment_data['display_grade_as'];
+        delete assignment_data['count_toward_final_grade'];
+        delete assignment_data['creation_date'];
+        delete assignment_data['submissions'];
+
+        let submission_data = await this.get_first_assignment_submissions_for_grader(
+            import_handler,
+            user_key,
+            assignment_key);
+
+        /*
+        let student_or_group_list;
+        if (assignment_data['group_assignment']) {
+            let course_group_set_data = await course_group_db_handler.get_course_group_set_data(assignment_data['course_group_set']);
+            student_or_group_list = await Promise.all(course_group_set_data['course_groups'].map(async course_group => {
+                let course_group_data = await course_group_db_handler.get_course_group_data(course_group);
+                return {key: course_group, name: course_group_data['name'], id: course_group_data['id']};
+            }));
+        } else
+            student_or_group_list = await course_db_handler.get_course_active_students(import_handler, assignment_data['course']);
+
+
+        student_or_group_list = student_or_group_list.filter(student_or_group => {
+            for (let extension of assignment_data['extensions']) {
+                if (extension['user'] === student_or_group['key'])
+                    return false;
+            }
+            return true;
+        });
+        */
+
+        let template_link = '';
+        if (assignment_data['template_group'] && assignment_data['template_link'] !== '')
+            template_link = await group_db_handler.get_group_link(import_handler, assignment_data['template_group']);
+
+        return {
+            assignment: assignment_data,
+            grader_link: submission_data.link,
+            grader_submission_id: submission_data.id,
+            link: '',
+            // student_or_group_list: student_or_group_list,
+            template_link: template_link
+        };
+    }
+
 
     async get_assignment_for_students (import_handler, user_key, assignment_key) {
         let submission_db_handler = await import_handler.submission_db_handler;

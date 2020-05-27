@@ -11,6 +11,7 @@ const indexRouter = require('./routes/index');
 const courseRouter = require('./routes/course');
 const assignmentRouter = require('./routes/assignment');
 const ltiAssignmentRouter = require('./routes/lti_assignment');
+const ltiGroupRouter = require('./routes/lti_group');
 const userRouter = require('./routes/user');
 const loginRouter = require('./routes/login');
 const course_groupRouter = require('./routes/course_group');
@@ -62,7 +63,7 @@ app.use('/courses/:course_id/users', userRouter);
 app.use('/courses/:course_id/course_groups', course_groupRouter);
 app.use('/courses/:course_id/grades', gradesRouter);
 app.use('/courses/:course_id/groups', groupRouter);
-
+app.use('/lti_groups', ltiGroupRouter);
 
 
 // catch 404 and forward to error handler

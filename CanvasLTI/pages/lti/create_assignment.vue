@@ -46,6 +46,7 @@
 
 <script lang = "ts">
 import * as https from 'https'
+// eslint-disable-next-line camelcase
 import jwt_decode from 'jwt-decode'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import $axios from 'axios'
@@ -55,6 +56,9 @@ import { ltiAuth } from '~/store' // Pre-initialized store.
   asyncData ({ req }: any) : any {
     if (process.server === true) {
       const jwt : any = req.body
+
+      // TODO Decode and verify jwt. Need to verify using the platform's (Canvas) public
+      // key which is retrieved using OAuth
       const ltiReqMessage : any = jwt_decode(jwt)
 
       if (CreateAssignment.validateToken(ltiReqMessage) === true) {
@@ -200,7 +204,7 @@ export default class CreateAssignment extends Vue {
 
   /**
    * Generate base-64 JWT string for ltiDeepLinkResponse message
-   * // TODO Get deployment id, determine best approach to sign the JWT response
+   * // TODO Determine best approach to sign the JWT response
    */
   private generateJWTResponse (ltiLink ?: string) : string {
     const reqMsg = this.ltiReqMessage
@@ -232,7 +236,7 @@ export default class CreateAssignment extends Vue {
       "iat": "${reqMsg.iat}",
       "nonce" "${reqMsg.nonce}",
       "azp" "${reqMsg.azp}",
-      "https://purl.imsglobal.org/spec/lti/claim/deployment_id": "07940580-b309-415e-a37c-914d387c1150",
+      "https://purl.imsglobal.org/spec/lti/claim/deployment_id": "${process.env.deployment_id}",
       "https://purl.imsglobal.org/spec/lti/claim/message_type": "LtiDeepLinkingResponse",
       "https://purl.imsglobal.org/spec/lti/claim/version": "1.3.0",
       "https://purl.imsglobal.org/spec/lti-dl/claim/content_items": ${JSON.stringify(contentItems)},

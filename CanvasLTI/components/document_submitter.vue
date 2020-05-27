@@ -31,20 +31,17 @@
 
 import * as https from 'https'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
-// import $axios from 'axios'
+import $axios from 'axios'
 // import { Route } from 'vue-router'
 // import { ltiAuth } from '~/store' // Pre-initialized store for authentication.
 
 @Component
 export default class DocumentSubmitter extends Vue {
   @Prop({ type: Boolean, required: true }) readonly submitted !: boolean;
+  @Prop({ type: String, required: true }) readonly userID !: string;
 
-  private isSubmitted : boolean = false;
   private files : File[] = [];
 
-  created () {
-    this.isSubmitted = this.submitted
-  }
 
   private submitAssignment () {
     if (this.files.length === 0) {
@@ -64,28 +61,27 @@ export default class DocumentSubmitter extends Vue {
       formData.append('files[' + i + ']', file)
     }
     /* TODO Submit to Canvas and mark associated assignment as marked in RichReview */
-    /*
+
     try {
       await $axios.post(
-          `https://${process.env.backend}:3000/courses/${
-            this.$route.params.course_id
-            }/assignments/${this.$route.params.assignment_id}/document_submissions`,
+          `https://${process.env.backend}:3000/lti_assignments/${
+            this.$route.params.assignment_id}/document_submissions`,
           formData,
           {
             headers: {
               'Content-Type': 'multipart/form-data',
-              Authorization: this.$store.state.authUser.id
+              Authorization: this.userID
             },
             httpsAgent: new https.Agent({
               rejectUnauthorized: false
             })
           }
       )
-    } catch (e: any) {
+    } catch (e) {
       window.alert(e.response.data.message)
       return
     }
-    */
+
     alert('Assignment successfully submitted!')
     this.isSubmitted = true
   }

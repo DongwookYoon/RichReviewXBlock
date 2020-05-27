@@ -67,18 +67,18 @@ router.get('/:assignment_id/comment_submissions/:group_id', async function(req, 
 /*
  ** GET an assignment
  */
-router.get('/:assignment_id', async function(req, res, next) {
+router.get('/:assignment_id/:is_instructor_or_ta', async function(req, res, next) {
 
     console.log("Get request for assignment with id: " + req.params.assignment_id);
     let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
     let assignment_key = KeyDictionary.key_dictionary['assignment'] + req.params['assignment_id'];
-    
+    let is_instructor_or_ta = (req.params.is_instructor_or_ta.toLowerCase() === 'true');
     let assignment_db_handler = await ImportHandler.assignment_db_handler;
-    let submission_db_handler = await ImportHandler.submission_db_handler
+    let submission_db_handler = await ImportHandler.submission_db_handler;
 
     try {
         await submission_db_handler.ensure_submission_initialized(ImportHandler, user_key, assignment_key);
-        let data = await assignment_db_handler.get_assignment(ImportHandler, user_key, course_key, assignment_key);
+        let data = await assignment_db_handler.get_assignment_lti(ImportHandler, assignment_key, user_key, is_instructor_or_ta);
         
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(data));
@@ -97,6 +97,7 @@ router.get('/:assignment_id', async function(req, res, next) {
 });
 
 
+/*
 router.get('/:assignment_id/submissions', async function(req, res, next) {
 
     console.log("Get request for assignment with id: " + req.params.assignment_id);
@@ -136,6 +137,7 @@ router.get('/:assignment_id/submissions', async function(req, res, next) {
             });
     }
 });
+*/
 
 router.get('/:assignment_id/grader', async function(req, res, next) {
 

@@ -22,6 +22,49 @@ class GroupDatabaseHandler {
     }
 
 
+    async get_data_for_viewer_lti (import_handler, group_key, is_instructor) {
+        let doc_db_handler = await import_handler.doc_db_handler;
+        let user_db_handler = await import_handler.user_db_handler;
+        let cmd_db_handler = await import_handler.cmd_db_handler;
+
+        let group_data = await this.get_group_data(group_key);
+       
+        let doc_data = await doc_db_handler.get_doc_data(group_data['docid']);
+
+        let template_group_cmd;
+
+        try {
+            let template_group = group_data['template_group'];
+            let template_group_id = template_group.replace(KeyDictionary.key_dictionary['group'], '');
+            template_group_cmd = KeyDictionary.key_dictionary['command'] + template_group_id;
+            if (!(await cmd_db_handler.does_cmd_exists(template_group_cmd)))
+                template_group_cmd = '';
+        } catch (e) {
+            template_group_cmd = '';
+        }
+
+        return {
+            r2_ctx: {
+                pdfid: doc_data['pdfid'],
+                docid: group_data['docid'].replace(KeyDictionary.key_dictionary['document'], ''),
+                groupid: group_key.replace(KeyDictionary.key_dictionary['group'], ''),
+                pdf_url: `${env.azure_config.storage.host}${doc_data['pdfid']}/doc.pdf`,
+                pdfjs_url: `${env.azure_config.storage.host}${doc_data['pdfid']}/doc.vs_doc`,
+                serve_dbs_url: process.env.HOST_URL,
+                instructor_data: {
+                    is_instructor: is_instructor,
+                    cur_instructor_name:  '',
+                    cur_instructor_id: '',
+                    all_instructors: []
+                },
+                template_group_cmd: template_group_cmd
+            },
+            env: env.node_config.ENV,
+            cdn_endpoint: env.azure_config.cdn.endpoint,
+            muted: group_data.muted
+        }
+    }
+
 
     async get_data_for_viewer (import_handler, user_key, course_key, group_key) {
         let doc_db_handler = await import_handler.doc_db_handler;

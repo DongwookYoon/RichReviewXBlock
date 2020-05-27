@@ -14,7 +14,7 @@ interface IUser {
 @Module({
   name: 'AuthStore',
   stateFactory: true,
-  namespaced: true,
+  namespaced: true
 })
 export default class AuthStore extends VuexModule {
 
@@ -30,7 +30,7 @@ export default class AuthStore extends VuexModule {
 
   get authUser () : IUser {
     //TODO Return a User object representing authenticated user
-    const user : IUser = {userID : '0'}
+    const user : IUser = { userID : '0'}
     return user
   }
 

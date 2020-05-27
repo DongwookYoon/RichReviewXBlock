@@ -28,6 +28,7 @@ import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import $axios from 'axios'
 import { Route } from 'vue-router'
 import { ltiAuth } from '~/store' // Pre-initialized store.
+import { ISubmitData, SubmitData } from '../pages/lti/assignment.vue'
 
 if (typeof window !== 'undefined') {
   require('../static/my_viewer_helper') // Only load RR viewer helper on client.
@@ -38,6 +39,7 @@ export default class CommentSubmitter extends Vue {
   @Prop({ type: Boolean, required: true }) readonly submitted !: Boolean;
   @Prop({ type: String, required: true }) readonly title !: string;
   @Prop({ type: String, required: true }) readonly userid !: string;
+  @Prop({ type: SubmitData, required: true }) readonly submitData !: SubmitData;
 
   private showSubmitButton : boolean = false;
   private assignmentId: string = '';
@@ -52,18 +54,13 @@ export default class CommentSubmitter extends Vue {
     ]
   }
 
-  // TODO May need to change this to get assignment data from LTI instead.
-  async asyncData (context: any) {
-    if (!ltiAuth.authorized) {
-      return
-    }
+  async mounted () {
 
+    // Note updated changed backend so that it is possible to get the data
+    // for the document based only on group id. It is simple to include the group id and
+    // other data in the launch URL
     const res = await $axios.get(
-      `https://${process.env.backend}:3000/courses/${
-        context.params.course_id
-        }/assignments/${
-        context.params.assignment_id
-        }/comment_submissions/${context.query.groupid}`,
+      `https://${process.env.backend}:3000/lti_groups/${this.submitData.groupID}/false`,
       {
         headers: {
           Authorization: this.userid
@@ -73,35 +70,10 @@ export default class CommentSubmitter extends Vue {
         })
       }
     )
-    const assignment_data = res.data.assignment
-    const submission_data = res.data.submission
-    console.log(res.data)
-
-    // this.assignmentId = assignment_data.id
-
-  }
-
-  async mounted () {
-  // TODO update this to get get the required data based on lti launch request from Canvas
-  // To simplify this, consider changing backend so that it is possible to get the data
-  // for the document based only on group id. It is simple to include the group id and
-  // other data in the launch URL
-  /*
-    const res = await $axios.get(
-      `https://${process.env.backend}:3000/courses/${
-        this.$route.params.course_id
-      }/groups/${this.$route.query.groupid}`,
-      {
-        headers: {
-          Authorization: this.userID
-        },
-        httpsAgent: new https.Agent({
-          rejectUnauthorized: false
-        })
-      }
-    )
+    // eslint-disable-next-line camelcase
     const r2_ctx = res.data.r2_ctx
-    r2_ctx.auth = this.$store.state.authUser
+    r2_ctx.auth = ltiAuth.authUser
+    // eslint-disable-next-line camelcase
     const cdn_endpoint = res.data.cdn_endpoint
 
     loadRichReview(
@@ -110,32 +82,29 @@ export default class CommentSubmitter extends Vue {
       cdn_endpoint,
       true
     )
-    */
   }
 
   public async submit () {
     if (!confirm('Are you sure you wish to submit?')) { return }
 
-    /* TODO Update this to submit based on data in the lti launch request and url
+    // TODO Update this to submit based on data in the lti launch request and url
     await $axios.post(
-        `https://${process.env.backend}:3000/courses/${
-          this.$route.params.course_id
-        }/assignments/${this.assignmentId}/comment_submissions`,
+        `https://${process.env.backend}:3000/lti_assignments/${this.assignmentId}/comment_submissions`,
         {
-          access_code: this.$route.query.access_code,
-          docid: this.$route.query.docid,
-          groupid: this.$route.query.groupid
+          access_code: this.submitData.accessCode,
+          docid: this.submitData.docID,
+          groupid: this.submitData.groupID
         },
         {
           headers: {
-            Authorization: this.$store.state.authUser.id
+            Authorization: this.userid
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false
           })
         }
     )
-    */
+
     alert('Assignment successfully submitted!')
   }
 }

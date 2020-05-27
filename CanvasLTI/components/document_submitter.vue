@@ -31,7 +31,6 @@
 
 import * as https from 'https'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
-import $axios from 'axios'
 // import { Route } from 'vue-router'
 // import { ltiAuth } from '~/store' // Pre-initialized store for authentication.
 
@@ -63,7 +62,7 @@ export default class DocumentSubmitter extends Vue {
     /* TODO Submit to Canvas and mark associated assignment as marked in RichReview */
 
     try {
-      await $axios.post(
+      await this.$axios.$post(
           `https://${process.env.backend}:3000/lti_assignments/${
             this.$route.params.assignment_id}/document_submissions`,
           formData,

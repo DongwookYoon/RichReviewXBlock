@@ -49,7 +49,6 @@ import * as https from 'https'
 // eslint-disable-next-line camelcase
 import jwt_decode from 'jwt-decode'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
-import $axios from 'axios'
 import { ltiAuth } from '~/store' // Pre-initialized store.
 
 @Component({
@@ -127,7 +126,7 @@ export default class CreateAssignment extends Vue {
           assignment_key: this.assignmentKey
         }))
 
-        await $axios.post(
+        await this.$axios.$post(
             `https://${process.env.backend}:3000/lti_assignments/comment_submission_assignment`,
             formData,
             {
@@ -142,7 +141,7 @@ export default class CreateAssignment extends Vue {
         )
       } // End-if
       else {
-        await $axios.post(
+        await this.$axios.$post(
             `https://${process.env.backend}:3000/lti_assignments/document_submission_assignment`,
             { assignment_key: this.assignmentKey },
             {
@@ -192,7 +191,7 @@ export default class CreateAssignment extends Vue {
     const formData : FormData = new FormData()
 
     formData.append('JWT', jwtResponse)
-    await $axios.post(postBackAddress, formData, {
+    await this.$axios.$post(postBackAddress, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       },

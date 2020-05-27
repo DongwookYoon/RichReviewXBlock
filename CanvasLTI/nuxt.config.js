@@ -1,11 +1,10 @@
 import * as certs from './ssl/certs'
-import plugins from './store';
+import plugins from './store'
 
-//import colors from 'vuetify/es5/util/colors'
+// import colors from 'vuetify/es5/util/colors'
 
 export default {
   mode: 'universal',
-
 
   /*
   ** Global CSS
@@ -50,9 +49,8 @@ export default {
   ** Auth module configuration
   ** See https://auth.nuxtjs.org/#getting-started
   */
- auth: {
-
- },
+  auth: {
+  },
 
   /*
   ** Nuxt server settings
@@ -63,17 +61,16 @@ export default {
       cert: certs.cert,
       ca: [certs.ca]
     },
-    port: certs.port,   // default: 3000
-    host: certs.host    // default: localhost
+    port: certs.port, // default: 3000
+    host: certs.host // default: localhost
   },
 
   env: {
-    deployment_id: 'Add Canvas deployment id', // Canvas deployment id
+    canvas_path: 'https://canvas.ubc.ca/',     //Path to institution's Canvas deployment
+    deployment_id: 'Add Canvas deployment id', // TODO Canvas deployment id
     backend:
       process.env.NODE_ENV !== 'production' ? 'localhost' : 'richreview.net'
   },
-
-
 
   /*
    ** Headers of the page
@@ -82,7 +79,7 @@ export default {
     title: 'RichReview',
     meta: [
       { charset: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1' }
     ],
     link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
     script: [
@@ -100,23 +97,23 @@ export default {
   ** vuetify module configuration
   ** https://github.com/nuxt-community/vuetify-module
   */
- // vuetify: {
- //   customVariables: ['~/assets/variables.scss'],
- //   theme: {
- //     dark: true,
- //     themes: {
- //       dark: {
- //         primary: colors.blue.darken2,
- //         accent: colors.grey.darken3,
- //         secondary: colors.amber.darken3,
- //         info: colors.teal.lighten1,
- //         warning: colors.amber.base,
- //         error: colors.deepOrange.accent4,
- //         success: colors.green.accent3
- //       }
- //     }
- //   }
- // },
+  // vuetify: {
+  //   customVariables: ['~/assets/variables.scss'],
+  //   theme: {
+  //     dark: true,
+  //     themes: {
+  //       dark: {
+  //         primary: colors.blue.darken2,
+  //         accent: colors.grey.darken3,
+  //         secondary: colors.amber.darken3,
+  //         info: colors.teal.lighten1,
+  //         warning: colors.amber.base,
+  //         error: colors.deepOrange.accent4,
+  //         success: colors.green.accent3
+  //       }
+  //     }
+  //   }
+  // },
 
   /*
   ** Build configuration

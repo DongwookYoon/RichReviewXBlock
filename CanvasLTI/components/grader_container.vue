@@ -7,10 +7,12 @@
           <base href="/lti">
           <div id="r2_app_page" align="'center">
             <div id="r2_app_container" align="left">
-              <p v-if="submitted===false" id="no-submission-text">
+              <p v-if="submitData.submitted===false" id="no-submission-text">
                 This student has not submitted the assignment
               </p>
-              <p v-else>Show the RichReview UI here for grading</p>
+              <p v-else>
+                Show the RichReview UI here for grading
+              </p>
             </div>
           </div>
         </div>
@@ -22,18 +24,15 @@
 <script lang="ts">
 import https from 'https'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
-import $axios from 'axios'
+import { SubmitData } from '../pages/lti/assignment.vue'
 import { ltiAuth } from '~/store'
 
 if (typeof window !== 'undefined') {
   require('../static/my_viewer_helper') // Only load RR viewer helper on client.
 }
 
-@Component
-export default class GraderContainer extends Vue {
-  @Prop({ type: Boolean, required: true }) readonly submitted !: Boolean;
-
-  head: any = {
+@Component({
+  head: {
     script: [
       {
         src:
@@ -42,17 +41,18 @@ export default class GraderContainer extends Vue {
       { src: '/my_viewer_helper.js', mode: 'client', body: true }
     ]
   }
+})
+export default class GraderContainer extends Vue {
+  @Prop({ type: Boolean, required: true }) readonly submitted !: Boolean;
+  @Prop({ type: SubmitData, required: true }) readonly submitData !: SubmitData;
 
-  mounted () {
+
+  async mounted () {
     /* Only show RichReview UI if the assignment has been submitted */
     if (this.submitted === true) {
-      /* TODO Check if group id is a valid identifier when lti is used and get
-      all required data to display assignment from the lti launch request */
-      /*
-      const res = await $axios.get(
-        `https://${process.env.backend}:3000/courses/${
-          this.$route.params.course_id
-        }/groups/${this.$route.query.groupid}`,
+      /* Get data for assignment as an instructor */
+      const res = await this.$axios.$get(
+        `https://${process.env.backend}:3000/lti_groups/${this.submitData.groupID}/true`,
         {
           headers: {
             Authorization: ltiAuth.userID
@@ -63,9 +63,10 @@ export default class GraderContainer extends Vue {
         }
       )
 
+      // eslint-disable-next-line camelcase
       const r2_ctx = res.data.r2_ctx
-      // r2_ctx.auth = this.$store.state.authUser;
       r2_ctx.auth = ltiAuth.authUser
+      // eslint-disable-next-line camelcase
       const cdn_endpoint = res.data.cdn_endpoint
 
       loadRichReview(
@@ -74,9 +75,7 @@ export default class GraderContainer extends Vue {
         cdn_endpoint,
         true
       )
-      */
     }
-
   }
 }
 

@@ -36,7 +36,6 @@
 <script lang="ts">
 import * as https from 'https'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
-import $axios from 'axios'
 import { Route } from 'vue-router'
 // eslint-disable-next-line camelcase
 import jwt_decode from 'jwt-decode'
@@ -82,7 +81,7 @@ const testData = {
       const isInstructorOrTA : boolean = (userRoles.includes(Assignment.INSTRUCTOR) || userRoles.includes(Assignment.TA))
       let resp
       try {
-        resp = await $axios.get(
+        resp = await context.$axios.$get(
         `https://${process.env.backend}:3000/lti_assignments/${assignmentID}/${isInstructorOrTA ? 'true' : 'false'}`,
         {
           headers: {

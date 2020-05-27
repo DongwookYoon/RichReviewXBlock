@@ -27,8 +27,8 @@ import * as https from 'https'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import $axios from 'axios'
 import { Route } from 'vue-router'
+import { SubmitData } from '../pages/lti/assignment.vue'
 import { ltiAuth } from '~/store' // Pre-initialized store.
-import { ISubmitData, SubmitData } from '../pages/lti/assignment.vue'
 
 if (typeof window !== 'undefined') {
   require('../static/my_viewer_helper') // Only load RR viewer helper on client.
@@ -36,10 +36,10 @@ if (typeof window !== 'undefined') {
 
 @Component
 export default class CommentSubmitter extends Vue {
-  @Prop({ type: Boolean, required: true }) readonly submitted !: Boolean;
-  @Prop({ type: String, required: true }) readonly title !: string;
-  @Prop({ type: String, required: true }) readonly userid !: string;
-  @Prop({ type: SubmitData, required: true }) readonly submitData !: SubmitData;
+  @Prop({ type: Boolean, required: true }) readonly submitted !: Boolean
+  @Prop({ type: String, required: true }) readonly title !: string
+  @Prop({ type: String, required: true }) readonly userid !: string
+  @Prop({ type: SubmitData, required: true }) readonly submitData !: SubmitData
 
   private showSubmitButton : boolean = false;
   private assignmentId: string = '';
@@ -55,7 +55,6 @@ export default class CommentSubmitter extends Vue {
   }
 
   async mounted () {
-
     // Note updated changed backend so that it is possible to get the data
     // for the document based only on group id. It is simple to include the group id and
     // other data in the launch URL
@@ -85,25 +84,34 @@ export default class CommentSubmitter extends Vue {
   }
 
   public async submit () {
-    if (!confirm('Are you sure you wish to submit?')) { return }
+    if (!confirm('Are you sure you wish to submit this assignment?')) { return }
 
-    // TODO Update this to submit based on data in the lti launch request and url
-    await $axios.post(
-        `https://${process.env.backend}:3000/lti_assignments/${this.assignmentId}/comment_submissions`,
-        {
-          access_code: this.submitData.accessCode,
-          docid: this.submitData.docID,
-          groupid: this.submitData.groupID
-        },
-        {
-          headers: {
-            Authorization: this.userid
+    try {
+      await $axios.post(
+          `https://${process.env.backend}:3000/lti_assignments/${this.assignmentId}/comment_submissions`,
+          {
+            access_code: this.submitData.accessCode,
+            docid: this.submitData.docID,
+            groupid: this.submitData.groupID
           },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        }
-    )
+          {
+            headers: {
+              Authorization: this.userid
+            },
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false
+            })
+          }
+      )
+    } catch (rrException) {
+      console.warn('Error while submitting to RichReview. Details: ' + rrException)
+      alert('Error submitting assignment. If this continues, please contact the RichReview system administrator.')
+      return
+    }
+
+    try {
+      await
+    }
 
     alert('Assignment successfully submitted!')
   }

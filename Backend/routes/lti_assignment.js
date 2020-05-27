@@ -5,7 +5,7 @@ var router = express.Router({mergeParams: true});
 const KeyDictionary = require('../bin/KeyDictionary');
 let ImportHandler = require('../bin/ImportHandler');
 const NotAuthorizedError = require('../errors/NotAuthorizedError');
-const AssignmentDatabaseHandler = require('../bin/AssignmentDatabaseHandler');
+
 
 /**
  * 
@@ -17,7 +17,7 @@ router.get('/', function(req, res, next) {
 
 
 /**
- * Get a comment a submitted comment submission assignment
+ * Get a submitted comment submission assignment
  */
 router.get('/:assignment_id/comment_submissions/:group_id', async function(req, res, next) {
     let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
@@ -400,3 +400,6 @@ router.post('/:assignment_id/comment_submissions', async function(req, res, next
 router.delete('/', function(req, res, next) {
     res.sendStatus(403);
 });
+
+
+module.exports = router;

@@ -55,7 +55,7 @@ app.use('/dbs', dbsRouter);
 app.use('/login', loginRouter);
 app.use('/bluemix_stt_auth', bluemixRouter);
 app.use('/admin', adminRouter);
-app.use('/', ltiAssignmentRouter)
+app.use('/lti_assignments', ltiAssignmentRouter)
 app.use('/courses', courseRouter);
 app.use('/courses/:course_id/assignments', assignmentRouter);
 app.use('/courses/:course_id/users', userRouter);

@@ -55,12 +55,17 @@ import { ltiAuth } from '~/store' // Pre-initialized store.
   asyncData ({ req }: any) : any {
     if (process.server === true) {
       const jwt : any = req.body
-      const ltiMessage : any = jwt_decode(jwt)
+      const ltiReqMessage : any = jwt_decode(jwt)
 
-      if (CreateAssignment.validateToken(ltiMessage) === true) {
-        return { ltiMessage } // Inject into CreateAssignment instance data
+      if (CreateAssignment.validateToken(ltiReqMessage) === true) {
+        // Generate assignment key
+        const assignmentKey : string = `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`
+        return {
+          ltiReqMessage,
+          assignmentKey
+        } // Inject into CreateAssignment instance data
       } else {
-        console.warn('Invalid ltiDeepLinkRequest\n' + ltiMessage)
+        console.warn('Invalid ltiDeepLinkRequest\n' + ltiReqMessage)
       }
     }
   }
@@ -70,8 +75,8 @@ export default class CreateAssignment extends Vue {
   private saved: boolean = true
   private assignmentType : string = 'document_submission'
   private files : File [] = []
-  private viewerLink : string
-  ltiMessage ?: any
+  private assignmentKey ?: string;
+  ltiReqMessage ?: any
   /* End data */
 
   /* Component-level methods */
@@ -95,7 +100,7 @@ export default class CreateAssignment extends Vue {
 
   public async save () {
     this.saved = true
-    const assignment_key: string = `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`
+
     /* Create a record of the assignment record in RichReview first */
     try {
       if (this.assignmentType === 'comment_submission') {
@@ -115,18 +120,16 @@ export default class CreateAssignment extends Vue {
         }
 
         formData.append('assignment_data', JSON.stringify({
-          assignment_type: this.assignmentType,
-          assignment_key
+          assignment_key: this.assignmentKey
         }))
 
-
         await $axios.post(
-            `https://${process.env.backend}:3000/lti/assignments/comment_submission_assignment`,
+            `https://${process.env.backend}:3000/lti_assignments/comment_submission_assignment`,
             formData,
             {
               headers: {
                 'Content-Type': 'multipart/form-data',
-                Authorization: this.ltiMessage.sub      // TODO make 100% sure that sub is an imutable GUID
+                Authorization: this.ltiReqMessage.sub // TODO verify that sub is an immutable GUID across contexts
               },
               httpsAgent: new https.Agent({
                 rejectUnauthorized: false
@@ -134,25 +137,22 @@ export default class CreateAssignment extends Vue {
             }
         )
       } // End-if
-
       else {
-
         await $axios.post(
-            `https://${process.env.backend}:3000/lti/assignments/document_submission_assignment`,
-            { assignment_key },
+            `https://${process.env.backend}:3000/lti_assignments/document_submission_assignment`,
+            { assignment_key: this.assignmentKey },
             {
               headers: {
-                Authorization: this.ltiMessage.sub     // TODO make 100% sure that sub is an imutable GUID
+                Authorization: this.ltiReqMessage.sub // TODO verify that sub is an immutable GUID across contexts
               },
               httpsAgent: new https.Agent({
                 rejectUnauthorized: false
               })
             }
         )
-        // this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
       }// end-else
-      await this.sendConsumerResponse()
-      this.navigateToPlatform()
+      const ltiLink = `/lti/assignment/${this.assignmentType}/${this.assignmentKey}`
+      this.postBackToPlatform(ltiLink)
     } catch (e) {
       this.saved = false
       window.alert(e.response.data.message)
@@ -165,14 +165,82 @@ export default class CreateAssignment extends Vue {
   public cancel () : void {
     if (this.saved === false) {
       if (confirm('Do you want to exit this? Changes you made may not be saved.') === true) {
-        this.navigateToPlatform()
+        this.postBackToPlatform()
       }
     } else {
-      this.navigateToPlatform()
+      this.postBackToPlatform()
     }
   }
   /* End component-level methods */
 
+  /**
+   * Finish LTI deep linking flow to send the user back to the consumer (LTI platform).
+   * Sends the required POST ltiDeepLinkResponse back to the consumer.
+   * General format of URL should be /lti/assignment/:assignment_type/:assignment_key.
+   * Note that this is sufficient for retreiving all assignment data from RR
+   * backend when the user accesses assignment.
+   *
+   * See LTI spec for more details here: https://www.imsglobal.org/spec/lti-dl/v2p0#dfn-deep-linking-response-message
+   */
+  private async postBackToPlatform (ltiLink ?: string) {
+    const jwtResponse = this.generateJWTResponse(ltiLink)
+    const postBackAddress = this.ltiReqMessage['https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings'].deep_link_return_url
+    const formData : FormData = new FormData()
+
+    formData.append('JWT', jwtResponse)
+    await $axios.post(postBackAddress, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: false
+      })
+    })
+  }
+
+  /**
+   * Generate base-64 JWT string for ltiDeepLinkResponse message
+   * // TODO Get deployment id, determine best approach to sign the JWT response
+   */
+  private generateJWTResponse (ltiLink ?: string) : string {
+    const reqMsg = this.ltiReqMessage
+    const contentItems : [] = []
+
+    /* Per LTI spec, details of how to launch RR are send back in contentItems array.
+       If no items were created (i.e. user cancelled), provider must still send
+       empty contentItems array */
+    if (ltiLink !== undefined) {
+      const linkItem : any = {
+        type: 'link',
+        title: 'Create a RichReview Assignment',
+        url: ltiLink,
+        window: {
+          targetName: 'RichReview',
+          windowFeatures: 'height=1920,width=1080,menubar=no'
+        },
+        iframe: {
+          width: 800,
+          height: 600,
+          src: ltiLink
+        }
+      }
+    }
+    const jwtResponse : string = `{
+      "iss": "${reqMsg.aud[0]}",
+      "aud": ["${reqMsg.iss}"],
+      "exp": "${reqMsg.exp}",
+      "iat": "${reqMsg.iat}",
+      "nonce" "${reqMsg.nonce}",
+      "azp" "${reqMsg.azp}",
+      "https://purl.imsglobal.org/spec/lti/claim/deployment_id": "07940580-b309-415e-a37c-914d387c1150",
+      "https://purl.imsglobal.org/spec/lti/claim/message_type": "LtiDeepLinkingResponse",
+      "https://purl.imsglobal.org/spec/lti/claim/version": "1.3.0",
+      "https://purl.imsglobal.org/spec/lti-dl/claim/content_items": ${JSON.stringify(contentItems)},
+      "https://purl.imsglobal.org/spec/lti-dl/claim/data": "${reqMsg.data}"
+      }`
+
+    return jwtResponse
+  }
 
   /**
    * TODO Validate the jwt token
@@ -180,21 +248,6 @@ export default class CreateAssignment extends Vue {
   private static validateToken (jwt: Object) : boolean {
     console.log(jwt)
     return true
-  }
-
-  /**
-   * Sends the required POST ltiDeepLinkResponse back to the tool consumer (platform)
-   */
-  private async sendConsumerResponse () {
-
-  }
-
-  /**
-   * Sends client browser back to the URL specified in LTI request.
-   * This is typically the LMS consumer assignment creation page
-   */
-  private navigateToPlatform () : void {
-    window.location.replace('/')
   }
 }
 

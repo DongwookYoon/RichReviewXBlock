@@ -32,12 +32,12 @@
 import * as https from 'https'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 // import { Route } from 'vue-router'
-// import { ltiAuth } from '~/store' // Pre-initialized store for authentication.
+// import { lti_auth } from '~/store' // Pre-initialized store for authentication.
 
 @Component
 export default class DocumentSubmitter extends Vue {
-  @Prop({ type: Boolean, required: true }) readonly submitted !: boolean;
-  @Prop({ type: String, required: true }) readonly userID !: string;
+  // eslint-disable-next-line camelcase
+  @Prop({ type: String, required: true }) readonly user_id !: string;
 
   private files : File[] = [];
 
@@ -69,7 +69,7 @@ export default class DocumentSubmitter extends Vue {
           {
             headers: {
               'Content-Type': 'multipart/form-data',
-              Authorization: this.userID
+              Authorization: this.user_id
             },
             httpsAgent: new https.Agent({
               rejectUnauthorized: false
@@ -81,8 +81,7 @@ export default class DocumentSubmitter extends Vue {
       return
     }
 
-    alert('Assignment successfully submitted!')
-    this.isSubmitted = true
+    this.$emit('submit-assignment') // Let parent handle submit to LTI Consumer
   }
 
   private addFile () : void {

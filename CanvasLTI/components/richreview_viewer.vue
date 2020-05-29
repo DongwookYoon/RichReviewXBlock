@@ -25,7 +25,8 @@
 import https from 'https'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import { SubmitData } from '../pages/lti/assignment.vue'
-import { ltiAuth } from '~/store'
+// eslint-disable-next-line camelcase
+import { lti_auth } from '~/store'
 
 if (typeof window !== 'undefined') {
   require('../static/my_viewer_helper') // Only load RR viewer helper on client.
@@ -42,9 +43,10 @@ if (typeof window !== 'undefined') {
     ]
   }
 })
-export default class GraderContainer extends Vue {
-  @Prop({ type: Boolean, required: true }) readonly submitted !: Boolean;
+export default class RichReviewViewer extends Vue {
+  @Prop({ type: Boolean, required: true }) readonly submitted !: boolean;
   @Prop({ type: SubmitData, required: true }) readonly submitData !: SubmitData;
+  @Prop({ type: String, required: true }) readonly userId !: string;
 
 
   async mounted () {
@@ -55,7 +57,7 @@ export default class GraderContainer extends Vue {
         `https://${process.env.backend}:3000/lti_groups/${this.submitData.groupID}/true`,
         {
           headers: {
-            Authorization: ltiAuth.userID
+            Authorization: this.userId
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false
@@ -65,7 +67,7 @@ export default class GraderContainer extends Vue {
 
       // eslint-disable-next-line camelcase
       const r2_ctx = res.data.r2_ctx
-      r2_ctx.auth = ltiAuth.authUser
+      r2_ctx.auth = lti_auth.authUser
       // eslint-disable-next-line camelcase
       const cdn_endpoint = res.data.cdn_endpoint
 

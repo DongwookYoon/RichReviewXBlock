@@ -28,7 +28,7 @@ import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import $axios from 'axios'
 import { Route } from 'vue-router'
 import { SubmitData } from '../pages/lti/assignment.vue'
-import { ltiAuth } from '~/store' // Pre-initialized store.
+import { lti_auth } from '~/store' // Pre-initialized store.
 
 if (typeof window !== 'undefined') {
   require('../static/my_viewer_helper') // Only load RR viewer helper on client.
@@ -38,7 +38,7 @@ if (typeof window !== 'undefined') {
 export default class CommentSubmitter extends Vue {
   @Prop({ type: Boolean, required: true }) readonly submitted !: Boolean
   @Prop({ type: String, required: true }) readonly title !: string
-  @Prop({ type: String, required: true }) readonly userid !: string
+  @Prop({ type: String, required: true }) readonly user_id !: string
   @Prop({ type: SubmitData, required: true }) readonly submitData !: SubmitData
 
   private showSubmitButton : boolean = false;
@@ -62,7 +62,7 @@ export default class CommentSubmitter extends Vue {
       `https://${process.env.backend}:3000/lti_groups/${this.submitData.groupID}/false`,
       {
         headers: {
-          Authorization: this.userid
+          Authorization: this.user_id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -71,7 +71,7 @@ export default class CommentSubmitter extends Vue {
     )
     // eslint-disable-next-line camelcase
     const r2_ctx = res.data.r2_ctx
-    r2_ctx.auth = ltiAuth.authUser
+    r2_ctx.auth = lti_auth.authUser
     // eslint-disable-next-line camelcase
     const cdn_endpoint = res.data.cdn_endpoint
 
@@ -86,6 +86,7 @@ export default class CommentSubmitter extends Vue {
   public async submit () {
     if (!confirm('Are you sure you wish to submit this assignment?')) { return }
 
+    /* Submit to RichReview backend first */
     try {
       await $axios.post(
           `https://${process.env.backend}:3000/lti_assignments/${this.assignmentId}/comment_submissions`,
@@ -96,7 +97,7 @@ export default class CommentSubmitter extends Vue {
           },
           {
             headers: {
-              Authorization: this.userid
+              Authorization: this.user_id
             },
             httpsAgent: new https.Agent({
               rejectUnauthorized: false
@@ -109,15 +110,11 @@ export default class CommentSubmitter extends Vue {
       return
     }
 
-    try {
-      await
-    }
-
-    alert('Assignment successfully submitted!')
+    this.$emit('submit-assignment') // Let parent handle submit to LTI Consumer
   }
 }
-
 </script>
+
 
 <style scoped>
 @import 'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/css/bootstrap.min.css';

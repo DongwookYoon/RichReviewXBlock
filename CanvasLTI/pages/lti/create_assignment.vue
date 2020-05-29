@@ -49,12 +49,23 @@ import * as https from 'https'
 // eslint-disable-next-line camelcase
 import jwt_decode from 'jwt-decode'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
-import { ltiAuth } from '~/store' // Pre-initialized store.
+// eslint-disable-next-line camelcase
+import { lti_auth } from '~/store'
 
 @Component({
-  asyncData ({ req }: any) : any {
+  asyncData (context) : any {
+    /* If user is not authenticated, attempt authentication and pass this page as redirect URI */
+    if (lti_auth.isAuthenticated() === false) {
+      context.redirect(`/lti/oauth_handler?redirect_uri=${context.route.fullPath}`)
+    }
+
+    if (lti_auth.isAuthenticated() === false) {
+      console.warn('Authentication failed')
+      alert('You are not allowed to create this assignment')
+      return
+    }
     if (process.server === true) {
-      const jwt : any = req.body
+      const jwt : any = context.req.body
 
       // TODO Decode and verify jwt. Need to verify using the platform's (Canvas) public
       // key which is retrieved using OAuth

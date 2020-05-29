@@ -66,7 +66,19 @@ export default {
   },
 
   env: {
-    canvas_path: 'https://canvas.ubc.ca/',     //Path to institution's Canvas deployment
+    // TODO generate a production public_jwk when generating developer key. This is only for test.
+    public_jwk: `"public_jwk":{
+      "kty":"RSA",
+      "alg":"RS256",
+      "e":"AQAB",
+      "kid":"8f796179-7ac4-48a3-a202-fc4f3d814fcd",
+      "n":"nZA7QWcIwj-3N_RZ1qJjX6CdibU87y2l02yMay4KunambalP9g0fU9yILwLX9WYJINcXZDUf6QeZ-SSbblET-h8Q4OvfSQ7iuu0WqcvBGy8M0qoZ7I-NiChw8dyybMJHgpiP_AyxpCQnp3bQ6829kb3fopbb4cAkOilwVRBYPhRLboXma0cwcllJHPLvMp1oGa7Ad8osmmJhXhN9qdFFASg_OCQdPnYVzp8gOFeOGwlXfSFEgt5vgeU25E-ycUOREcnP7BnMUk7wpwYqlE537LWGOV5z_1Dqcqc9LmN-z4HmNV7b23QZW4_mzKIOY4IqjmnUGgLU9ycFj5YGDCts7Q",
+      "use":"sig"
+    }`,
+    rsa256_private_key: '',
+    canvas_client_id: '',
+    canvas_client_secret: '',
+    canvas_path: 'https://canvas.ubc.ca',     //Path to institution's Canvas deployment
     deployment_id: 'Add Canvas deployment id', // TODO Canvas deployment id
     backend:
       process.env.NODE_ENV !== 'production' ? 'localhost' : 'richreview.net'

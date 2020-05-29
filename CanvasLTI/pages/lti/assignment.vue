@@ -11,24 +11,30 @@
     <p>assignment.vue test </p>
     <p>component is {{ checkDisplayComponent }} </p>
 
-    <!--if user role is instructor or TA then show grading view  -->
-    <GraderContainer v-if="userRoles.includes(Assignment.INSTRUCTOR) || userRoles.includes(Assignment.TA)" :submit_data="submitData" />
+    <!--If user has submitted the assignment OR user is has role of instructor or TA then
+        show the assignment in the RichReview viewer-->
+    <RichReviewViewer
+      v-if="submit_data.submitted === true || userRoles.includes(Assignment.INSTRUCTOR) || userRoles.includes(Assignment.TA)"
+      :submit_data="submitData"
+    />
 
-    <!--else if user role is learner and NOT submitted then  -->
-    <div v-else-if="userRoles.includes(Assignment.STUDENT) && submit_data.submitted === false" class="submit-area">
-      <DocumentSubmitter v-if="assignmentType==='document_submission'" />
+    <!--Else if user role is student then  -->
+    <div v-else-if="userRoles.includes(Assignment.STUDENT)" class="submit-area">
+      <!-- If assignment type is document_submission then -->
+      <DocumentSubmitter
+        v-if="assignmentType==='document_submission'"
+        :user_id="lti_auth.authUser.userId"
+        @submit-assignment="handleSubmit"
+      />
 
       <!--else if assignment_type is comment_submission then -->
       <CommentSubmitter
         v-else-if="assignmentType==='comment_submission'"
         :title="assignmentTitle"
-        :userid="userID"
+        :user_id="lti_auth.authUser.userId"
         :submit_data="submitData"
+        @submit-assignment="handleSubmit"
       />
-    </div>
-
-    <div v-else-if="submitted===true">
-      <p>You have already submitted this assignment.</p>
     </div>
   </div>
 </template>
@@ -39,10 +45,12 @@ import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import { Route } from 'vue-router'
 // eslint-disable-next-line camelcase
 import jwt_decode from 'jwt-decode'
+import ClientAuth from '~/utils/client-auth'
 import DocumentSubmitter from '../../components/document_submitter.vue'
 import CommentSubmitter from '../../components/comment_submitter.vue'
-import GraderContainer from '../../components/grader_container.vue'
-import { ltiAuth } from '~/store' // Pre-initialized store.
+import RichReviewViewer from '../../components/richreview_viewer.vue'
+// eslint-disable-next-line camelcase
+import { lti_auth } from '~/store' // Pre-initialized store.
 
 export class SubmitData {
   viewerLink : string = ''
@@ -57,17 +65,22 @@ const testData = {
   assignmentType: 'comment_submission',
   userRole: 'instructor',
   assignmentTitle: 'Test Assignment',
-  userID: 'aeaf282'
+  userId: 'aeaf282'
 }
 
 @Component({
   components: {
     DocumentSubmitter,
     CommentSubmitter,
-    GraderContainer
+    RichReviewViewer
   },
 
   async asyncData (context) {
+    /* If user is not authenticated, attempt authentication and pass this page as redirect URI */
+    if (lti_auth.isAuthenticated() === false) {
+      context.redirect(`/lti/oauth_handler?redirect_uri=${context.route.fullPath}`)
+    }
+
     if (process.server) {
       const jwt : any = (context.req as any).body
       // Use req.body and req.query to get the required data from lti deep linking launch request
@@ -79,13 +92,14 @@ const testData = {
       const assignmentID : string = context.params.assignment_key
       const userRoles = Assignment.getUserRoles(ltiLaunchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
       const isInstructorOrTA : boolean = (userRoles.includes(Assignment.INSTRUCTOR) || userRoles.includes(Assignment.TA))
+
       let resp
       try {
         resp = await context.$axios.$get(
         `https://${process.env.backend}:3000/lti_assignments/${assignmentID}/${isInstructorOrTA ? 'true' : 'false'}`,
         {
           headers: {
-            Authorization: ltiAuth.userID
+            Authorization: lti_auth.authUser.userId // Pass Canvas userId in Authorization header
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false
@@ -118,15 +132,12 @@ const testData = {
     }
   }
 })
-
 export default class Assignment extends Vue {
   private static readonly INSTRUCTOR : string = 'instructor'
   private static readonly TA : string = 'ta'
   private static readonly STUDENT : string = 'student'
 
   private isCreated: boolean = false
-  private userID: string = ''
-
 
   private assignmentTitle ?: string
   private assignmentType ?: string
@@ -136,14 +147,102 @@ export default class Assignment extends Vue {
   private submit_data !: SubmitData
   private userRoles ?: string[]
 
-  created () : void {
+  public created () {
     this.isCreated = true
 
-    this.submit_data.accessCode = Assignment.getQueryVariable('access_code')
-    this.submit_data.docID = Assignment.getQueryVariable('docid')
-    this.submit_data.groupID = Assignment.getQueryVariable('group_id')
+    this.submit_data.accessCode = Assignment.getQueryVariable('access_code', this.submit_data.viewerLink)
+    this.submit_data.docID = Assignment.getQueryVariable('docid', this.submit_data.viewerLink)
+    this.submit_data.groupID = Assignment.getQueryVariable('group_id', this.submit_data.viewerLink)
 
     this.injectTest() // Inject dummy data
+  }
+
+  public async handleSubmit () {
+    let assignmentResp
+    await this.updateClientCredentials()     // Update client credentials token in store
+
+    try {
+      assignmentResp = await this.$axios.$get(
+        `https://${process.env.backend}:3000/lti_assignments/${assignmentID}/false`,
+        {
+          headers: {
+            Authorization: lti_auth.authUser.userId // Pass the Canvas user id in Authorization header
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+      )
+    } catch (e) {
+      console.warn('Getting updated assignment data on submit failed. Reason: ' + e)
+      alert(`
+          Error. Could not submit assignment to Canvas.
+          Contact the system adminstrator for assistance if this continues.`)
+      return
+    }
+
+    const submissionId = assignmentResp.data.grader_submission_id
+    const submissionURL = `${this.$route.path}?${assignmentResp.data.link}&submission_id=${submissionId}`
+    const assignmentResourceId : string = this.ltiLaunchMessage[
+      'https://purl.imsglobal.org/spec/lti/claim/resource_link'].id
+    const courseId : string = this.ltiLaunchMessage[
+      'https://purl.imsglobal.org/spec/lti/claim/context'].id
+    let lineItemId : string = ''
+
+    try {
+      const lineItemsResp = await this.$axios.$get(
+        `${process.env.canvas_path}/api/lti/courses/${courseId}/line_items`,
+        {
+          headers: {
+            Authorization: `Bearer ${lti_auth.clientCredentialsToken}`
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        })
+
+      const lineItems = lineItemsResp.data // The parsed JSON which contains array of line items
+
+      /* Find the ID of the line item for which we want to create a submission in gradebook */
+      for (const curItem of lineItems) {
+        if (curItem.resourceLinkId === assignmentResourceId) {
+          lineItemId = curItem.id
+          break
+        }
+      }
+      if (lineItemId === '') {
+        console.warn('Error. Could not find a line item to create assignment submission')
+        throw new Error('Could not find a line item to create assignment submission')
+      }
+
+      const scoreData = `{
+          "timestamp": "${new Date().toISOString()}",
+          "activityProgress": "Submitted",
+          "gradingProgress": "PendingManual",
+          "userId": "${lti_auth.authUser.userId}",
+          "https://canvas.instructure.com/lti/submission": {
+            "new_submission": true,
+            "submission_type": "basic_lti_launch",
+            "submission_data": "${submissionURL}"
+          }
+        }`
+      /* Send the score resource to Canvas to indicate submission in gradebook */
+      this.$axios.$post(
+          `${process.env.canvas_path}/api/lti/courses/${courseId}/line_items/${lineItemId}/scores`,
+          scoreData,
+          {
+            headers: {
+              Authorization: `Bearer ${lti_auth.clientCredentialsToken}`
+            },
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false
+            })
+          })
+    } catch (e) {
+      alert(`
+          Error. Could not submit assignment to Canvas.
+          Contact the system adminstrator for assistance if this continues.`)
+    }
   }
 
   /**
@@ -162,16 +261,22 @@ export default class Assignment extends Vue {
     return 'Error. No assignment component.'
   }
 
-  private static getQueryVariable (variable : string) : string {
-    const query = window.location.search.substring(1)
-    const vars = query.split('&')
+
+  private async updateClientCredentials() {
+    let authHandler : ClientAuth = new ClientAuth(process.env.canvas_client_id, process.env.canvas_path)
+
+    lti_auth.updateClientCredentialsToken(authHandler.getGradeServicesToken())
+  }
+
+  private static getQueryVariable (variable : string, route : string) : string {
+    const vars : string[] = route.split('&')
     for (let i = 0; i < vars.length; i++) {
       const pair = vars[i].split('=')
-      if (decodeURIComponent(pair[0]) == variable) {
+      if (decodeURIComponent(pair[0]) == variable.toLowerCase()) {
         return decodeURIComponent(pair[1])
       }
     }
-    console.log('Query variable %s not found', variable)
+    console.warn(`Query variable ${variable} not found`)
     return ''
   }
 
@@ -196,7 +301,6 @@ export default class Assignment extends Vue {
     this.submit_data.submitted = testData.submitted
     this.assignmentType = testData.assignmentType
     this.userRoles = [testData.userRole]
-    this.userID = testData.userID
     this.assignmentTitle = testData.assignmentTitle
   }
 }

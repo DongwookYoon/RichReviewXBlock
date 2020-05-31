@@ -11,7 +11,6 @@ router.get('/', function(req, res, next) {
 });
 
 
-
 router.get('/:group_id', async function(req, res, next) {
     let user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
     let course_key = KeyDictionary.key_dictionary['course'] + req.params['course_id'];

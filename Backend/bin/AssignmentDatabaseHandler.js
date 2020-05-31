@@ -136,30 +136,6 @@ class AssignmentDatabaseHandler {
         }
     }
 
-    async create_assignment_lti(import_handler, assignment_data, assignment_key) {
-        let course_db_handler = await import_handler.course_db_handler;
-
-        let id = assignment_key.replace(KeyDictionary.key_dictionary['assignment'], '');
-        let key = KeyDictionary.key_dictionary['assignment'] + id;
-
-        for (const field in assignment_data) {
-            let value = assignment_data[field];
-
-            if (DateHelper.is_date(field))
-                value = DateHelper.format_date(value);
-
-            await this.set_assignment_data(assignment_key, field, value);
-        }
-
-        //Set default assignment data
-        await this.set_assignment_data(assignment_key, 'id', id);
-        await this.set_assignment_data(assignment_key, 'template_group', '');
-        await this.set_assignment_data(assignment_key, 'creation_date', new Date().toISOString());
-        await this.set_assignment_data(assignment_key, 'extensions', '[]');
-
-        return key;
-
-    }
 
 
     async create_assignment (import_handler, course_key, assignment_data, existing_assignment_key = null) {
@@ -181,7 +157,7 @@ class AssignmentDatabaseHandler {
         }
         else {
             if (this.is_valid_assignment_key(existing_assignment_key) === false)
-                console.warn(`Invalid assignment key provided as existing key: ${existing_assignment_key}`);
+                throw new RichReviewError(`Invalid assignment key provided as existing key: ${existing_assignment_key}`);
             id = existing_assignment_key.replace(KeyDictionary.key_dictionary['assignment'], '');
         }
 
@@ -209,22 +185,6 @@ class AssignmentDatabaseHandler {
     }
 
 
-    async create_document_submission_assignment_lti(import_handler, assignment_data, assignment_key) {
-        if (assignment_key === undefined)
-            throw new RichReviewError ('No assignment key');
-        if (assignment_data === undefined)
-            throw new RichReviewError ('No assignment data');
-
-        let key = await this.create_lti_assignment(import_handler, assignment_data, assignment_key);
-
-        // Create submissions / submitters for each user/group
-        let submission_db_handler = await import_handler.submission_db_handler;
-
-        let submission_keys = [];
-       
-        return key;
-
-    }
 
     async create_document_submission_assignment (import_handler, course_key, assignment_data, existing_key = null) {
 
@@ -268,88 +228,6 @@ class AssignmentDatabaseHandler {
     }
 
 
-    async create_comment_submission_assignment_lti (import_handler,
-        user_key,
-        assignment_data, 
-        assignment_key,
-        files = null, 
-        doc_key = null,
-        upload = true) {
-
-        if (assignment_data === undefined)
-            throw new RichReviewError ('No assignment data');
-        if ( (files == null || Object.keys(files).length < 1) && doc_key == null )
-            throw new RichReviewError ('Must provide at least one file or a doc_key for an existing upload');
-        if (Object.keys(assignment_data).length === 0)
-            throw new RichReviewError('Invalid assignment data');
-
-        let document_upload_handler = await import_handler.doc_upload_handler;
-        let document_db_handler = await import_handler.doc_db_handler;
-        let group_db_handler = await import_handler.group_db_handler;
-        let submission_db_handler = await import_handler.submission_db_handler;
-        let submitter_db_handler = await import_handler.submitter_db_handler;
-    
-        let user_id = user_key.replace(KeyDictionary.key_dictionary['user'], '');
-    
-        /*No existing doc_key accessible through doc_key, so upload files and get a doc_key */
-        if (doc_key == null && upload == true) {
-         // Upload pdf to azure
-            let main_context = await document_upload_handler.upload_documents(files);
-            doc_key = await document_db_handler.create_doc(user_id, main_context.container);
-        }
-    
-        /* Add doc and grp to redis */
-        let template_group_key = await group_db_handler.create_group(user_id, doc_key);
-        await document_db_handler.add_group_to_doc(doc_key, template_group_key);
-        await user_db_handler.add_group_to_user(user_key, template_group_key);
-    
-        let created_assignment_key = await this.create_assignment_lti(import_handler, course_key, assignment_data, assignment_key);
-    
-        await this.set_assignment_data(assignment_key, 'template_group', template_group_key);
-    
-        let submission_keys = [];
-    
-        /*
-        //submission_keys = await submission_db_handler.create_submission_for_each_user_and_return_keys(
-        //      import_handler,
-        //      course_key,
-        //      created_assignment_key);
-        
-        //for (let submission_key of submission_keys) {
-        //    let submission_data = await submission_db_handler.get_submission_data(submission_key);
-    
-        //    let submitter_key = submission_data['submitter'];
-        //    let submitter_data = await submitter_db_handler.get_submitter_data(submitter_key);
-    
-        //    let members = submitter_data['members'];
-    
-        //    let first_student = members.pop();
-        //    let first_student_id = first_student.replace(KeyDictionary.key_dictionary['user'], '');
-    
-        //    let group_key = await group_db_handler.create_group(first_student_id, doc_key, template_group_key);
-        //    await group_db_handler.add_submission_to_group(group_key, submission_key);
-    
-        //    await document_db_handler.add_group_to_doc(doc_key, group_key);
-    
-        //    await user_db_handler.add_group_to_user(first_student, group_key);
-    
-        //    try {
-        //         await submission_db_handler.add_group_to_comment_submission(submission_key, group_key);
-        //    } catch (e) {
-        //         console.warn(e);
-        //    }
-    
-        //    for (let member of members) {
-        //        await user_db_handler.add_group_to_user(member, group_key);
-        //         let member_id = member.replace(KeyDictionary.key_dictionary['user'], '');
-        //         await group_db_handler.add_user_to_group(member_id, group_key);
-    }
-    //} //End-for
-
-    //    await this.set_assignment_data(created_assignment_key, 'submissions', JSON.stringify(submission_keys));
-    */
-        return assignment_key;
-    }
 
     async create_comment_submission_assignment (import_handler,
          user_key,
@@ -466,54 +344,7 @@ class AssignmentDatabaseHandler {
     }
 
 
-    async submit_document_assignment_lti(import_handler, user_id, assignment_key, files, upload = true) {
-        let document_upload_handler = await import_handler.doc_upload_handler;
-        let document_db_handler = await import_handler.doc_db_handler;
-        let group_db_handler = await import_handler.group_db_handler;
-        let user_db_handler = await import_handler.user_db_handler;
-        let submission_db_handler = await import_handler.submission_db_handler;
-        let submitter_db_handler = await import_handler.submitter_db_handler;
-        
-        let user_key = KeyDictionary.key_dictionary['user'] + user_id;
-      
-        // Associate group with submission
-        let submission_key = await this.get_users_submission_key(import_handler, user_key, assignment_key);
-        let submission_data = await submission_db_handler.get_submission_data(submission_key);
 
-        if (submission_data['submission_time'] !== '') {
-            let assignment_data = await this.get_assignment_data(user_key, assignment_key);
-            if (!assignment_data['allow_multiple_submissions'])
-                throw new RichReviewError('This assignment doesn\'t allow multiple submissions');
-        }
-
-        let context = '_';
-
-        if (upload === true)
-            context = await document_upload_handler.upload_documents(files);
-        
-        // Add doc and grp to redis
-        let doc_key = await document_db_handler.create_doc(user_id, context.container);
-        let group_key = await group_db_handler.create_group(user_id, doc_key);
-
-        await document_db_handler.add_group_to_doc(doc_key, group_key);
-
-
-        let submitter_key = await submission_data['submitter'];
-        let submitter_data = await submitter_db_handler.get_submitter_data(submitter_key);
-
-        for (let member of submitter_data['members']) {
-            await user_db_handler.add_group_to_user(member, group_key);
-            member = member.replace(KeyDictionary.key_dictionary['user'], '');
-            await group_db_handler.add_user_to_group(member, group_key);
-        }
-
-        await group_db_handler.add_submission_to_group(group_key, submission_key);
-        await submission_db_handler.add_group_to_document_submission(submission_key, group_key);
-
-        return submission_key;
-    }
-
-    
 
     async submit_document_assignment (import_handler, user_id, course_key, assignment_key, files, upload = true) {
         let document_upload_handler = await import_handler.doc_upload_handler;
@@ -600,7 +431,7 @@ class AssignmentDatabaseHandler {
     async get_assignment (import_handler, user_key, course_key, assignment_key) {
         let user_db_handler = await import_handler.user_db_handler;
         let course_db_handler = await import_handler.course_db_handler;
-        
+
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
         let course_data = await course_db_handler.get_course_data(course_key);
         let data = {};
@@ -619,116 +450,6 @@ class AssignmentDatabaseHandler {
         return data
     }
 
-
-    async get_assignment_lti (import_handler, assignment_key, user_key, is_instructor_or_ta) {
-        let user_db_handler = await import_handler.user_db_handler;
-                
-        let data = {};
-
-        if (!is_instructor_or_ta) {
-            let assignment_data = await this.get_assignment_data('', assignment_key);
-            
-            data = await this.get_assignment_for_students_lti(import_handler, user_key, assignment_key);
-        } else  {
-            data = await this.get_assignment_for_tas_and_instructors_lti(import_handler, user_key, assignment_key);
-        }
-
-        
-        return data
-    }
-    
-
-    async get_assignment_for_students_lti (import_handler, user_key, assignment_key) {
-        let submission_db_handler = await import_handler.submission_db_handler;
-        let group_db_handler = await import_handler.group_db_handler;
-        
-        let assignment_data = await this.get_assignment_data(user_key, assignment_key);
-       
-        delete assignment_data['extensions'];
-        delete assignment_data['display_grade_as'];
-        delete assignment_data['count_toward_final_grade'];
-        delete assignment_data['creation_date'];
-        delete assignment_data['submissions'];
-
-        let submission_key = await this.get_users_submission_key(
-            import_handler,
-            user_key,
-            assignment_key);
-
-        let link = '';
-        let submission_status;
-
-        if (submission_key) {
-            let submission_data = await submission_db_handler.get_submission_data(submission_key);
-
-            if (submission_data)
-                submission_status = submission_data['submission_status'];
-
-            if (submission_data['group'] && submission_data['group'] !== '') {
-                link = await group_db_handler.get_group_link(import_handler, submission_data['group'])
-            }
-        }
-
-        return {
-            assignment: assignment_data,
-            grader_link: '',
-            link: link,
-            submission_status,
-            extension_date
-        };
-    }
-    
-
-    async get_assignment_for_tas_and_instructors_lti (import_handler, user_key, assignment_key) {
-        // let course_db_handler = await import_handler.course_db_handler;
-        // let course_group_db_handler = await import_handler.course_group_db_handler;
-        let group_db_handler = await import_handler.group_db_handler;
-
-        let assignment_data = await this.get_assignment_data(user_key, assignment_key);
-        delete assignment_data['display_grade_as'];
-        delete assignment_data['count_toward_final_grade'];
-        delete assignment_data['creation_date'];
-        delete assignment_data['submissions'];
-
-        let submission_data = await this.get_first_assignment_submissions_for_grader(
-            import_handler,
-            user_key,
-            assignment_key);
-
-        /*
-        let student_or_group_list;
-        if (assignment_data['group_assignment']) {
-            let course_group_set_data = await course_group_db_handler.get_course_group_set_data(assignment_data['course_group_set']);
-            student_or_group_list = await Promise.all(course_group_set_data['course_groups'].map(async course_group => {
-                let course_group_data = await course_group_db_handler.get_course_group_data(course_group);
-                return {key: course_group, name: course_group_data['name'], id: course_group_data['id']};
-            }));
-        } else
-            student_or_group_list = await course_db_handler.get_course_active_students(import_handler, assignment_data['course']);
-
-
-        student_or_group_list = student_or_group_list.filter(student_or_group => {
-            for (let extension of assignment_data['extensions']) {
-                if (extension['user'] === student_or_group['key'])
-                    return false;
-            }
-            return true;
-        });
-        */
-
-        let template_link = '';
-        if (assignment_data['template_group'] && assignment_data['template_link'] !== '')
-            template_link = await group_db_handler.get_group_link(import_handler, assignment_data['template_group']);
-
-        return {
-            assignment: assignment_data,
-            grader_link: submission_data.link,
-            grader_submission_id: submission_data.id,
-            link: '',
-            // student_or_group_list: student_or_group_list,
-            template_link: template_link
-        };
-    }
 
 
     async get_assignment_for_students (import_handler, user_key, assignment_key) {

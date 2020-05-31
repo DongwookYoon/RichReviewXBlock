@@ -10,8 +10,6 @@ const logger = require('morgan');
 const indexRouter = require('./routes/index');
 const courseRouter = require('./routes/course');
 const assignmentRouter = require('./routes/assignment');
-const ltiAssignmentRouter = require('./routes/lti_assignment');
-const ltiGroupRouter = require('./routes/lti_group');
 const userRouter = require('./routes/user');
 const loginRouter = require('./routes/login');
 const course_groupRouter = require('./routes/course_group');
@@ -56,14 +54,13 @@ app.use('/dbs', dbsRouter);
 app.use('/login', loginRouter);
 app.use('/bluemix_stt_auth', bluemixRouter);
 app.use('/admin', adminRouter);
-app.use('/lti_assignments', ltiAssignmentRouter)
 app.use('/courses', courseRouter);
 app.use('/courses/:course_id/assignments', assignmentRouter);
 app.use('/courses/:course_id/users', userRouter);
 app.use('/courses/:course_id/course_groups', course_groupRouter);
 app.use('/courses/:course_id/grades', gradesRouter);
 app.use('/courses/:course_id/groups', groupRouter);
-app.use('/lti_groups', ltiGroupRouter);
+
 
 
 // catch 404 and forward to error handler

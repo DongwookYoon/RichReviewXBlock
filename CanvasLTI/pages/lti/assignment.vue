@@ -41,16 +41,17 @@
 
 <script lang="ts">
 import * as https from 'https'
+import querystring from 'querystring'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import { Route } from 'vue-router'
-// eslint-disable-next-line camelcase
-import jwt_decode from 'jwt-decode'
 import ClientAuth from '~/utils/client-auth'
+import JwtUtil from '~/utils/jwt-util'
 import DocumentSubmitter from '../../components/document_submitter.vue'
 import CommentSubmitter from '../../components/comment_submitter.vue'
 import RichReviewViewer from '../../components/richreview_viewer.vue'
 // eslint-disable-next-line camelcase
 import { lti_auth } from '~/store' // Pre-initialized store.
+import jwk_to_pem from 'jwk-to-pem';
 
 export class SubmitData {
   viewerLink : string = ''
@@ -82,21 +83,37 @@ const testData = {
     }
 
     if (process.server) {
-      const jwt : any = (context.req as any).body
-      // Use req.body and req.query to get the required data from lti deep linking launch request
-      // TODO Decode and verify jwt. Need to verify using the platform's (Canvas) public
-      // key which is retrieved using OAuth
-      const ltiLaunchMessage : any = jwt_decode(jwt)
 
+      let jwt : string
+      let ltiLaunchMessage : object | null = null
+
+      try {
+      /* Note that the platform sends the encoded jwt in a form with a single parameter, which
+         is 'JWT'. The form is parsed here to get the jwt. */
+       jwt = querystring.parse((context.req as any).body).JWT as string
+       ltiLaunchMessage = await Assignment.getLaunchMessage(jwt, process.env.canvas_public_key_set_url as string)
+      } catch(ex) {
+        console.warn('Error occurred while getting ltiLaunchMessage from jwt. Reason: ' + ex)
+        ltiLaunchMessage = null
+      }
+      finally {
+        if (ltiLaunchMessage === null) {
+          alert('An error occurred. Please try reloading the page. Contact the system administrator if this continues.')
+          console.warn('Authentication failed.')
+          return {}
+        }
+      }
+
+      const launchMessage = ltiLaunchMessage as any
       const assignmentType : string = context.params.assignment_type
-      const assignmentID : string = context.params.assignment_key
-      const userRoles = Assignment.getUserRoles(ltiLaunchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
+      const assignmentId : string = context.params.assignment_key
+      const userRoles = Assignment.getUserRoles(launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
       const isInstructorOrTA : boolean = (userRoles.includes(Assignment.INSTRUCTOR) || userRoles.includes(Assignment.TA))
 
       let resp
       try {
         resp = await context.$axios.$get(
-        `https://${process.env.backend}:3000/lti_assignments/${assignmentID}/${isInstructorOrTA ? 'true' : 'false'}`,
+        `https://${process.env.backend}:3000/lti_assignments/${assignmentId}/${isInstructorOrTA ? 'true' : 'false'}`,
         {
           headers: {
             Authorization: lti_auth.authUser.userId // Pass Canvas userId in Authorization header
@@ -115,8 +132,8 @@ const testData = {
         return { ltiLaunchMessage }
       }
 
-      // eslint-disable-next-line camelcase
-      const submit_data : SubmitData = {
+
+      const submitData : SubmitData = {
         submitted: resp.data.submission_status,
         viewerLink: resp.data.link
       }
@@ -124,9 +141,9 @@ const testData = {
       return {
         assignmentTitle: resp.data.title,
         assignmentType,
-        assignmentID,
-        ltiLaunchMessage,
-        submit_data,
+        assignmentId,
+        launchMessage,
+        submit_data : submitData,
         userRoles
       }
     }
@@ -141,11 +158,12 @@ export default class Assignment extends Vue {
 
   private assignmentTitle ?: string
   private assignmentType ?: string
-  private assignmentID ?: string
-  private ltiLaunchMessage ?: any
+  private assignmentId ?: string
+  private launchMessage ?: any
   // eslint-disable-next-line camelcase
   private submit_data !: SubmitData
   private userRoles ?: string[]
+
 
   public created () {
     this.isCreated = true
@@ -157,13 +175,14 @@ export default class Assignment extends Vue {
     this.injectTest() // Inject dummy data
   }
 
+
   public async handleSubmit () {
     let assignmentResp
     await this.updateClientCredentials()     // Update client credentials token in store
 
     try {
       assignmentResp = await this.$axios.$get(
-        `https://${process.env.backend}:3000/lti_assignments/${assignmentID}/false`,
+        `https://${process.env.backend}:3000/lti_assignments/${this.assignmentId}/false`,
         {
           headers: {
             Authorization: lti_auth.authUser.userId // Pass the Canvas user id in Authorization header
@@ -183,9 +202,9 @@ export default class Assignment extends Vue {
 
     const submissionId = assignmentResp.data.grader_submission_id
     const submissionURL = `${this.$route.path}?${assignmentResp.data.link}&submission_id=${submissionId}`
-    const assignmentResourceId : string = this.ltiLaunchMessage[
+    const assignmentResourceId : string = this.launchMessage[
       'https://purl.imsglobal.org/spec/lti/claim/resource_link'].id
-    const courseId : string = this.ltiLaunchMessage[
+    const courseId : string = this.launchMessage[
       'https://purl.imsglobal.org/spec/lti/claim/context'].id
     let lineItemId : string = ''
 
@@ -194,6 +213,7 @@ export default class Assignment extends Vue {
         `${process.env.canvas_path}/api/lti/courses/${courseId}/line_items`,
         {
           headers: {
+            Accept: 'application/json+canvas-string-ids',
             Authorization: `Bearer ${lti_auth.clientCredentialsToken}`
           },
           httpsAgent: new https.Agent({
@@ -215,24 +235,41 @@ export default class Assignment extends Vue {
         throw new Error('Could not find a line item to create assignment submission')
       }
 
-      const scoreData = `{
-          "timestamp": "${new Date().toISOString()}",
-          "activityProgress": "Submitted",
-          "gradingProgress": "PendingManual",
-          "userId": "${lti_auth.authUser.userId}",
-          "https://canvas.instructure.com/lti/submission": {
-            "new_submission": true,
-            "submission_type": "basic_lti_launch",
-            "submission_data": "${submissionURL}"
-          }
-        }`
+      let scoreData : any = {
+          timestamp: `${new Date().toISOString()}`,
+          activityProgress: 'Submitted',
+          gradingProgress: 'PendingManual',
+          userId: `${lti_auth.authUser.userId}`,
+      }
+      scoreData["https://canvas.instructure.com/lti/submission"] = {
+            new_submission: true,
+            submission_type: 'basic_lti_launch',
+            submission_data: `${submissionURL}`
+      }
+
+      const options : object = {
+        algorithm: process.env.jwk_alg as string,
+        expiresIn: 900,                       // Number of seconds for 15 minutes expiration time
+        audience: `${this.launchMessage.iss}`,
+        issuer: process.env.canvas_client_id, // TODO Check if this is correct iss value
+        nonce: this.launchMessage.nonce
+      }
+
+      const scoreJWT = JwtUtil.createJWT(scoreData, options)
+      if (scoreJWT === null) {
+        throw new Error('Creating the JWT failed.')
+      }
+
+      const urlEncodedJWT = JwtUtil.createJwtFormUrlEncoded(scoreJWT)
+
       /* Send the score resource to Canvas to indicate submission in gradebook */
       this.$axios.$post(
           `${process.env.canvas_path}/api/lti/courses/${courseId}/line_items/${lineItemId}/scores`,
-          scoreData,
+          urlEncodedJWT,
           {
             headers: {
-              Authorization: `Bearer ${lti_auth.clientCredentialsToken}`
+              Authorization: `Bearer ${lti_auth.clientCredentialsToken}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
             },
             httpsAgent: new https.Agent({
               rejectUnauthorized: false
@@ -244,6 +281,7 @@ export default class Assignment extends Vue {
           Contact the system adminstrator for assistance if this continues.`)
     }
   }
+
 
   /**
    *  Only for testing purposes.
@@ -263,7 +301,8 @@ export default class Assignment extends Vue {
 
 
   private async updateClientCredentials() {
-    let authHandler : ClientAuth = new ClientAuth(process.env.canvas_client_id, process.env.canvas_path)
+    let authHandler : ClientAuth = new ClientAuth(process.env.canvas_client_id as string,
+      process.env.canvas_path as string)
 
     lti_auth.updateClientCredentialsToken(authHandler.getGradeServicesToken())
   }
@@ -279,6 +318,15 @@ export default class Assignment extends Vue {
     console.warn(`Query variable ${variable} not found`)
     return ''
   }
+
+  /**
+   * Decode and verify jwt. Need to verify using the platform's (Canvas) public keyset.
+   */
+  private static async getLaunchMessage (jwtBase64 : string, keysetUrl: string) : Promise<object | null> {
+        return await JwtUtil.getAndVerifyWithKeyset(jwtBase64, keysetUrl)
+  }
+
+
 
   private static getUserRoles (ltiRoles : string[]) {
     const friendlyRoles : string[] = []

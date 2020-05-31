@@ -46,11 +46,12 @@
 
 <script lang = "ts">
 import * as https from 'https'
-// eslint-disable-next-line camelcase
-import jwt_decode from 'jwt-decode'
+import JwtUtil from '~/utils/jwt-util'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 // eslint-disable-next-line camelcase
 import { lti_auth } from '~/store'
+import querystring from 'querystring';
+
 
 @Component({
   asyncData (context) : any {
@@ -65,21 +66,24 @@ import { lti_auth } from '~/store'
       return
     }
     if (process.server === true) {
-      const jwt : any = context.req.body
+      const jwt : string = querystring.parse((context.req as any).body).JWT as string
 
       // TODO Decode and verify jwt. Need to verify using the platform's (Canvas) public
       // key which is retrieved using OAuth
-      const ltiReqMessage : any = jwt_decode(jwt)
+      const ltiReqMessage : any = JwtUtil.getAndVerifyWithKeyset(jwt, process.env.canvas_public_key_set_url as string)
 
-      if (CreateAssignment.validateToken(ltiReqMessage) === true) {
-        // Generate assignment key
-        const assignmentKey : string = `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`
+      if (ltiReqMessage !== null) {
+      // Generate assignment key
+      const assignmentKey : string = `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`
         return {
           ltiReqMessage,
           assignmentKey
         } // Inject into CreateAssignment instance data
-      } else {
-        console.warn('Invalid ltiDeepLinkRequest\n' + ltiReqMessage)
+      }
+      else {
+        console.warn('Invalid ltiDeepLinkRequest. Could not valid jwt.\n' + ltiReqMessage)
+        alert(`An error occurred while loading. Please try to refresh the page.
+        If this error persists, contact the system administrator for assistance.`)
       }
     }
   }
@@ -143,7 +147,7 @@ export default class CreateAssignment extends Vue {
             {
               headers: {
                 'Content-Type': 'multipart/form-data',
-                Authorization: this.ltiReqMessage.sub // TODO verify that sub is an immutable GUID across contexts
+                Authorization: lti_auth.authUser.userId // TODO verify that sub is an immutable GUID across contexts
               },
               httpsAgent: new https.Agent({
                 rejectUnauthorized: false
@@ -199,12 +203,13 @@ export default class CreateAssignment extends Vue {
   private async postBackToPlatform (ltiLink ?: string) {
     const jwtResponse = this.generateJWTResponse(ltiLink)
     const postBackAddress = this.ltiReqMessage['https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings'].deep_link_return_url
-    const formData : FormData = new FormData()
+    const jwtUrlEncoded = JwtUtil.createJwtFormUrlEncoded(jwtResponse)
 
-    formData.append('JWT', jwtResponse)
-    await this.$axios.$post(postBackAddress, formData, {
+    await this.$axios.$post(postBackAddress,
+    jwtUrlEncoded, {
       headers: {
-        'Content-Type': 'multipart/form-data'
+        Authorization: `Bearer ${lti_auth.authUser.userId}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
       httpsAgent: new https.Agent({
         rejectUnauthorized: false
@@ -214,11 +219,10 @@ export default class CreateAssignment extends Vue {
 
   /**
    * Generate base-64 JWT string for ltiDeepLinkResponse message
-   * // TODO Determine best approach to sign the JWT response
    */
   private generateJWTResponse (ltiLink ?: string) : string {
     const reqMsg = this.ltiReqMessage
-    const contentItems : [] = []
+    let contentItems : {}[] = []
 
     /* Per LTI spec, details of how to launch RR are send back in contentItems array.
        If no items were created (i.e. user cancelled), provider must still send
@@ -238,14 +242,18 @@ export default class CreateAssignment extends Vue {
           src: ltiLink
         }
       }
+      contentItems.push(linkItem)
     }
+
+    const options : object = {
+        algorithm: process.env.jwk_alg as string,
+        expiresIn: 900,                       // Number of seconds for 15 minutes expiration time
+        audience: `${reqMsg.iss}`,
+        issuer: process.env.canvas_client_id, // TODO Check if this is correct iss value
+        nonce: reqMsg.nonce
+      }
+
     const jwtResponse : string = `{
-      "iss": "${reqMsg.aud[0]}",
-      "aud": ["${reqMsg.iss}"],
-      "exp": "${reqMsg.exp}",
-      "iat": "${reqMsg.iat}",
-      "nonce" "${reqMsg.nonce}",
-      "azp" "${reqMsg.azp}",
       "https://purl.imsglobal.org/spec/lti/claim/deployment_id": "${process.env.deployment_id}",
       "https://purl.imsglobal.org/spec/lti/claim/message_type": "LtiDeepLinkingResponse",
       "https://purl.imsglobal.org/spec/lti/claim/version": "1.3.0",
@@ -253,16 +261,15 @@ export default class CreateAssignment extends Vue {
       "https://purl.imsglobal.org/spec/lti-dl/claim/data": "${reqMsg.data}"
       }`
 
-    return jwtResponse
+    const scoreJWT = JwtUtil.createJWT(JSON.parse(jwtResponse), options)
+      if (scoreJWT === null) {
+        throw new Error('Creating the JWT failed.')
+      }
+
+    return scoreJWT
   }
 
-  /**
-   * TODO Validate the jwt token
-   */
-  private static validateToken (jwt: Object) : boolean {
-    console.log(jwt)
-    return true
-  }
+
 }
 
 </script>

@@ -36,7 +36,7 @@ export default class OAuthHandler extends Vue {
       window.location.replace(`${canvas_path}/login/oauth2/auth?client_id=${
           client_id}&response_type=code&state=${stateKey}`)
 
-      window.localStorage.setItem(stateKey, redirect_uri)
+      window.sessionStorage.setItem(stateKey, redirect_uri)
     }
 
     /*  Handle the redirect with OAuth response from Canvas containing code in query string */

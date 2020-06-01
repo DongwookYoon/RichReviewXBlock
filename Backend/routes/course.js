@@ -123,10 +123,27 @@ router.post('/', function(req, res, next) {
 
 
 /*
- ** POST to a course, do not need this
+ ** POST to a course. Create a course with the
+ *  specified id, if the course does not already exist.
  */
-router.post('/:course_id', function(req, res, next) {
-    res.sendStatus(403);
+router.post('/:course_id', async function(req, res, next) {
+    let course_db_handler = await ImportHandler.course_db_handler;
+
+    const course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
+    let courseData 
+    try {
+        await course_db_handler.get_course_data()
+    } catch(ex) {
+        console.warn(ex)
+        courseData = null;
+    }
+    if (courseData === null) {
+         await course_db_handler.create_course(course_key, req.body);
+         res.sendStatus(201);
+    }
+    else {
+        res.sendStatus(200);
+    }
 });
 
 

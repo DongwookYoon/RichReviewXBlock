@@ -44,6 +44,7 @@ import * as https from 'https'
 import querystring from 'querystring'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import { Route } from 'vue-router'
+import axios from 'axios'
 import ClientAuth from '~/utils/client-auth'
 import JwtUtil from '~/utils/jwt-util'
 import DocumentSubmitter from '../../components/document_submitter.vue'
@@ -83,7 +84,8 @@ const testData = {
     }
 
     if (process.server) {
-
+      const generalError: string = `An error occurred. Please try reloading the page.
+          Contact the RichReview system administrator if this continues.`
       let jwt : string
       let ltiLaunchMessage : object | null = null
 
@@ -98,7 +100,7 @@ const testData = {
       }
       finally {
         if (ltiLaunchMessage === null) {
-          alert('An error occurred. Please try reloading the page. Contact the system administrator if this continues.')
+          alert(generalError)
           console.warn('Authentication failed.')
           return {}
         }
@@ -109,11 +111,22 @@ const testData = {
       const assignmentId : string = context.params.assignment_key
       const userRoles = Assignment.getUserRoles(launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
       const isInstructorOrTA : boolean = (userRoles.includes(Assignment.INSTRUCTOR) || userRoles.includes(Assignment.TA))
+      const courseId = launchMessage[
+        'https://purl.imsglobal.org/spec/lti/claim/context'].id
+
+      try {
+        await Assignment.ensureUserEnrolled(courseId, lti_auth.authUser.userId, userRoles)
+      } catch (ex) {
+        console.warn('Could not verify user enrollment in course. Reason: ' +ex)
+        alert(generalError)
+        return {}
+      }
 
       let resp
       try {
-        resp = await context.$axios.$get(
-        `https://${process.env.backend}:3000/lti_assignments/${assignmentId}/${isInstructorOrTA ? 'true' : 'false'}`,
+        resp = await context.$axios.$get(`https://${process.env.backend}:3000/courses/${
+        courseId
+        }/assignments/${assignmentId}`,
         {
           headers: {
             Authorization: lti_auth.authUser.userId // Pass Canvas userId in Authorization header
@@ -125,13 +138,15 @@ const testData = {
         )
       } catch (e) {
         console.warn(e)
-        return { ltiLaunchMessage }
+        resp = null
       }
-      if (!resp.data) {
-        console.warn('Assignment data could not be loaded. Assignment does not exist.')
-        return { ltiLaunchMessage }
+      finally {
+        if (!resp || !resp.data) {
+          console.warn('Assignment data could not be loaded. ')
+          alert(generalError)
+          return { }
+        }
       }
-
 
       const submitData : SubmitData = {
         submitted: resp.data.submission_status,
@@ -148,6 +163,7 @@ const testData = {
       }
     }
   }
+
 })
 export default class Assignment extends Vue {
   private static readonly INSTRUCTOR : string = 'instructor'
@@ -177,12 +193,16 @@ export default class Assignment extends Vue {
 
 
   public async handleSubmit () {
+    const courseId : string = this.launchMessage[
+      'https://purl.imsglobal.org/spec/lti/claim/context'].id
     let assignmentResp
     await this.updateClientCredentials()     // Update client credentials token in store
 
     try {
       assignmentResp = await this.$axios.$get(
-        `https://${process.env.backend}:3000/lti_assignments/${this.assignmentId}/false`,
+         `https://${process.env.backend}:3000/courses/${
+        courseId
+      }/assignments/${this.assignmentId}`,
         {
           headers: {
             Authorization: lti_auth.authUser.userId // Pass the Canvas user id in Authorization header
@@ -204,8 +224,6 @@ export default class Assignment extends Vue {
     const submissionURL = `${this.$route.path}?${assignmentResp.data.link}&submission_id=${submissionId}`
     const assignmentResourceId : string = this.launchMessage[
       'https://purl.imsglobal.org/spec/lti/claim/resource_link'].id
-    const courseId : string = this.launchMessage[
-      'https://purl.imsglobal.org/spec/lti/claim/context'].id
     let lineItemId : string = ''
 
     try {
@@ -328,7 +346,7 @@ export default class Assignment extends Vue {
 
 
 
-  private static getUserRoles (ltiRoles : string[]) {
+  private static getUserRoles (ltiRoles : string[]) : string[] {
     const friendlyRoles : string[] = []
 
     for (const curRole of ltiRoles) {
@@ -344,6 +362,27 @@ export default class Assignment extends Vue {
 
     return friendlyRoles
   }
+
+  private static async ensureUserEnrolled(courseId: string, userId: string, roles: string[]){
+    // Ensure that user is marked as an instructor in this course
+    const userRes = await axios.post(`https://${process.env.backend}:3000/courses/${
+      courseId}/users/${lti_auth.authUser.userId}`,
+      {roles},
+      {
+      headers: {
+        Authorization: lti_auth.authUser.userId
+      },
+      httpsAgent: new https.Agent({
+         rejectUnauthorized: false
+      })
+    })
+
+    if (userRes.status > 202) {
+      throw new Error(`Could not ensure that the user ${userId} is enrolled in the course ${courseId}`)
+    }
+  }
+
+
 
   private injectTest () {
     this.submit_data.submitted = testData.submitted

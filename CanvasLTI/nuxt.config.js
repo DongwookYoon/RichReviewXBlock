@@ -35,7 +35,7 @@ export default {
     '@nuxtjs/dotenv',
     // Doc: https://auth.nuxtjs.org/guide/setup.html
     // '@nuxtjs/router',
-    '~/modules/LoadServerMiddleware'
+    //'~/modules/LoadServerMiddleware'
   ],
 
   /*

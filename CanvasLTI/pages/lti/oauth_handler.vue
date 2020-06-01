@@ -64,6 +64,8 @@ export default class OAuthHandler extends Vue {
 
         lti_auth.updatePlatformAuth(authPayload)
 
+        this.ensureRichReviewUserExists(authPayload)   // Store user in RichReview if no record exists.
+
         this.$router.push(redirect_uri)         // Redirect user back to original page where auth was initiated
       } catch (ex) {
         console.warn('Error getting OAuth token in code flow authorization grant. Reason ' + ex)
@@ -98,6 +100,21 @@ export default class OAuthHandler extends Vue {
 
     return resp.data
   }
+
+  private async ensureRichReviewUserExists(authPayload: IAuthPayload){
+    this.$axios.$post(`https://${process.env.backend}:3000/login`,
+    authPayload,
+    {
+      headers: {
+          Authorization: authPayload.userId   // Pass Canvas userId in Authorization header
+      },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+      })
+    })
+  }
+
+
 }
 </script>
 

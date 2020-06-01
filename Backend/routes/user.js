@@ -146,10 +146,43 @@ router.post('/', function(req, res, next) {
 
 
 /*
- ** POST to a user, do not need this
+ ** POST to a user. Enroll the user in the course,
+ *  if they are not already enrolled.
  */
-router.post('/:user_id', function(req, res, next) {
-    res.sendStatus(403);
+router.post('/:user_id', async function(req, res, next) {
+    let course_db_handler = await ImportHandler.course_db_handler;
+
+    const course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
+    const user_key = KeyDictionary.key_dictionary['user'] + req.params.user_id;
+
+    const roles = req.body.roles
+
+    if (course_db_handler.is_user_enrolled_in_course(user_key, course_key)) {
+        res.sendStatus(200);
+    }
+
+    else if (!roles || roles.length === 0){
+        res.sendStatus(501);
+        console.warn('Error. Req must include data for user roles in course')
+    }
+
+    else {
+        for (let role of roles){
+            const roleLower = role.toLowerCase();
+            if (roleLower === 'instructor'){
+                await course_db_handler.add_instructor_to_course(user_key, course_key);
+                res.sendStatus(201);
+            }
+            else if (roleLower === 'student') {
+                await course_db_handler.add_student_to_course(user_key, course_key);
+                res.sendStatus(201);
+            }
+
+            res.sendStatus(501);
+        }
+    }
+    
+    
 });
 
 

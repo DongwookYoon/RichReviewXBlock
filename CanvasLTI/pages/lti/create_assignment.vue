@@ -46,6 +46,7 @@
 
 <script lang = "ts">
 import * as https from 'https'
+import axios from 'axios'
 import JwtUtil from '~/utils/jwt-util'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 // eslint-disable-next-line camelcase
@@ -54,7 +55,10 @@ import querystring from 'querystring';
 
 
 @Component({
-  asyncData (context) : any {
+  async asyncData (context) {
+    let assignmentKey: string = ''
+    let ltiReqMessage : any
+
     /* If user is not authenticated, attempt authentication and pass this page as redirect URI */
     if (lti_auth.isAuthenticated() === false) {
       context.redirect(`/lti/oauth_handler?redirect_uri=${context.route.fullPath}`)
@@ -70,21 +74,35 @@ import querystring from 'querystring';
 
       // TODO Decode and verify jwt. Need to verify using the platform's (Canvas) public
       // key which is retrieved using OAuth
-      const ltiReqMessage : any = JwtUtil.getAndVerifyWithKeyset(jwt, process.env.canvas_public_key_set_url as string)
+      ltiReqMessage = JwtUtil.getAndVerifyWithKeyset(jwt, process.env.canvas_public_key_set_url as string)
 
       if (ltiReqMessage !== null) {
-      // Generate assignment key
-      const assignmentKey : string = `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`
-        return {
+        if (!CreateAssignment.isInstructor(ltiReqMessage["https://purl.imsglobal.org/spec/lti/claim/roles"])){
+          alert('Error. Only instructors may create assignments.')
+          return {}
+        }
+        // Generate assignment key
+        assignmentKey = `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`
+      }
+      else {
+        console.warn('Invalid ltiDeepLinkRequest. Could not validate jwt.\n' + ltiReqMessage)
+        alert(`An error occurred while loading. Please try to refresh the page.
+        If this error persists, contact the system administrator for assistance.`)
+        return {}
+      }
+    }
+
+    try {
+      await CreateAssignment.ensureCourseInstructorEnrolled(ltiReqMessage, lti_auth.authUser.userId)
+      return {
           ltiReqMessage,
           assignmentKey
         } // Inject into CreateAssignment instance data
-      }
-      else {
-        console.warn('Invalid ltiDeepLinkRequest. Could not valid jwt.\n' + ltiReqMessage)
-        alert(`An error occurred while loading. Please try to refresh the page.
-        If this error persists, contact the system administrator for assistance.`)
-      }
+    } catch (ex) {
+      console.warn('Failed to add instructor in RichReview record of course. Reason: ' +ex)
+      alert(`Error occurred while accessing the RichReview resource.
+      Please try to refresh the page. If this error persists, contact the
+      system administrator for assistance.`)
     }
   }
 })
@@ -118,7 +136,8 @@ export default class CreateAssignment extends Vue {
 
   public async save () {
     this.saved = true
-
+    const courseId : string = this.ltiReqMessage[
+      'https://purl.imsglobal.org/spec/lti/claim/context'].id
     /* Create a record of the assignment record in RichReview first */
     try {
       if (this.assignmentType === 'comment_submission') {
@@ -142,12 +161,14 @@ export default class CreateAssignment extends Vue {
         }))
 
         await this.$axios.$post(
-            `https://${process.env.backend}:3000/lti_assignments/comment_submission_assignment`,
+            `https://${process.env.backend}:3000/courses/${
+              courseId
+              }/assignments/comment_submission_assignment`,
             formData,
             {
               headers: {
                 'Content-Type': 'multipart/form-data',
-                Authorization: lti_auth.authUser.userId // TODO verify that sub is an immutable GUID across contexts
+                Authorization: lti_auth.authUser.userId
               },
               httpsAgent: new https.Agent({
                 rejectUnauthorized: false
@@ -157,11 +178,13 @@ export default class CreateAssignment extends Vue {
       } // End-if
       else {
         await this.$axios.$post(
-            `https://${process.env.backend}:3000/lti_assignments/document_submission_assignment`,
+            `https://${process.env.backend}:3000/courses/${
+              courseId
+              }/assignments/document_submission_assignment`,
             { assignment_key: this.assignmentKey },
             {
               headers: {
-                Authorization: this.ltiReqMessage.sub // TODO verify that sub is an immutable GUID across contexts
+                Authorization: lti_auth.authUser.userId
               },
               httpsAgent: new https.Agent({
                 rejectUnauthorized: false
@@ -267,6 +290,59 @@ export default class CreateAssignment extends Vue {
       }
 
     return scoreJWT
+  }
+
+  private static async ensureCourseInstructorEnrolled(ltiMsg: any, userId: string) {
+    const contextPropName : string = 'https://purl.imsglobal.org/spec/lti/claim/context'
+    const courseId = ltiMsg[contextPropName].id
+    const courseData = {
+      id: courseId,
+      title: ltiMsg[contextPropName].title || '',
+      dept: '',
+      number: ltiMsg[contextPropName].label || '',
+      section: ''
+    }
+     // Ensure that the course is created
+    const course_res= await axios.post(`https://${process.env.backend}:3000/courses/${courseId}`,
+        courseData, {
+        headers: {
+        Authorization: userId
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+     })
+
+    if (course_res.status > 202) {
+      throw new Error(`Could not ensure that the course ${courseId} exists in RR`)
+    }
+
+    // Ensure that user is marked as an instructor in this course
+    const user_res = await axios.post(`https://${process.env.backend}:3000/courses/${
+      courseId}/users/${userId}`,
+      {roles: ['instructor']},
+      {
+      headers: {
+        Authorization: userId
+      },
+      httpsAgent: new https.Agent({
+         rejectUnauthorized: false
+      })
+    })
+
+    if (user_res.status > 202) {
+      throw new Error(`Could not ensure that the user ${userId} is enrolled in the course ${courseId}`)
+    }
+
+  }
+
+  private static isInstructor(roles : string[]) : boolean {
+    for (let curRole of roles) {
+      if (curRole.toLowerCase().includes('instructor'))
+        return true
+    }
+
+    return false
   }
 
 

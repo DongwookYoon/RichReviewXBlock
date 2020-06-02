@@ -224,7 +224,7 @@ export default class CreateAssignment extends Vue {
    * See LTI spec for more details here: https://www.imsglobal.org/spec/lti-dl/v2p0#dfn-deep-linking-response-message
    */
   private async postBackToPlatform (ltiLink ?: string) {
-    const jwtResponse = this.generateJWTResponse(ltiLink)
+    const jwtResponse = await this.generateJWTResponse(ltiLink)
     const postBackAddress = this.ltiReqMessage['https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings'].deep_link_return_url
     const jwtUrlEncoded = JwtUtil.createJwtFormUrlEncoded(jwtResponse)
 
@@ -243,7 +243,7 @@ export default class CreateAssignment extends Vue {
   /**
    * Generate base-64 JWT string for ltiDeepLinkResponse message
    */
-  private generateJWTResponse (ltiLink ?: string) : string {
+  private async generateJWTResponse (ltiLink ?: string) {
     const reqMsg = this.ltiReqMessage
     let contentItems : {}[] = []
 
@@ -268,13 +268,6 @@ export default class CreateAssignment extends Vue {
       contentItems.push(linkItem)
     }
 
-    const options : object = {
-        algorithm: process.env.jwk_alg as string,
-        expiresIn: 900,                       // Number of seconds for 15 minutes expiration time
-        audience: `${reqMsg.iss}`,
-        issuer: process.env.canvas_client_id, // TODO Check if this is correct iss value
-        nonce: reqMsg.nonce
-      }
 
     const jwtResponse : string = `{
       "https://purl.imsglobal.org/spec/lti/claim/deployment_id": "${process.env.deployment_id}",
@@ -285,7 +278,7 @@ export default class CreateAssignment extends Vue {
       }`
 
     // TODO make sure this is secure way to pass private key
-    const scoreJWT = JwtUtil.signAndEncode(JSON.parse(jwtResponse), process.env.rsa256_private_key as string, options)
+    const scoreJWT = JwtUtil.encodeJWT(JSON.parse(jwtResponse), reqMsg.nonce)
       if (scoreJWT === null) {
         throw new Error('Creating the JWT failed.')
       }

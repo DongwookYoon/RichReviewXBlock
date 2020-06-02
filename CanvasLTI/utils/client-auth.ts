@@ -6,15 +6,12 @@ export default class ClientAuth {
 
 
   private domain: string
-  private clientId: string
   private toolUrl: string
-  private rsaPrivateKey: string
 
-  constructor(clientId: string, ltiDomain: string, toolUrl: string, rsaPrivateKey: string) {
-    this.clientId = clientId
+
+  constructor(ltiDomain: string, toolUrl: string) {
     this.domain = ltiDomain
     this.toolUrl = toolUrl
-    this.rsaPrivateKey = rsaPrivateKey
   }
 
   /**
@@ -50,17 +47,17 @@ export default class ClientAuth {
 
 
 
-  private generateClientAssertion(audience: string) : string | null{
-    const options : object = {
-      algorithm: 'RS256',
-      expiresIn: 300,                       // Number of seconds for 5 minutes expiration time
-      audience,
-      issuer: this.toolUrl,
-      subject: this.clientId,
-      jwtid: `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`
-    }
-    //Note empty object, as there are no other claims required in this JWK.
-    return jwtUtil.signAndEncode({}, this.rsaPrivateKey, options)
+  private async generateClientAssertion() {
+
+    let jwtResponse = await axios.post(`/api/jwt/client_assertion`)
+
+    if (!jwtResponse.data)
+       return null
+
+    return jwtResponse.data.jwt
+
+
+
   }
 
 

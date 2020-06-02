@@ -272,16 +272,9 @@ export default class Assignment extends Vue {
             submission_data: `${submissionURL}`
       }
 
-      const options : object = {
-        algorithm: process.env.jwk_alg as string,
-        expiresIn: 900,                       // Number of seconds for 15 minutes expiration time
-        audience: `${this.launchMessage.iss}`,
-        issuer: process.env.canvas_client_id, // TODO Check if this is correct iss value
-        nonce: this.launchMessage.nonce
-      }
 
-      // TODO Make sure this is secure...probably not. Will need to hide private key.
-      const scoreJWT = JwtUtil.signAndEncode(scoreData, process.env.rsa256_private_key as string, options)
+      // TODO Make sure this is secure. Call backend to sign.
+      const scoreJWT = await JwtUtil.encodeJWT(scoreData, this.launchMessage.nonce)
       if (scoreJWT === null) {
         throw new Error('Creating the JWT failed.')
       }
@@ -328,9 +321,7 @@ export default class Assignment extends Vue {
 
   private async updateClientCredentials() {
     const authHandler : ClientAuth = new ClientAuth(process.env.canvas_client_id as string,
-      process.env.canvas_path as string,
-      process.env.prod_url as string,
-      process.env.rsa256_private_key as string)
+      process.env.canvas_path as string)
 
     const clientToken = await authHandler.getGradeServicesToken()
 

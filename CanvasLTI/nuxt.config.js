@@ -66,14 +66,19 @@ export default {
   },
 
   env: {
+    prod_url: 'https://richreview.net',
     // TODO generate a production public_jwk when generating developer key. This is only for test.
     canvas_public_key_set_url: 'https://canvas.ubc.ca/api/lti/security/jwks',
-    jwk_alg: 'RS256',
-    rsa256_private_key: '',
-    canvas_client_id: '',
-    canvas_client_secret: '',
     canvas_path: 'https://canvas.ubc.ca',     //Path to institution's Canvas deployment
     deployment_id: 'Add Canvas deployment id', // TODO Canvas deployment id
+    rs256_public_jwt: {
+      "alg": "RS256",
+      "e": "AQAB",
+      "kid": "sSjNGZuBvnkNFEiRNf6wjuHSpy_RvQNk54NHwgHFrq4",
+      "kty": "RSA",
+      "n": "7HL1kCH7YDeRW2XWm6zHcTmrkD0Y02khq2K1C9aAfvPSAXLHiaTtz5E2eO3A2CSFES7nTvNDKlDrV9aql1v6FOacraVhUMa-yP-UVilJM6K-FBjrOGj7txnPOeK7kJMz_dynR0VwZd-wfQ1UQmSGcDhGRGjaiZ3paml02vN1sQDGXDjnCv0bW8uTFirtdg6l1pYW1gHOUpydEDsL86y7Klmb7KNiGmlbe4cQUm18aRHkKS-tiW4eQgWHoqMCzrrchrx280HpBB01DNQmtJ_P6Z70yVc0PM4UjYFBvEBIAJCRcK9tT7yE7F-YJeDrAHCCO4AElPIE2dkDRRFHGZS3EOaQcaN-yQN0B_hazbsv98rYbm4FpXBU-IMjzIdjB5PXmOnSePxU8rWvze9xAiwU_qIqzr6ObsYzNbO_FC0YaDPvShWYziEE871SwhH-ghE0fLFEmJ928lu3PIGYpzd0xMgzcsP95P1L9YguSgxdMjNnDjvu-inqSHecI6ywZdB6D6pQzEsIpniCi_znYznLCVLuZ0CeGLSUFdQ-8DbV8SAcPqaVH0aUBf_VEaBEQNDYAsegGjQ71fyRR4o2UxrpxsjXDmw6Q7MpLA9CkTyi_DRhSNqRKreq5v25tTGahQEhEjAltLlrxv_RnhC-sLNCCEfNPX93F11NT3_TIxl-3Ec",
+      "use": "sig"
+    },
     backend:
       process.env.NODE_ENV !== 'production' ? 'localhost' : 'richreview.net'
   },

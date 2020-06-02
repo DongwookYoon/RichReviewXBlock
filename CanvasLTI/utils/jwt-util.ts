@@ -75,13 +75,16 @@ export default class JwtUtil {
     }
 
 
-    public static signAndEncode (jwtData : Object, privateKey : string, options ?: Object) : string | null {
-      try {
-        return jwt.sign(jwtData, privateKey, options)
-      } catch (ex) {
-        console.warn('Signing JWT failed. Reason' + ex)
-        return null
-      }
+
+    public static async encodeJWT (jwtData : Object, nonce: string) {
+       let jwtResponse = await axios.post(`/api/jwt/lti_jwt/${nonce}`, jwtData);
+
+        if (!jwtResponse.data ){
+          return null
+        }
+
+
+       return jwtResponse.data.jwt
     }
 
     public static createJwtFormUrlEncoded(jwtDataBase64 : string) : string {

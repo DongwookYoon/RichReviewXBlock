@@ -56,8 +56,6 @@ export default class ClientAuth {
 
     return jwtResponse.data.jwt
 
-
-
   }
 
 

@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router({mergeParams: true});
 var signAndEncode = require('../util/util');
+var axios = require('axios');
 
 const lti_config = JSON.parse(
   fs.readFileSync(path.join(__dirname, '..', 'ssl/lti.json'), 'utf-8')
@@ -23,6 +24,35 @@ router.get('/client_assertion', function(req, res, next) {
   const signed = signAndEncode({}, options);
   res.json({jwt: signed});
 });
+
+
+
+router.get('/oauth_token', async function(req, res, next) {
+  const code = req.body.code;
+  
+  const reqMsg = {
+    grant_type: 'authorization_code',
+    code,
+    client_id: lti_config.canvas_client_id,
+    client_secret: lti_config.canvas_client_secret
+  };
+
+  const resp = await axios.post(
+    `${lti_config.platform_path}/login/oauth2/token`,
+    reqMsg, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: false
+      })
+    });
+
+  if (!resp.data)
+    res.sendStatus(501);
+  
+  res.json({auth_info: resp.data});
+}
 
 
 /*

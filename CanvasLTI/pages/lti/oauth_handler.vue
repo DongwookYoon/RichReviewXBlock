@@ -32,7 +32,7 @@ export default class OAuthHandler extends Vue {
       const redirect_uri : string = query.redirect_uri as string
 
       //Generate pseudorandom key for accessing the redirect_uri again
-      const stateKey : string = `RichReview_${Date.now()}_${Math.random()*10000}`.replace('.', '_')
+      const stateKey : string = (`RichReview_${Date.now()}_${Math.random()*10000}`).replace('.', '_')
       window.location.replace(`${canvas_path}/login/oauth2/auth?client_id=${
           client_id}&response_type=code&state=${stateKey}`)
 
@@ -64,7 +64,6 @@ export default class OAuthHandler extends Vue {
 
         lti_auth.updatePlatformAuth(authPayload)
 
-        this.ensureRichReviewUserExists(authPayload)   // Store user in RichReview if no record exists.
 
         this.$router.push(redirect_uri)         // Redirect user back to original page where auth was initiated
       } catch (ex) {
@@ -85,23 +84,22 @@ export default class OAuthHandler extends Vue {
 
   private async getAuthInfo (code : string) {
     const reqMsg = {
-      grant_type: 'authorization_code',
-      client_id: `${process.env.canvas_client_id}`,
-      client_secret: `${process.env.canvas_client_secret}`,
       code
     }
-    const resp = await this.$axios.$post(
-        `${process.env.canvas_path}/login/oauth2/token`,
-        reqMsg, {
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        })
 
-    return resp.data
+    let tokenResp = await this.$axios.$post(`/api/jwt/oauth_token`,
+    reqMsg, {
+      httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+      })
+    })
+
+    if (!tokenResp.data)
+       return null
+
+    return tokenResp.data.auth_info
+
+
   }
 
 

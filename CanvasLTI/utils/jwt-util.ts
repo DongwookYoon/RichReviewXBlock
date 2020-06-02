@@ -74,12 +74,6 @@ export default class JwtUtil {
       }
     }
 
-    public static createJWT(data: Object, options ?: Object) : string | null {
-        // TODO sign on express backend to avoid exposing private key
-        return JwtUtil.signAndEncode(data,
-          process.env.rsa256_private_key as string,
-          options)
-    }
 
     public static signAndEncode (jwtData : Object, privateKey : string, options ?: Object) : string | null {
       try {

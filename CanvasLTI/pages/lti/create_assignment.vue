@@ -284,7 +284,8 @@ export default class CreateAssignment extends Vue {
       "https://purl.imsglobal.org/spec/lti-dl/claim/data": "${reqMsg.data}"
       }`
 
-    const scoreJWT = JwtUtil.createJWT(JSON.parse(jwtResponse), options)
+    // TODO make sure this is secure way to pass private key
+    const scoreJWT = JwtUtil.signAndEncode(JSON.parse(jwtResponse), process.env.rsa256_private_key as string, options)
       if (scoreJWT === null) {
         throw new Error('Creating the JWT failed.')
       }

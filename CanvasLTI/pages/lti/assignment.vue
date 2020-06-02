@@ -196,7 +196,14 @@ export default class Assignment extends Vue {
     const courseId : string = this.launchMessage[
       'https://purl.imsglobal.org/spec/lti/claim/context'].id
     let assignmentResp
-    await this.updateClientCredentials()     // Update client credentials token in store
+
+    try {
+      await this.updateClientCredentials()     // Update client credentials token in store
+    } catch (ex) {
+      console.warn('OAuth client credential grant for assignment submission failed. Reason: ' +ex)
+      alert('Could not submit assignment. Please try again.')
+      return
+    }
 
     try {
       assignmentResp = await this.$axios.$get(
@@ -273,7 +280,8 @@ export default class Assignment extends Vue {
         nonce: this.launchMessage.nonce
       }
 
-      const scoreJWT = JwtUtil.createJWT(scoreData, options)
+      // TODO Make sure this is secure...probably not. Will need to hide private key.
+      const scoreJWT = JwtUtil.signAndEncode(scoreData, process.env.rsa256_private_key as string, options)
       if (scoreJWT === null) {
         throw new Error('Creating the JWT failed.')
       }
@@ -319,10 +327,14 @@ export default class Assignment extends Vue {
 
 
   private async updateClientCredentials() {
-    let authHandler : ClientAuth = new ClientAuth(process.env.canvas_client_id as string,
-      process.env.canvas_path as string)
+    const authHandler : ClientAuth = new ClientAuth(process.env.canvas_client_id as string,
+      process.env.canvas_path as string,
+      process.env.prod_url as string,
+      process.env.rsa256_private_key as string)
 
-    lti_auth.updateClientCredentialsToken(authHandler.getGradeServicesToken())
+    const clientToken = await authHandler.getGradeServicesToken()
+
+    lti_auth.updateClientCredentialsToken(clientToken)
   }
 
   private static getQueryVariable (variable : string, route : string) : string {

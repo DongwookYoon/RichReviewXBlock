@@ -93,25 +93,15 @@ export default class OAuthHandler extends Vue {
     const resp = await this.$axios.$post(
         `${process.env.canvas_path}/login/oauth2/token`,
         reqMsg, {
+          headers: {
+            'Content-Type': 'application/json'
+          },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false
           })
         })
 
     return resp.data
-  }
-
-  private async ensureRichReviewUserExists(authPayload: IAuthPayload){
-    this.$axios.$post(`https://${process.env.backend}:3000/login`,
-    authPayload,
-    {
-      headers: {
-          Authorization: authPayload.userId   // Pass Canvas userId in Authorization header
-      },
-        httpsAgent: new https.Agent({
-          rejectUnauthorized: false
-      })
-    })
   }
 
 

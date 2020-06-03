@@ -27,6 +27,8 @@ router.get('/client_assertion', function(req, res, next) {
 
 
 
+/* Get an oauth access token from the lti endpoint using a 
+   code provided by the client */
 router.get('/oauth_token', async function(req, res, next) {
   const code = req.body.code;
   
@@ -52,7 +54,9 @@ router.get('/oauth_token', async function(req, res, next) {
     res.sendStatus(501);
   
   res.json({auth_info: resp.data});
-}
+});
+
+
 
 
 /*

@@ -18,7 +18,8 @@ const groupRouter = require('./routes/group');
 const dbsRouter = require('./routes/dbs');
 const bluemixRouter = require('./routes/bluemix_stt_auth');
 const adminRouter = require('./routes/admin');
-const jwtRouter = require('./routes/jwt')
+const jwtRouter = require('./routes/jwt');
+const ltiLoginRouter = require ('./routes/lti-login');
 //require('./lib/ELDAPSync');
 
 const app = express();
@@ -62,6 +63,7 @@ app.use('/courses/:course_id/course_groups', course_groupRouter);
 app.use('/courses/:course_id/grades', gradesRouter);
 app.use('/courses/:course_id/groups', groupRouter);
 app.use('/api/jwt', jwtRouter);
+app.use('/lti_login', ltiLoginRouter);
 
 
 

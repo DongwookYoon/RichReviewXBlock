@@ -48,6 +48,7 @@
 import * as https from 'https'
 import axios from 'axios'
 import JwtUtil from '~/utils/jwt-util'
+import ClientAuth from '~/utils/client-auth'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 // eslint-disable-next-line camelcase
 import { lti_auth } from '~/store'
@@ -55,26 +56,25 @@ import querystring from 'querystring';
 
 
 @Component({
+  middleware: 'oidc_handler',                 // Handle OIDC login request
+
   async asyncData (context) {
     let assignmentKey: string = ''
     let ltiReqMessage : any
 
-    /* If user is not authenticated, attempt authentication and pass this page as redirect URI */
-    if (lti_auth.isAuthenticated() === false) {
-      context.redirect(`/lti/oauth_handler?redirect_uri=${context.route.fullPath}`)
-    }
-
-    if (lti_auth.isAuthenticated() === false) {
+    if (lti_auth.codeToken === null) {
+     context.redirect(`/lti/oauth_handler?redirect_uri=${context.route.fullPath}`)
+     }
+    if (lti_auth.codeToken === null) {
       console.warn('Authentication failed')
       alert('You are not allowed to create this assignment')
       return
     }
-    if (process.server === true) {
-      const jwt : string = querystring.parse((context.req as any).body).JWT as string
 
-      // TODO Decode and verify jwt. Need to verify using the platform's (Canvas) public
-      // key which is retrieved using OAuth
-      ltiReqMessage = JwtUtil.getAndVerifyWithKeyset(jwt, process.env.canvas_public_key_set_url as string)
+    if (process.server === true) {
+       const jwt : string = querystring.parse((context.req as any).body).JWT as string
+
+      ltiReqMessage = await JwtUtil.getAndVerifyWithKeyset(jwt, process.env.canvas_public_key_set_url as string)
 
       if (ltiReqMessage !== null) {
         if (!CreateAssignment.isInstructor(ltiReqMessage["https://purl.imsglobal.org/spec/lti/claim/roles"])){
@@ -103,6 +103,14 @@ import querystring from 'querystring';
       alert(`Error occurred while accessing the RichReview resource.
       Please try to refresh the page. If this error persists, contact the
       system administrator for assistance.`)
+    }
+  },
+
+  fetch(){
+    if (lti_auth.isLoggedIn === false) {
+      console.warn('OIDC login failed')
+      alert('Please log in to Canvas to access RichReview. ')
+      this.$router.push('/')
     }
   }
 })

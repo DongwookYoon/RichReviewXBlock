@@ -71,6 +71,8 @@ const testData = {
 }
 
 @Component({
+  middleware: 'auth_handler',            // Handle OIDC login request
+
   components: {
     DocumentSubmitter,
     CommentSubmitter,
@@ -78,12 +80,8 @@ const testData = {
   },
 
   async asyncData (context) {
-    /* If user is not authenticated, attempt authentication and pass this page as redirect URI */
-    if (lti_auth.isAuthenticated() === false) {
-      context.redirect(`/lti/oauth_handler?redirect_uri=${context.route.fullPath}`)
-    }
 
-    if (process.server) {
+   if (process.server) {
       const generalError: string = `An error occurred. Please try reloading the page.
           Contact the RichReview system administrator if this continues.`
       let jwt : string
@@ -162,7 +160,17 @@ const testData = {
         userRoles
       }
     }
+  },
+
+  fetch(){
+    if (lti_auth.isLoggedIn === false) {
+      console.warn('OIDC login failed')
+      alert('Please log in to Canvas to view this assignment. ')
+      this.$router.push('/')
+    }
   }
+
+
 
 })
 export default class Assignment extends Vue {

@@ -11,7 +11,7 @@
 import * as https from 'https'
 import { Component, Vue } from 'nuxt-property-decorator'
 import * as _ from 'lodash'
-import { lti_auth, IAuthPayload } from '~/store'
+import { lti_auth } from '~/store'
 
 @Component
 export default class OAuthHandler extends Vue {
@@ -56,14 +56,7 @@ export default class OAuthHandler extends Vue {
       try {
         authInfo = this.getAuthInfo(code as string)
 
-        const authPayload : IAuthPayload = {
-          userId: authInfo.user.id,
-          userName: authInfo.user.name,
-          token: authInfo.access_token
-        }
-
-        lti_auth.updatePlatformAuth(authPayload)
-
+        lti_auth.updatePlatformAuth(authInfo.access_token)
 
         this.$router.push(redirect_uri)         // Redirect user back to original page where auth was initiated
       } catch (ex) {
@@ -83,12 +76,8 @@ export default class OAuthHandler extends Vue {
 
 
   private async getAuthInfo (code : string) {
-    const reqMsg = {
-      code
-    }
-
     let tokenResp = await this.$axios.$post(`/api/jwt/oauth_token`,
-    reqMsg, {
+    { code }, {
       httpsAgent: new https.Agent({
             rejectUnauthorized: false
       })

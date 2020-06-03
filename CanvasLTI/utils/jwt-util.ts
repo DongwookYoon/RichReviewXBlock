@@ -6,8 +6,15 @@ import * as https from 'https'
 
 export default class JwtUtil {
 
+    /**
+     * Verifies and decodes a JWT using a set of public keys.
+     * If verification fails, returns null. Otherwise, return
+     * the decoded JWT as an object.
+     * @param jwtBase64 JWT signed by the owner of the public key set.
+     * @param keysetUrl Path for JWK public key set provided by JWT signer.
+     */
     public static async getAndVerifyWithKeyset (jwtBase64 : string, keysetUrl: string) {
-      const kid = JwtUtil.getMessageKid(jwtBase64)
+        const kid = JwtUtil.getMessageKid(jwtBase64)
 
         if (kid === null) {
           throw new Error(`Getting launch message failed. Reason: kid is null`)
@@ -64,7 +71,7 @@ export default class JwtUtil {
     }
 
 
-    public static verifyAndDecode(jwtBase64 : string, pemKey : string) : object | null {
+    public static verifyAndDecode(jwtBase64 : string, pemKey : string) : Object | null {
       try {
         return jwt.verify(jwtBase64, pemKey) as object
 
@@ -77,7 +84,12 @@ export default class JwtUtil {
 
 
     public static async encodeJWT (jwtData : Object, nonce: string) {
-       let jwtResponse = await axios.post(`/api/jwt/lti_jwt/${nonce}`, jwtData);
+       const jwtResponse = await axios.post(`https://${process.env.backend}:3000/api/jwt/lti_jwt/${nonce}`,
+       jwtData, {
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        })
 
         if (!jwtResponse.data ){
           return null
@@ -90,5 +102,4 @@ export default class JwtUtil {
     public static createJwtFormUrlEncoded(jwtDataBase64 : string) : string {
       return `JWT=${encodeURIComponent(jwtDataBase64)}`
     }
-
 }

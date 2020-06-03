@@ -2,26 +2,9 @@ var express = require('express');
 var router = express.Router({mergeParams: true});
 const ImportHandler = require("../bin/ImportHandler");
 
-/*
- ** GET
- */
-router.get('/', function(req, res, next) {
-    res.sendStatus(403);
-});
-
-
 
 /*
- ** PUT useful for editing a user?
- */
-router.put('/', function(req, res, next) {
-    res.sendStatus(403);
-});
-
-
-
-/*
- ** POST will add a user to redis
+ ** POST will add an lti user to redis
  */
 router.post('/', async (req, res, next) => {
     let user_db_handler = await ImportHandler.user_db_handler;
@@ -30,30 +13,16 @@ router.post('/', async (req, res, next) => {
     let course_db_handler = await ImportHandler.course_db_handler;
 
     try {
-        let user_login_data;
-        let auth_type = req.body.auth_type;
+        let user_login_data = req.body;
+        let auth_type = 'LTI_OIDC';
 
-        if (auth_type === 'Google')
-            user_login_data = req.body.auth || req.body.user_data;
-        else if (auth_type === 'UBC_CWL')
-            user_login_data = req.body.user_data;
-        else if (auth_type === 'Pilot') {
-            try {
-                await user_db_handler.pilot_login(req.body.user, req.body.password);
-            } catch (e) {
-                res.status(401).send({
-                    message: 'Invalid Credentials'
-                });
-                return;
-            }
+        if (user_db_handler.user_exists(user_login_data.id) ) {
             res.sendStatus(200);
+            console.log('User already exists');
             return;
         }
 
-        console.log(JSON.stringify(user_login_data));
-
         let user_key = await user_db_handler.add_user_to_db(ImportHandler, user_login_data, auth_type);
-
         let user_data = await user_db_handler.get_user_data(user_key);
 
         let user_assignments = await Promise.all(user_data['submitters'].map(async (submitter) => {
@@ -65,7 +34,8 @@ router.post('/', async (req, res, next) => {
         for (const course of user_data['enrolments'])
             await course_db_handler.create_submitters_for_student(ImportHandler, user_key, course, user_assignments);
 
-        res.sendStatus(200);
+        
+        res.sendStatus(201);
     } catch (e) {
         console.warn(e);
         res.status(500).send({
@@ -76,8 +46,9 @@ router.post('/', async (req, res, next) => {
 
 
 
+
 /*
- ** DELETE all courses
+ ** DELETE all lti users
  */
 router.delete('/', function(req, res, next) {
     res.sendStatus(403);

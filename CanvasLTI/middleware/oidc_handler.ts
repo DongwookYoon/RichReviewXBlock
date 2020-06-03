@@ -38,6 +38,7 @@ const oidc_handler: Middleware = async (context) => {
     if (state === null || state !== lti_auth.oidcState) {
       lti_auth.logOut();
     }
+
   }
 }
 

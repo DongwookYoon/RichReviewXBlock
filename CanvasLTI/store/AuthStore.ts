@@ -12,8 +12,14 @@ export interface IUser {
   userName ?: string
 }
 
+interface IAuthData {
+  token: string,
+  name ?: string
+}
+
 interface ITokenInfo {
   token: string,
+  name ?: string,
   creationTime: Date
 }
 
@@ -111,9 +117,10 @@ export default class AuthStore extends VuexModule {
   }
 
   @Mutation
-  setClientCredentialsToken (token: string) {
+  setOAuthData (authData: IAuthData) {
     this.clientToken = {
-      token,
+      token: authData.token,
+      name: authData.name,
       creationTime: new Date()
     }
   }
@@ -133,8 +140,8 @@ export default class AuthStore extends VuexModule {
    * authorization code grant.
    */
   @Action
-  updatePlatformAuth (codeFlowToken: string | null) {
-    this.context.commit('setCodeFlowToken', codeFlowToken)
+  updatePlatformAuth (codeFlowToken: string | null, userName ?: string) {
+    this.context.commit('setOAuthData', {codeFlowToken, userName})
   }
 
   /**

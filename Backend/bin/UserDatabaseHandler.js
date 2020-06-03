@@ -251,10 +251,9 @@ class UserDatabaseHandler {
     }
 
 
-
-
     async add_user_to_db (import_handler, user_data, auth_type) {
-        let user_exists = await this.user_exists(auth_type === 'Google' ?
+        let user_exists = await this.user_exists(
+            auth_type === 'Google' || auth_type === 'LTI_OIDC' ?
             (user_data.sub || user_data.id) :
             user_data[this.UBC_CWL]);
 
@@ -267,6 +266,9 @@ class UserDatabaseHandler {
         else if (auth_type === 'UBC_CWL') {
             await this.add_ubc_user_to_db(user_data, user_exists);
             user_key = await this.add_ubc_user_to_courses(import_handler, user_data);
+        }
+        else if (auth_type === 'LTI_OIDC') {
+            user_key = await this.add_lti_user_to_db(user_data, user_exists);
         }
 
         await this.verify_submitters_for_enrolments(import_handler, user_key);
@@ -281,8 +283,42 @@ class UserDatabaseHandler {
     }
 
 
+    async add_lti_user_to_db (user_data, user_exists) {
+        let user_key = `${KeyDictionary.key_dictionary['user']}${user_data.sub ? user_data.sub : user_data.id}`;
 
-    async add_google_user_to_db (user_data, user_exists) {
+        await this.set_user_data(user_key, 'auth_type', 'LTI_OIDC');
+        await this.set_user_data(user_key, 'display_name', user_data.display_name || user_data.name || 'Canvas User');
+        await this.set_user_data(user_key, 'email', user_data.email || '');
+        await this.set_user_data(user_key, 'first_name', user_data.first_name || user_data.given_name || 'Canvas');
+        await this.set_user_data(user_key, 'last_name', user_data.last_name || user_data.family_name || 'User');
+        await this.set_user_data(user_key, 'nick_name', user_data.nick || user_data.display_name || user_data.name || 'Canvas User');
+
+        console.log(`LTI User ${user_data.sub || user_data.id} doesn't exist. Creating user`);
+        await this.set_user_data(user_key, 'id', user_data.sub || user_data.id);
+
+        if (!redis_user_data['groupNs'])
+            await this.set_user_data(user_key, 'groupNs', '[]');
+        if (!redis_user_data['creation_date'])
+            await this.set_user_data(user_key, 'creation_date', Date(Date.now()).toString());
+        if (!redis_user_data['enrolments'])
+            await this.set_user_data(user_key, 'enrolments', '[]');
+        if (!redis_user_data['teaching'])
+            await this.set_user_data(user_key, 'teaching', '[]');
+        if (!redis_user_data['taing'])
+            await this.set_user_data(user_key, 'taing', '[]');
+        if (!redis_user_data['course_groups'])
+            await this.set_user_data(user_key, 'course_groups', '[]');
+        if (!redis_user_data['submitters'])
+            await this.set_user_data(user_key, 'submitters', '[]');
+        if (!redis_user_data['inactive_submitters'])
+            await this.set_user_data(user_key, 'inactive_submitters', '[]');
+
+        return user_key;
+    }
+
+
+
+    async add_google_user_to_db (user_data) {
 
         let user_key = `${KeyDictionary.key_dictionary['user']}${user_data.sub ? user_data.sub : user_data.id}`;
 

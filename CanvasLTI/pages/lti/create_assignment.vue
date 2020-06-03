@@ -48,6 +48,7 @@
 import * as https from 'https'
 import axios from 'axios'
 import JwtUtil from '~/utils/jwt-util'
+import ApiHelper from '../../utils/api-helper'
 import ClientAuth from '~/utils/client-auth'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 // eslint-disable-next-line camelcase
@@ -55,12 +56,16 @@ import { lti_auth } from '~/store'
 import querystring from 'querystring';
 
 
+
 @Component({
   middleware: 'oidc_handler',                 // Handle OIDC login request
 
   async asyncData (context) {
-    let assignmentKey: string = ''
-    let ltiReqMessage : any
+    if (lti_auth.isLoggedIn === false) {
+      console.warn('OIDC login failed')
+      alert('Please log in to Canvas to access RichReview. ')
+      context.redirect('/')
+    }
 
     if (lti_auth.codeToken === null) {
      context.redirect(`/lti/oauth_handler?redirect_uri=${context.route.fullPath}`)
@@ -70,6 +75,9 @@ import querystring from 'querystring';
       alert('You are not allowed to create this assignment')
       return
     }
+
+    let assignmentKey: string = ''
+    let ltiReqMessage : any
 
     if (process.server === true) {
        const jwt : string = querystring.parse((context.req as any).body).JWT as string
@@ -107,11 +115,7 @@ import querystring from 'querystring';
   },
 
   fetch(){
-    if (lti_auth.isLoggedIn === false) {
-      console.warn('OIDC login failed')
-      alert('Please log in to Canvas to access RichReview. ')
-      this.$router.push('/')
-    }
+
   }
 })
 export default class CreateAssignment extends Vue {
@@ -295,6 +299,9 @@ export default class CreateAssignment extends Vue {
   }
 
   private static async ensureCourseInstructorEnrolled(ltiMsg: any, userId: string) {
+
+    await ApiHelper.ensureRichReviewUserExists(lti_auth.authUser)   // Create the user if they do not exist in RR.
+
     const contextPropName : string = 'https://purl.imsglobal.org/spec/lti/claim/context'
     const courseId = ltiMsg[contextPropName].id
     const courseData = {

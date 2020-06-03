@@ -45,14 +45,13 @@ import querystring from 'querystring'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import { Route } from 'vue-router'
 import axios from 'axios'
-import ClientAuth from '~/utils/client-auth'
 import JwtUtil from '~/utils/jwt-util'
 import DocumentSubmitter from '../../components/document_submitter.vue'
 import CommentSubmitter from '../../components/comment_submitter.vue'
 import RichReviewViewer from '../../components/richreview_viewer.vue'
 // eslint-disable-next-line camelcase
 import { lti_auth } from '~/store' // Pre-initialized store.
-import jwk_to_pem from 'jwk-to-pem';
+import ApiHelper from '../../utils/api-helper';
 
 export class SubmitData {
   viewerLink : string = ''
@@ -71,7 +70,7 @@ const testData = {
 }
 
 @Component({
-  middleware: 'auth_handler',            // Handle OIDC login request
+  middleware: 'oidc_handler',            // Handle OIDC login request
 
   components: {
     DocumentSubmitter,
@@ -375,7 +374,7 @@ export default class Assignment extends Vue {
   }
 
   private static async ensureUserEnrolled(courseId: string, userId: string, roles: string[]){
-    // Ensure that user is marked as an instructor in this course
+    await ApiHelper.ensureRichReviewUserExists(lti_auth.authUser)
     const userRes = await axios.post(`https://${process.env.backend}:3000/courses/${
       courseId}/users/${lti_auth.authUser.userId}`,
       {roles},

@@ -52,19 +52,16 @@ export default class OAuthHandler extends Vue {
         throw new Error('Error. The redirect_uri could not be retrieved from session storage')
       }
 
-      let authInfo : any
-      try {
-        authInfo = this.getAuthInfo(code as string)
+      this.getAuthInfo(code as string).then(function(authInfo){
+          lti_auth.updatePlatformAuth(authInfo.access_token, authInfo.user.name)
+          this.$router.push(redirect_uri)         // Redirect user back to original page where auth was initiated
+        }).catch(function(reason) {
+            console.warn('Error getting OAuth token in code flow authorization grant. Reason ' + ex)
+            alert(`An error occurred while logging in.
+            Please try again. Contact the system adminstrator if this error continues.`)
+            this.authSuccess = false
+        })
 
-        lti_auth.updatePlatformAuth(authInfo.access_token)
-
-        this.$router.push(redirect_uri)         // Redirect user back to original page where auth was initiated
-      } catch (ex) {
-        console.warn('Error getting OAuth token in code flow authorization grant. Reason ' + ex)
-        alert(`An error occurred while logging in.
-        Please try again. Contact the system adminstrator if this error continues.`)
-        this.authSuccess = false
-      }
     }
     else {
       console.warn('Invalid request to oauth_handler. Request URL was ' + this.$route.fullPath)
@@ -76,7 +73,7 @@ export default class OAuthHandler extends Vue {
 
 
   private async getAuthInfo (code : string) {
-    let tokenResp = await this.$axios.$post(`/api/jwt/oauth_token`,
+    let tokenResp = await this.$axios.$post(`https://${process.env.backend}:3000/api/jwt/oauth_token`,
     { code }, {
       httpsAgent: new https.Agent({
             rejectUnauthorized: false

@@ -1,6 +1,6 @@
 import https from 'https'
 import axios from 'axios'
-import { IUser } from '../store';
+import { IUser } from '~/store/AuthStore';
 export default class ApiHelper{
 
   public static async ensureRichReviewUserExists(user : IUser){

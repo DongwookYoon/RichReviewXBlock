@@ -58,9 +58,10 @@ import querystring from 'querystring';
 
 
 @Component({
-  middleware: 'oidc_handler',                 // Handle OIDC login request
+  // middleware: 'oidc_handler',                 // Handle OIDC login request
 
   async asyncData (context) {
+    /*
     if (lti_auth.isLoggedIn === false) {
       console.warn('OIDC login failed')
       alert('Please log in to Canvas to access RichReview. ')
@@ -75,6 +76,7 @@ import querystring from 'querystring';
       alert('You are not allowed to create this assignment')
       return
     }
+    */
 
     let assignmentKey: string = ''
     let ltiReqMessage : any

@@ -12,12 +12,12 @@ export interface IUser {
   userName ?: string
 }
 
-interface IAuthData {
+export interface IAuthData {
   token: string,
   name ?: string
 }
 
-interface ITokenInfo {
+export interface ITokenInfo {
   token: string,
   name ?: string,
   creationTime: Date

@@ -5,10 +5,10 @@
 <script lang="ts">
 /* eslint-disable camelcase */
 import * as https from 'https'
-import { v5 as uuidv5 } from 'uuid'
+import { v4 as uuidv4 } from 'uuid'
 import { Component, Vue } from 'nuxt-property-decorator'
 import * as _ from 'lodash'
-import { lti_auth, IAuthPayload } from '~/store'
+import { lti_auth } from '~/store'
 import { initialiseStores } from '~/utils/store-accessor';
 
 /**
@@ -27,7 +27,7 @@ import { initialiseStores } from '~/utils/store-accessor';
       redirect('/')
     }
 
-    const state : string = uuidv5()
+    const state : string = uuidv4()
     const authRedirectUrl : string = Login.generateAuthRequestUrl(login_hint as string,
       target_link_uri as string,
       state)
@@ -66,7 +66,7 @@ export default class Login extends Vue {
       login_hint: loginHint,
       state,
       response_mode: 'form_post',
-      nonce: uuidv5(),
+      nonce: uuidv4(),
       prompt: 'none'
     }
 

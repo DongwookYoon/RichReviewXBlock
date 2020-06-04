@@ -15,7 +15,7 @@
         show the assignment in the RichReview viewer-->
     <RichReviewViewer
       v-if="submit_data.submitted === true || userRoles.includes(Assignment.INSTRUCTOR) || userRoles.includes(Assignment.TA)"
-      :submit_data="submitData"
+      :submit_data="submit_data"
     />
 
     <!--Else if user role is student then  -->
@@ -32,7 +32,8 @@
         v-else-if="assignmentType==='comment_submission'"
         :title="assignmentTitle"
         :user_id="lti_auth.authUser.userId"
-        :submit_data="submitData"
+        :submit_data="submit_data"
+        :course_id ="courseId"
         @submit-assignment="handleSubmit"
       />
     </div>
@@ -44,14 +45,15 @@ import * as https from 'https'
 import querystring from 'querystring'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import { Route } from 'vue-router'
-import axios from 'axios'
 import JwtUtil from '~/utils/jwt-util'
+import ClientAuth from '~/utils/client-auth'
 import DocumentSubmitter from '../../components/document_submitter.vue'
 import CommentSubmitter from '../../components/comment_submitter.vue'
 import RichReviewViewer from '../../components/richreview_viewer.vue'
 // eslint-disable-next-line camelcase
 import { lti_auth } from '~/store' // Pre-initialized store.
 import ApiHelper from '../../utils/api-helper';
+import { NuxtAxiosInstance } from '@nuxtjs/axios'
 
 export class SubmitData {
   viewerLink : string = ''
@@ -70,7 +72,7 @@ const testData = {
 }
 
 @Component({
-  middleware: 'oidc_handler',            // Handle OIDC login request
+  // middleware: 'oidc_handler',            // Handle OIDC login request
 
   components: {
     DocumentSubmitter,
@@ -79,7 +81,13 @@ const testData = {
   },
 
   async asyncData (context) {
-
+    /*
+    if (lti_auth.isLoggedIn === false) {
+      console.warn('OIDC login failed')
+      alert('Please log in to Canvas to access RichReview. ')
+      context.redirect('/')
+    }
+    */
    if (process.server) {
       const generalError: string = `An error occurred. Please try reloading the page.
           Contact the RichReview system administrator if this continues.`
@@ -112,7 +120,7 @@ const testData = {
         'https://purl.imsglobal.org/spec/lti/claim/context'].id
 
       try {
-        await Assignment.ensureUserEnrolled(courseId, lti_auth.authUser.userId, userRoles)
+        await Assignment.ensureUserEnrolled(courseId, lti_auth.authUser.userId, userRoles, context.$axios)
       } catch (ex) {
         console.warn('Could not verify user enrollment in course. Reason: ' +ex)
         alert(generalError)
@@ -145,7 +153,7 @@ const testData = {
         }
       }
 
-      const submitData : SubmitData = {
+      const submit_data : SubmitData = {
         submitted: resp.data.submission_status,
         viewerLink: resp.data.link
       }
@@ -155,8 +163,9 @@ const testData = {
         assignmentType,
         assignmentId,
         launchMessage,
-        submit_data : submitData,
-        userRoles
+        submit_data,
+        userRoles,
+        courseId
       }
     }
   },
@@ -186,6 +195,7 @@ export default class Assignment extends Vue {
   // eslint-disable-next-line camelcase
   private submit_data !: SubmitData
   private userRoles ?: string[]
+  private courseId ?: string
 
 
   public created () {
@@ -314,7 +324,7 @@ export default class Assignment extends Vue {
    *  Returns the name of component that will be used to display assignment.
    */
   public get checkDisplayComponent () {
-    if (this.userRoles.includes('instructor') || this.userRoles.includes('ta')) {
+    if ( (this.userRoles) && (this.userRoles.includes('instructor') || this.userRoles.includes('ta')) ) {
       return 'GraderContainer'
     } else if (this.assignmentType === 'document_submission') {
       return 'DocumentSubmitter'
@@ -373,7 +383,7 @@ export default class Assignment extends Vue {
     return friendlyRoles
   }
 
-  private static async ensureUserEnrolled(courseId: string, userId: string, roles: string[]){
+  private static async ensureUserEnrolled(courseId: string, userId: string, roles: string[], axios: NuxtAxiosInstance){
     await ApiHelper.ensureRichReviewUserExists(lti_auth.authUser)
     const userRes = await axios.post(`https://${process.env.backend}:3000/courses/${
       courseId}/users/${lti_auth.authUser.userId}`,

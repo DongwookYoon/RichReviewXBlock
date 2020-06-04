@@ -25,7 +25,6 @@
 
 import * as https from 'https'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
-import $axios from 'axios'
 import { Route } from 'vue-router'
 import { SubmitData } from '../pages/lti/assignment.vue'
 import { lti_auth } from '~/store' // Pre-initialized store.
@@ -39,7 +38,8 @@ export default class CommentSubmitter extends Vue {
   @Prop({ type: Boolean, required: true }) readonly submitted !: Boolean
   @Prop({ type: String, required: true }) readonly title !: string
   @Prop({ type: String, required: true }) readonly user_id !: string
-  @Prop({ type: SubmitData, required: true }) readonly submitData !: SubmitData
+  @Prop({ type: SubmitData, required: true }) readonly submit_data !: SubmitData
+  @Prop({ type: String, required: true }) readonly course_id !: string
 
   private showSubmitButton : boolean = false;
   private assignmentId: string = '';
@@ -54,33 +54,36 @@ export default class CommentSubmitter extends Vue {
     ]
   }
 
-  async mounted () {
+  mounted () {
     // Note updated changed backend so that it is possible to get the data
     // for the document based only on group id. It is simple to include the group id and
     // other data in the launch URL
-    const res = await $axios.get(
-      `https://${process.env.backend}:3000/lti_groups/${this.submitData.groupID}/false`,
+    this.$axios.$get(
+      `https://${process.env.backend}:3000/courses/${
+        this.course_id
+      }/groups/${this.submit_data.groupID}`,
       {
         headers: {
-          Authorization: this.user_id
+          Authorization: this.$store.state.authUser.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
         })
       }
-    )
-    // eslint-disable-next-line camelcase
-    const r2_ctx = res.data.r2_ctx
-    r2_ctx.auth = lti_auth.authUser
-    // eslint-disable-next-line camelcase
-    const cdn_endpoint = res.data.cdn_endpoint
+    ).then((res)=> {
+      // eslint-disable-next-line camelcase
+      const r2_ctx = res.data.r2_ctx
+      r2_ctx.auth = lti_auth.authUser
+      // eslint-disable-next-line camelcase
+      const cdn_endpoint = res.data.cdn_endpoint
 
-    loadRichReview(
-      encodeURIComponent(JSON.stringify(r2_ctx)),
-      res.data.env,
-      cdn_endpoint,
-      true
-    )
+      loadRichReview(
+        encodeURIComponent(JSON.stringify(r2_ctx)),
+        res.data.env,
+        cdn_endpoint,
+        true
+      )
+    })
   }
 
   public async submit () {
@@ -88,12 +91,12 @@ export default class CommentSubmitter extends Vue {
 
     /* Submit to RichReview backend first */
     try {
-      await $axios.post(
-          `https://${process.env.backend}:3000/lti_assignments/${this.assignmentId}/comment_submissions`,
+      await this.$axios.$post(
+          `https://${process.env.backend}:3000/assignments/${this.assignmentId}/comment_submissions`,
           {
-            access_code: this.submitData.accessCode,
-            docid: this.submitData.docID,
-            groupid: this.submitData.groupID
+            access_code: this.submit_data.accessCode,
+            docid: this.submit_data.docID,
+            groupid: this.submit_data.groupID
           },
           {
             headers: {

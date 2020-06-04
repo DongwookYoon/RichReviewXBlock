@@ -42,7 +42,7 @@ export default class DocumentSubmitter extends Vue {
   private files : File[] = [];
 
 
-  private submitAssignment () {
+  private async submitAssignment () {
     if (this.files.length === 0) {
       alert('One or more files is required for a submission.')
       return
@@ -63,7 +63,7 @@ export default class DocumentSubmitter extends Vue {
 
     try {
       await this.$axios.$post(
-          `https://${process.env.backend}:3000/lti_assignments/${
+          `https://${process.env.backend}:3000/assignments/${
             this.$route.params.assignment_id}/document_submissions`,
           formData,
           {

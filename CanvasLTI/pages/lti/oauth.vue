@@ -52,11 +52,12 @@ export default class OAuthHandler extends Vue {
         throw new Error('Error. The redirect_uri could not be retrieved from session storage')
       }
 
-      this.getAuthInfo(code as string).then(function(authInfo){
+
+      this.getAuthInfo(code as string).then(authInfo =>{
           lti_auth.updatePlatformAuth(authInfo.access_token, authInfo.user.name)
           this.$router.push(redirect_uri)         // Redirect user back to original page where auth was initiated
-        }).catch(function(reason) {
-            console.warn('Error getting OAuth token in code flow authorization grant. Reason ' + ex)
+        }).catch( reason => {
+            console.warn('Error getting OAuth token in code flow authorization grant. Reason ' + reason)
             alert(`An error occurred while logging in.
             Please try again. Contact the system adminstrator if this error continues.`)
             this.authSuccess = false

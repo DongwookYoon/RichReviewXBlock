@@ -7,7 +7,7 @@
           <base href="/lti">
           <div id="r2_app_page" align="'center">
             <div id="r2_app_container" align="left">
-              <p v-if="submitData.submitted===false" id="no-submission-text">
+              <p v-if="submit_data.submitted===false" id="no-submission-text">
                 This student has not submitted the assignment
               </p>
               <p v-else>
@@ -45,40 +45,44 @@ if (typeof window !== 'undefined') {
 })
 export default class RichReviewViewer extends Vue {
   @Prop({ type: Boolean, required: true }) readonly submitted !: boolean;
-  @Prop({ type: SubmitData, required: true }) readonly submitData !: SubmitData;
+  @Prop({ type: SubmitData, required: true }) readonly submit_data !: SubmitData;
   @Prop({ type: String, required: true }) readonly userId !: string;
+  @Prop({ type: String, required: true }) readonly course_id !: string
 
 
-  async mounted () {
+  mounted () {
     /* Only show RichReview UI if the assignment has been submitted */
     if (this.submitted === true) {
-      /* Get data for assignment as an instructor */
-      const res = await this.$axios.$get(
-        `https://${process.env.backend}:3000/lti_groups/${this.submitData.groupID}/true`,
+      /* Get data for assignment as an instructor or student*/
+      this.$axios.$get(
+        `https://${process.env.backend}:3000/courses/${
+          this.course_id
+        }/groups/${this.submit_data.groupID}`,
         {
           headers: {
-            Authorization: this.userId
+            Authorization: this.$store.state.authUser.id
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false
           })
         }
-      )
+      ).then(res => {
+        // eslint-disable-next-line camelcase
+        const r2_ctx = res.data.r2_ctx
+        r2_ctx.auth = lti_auth.authUser
+        // eslint-disable-next-line camelcase
+        const cdn_endpoint = res.data.cdn_endpoint
 
-      // eslint-disable-next-line camelcase
-      const r2_ctx = res.data.r2_ctx
-      r2_ctx.auth = lti_auth.authUser
-      // eslint-disable-next-line camelcase
-      const cdn_endpoint = res.data.cdn_endpoint
-
-      loadRichReview(
-        encodeURIComponent(JSON.stringify(r2_ctx)),
-        res.data.env,
-        cdn_endpoint,
-        true
-      )
+        loadRichReview(
+          encodeURIComponent(JSON.stringify(r2_ctx)),
+          res.data.env,
+          cdn_endpoint,
+          true
+        )
+      })
     }
   }
+
 }
 
 </script>

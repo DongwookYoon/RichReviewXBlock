@@ -23,7 +23,7 @@ const R2D = require("../lib/r2d.js");
 
 /**
  * CHANGES: 20180505
- * 
+ *
  * If os hostname is spire then use own django server (localhost)
  */
 let MUPLA_SERVER_LOCAL_URL = null;

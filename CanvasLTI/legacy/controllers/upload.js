@@ -332,7 +332,7 @@ function Post_UploadDocLayout_CreateAzureBlob_PDF(_ctx){
                 blob_localfile_path: pdf_path
             };
 
-            console.log("DEBUG: " + JSON.stringify(ctx));
+            // console.log("DEBUG: " + JSON.stringify(ctx));
             return ctx;
         }).then(azure.CreateContainerIfNotExist)
         .then(azure.CreateBlobFromLocalFile)

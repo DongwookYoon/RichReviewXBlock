@@ -64,7 +64,7 @@ export default class OAuthHandler extends Vue {
 
     }
     else {
-      console.warn('Invalid request to oauth_handler. Request URL was ' + this.$route.fullPath)
+      console.warn('Invalid request to oauth handler. Request URL was ' + this.$route.fullPath)
       alert(`An error occurred while logging in.
           Please try again. Contact the system adminstrator if this error continues.`)
       this.authSuccess = false

@@ -72,7 +72,7 @@ export default {
     canvas_public_key_set_url: 'https://canvas.ubc.ca/api/lti/security/jwks',
     canvas_path: 'https://canvas.ubc.ca',     //Path to institution's Canvas deployment
     canvas_host: 'canvas.ubc.ca',
-    deployment_id: 'Add Canvas deployment id', // TODO Canvas deployment id, make it dynamic per deployment
+    deployment_id: '12277:f7688ba591cfce37b3bcacd61370d6dc591cf543',
     rs256_public_jwt: {
       "alg": "RS256",
       "e": "AQAB",

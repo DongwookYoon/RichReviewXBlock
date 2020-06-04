@@ -68,7 +68,7 @@ import querystring from 'querystring';
     }
 
     if (lti_auth.codeToken === null) {
-     context.redirect(`/lti/oauth_handler?redirect_uri=${context.route.fullPath}`)
+     context.redirect(`/lti/oauth?redirect_uri=${context.route.fullPath}`)
      }
     if (lti_auth.codeToken === null) {
       console.warn('Authentication failed')

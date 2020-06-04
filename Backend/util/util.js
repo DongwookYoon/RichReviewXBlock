@@ -1,5 +1,6 @@
-const fs = require('fs')
-const jwt = require('jsonwebtoken')
+const fs = require('fs');
+const jwt = require('jsonwebtoken');
+const path = require('path');
 
 
 const rs256_private_key = fs.readFileSync(
@@ -13,9 +14,9 @@ const signAndEncode = function (jwtData, options)  {
     console.warn('Signing JWT failed. Reason' + ex);
     return null;
   }
-}
+};
 
 
 module.exports = {
   signAndEncode
-}
+};

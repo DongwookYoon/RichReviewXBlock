@@ -1,4 +1,6 @@
 var express = require('express');
+var fs = require('fs');
+var path = require('path');
 var router = express.Router({mergeParams: true});
 var signAndEncode = require('../util/util');
 var axios = require('axios');
@@ -75,6 +77,9 @@ router.post('/lti_jwt/:nonce', function(req, res, next) {
 
   res.json({jwt: signed});
 });
+
+
+module.exports = router;
 
 
 

@@ -60,7 +60,7 @@ export default class RichReviewViewer extends Vue {
         }/groups/${this.submit_data.groupID}`,
         {
           headers: {
-            Authorization: this.$store.state.authUser.id
+            Authorization: lti_auth.authUser.userId
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false

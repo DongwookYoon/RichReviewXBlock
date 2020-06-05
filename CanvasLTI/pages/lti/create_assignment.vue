@@ -1,5 +1,6 @@
 <template>
-  <div id="create-assignment">
+
+  <div id="create-assignment" v-if="success === true">
     <div id="assignment-details">
       <div id="assignment-type-section">
         <label id="assignment-type-label" for="assignment-type">Assignment type</label>
@@ -56,68 +57,75 @@ import { lti_auth } from '~/store'
 import querystring from 'querystring';
 
 
+const testData = {
+  assignmentKey: `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`,
+  success: true
+}
 
 @Component({
   // middleware: 'oidc_handler',                 // Handle OIDC login request
 
   async asyncData (context) {
-    /*
-    if (lti_auth.isLoggedIn === false) {
-      console.warn('OIDC login failed')
-      alert('Please log in to Canvas to access RichReview. ')
-      context.redirect('/')
+    if (process.env.test_mode &&
+        (process.env.test_mode as string).toLowerCase() === 'true') {
+      lti_auth.logIn({userId: 'google_102369315136728943851', userName: 'Test User'})
+      return testData
     }
 
+    if (lti_auth.isLoggedIn === false) {
+     return { }
+    }
     if (lti_auth.codeToken === null) {
      context.redirect(`/lti/oauth?redirect_uri=${context.route.fullPath}`)
      }
     if (lti_auth.codeToken === null) {
       console.warn('Authentication failed')
-      alert('You are not allowed to create this assignment')
       return
     }
-    */
+
 
     let assignmentKey: string = ''
     let ltiReqMessage : any
+    let success : boolean = false
 
     if (process.server === true) {
        const jwt : string = querystring.parse((context.req as any).body).JWT as string
 
-      ltiReqMessage = await JwtUtil.getAndVerifyWithKeyset(jwt, process.env.canvas_public_key_set_url as string)
-
-      if (ltiReqMessage !== null) {
-        if (!CreateAssignment.isInstructor(ltiReqMessage["https://purl.imsglobal.org/spec/lti/claim/roles"])){
+      try {
+        ltiReqMessage = await JwtUtil.getAndVerifyWithKeyset(jwt, process.env.canvas_public_key_set_url as string)
+      } catch(ex) {
+         console.warn(`Invalid ltiDeepLinkRequest. Could not validate jwt.  ${ltiReqMessage}
+          \n Reason: ${ex}`)
+        return { success }
+      }
+      if (!CreateAssignment.isInstructor(
+        ltiReqMessage["https://purl.imsglobal.org/spec/lti/claim/roles"])){
           alert('Error. Only instructors may create assignments.')
-          return {}
-        }
-        // Generate assignment key
-        assignmentKey = `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`
-      }
-      else {
-        console.warn('Invalid ltiDeepLinkRequest. Could not validate jwt.\n' + ltiReqMessage)
-        alert(`An error occurred while loading. Please try to refresh the page.
-        If this error persists, contact the system administrator for assistance.`)
-        return {}
-      }
-    }
+          return { success }
+       }
 
-    try {
-      await CreateAssignment.ensureCourseInstructorEnrolled(ltiReqMessage, lti_auth.authUser.userId)
-      return {
-          ltiReqMessage,
-          assignmentKey
-        } // Inject into CreateAssignment instance data
-    } catch (ex) {
-      console.warn('Failed to add instructor in RichReview record of course. Reason: ' +ex)
-      alert(`Error occurred while accessing the RichReview resource.
-      Please try to refresh the page. If this error persists, contact the
-      system administrator for assistance.`)
-    }
+      // Generate assignment key
+      assignmentKey = `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`
+
+      try {
+        await CreateAssignment.ensureCourseInstructorEnrolled(ltiReqMessage, lti_auth.authUser.userId)
+        success = true
+        return {
+            ltiReqMessage,
+            assignmentKey,
+            success
+          } // Inject into CreateAssignment instance data
+      } catch (ex) {
+        console.warn('Failed to add instructor in RichReview record of course. Reason: ' +ex)
+      }
+
+    }//End-if
   },
+  fetch () {
+    if (lti_auth.isLoggedIn === false) {
+      console.warn('OIDC login failed')
 
-  fetch(){
-
+    }
   }
 })
 export default class CreateAssignment extends Vue {
@@ -125,9 +133,21 @@ export default class CreateAssignment extends Vue {
   private saved: boolean = true
   private assignmentType : string = 'document_submission'
   private files : File [] = []
-  private assignmentKey ?: string;
-  ltiReqMessage ?: any
+  private assignmentKey ?: string
+  private ltiReqMessage ?: any
+  private success !: boolean
   /* End data */
+
+  public mounted () {
+    if (lti_auth.isLoggedIn === false) {
+      alert('You must be logged in to Canvas to create an assignment')
+      window.location.replace(process.env.canvas_path as string)
+    }
+    if (this.success === false) {
+      alert(`An error occurred while loading. Please try to refresh the page.
+        If this error persists, contact the system administrator for assistance.`)
+    }
+  }
 
   /* Component-level methods */
   public addFile () : void {

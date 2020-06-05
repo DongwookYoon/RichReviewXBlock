@@ -14,16 +14,16 @@
     <!--If user has submitted the assignment OR user is has role of instructor or TA then
         show the assignment in the RichReview viewer-->
     <RichReviewViewer
-      v-if="submit_data.submitted === true || userRoles.includes(Assignment.INSTRUCTOR) || userRoles.includes(Assignment.TA)"
+      v-if="submit_data.submitted === true || userRoles.includes(INSTRUCTOR) || userRoles.includes(TA)"
       :submit_data="submit_data"
     />
 
     <!--Else if user role is student then  -->
-    <div v-else-if="userRoles.includes(Assignment.STUDENT)" class="submit-area">
+    <div v-else-if="userRoles.includes(STUDENT)" class="submit-area">
       <!-- If assignment type is document_submission then -->
       <DocumentSubmitter
         v-if="assignmentType==='document_submission'"
-        :user_id="lti_auth.authUser.userId"
+        :user_id="userId"
         @submit-assignment="handleSubmit"
       />
 
@@ -31,7 +31,7 @@
       <CommentSubmitter
         v-else-if="assignmentType==='comment_submission'"
         :title="assignmentTitle"
-        :user_id="lti_auth.authUser.userId"
+        :user_id="userId"
         :submit_data="submit_data"
         :course_id ="courseId"
         @submit-assignment="handleSubmit"
@@ -55,6 +55,7 @@ import { lti_auth } from '~/store' // Pre-initialized store.
 import ApiHelper from '../../utils/api-helper';
 import { NuxtAxiosInstance } from '@nuxtjs/axios'
 
+
 export class SubmitData {
   viewerLink : string = ''
   accessCode ?: string
@@ -63,13 +64,47 @@ export class SubmitData {
   submitted ?: boolean
 }
 
-const testData = {
-  submitted: true,
-  assignmentType: 'comment_submission',
-  userRole: 'instructor',
-  assignmentTitle: 'Test Assignment',
-  userId: 'aeaf282'
+export class Roles {
+  public static readonly INSTRUCTOR : string = 'instructor'
+  public static readonly TA : string = 'ta'
+  public static readonly STUDENT : string = 'student'
+
+  public static getUserRoles (ltiRoles : string[]) : string[] {
+    const friendlyRoles : string[] = []
+
+    for (const curRole of ltiRoles) {
+      const curRoleLower = curRole.toLowerCase()
+      if (curRoleLower.includes('student') || curRole.includes('learner')) {
+        friendlyRoles.push(this.STUDENT)
+      } else if (curRoleLower.includes('instructor')) {
+        friendlyRoles.push(this.INSTRUCTOR)
+      } else if (curRoleLower.includes('teachingassistant')) {
+        friendlyRoles.push(this.TA)
+      }
+    }
+
+    return friendlyRoles
+  }
 }
+
+
+
+const testData = {
+    assignmentTitle: 'Test Assignment',
+    assignmentType: 'document_submission',
+    assignmentId: '1',
+    userRoles: ['student'],
+    courseId:'1',
+    submit_data: {
+      viewerLink: 'access_code=access_code=072b22ddae7b22bca87f03992203d780e164cc57' +
+      '&docid=google_102369315136728943851_1590438756677' +
+      '&groupid=google_102369315136728943851_1590438756682',
+      submitted: true
+    },
+    userId: 'google_102369315136728943851'
+}
+
+
 
 @Component({
   // middleware: 'oidc_handler',            // Handle OIDC login request
@@ -81,22 +116,23 @@ const testData = {
   },
 
   async asyncData (context) {
-    /*
-    if (lti_auth.isLoggedIn === false) {
-      console.warn('OIDC login failed')
-      alert('Please log in to Canvas to access RichReview. ')
-      context.redirect('/')
+    if (process.env.test_mode &&
+        (process.env.test_mode as string).toLowerCase() === 'true') {
+      lti_auth.logIn({userId: testData.userId, userName: 'Test User'})
+      return testData
     }
-    */
-   if (process.server) {
-      const generalError: string = `An error occurred. Please try reloading the page.
-          Contact the RichReview system administrator if this continues.`
+
+    if (lti_auth.isLoggedIn === false) {
+      return { }
+    }
+
+    if (process.server) {
       let jwt : string
       let ltiLaunchMessage : object | null = null
 
       try {
-      /* Note that the platform sends the encoded jwt in a form with a single parameter, which
-         is 'JWT'. The form is parsed here to get the jwt. */
+      //Note that the platform sends the encoded jwt in a form with a single parameter, which
+      //   is 'JWT'. The form is parsed here to get the jwt.
        jwt = querystring.parse((context.req as any).body).JWT as string
        ltiLaunchMessage = await Assignment.getLaunchMessage(jwt, process.env.canvas_public_key_set_url as string)
       } catch(ex) {
@@ -105,25 +141,24 @@ const testData = {
       }
       finally {
         if (ltiLaunchMessage === null) {
-          alert(generalError)
-          console.warn('Authentication failed.')
           return {}
         }
       }
 
       const launchMessage = ltiLaunchMessage as any
-      const assignmentType : string = context.params.assignment_type
-      const assignmentId : string = context.params.assignment_key
-      const userRoles = Assignment.getUserRoles(launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
-      const isInstructorOrTA : boolean = (userRoles.includes(Assignment.INSTRUCTOR) || userRoles.includes(Assignment.TA))
+      const userRoles = Roles.getUserRoles(launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
+      const isInstructorOrTA : boolean = (userRoles.includes(Roles.INSTRUCTOR) || userRoles.includes(Roles.TA))
       const courseId = launchMessage[
         'https://purl.imsglobal.org/spec/lti/claim/context'].id
 
+      const assignmentType : string = context.params.assignment_type
+      const assignmentId : string = context.params.assignment_key
+
+
       try {
-        await Assignment.ensureUserEnrolled(courseId, lti_auth.authUser.userId, userRoles, context.$axios)
+         await Assignment.ensureUserEnrolled(courseId, lti_auth.authUser.userId, userRoles, context.$axios)
       } catch (ex) {
         console.warn('Could not verify user enrollment in course. Reason: ' +ex)
-        alert(generalError)
         return {}
       }
 
@@ -148,14 +183,13 @@ const testData = {
       finally {
         if (!resp || !resp.data) {
           console.warn('Assignment data could not be loaded. ')
-          alert(generalError)
           return { }
         }
       }
 
       const submit_data : SubmitData = {
         submitted: resp.data.submission_status,
-        viewerLink: resp.data.link
+        viewerLink: userRoles.includes(Roles.STUDENT) ? resp.data.link : resp.data.grader_link
       }
 
       return {
@@ -165,7 +199,8 @@ const testData = {
         launchMessage,
         submit_data,
         userRoles,
-        courseId
+        courseId,
+        userId: lti_auth.authUser.userId
       }
     }
   },
@@ -173,18 +208,14 @@ const testData = {
   fetch(){
     if (lti_auth.isLoggedIn === false) {
       console.warn('OIDC login failed')
-      alert('Please log in to Canvas to view this assignment. ')
-      this.$router.push('/')
     }
   }
 
-
-
 })
 export default class Assignment extends Vue {
-  private static readonly INSTRUCTOR : string = 'instructor'
-  private static readonly TA : string = 'ta'
-  private static readonly STUDENT : string = 'student'
+  public readonly INSTRUCTOR : string = Roles.INSTRUCTOR
+  public readonly TA : string = Roles.TA
+  public readonly STUDENT : string = Roles.STUDENT
 
   private isCreated: boolean = false
 
@@ -196,16 +227,28 @@ export default class Assignment extends Vue {
   private submit_data !: SubmitData
   private userRoles ?: string[]
   private courseId ?: string
+  private userId ?: string
 
 
   public created () {
-    this.isCreated = true
+    if (lti_auth.isLoggedIn === true) {
+      this.isCreated = true
 
-    this.submit_data.accessCode = Assignment.getQueryVariable('access_code', this.submit_data.viewerLink)
-    this.submit_data.docID = Assignment.getQueryVariable('docid', this.submit_data.viewerLink)
-    this.submit_data.groupID = Assignment.getQueryVariable('group_id', this.submit_data.viewerLink)
+      this.submit_data.accessCode = Assignment.getQueryVariable('access_code', this.submit_data.viewerLink)
+      this.submit_data.docID = Assignment.getQueryVariable('docid', this.submit_data.viewerLink)
+      this.submit_data.groupID = Assignment.getQueryVariable('group_id', this.submit_data.viewerLink)
+    }
 
-    this.injectTest() // Inject dummy data
+
+  }
+
+  public mounted () {
+    if (lti_auth.isLoggedIn === false) {
+      alert('You must be logged in to Canvas to view this assignment.')
+      window.location.replace(process.env.canvas_path as string)
+    }
+
+    console.log(this)
   }
 
 
@@ -366,25 +409,10 @@ export default class Assignment extends Vue {
 
 
 
-  private static getUserRoles (ltiRoles : string[]) : string[] {
-    const friendlyRoles : string[] = []
-
-    for (const curRole of ltiRoles) {
-      const curRoleLower = curRole.toLowerCase()
-      if (curRoleLower.includes('student') || curRole.includes('learner')) {
-        friendlyRoles.push(Assignment.STUDENT)
-      } else if (curRoleLower.includes('instructor')) {
-        friendlyRoles.push(Assignment.INSTRUCTOR)
-      } else if (curRoleLower.includes('teachingassistant')) {
-        friendlyRoles.push(Assignment.TA)
-      }
-    }
-
-    return friendlyRoles
-  }
 
   private static async ensureUserEnrolled(courseId: string, userId: string, roles: string[], axios: NuxtAxiosInstance){
     await ApiHelper.ensureRichReviewUserExists(lti_auth.authUser)
+
     const userRes = await axios.post(`https://${process.env.backend}:3000/courses/${
       courseId}/users/${lti_auth.authUser.userId}`,
       {roles},
@@ -403,14 +431,9 @@ export default class Assignment extends Vue {
   }
 
 
-
-  private injectTest () {
-    this.submit_data.submitted = testData.submitted
-    this.assignmentType = testData.assignmentType
-    this.userRoles = [testData.userRole]
-    this.assignmentTitle = testData.assignmentTitle
-  }
 }
+
+
 </script>
 
 <style scoped>

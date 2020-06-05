@@ -538,6 +538,11 @@ class AssignmentDatabaseHandler {
         if (assignment_data['template_group'] && assignment_data['template_link'] !== '')
             template_link = await group_db_handler.get_group_link(import_handler, assignment_data['template_group']);
 
+        
+            
+
+        //if (submission_data_student['group'] && submission_data_student['group'] !== '') {
+        //        link = await group_db_handler.get_group_link(import_handler, submission_data['group'])
         return {
             assignment: assignment_data,
             grader_link: submission_data.link,

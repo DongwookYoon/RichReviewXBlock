@@ -9,13 +9,14 @@
     <!--TODO determine what data needs to be passed to components, and load it in
       this page, instead of in the component, if possible -->
     <p>assignment.vue test </p>
-    <p>component is {{ checkDisplayComponent }} </p>
 
     <!--If user has submitted the assignment OR user is has role of instructor or TA then
         show the assignment in the RichReview viewer-->
     <RichReviewViewer
       v-if="submit_data.submitted === true || userRoles.includes(INSTRUCTOR) || userRoles.includes(TA)"
       :submit_data="submit_data"
+      :user_id="userId"
+      :course_id ="courseId"
     />
 
     <!--Else if user role is student then  -->
@@ -96,9 +97,9 @@ const testData = {
     userRoles: ['student'],
     courseId:'1',
     submit_data: {
-      viewerLink: 'access_code=access_code=072b22ddae7b22bca87f03992203d780e164cc57' +
+      viewerLink: 'access_code=072b22ddae7b22bca87f03992203d780e164cc57' +
       '&docid=google_102369315136728943851_1590438756677' +
-      '&groupid=google_102369315136728943851_1590438756682',
+      '&group_id=google_102369315136728943851_1590438756682',
       submitted: true
     },
     userId: 'google_102369315136728943851'
@@ -232,6 +233,7 @@ export default class Assignment extends Vue {
 
   public created () {
     if (lti_auth.isLoggedIn === true) {
+      console.log(`Logged in user: ${lti_auth.authUser.userId}`)
       this.isCreated = true
 
       this.submit_data.accessCode = Assignment.getQueryVariable('access_code', this.submit_data.viewerLink)
@@ -362,22 +364,6 @@ export default class Assignment extends Vue {
   }
 
 
-  /**
-   *  Only for testing purposes.
-   *  Returns the name of component that will be used to display assignment.
-   */
-  public get checkDisplayComponent () {
-    if ( (this.userRoles) && (this.userRoles.includes('instructor') || this.userRoles.includes('ta')) ) {
-      return 'GraderContainer'
-    } else if (this.assignmentType === 'document_submission') {
-      return 'DocumentSubmitter'
-    } else if (this.assignmentType === 'comment_submission') {
-      return 'CommentSubmitter'
-    }
-
-    return 'Error. No assignment component.'
-  }
-
 
   private async updateClientCredentials() {
     const authHandler : ClientAuth = new ClientAuth(process.env.canvas_client_id as string,
@@ -387,6 +373,7 @@ export default class Assignment extends Vue {
 
     lti_auth.updateClientCredentialsToken(clientToken)
   }
+
 
   private static getQueryVariable (variable : string, route : string) : string {
     const vars : string[] = route.split('&')

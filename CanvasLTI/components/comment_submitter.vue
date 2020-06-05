@@ -35,7 +35,6 @@ if (typeof window !== 'undefined') {
 
 @Component
 export default class CommentSubmitter extends Vue {
-  @Prop({ type: Boolean, required: true }) readonly submitted !: Boolean
   @Prop({ type: String, required: true }) readonly title !: string
   @Prop({ type: String, required: true }) readonly user_id !: string
   @Prop({ type: SubmitData, required: true }) readonly submit_data !: SubmitData
@@ -72,10 +71,10 @@ export default class CommentSubmitter extends Vue {
       }
     ).then((res)=> {
       // eslint-disable-next-line camelcase
-      const r2_ctx = res.data.r2_ctx
-      r2_ctx.auth = lti_auth.authUser
+      const r2_ctx = res.r2_ctx
+      r2_ctx.auth = this.user_id
       // eslint-disable-next-line camelcase
-      const cdn_endpoint = res.data.cdn_endpoint
+      const cdn_endpoint = res.cdn_endpoint
 
       loadRichReview(
         encodeURIComponent(JSON.stringify(r2_ctx)),

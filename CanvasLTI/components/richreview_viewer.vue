@@ -44,41 +44,51 @@ if (typeof window !== 'undefined') {
   }
 })
 export default class RichReviewViewer extends Vue {
-  @Prop({ type: Boolean, required: true }) readonly submitted !: boolean;
   @Prop({ type: SubmitData, required: true }) readonly submit_data !: SubmitData;
-  @Prop({ type: String, required: true }) readonly userId !: string;
+  @Prop({ type: String, required: true }) readonly user_id !: string;
   @Prop({ type: String, required: true }) readonly course_id !: string
 
 
   mounted () {
     /* Only show RichReview UI if the assignment has been submitted */
-    if (this.submitted === true) {
+    if (this.submit_data.submitted === true) {
       /* Get data for assignment as an instructor or student*/
+
+      console.log('Getting assignment data for instructor or student.')
+      console.log('Course id ' + this.course_id)
+      console.log('Group ID: ' + this.submit_data.groupID)
+      console.log('User id: ' + this.user_id)
       this.$axios.$get(
         `https://${process.env.backend}:3000/courses/${
           this.course_id
         }/groups/${this.submit_data.groupID}`,
         {
           headers: {
-            Authorization: lti_auth.authUser.userId
+            Authorization: this.user_id
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false
           })
         }
       ).then(res => {
+        console.log(`Assignment response: ${res}`)
+        for (let prop in res) {
+          console.log(`${prop}: ${res[prop]}` )
+        }
         // eslint-disable-next-line camelcase
-        const r2_ctx = res.data.r2_ctx
-        r2_ctx.auth = lti_auth.authUser
+        const r2_ctx = res.r2_ctx
+        r2_ctx.auth = this.user_id
         // eslint-disable-next-line camelcase
-        const cdn_endpoint = res.data.cdn_endpoint
+        const cdn_endpoint = res.cdn_endpoint
 
         loadRichReview(
           encodeURIComponent(JSON.stringify(r2_ctx)),
-          res.data.env,
+          res.env,
           cdn_endpoint,
           true
         )
+      }).catch (reason => {
+        console.warn('Loading RichReview failed. Reason: ' + reason)
       })
     }
   }

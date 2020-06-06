@@ -423,7 +423,7 @@
           )
         }
       )
-      
+
       if (type === 'audio') {
         $a.attr('aria-label', 'audio comment')
         $i.toggleClass('fa-volume-up')
@@ -441,7 +441,7 @@
             console.warn('Scroll to comment failed for ' + annotid);
           }
         })
-      } 
+      }
       else if (type === 'text') {
         $a.attr('aria-label', 'text comment')
         $i.toggleClass('fa-edit')
@@ -512,11 +512,11 @@
 
       let $piece_group = r2.turnPageAndSetFocus(searchResult, annotid);
       highlight($a, $piece_group);
-      
+
       let piece = searchResult["piece"];
       let left = piece.pos.x;
       let top = piece.pos.y;
-      
+
       /*If we don't have coordinates set on the piece */
       if (left == 0 && top == 0) {
         let dashboard_height = r2.resizeWindow();
@@ -524,14 +524,14 @@
         let offset = pieceGroup.offset();
         let height = pieceGroup.height();
 
-        left = (offset.left + pieceGroup.clientWidth / 2.0);   
+        left = (offset.left + pieceGroup.clientWidth / 2.0);
         top = offset.top - dashboard_height - height;
       }
       else {
-        left = (left + searchResult["piece"].GetContentSize().x / 2.0) * r2.dom.getCanvasWidth(); 
+        left = (left + searchResult["piece"].GetContentSize().x / 2.0) * r2.dom.getCanvasWidth();
         top *= r2.dom.getCanvasWidth();
       }
-                                                        
+
       r2.dom.setScroll(left, top);
       return true;
     }
@@ -550,7 +550,7 @@
         if (cmd.type == 'CommentNewSpeak') {
           addItem(cmd.user, 'audio', cmd.data.aid, cmd);
         }
-      } 
+      }
       /*Delete comment */
       else if (cmd.op == 'DeleteComment') {
         if (cmd.target.type == 'PieceKeyboard') {
@@ -721,7 +721,7 @@
       }
     }
 
-   
+
     return pub
   })()
 
@@ -1114,7 +1114,7 @@
             booklet_n = i
           }
         }
-       
+
       }
       if (typeof booklet_n !== 'undefined') {
         if (booklet_n < groups.length) {
@@ -1239,7 +1239,7 @@
 
       updatePageNavBar()
       r2App.cur_page.refreshPageSpotlightWidth();         //Calc spotlight width for this page
-      
+
     }
 
     function updatePageNavBar() {
@@ -2089,7 +2089,7 @@
     pub.getCanvasHeight = function() {
       return page_canvas.height;
     };
-  
+
     /** helper */
     function getDomWidth(dom) {
       return dom.getBoundingClientRect().width
@@ -2129,7 +2129,7 @@
     this._modified = true
     this._time_last_modified = r2App.cur_time
   }
-  
+
   r2.CmdTimedUploader.prototype.getCmdsToUpload = function() {
     if (
       this._modified &&

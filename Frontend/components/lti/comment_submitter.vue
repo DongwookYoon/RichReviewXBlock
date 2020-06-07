@@ -106,7 +106,6 @@ export default class CommentSubmitter extends Vue {
     if (!confirm('Are you sure you wish to submit this assignment?')) {
       return
     }
-
     await this.submit()
   }
 

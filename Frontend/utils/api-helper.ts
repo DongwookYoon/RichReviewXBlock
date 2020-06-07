@@ -18,4 +18,21 @@ export default class ApiHelper {
         })
       })
   }
+
+  public static async getAssignmentData (courseId: string, assignmentId: string, userId: string) {
+    const resp = await await axios.get(`https://${process.env.backend}:3000/courses/${
+        courseId
+        }/assignments/${assignmentId}`,
+    {
+      headers: {
+        Authorization: userId
+      },
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: false
+      })
+    }
+    )
+
+    return resp.data
+  }
 }

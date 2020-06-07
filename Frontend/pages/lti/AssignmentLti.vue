@@ -3,7 +3,7 @@
     <!--TODO determine what data needs to be passed to components, and load it in
       this page, instead of in the component, if possible -->
     <p>assignment.vue test </p>
-    <p>Component:</p>
+    <p>Component: {{ curComponent }}</p>
 
     <!--If user has submitted the assignment OR user is has role of instructor or TA then
         show the assignment in the RichReview viewer-->
@@ -44,6 +44,7 @@
 import * as https from 'https'
 import querystring from 'querystring'
 import { Component, Vue } from 'nuxt-property-decorator'
+import { mapGetters } from 'vuex'
 import JwtUtil from '~/utils/jwt-util'
 import ClientAuth from '~/utils/client-auth'
 import DocumentSubmitter from '~/components/lti/document_submitter.vue'
@@ -52,7 +53,8 @@ import RichReviewViewer from '~/components/lti/richreview_viewer.vue'
 // eslint-disable-next-line camelcase
 import ApiHelper from '~/utils/api-helper'
 import { NuxtAxiosInstance } from '@nuxtjs/axios'
-import { User } from '~/store/modules/LtiAuthStore'
+import { User, ITokenInfo } from '~/store/modules/LtiAuthStore'
+import Roles from '~/utils/roles'
 
 export class SubmitData {
   viewerLink : string = ''
@@ -62,31 +64,6 @@ export class SubmitData {
   submitted ?: boolean
 }
 
-export class Roles {
-  public static readonly INSTRUCTOR : string = 'instructor'
-  public static readonly TA : string = 'ta'
-  public static readonly STUDENT : string = 'student'
-
-  public static getUserRoles (ltiRoles : string[]) : string[] {
-    const friendlyRoles : string[] = []
-
-    for (const curRole of ltiRoles) {
-      const curRoleLower = curRole.toLowerCase()
-      if (curRoleLower.includes('student') || curRole.includes('learner')) {
-        friendlyRoles.push(this.STUDENT)
-      }
-      else if (curRoleLower.includes('instructor')) {
-        friendlyRoles.push(this.INSTRUCTOR)
-      }
-      else if (curRoleLower.includes('teachingassistant')) {
-        friendlyRoles.push(this.TA)
-      }
-    }
-
-    return friendlyRoles
-  }
-}
-
 const testUser : User = {
   id: 'google_102369315136728943851',
   userName: 'Test User'
@@ -94,15 +71,14 @@ const testUser : User = {
 
 const testDataStudent = {
   assignmentTitle: 'Test Assignment',
-  assignmentType: 'comment_submission',
+  assignmentType: 'document_submission',
   assignmentId: '1_1591495925951_87362',
   userRoles: ['student'],
   courseId: '1',
   submit_data: {
     viewerLink: 'access_code=542cc5809e6f3d8670f47fa722691f70c1c5cd07&docid=google_109022885000538247847_1591495925932&groupid=google_102369315136728943851_1591495926073',
     submitted: false
-  },
-  user: testUser
+  }
 }
 
 @Component({
@@ -117,7 +93,7 @@ const testDataStudent = {
   async asyncData (context) {
     if (process.env.test_mode &&
         (process.env.test_mode as string).toLowerCase() === 'true') {
-      context.store.dispatch('LtiAuthStore/logIn', testDataStudent.user)
+      context.store.dispatch('LtiAuthStore/logIn', testUser)
       return testDataStudent
     }
 
@@ -131,7 +107,7 @@ const testDataStudent = {
 
       try {
       // Note that the platform sends the encoded jwt in a form with a single parameter, which
-      //   is 'JWT'. The form is parsed here to get the jwt.
+      // is 'JWT'. The form is parsed here to get the jwt.
         jwt = querystring.parse((context.req as any).body).JWT as string
         ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt, process.env.canvas_public_key_set_url as string)
       }
@@ -147,7 +123,7 @@ const testDataStudent = {
 
       const launchMessage = ltiLaunchMessage as any
       const userRoles = Roles.getUserRoles(launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
-      const isInstructorOrTA : boolean = (userRoles.includes(Roles.INSTRUCTOR) || userRoles.includes(Roles.TA))
+
       const courseId = launchMessage[
         'https://purl.imsglobal.org/spec/lti/claim/context'].id
 
@@ -155,34 +131,29 @@ const testDataStudent = {
       const assignmentId : string = context.params.assignment_key
 
       try {
-        await AssignmentLti.ensureUserEnrolled(courseId, context.store.getters['LtiAuthStore/authUser'], userRoles, context.$axios)
+        await AssignmentLti.ensureUserEnrolled(courseId,
+          context.store.getters['LtiAuthStore/authUser'],
+          userRoles,
+          context.$axios)
       }
       catch (ex) {
         console.warn('Could not verify user enrollment in course. Reason: ' + ex)
         return {}
       }
 
-      let resp
+      let assignmentData = null
+
       try {
-        resp = await context.$axios.$get(`https://${process.env.backend}:3000/courses/${
-        courseId
-        }/assignments/${assignmentId}`,
-        {
-          headers: {
-            Authorization: this.$store.getters['LtiAuthStore/authUser'].userId // Pass Canvas userId in Authorization header
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        }
-        )
+        assignmentData = await ApiHelper.getAssignmentData(courseId,
+          assignmentId,
+          context.store.getters['LtiAuthStore/authUser'].id)
       }
       catch (e) {
         console.warn(e)
-        resp = null
+        assignmentData = null
       }
       finally {
-        if (!resp || !resp.data) {
+        if (assignmentData === null) {
           console.warn('Assignment data could not be loaded. ')
           return { }
         }
@@ -190,27 +161,28 @@ const testDataStudent = {
 
       // eslint-disable-next-line camelcase
       const submit_data : SubmitData = {
-        submitted: resp.data.submission_status,
-        viewerLink: userRoles.includes(Roles.STUDENT) ? resp.data.link : resp.data.grader_link
+        submitted: assignmentData.submission_status,
+        viewerLink: userRoles.includes(Roles.STUDENT) ? assignmentData.link : assignmentData.grader_link
       }
 
       return {
-        assignmentTitle: resp.data.title,
+        assignmentTitle: assignmentData.data.title,
         assignmentType,
         assignmentId,
         launchMessage,
         submit_data,
         userRoles,
-        courseId,
-        user: this.$store.getters['LtiAuthStore/authUser']
+        courseId
       }
     }
   },
 
-  fetch (context) {
-    if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
-      console.warn('OIDC login failed')
-    }
+  computed: {
+    ...mapGetters('LtiAuthStore', {
+      user: 'authUser',
+      isLoggedIn: 'isLoggedIn',
+      clientCredentialsToken: 'clientCredentialsToken'
+    })
   }
 
 })
@@ -221,19 +193,45 @@ export default class AssignmentLti extends Vue {
 
   private isCreated: boolean = false
 
+  /* Mappings for Vuex store getters */
+  public isLoggedIn !: boolean
+  public clientCredentialsToken ?: ITokenInfo
+  public user !: User
+  /* End mapped getters */
+
+  /* Component data */
   private assignmentTitle ?: string
   private assignmentType ?: string
-  private assignmentId ?: string
+  private assignmentId !: string
   private launchMessage ?: any
   // eslint-disable-next-line camelcase
   private submit_data !: SubmitData
-  private userRoles ?: string[]
-  private courseId ?: string
-  private user?: User
+  private userRoles !: string[]
+  private courseId !: string
+  /* End Component data */
+
+  public get curComponent () : string {
+    if (this.userRoles.includes(this.INSTRUCTOR) ||
+        this.userRoles.includes(this.TA) ||
+        this.submit_data.submitted === true) {
+      return 'richreview_viewer'
+    }
+
+    if (this.userRoles.includes(this.STUDENT)) {
+      if (this.assignmentType === 'document_submission') {
+        return 'document_submitter'
+      }
+      else if (this.assignmentType === 'comment_submission') {
+        return 'comment_submitter'
+      }
+    }
+
+    return 'default'
+  }
 
   public created () {
-    if (this.$store.getters['LtiAuthStore/isLoggedIn'] === true) {
-      console.log(`Logged in user: ${this.$store.getters['LtiAuthStore/authUser'].userId}`)
+    if (this.isLoggedIn === true) {
+      console.log(`Logged in user: ${this.user.id}`)
       this.isCreated = true
 
       this.submit_data.accessCode = AssignmentLti.getQueryVariable('access_code', this.submit_data.viewerLink)
@@ -243,7 +241,8 @@ export default class AssignmentLti extends Vue {
   }
 
   public mounted () {
-    if (this.$store.getters['LtiAuthStore/isLoggedIn'] === false) {
+    if (this.isLoggedIn === false) {
+      console.warn('OIDC login failed')
       alert('You must be logged in to Canvas to view this assignment.')
       window.location.replace(process.env.canvas_path as string)
     }
@@ -252,9 +251,14 @@ export default class AssignmentLti extends Vue {
   }
 
   public async handleSubmit () {
-    const courseId : string = this.launchMessage[
-      'https://purl.imsglobal.org/spec/lti/claim/context'].id
-    let assignmentResp
+    if (process.env.test_mode &&
+        (process.env.test_mode as string).toLowerCase() === 'true') {
+      alert('DEBUG MODE: Handling submit event from child component!')
+      return
+    }
+
+    const courseId : string = this.courseId
+    let assignmentData
 
     try {
       await this.updateClientCredentials() // Update client credentials token in store
@@ -266,19 +270,9 @@ export default class AssignmentLti extends Vue {
     }
 
     try {
-      assignmentResp = await this.$axios.$get(
-         `https://${process.env.backend}:3000/courses/${
-        courseId
-      }/assignments/${this.assignmentId}`,
-         {
-           headers: {
-             Authorization: this.$store.getters['LtiAuthStore/authUser'].userId // Pass the Canvas user id in Authorization header
-           },
-           httpsAgent: new https.Agent({
-             rejectUnauthorized: false
-           })
-         }
-      )
+      assignmentData = await ApiHelper.getAssignmentData(courseId,
+        this.assignmentId,
+        this.user.id as string)
     }
     catch (e) {
       console.warn('Getting updated assignment data on submit failed. Reason: ' + e)
@@ -288,8 +282,8 @@ export default class AssignmentLti extends Vue {
       return
     }
 
-    const submissionId = assignmentResp.data.grader_submission_id
-    const submissionURL = `${this.$route.path}?${assignmentResp.data.link}&submission_id=${submissionId}`
+    const submissionId = assignmentData.grader_submission_id
+    const submissionURL = `${this.$route.path}?${assignmentData.link}&submission_id=${submissionId}`
     const assignmentResourceId : string = this.launchMessage[
       'https://purl.imsglobal.org/spec/lti/claim/resource_link'].id
     let lineItemId : string = ''
@@ -300,7 +294,7 @@ export default class AssignmentLti extends Vue {
         {
           headers: {
             Accept: 'application/json+canvas-string-ids',
-            Authorization: `Bearer ${this.$store.getters['LtiAuthStore/clientCredentialsToken']}`
+            Authorization: `Bearer ${this.clientCredentialsToken}`
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false
@@ -325,7 +319,7 @@ export default class AssignmentLti extends Vue {
         timestamp: `${new Date().toISOString()}`,
         activityProgress: 'Submitted',
         gradingProgress: 'PendingManual',
-        userId: `${this.$store.getters['LtiAuthStore/authUser'].userId}`
+        userId: `${this.user.id}`
       }
       scoreData['https://canvas.instructure.com/lti/submission'] = {
         new_submission: true,
@@ -347,7 +341,7 @@ export default class AssignmentLti extends Vue {
           urlEncodedJWT,
           {
             headers: {
-              Authorization: `Bearer ${this.$store.getters['LtiAuthStore/clientCredentialsToken'].userId}`,
+              Authorization: `Bearer ${this.clientCredentialsToken}`,
               'Content-Type': 'application/x-www-form-urlencoded'
             },
             httpsAgent: new https.Agent({
@@ -366,6 +360,7 @@ export default class AssignmentLti extends Vue {
     const authHandler : ClientAuth = new ClientAuth(process.env.canvas_client_id as string,
       process.env.canvas_path as string)
 
+    // Get a client credential token with scopes required for the LTI grader services
     const clientToken = await authHandler.getGradeServicesToken()
 
     this.$store.dispatch('updateClientCredentialsToken', clientToken)
@@ -394,7 +389,7 @@ export default class AssignmentLti extends Vue {
     await ApiHelper.ensureRichReviewUserExists(user)
 
     const userRes = await axios.post(`https://${process.env.backend}:3000/courses/${
-      courseId}/users/userId}`,
+      courseId}/users/${user.id}}`,
     { roles },
     {
       headers: {

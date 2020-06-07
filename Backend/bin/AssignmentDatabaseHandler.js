@@ -139,9 +139,11 @@ class AssignmentDatabaseHandler {
 
 
     async create_assignment (import_handler, course_key, assignment_data, existing_assignment_key = null) {
-
-        if(!this.is_valid_assignment_data(assignment_data))
-            throw new RichReviewError(`Invalid assignment data:\n ${assignment_data}`);
+        /*Allow 'blank' assignment with only assignment key for lti assignments */
+        if(!assignment_data.lti && !assignment_data.assignment_key &&
+            !this.is_valid_assignment_data(assignment_data)) {
+            throw new RichReviewError(`Invalid assignment data:\n ${JSON.stringify(assignment_data)}`);
+        }
 
         let course_db_handler = await import_handler.course_db_handler;
 

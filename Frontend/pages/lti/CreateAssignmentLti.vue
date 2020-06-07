@@ -48,15 +48,23 @@
 import * as https from 'https'
 import querystring from 'querystring'
 import ApiHelper from '~/utils/api-helper'
-import { User } from '~/store/modules/LtiAuthStore'
 import axios from 'axios'
 import JwtUtil from '~/utils/jwt-util'
 import { Component, Vue } from 'nuxt-property-decorator'
+import { mapGetters } from 'vuex'
+import Roles from '~/utils/roles'
+import { User, ITokenInfo } from '~/store/modules/LtiAuthStore'
 // eslint-disable-next-line camelcase
 
 const testData = {
   assignmentKey: `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`,
-  success: true
+  success: true,
+  courseId: '1'
+}
+
+const testUser: User = {
+  id: 'google_109022885000538247847',
+  userName: 'Test Instructor'
 }
 
 @Component({
@@ -65,7 +73,7 @@ const testData = {
   async asyncData (context) {
     if (process.env.test_mode &&
         (process.env.test_mode as string).toLowerCase() === 'true') {
-      context.store.dispatch('LtiAuthStore/logIn', { userId: 'google_102369315136728943851', userName: 'Test User' })
+      context.store.dispatch('LtiAuthStore/logIn', testUser)
       return testData
     }
 
@@ -91,22 +99,30 @@ const testData = {
           \n Reason: ${ex}`)
         return { success }
       }
-      if (!CreateAssignmentLti.isInstructor(
-        ltiReqMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])) {
+
+      const userRoles = Roles.getUserRoles(ltiReqMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
+
+      if (userRoles.includes(Roles.INSTRUCTOR) === false) {
         alert('Error. Only instructors may create assignments.')
+        context.redirect(process.env.canvas_path as string)
         return { success }
       }
+
+      const courseId = ltiReqMessage['https://purl.imsglobal.org/spec/lti/claim/context'].id
 
       // Generate assignment key
       assignmentKey = `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`
 
       try {
         await CreateAssignmentLti.ensureCourseInstructorEnrolled(ltiReqMessage,
-          this.$store.getters['LtiAuthStore/authUser'].userId)
+          this.$store.getters['LtiAuthStore/authUser'].id,
+          courseId)
         success = true
+
         return {
           ltiReqMessage,
           assignmentKey,
+          courseId,
           success
         } // Inject into CreateAssignment instance data
       }
@@ -115,11 +131,15 @@ const testData = {
       }
     }// End-if
   },
-  fetch (context) {
-    if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
-      console.warn('OIDC login failed')
-    }
+
+  computed: {
+    ...mapGetters('LtiAuthStore', {
+      user: 'authUser',
+      isLoggedIn: 'isLoggedIn',
+      codeToken: 'codeToken'
+    })
   }
+
 })
 export default class CreateAssignmentLti extends Vue {
   /* Component data */
@@ -129,12 +149,17 @@ export default class CreateAssignmentLti extends Vue {
   private assignmentKey ?: string
   private ltiReqMessage ?: any
   private success !: boolean
+  private courseId !: string
   /* End data */
 
-  public mounted () {
-    console.log(JSON.stringify(this.$store.getters))
+  /* Mappings for Vuex store getters */
+  public isLoggedIn !: boolean
+  public codeToken !: ITokenInfo
+  public user !: User
+  /* End mapped getters */
 
-    if (this.$store.getters['LtiAuthStore/isLoggedIn'].isLoggedIn === false) {
+  public mounted () {
+    if (this.isLoggedIn === false) {
       alert('You must be logged in to Canvas to create an assignment')
       window.location.replace(process.env.canvas_path as string)
     }
@@ -165,8 +190,8 @@ export default class CreateAssignmentLti extends Vue {
 
   public async save () {
     this.saved = true
-    const courseId : string = this.ltiReqMessage[
-      'https://purl.imsglobal.org/spec/lti/claim/context'].id
+    const courseId : string = this.courseId
+
     /* Create a record of the assignment record in RichReview first */
     try {
       if (this.assignmentType === 'comment_submission') {
@@ -186,7 +211,8 @@ export default class CreateAssignmentLti extends Vue {
         }
 
         formData.append('assignment_data', JSON.stringify({
-          assignment_key: this.assignmentKey
+          assignment_key: this.assignmentKey,
+          lti: true
         }))
 
         await this.$axios.$post(
@@ -197,7 +223,7 @@ export default class CreateAssignmentLti extends Vue {
             {
               headers: {
                 'Content-Type': 'multipart/form-data',
-                Authorization: this.$store.getters['LtiAuthStore/authUser'].userId
+                Authorization: this.user.id
               },
               httpsAgent: new https.Agent({
                 rejectUnauthorized: false
@@ -210,10 +236,15 @@ export default class CreateAssignmentLti extends Vue {
             `https://${process.env.backend}:3000/courses/${
               courseId
               }/assignments/document_submission_assignment`,
-            { assignment_key: this.assignmentKey },
+            {
+              assignment_data: {
+                assignment_key: this.assignmentKey,
+                lti: true
+              }
+            },
             {
               headers: {
-                Authorization: this.$store.getters['LtiAuthStore/authUser'].userId
+                Authorization: this.user.id
               },
               httpsAgent: new https.Agent({
                 rejectUnauthorized: false
@@ -222,7 +253,9 @@ export default class CreateAssignmentLti extends Vue {
         )
       }// end-else
       const ltiLink = `/lti/assignment/${this.assignmentType}/${this.assignmentKey}`
-      this.postBackToPlatform(ltiLink)
+      console.log(` Successfuly created assignment in RichReview! \nSubmission lti Link: ${ltiLink}`)
+
+      // await this.postBackToPlatform(ltiLink)
     }
     catch (e) {
       this.saved = false
@@ -231,7 +264,8 @@ export default class CreateAssignmentLti extends Vue {
   }
 
   /**
-   *  Take user back to the LTI platform
+   *  Take user back to the LTI platform. If the user has made changes that are not saved,
+   *  prompt user to ask if they want to cancel, as the cancel action cannot be reversed.
    */
   public cancel () : void {
     if (this.saved === false) {
@@ -262,7 +296,7 @@ export default class CreateAssignmentLti extends Vue {
     await this.$axios.$post(postBackAddress,
       jwtUrlEncoded, {
         headers: {
-          Authorization: `Bearer ${this.$store.getters['LtiAuthStore/codeToken']}`,
+          Authorization: `Bearer ${this.codeToken.token}`,
           'Content-Type': 'application/x-www-form-urlencoded'
         },
         httpsAgent: new https.Agent({
@@ -316,11 +350,10 @@ export default class CreateAssignmentLti extends Vue {
     return scoreJWT
   }
 
-  private static async ensureCourseInstructorEnrolled (ltiMsg: any, user : User) {
+  private static async ensureCourseInstructorEnrolled (ltiMsg: any, user : User, courseId: string) {
     await ApiHelper.ensureRichReviewUserExists(user) // Create the user if they do not exist in RR.
 
     const contextPropName : string = 'https://purl.imsglobal.org/spec/lti/claim/context'
-    const courseId = ltiMsg[contextPropName].id
     const courseData = {
       id: courseId,
       title: ltiMsg[contextPropName].title || '',
@@ -392,6 +425,7 @@ export default class CreateAssignmentLti extends Vue {
 #assignment-type-selection {
   min-height: 1.2rem;
   margin-left: 0.5rem;
+  font-size: 1rem;
 }
 
 #finish-button-section {

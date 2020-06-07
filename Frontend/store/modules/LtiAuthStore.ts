@@ -14,7 +14,7 @@ export interface ITokenInfo {
 const TOKEN_LIFETIME: number = 3600
 
 const state = () => ({
-  userId: new Date(),
+  userId: null,
   userName: null,
   codeToken: null,
   clientCredentialsToken: null,
@@ -22,33 +22,32 @@ const state = () => ({
 })
 
 const getters = {
-  oidcState: (state: any, getters: any) => state.oidcState,
-  isLoggedIn: (state: any, getters: any) => state.userId !== null,
-  authUser: (state: any, getters: any) => {
-    return { userId: state.userId, userName: state.userName }
+  oidcState: (state: any, getters: any) : string => state.oidcState,
+  isLoggedIn: (state: any, getters: any) : boolean => state.userId !== null,
+  authUser: (state: any, getters: any) : User => {
+    return { id: state.userId, userName: state.userName }
   },
-  codeToken: (state: any, getters: any) => state.codeToken,
-  clientCredentialsToken: (state: any, getters: any) => state.clientCredentialsToken
+  codeToken: (state: any, getters: any) : ITokenInfo => state.codeToken,
+  clientCredentialsToken: (state: any, getters: any) : ITokenInfo => state.clientCredentialsToken
 }
 
 const actions = {
   /**
-       * Update auth state using mutation `setAuth`.
-       * Uses OAuth token obtained from LTI platform.
-       * Payload may be acquired via OAuth Code Flow with
-       * authorization code grant.
-       */
-
+   * Update auth state using mutation `setOAuthData`.
+   * Uses OAuth token obtained from LTI platform.
+   * Payload may be acquired via OAuth Code Flow with
+   * authorization code grant.
+   */
   updatePlatformAuth ({ commit, state }: any, payload : ITokenInfo) {
     commit('setOAuthData', payload)
   },
 
   /**
-       * Update auth state using mutation `setClientCredentialsToken`.
-       * Uses OAuth token obtained from LTI platform.
-       * Token may be acquired via client credentials flow with
-       * client credentials code grant.
-       */
+   * Update auth state using mutation `setClientCredentialsToken`.
+   * Uses OAuth token obtained from LTI platform.
+   * Token may be acquired via client credentials flow with
+   * client credentials code grant.
+   */
   updateClientCredentialsToken ({ commit, state } : any, clientCredentialToken : string | null) {
     commit('setClientCredentialsToken', clientCredentialToken)
   },
@@ -79,7 +78,7 @@ const mutations = {
     state.userName = null
   },
 
-  setCodeFlowToken (state: any, token: string) {
+  setClientCredentialsToken (state: any, token: string) {
     state.codeToken = {
       token,
       creationTime: new Date()

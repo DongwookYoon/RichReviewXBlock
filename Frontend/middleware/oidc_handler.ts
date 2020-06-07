@@ -1,6 +1,6 @@
 import querystring from 'querystring'
 import { Middleware } from '@nuxt/types'
-import JwtUtil from '../utils/jwt-util'
+import JwtUtil from '~/utils/jwt-util'
 
 // eslint-disable-next-line camelcase
 const oidc_handler: Middleware = async (context) => {
@@ -27,7 +27,7 @@ const oidc_handler: Middleware = async (context) => {
       return
     }
 
-    context.store.dispatch('LtiAuthStore/logIn', { userId: tokenData.sub }) // JWT sub claim contains user id.
+    context.store.dispatch('LtiAuthStore/logIn', { id: tokenData.sub }) // JWT sub claim contains user id.
   }
 
   /* Verify the OIDC state. Invalidate login if session state doesn't match state in the Nuxt store */

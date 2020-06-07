@@ -23,6 +23,7 @@
 
 <script lang="ts">
 import https from 'https'
+import 'reflect-metadata' // Must import this before nuxt property decorators
 import { SubmitData } from '~/pages/lti/AssignmentLti.vue'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import { User } from '~/store/modules/LtiAuthStore'
@@ -44,9 +45,9 @@ if (typeof window !== 'undefined') {
   }
 })
 export default class RichReviewViewer extends Vue {
-  @Prop({ type: SubmitData, required: true }) readonly submit_data !: SubmitData;
-  @Prop({ type: User, required: true }) readonly user !: User;
-  @Prop({ type: String, required: true }) readonly course_id !: string
+  @Prop({ required: true }) readonly submit_data !: SubmitData;
+  @Prop({ required: true }) readonly user !: User;
+  @Prop({ required: true }) readonly course_id !: string
 
   mounted () {
     /* Only show RichReview UI if the assignment has been submitted */

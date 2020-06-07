@@ -15,6 +15,7 @@
     "importHelpers": true,
     "noEmit": true,
     "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "forceConsistentCasingInFileNames": false,
     "baseUrl": ".",
     "paths": {

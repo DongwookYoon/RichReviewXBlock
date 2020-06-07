@@ -25,10 +25,10 @@
 
 import https from 'https'
 import axios from 'axios'
+import 'reflect-metadata'    // Must import this before nuxt property decorators
 import { Component, Prop, Emit, Vue } from 'nuxt-property-decorator'
 import { SubmitData } from '~/pages/lti/AssignmentLti.vue'
 import { User } from '~/store/modules/LtiAuthStore'
-
 
 if (typeof window !== 'undefined') {
   require('@/static/my_viewer_helper') // Only load RR viewer helper on client.
@@ -48,10 +48,10 @@ if (typeof window !== 'undefined') {
   }
 })
 export default class CommentSubmitter extends Vue {
-  @Prop({ type: String, required: true }) readonly title !: string
-  @Prop({ type: User, required: true }) readonly user !: User
-  @Prop({ type: SubmitData, required: true }) readonly submit_data !: SubmitData
-  @Prop({ type: String, required: true }) readonly course_id !: string
+  @Prop({ required: true }) readonly title !: string
+  @Prop({ required: true }) readonly user !: User
+  @Prop({ required: true }) readonly submit_data !: SubmitData
+  @Prop({ required: true }) readonly course_id !: string
 
   private showSubmitButton : boolean = false;
   private assignmentId: string = '';
@@ -107,6 +107,15 @@ export default class CommentSubmitter extends Vue {
       return
     }
 
+    await this.submit()
+  }
+
+  @Emit('submit-assignment')
+  public submitSuccess () {
+    console.log('Assignment successfully submit to RichReview!')
+  }
+
+  private async submit () {
     /* Submit to RichReview backend first */
     try {
       await this.$axios.$post(
@@ -129,7 +138,10 @@ export default class CommentSubmitter extends Vue {
     catch (rrException) {
       console.warn('Error while submitting to RichReview. Details: ' + rrException)
       alert('Error submitting assignment. If this continues, please contact the RichReview system administrator.')
+      return
     }
+
+    this.submitSuccess()
   }
 }
 </script>

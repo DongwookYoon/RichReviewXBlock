@@ -5,22 +5,22 @@
         <h2 id="files-header">
           Assignment Files
         </h2>
-        <input ref="files" @change="handleFileUpload()" class="file-input" type="file" multiple>
+        <input ref="files" class="file-input" type="file" multiple @change="handleFileUpload()">
       </div>
 
       <div v-for="(file, key) in files" :key="key" class="file-listing">
         <p class="file">
-          {{ file.name }} <span @click="removeFile(key)" class="remove-file">Remove</span>
+          {{ file.name }} <span class="remove-file" @click="removeFile(key)">Remove</span>
         </p>
       </div>
 
-      <button id="add-file-button" @click="addFile" class="assignment-button">
+      <button id="add-file-button" class="assignment-button" @click="addFile">
         Add Files
       </button>
     </div>
 
     <div>
-      <button id="submit-button" v-if="files.length > 0" @click="submitAssignment()" class="assignment-button">
+      <button v-if="files.length > 0" id="submit-button" class="assignment-button" @click="submitAssignment()">
         Submit
       </button>
     </div>
@@ -30,16 +30,20 @@
 <script lang="ts">
 
 import * as https from 'https'
-import { Component, Prop, Vue } from 'nuxt-property-decorator'
-
+import { Component, Prop, Emit, Vue } from 'nuxt-property-decorator'
 
 @Component
 export default class DocumentSubmitter extends Vue {
   // eslint-disable-next-line camelcase
-  @Prop({ type: String, required: true }) readonly user_id !: string;
+  @Prop({ required: true }) readonly user_id !: string;
 
   private files : File[] = [];
 
+
+  @Emit('submit-assignment')
+  public submitSuccess () {
+    console.log('Assignment successfully submit to RichReview!')
+  }
 
   private async submitAssignment () {
     if (this.files.length === 0) {
@@ -75,12 +79,13 @@ export default class DocumentSubmitter extends Vue {
             })
           }
       )
-    } catch (e) {
+    }
+    catch (e) {
       window.alert(e.response.data.message)
       return
     }
 
-    this.$emit('submit-assignment') // Let parent handle submit to LTI Consumer
+    this.submitSuccess()
   }
 
   private addFile () : void {

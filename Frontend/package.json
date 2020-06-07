@@ -85,6 +85,7 @@
     "redirect-ssl": "^1.4.1",
     "redis": "latest",
     "redlock": "^4.0.0",
+    "reflect-metadata": "^0.1.13",
     "request": "^2.88.0",
     "saml2js": "^0.1.2",
     "sha1": "^1.1.1",

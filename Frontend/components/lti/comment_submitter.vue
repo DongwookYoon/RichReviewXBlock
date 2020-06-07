@@ -4,7 +4,7 @@
       <p id="assignment-title">
         {{ title }}
       </p>
-      <button id="submit-button" @click="submit">
+      <button id="submit-button" @click="handleSubmit">
         Submit
       </button>
     </div>
@@ -25,12 +25,13 @@
 
 import https from 'https'
 import axios from 'axios'
-import { Component, Prop, Vue } from 'nuxt-property-decorator'
+import { Component, Prop, Emit, Vue } from 'nuxt-property-decorator'
 import { SubmitData } from '~/pages/lti/AssignmentLti.vue'
 import { User } from '~/store/modules/LtiAuthStore'
 
+
 if (typeof window !== 'undefined') {
-  require('../static/my_viewer_helper') // Only load RR viewer helper on client.
+  require('@/static/my_viewer_helper') // Only load RR viewer helper on client.
 }
 
 /* eslint-disable camelcase */
@@ -101,7 +102,7 @@ export default class CommentSubmitter extends Vue {
     })
   }
 
-  public async submit () {
+  public async handleSubmit () {
     if (!confirm('Are you sure you wish to submit this assignment?')) {
       return
     }
@@ -128,10 +129,7 @@ export default class CommentSubmitter extends Vue {
     catch (rrException) {
       console.warn('Error while submitting to RichReview. Details: ' + rrException)
       alert('Error submitting assignment. If this continues, please contact the RichReview system administrator.')
-      return
     }
-
-    this.$emit('submit-assignment') // Let parent handle submit to LTI Consumer
   }
 }
 </script>

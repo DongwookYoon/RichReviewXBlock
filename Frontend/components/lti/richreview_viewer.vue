@@ -23,13 +23,13 @@
 
 <script lang="ts">
 import https from 'https'
-import { SubmitData } from '../pages/lti/AssignmentLti.vue'
+import { SubmitData } from '~/pages/lti/AssignmentLti.vue'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import { User } from '~/store/modules/LtiAuthStore'
 // eslint-disable-next-line camelcase
 
 if (typeof window !== 'undefined') {
-  require('../static/my_viewer_helper') // Only load RR viewer helper on client.
+  require('@/static/my_viewer_helper') // Only load RR viewer helper on client.
 }
 /* eslint-disable camelcase */
 @Component({

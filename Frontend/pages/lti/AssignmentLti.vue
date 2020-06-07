@@ -3,21 +3,25 @@
     <!--TODO determine what data needs to be passed to components, and load it in
       this page, instead of in the component, if possible -->
     <p>assignment.vue test </p>
+    <p>Component:</p>
 
     <!--If user has submitted the assignment OR user is has role of instructor or TA then
         show the assignment in the RichReview viewer-->
     <RichReviewViewer
-      v-if="submit_data.submitted === true || userRoles.includes(INSTRUCTOR) || userRoles.includes(TA)"
+      v-if="submit_data.submitted === true ||
+        userRoles.includes(INSTRUCTOR) || userRoles.includes(TA)"
+      class="rich-review-view"
       :submit_data="submit_data"
       :user="user"
       :course_id="courseId"
     />
 
     <!--Else if user role is student then  -->
-    <div v-else-if="userRoles.includes(STUDENT)" class="submit-area">
+    <div v-else-if="userRoles.includes(STUDENT)">
       <!-- If assignment type is document_submission then -->
       <DocumentSubmitter
         v-if="assignmentType==='document_submission'"
+        class="document-submitter"
         :user_id="user.id"
         @submit-assignment="handleSubmit"
       />
@@ -25,6 +29,7 @@
       <!--else if assignment_type is comment_submission then -->
       <CommentSubmitter
         v-else-if="assignmentType==='comment_submission'"
+        class="rich-review-view"
         :title="assignmentTitle"
         :user="user"
         :submit_data="submit_data"
@@ -41,9 +46,9 @@ import querystring from 'querystring'
 import { Component, Vue } from 'nuxt-property-decorator'
 import JwtUtil from '~/utils/jwt-util'
 import ClientAuth from '~/utils/client-auth'
-import DocumentSubmitter from '~/components/document_submitter.vue'
-import CommentSubmitter from '~/components/comment_submitter.vue'
-import RichReviewViewer from '~/components/richreview_viewer.vue'
+import DocumentSubmitter from '~/components/lti/document_submitter.vue'
+import CommentSubmitter from '~/components/lti/comment_submitter.vue'
+import RichReviewViewer from '~/components/lti/richreview_viewer.vue'
 // eslint-disable-next-line camelcase
 import ApiHelper from '~/utils/api-helper'
 import { NuxtAxiosInstance } from '@nuxtjs/axios'
@@ -82,6 +87,11 @@ export class Roles {
   }
 }
 
+const testUser : User = {
+  id: 'google_102369315136728943851',
+  userName: 'Test User'
+}
+
 const testDataStudent = {
   assignmentTitle: 'Test Assignment',
   assignmentType: 'comment_submission',
@@ -92,10 +102,7 @@ const testDataStudent = {
     viewerLink: 'access_code=542cc5809e6f3d8670f47fa722691f70c1c5cd07&docid=google_109022885000538247847_1591495925932&groupid=google_102369315136728943851_1591495926073',
     submitted: false
   },
-  user: {
-    id: 'google_102369315136728943851',
-    userName: 'Test User'
-  }
+  user: testUser
 }
 
 @Component({
@@ -409,8 +416,12 @@ export default class AssignmentLti extends Vue {
 <style scoped>
   @import url('@/static/nuxt_static_viewer/stylesheets/lti_style.css');
 
-  .submit-area {
+  .document-submitter {
     margin: 1.5rem 2%;
+  }
+
+  .rich-review-view {
+    margin: 0
   }
 
 </style>

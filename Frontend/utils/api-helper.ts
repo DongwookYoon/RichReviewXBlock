@@ -1,25 +1,21 @@
 import https from 'https'
 import axios from 'axios'
-import { IUser } from '~/store/modules/LtiAuthStore'
+import { User } from '~/store/modules/LtiAuthStore'
 
-
-export default class ApiHelper{
-
-  public static async ensureRichReviewUserExists(user : IUser){
-    const loginRes = await axios.post(`https://${process.env.backend}:3000/lti_login`,
-        {
-          id: user.userId,
-          name: user.userName
+export default class ApiHelper {
+  public static async ensureRichReviewUserExists (user : User) {
+    const loginRes : any = await axios.post(`https://${process.env.backend}:3000/lti_login`,
+      {
+        id: user.id,
+        name: user.userName
+      },
+      {
+        headers: {
+          Authorization: user.id
         },
-        {
-          headers: {
-            Authorization: user.userId
-        },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
         })
+      })
   }
-
-
 }

@@ -1,6 +1,4 @@
-<template>
-
-</template>
+<template />
 
 <script lang="ts">
 /* eslint-disable camelcase */
@@ -9,14 +7,12 @@ import { v4 as uuidv4 } from 'uuid'
 import { Component, Vue } from 'nuxt-property-decorator'
 import * as _ from 'lodash'
 
-
-
 /**
  *  Page handles OIDC login request from LTI Platform (i.e. Canvas) for
  *  third party login. No user interaction is involved.
  */
 @Component({
-  asyncData({query, redirect}){
+  asyncData ({ query, redirect }) {
     const iss : string | null = query.iss as string | null
     const login_hint : string | null = query.login_hint as string | null
     const target_link_uri : string | null = query.target_link_uri as string | null
@@ -36,14 +32,13 @@ import * as _ from 'lodash'
       authRedirectUrl,
       state
     }
-
   }
 })
 export default class LoginLti extends Vue {
   private authRedirectUrl ?: string
   private state ?: string
 
-  public created(){
+  public created () {
     if (this.state && this.authRedirectUrl) {
       window.sessionStorage.setItem('rr_oidc_state', this.state)
       window.location.replace(this.authRedirectUrl)
@@ -53,8 +48,7 @@ export default class LoginLti extends Vue {
     }
   }
 
-
-  public static generateAuthRequestUrl(loginHint: string, targetLinkURI: string, state: string) : string {
+  public static generateAuthRequestUrl (loginHint: string, targetLinkURI: string, state: string) : string {
     const authEndpoint : string = process.env.canvas_oidc_endpoint as string
 
     /* Params required to make OIDC auth request to platform. Note state and nonce are GUIDs */
@@ -70,44 +64,39 @@ export default class LoginLti extends Vue {
       prompt: 'none'
     }
 
-    let searchParams = new URLSearchParams()
+    const searchParams = new URLSearchParams()
 
-    for (let key in queryParams) {
+    for (const key in queryParams) {
       searchParams.append(key, `${queryParams[key]}`)
     }
 
     return `${authEndpoint}?${searchParams}`
-
   }
 
-  public static verifyRequest(iss: string | null,
-  loginHint: string | null,
-  targetLinkURI: string | null) : boolean {
-
+  public static verifyRequest (iss: string | null,
+    loginHint: string | null,
+    targetLinkURI: string | null) : boolean {
     if (iss === null || loginHint === null || targetLinkURI === null) {
       return false
     }
 
     const issPath: URL = new URL(iss)
 
-    if ( !(issPath.host !== `${process.env.canvas_host}`) ) {
-       console.warn('Invalid issuer in OIDC login request.')
-       return false
+    if (!(issPath.host !== `${process.env.canvas_host}`)) {
+      console.warn('Invalid issuer in OIDC login request.')
+      return false
     }
 
     const targetLinkPath : URL = new URL(targetLinkURI)
 
-    if ( !(targetLinkPath.host !== `${process.env.hostname}`)) {
+    if (!(targetLinkPath.host !== `${process.env.hostname}`)) {
       console.warn('Invalid resource link in OIDC login request')
       return false
     }
 
     return true
   }
-
-
 }
-
 
 </script>
 

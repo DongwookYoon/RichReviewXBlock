@@ -26,13 +26,14 @@
 import https from 'https'
 import axios from 'axios'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
-import { Route } from 'vue-router'
 import { SubmitData } from '~/pages/lti/AssignmentLti.vue'
-
+import { User } from '~/store/modules/LtiAuthStore'
 
 if (typeof window !== 'undefined') {
   require('../static/my_viewer_helper') // Only load RR viewer helper on client.
 }
+
+/* eslint-disable camelcase */
 
 @Component({
   head: {
@@ -47,7 +48,7 @@ if (typeof window !== 'undefined') {
 })
 export default class CommentSubmitter extends Vue {
   @Prop({ type: String, required: true }) readonly title !: string
-  @Prop({ type: String, required: true }) readonly user_id !: string
+  @Prop({ type: User, required: true }) readonly user !: User
   @Prop({ type: SubmitData, required: true }) readonly submit_data !: SubmitData
   @Prop({ type: String, required: true }) readonly course_id !: string
 
@@ -65,9 +66,9 @@ export default class CommentSubmitter extends Vue {
   }
 
   mounted () {
-    console.log('User id: ' + this.user_id)
+    console.log('User id: ' + this.user.id)
     console.log('group id: ' + this.submit_data.groupID)
-    console.log('Course id: ' +this.course_id)
+    console.log('Course id: ' + this.course_id)
     // Note updated changed backend so that it is possible to get the data
     // for the document based only on group id. It is simple to include the group id and
     // other data in the launch URL
@@ -77,17 +78,17 @@ export default class CommentSubmitter extends Vue {
       }/groups/${this.submit_data.groupID}`,
       {
         headers: {
-          Authorization: this.user_id
+          Authorization: this.user.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
         })
       }
-    ).then((res)=> {
+    ).then((res) => {
       console.log(JSON.stringify(res.data))
       // eslint-disable-next-line camelcase
       const r2_ctx = res.data.r2_ctx
-      r2_ctx.auth = this.user_id
+      r2_ctx.auth = this.user
       // eslint-disable-next-line camelcase
       const cdn_endpoint = res.data.cdn_endpoint
 
@@ -101,7 +102,9 @@ export default class CommentSubmitter extends Vue {
   }
 
   public async submit () {
-    if (!confirm('Are you sure you wish to submit this assignment?')) { return }
+    if (!confirm('Are you sure you wish to submit this assignment?')) {
+      return
+    }
 
     /* Submit to RichReview backend first */
     try {
@@ -114,14 +117,15 @@ export default class CommentSubmitter extends Vue {
           },
           {
             headers: {
-              Authorization: this.user_id
+              Authorization: this.user.id
             },
             httpsAgent: new https.Agent({
               rejectUnauthorized: false
             })
           }
       )
-    } catch (rrException) {
+    }
+    catch (rrException) {
       console.warn('Error while submitting to RichReview. Details: ' + rrException)
       alert('Error submitting assignment. If this continues, please contact the RichReview system administrator.')
       return
@@ -132,10 +136,8 @@ export default class CommentSubmitter extends Vue {
 }
 </script>
 
-
 <style scoped>
 @import 'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/css/bootstrap.min.css';
-
 
 p {
   margin: 0;

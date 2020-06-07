@@ -1,16 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-export interface IUser {
-  userId: string
-  userName ?: string
+export class User {
+  id: string | null = null;
+  userName ?: string;
 }
 
 export interface ITokenInfo {
-  token: string,
-  name ?: string,
-  creationTime ?: Date
+  token: string;
+  name ?: string;
+  creationTime ?: Date;
 }
-
 
 const TOKEN_LIFETIME: number = 3600
 
@@ -54,7 +53,7 @@ const actions = {
     commit('setClientCredentialsToken', clientCredentialToken)
   },
 
-  logIn ({ commit, state } : any, loginInfo : IUser) {
+  logIn ({ commit, state } : any, loginInfo : User) {
     console.log('logging in!! ' + JSON.stringify(loginInfo))
     commit('setLogin', loginInfo)
   },
@@ -70,8 +69,8 @@ const actions = {
 }
 
 const mutations = {
-  setLogin (state: any, authPayload : IUser) {
-    state.userId = authPayload.userId
+  setLogin (state: any, authPayload : User) {
+    state.userId = authPayload.id
     state.userName = (authPayload.userName ? authPayload.userName : null)
   },
 

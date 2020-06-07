@@ -9,8 +9,8 @@
     <RichReviewViewer
       v-if="submit_data.submitted === true || userRoles.includes(INSTRUCTOR) || userRoles.includes(TA)"
       :submit_data="submit_data"
-      :user_id="userId"
-      :course_id ="courseId"
+      :user="user"
+      :course_id="courseId"
     />
 
     <!--Else if user role is student then  -->
@@ -18,7 +18,7 @@
       <!-- If assignment type is document_submission then -->
       <DocumentSubmitter
         v-if="assignmentType==='document_submission'"
-        :user_id="userId"
+        :user_id="user.id"
         @submit-assignment="handleSubmit"
       />
 
@@ -26,9 +26,9 @@
       <CommentSubmitter
         v-else-if="assignmentType==='comment_submission'"
         :title="assignmentTitle"
-        :user_id="userId"
+        :user="user"
         :submit_data="submit_data"
-        :course_id ="courseId"
+        :course_id="courseId"
         @submit-assignment="handleSubmit"
       />
     </div>
@@ -38,8 +38,7 @@
 <script lang="ts">
 import * as https from 'https'
 import querystring from 'querystring'
-import { Component, Prop, Vue } from 'nuxt-property-decorator'
-import { Route } from 'vue-router'
+import { Component, Vue } from 'nuxt-property-decorator'
 import JwtUtil from '~/utils/jwt-util'
 import ClientAuth from '~/utils/client-auth'
 import DocumentSubmitter from '~/components/document_submitter.vue'
@@ -48,9 +47,7 @@ import RichReviewViewer from '~/components/richreview_viewer.vue'
 // eslint-disable-next-line camelcase
 import ApiHelper from '~/utils/api-helper'
 import { NuxtAxiosInstance } from '@nuxtjs/axios'
-import { IUser } from '~/store/modules/LtiAuthStore'
-
-
+import { User } from '~/store/modules/LtiAuthStore'
 
 export class SubmitData {
   viewerLink : string = ''
@@ -72,9 +69,11 @@ export class Roles {
       const curRoleLower = curRole.toLowerCase()
       if (curRoleLower.includes('student') || curRole.includes('learner')) {
         friendlyRoles.push(this.STUDENT)
-      } else if (curRoleLower.includes('instructor')) {
+      }
+      else if (curRoleLower.includes('instructor')) {
         friendlyRoles.push(this.INSTRUCTOR)
-      } else if (curRoleLower.includes('teachingassistant')) {
+      }
+      else if (curRoleLower.includes('teachingassistant')) {
         friendlyRoles.push(this.TA)
       }
     }
@@ -83,22 +82,21 @@ export class Roles {
   }
 }
 
-
-
 const testDataStudent = {
-    assignmentTitle: 'Test Assignment',
-    assignmentType: 'comment_submission',
-    assignmentId: '1_1589103892412_49892',
-    userRoles: ['student'],
-    courseId:'1',
-    submit_data: {
-      viewerLink: 'access_code=c3c9fb8c64ca7901ad13a0861892d0581497f40c&docid=google_109022885000538247847_1589103892395&groupid=google_102369315136728943851_1589103892531',
-      submitted: false
-    },
-    userId: 'google_102369315136728943851'
+  assignmentTitle: 'Test Assignment',
+  assignmentType: 'comment_submission',
+  assignmentId: '1_1591495925951_87362',
+  userRoles: ['student'],
+  courseId: '1',
+  submit_data: {
+    viewerLink: 'access_code=542cc5809e6f3d8670f47fa722691f70c1c5cd07&docid=google_109022885000538247847_1591495925932&groupid=google_102369315136728943851_1591495926073',
+    submitted: false
+  },
+  user: {
+    id: 'google_102369315136728943851',
+    userName: 'Test User'
+  }
 }
-
-
 
 @Component({
   // middleware: 'oidc_handler',            // Handle OIDC login request
@@ -112,7 +110,7 @@ const testDataStudent = {
   async asyncData (context) {
     if (process.env.test_mode &&
         (process.env.test_mode as string).toLowerCase() === 'true') {
-      context.store.dispatch('LtiAuthStore/logIn', {userId: testDataStudent.userId, userName: 'Test User'})
+      context.store.dispatch('LtiAuthStore/logIn', testDataStudent.user)
       return testDataStudent
     }
 
@@ -125,11 +123,12 @@ const testDataStudent = {
       let ltiLaunchMessage : object | null = null
 
       try {
-      //Note that the platform sends the encoded jwt in a form with a single parameter, which
+      // Note that the platform sends the encoded jwt in a form with a single parameter, which
       //   is 'JWT'. The form is parsed here to get the jwt.
-       jwt = querystring.parse((context.req as any).body).JWT as string
-       ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt, process.env.canvas_public_key_set_url as string)
-      } catch(ex) {
+        jwt = querystring.parse((context.req as any).body).JWT as string
+        ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt, process.env.canvas_public_key_set_url as string)
+      }
+      catch (ex) {
         console.warn('Error occurred while getting ltiLaunchMessage from jwt. Reason: ' + ex)
         ltiLaunchMessage = null
       }
@@ -148,11 +147,11 @@ const testDataStudent = {
       const assignmentType : string = context.params.assignment_type
       const assignmentId : string = context.params.assignment_key
 
-
       try {
-         await AssignmentLti.ensureUserEnrolled(courseId, context.store.getters['LtiAuthStore/authUser'], userRoles, context.$axios)
-      } catch (ex) {
-        console.warn('Could not verify user enrollment in course. Reason: ' +ex)
+        await AssignmentLti.ensureUserEnrolled(courseId, context.store.getters['LtiAuthStore/authUser'], userRoles, context.$axios)
+      }
+      catch (ex) {
+        console.warn('Could not verify user enrollment in course. Reason: ' + ex)
         return {}
       }
 
@@ -170,7 +169,8 @@ const testDataStudent = {
           })
         }
         )
-      } catch (e) {
+      }
+      catch (e) {
         console.warn(e)
         resp = null
       }
@@ -181,6 +181,7 @@ const testDataStudent = {
         }
       }
 
+      // eslint-disable-next-line camelcase
       const submit_data : SubmitData = {
         submitted: resp.data.submission_status,
         viewerLink: userRoles.includes(Roles.STUDENT) ? resp.data.link : resp.data.grader_link
@@ -194,12 +195,12 @@ const testDataStudent = {
         submit_data,
         userRoles,
         courseId,
-        userId: this.$store.getters['LtiAuthStore/authUser'].userId
+        user: this.$store.getters['LtiAuthStore/authUser']
       }
     }
   },
 
-  fetch(context){
+  fetch (context) {
     if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
       console.warn('OIDC login failed')
     }
@@ -221,8 +222,7 @@ export default class AssignmentLti extends Vue {
   private submit_data !: SubmitData
   private userRoles ?: string[]
   private courseId ?: string
-  private userId ?: string
-
+  private user?: User
 
   public created () {
     if (this.$store.getters['LtiAuthStore/isLoggedIn'] === true) {
@@ -233,8 +233,6 @@ export default class AssignmentLti extends Vue {
       this.submit_data.docID = AssignmentLti.getQueryVariable('docid', this.submit_data.viewerLink)
       this.submit_data.groupID = AssignmentLti.getQueryVariable('groupid', this.submit_data.viewerLink)
     }
-
-
   }
 
   public mounted () {
@@ -246,16 +244,16 @@ export default class AssignmentLti extends Vue {
     console.log(this)
   }
 
-
   public async handleSubmit () {
     const courseId : string = this.launchMessage[
       'https://purl.imsglobal.org/spec/lti/claim/context'].id
     let assignmentResp
 
     try {
-      await this.updateClientCredentials()     // Update client credentials token in store
-    } catch (ex) {
-      console.warn('OAuth client credential grant for assignment submission failed. Reason: ' +ex)
+      await this.updateClientCredentials() // Update client credentials token in store
+    }
+    catch (ex) {
+      console.warn('OAuth client credential grant for assignment submission failed. Reason: ' + ex)
       alert('Could not submit assignment. Please try again.')
       return
     }
@@ -265,16 +263,17 @@ export default class AssignmentLti extends Vue {
          `https://${process.env.backend}:3000/courses/${
         courseId
       }/assignments/${this.assignmentId}`,
-        {
-          headers: {
-            Authorization: this.$store.getters['LtiAuthStore/authUser'].userId // Pass the Canvas user id in Authorization header
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        }
+         {
+           headers: {
+             Authorization: this.$store.getters['LtiAuthStore/authUser'].userId // Pass the Canvas user id in Authorization header
+           },
+           httpsAgent: new https.Agent({
+             rejectUnauthorized: false
+           })
+         }
       )
-    } catch (e) {
+    }
+    catch (e) {
       console.warn('Getting updated assignment data on submit failed. Reason: ' + e)
       alert(`
           Error. Could not submit assignment to Canvas.
@@ -315,18 +314,17 @@ export default class AssignmentLti extends Vue {
         throw new Error('Could not find a line item to create assignment submission')
       }
 
-      let scoreData : any = {
-          timestamp: `${new Date().toISOString()}`,
-          activityProgress: 'Submitted',
-          gradingProgress: 'PendingManual',
-          userId: `${this.$store.getters['LtiAuthStore/authUser'].userId}`,
+      const scoreData : any = {
+        timestamp: `${new Date().toISOString()}`,
+        activityProgress: 'Submitted',
+        gradingProgress: 'PendingManual',
+        userId: `${this.$store.getters['LtiAuthStore/authUser'].userId}`
       }
-      scoreData["https://canvas.instructure.com/lti/submission"] = {
-            new_submission: true,
-            submission_type: 'basic_lti_launch',
-            submission_data: `${submissionURL}`
+      scoreData['https://canvas.instructure.com/lti/submission'] = {
+        new_submission: true,
+        submission_type: 'basic_lti_launch',
+        submission_data: `${submissionURL}`
       }
-
 
       // TODO Make sure this is secure. Call backend to sign.
       const scoreJWT = await JwtUtil.encodeJWT(scoreData, this.launchMessage.nonce)
@@ -349,16 +347,15 @@ export default class AssignmentLti extends Vue {
               rejectUnauthorized: false
             })
           })
-    } catch (e) {
+    }
+    catch (e) {
       alert(`
           Error. Could not submit assignment to Canvas.
           Contact the system adminstrator for assistance if this continues.`)
     }
   }
 
-
-
-  private async updateClientCredentials() {
+  private async updateClientCredentials () {
     const authHandler : ClientAuth = new ClientAuth(process.env.canvas_client_id as string,
       process.env.canvas_path as string)
 
@@ -367,12 +364,11 @@ export default class AssignmentLti extends Vue {
     this.$store.dispatch('updateClientCredentialsToken', clientToken)
   }
 
-
   private static getQueryVariable (variable : string, route : string) : string {
     const vars : string[] = route.split('&')
     for (let i = 0; i < vars.length; i++) {
       const pair = vars[i].split('=')
-      if (decodeURIComponent(pair[0]) == variable.toLowerCase()) {
+      if (decodeURIComponent(pair[0]) === variable.toLowerCase()) {
         return decodeURIComponent(pair[1])
       }
     }
@@ -384,35 +380,29 @@ export default class AssignmentLti extends Vue {
    * Decode and verify jwt. Need to verify using the platform's (Canvas) public keyset.
    */
   private static async getLaunchMessage (jwtBase64 : string, keysetUrl: string) : Promise<object | null> {
-        return await JwtUtil.getAndVerifyWithKeyset(jwtBase64, keysetUrl)
+    return await JwtUtil.getAndVerifyWithKeyset(jwtBase64, keysetUrl)
   }
 
-
-
-
-  private static async ensureUserEnrolled(courseId: string, user: IUser, roles: string[], axios: NuxtAxiosInstance){
+  private static async ensureUserEnrolled (courseId: string, user: User, roles: string[], axios: NuxtAxiosInstance) {
     await ApiHelper.ensureRichReviewUserExists(user)
 
     const userRes = await axios.post(`https://${process.env.backend}:3000/courses/${
       courseId}/users/userId}`,
-      {roles},
-      {
+    { roles },
+    {
       headers: {
-        Authorization: user.userId
+        Authorization: user.id
       },
       httpsAgent: new https.Agent({
-         rejectUnauthorized: false
+        rejectUnauthorized: false
       })
     })
 
     if (userRes.status > 202) {
-      throw new Error(`Could not ensure that the user ${user.userId} is enrolled in the course ${courseId}`)
+      throw new Error(`Could not ensure that the user ${user.id} is enrolled in the course ${courseId}`)
     }
   }
-
-
 }
-
 
 </script>
 

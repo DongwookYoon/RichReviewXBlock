@@ -1,4 +1,4 @@
-/* eslint-disable camelcase,no-undef,no-unused-vars,no-console */
+/* eslint-disable */
 /**
  * Created by dongwookyoon on 6/10/15.
  */

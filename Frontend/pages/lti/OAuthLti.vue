@@ -12,7 +12,6 @@ import * as https from 'https'
 import { Component, Vue } from 'nuxt-property-decorator'
 import * as _ from 'lodash'
 
-
 @Component
 export default class OAuthLti extends Vue {
   private authSuccess !: boolean
@@ -31,8 +30,8 @@ export default class OAuthLti extends Vue {
     else if (_.has(query, 'code') === false && _.has(query, 'redirect_uri') === true) {
       const redirect_uri : string = query.redirect_uri as string
 
-      //Generate pseudorandom key for accessing the redirect_uri again
-      const stateKey : string = (`RichReview_${Date.now()}_${Math.random()*10000}`).replace('.', '_')
+      // Generate pseudorandom key for accessing the redirect_uri again
+      const stateKey : string = (`RichReview_${Date.now()}_${Math.random() * 10000}`).replace('.', '_')
       window.location.replace(`${canvas_path}/login/oauth2/auth?client_id=${
           client_id}&response_type=code&state=${stateKey}`)
 
@@ -52,19 +51,19 @@ export default class OAuthLti extends Vue {
         throw new Error('Error. The redirect_uri could not be retrieved from session storage')
       }
 
-
-      this.getAuthInfo(code as string).then(authInfo =>{
-          this.$store.dispatch('LtiAuthStore/updatePlatformAuth',
-            {token: authInfo.access_token,
-            name: authInfo.user.name})
-          this.$router.push(redirect_uri)         // Redirect user back to original page where auth was initiated
-        }).catch( reason => {
-            console.warn('Error getting OAuth token in code flow authorization grant. Reason ' + reason)
-            alert(`An error occurred while logging in.
+      this.getAuthInfo(code as string).then((authInfo) => {
+        this.$store.dispatch('LtiAuthStore/updatePlatformAuth',
+          {
+            token: authInfo.access_token,
+            name: authInfo.user.name
+          })
+        this.$router.push(redirect_uri) // Redirect user back to original page where auth was initiated
+      }).catch((reason) => {
+        console.warn('Error getting OAuth token in code flow authorization grant. Reason ' + reason)
+        alert(`An error occurred while logging in.
             Please try again. Contact the system adminstrator if this error continues.`)
-            this.authSuccess = false
-        })
-
+        this.authSuccess = false
+      })
     }
     else {
       console.warn('Invalid request to oauth handler. Request URL was ' + this.$route.fullPath)
@@ -74,24 +73,20 @@ export default class OAuthLti extends Vue {
     }
   }
 
-
   private async getAuthInfo (code : string) {
-    let tokenResp = await this.$axios.$post(`https://${process.env.backend}:3000/api/jwt/oauth_token`,
-    { code }, {
-      httpsAgent: new https.Agent({
-            rejectUnauthorized: false
+    const tokenResp = await this.$axios.$post(`https://${process.env.backend}:3000/api/jwt/oauth_token`,
+      { code }, {
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
       })
-    })
 
-    if (!tokenResp.data)
-       return null
+    if (!tokenResp.data) {
+      return null
+    }
 
     return tokenResp.data.auth_info
-
-
   }
-
-
 }
 </script>
 

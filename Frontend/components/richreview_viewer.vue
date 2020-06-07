@@ -23,15 +23,15 @@
 
 <script lang="ts">
 import https from 'https'
-import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import { SubmitData } from '../pages/lti/AssignmentLti.vue'
+import { Component, Prop, Vue } from 'nuxt-property-decorator'
+import { User } from '~/store/modules/LtiAuthStore'
 // eslint-disable-next-line camelcase
-
 
 if (typeof window !== 'undefined') {
   require('../static/my_viewer_helper') // Only load RR viewer helper on client.
 }
-
+/* eslint-disable camelcase */
 @Component({
   head: {
     script: [
@@ -45,39 +45,38 @@ if (typeof window !== 'undefined') {
 })
 export default class RichReviewViewer extends Vue {
   @Prop({ type: SubmitData, required: true }) readonly submit_data !: SubmitData;
-  @Prop({ type: String, required: true }) readonly user_id !: string;
+  @Prop({ type: User, required: true }) readonly user !: User;
   @Prop({ type: String, required: true }) readonly course_id !: string
-
 
   mounted () {
     /* Only show RichReview UI if the assignment has been submitted */
     if (this.submit_data.submitted === true) {
-      /* Get data for assignment as an instructor or student*/
+      /* Get data for assignment as an instructor or student */
 
       console.log('Getting assignment data for instructor or student.')
       console.log('Course id ' + this.course_id)
       console.log('Group ID: ' + this.submit_data.groupID)
-      console.log('User id: ' + this.user_id)
+      console.log('User id: ' + this.user.id)
       this.$axios.$get(
         `https://${process.env.backend}:3000/courses/${
           this.course_id
         }/groups/${this.submit_data.groupID}`,
         {
           headers: {
-            Authorization: this.user_id
+            Authorization: this.user.id
           },
           httpsAgent: new https.Agent({
             rejectUnauthorized: false
           })
         }
-      ).then(res => {
+      ).then((res) => {
         console.log(`Assignment response: ${res}`)
-        for (let prop in res) {
-          console.log(`${prop}: ${res[prop]}` )
+        for (const prop in res) {
+          console.log(`${prop}: ${res[prop]}`)
         }
         // eslint-disable-next-line camelcase
         const r2_ctx = res.r2_ctx
-        r2_ctx.auth = this.user_id
+        r2_ctx.auth = this.user
         // eslint-disable-next-line camelcase
         const cdn_endpoint = res.cdn_endpoint
 
@@ -87,12 +86,11 @@ export default class RichReviewViewer extends Vue {
           cdn_endpoint,
           true
         )
-      }).catch (reason => {
+      }).catch((reason) => {
         console.warn('Loading RichReview failed. Reason: ' + reason)
       })
     }
   }
-
 }
 
 </script>

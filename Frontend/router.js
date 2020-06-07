@@ -131,7 +131,7 @@ export function createRouter() {
         component: index
       },
       {
-        path: '/lti/assignment/:assignment_type/:assignment_key',
+        path: '/lti/assignments/:assignment_type/:assignment_key',
         component: AssignmentLti
       },
       {

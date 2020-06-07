@@ -48,10 +48,10 @@
 import * as https from 'https'
 import querystring from 'querystring'
 import ApiHelper from '~/utils/api-helper'
-import { IUser } from '~/store/modules/LtiAuthStore'
+import { User } from '~/store/modules/LtiAuthStore'
 import axios from 'axios'
 import JwtUtil from '~/utils/jwt-util'
-import { Component, Prop, Vue } from 'nuxt-property-decorator'
+import { Component, Vue } from 'nuxt-property-decorator'
 // eslint-disable-next-line camelcase
 
 const testData = {
@@ -133,7 +133,6 @@ export default class CreateAssignmentLti extends Vue {
 
   public mounted () {
     console.log(JSON.stringify(this.$store.getters))
-
 
     if (this.$store.getters['LtiAuthStore/isLoggedIn'].isLoggedIn === false) {
       alert('You must be logged in to Canvas to create an assignment')
@@ -317,7 +316,7 @@ export default class CreateAssignmentLti extends Vue {
     return scoreJWT
   }
 
-  private static async ensureCourseInstructorEnrolled (ltiMsg: any, user : IUser) {
+  private static async ensureCourseInstructorEnrolled (ltiMsg: any, user : User) {
     await ApiHelper.ensureRichReviewUserExists(user) // Create the user if they do not exist in RR.
 
     const contextPropName : string = 'https://purl.imsglobal.org/spec/lti/claim/context'
@@ -334,7 +333,7 @@ export default class CreateAssignmentLti extends Vue {
     const course_res = await axios.post(`https://${process.env.backend}:3000/courses/${courseId}`,
       courseData, {
         headers: {
-          Authorization: user.userId
+          Authorization: user.id
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -348,11 +347,11 @@ export default class CreateAssignmentLti extends Vue {
     // Ensure that user is marked as an instructor in this course
     // eslint-disable-next-line camelcase
     const user_res = await axios.post(`https://${process.env.backend}:3000/courses/${
-      courseId}/users/${user.userId}`,
+      courseId}/users/${user.id}`,
     { roles: ['instructor'] },
     {
       headers: {
-        Authorization: user.userId
+        Authorization: user.id
       },
       httpsAgent: new https.Agent({
         rejectUnauthorized: false
@@ -360,7 +359,7 @@ export default class CreateAssignmentLti extends Vue {
     })
 
     if (user_res.status > 202) {
-      throw new Error(`Could not ensure that the user ${user.userId} is enrolled in the course ${courseId}`)
+      throw new Error(`Could not ensure that the user ${user.id} is enrolled in the course ${courseId}`)
     }
   }
 

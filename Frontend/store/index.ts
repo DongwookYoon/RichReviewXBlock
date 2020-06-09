@@ -1,11 +1,24 @@
+// eslint-disable-next-line camelcase
+
+import Vue from 'vue'
 import Vuex from 'vuex'
+import LtiAuthStore from '~/store/modules/LtiAuthStore'
+
+Vue.use(Vuex)
 
 if (process.client) {
   require('whatwg-fetch')
 }
 
+
+
 const store = () =>
   new Vuex.Store({
+
+    modules: {
+      LtiAuthStore
+    },
+
     state: () => ({
       authUser: null
     }),
@@ -17,7 +30,7 @@ const store = () =>
     },
 
     actions: {
-      nuxtServerInit({ commit }, { req }) {
+      nuxtServerInit ({ commit }, { req }) {
         if (req.session && req.session.authUser) {
           commit('SET_USER', req.session.authUser)
         }
@@ -46,7 +59,7 @@ const store = () =>
       //       commit('SET_USER', authUser)
       //     })
       // },
-      logout({ commit }) {
+      logout ({ commit }) {
         commit('SET_USER', null)
         // return fetch('/api/logout', {
         //   // Send the client cookies to the server

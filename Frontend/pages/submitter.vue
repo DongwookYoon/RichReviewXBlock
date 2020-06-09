@@ -80,6 +80,9 @@ export default {
     }
   },
   mounted: async function() {
+    console.log('User: ' + this.$store.state.authUser.id)
+    console.log('Group id: ' + this.$route.query.groupid)
+    console.log('Course id:' + this.$route.params.course_id)
     const res = await axios.get(
       `https://${process.env.backend}:3000/courses/${
         this.$route.params.course_id

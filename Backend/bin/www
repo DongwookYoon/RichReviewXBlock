@@ -28,10 +28,10 @@ const options = {
 
 var server = http.createServer(options, app);
 /**
- * Listen on provided port, on all network interfaces.
+ * Listen on provided port, on localhost only.
  */
 
-server.listen(port);
+server.listen(port, 'localhost');
 server.on('error', onError);
 server.on('listening', onListening);
 

@@ -139,9 +139,11 @@ class AssignmentDatabaseHandler {
 
 
     async create_assignment (import_handler, course_key, assignment_data, existing_assignment_key = null) {
-
-        if(!this.is_valid_assignment_data(assignment_data))
-            throw new RichReviewError(`Invalid assignment data:\n ${assignment_data}`);
+        /*Allow 'blank' assignment with only assignment key for lti assignments */
+        if(!assignment_data.lti &&
+            !this.is_valid_assignment_data(assignment_data)) {
+            throw new RichReviewError(`Invalid assignment data:\n ${JSON.stringify(assignment_data)}`);
+        }
 
         let course_db_handler = await import_handler.course_db_handler;
 
@@ -152,7 +154,14 @@ class AssignmentDatabaseHandler {
         let assignment_key = '';
 
         /*Generate an assignment key if no existing key is provided */
-        if (existing_assignment_key === null) {
+        if (assignment_data['id']) {
+            if (this.is_valid_assignment_key(assignment_data['id']) === false)
+                throw new RichReviewError(`Invalid assignment key provided as existing key: ${existing_assignment_key}`);
+
+            id = assignment_data['id'].replace(KeyDictionary.key_dictionary['assignment'], '');
+        }
+
+        else if (existing_assignment_key === null) {
             id = `${course_key.replace(KeyDictionary.key_dictionary['course'], '')}_${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`;
         }
         else {
@@ -538,6 +547,11 @@ class AssignmentDatabaseHandler {
         if (assignment_data['template_group'] && assignment_data['template_link'] !== '')
             template_link = await group_db_handler.get_group_link(import_handler, assignment_data['template_group']);
 
+        
+            
+
+        //if (submission_data_student['group'] && submission_data_student['group'] !== '') {
+        //        link = await group_db_handler.get_group_link(import_handler, submission_data['group'])
         return {
             assignment: assignment_data,
             grader_link: submission_data.link,
@@ -1256,7 +1270,7 @@ class AssignmentDatabaseHandler {
                 if (error || result === null) {
                     resolve(false);
                 }
-
+                    
                 resolve(true);
             });
         })

@@ -146,10 +146,66 @@ router.post('/', function(req, res, next) {
 
 
 /*
- ** POST to a user, do not need this
+ ** POST to a user. Enroll the user in the course,
+ *  if they are not already enrolled.
  */
-router.post('/:user_id', function(req, res, next) {
-    res.sendStatus(403);
+router.post('/:user_id', async function(req, res, next) {
+    let course_db_handler = await ImportHandler.course_db_handler;
+
+    const course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
+    const user_key = KeyDictionary.key_dictionary['user'] + req.params.user_id;
+    const roles = req.body.roles;
+
+    if (!roles || roles.length === 0){
+        res.sendStatus(501);
+        console.warn('Error. Req must include data for user roles in course')
+        return;
+    }
+    
+    let checked = false;
+    try {
+        for (let role of roles){
+            const roleLower = role.toLowerCase();
+            if (roleLower === 'instructor'){
+                if (await course_db_handler.is_user_instructor_for_course(user_key, course_key)) {
+                    console.log('User already instructor in course');
+                    res.sendStatus(200);
+                }
+                else {
+                    console.log('Adding instructor to course with course key ' + course_key)
+                    await course_db_handler.add_instructor_to_course(ImportHandler, user_key, course_key);
+                    res.sendStatus(201);
+                    
+                }
+                checked = true;
+            }
+            else if (roleLower === 'student') {
+                if (await course_db_handler.is_user_enrolled_in_course(user_key, course_key)) {
+                    console.log('User already enrolled in course');
+                    res.sendStatus(200);
+                }
+                else {
+                    console.log('Adding student to course with course key ' + course_key);
+                    await course_db_handler.add_student_to_course(ImportHandler, user_key, course_key);
+                    res.sendStatus(201);
+                }
+                    
+                checked = true;
+            }
+        }
+        if (checked === false) {
+            console.warn('No valid role for adding student or instructor. Roles are' + JSON.stringify(roles));
+            res.sendStatus(501);
+        }
+
+    } catch (ex) {
+        console.warn(ex)
+        res.sendStatus(501);
+    }
+
+    
+    
+    
 });
 
 

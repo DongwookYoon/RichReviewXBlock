@@ -398,6 +398,7 @@
 
                 var cmd_spotlight;
                 for(i = 0; cmd_spotlight = cmd.data.Spotlights[i]; ++i){
+                    var spotlight_width = cmd_spotlight.splght_width || r2Const.SPLGHT_PRIVATE_WIDTH;
                     var spotlight = new r2.Spotlight();
                     var spotlight_time = 0;
                     if(cmd_spotlight.time)
@@ -409,7 +410,8 @@
                         spotlight_time,
                         cmd_spotlight.t_bgn,
                         cmd_spotlight.t_end,
-                        cmd_spotlight.splght_width);
+                        spotlight_width
+                        );
                     for(var j = 0; j < cmd_spotlight.segments.length; ++j){
                         if(r2App.pieces_cache.hasOwnProperty(cmd_spotlight.segments[j].pid)){
                             var segment = new r2.Spotlight.Segment();

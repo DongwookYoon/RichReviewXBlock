@@ -14,6 +14,7 @@ try {
   console.warn('Failed to read lti.json config file');
 }
 
+12782
 
 /*
  ** Get a signed client assertion

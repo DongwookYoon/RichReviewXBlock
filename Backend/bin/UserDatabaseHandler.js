@@ -318,7 +318,7 @@ class UserDatabaseHandler {
 
 
 
-    async add_google_user_to_db (user_data) {
+    async add_google_user_to_db (user_data, user_exists) {
 
         let user_key = `${KeyDictionary.key_dictionary['user']}${user_data.sub ? user_data.sub : user_data.id}`;
 

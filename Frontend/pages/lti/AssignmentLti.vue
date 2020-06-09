@@ -10,26 +10,15 @@
       please contact the RichReview system administrator.
     </p>
 
-    <!--If assignment has been submitted, regardless of user role,
-        show the assignment in the RichReview viewer-->
-    <RichReviewViewer
-      v-if="submit_data.submitted === true"
-      class="rich-review-view"
-      :submit_data="submit_data"
-      :user="user"
-      :course_id="courseId"
-      :user_roles="userRoles"
-    />
-
     <div
-      v-else-if="(userRoles.includes(INSTRUCTOR) || userRoles.includes(TA))
+      v-if="(userRoles.includes(INSTRUCTOR) || userRoles.includes(TA))
         && submit_data.submitted === false"
     >
       <p>The student has not yet submitted this assignment.</p>
     </div>
 
     <!--Else if user role is student then  -->
-    <div v-else-if="userRoles.includes(STUDENT)">
+    <div v-else-if="userRoles.includes(STUDENT) && submit_data.submitted === false">
       <!-- If assignment type is document_submission then -->
       <DocumentSubmitter
         v-if="assignmentType==='document_submission'"
@@ -50,6 +39,17 @@
         @submit-assignment="handleSubmit"
       />
     </div>
+
+    <!--Otherwise assignment has been submitted, regardless of user role,
+        show the assignment in the RichReview viewer-->
+    <RichReviewViewer
+      v-else
+      class="rich-review-view"
+      :submit_data="submit_data"
+      :user="user"
+      :course_id="courseId"
+      :user_roles="userRoles"
+    />
   </div>
 </template>
 
@@ -78,15 +78,15 @@ export class SubmitData {
 }
 
 const testUser : User = {
-  id: 'google_102369315136728943851',
-  userName: 'Test User'
+  id: 'google_109022885000538247847',
+  userName: 'Test Instructor'
 }
 
 const testDataStudent = {
   assignmentTitle: 'Test Assignment',
   assignmentType: 'document_submission',
   assignmentId: '1_1591495925951_87362',
-  userRoles: ['student'],
+  userRoles: ['instructor'],
   courseId: '1',
   submit_data: {
     viewerLink: 'access_code=542cc5809e6f3d8670f47fa722691f70c1c5cd07&docid=google_109022885000538247847_1591495925932&groupid=google_102369315136728943851_1591495926073',
@@ -172,10 +172,18 @@ const testDataStudent = {
           assignmentId,
           context.store.getters['LtiAuthStore/authUser'].id)
 
-        console.log(JSON.stringify(assignmentData))
-
-        const submitted : boolean = (assignmentData.submission_status &&
+        let submitted : boolean = (assignmentData.submission_status &&
                                       assignmentData.submission_status.toLowerCase() === 'submitted')
+
+        if (submitted !== false) {
+          if (
+            context.query.access_code &&
+              context.query.docid &&
+              context.query.groupid
+          ) {
+            submitted = true
+          }
+        }
 
         const viewerLink = userRoles.includes(Roles.STUDENT) ? assignmentData.link : assignmentData.grader_link
         // eslint-disable-next-line camelcase
@@ -271,12 +279,31 @@ export default class AssignmentLti extends Vue {
   public created () {
     if (this.isLoggedIn === true && this.loadSuccess) {
       console.log(`Logged in user: ${this.user.id}`)
-      this.isCreated = true
+      console.log('The viewer link: ' + this.submit_data.viewerLink)
+      /* If provided, get submission params from URL query string. Otherwise,
+        get them from the assignment data */
+      const accessCode: string | null =
+        this.$route.query.access_code ? this.$route.query.access_code as string
+          : AssignmentLti.getQueryVariable('access_code', this.submit_data.viewerLink)
 
-      this.submit_data.accessCode = AssignmentLti.getQueryVariable('access_code', this.submit_data.viewerLink)
-      this.submit_data.docID = AssignmentLti.getQueryVariable('docid', this.submit_data.viewerLink)
-      this.submit_data.groupID = AssignmentLti.getQueryVariable('groupid', this.submit_data.viewerLink)
-      this.submit_data.submissionID = AssignmentLti.getQueryVariable('submission_id', this.submit_data.viewerLink)
+      const docID: string | null =
+        this.$route.query.docid ? this.$route.query.docid as string
+          : AssignmentLti.getQueryVariable('docid', this.submit_data.viewerLink)
+
+      const groupID : string | null =
+        this.$route.query.groupid ? this.$route.query.groupid as string
+          : AssignmentLti.getQueryVariable('groupid', this.submit_data.viewerLink)
+
+      const submissionID : string | null =
+        this.$route.query.submission_id ? this.$route.query.submission_id as string
+          : AssignmentLti.getQueryVariable('submission_id', this.submit_data.viewerLink)
+
+      this.submit_data.accessCode = accessCode
+      this.submit_data.docID = docID
+      this.submit_data.groupID = groupID
+      this.submit_data.submissionID = submissionID
+
+      this.isCreated = true
     }
   }
 
@@ -291,26 +318,11 @@ export default class AssignmentLti extends Vue {
   }
 
   public async handleSubmit () {
-    if (process.env.test_mode &&
-        (process.env.test_mode as string).toLowerCase() === 'true') {
-      alert('DEBUG MODE: Got submit event from child component!')
-      return
-    }
-
     const courseId : string = this.courseId
-    let assignmentData
+    let updatedAssignmentData
 
     try {
-      await this.updateClientCredentials() // Update client credentials token in store
-    }
-    catch (ex) {
-      console.warn('OAuth client credential grant for assignment submission failed. Reason: ' + ex)
-      alert('Could not submit assignment. Please try again.')
-      return
-    }
-
-    try {
-      assignmentData = await ApiHelper.getAssignmentData(courseId,
+      updatedAssignmentData = await ApiHelper.getAssignmentData(courseId,
         this.assignmentId,
         this.user.id as string)
     }
@@ -322,8 +334,30 @@ export default class AssignmentLti extends Vue {
       return
     }
 
-    const submissionId = assignmentData.grader_submission_id
-    const submissionURL = `${this.$route.path}?${assignmentData.link}&submission_id=${submissionId}`
+    const submissionId = updatedAssignmentData.grader_submission_id
+    console.log(JSON.stringify(updatedAssignmentData))
+    let submissionURL = `${this.$route.path}?${updatedAssignmentData.link}`
+
+    if (submissionId) {
+      submissionURL += `&submission_id=${submissionId}`
+    }
+
+    if (process.env.test_mode &&
+        (process.env.test_mode as string).toLowerCase() === 'true') {
+      alert('DEBUG MODE: Got submit event from child component!')
+      console.log('Submitted assignment viewer URL: ' + submissionURL)
+      return
+    }
+
+    try {
+      await this.updateClientCredentials() // Update client credentials token in store
+    }
+    catch (ex) {
+      console.warn('OAuth client credential grant for assignment submission failed. Reason: ' + ex)
+      alert('Could not submit assignment. Please try again.')
+      return
+    }
+
     const assignmentResourceId : string = this.launchMessage[
       'https://purl.imsglobal.org/spec/lti/claim/resource_link'].id
     let lineItemId : string = ''

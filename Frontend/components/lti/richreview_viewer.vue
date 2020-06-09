@@ -1,23 +1,19 @@
 <template>
-  <div>
+  <div v-if="submit_data.submitted===true">
     <no-ssr>
       <body>
         <div class="content_body">
           <!--TODO Check that base is correct -->
           <base href="/lti">
           <div id="r2_app_page" align="'center">
-            <div id="r2_app_container" align="left">
-              <p v-if="submit_data.submitted===false" id="no-submission-text">
-                This student has not submitted the assignment
-              </p>
-              <p v-else>
-                Show the RichReview UI here for grading
-              </p>
-            </div>
+            <div id="r2_app_container" align="left" />
           </div>
         </div>
       </body>
     </no-ssr>
+  </div>
+  <div v-else>
+    <p>This assignment has not yet been submitted.</p>
   </div>
 </template>
 
@@ -27,7 +23,7 @@ import 'reflect-metadata' // Must import this before nuxt property decorators
 import { SubmitData } from '~/pages/lti/AssignmentLti.vue'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import { User } from '~/store/modules/LtiAuthStore'
-import Roles from '~/utils/roles'
+
 // eslint-disable-next-line camelcase
 
 if (typeof window !== 'undefined') {
@@ -51,28 +47,24 @@ export default class RichReviewViewer extends Vue {
   @Prop({ required: true }) readonly course_id !: string;
   @Prop({ required: true }) readonly user_roles !: string[];
 
-  mounted () {
-    /* Only show RichReview UI if the assignment has been submitted */
-    if (this.submit_data.submitted === true) {
-      /* Get data for assignment as an instructor or student */
 
+  mounted () {
+    if (this.submit_data.submitted === false) {
+      return
+    }
+
+    this.getViewerData().then((res) => {
       console.log('Getting assignment data for instructor or student.')
-      console.log('Course id ' + this.course_id)
+      console.log('Course id: ' + this.course_id)
       console.log('Group ID: ' + this.submit_data.groupID)
       console.log('User id: ' + this.user.id)
-
-
-
-      if (this.user_roles.includes(Roles.INSTRUCTOR) || this.user_roles.includes(Roles.TA)) {
-        const graderData = this.getGraderData()
+      console.log(`Assignment response: ${res}`)
+      for (const prop in res) {
+        console.log(`${prop}: ${res[prop]}`)
       }
 
-
-      this.getViewerData().then((res) => {
-        console.log(`Assignment response: ${res}`)
-        for (const prop in res) {
-          console.log(`${prop}: ${res[prop]}`)
-        }
+      /* Only show RichReview UI if the assignment has been submitted */
+      if (this.submit_data.submitted === true) {
         // eslint-disable-next-line camelcase
         const r2_ctx = res.r2_ctx
         r2_ctx.auth = this.user
@@ -85,20 +77,18 @@ export default class RichReviewViewer extends Vue {
           cdn_endpoint,
           true
         )
-      }).catch((reason) => {
-        console.warn('Loading RichReview failed. Reason: ' + reason)
-      })
-    }
+      }
+    }).catch((reason) => {
+      console.warn('Loading RichReview failed. Reason: ' + reason)
+    })
   }
 
-
-  private getGraderData() : Promise<any> {
+  private getGraderData () : Promise<any> {
 
   }
 
-
-  private getViewerData() : Promise<any> {
-     return this.$axios.$get(
+  private getViewerData () : Promise<any> {
+    return this.$axios.$get(
         `https://${process.env.backend}:3000/courses/${
           this.course_id
         }/groups/${this.submit_data.groupID}`,
@@ -110,26 +100,14 @@ export default class RichReviewViewer extends Vue {
             rejectUnauthorized: false
           })
         }
-      )
+    )
   }
-
 }
-
-
-private
-  }
-
-
-
-}
-
-
 
 </script>
 
 <style scoped>
 @import 'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/css/bootstrap.min.css';
-import Roles from '../../utils/roles';
 
 .due-div {
     display: flex;

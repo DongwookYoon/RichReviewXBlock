@@ -25,7 +25,6 @@ import AssignmentLti from './pages/lti/AssignmentLti'
 import CreateAssignmentLti from './pages/lti/CreateAssignmentLti'
 import LoginLti from './pages/lti/LoginLti'
 import OAuthLti from './pages/lti/OAuthLti'
-import Index from './pages/lti/Index'
 import Vue from 'vue'
 import Router from 'vue-router'
 
@@ -125,7 +124,6 @@ export function createRouter () {
         path: '/ubc-pilot',
         component: ubc_pilot
       },
-
       {
         path: '/lti/assignments/:assignment_type/:assignment_key',
         component: AssignmentLti

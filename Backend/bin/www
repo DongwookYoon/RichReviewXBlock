@@ -27,11 +27,11 @@ const options = {
 };
 
 var server = http.createServer(options, app);
-/**
- * Listen on provided port, on localhost only.
- */
 
-server.listen(port, 'localhost');
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
 

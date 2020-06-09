@@ -1,6 +1,4 @@
 /* eslint-disable camelcase */
-import Vue from 'vue'
-import Router from 'vue-router'
 
 import login from './pages/login'
 import authentication from './pages/authentication'
@@ -23,16 +21,17 @@ import all_user_groups from './pages/all_user_groups'
 import all_user_grades from './pages/all_user_grades'
 import admin from './pages/admin'
 import ubc_pilot from './pages/ubc_pilot'
-import AssignmentLti from './pages/lti/AssignmentLti'
-import CreateAssignmentLti from './pages/lti/CreateAssignmentLti'
-import LoginLti from './pages/lti/LoginLti'
-import OAuthLti from './pages/lti/OAuthLti'
-import index from './pages/lti'
-
+import Router from 'vue-router'
+import Vue from 'vue'
+// import AssignmentLti from './pages/lti/AssignmentLti'
+// import CreateAssignmentLti from './pages/lti/CreateAssignmentLti'
+// import LoginLti from './pages/lti/LoginLti'
+// import OAuthLti from './pages/lti/OAuthLti'
+// import index from './pages/lti'
 
 Vue.use(Router)
 
-export function createRouter() {
+export function createRouter () {
   return new Router({
     mode: 'history',
     routes: [
@@ -125,8 +124,8 @@ export function createRouter() {
       {
         path: '/ubc-pilot',
         component: ubc_pilot
-      },
-      {
+      }
+      /* {
         path: '/lti',
         component: index
       },
@@ -145,8 +144,7 @@ export function createRouter() {
       {
         path: '/lti/oauth',
         component: OAuthLti
-      }
-
+    } */
 
     ]
   })

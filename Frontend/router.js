@@ -123,7 +123,8 @@ export function createRouter () {
       {
         path: '/ubc-pilot',
         component: ubc_pilot
-      },
+      }
+      /*
       {
         path: '/lti/assignments/:assignment_type/:assignment_key',
         component: AssignmentLti
@@ -140,6 +141,7 @@ export function createRouter () {
         path: '/lti/oauth',
         component: OAuthLti
       }
+      */
 
     ]
   })

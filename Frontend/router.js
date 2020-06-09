@@ -20,10 +20,10 @@ import all_user_groups from './pages/all_user_groups'
 import all_user_grades from './pages/all_user_grades'
 import admin from './pages/admin'
 import ubc_pilot from './pages/ubc_pilot'
-import AssignmentLti from './pages/lti/AssignmentLti'
-import CreateAssignmentLti from './pages/lti/CreateAssignmentLti'
-import LoginLti from './pages/lti/LoginLti'
-import OAuthLti from './pages/lti/OAuthLti'
+// import AssignmentLti from './pages/lti/AssignmentLti'
+// import CreateAssignmentLti from './pages/lti/CreateAssignmentLti'
+// import LoginLti from './pages/lti/LoginLti'
+// import OAuthLti from './pages/lti/OAuthLti'
 import login from './pages/login'
 import Vue from 'vue'
 import Router from 'vue-router'
@@ -123,7 +123,8 @@ export function createRouter () {
       {
         path: '/ubc-pilot',
         component: ubc_pilot
-      },
+      }
+      /*
       {
         path: '/lti/assignments/:assignment_type/:assignment_key ',
         component: AssignmentLti
@@ -140,6 +141,7 @@ export function createRouter () {
         path: '/lti/oauth',
         component: OAuthLti
       }
+      */
 
     ]
   })

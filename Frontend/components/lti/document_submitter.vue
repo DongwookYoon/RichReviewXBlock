@@ -32,17 +32,18 @@
 import * as https from 'https'
 import { Component, Prop, Emit, Vue } from 'nuxt-property-decorator'
 
+/* eslint-disable camelcase */
 @Component
 export default class DocumentSubmitter extends Vue {
-  // eslint-disable-next-line camelcase
   @Prop({ required: true }) readonly user_id !: string;
+  @Prop({ required: true }) readonly course_id !: string;
 
   private files : File[] = [];
 
 
   @Emit('submit-assignment')
   public submitSuccess () {
-    console.log('Assignment successfully submit to RichReview!')
+    console.log('Assignment successfully submitted to RichReview!')
   }
 
   private async submitAssignment () {
@@ -62,12 +63,12 @@ export default class DocumentSubmitter extends Vue {
       }
       formData.append('files[' + i + ']', file)
     }
-    /* TODO Submit to Canvas and mark associated assignment as marked in RichReview */
 
     try {
       await this.$axios.$post(
-          `https://${process.env.backend}:3000/assignments/${
-            this.$route.params.assignment_id}/document_submissions`,
+          `https://${process.env.backend}:3000/courses/${
+            this.course_id}/assignments/${
+            this.$route.params.assignment_key}/document_submissions`,
           formData,
           {
             headers: {
@@ -81,7 +82,7 @@ export default class DocumentSubmitter extends Vue {
       )
     }
     catch (e) {
-      window.alert(e.response.data.message)
+      window.alert(e.response ? e.response.data.message : e)
       return
     }
 

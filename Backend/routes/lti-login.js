@@ -21,6 +21,7 @@ router.post('/', async (req, res, next) => {
             console.log('User already exists');
             return;
         }
+        
 
         let user_key = await user_db_handler.add_user_to_db(ImportHandler, user_login_data, auth_type);
         let user_data = await user_db_handler.get_user_data(user_key);

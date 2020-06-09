@@ -25,7 +25,7 @@
 
 import https from 'https'
 import axios from 'axios'
-import 'reflect-metadata'    // Must import this before nuxt property decorators
+import 'reflect-metadata' // Must import this before nuxt property decorators
 import { Component, Prop, Emit, Vue } from 'nuxt-property-decorator'
 import { SubmitData } from '~/pages/lti/AssignmentLti.vue'
 import { User } from '~/store/modules/LtiAuthStore'
@@ -54,7 +54,6 @@ export default class CommentSubmitter extends Vue {
   @Prop({ required: true }) readonly course_id !: string
 
   private showSubmitButton : boolean = false;
-  private assignmentId: string = '';
 
   head = {
     script: [
@@ -67,9 +66,9 @@ export default class CommentSubmitter extends Vue {
   }
 
   mounted () {
-    console.log('User id: ' + this.user.id)
-    console.log('group id: ' + this.submit_data.groupID)
-    console.log('Course id: ' + this.course_id)
+    console.log('User id : ' + this.user.id)
+    console.log('group id : ' + this.submit_data.groupID)
+    console.log('Course id : ' + this.course_id)
     // Note updated changed backend so that it is possible to get the data
     // for the document based only on group id. It is simple to include the group id and
     // other data in the launch URL
@@ -86,7 +85,6 @@ export default class CommentSubmitter extends Vue {
         })
       }
     ).then((res) => {
-      console.log(JSON.stringify(res.data))
       // eslint-disable-next-line camelcase
       const r2_ctx = res.data.r2_ctx
       r2_ctx.auth = this.user
@@ -118,7 +116,9 @@ export default class CommentSubmitter extends Vue {
     /* Submit to RichReview backend first */
     try {
       await this.$axios.$post(
-          `https://${process.env.backend}:3000/assignments/${this.assignmentId}/comment_submissions`,
+          `https://${process.env.backend}:3000/courses/${
+            this.course_id}/assignments/${
+            this.$route.params.assignment_key}/comment_submissions`,
           {
             access_code: this.submit_data.accessCode,
             docid: this.submit_data.docID,

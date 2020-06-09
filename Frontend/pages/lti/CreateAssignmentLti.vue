@@ -57,7 +57,7 @@ import { User, ITokenInfo } from '~/store/modules/LtiAuthStore'
 // eslint-disable-next-line camelcase
 
 const testData = {
-  assignmentKey: `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`,
+  assignmentId: `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`,
   success: true,
   courseId: '1'
 }
@@ -74,6 +74,8 @@ const testUser: User = {
     if (process.env.test_mode &&
         (process.env.test_mode as string).toLowerCase() === 'true') {
       context.store.dispatch('LtiAuthStore/logIn', testUser)
+
+      console.log('Assignment key should be ' + testData.assignmentId)
       return testData
     }
 
@@ -84,7 +86,7 @@ const testUser: User = {
       context.redirect(`/lti/oauth?redirect_uri=${context.route.fullPath}`)
     }
 
-    let assignmentKey: string = ''
+    let assignmentId: string = ''
     let ltiReqMessage : any
     let success : boolean = false
 
@@ -111,7 +113,7 @@ const testUser: User = {
       const courseId = ltiReqMessage['https://purl.imsglobal.org/spec/lti/claim/context'].id
 
       // Generate assignment key
-      assignmentKey = `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`
+      assignmentId = `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`
 
       try {
         await CreateAssignmentLti.ensureCourseInstructorEnrolled(ltiReqMessage,
@@ -121,7 +123,7 @@ const testUser: User = {
 
         return {
           ltiReqMessage,
-          assignmentKey,
+          assignmentId,
           courseId,
           success
         } // Inject into CreateAssignment instance data
@@ -146,7 +148,7 @@ export default class CreateAssignmentLti extends Vue {
   private saved: boolean = true
   private assignmentType : string = 'document_submission'
   private files : File [] = []
-  private assignmentKey ?: string
+  private assignmentId ?: string
   private ltiReqMessage ?: any
   private success !: boolean
   private courseId !: string
@@ -192,6 +194,25 @@ export default class CreateAssignmentLti extends Vue {
     this.saved = true
     const courseId : string = this.courseId
 
+    // eslint-disable-next-line camelcase
+    const now_date = new Date()
+    // eslint-disable-next-line camelcase
+    const until_date = now_date.setFullYear(now_date.getFullYear() + 100)
+    // eslint-disable-next-line camelcase
+    const assignment_data = {
+      id: this.assignmentId,
+      title: 'RichReview',
+      description: 'LTI Assignment',
+      lti: true,
+      hidden: false,
+      available_date: new Date().toISOString(),
+      due_date: until_date,
+      until_date,
+      type: this.assignmentType,
+      group_assignment: false,
+      allow_multiple_submissions: false,
+      count_toward_final_grade: 0
+    }
     /* Create a record of the assignment record in RichReview first */
     try {
       if (this.assignmentType === 'comment_submission') {
@@ -210,10 +231,7 @@ export default class CreateAssignmentLti extends Vue {
           formData.append(`file-${i}`, file)
         }
 
-        formData.append('assignment_data', JSON.stringify({
-          assignment_key: this.assignmentKey,
-          lti: true
-        }))
+        formData.append('assignment_data', JSON.stringify(assignment_data))
 
         await this.$axios.$post(
             `https://${process.env.backend}:3000/courses/${
@@ -236,12 +254,7 @@ export default class CreateAssignmentLti extends Vue {
             `https://${process.env.backend}:3000/courses/${
               courseId
               }/assignments/document_submission_assignment`,
-            {
-              assignment_data: {
-                assignment_key: this.assignmentKey,
-                lti: true
-              }
-            },
+            { assignment_data },
             {
               headers: {
                 Authorization: this.user.id
@@ -252,14 +265,14 @@ export default class CreateAssignmentLti extends Vue {
             }
         )
       }// end-else
-      const ltiLink = `/lti/assignment/${this.assignmentType}/${this.assignmentKey}`
+      const ltiLink = `${process.env.prod_url}/lti/assignments/${this.assignmentType}/${this.assignmentId}`
       console.log(` Successfuly created assignment in RichReview! \nSubmission lti Link: ${ltiLink}`)
 
       // await this.postBackToPlatform(ltiLink)
     }
     catch (e) {
       this.saved = false
-      window.alert(e.response.data.message)
+      window.alert(e)
     }
   }
 

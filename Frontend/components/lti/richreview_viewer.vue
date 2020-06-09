@@ -27,6 +27,7 @@ import 'reflect-metadata' // Must import this before nuxt property decorators
 import { SubmitData } from '~/pages/lti/AssignmentLti.vue'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import { User } from '~/store/modules/LtiAuthStore'
+import Roles from '~/utils/roles'
 // eslint-disable-next-line camelcase
 
 if (typeof window !== 'undefined') {
@@ -47,7 +48,8 @@ if (typeof window !== 'undefined') {
 export default class RichReviewViewer extends Vue {
   @Prop({ required: true }) readonly submit_data !: SubmitData;
   @Prop({ required: true }) readonly user !: User;
-  @Prop({ required: true }) readonly course_id !: string
+  @Prop({ required: true }) readonly course_id !: string;
+  @Prop({ required: true }) readonly user_roles !: string[];
 
   mounted () {
     /* Only show RichReview UI if the assignment has been submitted */
@@ -58,19 +60,15 @@ export default class RichReviewViewer extends Vue {
       console.log('Course id ' + this.course_id)
       console.log('Group ID: ' + this.submit_data.groupID)
       console.log('User id: ' + this.user.id)
-      this.$axios.$get(
-        `https://${process.env.backend}:3000/courses/${
-          this.course_id
-        }/groups/${this.submit_data.groupID}`,
-        {
-          headers: {
-            Authorization: this.user.id
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        }
-      ).then((res) => {
+
+
+
+      if (this.user_roles.includes(Roles.INSTRUCTOR) || this.user_roles.includes(Roles.TA)) {
+        const graderData = this.getGraderData()
+      }
+
+
+      this.getViewerData().then((res) => {
         console.log(`Assignment response: ${res}`)
         for (const prop in res) {
           console.log(`${prop}: ${res[prop]}`)
@@ -92,12 +90,46 @@ export default class RichReviewViewer extends Vue {
       })
     }
   }
+
+
+  private getGraderData() : Promise<any> {
+
+  }
+
+
+  private getViewerData() : Promise<any> {
+     return this.$axios.$get(
+        `https://${process.env.backend}:3000/courses/${
+          this.course_id
+        }/groups/${this.submit_data.groupID}`,
+        {
+          headers: {
+            Authorization: this.user.id
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+      )
+  }
+
 }
+
+
+private
+  }
+
+
+
+}
+
+
 
 </script>
 
 <style scoped>
 @import 'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/css/bootstrap.min.css';
+import Roles from '../../utils/roles';
 
 .due-div {
     display: flex;

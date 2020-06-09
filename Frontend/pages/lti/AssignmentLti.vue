@@ -5,16 +5,28 @@
     <p>assignment.vue test </p>
     <p>Component: {{ curComponent }}</p>
 
-    <!--If user has submitted the assignment OR user is has role of instructor or TA then
+    <p v-if="loadSuccess === false">
+      An error occurred while loading. Try to refresh the page. If this continues,
+      please contact the RichReview system administrator.
+    </p>
+
+    <!--If assignment has been submitted, regardless of user role,
         show the assignment in the RichReview viewer-->
     <RichReviewViewer
-      v-if="submit_data.submitted === true ||
-        userRoles.includes(INSTRUCTOR) || userRoles.includes(TA)"
+      v-if="submit_data.submitted === true"
       class="rich-review-view"
       :submit_data="submit_data"
       :user="user"
       :course_id="courseId"
+      :user_roles="userRoles"
     />
+
+    <div
+      v-else-if="(userRoles.includes(INSTRUCTOR) || userRoles.includes(TA))
+        && submit_data.submitted === false"
+    >
+      <p>The student has not yet submitted this assignment.</p>
+    </div>
 
     <!--Else if user role is student then  -->
     <div v-else-if="userRoles.includes(STUDENT)">
@@ -23,6 +35,7 @@
         v-if="assignmentType==='document_submission'"
         class="document-submitter"
         :user_id="user.id"
+        :course_id="courseId"
         @submit-assignment="handleSubmit"
       />
 
@@ -42,7 +55,6 @@
 
 <script lang="ts">
 import * as https from 'https'
-import querystring from 'querystring'
 import { Component, Vue } from 'nuxt-property-decorator'
 import { mapGetters } from 'vuex'
 import JwtUtil from '~/utils/jwt-util'
@@ -58,9 +70,10 @@ import Roles from '~/utils/roles'
 
 export class SubmitData {
   viewerLink : string = ''
-  accessCode ?: string
-  docID ?: string
-  groupID ?: string
+  accessCode ?: string | null
+  docID ?: string | null
+  groupID ?: string | null
+  submissionID ?: string | null
   submitted ?: boolean
 }
 
@@ -91,17 +104,24 @@ const testDataStudent = {
   },
 
   async asyncData (context) {
+    let loadSuccess: boolean = false
+    let courseId : string = ''
+    let userRoles :string[] = ['']
     if (process.env.test_mode &&
-        (process.env.test_mode as string).toLowerCase() === 'true') {
+      (process.env.test_mode as string).toLowerCase() === 'true') {
       context.store.dispatch('LtiAuthStore/logIn', testUser)
-      return testDataStudent
+      courseId = testDataStudent.courseId
+      userRoles = testDataStudent.userRoles
     }
 
     if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
-      return { }
+      return {
+        loadSuccess
+      }
     }
 
     if (process.server) {
+      /*
       let jwt : string
       let ltiLaunchMessage : object | null = null
 
@@ -126,7 +146,7 @@ const testDataStudent = {
 
       const courseId = launchMessage[
         'https://purl.imsglobal.org/spec/lti/claim/context'].id
-
+      */
       const assignmentType : string = context.params.assignment_type
       const assignmentId : string = context.params.assignment_key
 
@@ -138,15 +158,33 @@ const testDataStudent = {
       }
       catch (ex) {
         console.warn('Could not verify user enrollment in course. Reason: ' + ex)
-        return {}
+        return {
+          loadSuccess
+        }
       }
-
+      // eslint-disable-next-line camelcase
       let assignmentData = null
+      // eslint-disable-next-line camelcase
+      let submit_data : SubmitData | null = null
 
       try {
         assignmentData = await ApiHelper.getAssignmentData(courseId,
           assignmentId,
           context.store.getters['LtiAuthStore/authUser'].id)
+
+        console.log(JSON.stringify(assignmentData))
+
+        const submitted : boolean = (assignmentData.submission_status &&
+                                      assignmentData.submission_status.toLowerCase() === 'submitted')
+
+        const viewerLink = userRoles.includes(Roles.STUDENT) ? assignmentData.link : assignmentData.grader_link
+        // eslint-disable-next-line camelcase
+        submit_data = {
+          submitted,
+          viewerLink
+        }
+
+        loadSuccess = true
       }
       catch (e) {
         console.warn(e)
@@ -155,24 +193,23 @@ const testDataStudent = {
       finally {
         if (assignmentData === null) {
           console.warn('Assignment data could not be loaded. ')
-          return { }
         }
       }
 
-      // eslint-disable-next-line camelcase
-      const submit_data : SubmitData = {
-        submitted: assignmentData.submission_status,
-        viewerLink: userRoles.includes(Roles.STUDENT) ? assignmentData.link : assignmentData.grader_link
+      if (loadSuccess === false) {
+        return { loadSuccess }
       }
 
       return {
-        assignmentTitle: assignmentData.data.title,
+        loadSuccess,
+        assignmentTitle: assignmentData.title,
         assignmentType,
         assignmentId,
-        launchMessage,
+        // launchMessage,
         submit_data,
         userRoles,
-        courseId
+        courseId,
+        assignmentData
       }
     }
   },
@@ -192,6 +229,7 @@ export default class AssignmentLti extends Vue {
   public readonly STUDENT : string = Roles.STUDENT
 
   private isCreated: boolean = false
+  private loadSuccess: boolean = false
 
   /* Mappings for Vuex store getters */
   public isLoggedIn !: boolean
@@ -203,6 +241,7 @@ export default class AssignmentLti extends Vue {
   private assignmentTitle ?: string
   private assignmentType ?: string
   private assignmentId !: string
+  private assignmentData : any
   private launchMessage ?: any
   // eslint-disable-next-line camelcase
   private submit_data !: SubmitData
@@ -230,30 +269,31 @@ export default class AssignmentLti extends Vue {
   }
 
   public created () {
-    if (this.isLoggedIn === true) {
+    if (this.isLoggedIn === true && this.loadSuccess) {
       console.log(`Logged in user: ${this.user.id}`)
       this.isCreated = true
 
       this.submit_data.accessCode = AssignmentLti.getQueryVariable('access_code', this.submit_data.viewerLink)
       this.submit_data.docID = AssignmentLti.getQueryVariable('docid', this.submit_data.viewerLink)
       this.submit_data.groupID = AssignmentLti.getQueryVariable('groupid', this.submit_data.viewerLink)
+      this.submit_data.submissionID = AssignmentLti.getQueryVariable('submission_id', this.submit_data.viewerLink)
     }
   }
 
   public mounted () {
+    console.log(JSON.stringify(this.assignmentData))
+    console.log('Assignment submitted?: ' + this.submit_data.submitted)
     if (this.isLoggedIn === false) {
       console.warn('OIDC login failed')
       alert('You must be logged in to Canvas to view this assignment.')
       window.location.replace(process.env.canvas_path as string)
     }
-
-    console.log(this)
   }
 
   public async handleSubmit () {
     if (process.env.test_mode &&
         (process.env.test_mode as string).toLowerCase() === 'true') {
-      alert('DEBUG MODE: Handling submit event from child component!')
+      alert('DEBUG MODE: Got submit event from child component!')
       return
     }
 
@@ -366,7 +406,7 @@ export default class AssignmentLti extends Vue {
     this.$store.dispatch('updateClientCredentialsToken', clientToken)
   }
 
-  private static getQueryVariable (variable : string, route : string) : string {
+  private static getQueryVariable (variable : string, route : string) : string | null {
     const vars : string[] = route.split('&')
     for (let i = 0; i < vars.length; i++) {
       const pair = vars[i].split('=')
@@ -374,8 +414,7 @@ export default class AssignmentLti extends Vue {
         return decodeURIComponent(pair[1])
       }
     }
-    console.warn(`Query variable ${variable} not found`)
-    return ''
+    return null
   }
 
   /**
@@ -388,8 +427,10 @@ export default class AssignmentLti extends Vue {
   private static async ensureUserEnrolled (courseId: string, user: User, roles: string[], axios: NuxtAxiosInstance) {
     await ApiHelper.ensureRichReviewUserExists(user)
 
+    console.log('courseid' + courseId)
+    /* Ensure user is enrolled in course */
     const userRes = await axios.post(`https://${process.env.backend}:3000/courses/${
-      courseId}/users/${user.id}}`,
+      courseId}/users/${user.id}`,
     { roles },
     {
       headers: {

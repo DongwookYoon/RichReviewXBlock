@@ -83,9 +83,6 @@ export default class RichReviewViewer extends Vue {
     })
   }
 
-  private getGraderData () : Promise<any> {
-
-  }
 
   private getViewerData () : Promise<any> {
     return this.$axios.$get(

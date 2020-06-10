@@ -8,13 +8,12 @@ var axios = require('axios');
 let lti_config
 try {
    lti_config = JSON.parse(
-    fs.readFileSync(path.join(__dirname, '..', 'ssl/lti.json'), 'utf-8')
-  );
+    fs.readFileSync(path.join(__dirname, '..', 'ssl/lti.json'), 'utf-8'));
+   console.log(`Successfully read lti.json config file: ${JSON.stringify(lti_config)}`);
 } catch(ex) {
-  console.warn('Failed to read lti.json config file');
+  console.warn('Failed to read lti.json config file. Reason: ' + ex);
 }
 
-12782
 
 /*
  ** Get a signed client assertion

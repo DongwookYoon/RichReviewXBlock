@@ -1,7 +1,11 @@
+import fs from 'fs'
+import path from 'path'
 import pkg from './package'
 import * as certs from './ssl/certs'
 
 const optimizeBuild = (process.env.NUXT_OPTIMIZE !== undefined) && process.env.NUXT_OPTIMIZE.trim().toUpperCase() === 'TRUE'
+
+const customRoutes = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'routes.json'), 'utf8'))
 
 const config = {
   mode: 'universal',
@@ -93,10 +97,15 @@ const config = {
     // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
     // '@nuxtjs/auth',
-    '@nuxtjs/router',
+    // '@nuxtjs/router'
     '~/modules/LoadServerMiddleware'
   ],
 
+  router: {
+    extendRoutes (routes) {
+      routes.push(...customRoutes)
+    }
+  },
   /*
    ** Axios module configuration
    */

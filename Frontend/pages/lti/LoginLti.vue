@@ -1,4 +1,7 @@
-<template />
+
+<template>
+  <div><p>Logging in...</p></div>
+</template>
 
 <script lang="ts">
 /* eslint-disable camelcase */

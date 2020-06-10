@@ -43,7 +43,7 @@ class AssignmentDatabaseHandler {
 
     async edit_assignment (import_handler, user_key, assignment_key, edits) {
 
-        if(!(await this.is_valid_assignment_key(assignment_key)))
+        if(!(await this.is_valid_assignment_key(assignment_key))) 
             throw new RichReviewError('Invalid assignment key');
 
         let user_db_handler = await import_handler.user_db_handler;
@@ -752,7 +752,7 @@ class AssignmentDatabaseHandler {
         for (let assignment_key of assignment_keys) {
 
             if (!(await this.is_valid_assignment_key(assignment_key)))
-                throw new RichReviewError('Invalid assignment key');
+                console.warn(`Invalid assignment key ${assignment_key}. Attempting get regardless.`);
             let submitter_exists = await submitter_db_handler.does_user_have_submitter(import_handler, user_key, assignment_key);
 
             if (submitter_exists) {
@@ -815,7 +815,7 @@ class AssignmentDatabaseHandler {
 
         let assignment_promises = assignment_keys.map(async (assignment_key) => {
             if(!(await this.is_valid_assignment_key(assignment_key)))
-                throw new RichReviewError('Invalid assignment key');
+                console.warn(`Invalid assignment key ${assignment_key}. Attempting get regardless.`);
 
             return await this.get_assignment_data(user_key, assignment_key);
         });

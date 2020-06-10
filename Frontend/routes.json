@@ -1,0 +1,128 @@
+[
+  {
+    "path": "/edu/login",
+    "component": "./pages/login.vue"
+  },
+  {
+    "path": "/edu",
+    "component":  "./pages/login.vue"
+  },
+  {
+    "path": "/edu/authentication",
+    "component":  "./pages/authentication.vue"
+  },
+  {
+    "path": "/edu/dashboard",
+    "component":  "./pages/dashboard.vue"
+  },
+
+  {
+    "path": "/edu/all-assignments",
+    "component":  "./pages/all_user_assignments.vue"
+  },
+
+  {
+    "path": "/edu/all-groups",
+    "component":  "./pages/all_user_groups.vue"
+  },
+
+  {
+    "path": "/edu/all-grades",
+    "component":  "./pages/all_user_grades.vue"
+  },
+
+  {
+    "path": "/edu/courses/:course_id",
+    "component":  "./pages/course.vue"
+  },
+
+  {
+    "path": "/edu/courses/:course_id/assignments/new",
+    "component":  "./pages/new_assignment.vue"
+  },
+
+  {
+    "path": "/edu/courses/:course_id/deleted-assignments",
+    "component":  "./pages/deleted_assignments.vue"
+  },
+
+  {
+    "path": "/edu/courses/:course_id/assignments/:assignment_id",
+    "component":  "./pages/assignment.vue"
+  },
+
+  {
+    "path": "/edu/courses/:course_id/users",
+    "component":  "./pages/people.vue"
+  },
+
+  {
+    "path": "/edu/courses/:course_id/course_groups/new",
+    "component":  "./pages/new_course_group.vue"
+  },
+
+  {
+    "path": "/edu/courses/:course_id/course_groups/:group_id",
+    "component":  "./pages/course_group.vue"
+  },
+
+  {
+    "path": "/edu/courses/:course_id/assignments/:assignment_id/edit",
+    "component":  "./pages/edit_assignment.vue"
+  },
+
+  {
+    "path": "/edu/courses/:course_id/grades",
+    "component":  "./pages/grades.vue"
+  },
+
+  {
+    "path": "/edu/courses/:course_id/assignments/:assignment_id/submissions",
+    "component":  "./pages/assignment_submissions.vue"
+  },
+
+  {
+    "path": "/edu/courses/:course_id/assignments/:assignment_id/viewer",
+    "component":  "./pages/viewer.vue"
+  },
+
+  {
+    "path": "/edu/courses/:course_id/assignments/:assignment_id/submissions/:submission_id/grader",
+    "component":  "./pages/grader.vue"
+  },
+
+  {
+    "path": "/edu/courses/:course_id/assignments/:assignment_id/submitter",
+    "component":  "./pages/submitter.vue"
+  },
+
+  {
+    "path": "/edu/admin",
+    "component":  "./pages/admin.vue"
+  },
+
+  {
+    "path": "/ubc-pilot",
+    "component":  "./pages/ubc_pilot.vue"
+  },
+
+  {
+    "path": "/lti/create_assignment",
+    "component":  "./pages/lti/CreateAssignmentLti.vue"
+  },
+
+  {
+    "path": "/lti/assignments/:assignment_type/:assignment_key",
+    "component":  "./pages/lti/AssignmentLti.vue"
+  },
+
+  {
+    "path": "/lti/login",
+    "component":  "./pages/lti/LoginLti.vue"
+  },
+  {
+    "path": "/lti/oauth",
+    "component":  "./pages/lti/OAuthLti.vue"
+  }
+
+]

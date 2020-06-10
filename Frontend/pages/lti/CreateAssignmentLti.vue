@@ -1,3 +1,4 @@
+
 <template>
   <div v-if="success === true" id="create-assignment">
     <div id="assignment-details">

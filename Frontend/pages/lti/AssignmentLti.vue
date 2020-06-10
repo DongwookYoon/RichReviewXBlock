@@ -55,6 +55,7 @@
 
 <script lang="ts">
 import * as https from 'https'
+import querystring from 'querystring'
 import { Component, Vue } from 'nuxt-property-decorator'
 import { mapGetters } from 'vuex'
 import JwtUtil from '~/utils/jwt-util'
@@ -95,7 +96,7 @@ const testDataStudent = {
 }
 
 @Component({
-  // middleware: 'oidc_handler',            // Handle OIDC login request
+  middleware: 'oidc_handler',            // Handle OIDC login request
 
   components: {
     DocumentSubmitter,
@@ -105,10 +106,12 @@ const testDataStudent = {
 
   async asyncData (context) {
     let loadSuccess: boolean = false
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let courseId : string = ''
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let userRoles :string[] = ['']
-    if (process.env.test_mode &&
-      (process.env.test_mode as string).toLowerCase() === 'true') {
+    if (process.env.debug_mode &&
+      (process.env.debug_mode as string).toLowerCase() === 'true') {
       context.store.dispatch('LtiAuthStore/logIn', testUser)
       courseId = testDataStudent.courseId
       userRoles = testDataStudent.userRoles
@@ -121,7 +124,7 @@ const testDataStudent = {
     }
 
     if (process.server) {
-      /*
+
       let jwt : string
       let ltiLaunchMessage : object | null = null
 
@@ -146,7 +149,7 @@ const testDataStudent = {
 
       const courseId = launchMessage[
         'https://purl.imsglobal.org/spec/lti/claim/context'].id
-      */
+
       const assignmentType : string = context.params.assignment_type
       const assignmentId : string = context.params.assignment_key
 
@@ -342,8 +345,8 @@ export default class AssignmentLti extends Vue {
       submissionURL += `&submission_id=${submissionId}`
     }
 
-    if (process.env.test_mode &&
-        (process.env.test_mode as string).toLowerCase() === 'true') {
+    if (process.env.debug_mode &&
+        (process.env.debug_mode as string).toLowerCase() === 'true') {
       alert('DEBUG MODE: Got submit event from child component!')
       console.log('Submitted assignment viewer URL: ' + submissionURL)
       return

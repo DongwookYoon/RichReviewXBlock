@@ -69,11 +69,11 @@ const testUser: User = {
 }
 
 @Component({
-  // middleware: 'oidc_handler',                 // Handle OIDC login request
+  middleware: 'oidc_handler',                 // Handle OIDC login request
 
   async asyncData (context) {
-    if (process.env.test_mode &&
-        (process.env.test_mode as string).toLowerCase() === 'true') {
+    if (process.env.debug_mode &&
+        (process.env.debug_mode as string).toLowerCase() === 'true') {
       context.store.dispatch('LtiAuthStore/logIn', testUser)
 
       console.log('Assignment key should be ' + testData.assignmentId)

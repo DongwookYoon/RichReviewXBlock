@@ -30,7 +30,7 @@ const config = {
   },
 
   env: {
-    test_mode: 'true',
+    debug_mode: 'false',
     prod_url: 'https://richreview.net',
     canvas_oidc_endpoint: 'https://canvas.ubc.ca/api/lti/authorize_redirect',
     canvas_client_id: '', // TODO get canvas client id

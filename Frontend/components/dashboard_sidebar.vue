@@ -304,15 +304,12 @@ p {
 #groups,
 #grades,
 #logout {
-  margin-top: 50px;
+ padding: 1rem 0.5rem;
   cursor: pointer;
   border-radius: 0 2px 2px 0;
-  padding-top: 5px;
 }
 
-#grades {
-  padding-bottom: 50px;
-}
+
 
 #sb_dashboard {
   margin-top: 20px;

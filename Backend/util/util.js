@@ -6,7 +6,7 @@ let rs256_private_key
 try {
   rs256_private_key  = fs.readFileSync(
     path.join(__dirname, '..', 'ssl/lti_private.key'), 'utf-8');
-  console.log('Successfully read lti private key. ' + rs256_private_key);
+  console.log('Successfully read lti private key. ');
 } catch (fsEx) {
   console.warn('Reading lti private key failed. Reason: ' + fsEx)
 }

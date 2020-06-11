@@ -19,9 +19,9 @@ import * as _ from 'lodash'
     const login_hint : string | null = query.login_hint as string | null
     const target_link_uri : string | null = query.target_link_uri as string | null
 
+    console.log(`Incoming OIDC login request: ISS=${iss} login_hint=${login_hint} target_link_uri=${target_link_uri}`)
     if (LoginLti.verifyRequest(iss, login_hint, target_link_uri) === false) {
-      console.warn('Invalid OIDC third-party login request')
-      alert('Invalid login request')
+      console.warn('Error. Invalid OIDC third-party login request. ')
       redirect('/')
     }
 
@@ -78,21 +78,33 @@ export default class LoginLti extends Vue {
   public static verifyRequest (iss: string | null,
     loginHint: string | null,
     targetLinkURI: string | null) : boolean {
-    if (iss === null || loginHint === null || targetLinkURI === null) {
+    if (!iss) {
+      console.warn('No iss provided in request query.')
+      return false
+    }
+
+    if (!loginHint) {
+      console.warn('No login hint provided in request query.')
+      return false
+    }
+
+    if (!targetLinkURI) {
+      console.warn('No target link URI provided in request query.')
       return false
     }
 
     const issPath: URL = new URL(iss)
 
-    if (!(issPath.host !== `${process.env.canvas_host}`)) {
+    if ((issPath.host.toLowerCase() !== `${(process.env.canvas_host as string).toLowerCase()}`)) {
       console.warn('Invalid issuer in OIDC login request.')
+      console.warn(`Expected host is ${process.env.canvas_host} but issuer is ${issPath.host}.`)
       return false
     }
 
-    const targetLinkPath : URL = new URL(targetLinkURI)
-
-    if (!(targetLinkPath.host !== `${process.env.hostname}`)) {
+    const targetLinkPath = new URL(targetLinkURI)
+    if (targetLinkPath.host.toLowerCase() !== `${(process.env.hostname as string).toLowerCase()}`) {
       console.warn('Invalid resource link in OIDC login request')
+      console.warn(`Expected target link host is ${process.env.hostname} but target link path host is ${targetLinkPath.host}`)
       return false
     }
 

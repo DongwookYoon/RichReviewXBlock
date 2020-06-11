@@ -35,6 +35,8 @@ import { Component, Vue } from 'nuxt-property-decorator'
 
     else if (req.method && req.method.toUpperCase() === 'POST') {
       const loginData = querystring.parse((req as any).body)
+
+      console.log(`POST login request: ${JSON.stringify(loginData)}`)
       iss = loginData.iss as string | null
       login_hint = loginData.login_hint as string | null
       target_link_uri = loginData.target_link_uri as string | null

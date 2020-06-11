@@ -130,7 +130,7 @@ const testDataStudent = {
       try {
       // Note that the platform sends the encoded jwt in a form with a single parameter, which
       // is 'JWT'. The form is parsed here to get the jwt.
-        jwt = querystring.parse((context.req as any).body).JWT as string
+        jwt = ((context.req as any).body).JWT as string
         ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt, process.env.canvas_public_key_set_url as string)
       }
       catch (ex) {
@@ -139,7 +139,7 @@ const testDataStudent = {
       }
       finally {
         if (ltiLaunchMessage === null) {
-          return {}
+          return
         }
       }
 

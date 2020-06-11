@@ -92,7 +92,7 @@ const testUser: User = {
     let success : boolean = false
 
     if (process.server === true) {
-      const jwt : string = querystring.parse((context.req as any).body).JWT as string
+      const jwt : string = ((context.req as any).body).JWT as string
 
       try {
         ltiReqMessage = await JwtUtil.getAndVerifyWithKeyset(jwt, process.env.canvas_public_key_set_url as string)

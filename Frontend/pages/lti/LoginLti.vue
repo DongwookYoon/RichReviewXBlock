@@ -5,7 +5,6 @@
 
 <script lang="ts">
 /* eslint-disable camelcase */
-import * as https from 'https'
 import { v4 as uuidv4 } from 'uuid'
 import { Component, Vue } from 'nuxt-property-decorator'
 import * as _ from 'lodash'

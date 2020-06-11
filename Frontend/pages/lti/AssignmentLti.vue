@@ -96,7 +96,7 @@ const testDataStudent = {
 }
 
 @Component({
-  middleware: 'oidc_handler',            // Handle OIDC login request
+  middleware: 'oidc_handler', // Handle OIDC login request
 
   components: {
     DocumentSubmitter,
@@ -124,7 +124,6 @@ const testDataStudent = {
     }
 
     if (process.server) {
-
       let jwt : string
       let ltiLaunchMessage : object | null = null
 
@@ -216,7 +215,7 @@ const testDataStudent = {
         assignmentTitle: assignmentData.title,
         assignmentType,
         assignmentId,
-        // launchMessage,
+        launchMessage,
         submit_data,
         userRoles,
         courseId,

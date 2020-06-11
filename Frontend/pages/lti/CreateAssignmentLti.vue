@@ -69,7 +69,7 @@ const testUser: User = {
 }
 
 @Component({
-  middleware: 'oidc_handler',                 // Handle OIDC login request
+  middleware: 'oidc_handler', // Handle OIDC login request
 
   async asyncData (context) {
     if (process.env.debug_mode &&
@@ -269,7 +269,7 @@ export default class CreateAssignmentLti extends Vue {
       const ltiLink = `${process.env.prod_url}/lti/assignments/${this.assignmentType}/${this.assignmentId}`
       console.log(` Successfuly created assignment in RichReview! \nSubmission lti Link: ${ltiLink}`)
 
-      // await this.postBackToPlatform(ltiLink)
+      await this.postBackToPlatform(ltiLink)
     }
     catch (e) {
       this.saved = false

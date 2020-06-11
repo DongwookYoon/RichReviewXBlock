@@ -5,21 +5,47 @@
 
 <script lang="ts">
 /* eslint-disable camelcase */
+import querystring from 'querystring'
 import { v4 as uuidv4 } from 'uuid'
 import { Component, Vue } from 'nuxt-property-decorator'
-import * as _ from 'lodash'
 
 /**
  *  Page handles OIDC login request from LTI Platform (i.e. Canvas) for
  *  third party login. No user interaction is involved.
+ *
+ *  As per LTI IMS Security Framework spec, the tool MUST support
+ *  both GET and POST OIDC login requests.
+ *  @see https://www.imsglobal.org/spec/security/v1p0/#message-security-and-message-signing
  */
 @Component({
-  asyncData ({ query, redirect }) {
-    const iss : string | null = query.iss as string | null
-    const login_hint : string | null = query.login_hint as string | null
-    const target_link_uri : string | null = query.target_link_uri as string | null
+  asyncData ({ query, redirect, req }) {
+    if (!process.server) {
+      return
+    }
+
+    let iss : string | null = query.iss as string | null
+    let login_hint : string | null = query.login_hint as string | null
+    let target_link_uri : string | null = query.target_link_uri as string | null
+
+    if (req.method && req.method.toUpperCase() === 'GET') {
+      iss = query.iss as string | null
+      login_hint = query.login_hint as string | null
+      target_link_uri = query.target_link_uri as string | null
+    }
+
+    else if (req.method && req.method.toUpperCase() === 'POST') {
+      const loginData = querystring.parse((req as any).body)
+      iss = loginData.iss as string | null
+      login_hint = loginData.login_hint as string | null
+      target_link_uri = loginData.target_link_uri as string | null
+    }
+
+    else {
+      console.warn(`Invalid OIDC request. Request method must be GET or POSt, but it is ${req.method}.`)
+    }
 
     console.log(`Incoming OIDC login request: ISS=${iss} login_hint=${login_hint} target_link_uri=${target_link_uri}`)
+
     if (LoginLti.verifyRequest(iss, login_hint, target_link_uri) === false) {
       console.warn('Error. Invalid OIDC third-party login request. ')
       redirect('/')

@@ -50,8 +50,7 @@ import oidcUtil from '~/utils/oidc-util'
       redirect('/')
     }
 
-    // console.log(`Incoming OIDC login request: ISS=${iss
-    // } login_hint=${login_hint} target_link_uri=${target_link_uri}`)
+    console.log(`Incoming OIDC login request: ${req.body}`)
 
     if (oidcUtil.verifyRequest(iss, login_hint, target_link_uri) === false) {
       console.warn('Error. Invalid OIDC third-party login request. ')
@@ -62,6 +61,8 @@ import oidcUtil from '~/utils/oidc-util'
     const authRedirectUrl : string = oidcUtil.generateAuthRequestUrl(login_hint as string,
       target_link_uri as string,
       state)
+
+    console.log('Auth redirect URL: ' + authRedirectUrl)
 
     return {
       authRedirectUrl,

@@ -12,7 +12,7 @@ export default class OIDCUtil {
       scope: 'openid',
       response_type: 'id_token',
       client_id: process.env.canvas_client_id,
-      // redirect_uri: targetLinkURI,
+      redirect_uri: targetLinkURI,
       login_hint: loginHint,
       state,
       response_mode: 'form_post',
@@ -21,13 +21,13 @@ export default class OIDCUtil {
       lti_message_hint: ltiMessageHint
     }
 
-    let queryString : string = ''
+    const searchParams: URLSearchParams = new URLSearchParams()
 
     for (const key in queryParams) {
-      queryString += `${key}=${queryParams[key]}`
+      searchParams.append(key, queryParams[key])
     }
 
-    return `${authEndpoint}?${queryString}`
+    return `${authEndpoint}?${searchParams}`
   }
 
   public static verifyRequest (iss: string | null,

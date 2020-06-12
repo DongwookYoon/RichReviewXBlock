@@ -21,11 +21,18 @@ export default class OIDCUtil {
       lti_message_hint: ltiMessageHint
     }
 
-
     let queryString : string = ''
 
+    let first: boolean = true
+
     for (const key in queryParams) {
-      queryString += `${key}=${queryParams[key]}`
+      if (!first) {
+        queryString += `&${key}=${queryParams[key]}`
+      }
+      else {
+        queryString += `${key}=${queryParams[key]}`
+        first = false
+      }
     }
 
     return `${authEndpoint}?${queryString}`
@@ -64,7 +71,7 @@ export default class OIDCUtil {
     const organizationCanvas = (process.env.canvas_host as string).toLowerCase()
     const defaultCanvas = (process.env.default_canvas as string).toLowerCase()
 
-    if ( lowerCaseHost !== organizationCanvas && lowerCaseHost !== defaultCanvas) {
+    if (lowerCaseHost !== organizationCanvas && lowerCaseHost !== defaultCanvas) {
       console.warn('Invalid issuer in OIDC login request.')
       console.warn(`Expected host is ${process.env.canvas_host} but issuer is ${issPath.host}.`)
       return false

@@ -60,7 +60,7 @@ export default class ApiHelper {
   public static async ensureCourseExists (courseData: CourseData, userId: string) {
     // eslint-disable-next-line camelcase
     const course_res = await axios.post(
-      `https://${process.env.backend}:3000/courses/${courseId}`,
+      `https://${process.env.backend}:3000/courses/${courseData.id}`,
       courseData, {
         headers: {
           Authorization: userId
@@ -93,6 +93,11 @@ export default class ApiHelper {
       })
     }
     )
+
+    if (resp.status !== 200) {
+      throw new Error(`Could not get assignment data for assignment id ${
+        assignmentId} and course id ${courseId}`)
+    }
 
     console.log(JSON.stringify(resp.data))
     return resp.data

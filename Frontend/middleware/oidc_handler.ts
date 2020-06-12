@@ -16,7 +16,7 @@ const oidc_handler: Middleware = async (context) => {
     This request is expected after RichReview has redirected the
     client (user agent) to the LTI platform Authentication Endpoint */
   if (process.server) {
-    const loginData = querystring.parse((context.req as any).body) // Parse the expected URL encoded POST request body
+    const loginData = querystring.parse(context.req.body) // Parse the expected URL encoded POST request body
     context.store.dispatch('LtiAuthStore/updateOidcState', loginData.state as string)
 
     const tokenData : any = await JwtUtil.getAndVerifyWithKeyset(loginData.id_token as string,

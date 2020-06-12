@@ -47,9 +47,7 @@
 
 <script lang = "ts">
 import * as https from 'https'
-import querystring from 'querystring'
-import ApiHelper from '~/utils/api-helper'
-import axios from 'axios'
+import ApiHelper, { CourseData } from '~/utils/api-helper'
 import JwtUtil from '~/utils/jwt-util'
 import { Component, Vue } from 'nuxt-property-decorator'
 import { mapGetters } from 'vuex'
@@ -80,9 +78,14 @@ const testUser: User = {
       return testData
     }
 
+    /* Expect that middleware will handle login before this point. So
+       if login has failed, this property in store will be false */
     if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
       return { }
     }
+
+    /* Check if we have a recent (unexpired) code token. If not,
+       begin OAuth code flow to get authorization token. */
     if (context.store.getters['LtiAuthStore/codeToken'] === null) {
       context.redirect(`/lti/oauth?redirect_uri=${context.route.fullPath}`)
     }
@@ -120,6 +123,7 @@ const testUser: User = {
         await CreateAssignmentLti.ensureCourseInstructorEnrolled(ltiReqMessage,
           this.$store.getters['LtiAuthStore/authUser'].id,
           courseId)
+
         success = true
 
         return {
@@ -131,6 +135,7 @@ const testUser: User = {
       }
       catch (ex) {
         console.warn('Failed to add instructor in RichReview record of course. Reason: ' + ex)
+        return { success }
       }
     }// End-if
   },
@@ -368,46 +373,19 @@ export default class CreateAssignmentLti extends Vue {
     await ApiHelper.ensureRichReviewUserExists(user) // Create the user if they do not exist in RR.
 
     const contextPropName : string = 'https://purl.imsglobal.org/spec/lti/claim/context'
-    const courseData = {
+    const courseData : CourseData = {
       id: courseId,
       title: ltiMsg[contextPropName].title || '',
       dept: '',
       number: ltiMsg[contextPropName].label || '',
       section: ''
     }
+
     // Ensure that the course is created
     // eslint-disable-next-line camelcase
-    const course_res = await axios.post(`https://${process.env.backend}:3000/courses/${courseId}`,
-      courseData, {
-        headers: {
-          Authorization: user.id
-        },
-        httpsAgent: new https.Agent({
-          rejectUnauthorized: false
-        })
-      })
+    await ApiHelper.ensureCourseExists(courseData, user.id)
 
-    if (course_res.status > 202) {
-      throw new Error(`Could not ensure that the course ${courseId} exists in RR`)
-    }
-
-    // Ensure that user is marked as an instructor in this course
-    // eslint-disable-next-line camelcase
-    const user_res = await axios.post(`https://${process.env.backend}:3000/courses/${
-      courseId}/users/${user.id}`,
-    { roles: ['instructor'] },
-    {
-      headers: {
-        Authorization: user.id
-      },
-      httpsAgent: new https.Agent({
-        rejectUnauthorized: false
-      })
-    })
-
-    if (user_res.status > 202) {
-      throw new Error(`Could not ensure that the user ${user.id} is enrolled in the course ${courseId}`)
-    }
+    await ApiHelper.ensureUserEnrolled(courseId, user, [Roles.INSTRUCTOR])
   }
 
   private static isInstructor (roles : string[]) : boolean {

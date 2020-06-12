@@ -61,9 +61,9 @@ export default class OIDCUtil {
       return false
     }
 
-    if (targetLinkPath.host.toLowerCase() !== `${(process.env.hostname as string).toLowerCase()}`) {
+    if (targetLinkPath.host.toLowerCase() !== `${(process.env.backend as string).toLowerCase().trim()}`) {
       console.warn('Invalid resource link in OIDC login request')
-      console.warn(`Expected target link host is ${process.env.hostname} but target link path host is ${targetLinkPath.host}`)
+      console.warn(`Expected target link host is ${process.env.backend} but target link path host is ${targetLinkPath.host}`)
       return false
     }
 

@@ -1,15 +1,11 @@
-import axios from 'axios'
 import https from 'https'
-import jwtUtil from './jwt-util'
+import axios from 'axios'
 
 export default class ClientAuth {
-
-
   private domain: string
   private toolUrl: string
 
-
-  constructor(ltiDomain: string, toolUrl: string) {
+  constructor (ltiDomain: string, toolUrl: string) {
     this.domain = ltiDomain
     this.toolUrl = toolUrl
   }
@@ -18,7 +14,7 @@ export default class ClientAuth {
    * Obtain token which gives app access to Canvas Advantage Grading Services
    * line items and score to support assignment submission
    */
-  public async getGradeServicesToken() : Promise<string> {
+  public async getGradeServicesToken () : Promise<string> {
     const oauthPath = `${this.domain}/login/oauth2/auth`
     const assertionJWT: string | null = await this.generateClientAssertion()
 
@@ -45,25 +41,46 @@ export default class ClientAuth {
     return tokenResp.data.access_token
   }
 
-
-
-
-  private async generateClientAssertion() {
-    const jwtResponse = await axios.post(`https://${process.env.backend}:3000/api/jwt/client_assertion`,
-    {}, {
-      httpsAgent: new https.Agent({
-        rejectUnauthorized: false
+  /**
+   *  Obtain an OAuth authorization token with lti deep link scopes
+   *  via the RichReview backend API.
+   *
+   *  @param code:string The code obtained from the LTI authorization
+   *  server during the initial authorization request.
+   */
+  public static async getDeepLinkingToken (code : string) {
+    // const scope = 'https://purl.imsglobal.org/spec/lti-dl/scope/ltideeplinkingresponse'
+    const tokenResp = await axios.post(
+      `https://${process.env.backend}:3000/api/jwt/oauth_token`,
+      {
+        code
+        // scope
+      }, {
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
       })
-    })
 
-    if (!jwtResponse.data)
-       return null
+    if (!tokenResp.data.auth_info) {
+      return null
+    }
 
-    return jwtResponse.data.jwt
-
+    return tokenResp.data.auth_info
   }
 
+  private async generateClientAssertion () {
+    const jwtResponse = await axios.get(
+      `https://${process.env.backend}:3000/api/jwt/client_assertion`,
+      {
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      })
 
+    if (!jwtResponse.data) {
+      return null
+    }
 
-
+    return jwtResponse.data.jwt
+  }
 }

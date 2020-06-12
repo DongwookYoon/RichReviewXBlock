@@ -9,15 +9,15 @@
 
 <script lang="ts">
 /* eslint-disable camelcase */
-import * as https from 'https'
 import { Component, Vue } from 'nuxt-property-decorator'
 import * as _ from 'lodash'
+import ClientAuth from '~/utils/client-auth'
 
 @Component
 export default class OAuthLti extends Vue {
   private authSuccess !: boolean
 
-  public created () {
+  public mounted () {
     const query = this.$route.query
     const canvas_path = process.env.canvas_path
     const client_id = process.env.canvas_client_id
@@ -27,16 +27,16 @@ export default class OAuthLti extends Vue {
       this.authSuccess = false
     }
 
-    /* Request from app */
+    /* Request from app to begin OAuth flow */
     else if (_.has(query, 'code') === false && _.has(query, 'redirect_uri') === true) {
       const redirect_uri : string = query.redirect_uri as string
 
       // Generate pseudorandom key for accessing the redirect_uri again
       const stateKey : string = (`RichReview_${Date.now()}_${Math.random() * 10000}`).replace('.', '_')
+      window.sessionStorage.setItem(stateKey, redirect_uri)
+
       window.location.replace(`${canvas_path}/login/oauth2/auth?client_id=${
           client_id}&response_type=code&state=${stateKey}`)
-
-      window.sessionStorage.setItem(stateKey, redirect_uri)
     }
 
     /*  Handle the redirect with OAuth response from Canvas containing code in query string */
@@ -52,7 +52,7 @@ export default class OAuthLti extends Vue {
         throw new Error('Error. The redirect_uri could not be retrieved from session storage')
       }
 
-      this.getAuthInfo(code as string).then((authInfo) => {
+      ClientAuth.getDeepLinkingToken(code as string).then((authInfo) => {
         this.$store.dispatch('LtiAuthStore/updatePlatformAuth',
           {
             token: authInfo.access_token,
@@ -72,21 +72,6 @@ export default class OAuthLti extends Vue {
           Please try again. Contact the system adminstrator if this error continues.`)
       this.authSuccess = false
     }
-  }
-
-  private async getAuthInfo (code : string) {
-    const tokenResp = await this.$axios.$post(`https://${process.env.backend}:3000/api/jwt/oauth_token`,
-      { code }, {
-        httpsAgent: new https.Agent({
-          rejectUnauthorized: false
-        })
-      })
-
-    if (!tokenResp.data) {
-      return null
-    }
-
-    return tokenResp.data.auth_info
   }
 }
 </script>

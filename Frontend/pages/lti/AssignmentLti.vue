@@ -54,8 +54,6 @@
 </template>
 
 <script lang="ts">
-import * as https from 'https'
-import querystring from 'querystring'
 import { Component, Vue } from 'nuxt-property-decorator'
 import { mapGetters } from 'vuex'
 import JwtUtil from '~/utils/jwt-util'
@@ -65,7 +63,6 @@ import CommentSubmitter from '~/components/lti/comment_submitter.vue'
 import RichReviewViewer from '~/components/lti/richreview_viewer.vue'
 // eslint-disable-next-line camelcase
 import ApiHelper from '~/utils/api-helper'
-import { NuxtAxiosInstance } from '@nuxtjs/axios'
 import { User, ITokenInfo } from '~/store/modules/LtiAuthStore'
 import Roles from '~/utils/roles'
 
@@ -130,7 +127,7 @@ const testDataStudent = {
       try {
       // Note that the platform sends the encoded jwt in a form with a single parameter, which
       // is 'JWT'. The form is parsed here to get the jwt.
-        jwt = ((context.req as any).body).JWT as string
+        jwt = (context.req.body).JWT as string
         ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt, process.env.canvas_public_key_set_url as string)
       }
       catch (ex) {
@@ -144,7 +141,8 @@ const testDataStudent = {
       }
 
       const launchMessage = ltiLaunchMessage as any
-      const userRoles = Roles.getUserRoles(launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
+      const userRoles = Roles.getUserRoles(
+        launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
 
       const courseId = launchMessage[
         'https://purl.imsglobal.org/spec/lti/claim/context'].id
@@ -153,10 +151,9 @@ const testDataStudent = {
       const assignmentId : string = context.params.assignment_key
 
       try {
-        await AssignmentLti.ensureUserEnrolled(courseId,
+        await ApiHelper.ensureUserEnrolled(courseId,
           context.store.getters['LtiAuthStore/authUser'],
-          userRoles,
-          context.$axios)
+          userRoles)
       }
       catch (ex) {
         console.warn('Could not verify user enrollment in course. Reason: ' + ex)
@@ -243,7 +240,7 @@ export default class AssignmentLti extends Vue {
 
   /* Mappings for Vuex store getters */
   public isLoggedIn !: boolean
-  public clientCredentialsToken ?: ITokenInfo
+  public clientCredentialsToken !: ITokenInfo
   public user !: User
   /* End mapped getters */
 
@@ -360,75 +357,18 @@ export default class AssignmentLti extends Vue {
       return
     }
 
-    const assignmentResourceId : string = this.launchMessage[
-      'https://purl.imsglobal.org/spec/lti/claim/resource_link'].id
-    let lineItemId : string = ''
-
     try {
-      const lineItemsResp = await this.$axios.$get(
-        `${process.env.canvas_path}/api/lti/courses/${courseId}/line_items`,
-        {
-          headers: {
-            Accept: 'application/json+canvas-string-ids',
-            Authorization: `Bearer ${this.clientCredentialsToken}`
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        })
-
-      const lineItems = lineItemsResp.data // The parsed JSON which contains array of line items
-
-      /* Find the ID of the line item for which we want to create a submission in gradebook */
-      for (const curItem of lineItems) {
-        if (curItem.resourceLinkId === assignmentResourceId) {
-          lineItemId = curItem.id
-          break
-        }
-      }
-      if (lineItemId === '') {
-        console.warn('Error. Could not find a line item to create assignment submission')
-        throw new Error('Could not find a line item to create assignment submission')
-      }
-
-      const scoreData : any = {
-        timestamp: `${new Date().toISOString()}`,
-        activityProgress: 'Submitted',
-        gradingProgress: 'PendingManual',
-        userId: `${this.user.id}`
-      }
-      scoreData['https://canvas.instructure.com/lti/submission'] = {
-        new_submission: true,
-        submission_type: 'basic_lti_launch',
-        submission_data: `${submissionURL}`
-      }
-
-      // TODO Make sure this is secure. Call backend to sign.
-      const scoreJWT = await JwtUtil.encodeJWT(scoreData, this.launchMessage.nonce)
-      if (scoreJWT === null) {
-        throw new Error('Creating the JWT failed.')
-      }
-
-      const urlEncodedJWT = JwtUtil.createJwtFormUrlEncoded(scoreJWT)
-
-      /* Send the score resource to Canvas to indicate submission in gradebook */
-      this.$axios.$post(
-          `${process.env.canvas_path}/api/lti/courses/${courseId}/line_items/${lineItemId}/scores`,
-          urlEncodedJWT,
-          {
-            headers: {
-              Authorization: `Bearer ${this.clientCredentialsToken}`,
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          })
+      await ApiHelper.submitAssignmentToCanvas(
+        this.launchMessage,
+        this.courseId,
+        this.clientCredentialsToken.token,
+        this.user.id,
+        new URL(submissionURL))
     }
     catch (e) {
       alert(`
-          Error. Could not submit assignment to Canvas.
-          Contact the system adminstrator for assistance if this continues.`)
+            Error. Could not submit assignment to Canvas.
+            Contact the system adminstrator for assistance if this continues.`)
     }
   }
 
@@ -458,28 +398,6 @@ export default class AssignmentLti extends Vue {
    */
   private static async getLaunchMessage (jwtBase64 : string, keysetUrl: string) : Promise<object | null> {
     return await JwtUtil.getAndVerifyWithKeyset(jwtBase64, keysetUrl)
-  }
-
-  private static async ensureUserEnrolled (courseId: string, user: User, roles: string[], axios: NuxtAxiosInstance) {
-    await ApiHelper.ensureRichReviewUserExists(user)
-
-    console.log('courseid' + courseId)
-    /* Ensure user is enrolled in course */
-    const userRes = await axios.post(`https://${process.env.backend}:3000/courses/${
-      courseId}/users/${user.id}`,
-    { roles },
-    {
-      headers: {
-        Authorization: user.id
-      },
-      httpsAgent: new https.Agent({
-        rejectUnauthorized: false
-      })
-    })
-
-    if (userRes.status > 202) {
-      throw new Error(`Could not ensure that the user ${user.id} is enrolled in the course ${courseId}`)
-    }
   }
 }
 

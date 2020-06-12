@@ -21,6 +21,7 @@
     "precommit": "npm run lint"
   },
   "dependencies": {
+    "@nuxt/http": "^0.5.2",
     "@nuxtjs/auth": "^4.5.3",
     "@nuxtjs/axios": "^5.4.1",
     "@nuxtjs/eslint-config-typescript": "^2.0.0",

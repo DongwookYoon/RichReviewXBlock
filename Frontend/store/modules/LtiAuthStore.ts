@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 export class User {
-  id: string | null = null;
+  id: string = '';
   userName ?: string;
 }
 
@@ -97,7 +97,6 @@ const mutations = {
     state.oidcStateData = stateData
   }
 }
-
 
 export default {
   namespaced: true,

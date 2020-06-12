@@ -17,7 +17,8 @@ import oidcUtil from '~/utils/oidc-util'
  *  both GET and POST OIDC login requests.
  *  @see https://www.imsglobal.org/spec/security/v1p0/#message-security-and-message-signing
  *
- *  Note that the incoming request body for POST is in JSON format.
+ *  Note that the incoming request data has been handled by body parser in server middleware.
+ *  Therefore, it is already in JSON format.
  */
 @Component({
   asyncData ({ query, redirect, req, res }) {
@@ -36,9 +37,7 @@ import oidcUtil from '~/utils/oidc-util'
     }
 
     else if (req.method && req.method.toUpperCase() === 'POST') {
-      const reqBody = (req as any).body
-
-      console.log('POST OIDC login request body: ' + JSON.stringify(reqBody))
+      const reqBody = req.body
 
       iss = reqBody.iss
       login_hint = reqBody.login_hint
@@ -73,12 +72,14 @@ export default class LoginLti extends Vue {
   private state ?: string
 
   public mounted () {
+    console.log('mounted')
     if (this.state && this.authRedirectUrl) {
       window.sessionStorage.setItem('rr_oidc_state', this.state)
       console.log('OIDC login succeeded. Redirecting to: ' + this.authRedirectUrl)
       window.location.replace(this.authRedirectUrl)
     }
     else {
+      console.warn(`Invalid ${this.state ? 'state' : 'authRedirectUrl'} for OIDC login`)
       window.location.replace('/')
     }
   }

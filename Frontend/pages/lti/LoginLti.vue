@@ -17,8 +17,9 @@ import oidcUtil from '~/utils/oidc-util'
  *  both GET and POST OIDC login requests.
  *  @see https://www.imsglobal.org/spec/security/v1p0/#message-security-and-message-signing
  *
- *  Note that the incoming request data has been handled by body parser in server middleware.
- *  Therefore, it is already in JSON format.
+ *  Note that for POST requests, the incoming request data has been handled by
+ *  body parser in the Express (legacy) server middleware. Therefore, it is already
+ *  in JSON format.
  */
 @Component({
   asyncData ({ query, redirect, req, res }) {
@@ -49,7 +50,8 @@ import oidcUtil from '~/utils/oidc-util'
       redirect('/')
     }
 
-    // console.log(`Incoming OIDC login request: ISS=${iss} login_hint=${login_hint} target_link_uri=${target_link_uri}`)
+    // console.log(`Incoming OIDC login request: ISS=${iss
+    // } login_hint=${login_hint} target_link_uri=${target_link_uri}`)
 
     if (oidcUtil.verifyRequest(iss, login_hint, target_link_uri) === false) {
       console.warn('Error. Invalid OIDC third-party login request. ')

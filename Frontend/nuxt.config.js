@@ -32,6 +32,7 @@ const config = {
   env: {
     debug_mode: 'false',
     prod_url: 'https://richreview.net',
+    default_canvas: 'canvas.instructure.com',
     canvas_oidc_endpoint: 'https://canvas.ubc.ca/api/lti/authorize_redirect',
     canvas_client_id: '112240000000000077',
     canvas_public_key_set_url: 'https://canvas.ubc.ca/api/lti/security/jwks',

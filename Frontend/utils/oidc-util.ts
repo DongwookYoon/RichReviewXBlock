@@ -55,7 +55,11 @@ export default class OIDCUtil {
       return false
     }
 
-    if ((issPath.host.toLowerCase() !== `${(process.env.canvas_host as string).toLowerCase()}`)) {
+    const lowerCaseHost: string = issPath.host.toLowerCase()
+    const organizationCanvas = (process.env.canvas_host as string).toLowerCase()
+    const defaultCanvas = (process.env.default_canvas as string).toLowerCase()
+
+    if ( lowerCaseHost !== organizationCanvas && lowerCaseHost !== defaultCanvas) {
       console.warn('Invalid issuer in OIDC login request.')
       console.warn(`Expected host is ${process.env.canvas_host} but issuer is ${issPath.host}.`)
       return false

@@ -50,7 +50,11 @@ import oidcUtil from '~/utils/oidc-util'
       redirect('/')
     }
 
-    console.log(`Incoming OIDC login request: ${req.body}`)
+    console.log(`Incoming OIDC login request: ${JSON.stringify(req.body)}`)
+
+    if (req.body.lti_message_hint) {
+      console.log(JSON.stringify('lti_message_hint: ' + JSON.stringify(req.body.lti_message_hint)))
+    }
 
     if (oidcUtil.verifyRequest(iss, login_hint, target_link_uri) === false) {
       console.warn('Error. Invalid OIDC third-party login request. ')

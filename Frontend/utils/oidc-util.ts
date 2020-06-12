@@ -1,7 +1,10 @@
 import { v4 as uuidv4 } from 'uuid'
 
 export default class OIDCUtil {
-  public static generateAuthRequestUrl (loginHint: string, targetLinkURI: string, state: string) : string {
+  public static generateAuthRequestUrl (loginHint: string,
+    targetLinkURI: string,
+    state: string,
+    ltiMessageHint ?: string) : string {
     const authEndpoint : string = process.env.canvas_oidc_endpoint as string
 
     /* Params required to make OIDC auth request to platform. Note state and nonce are GUIDs */
@@ -14,7 +17,8 @@ export default class OIDCUtil {
       state,
       response_mode: 'form_post',
       nonce: uuidv4(),
-      prompt: 'none'
+      prompt: 'none',
+      lti_message_hint: ltiMessageHint
     }
 
     const searchParams = new URLSearchParams()

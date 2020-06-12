@@ -6,6 +6,7 @@ import JwtUtil from '~/utils/jwt-util'
 const oidc_handler: Middleware = async (context) => {
   /* If user already logged in, simply return */
   if (context.store.getters['LtiAuthStore/isLoggedIn'] === true) {
+    console.log('Already logged in')
     return
   }
 
@@ -19,6 +20,7 @@ const oidc_handler: Middleware = async (context) => {
     const loginData = querystring.parse(context.req.body) // Parse the expected URL encoded POST request body
     context.store.dispatch('LtiAuthStore/updateOidcState', loginData.state as string)
 
+    console.log('Processing OIDC login response from Canvas...')
     const tokenData : any = await JwtUtil.getAndVerifyWithKeyset(loginData.id_token as string,
       process.env.canvas_public_key_set_url as string)
 
@@ -36,6 +38,7 @@ const oidc_handler: Middleware = async (context) => {
 
     if (state === null || state !== context.store.getters['LtiAuthStore/oidcState']) {
       context.store.dispatch('LtiAuthStore/logout')
+      console.warn('Invalid OIDC state. Logging out.')
     }
   }
 }

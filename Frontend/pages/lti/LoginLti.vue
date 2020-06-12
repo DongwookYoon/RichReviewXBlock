@@ -27,14 +27,16 @@ import oidcUtil from '~/utils/oidc-util'
       return
     }
 
-    let iss : string | null = query.iss as string | null
-    let login_hint : string | null = query.login_hint as string | null
-    let target_link_uri : string | null = query.target_link_uri as string | null
+    let iss : string | null = null
+    let login_hint : string | null = null
+    let target_link_uri : string | null = null
+    let lti_message_hint : string | null = null
 
     if (req.method && req.method.toUpperCase() === 'GET') {
       iss = query.iss as string | null
       login_hint = query.login_hint as string | null
       target_link_uri = query.target_link_uri as string | null
+      lti_message_hint = query.lti_message_hint as string | null
     }
 
     else if (req.method && req.method.toUpperCase() === 'POST') {
@@ -43,6 +45,7 @@ import oidcUtil from '~/utils/oidc-util'
       iss = reqBody.iss
       login_hint = reqBody.login_hint
       target_link_uri = reqBody.target_link_uri
+      lti_message_hint = reqBody.lti_message_hint
     }
 
     else {
@@ -52,9 +55,6 @@ import oidcUtil from '~/utils/oidc-util'
 
     console.log(`Incoming OIDC login request: ${JSON.stringify(req.body)}`)
 
-    if (req.body.lti_message_hint) {
-      console.log(JSON.stringify('lti_message_hint: ' + JSON.stringify(req.body.lti_message_hint)))
-    }
 
     if (oidcUtil.verifyRequest(iss, login_hint, target_link_uri) === false) {
       console.warn('Error. Invalid OIDC third-party login request. ')
@@ -64,15 +64,15 @@ import oidcUtil from '~/utils/oidc-util'
     const state : string = uuidv4()
     const authRedirectUrl : string = oidcUtil.generateAuthRequestUrl(login_hint as string,
       target_link_uri as string,
-      state)
+      state,
+      ((lti_message_hint !== null) ? lti_message_hint : undefined))
 
     console.log('Auth redirect URL: ' + authRedirectUrl)
 
     return {
       authRedirectUrl,
       state
-    }
-  }
+    }  }
 })
 export default class LoginLti extends Vue {
   private authRedirectUrl ?: string

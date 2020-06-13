@@ -67,7 +67,7 @@ const testUser: User = {
 }
 
 @Component({
-  // middleware: 'oidc_handler', // Handle OIDC login request
+  middleware: 'oidc_handler', // Handle OIDC login request
 
   async asyncData (context) {
     if (process.env.debug_mode &&
@@ -80,10 +80,10 @@ const testUser: User = {
 
     /* Expect that middleware will handle login before this point. So
        if login has failed, this property in store will be false */
-    //if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
-    //  console.warn('Error. Platform user is expecte to be authenticated before accessig this page.')
-    //  return { }
-    //}
+    if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
+      console.warn('Error. Platform user is expecte to be authenticated before accessig this page.')
+      return { }
+    }
 
     /* Check if we have a recent (unexpired) code token. If not,
        begin OAuth code flow to get authorization token. */

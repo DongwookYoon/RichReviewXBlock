@@ -32,8 +32,8 @@ export default class OAuthLti extends Vue {
     const query = this.$route.query
     const canvas_oauth_endpoint : string = process.env.canvas_oauth_endpoint as string
     const client_id : string = process.env.canvas_client_id as string
-     const oauthRedirect : string = `https://${
-        process.env.backend}${this.$route.fullPath}`
+    const oauthRedirect : string = `https://${
+        process.env.backend}${this.$route.path}`
 
     /* Handle the error OAuth response from Canvas */
     if (_.has(query, 'error')) {

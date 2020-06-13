@@ -19,49 +19,58 @@ export default class JwtUtil {
       throw new Error(`Getting launch message failed. Reason: kid is null`)
     }
 
-    const pem : string = await JwtUtil.getPublicPemFromJwkKeyset(kid as string, keysetUrl)
+    const pem : string | null = await JwtUtil.getPublicPemFromJwkKeyset(kid as string, keysetUrl)
     if (pem === null) {
       throw new Error('Getting public key pem failed')
     }
+    console.log('Got public key PEM from public JWK: ' + pem)
 
     return JwtUtil.verifyAndDecode(jwtBase64, pem)
   }
 
-  public static async getPublicPemFromJwkKeyset (kid : string, keysetPath: string) : Promise<string> {
-    const resp = await axios.get('keySetPath', {
-      httpsAgent: new https.Agent({
-        rejectUnauthorized: false
+
+
+  public static async getPublicPemFromJwkKeyset (kid : string, keysetPath: string) {
+    console.log('Getting public JWK...')
+    let resp
+    try {
+      resp = await axios.get(keysetPath, {
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
       })
-    })
+    } catch (ex) {
+      console.warn('Loading public keyset failed. Reason: ' +ex)
+      return null
+    }
 
-    return new Promise<string>((resolve, reject) => {
-      if (!resp.data) {
-        console.warn(`Failed to get public key set from ${keysetPath}`)
-        reject(new Error(`Failed to get public key set from ${keysetPath}`))
-      }
-      else {
-        const keySet = resp.data.keys // Array of JWKs
+    if (!resp.data) {
+      console.warn(`Failed to get public key set from ${keysetPath}`)
+      return null
+    }
+    else {
+      const keySet = resp.data.keys // Array of JWKs
 
-        for (const curJWK of keySet) {
-          if (curJWK.kid === kid) {
-            // eslint-disable-next-line camelcase
-            const jwk: jwk_to_pem.JWK = {
-              kty: curJWK.kty,
-              e: curJWK.e,
-              n: curJWK.n
-            }
-            const pem = jwk_to_pem(jwk)
-            resolve(pem)
+      for (const curJWK of keySet) {
+        if (curJWK.kid === kid) {
+          // eslint-disable-next-line camelcase
+          const jwk: jwk_to_pem.JWK = {
+            kty: curJWK.kty,
+            e: curJWK.e,
+            n: curJWK.n
           }
+          const pem = jwk_to_pem(jwk)
+          return pem
         }
-        console.warn(`Failed to get public key set from ${keysetPath} ' because no matching kid for ${kid}`)
-        reject(new Error(`Failed to get public key set from ${keysetPath} ' because no matching kid for ${kid}`))
       }
-    })
+
+      console.warn(`Failed to get public key set from ${keysetPath} ' because no matching kid for ${kid}`)
+      return null
+    }
   }
 
   public static getMessageKid (jwtBase64 : string) : string | null {
-    const msg = jwt.decode(jwtBase64, { complete: true })   // 'complete' option to include JWT header.
+    const msg = jwt.decode(jwtBase64, { complete: true }) // 'complete' option to include JWT header.
     if (!msg || !(msg as {[key: string]: any}).header.kid) {
       console.warn('Could not get message kid from message jwt. jwt: ' + jwtBase64)
       return null

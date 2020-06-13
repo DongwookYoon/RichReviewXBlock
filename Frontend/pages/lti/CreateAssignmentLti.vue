@@ -347,8 +347,8 @@ export default class CreateAssignmentLti extends Vue {
         title: 'RichReview Assignment',
         url: ltiLink,
         window: {
-          targetName: 'RichReview',
-          windowFeatures: 'height=1920,width=1080,menubar=no'
+          targetName: `RichReview_${this.assignmentId}`,
+          windowFeatures: 'menubar=yes,location=yes,status=yes,resizable=yes,scrollbars=no'
         },
         iframe: {
           width: 800,

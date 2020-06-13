@@ -85,7 +85,7 @@ const testUser: User = {
       return { }
     }
 
-    /* // OAuth authorization token NOT required for lti deep linking?
+    /* // OAuth authorization token NOT required for lti deep linking
     if (context.store.getters['LtiAuthStore/codeToken'] === null) {
       console.log('No valid OAuth code token. Redirecting to OAuth handler...')
 
@@ -323,7 +323,6 @@ export default class CreateAssignmentLti extends Vue {
     await this.$axios.$post(postBackAddress,
       jwtUrlEncoded, {
         headers: {
-          Authorization: `Bearer ${this.codeToken.token}`,
           'Content-Type': 'application/x-www-form-urlencoded'
         },
         httpsAgent: new https.Agent({
@@ -345,7 +344,7 @@ export default class CreateAssignmentLti extends Vue {
     if (ltiLink !== undefined) {
       const linkItem : any = {
         type: 'link',
-        title: 'Create a RichReview Assignment',
+        title: 'RichReview Assignment',
         url: ltiLink,
         window: {
           targetName: 'RichReview',

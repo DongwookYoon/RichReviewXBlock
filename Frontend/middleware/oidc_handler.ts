@@ -2,7 +2,7 @@ import { Middleware } from '@nuxt/types'
 import JwtUtil from '~/utils/jwt-util'
 
 // eslint-disable-next-line camelcase
-const oidc_handler: Middleware = async ({store, req}) => {
+const oidc_handler: Middleware = async ({ store, req }) => {
   /* If user already logged in, simply return */
   if (store.getters['LtiAuthStore/isLoggedIn'] === true) {
     console.log('Already logged in')

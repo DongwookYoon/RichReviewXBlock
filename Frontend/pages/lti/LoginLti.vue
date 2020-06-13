@@ -55,7 +55,6 @@ import oidcUtil from '~/utils/oidc-util'
 
     console.log(`Incoming OIDC login request: ${JSON.stringify(req.body)}`)
 
-
     if (oidcUtil.verifyRequest(iss, login_hint, target_link_uri) === false) {
       console.warn('Error. Invalid OIDC third-party login request. ')
       redirect('/')
@@ -72,7 +71,8 @@ import oidcUtil from '~/utils/oidc-util'
     return {
       authRedirectUrl,
       state
-    }  }
+    }
+  }
 })
 export default class LoginLti extends Vue {
   private authRedirectUrl ?: string

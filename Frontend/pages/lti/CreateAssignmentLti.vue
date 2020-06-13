@@ -85,8 +85,7 @@ const testUser: User = {
       return { }
     }
 
-    /* Check if we have a recent (unexpired) code token. If not,
-       begin OAuth code flow to get authorization token. */
+    /* // OAuth authorization token NOT required for lti deep linking?
     if (context.store.getters['LtiAuthStore/codeToken'] === null) {
       console.log('No valid OAuth code token. Redirecting to OAuth handler...')
 
@@ -96,6 +95,7 @@ const testUser: User = {
       context.redirect(`/lti/oauth?redirect_uri=${redirectUri}`)
       return { }
     }
+    */
 
     let assignmentId: string = ''
     let ltiReqMessage : any

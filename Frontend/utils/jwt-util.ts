@@ -62,6 +62,7 @@ export default class JwtUtil {
 
   public static getMessageKid (jwtBase64 : string) : string | null {
     const msg = jwt.decode(jwtBase64, { complete: true })   // 'complete' option to include JWT header.
+    console.log('kid is ' + (msg as any).kid)
     if (!msg || !(msg as {[key: string]: any}).kid) {
       console.warn('Could not get message kid from message jwt. jwt: ' + jwtBase64)
       return null

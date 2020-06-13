@@ -1,7 +1,7 @@
 
 <template>
   <div>
-    <p v-if="authSuccess===false">
+    <p v-if="authFailed === true">
       Authentication failed. If this problem continues, please contact the system administrator for assistance.
     </p>
   </div>
@@ -23,7 +23,8 @@ import { ITokenInfo } from '~/store/modules/LtiAuthStore'
   }
 })
 export default class OAuthLti extends Vue {
-  private authSuccess !: boolean
+  private authFailed ?: boolean = false
+
 
   public addTokenToStore !: (tokenInfo: ITokenInfo) => void // Mapped to updatePlatformAuth action in LtiAuthStore
 
@@ -33,13 +34,12 @@ export default class OAuthLti extends Vue {
     const client_id : string = process.env.canvas_client_id as string
 
     /* Handle the error OAuth response from Canvas */
-    if (_.size(query) === 0 || _.has(query, 'error')) {
-      this.authSuccess = false
+    if (_.has(query, 'error')) {
+      this.authFailed = false
     }
 
     /* Request from app to begin OAuth flow */
     else if (_.has(query, 'code') === false && _.has(query, 'redirect_uri') === true) {
-
       const redirectUri : string = query.redirect_uri as string
 
       console.log('Rich Review is requesting OAuth token for: ' + decodeURIComponent(redirectUri))
@@ -52,7 +52,7 @@ export default class OAuthLti extends Vue {
           encodeURIComponent(client_id)}&response_type=code&state=${
             encodeURIComponent(stateKey)}&redirect_uri=${redirectUri}`
 
-      window.sessionStorage.setItem(stateKey, decodeURIComponent(redirectUri))
+      window.sessionStorage.setItem(stateKey, decodeURIComponent(redirectUri)) //Store redirect URI in session storage
 
       console.log('Redirecting to Canvas OAuth endpoint with URL ' + platformOauthUrl)
 
@@ -83,15 +83,14 @@ export default class OAuthLti extends Vue {
           name: authInfo.user.name
         })
         this.$router.push(redirectUri) // Redirect user back to original page where auth was initiated
-
       }).catch((reason) => {
         console.warn('Error getting OAuth token in code flow authorization grant. Reason ' + reason)
-        this.authSuccess = false
+        this.authFailed = true
       })
     }
     else {
       console.warn('Invalid request to oauth handler. Request URL was ' + this.$route.fullPath)
-      this.authSuccess = false
+      this.authFailed = true
     }
   }
 }

@@ -125,8 +125,9 @@ const testDataStudent = {
       let ltiLaunchMessage : object | null = null
 
       try {
-      // Note that the platform sends the encoded jwt in a form with a single parameter, which
-      // is 'JWT'. The form is parsed here to get the jwt.
+      /* Note that the platform (i.e. Canvas) sends the encoded jwt in a form
+         with a single parameter 'JWT'. The form is parsed in the server
+         middleware to create a JSON object. */
         jwt = (context.req.body).JWT as string
         ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt, process.env.canvas_public_key_set_url as string)
       }

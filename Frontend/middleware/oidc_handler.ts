@@ -1,11 +1,10 @@
-import querystring from 'querystring'
 import { Middleware } from '@nuxt/types'
 import JwtUtil from '~/utils/jwt-util'
 
 // eslint-disable-next-line camelcase
-const oidc_handler: Middleware = async (context) => {
+const oidc_handler: Middleware = async ({store, req}) => {
   /* If user already logged in, simply return */
-  if (context.store.getters['LtiAuthStore/isLoggedIn'] === true) {
+  if (store.getters['LtiAuthStore/isLoggedIn'] === true) {
     console.log('Already logged in')
     return
   }
@@ -15,10 +14,14 @@ const oidc_handler: Middleware = async (context) => {
     state and id_token properties.
 
     This request is expected after RichReview has redirected the
-    client (user agent) to the LTI platform Authentication Endpoint */
+    client (user agent) to the LTI platform Authentication Endpoint
+
+    Note that URL encoded request data has been pre-processed by body-parser in
+    Express Server middleware before being handled by this middleware module.
+    Therefore, expected data format for body is JSON. */
   if (process.server) {
-    const loginData = querystring.parse(context.req.body) // Parse the expected URL encoded POST request body
-    context.store.dispatch('LtiAuthStore/updateOidcState', loginData.state as string)
+    const loginData = req.body
+    store.dispatch('LtiAuthStore/updateOidcState', loginData.state as string)
 
     console.log('Processing OIDC login response from Canvas...')
     const tokenData : any = await JwtUtil.getAndVerifyWithKeyset(loginData.id_token as string,
@@ -29,15 +32,15 @@ const oidc_handler: Middleware = async (context) => {
       return
     }
 
-    context.store.dispatch('LtiAuthStore/logIn', { id: tokenData.sub }) // JWT sub claim contains user id.
+    store.dispatch('LtiAuthStore/logIn', { id: tokenData.sub }) // JWT 'sub' claim contains unique global user id.
   }
 
   /* Verify the OIDC state. Invalidate login if session state doesn't match state in the Nuxt store */
   else if (process.client) {
     const state : string | null = window.sessionStorage.getItem('rr_oidc_state')
 
-    if (state === null || state !== context.store.getters['LtiAuthStore/oidcState']) {
-      context.store.dispatch('LtiAuthStore/logout')
+    if (state === null || state !== store.getters['LtiAuthStore/oidcState']) {
+      store.dispatch('LtiAuthStore/logout')
       console.warn('Invalid OIDC state. Logging out.')
     }
   }

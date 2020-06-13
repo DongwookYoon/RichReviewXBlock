@@ -95,7 +95,7 @@ const testUser: User = {
     let success : boolean = false
 
     if (process.server === true) {
-      const jwt : string = ((context.req as any).body).JWT as string
+      const jwt : string = (context.req.body).JWT as string
 
       try {
         ltiReqMessage = await JwtUtil.getAndVerifyWithKeyset(jwt, process.env.canvas_public_key_set_url as string)
@@ -309,7 +309,8 @@ export default class CreateAssignmentLti extends Vue {
    */
   private async postBackToPlatform (ltiLink ?: string) {
     const jwtResponse = await this.generateJWTResponse(ltiLink)
-    const postBackAddress = this.ltiReqMessage['https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings'].deep_link_return_url
+    const postBackAddress = this.ltiReqMessage[
+      'https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings'].deep_link_return_url
     const jwtUrlEncoded = JwtUtil.createJwtFormUrlEncoded(jwtResponse)
 
     await this.$axios.$post(postBackAddress,
@@ -327,7 +328,7 @@ export default class CreateAssignmentLti extends Vue {
   /**
    * Generate base-64 JWT string for ltiDeepLinkResponse message
    */
-  private generateJWTResponse (ltiLink ?: string) {
+  private async generateJWTResponse (ltiLink ?: string) {
     const reqMsg = this.ltiReqMessage
     const contentItems : {}[] = []
 
@@ -360,8 +361,7 @@ export default class CreateAssignmentLti extends Vue {
       "https://purl.imsglobal.org/spec/lti-dl/claim/data": "${reqMsg.data}"
       }`
 
-    // TODO make sure this is secure way to pass private key
-    const scoreJWT = JwtUtil.encodeJWT(JSON.parse(jwtResponse), reqMsg.nonce)
+    const scoreJWT = await JwtUtil.encodeJWT(JSON.parse(jwtResponse), reqMsg.nonce)
     if (scoreJWT === null) {
       throw new Error('Creating the JWT failed.')
     }

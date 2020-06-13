@@ -32,6 +32,8 @@ export default class OAuthLti extends Vue {
     const query = this.$route.query
     const canvas_oauth_endpoint : string = process.env.canvas_oauth_endpoint as string
     const client_id : string = process.env.canvas_client_id as string
+     const oauthRedirect : string = `https://${
+        process.env.backend}${this.$route.fullPath}`
 
     /* Handle the error OAuth response from Canvas */
     if (_.has(query, 'error')) {
@@ -42,18 +44,19 @@ export default class OAuthLti extends Vue {
     else if (_.has(query, 'code') === false && _.has(query, 'redirect_uri') === true) {
       const redirectUri : string = query.redirect_uri as string
 
-      console.log('Rich Review is requesting OAuth token for: ' + decodeURIComponent(redirectUri))
-
       // Generate pseudorandom key for accessing the redirect_uri again
       const stateKey : string = (`RichReview_${
         Date.now()}_${Math.random() * 10000}`).replace('.', '_')
 
       const platformOauthUrl = `${canvas_oauth_endpoint}?client_id=${
           encodeURIComponent(client_id)}&response_type=code&state=${
-            encodeURIComponent(stateKey)}&redirect_uri=${redirectUri}`
+            encodeURIComponent(stateKey)}&redirect_uri=${
+              encodeURIComponent(oauthRedirect)}&scope=${
+                encodeURIComponent('scope=/auth/userinfo')}`
 
-      window.sessionStorage.setItem(stateKey, decodeURIComponent(redirectUri)) //Store redirect URI in session storage
+      window.sessionStorage.setItem(stateKey, redirectUri)          //Store redirect URI in session storage
 
+      console.log('Rich Review is requesting OAuth token for: ' + redirectUri)
       console.log('Redirecting to Canvas OAuth endpoint with URL ' + platformOauthUrl)
 
       window.location.replace(platformOauthUrl)
@@ -64,6 +67,7 @@ export default class OAuthLti extends Vue {
       const code : string | null = query.code as string | null
       let stateKey : string = query.state as string
 
+      console.log('Got authorization code from Canvas')
       if (!stateKey) {
         throw new Error(`Error. Invalid OAuth response from Canvas.
         State query param must be included to access redirect_uri`)
@@ -77,7 +81,7 @@ export default class OAuthLti extends Vue {
         session storage for state key ${stateKey}`)
       }
 
-      ClientAuth.getDeepLinkingToken(code as string, redirectUri, client_id).then((authInfo) => {
+      ClientAuth.getDeepLinkingToken(code as string, oauthRedirect, client_id).then((authInfo) => {
         this.addTokenToStore({
           token: authInfo.access_token,
           name: authInfo.user.name

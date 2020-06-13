@@ -37,7 +37,8 @@ export default class OAuthLti extends Vue {
 
     /* Handle the error OAuth response from Canvas */
     if (_.has(query, 'error')) {
-      this.authFailed = false
+      this.authFailed = true
+      console.warn(query.error)
     }
 
     /* Request from app to begin OAuth flow */

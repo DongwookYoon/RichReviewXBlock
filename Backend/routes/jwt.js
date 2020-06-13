@@ -23,15 +23,18 @@ router.get('/client_assertion', function(req, res, next) {
    used here is to sign the*/
 router.post('/oauth_code_token', async function(req, res, next) {
   const code = req.body.code;
-  const scope = req.body.scope;
+  const client_id = req.body.clientId;
+  const redirect_uri = req.body.redirectUri;
   
   const assertionJWT = jwtUtil.createClientAssertion();
   
   const reqMsg = {
     grant_type: 'authorization_code',
     code,
+    client_id,
+    redirect_uri,
     client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-    client_assertion: assertionJWT,
+    client_assertion: assertionJWT
   };
 
   const resp = await axios.post(

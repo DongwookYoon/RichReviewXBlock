@@ -24,7 +24,8 @@ const store = () =>
     }),
 
     mutations: {
-      SET_USER: function(state, user) {
+      // eslint-disable-next-line object-shorthand
+      SET_USER: function (state, user) {
         state.authUser = user
       }
     },

@@ -48,13 +48,14 @@ export default class ClientAuth {
    *  @param code:string The code obtained from the LTI authorization
    *  server during the initial authorization request.
    */
-  public static async getDeepLinkingToken (code : string) {
+  public static async getDeepLinkingToken (code : string, redirectUri: string, clientId: string) {
     // const scope = 'https://purl.imsglobal.org/spec/lti-dl/scope/ltideeplinkingresponse'
     const tokenResp = await axios.post(
-      `https://${process.env.backend}:3000/api/jwt/oauth_token`,
+      `https://${process.env.backend}:3000/api/jwt/oauth_code_token`,
       {
-        code
-        // scope
+        code,
+        redirectUri,
+        clientId
       }, {
         httpsAgent: new https.Agent({
           rejectUnauthorized: false

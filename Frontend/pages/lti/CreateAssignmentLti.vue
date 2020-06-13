@@ -91,7 +91,8 @@ const testUser: User = {
       console.log('No valid OAuth code token. Redirecting to OAuth handler...')
 
       const redirectUri: string = encodeURIComponent(`https://${
-        process.env.backend}/${context.route.fullPath}`)
+        process.env.backend}${context.route.fullPath}`)
+
       context.redirect(`/lti/oauth?redirect_uri=${redirectUri}`)
       return { }
     }

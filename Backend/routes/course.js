@@ -132,16 +132,18 @@ router.post('/:course_id', async function(req, res, next) {
     const course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
     let courseData 
     try {
-        await course_db_handler.get_course_data()
+        courseData = await course_db_handler.get_course_data(course_key);
     } catch(ex) {
-        console.warn(ex)
+        console.log('No course for ' + course_key);
         courseData = null;
     }
     if (courseData === null) {
+         console.log('Creating course with id ' + course_key)
          await course_db_handler.create_course(course_key, req.body);
          res.sendStatus(201);
     }
     else {
+        console.log('Course already exists for id ' + course_key)
         res.sendStatus(200);
     }
 });

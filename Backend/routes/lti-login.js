@@ -16,9 +16,9 @@ router.post('/', async (req, res, next) => {
         let user_login_data = req.body;
         let auth_type = 'LTI_OIDC';
 
-        if (user_db_handler.user_exists(user_login_data.id) ) {
+        if ( (await user_db_handler.user_exists(user_login_data.id)) === true) {
             res.sendStatus(200);
-            console.log('User already exists');
+            console.log(`User ${user_login_data.id} already exists`);
             return;
         }
         

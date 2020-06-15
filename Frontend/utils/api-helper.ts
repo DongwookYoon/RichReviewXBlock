@@ -12,6 +12,7 @@ export default class ApiHelper {
    * @param user User with id to check
    */
   public static async ensureRichReviewUserExists (user : User) {
+    console.log(`Ensure user ${user.id} exists in RichReview.`)
     const loginRes : any = await axios.post(`https://${process.env.backend}:3000/lti_login`,
       {
         id: user.id,

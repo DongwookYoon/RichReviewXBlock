@@ -58,23 +58,35 @@ import { User, ITokenInfo } from '~/store/modules/LtiAuthStore'
 const testData = {
   assignmentId: `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`,
   success: true,
-  courseId: '1'
+  courseId: `test_2`
+}
+
+const testCourseData = {
+  id: testData.courseId,
+  title: 'Test Course',
+  dept: 'Test Department',
+  number: '0000',
+  section: '0000'
 }
 
 const testUser: User = {
-  id: 'google_109022885000538247847',
+  id: '109022885000538247847',
   userName: 'Test Instructor'
 }
 
 @Component({
-  middleware: 'oidc_handler', // Handle OIDC login request
+  // middleware: 'oidc_handler', // Handle OIDC login request
 
   async asyncData (context) {
     if (process.env.debug_mode &&
         (process.env.debug_mode as string).toLowerCase() === 'true') {
-      context.store.dispatch('LtiAuthStore/logIn', testUser)
+      console.log(`Running in DEBUG mode.\n Test data: ${
+        JSON.stringify(testData)
+        }\n Test course: ${JSON.stringify(testCourseData)}`)
 
-      console.log('Assignment key should be ' + testData.assignmentId)
+      context.store.dispatch('LtiAuthStore/logIn', testUser)
+      await CreateAssignmentLti.makeCourseAndEnrollInstructor(testCourseData, testUser)
+
       return testData
     }
 
@@ -134,7 +146,7 @@ const testUser: User = {
 
     try {
       await CreateAssignmentLti.ensureCourseInstructorEnrolled(ltiReqMessage,
-        this.$store.getters['LtiAuthStore/authUser'].id,
+        context.store.getters['LtiAuthStore/authUser'].id,
         courseId)
 
       success = true
@@ -381,8 +393,6 @@ export default class CreateAssignmentLti extends Vue {
   }
 
   private static async ensureCourseInstructorEnrolled (ltiMsg: any, user : User, courseId: string) {
-    await ApiHelper.ensureRichReviewUserExists(user) // Create the user if they do not exist in RR.
-
     const contextPropName : string = 'https://purl.imsglobal.org/spec/lti/claim/context'
     const courseData : CourseData = {
       id: courseId,
@@ -392,11 +402,19 @@ export default class CreateAssignmentLti extends Vue {
       section: ''
     }
 
+    await CreateAssignmentLti.makeCourseAndEnrollInstructor(courseData, user)
+  }
+
+
+  private static async makeCourseAndEnrollInstructor (courseData: CourseData, user: User) {
+
     // Ensure that the course is created
     // eslint-disable-next-line camelcase
+    console.log(`Creating course with id ${courseData.id} if it does not exist`)
     await ApiHelper.ensureCourseExists(courseData, user.id)
 
-    await ApiHelper.ensureUserEnrolled(courseId, user, [Roles.INSTRUCTOR])
+    console.log(`Adding instructor ${user.id} to course if they do not exist in course.`)
+    await ApiHelper.ensureUserEnrolled(courseData.id, user, [Roles.INSTRUCTOR])
   }
 
   private static isInstructor (roles : string[]) : boolean {

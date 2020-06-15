@@ -278,8 +278,10 @@ class UserDatabaseHandler {
 
 
     async user_exists (user_id) {
-        let user_key = KeyDictionary.key_dictionary['user'] + user_id;
-        return (await this.async_db_handler.client.hgetall(user_key)) !== null;
+        const user_key = KeyDictionary.key_dictionary['user'] + user_id;
+        const user_data = await this.async_db_handler.client.hgetall(user_key);
+       
+        return user_data !== null;
     }
 
 
@@ -292,6 +294,8 @@ class UserDatabaseHandler {
         await this.set_user_data(user_key, 'first_name', user_data.first_name || user_data.given_name || 'Canvas');
         await this.set_user_data(user_key, 'last_name', user_data.last_name || user_data.family_name || 'User');
         await this.set_user_data(user_key, 'nick_name', user_data.nick || user_data.display_name || user_data.name || 'Canvas User');
+
+        let redis_user_data = await this.get_user_data(user_key);
 
         console.log(`LTI User ${user_data.sub || user_data.id} doesn't exist. Creating user`);
         await this.set_user_data(user_key, 'id', user_data.sub || user_data.id);

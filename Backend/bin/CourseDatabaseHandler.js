@@ -458,7 +458,6 @@ class CourseDatabaseHandler {
                     error = new Error("Cannot find the course with the key: " + course_key);
                 }
                 if (error) {
-                    console.log(error);
                     reject(error);
                 }
 

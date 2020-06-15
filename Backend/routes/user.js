@@ -147,10 +147,12 @@ router.post('/', function(req, res, next) {
 
 /*
  ** POST to a user. Enroll the user in the course,
- *  if they are not already enrolled.
+ *  if they are not already enrolled. This handles
+ *  both instructors and students.
  */
 router.post('/:user_id', async function(req, res, next) {
     let course_db_handler = await ImportHandler.course_db_handler;
+    let user_db_handler = await ImportHandler.user_db_handler;
 
     const course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
     const user_key = KeyDictionary.key_dictionary['user'] + req.params.user_id;
@@ -172,8 +174,9 @@ router.post('/:user_id', async function(req, res, next) {
                     res.sendStatus(200);
                 }
                 else {
-                    console.log('Adding instructor to course with course key ' + course_key)
-                    await course_db_handler.add_instructor_to_course(ImportHandler, user_key, course_key);
+                    console.log('Adding instructor to course with course key ' + course_key);
+                    await course_db_handler.add_instructor_to_course(user_key, course_key);
+                    await user_db_handler.add_course_to_instructor(user_key, course_key);
                     res.sendStatus(201);
                     
                 }
@@ -203,11 +206,8 @@ router.post('/:user_id', async function(req, res, next) {
         res.sendStatus(501);
     }
 
-    
-    
-    
+      
 });
-
 
 
 /*

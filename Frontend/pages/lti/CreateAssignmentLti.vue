@@ -113,7 +113,7 @@ const testUser: User = {
     catch (ex) {
       console.warn(`Invalid ltiDeepLinkRequest. Could not validate jwt.  ${jwt}
           \n Reason: ${ex}`)
-      console.warn('Request body contained: ' + context.req.body)
+      console.warn('Request body contained: ' + JSON.stringify(context.req.body))
       return { success }
     }
 

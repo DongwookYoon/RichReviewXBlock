@@ -125,10 +125,9 @@ const testDataStudent = {
       let ltiLaunchMessage : object | null = null
 
       try {
-      /* Note that the platform (i.e. Canvas) sends the encoded jwt in a form
-         with a single parameter 'JWT'. The form is parsed in the server
-         middleware to create a JSON object. */
-        jwt = (context.req.body).JWT as string
+        /* As per IMS Security Framework Spec (https://www.imsglobal.org/spec/security/v1p0/),
+        the data required to perform the launch is contained within the id_token jwt */
+        const jwt : string = (context.req.body).id_token as string
         ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt, process.env.canvas_public_key_set_url as string)
       }
       catch (ex) {

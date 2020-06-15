@@ -105,7 +105,9 @@ const testUser: User = {
     let ltiReqMessage : any
     let success : boolean = false
 
-    const jwt : string = (context.req.body).JWT as string
+    /* As per IMS Security Framework Spec (https://www.imsglobal.org/spec/security/v1p0/),
+      the data required to perform the launch is contained within the id_token jwt */
+    const jwt : string = (context.req.body).id_token as string
 
     try {
       ltiReqMessage = await JwtUtil.getAndVerifyWithKeyset(jwt, process.env.canvas_public_key_set_url as string)

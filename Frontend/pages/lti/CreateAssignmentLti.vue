@@ -184,8 +184,8 @@ export default class CreateAssignmentLti extends Vue {
       window.location.replace(process.env.canvas_path as string)
     }
     if (this.success === false) {
-      alert(`An error occurred while loading. Please try to refresh the page.\n
-        If this error persists, contact the RichReview system administrator for assistance.`)
+      alert('An error occurred while loading. Please try to refresh the page.\n' +
+        'If this error persists, contact the RichReview system administrator for assistance.')
     }
   }
 

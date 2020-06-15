@@ -104,9 +104,10 @@ const testDataStudent = {
   async asyncData (context) {
     let loadSuccess: boolean = false
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    let courseId : string = ''
+    let courseId: string = ''
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    let userRoles :string[] = ['']
+    let userRoles: string[] = ['']
+
     if (process.env.debug_mode &&
       (process.env.debug_mode as string).toLowerCase() === 'true') {
       context.store.dispatch('LtiAuthStore/logIn', testUser)
@@ -120,104 +121,104 @@ const testDataStudent = {
       }
     }
 
-    if (process.server) {
-      let jwt : string
-      let ltiLaunchMessage : object | null = null
+    if (process.server === false) {
+      return
+    }
 
-      try {
-        /* As per IMS Security Framework Spec (https://www.imsglobal.org/spec/security/v1p0/),
+    let jwt : string
+    let ltiLaunchMessage : object | null = null
+
+    try {
+      /* As per IMS Security Framework Spec (https://www.imsglobal.org/spec/security/v1p0/),
         the data required to perform the launch is contained within the id_token jwt */
-        const jwt : string = (context.req.body).id_token as string
-        ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt, process.env.canvas_public_key_set_url as string)
+      jwt = context.req.body.id_token as string
+      ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt, process.env.canvas_public_key_set_url as string)
+    }
+    catch (ex) {
+      console.warn('Error occurred while getting ltiLaunchMessage from jwt. Reason: ' + ex)
+      ltiLaunchMessage = null
+      return { loadSuccess }
+    }
+
+    const launchMessage = ltiLaunchMessage as any
+    userRoles = Roles.getUserRoles(
+      launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
+
+    courseId = launchMessage[
+      'https://purl.imsglobal.org/spec/lti/claim/context'].id
+
+    const assignmentType : string = context.params.assignment_type
+    const assignmentId : string = context.params.assignment_key
+
+    try {
+      await ApiHelper.ensureUserEnrolled(courseId,
+        context.store.getters['LtiAuthStore/authUser'],
+        userRoles)
+    }
+    catch (ex) {
+      console.warn('Could not verify user enrollment in course. Reason: ' + ex)
+      loadSuccess = false
+      return {
+        loadSuccess
       }
-      catch (ex) {
-        console.warn('Error occurred while getting ltiLaunchMessage from jwt. Reason: ' + ex)
-        ltiLaunchMessage = null
-      }
-      finally {
-        if (ltiLaunchMessage === null) {
-          return
-        }
-      }
+    }
+    // eslint-disable-next-line camelcase
+    let assignmentData = null
+    // eslint-disable-next-line camelcase
+    let submit_data : SubmitData | null = null
 
-      const launchMessage = ltiLaunchMessage as any
-      const userRoles = Roles.getUserRoles(
-        launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
+    try {
+      assignmentData = await ApiHelper.getAssignmentData(courseId,
+        assignmentId,
+        context.store.getters['LtiAuthStore/authUser'].id)
 
-      const courseId = launchMessage[
-        'https://purl.imsglobal.org/spec/lti/claim/context'].id
-
-      const assignmentType : string = context.params.assignment_type
-      const assignmentId : string = context.params.assignment_key
-
-      try {
-        await ApiHelper.ensureUserEnrolled(courseId,
-          context.store.getters['LtiAuthStore/authUser'],
-          userRoles)
-      }
-      catch (ex) {
-        console.warn('Could not verify user enrollment in course. Reason: ' + ex)
-        return {
-          loadSuccess
-        }
-      }
-      // eslint-disable-next-line camelcase
-      let assignmentData = null
-      // eslint-disable-next-line camelcase
-      let submit_data : SubmitData | null = null
-
-      try {
-        assignmentData = await ApiHelper.getAssignmentData(courseId,
-          assignmentId,
-          context.store.getters['LtiAuthStore/authUser'].id)
-
-        let submitted : boolean = (assignmentData.submission_status &&
+      let submitted : boolean = (assignmentData.submission_status &&
                                       assignmentData.submission_status.toLowerCase() === 'submitted')
 
-        if (submitted !== false) {
-          if (
-            context.query.access_code &&
+      if (submitted !== false) {
+        if (
+          context.query.access_code &&
               context.query.docid &&
               context.query.groupid
-          ) {
-            submitted = true
-          }
-        }
-
-        const viewerLink = userRoles.includes(Roles.STUDENT) ? assignmentData.link : assignmentData.grader_link
-        // eslint-disable-next-line camelcase
-        submit_data = {
-          submitted,
-          viewerLink
-        }
-
-        loadSuccess = true
-      }
-      catch (e) {
-        console.warn(e)
-        assignmentData = null
-      }
-      finally {
-        if (assignmentData === null) {
-          console.warn('Assignment data could not be loaded. ')
+        ) {
+          submitted = true
         }
       }
 
-      if (loadSuccess === false) {
-        return { loadSuccess }
+      const viewerLink = userRoles.includes(Roles.STUDENT) ? assignmentData.link : assignmentData.grader_link
+      // eslint-disable-next-line camelcase
+      submit_data = {
+        submitted,
+        viewerLink
       }
 
-      return {
-        loadSuccess,
-        assignmentTitle: assignmentData.title,
-        assignmentType,
-        assignmentId,
-        launchMessage,
-        submit_data,
-        userRoles,
-        courseId,
-        assignmentData
+      loadSuccess = true
+    }
+    catch (e) {
+      console.warn(e)
+      assignmentData = null
+    }
+    finally {
+      if (assignmentData === null) {
+        console.warn('Assignment data could not be loaded. ')
+        loadSuccess = false
       }
+    }
+
+    if (loadSuccess === false) {
+      return { loadSuccess }
+    }
+
+    return {
+      loadSuccess,
+      assignmentTitle: assignmentData.title,
+      assignmentType,
+      assignmentId,
+      launchMessage,
+      submit_data,
+      userRoles,
+      courseId,
+      assignmentData
     }
   },
 
@@ -313,6 +314,10 @@ export default class AssignmentLti extends Vue {
       console.warn('OIDC login failed')
       alert('You must be logged in to Canvas to view this assignment.')
       window.location.replace(process.env.canvas_path as string)
+    }
+    else if (this.loadSuccess === false) {
+      alert('An error occurred while loading. Please try to refresh the page.\n' +
+        'If this error persists, contact the RichReview system administrator for assistance.')
     }
   }
 

@@ -81,7 +81,7 @@ const testUser: User = {
     /* Expect that middleware will handle login before this point. So
        if login has failed, this property in store will be false */
     if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
-      console.warn('Error. Platform user is expecte to be authenticated before accessig this page.')
+      console.warn('Error. Platform user is expected to be authenticated before accessing this page.')
       return { }
     }
 
@@ -97,54 +97,57 @@ const testUser: User = {
     }
     */
 
+    if (process.server === false) {
+      return
+    }
+
     let assignmentId: string = ''
     let ltiReqMessage : any
     let success : boolean = false
 
-    if (process.server === true) {
-      const jwt : string = (context.req.body).JWT as string
+    const jwt : string = (context.req.body).JWT as string
 
-      try {
-        ltiReqMessage = await JwtUtil.getAndVerifyWithKeyset(jwt, process.env.canvas_public_key_set_url as string)
-      }
-      catch (ex) {
-        console.warn(`Invalid ltiDeepLinkRequest. Could not validate jwt.  ${ltiReqMessage}
+    try {
+      ltiReqMessage = await JwtUtil.getAndVerifyWithKeyset(jwt, process.env.canvas_public_key_set_url as string)
+    }
+    catch (ex) {
+      console.warn(`Invalid ltiDeepLinkRequest. Could not validate jwt.  ${jwt}
           \n Reason: ${ex}`)
-        return { success }
-      }
+      console.warn('Request body contained: ' + context.req.body)
+      return { success }
+    }
 
-      const userRoles = Roles.getUserRoles(ltiReqMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
+    const userRoles = Roles.getUserRoles(ltiReqMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
 
-      if (userRoles.includes(Roles.INSTRUCTOR) === false) {
-        alert('Error. Only instructors may create assignments.')
-        context.redirect(process.env.canvas_path as string)
-        return { success }
-      }
+    if (userRoles.includes(Roles.INSTRUCTOR) === false) {
+      alert('Error. Only instructors may create assignments.')
+      context.redirect(process.env.canvas_path as string)
+      return { success }
+    }
 
-      const courseId = ltiReqMessage['https://purl.imsglobal.org/spec/lti/claim/context'].id
+    const courseId = ltiReqMessage['https://purl.imsglobal.org/spec/lti/claim/context'].id
 
-      // Generate assignment key
-      assignmentId = `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`
+    // Generate assignment key
+    assignmentId = `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`
 
-      try {
-        await CreateAssignmentLti.ensureCourseInstructorEnrolled(ltiReqMessage,
-          this.$store.getters['LtiAuthStore/authUser'].id,
-          courseId)
+    try {
+      await CreateAssignmentLti.ensureCourseInstructorEnrolled(ltiReqMessage,
+        this.$store.getters['LtiAuthStore/authUser'].id,
+        courseId)
 
-        success = true
+      success = true
 
-        return {
-          ltiReqMessage,
-          assignmentId,
-          courseId,
-          success
-        } // Inject into CreateAssignment instance data
-      }
-      catch (ex) {
-        console.warn('Failed to add instructor in RichReview record of course. Reason: ' + ex)
-        return { success }
-      }
-    }// End-if
+      return {
+        ltiReqMessage,
+        assignmentId,
+        courseId,
+        success
+      } // Inject into CreateAssignment instance data
+    }
+    catch (ex) {
+      console.warn('Failed to add instructor in RichReview record of course. Reason: ' + ex)
+      return { success }
+    }
   },
 
   computed: {
@@ -179,8 +182,8 @@ export default class CreateAssignmentLti extends Vue {
       window.location.replace(process.env.canvas_path as string)
     }
     if (this.success === false) {
-      alert(`An error occurred while loading. Please try to refresh the page.
-        If this error persists, contact the system administrator for assistance.`)
+      alert(`An error occurred while loading. Please try to refresh the page.\n
+        If this error persists, contact the RichReview system administrator for assistance.`)
     }
   }
 

@@ -148,7 +148,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
 
     try {
       await CreateAssignmentLti.ensureCourseInstructorEnrolled(ltiReqMessage,
-        context.store.getters['LtiAuthStore/authUser'].id,
+        context.store.getters['LtiAuthStore/authUser'],
         courseId)
 
       success = true

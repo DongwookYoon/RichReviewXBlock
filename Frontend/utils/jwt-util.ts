@@ -28,8 +28,6 @@ export default class JwtUtil {
     return JwtUtil.verifyAndDecode(jwtBase64, pem)
   }
 
-
-
   public static async getPublicPemFromJwkKeyset (kid : string, keysetPath: string) {
     console.log('Getting public JWK...')
     let resp
@@ -39,8 +37,9 @@ export default class JwtUtil {
           rejectUnauthorized: false
         })
       })
-    } catch (ex) {
-      console.warn('Loading public keyset failed. Reason: ' +ex)
+    }
+    catch (ex) {
+      console.warn('Loading public keyset failed. Reason: ' + ex)
       return null
     }
 
@@ -89,15 +88,22 @@ export default class JwtUtil {
   }
 
   public static async encodeJWT (jwtData : Object, nonce: string) {
-    const jwtResponse = await axios.post(
-         `https://${process.env.backend}:3000/api/jwt/lti_jwt/${nonce}`,
-         jwtData, {
-           httpsAgent: new https.Agent({
-             rejectUnauthorized: false
-           })
-         })
+    let jwtResponse
+    try {
+      jwtResponse = await axios.post(
+          `https://${process.env.backend}:3000/api/jwt/lti_jwt/${nonce}`,
+          jwtData, {
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false
+            })
+          })
 
-    if (!jwtResponse.data) {
+      if (!jwtResponse.data) {
+        return null
+      }
+    }
+    catch (ex) {
+      console.warn('Signing JWT failed. Reason: ' + ex)
       return null
     }
 

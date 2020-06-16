@@ -21,7 +21,23 @@ try {
 }
 
 
-const signAndEncode = function (jwtData, options)  {
+const signAndEncode = function (jwtData, nonce=undefined, options=undefined)  {
+  let signOptions;
+  if (options) {
+    signOptions = options;
+  }
+  else {
+    signOptions = {
+      algorithm: lti_config.jwk_alg,
+      expiresIn: 900,                       // Number of seconds for 15 minutes expiration time
+      audience: lti_config.platform_path,
+      issuer: lti_config.tool_path,
+    };
+  }
+  if (nonce) {
+    signOptions.nonce = nonce;
+  }
+  
   try {
     return jwt.sign(jwtData, rs256_private_key, options);
   } catch (ex) {
@@ -42,7 +58,7 @@ const createClientAssertion = function (options = null){
     };
   }
 
-  const signed = signAndEncode({}, options);
+  const signed = signAndEncode({}, null, options);
 
   return signed;
 }

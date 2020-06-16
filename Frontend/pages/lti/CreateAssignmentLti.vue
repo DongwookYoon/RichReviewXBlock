@@ -74,12 +74,14 @@ const testUser: User = {
   userName: 'Test Instructor'
 }
 
+const DEBUG: boolean = process.env.debug_mode !== undefined &&
+  process.env.debug_mode.toLowerCase().trim() === 'true'
+
 @Component({
-  // middleware: 'oidc_handler', // Handle OIDC login request
+  middleware: DEBUG ? '' : 'oidc_handler', // Handle OIDC login request
 
   async asyncData (context) {
-    if (process.env.debug_mode &&
-        (process.env.debug_mode as string).toLowerCase() === 'true') {
+    if (DEBUG === true) {
       console.log(`Running in DEBUG mode.\n Test data: ${
         JSON.stringify(testData)
         }\n Test course: ${JSON.stringify(testCourseData)}`)
@@ -333,14 +335,19 @@ export default class CreateAssignmentLti extends Vue {
    */
   private async postBackToPlatform (ltiLink ?: string) {
     const jwtResponse = await this.generateJWTResponse(ltiLink)
+
+    console.log('Generated JWT response to submit assignment to Canvas:' + jwtResponse)
+
     const postBackAddress = this.ltiReqMessage[
       'https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings'].deep_link_return_url
-    const jwtUrlEncoded = JwtUtil.createJwtFormUrlEncoded(jwtResponse)
 
     await this.$axios.$post(postBackAddress,
-      jwtUrlEncoded, {
+      {
+        JWT: jwtResponse
+      },
+      {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/json'
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -349,15 +356,19 @@ export default class CreateAssignmentLti extends Vue {
   }
 
   /**
-   * Generate base-64 JWT string for ltiDeepLinkResponse message
+   * Generate base-64 JWT string for ltiDeepLinkResponse message.
+   * Note that if no items were created (i.e. user cancelled), provider must still send
+   * back a response with no content items. This can be achieved by calling this
+   * method without the option ltiLink argument.
    */
   private async generateJWTResponse (ltiLink ?: string) {
     const reqMsg = this.ltiReqMessage
+    const verificationData = reqMsg[
+      'https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings'].data
     const contentItems : {}[] = []
 
-    /* Per LTI spec, details of how to launch RR are send back in contentItems array.
-       If no items were created (i.e. user cancelled), provider must still send
-       empty contentItems array */
+    /* Per LTI spec, details of how to launch RR are send back in contentItems array. */
+
     if (ltiLink !== undefined) {
       const linkItem : any = {
         type: 'link',
@@ -376,13 +387,18 @@ export default class CreateAssignmentLti extends Vue {
       contentItems.push(linkItem)
     }
 
-    const jwtResponse : string = `{
+    let jwtResponse : string = `{
       "https://purl.imsglobal.org/spec/lti/claim/deployment_id": "${process.env.deployment_id}",
       "https://purl.imsglobal.org/spec/lti/claim/message_type": "LtiDeepLinkingResponse",
       "https://purl.imsglobal.org/spec/lti/claim/version": "1.3.0",
-      "https://purl.imsglobal.org/spec/lti-dl/claim/content_items": ${JSON.stringify(contentItems)},
-      "https://purl.imsglobal.org/spec/lti-dl/claim/data": "${reqMsg.data}"
-      }`
+      "https://purl.imsglobal.org/spec/lti-dl/claim/content_items": ${JSON.stringify(contentItems)}
+    `
+
+    /* Only add 'data' claim if it was included in original message */
+    if (verificationData !== undefined) {
+      jwtResponse += `, "https://purl.imsglobal.org/spec/lti-dl/claim/data": "${verificationData}"`
+    }
+    jwtResponse += '}'
 
     const scoreJWT = await JwtUtil.encodeJWT(JSON.parse(jwtResponse), reqMsg.nonce)
     if (scoreJWT === null) {
@@ -405,9 +421,7 @@ export default class CreateAssignmentLti extends Vue {
     await CreateAssignmentLti.makeCourseAndEnrollInstructor(courseData, user)
   }
 
-
   private static async makeCourseAndEnrollInstructor (courseData: CourseData, user: User) {
-
     // Ensure that the course is created
     // eslint-disable-next-line camelcase
     console.log(`Creating course with id ${courseData.id} if it does not exist`)

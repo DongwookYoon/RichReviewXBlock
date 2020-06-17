@@ -334,20 +334,18 @@ export default class CreateAssignmentLti extends Vue {
    * See LTI spec for more details here: https://www.imsglobal.org/spec/lti-dl/v2p0#dfn-deep-linking-response-message
    */
   private async postBackToPlatform (ltiLink ?: string) {
-    const jwtResponse = await this.generateJWTResponse(ltiLink)
+    const urlEncodedJWT = await this.generateJWTResponse(ltiLink)
 
-    console.log('Generated JWT response to submit assignment to Canvas:' + jwtResponse)
+    console.log('Generated JWT response to submit assignment to Canvas:' + urlEncodedJWT)
 
     const postBackAddress = this.ltiReqMessage[
       'https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings'].deep_link_return_url
 
     await this.$axios.$post(postBackAddress,
-      {
-        JWT: jwtResponse
-      },
+      urlEncodedJWT,
       {
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/x-www-form-urlencoded'
         },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
@@ -400,12 +398,14 @@ export default class CreateAssignmentLti extends Vue {
     }
     jwtResponse += '}'
 
-    const scoreJWT = await JwtUtil.encodeJWT(JSON.parse(jwtResponse), reqMsg.nonce)
-    if (scoreJWT === null) {
+    const assignmentJWT = await JwtUtil.encodeJWT(JSON.parse(jwtResponse), reqMsg.nonce)
+    if (assignmentJWT  === null) {
       throw new Error('Creating the JWT failed.')
     }
 
-    return scoreJWT
+    const urlEncodedJWT = JwtUtil.createJwtFormUrlEncoded(assignmentJWT)   // URL encode JWT as jwt=Base64EncodedValue
+
+    return urlEncodedJWT
   }
 
   private static async ensureCourseInstructorEnrolled (ltiMsg: any, user : User, courseId: string) {

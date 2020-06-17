@@ -1,9 +1,8 @@
 import https from 'https'
-import { ITokenInfo } from '../store/modules/LtiAuthStore'
 import JwtUtil from './jwt-util'
 import axios from 'axios'
 import { User } from '~/store/modules/LtiAuthStore'
-import { NuxtAxiosInstance } from '@nuxtjs/axios'
+
 
 export default class ApiHelper {
   /**

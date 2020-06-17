@@ -1185,13 +1185,13 @@ class AssignmentDatabaseHandler {
 
          if (assignment_data['available_date'] !== 'Invalid Date' &&
                  Date.parse(assignment_data['available_date']) > Date.now()) {
-                 console.log('User does have permission to view assignment that is not yet available');
+                 console.log('User does not have permission to view assignment that is not yet available');
              return false;
         }
 
          if (assignment_data['until_date'] !== 'Invalid Date' &&
                  Date.parse(assignment_data['until_date']) < Date.now()) {
-                 console.log('User does have permission to view assignment after assignment is closed');
+                 console.log('User does not have permission to view assignment after assignment is closed');
              return false;
         }
         return true;

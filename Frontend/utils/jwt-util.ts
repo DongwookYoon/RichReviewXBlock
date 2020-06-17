@@ -87,8 +87,14 @@ export default class JwtUtil {
     }
   }
 
-  public static async encodeJWT (jwtData : Object, nonce: string) {
+  public static async encodeJWT (jwtData : any, nonce: string, audience ?: string) {
     let jwtResponse
+    if (!audience) {
+      audience = process.env.canvas_path
+    }
+
+    jwtData.aud = audience
+
     try {
       jwtResponse = await axios.post(
           `https://${process.env.backend}:3000/api/jwt/lti_jwt/${nonce}`,

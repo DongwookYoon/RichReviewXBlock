@@ -31,20 +31,21 @@ const signAndEncode = function (jwtData, nonce=undefined, options=undefined)  {
       algorithm: lti_config.jwk_alg,
       expiresIn: 900,                       // Number of seconds for 15 minutes expiration time
       audience: lti_config.platform_path,
-      issuer: lti_config.tool_path,
+      issuer: lti_config.tool_path
     };
   }
   if (nonce) {
-    signOptions.nonce = nonce;
+    jwtData.nonce = nonce;
   }
   
   try {
-    return jwt.sign(jwtData, rs256_private_key, options);
+    return jwt.sign(jwtData, rs256_private_key, signOptions);
   } catch (ex) {
     console.warn('Signing JWT failed. Reason' + ex);
     return null;
   }
 };
+
 
 const createClientAssertion = function (options = null){
   if (options === null) {

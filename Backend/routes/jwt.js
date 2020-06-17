@@ -5,7 +5,15 @@ var router = express.Router({mergeParams: true});
 var jwtUtil = require('../util/jwt-util');
 var axios = require('axios');
 
+var lti_config;
 
+try {
+  lti_config = JSON.parse(
+   fs.readFileSync(path.join(__dirname, '..', 'ssl/lti.json'), 'utf-8'));
+  console.log(`Successfully read lti.json config file`);
+} catch(ex) {
+ console.warn('Failed to read lti.json config file. Reason: ' + ex);
+}
 
 /*
  ** Get a signed client assertion
@@ -63,11 +71,16 @@ router.post('/oauth_code_token', async function(req, res, next) {
 router.post('/lti_jwt/:nonce', function(req, res, next) {
   
  try {
-    console.log(req.body);
-    const signed = jwtUtil.signAndEncode(req.body, req.params.nonce);
+    let options = {
+      algorithm: lti_config.jwk_alg,
+      expiresIn: 900,                       // Number of seconds for 15 minutes expiration time
+      issuer: lti_config.canvas_client_id
+    };
+
+    const signed = jwtUtil.signAndEncode(req.body, req.params.nonce, options);
 
     res.json({jwt: signed});
-    console.log('Signed JWT response: ' + signed)
+    console.log('Signed JWT response: ' + signed);
   } catch (ex) {
     console.warn('Signing JWT failed. Reason: ' + ex);
   }

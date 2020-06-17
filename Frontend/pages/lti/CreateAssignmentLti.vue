@@ -398,7 +398,7 @@ export default class CreateAssignmentLti extends Vue {
     }
     jwtResponse += '}'
 
-    const assignmentJWT = await JwtUtil.encodeJWT(JSON.parse(jwtResponse), reqMsg.nonce)
+    const assignmentJWT = await JwtUtil.encodeJWT(JSON.parse(jwtResponse), reqMsg.nonce, reqMsg.iss)
     if (assignmentJWT  === null) {
       throw new Error('Creating the JWT failed.')
     }

@@ -105,7 +105,7 @@ router.post('/deeplink', async function(req, res, next) {
     }
 
     const urlEncodedJWT = `JWT=${encodeURIComponent(jwt)}`;
-
+    console.log('Postback JWT: ' +  urlEncodedJWT);
     let submitRes = await axios.post(req.body.postBackAddress,
       urlEncodedJWT,
       {
@@ -126,6 +126,8 @@ router.post('/deeplink', async function(req, res, next) {
 
   } catch(ex) {
     console.warn('Posting lti deep link response to Canvas failed. Reason: ' + ex);
+    console.warn('Error message: ' + ex.message );
+    console.warn(ex.response);
     res.sendStatus(500);
   }
 

@@ -42,6 +42,7 @@
         Cancel
       </button>
     </div>
+
   </div>
 </template>
 
@@ -306,6 +307,7 @@ export default class CreateAssignmentLti extends Vue {
       this.saved = false
       window.alert(e)
     }
+
   }
 
   /**
@@ -339,10 +341,17 @@ export default class CreateAssignmentLti extends Vue {
     const postBackAddress = this.ltiReqMessage[
       'https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings'].deep_link_return_url
 
-    await ApiHelper.postBackDeepLink(postBackAddress,
-      jwtResponse,
-      this.ltiReqMessage.nonce,
-      this.ltiReqMessage.iss)
+    try {
+      await ApiHelper.postBackDeepLink(postBackAddress,
+        jwtResponse,
+        this.ltiReqMessage.nonce,
+        this.ltiReqMessage.iss)
+    } catch (ex) {
+      console.warn(`Postback to ${postBackAddress} failed. Reason: ${ex}`)
+      throw ex
+    }
+
+    window.location.href = postBackAddress       // Redirect back to the platform
   }
 
   /**

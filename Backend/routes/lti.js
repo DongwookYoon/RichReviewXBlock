@@ -95,7 +95,7 @@ router.post('/deeplink', async function(req, res, next) {
     options = {
       algorithm: lti_config.jwk_alg,
       expiresIn: 900,                       // Number of seconds for 15 minutes expiration time
-      issuer: lti_config.tool_path
+      issuer: lti_config.canvas_client_id
     };
 
     const jwt = jwtUtil.signAndEncode(req.body.message, options);

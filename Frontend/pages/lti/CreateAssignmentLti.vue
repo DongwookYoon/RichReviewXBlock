@@ -136,7 +136,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
     const userRoles = Roles.getUserRoles(ltiReqMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
 
     if (userRoles.includes(Roles.INSTRUCTOR) === false) {
-      alert('Error. Only instructors may create assignments.')
+      console.warn('Unauthorized. Only instructors may create assignments.')
       context.redirect(process.env.canvas_path as string)
       return { success }
     }
@@ -334,23 +334,15 @@ export default class CreateAssignmentLti extends Vue {
    * See LTI spec for more details here: https://www.imsglobal.org/spec/lti-dl/v2p0#dfn-deep-linking-response-message
    */
   private async postBackToPlatform (ltiLink ?: string) {
-    const urlEncodedJWT = await this.generateJWTResponse(ltiLink)
-
-    console.log('Generated JWT response to submit assignment to Canvas:' + urlEncodedJWT)
+    const jwtResponse = this.generateJWTResponse(ltiLink)
 
     const postBackAddress = this.ltiReqMessage[
       'https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings'].deep_link_return_url
 
-    await this.$axios.$post(postBackAddress,
-      urlEncodedJWT,
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        httpsAgent: new https.Agent({
-          rejectUnauthorized: false
-        })
-      })
+    await ApiHelper.postBackDeepLink(postBackAddress,
+      jwtResponse,
+      this.ltiReqMessage.nonce,
+      this.ltiReqMessage.iss)
   }
 
   /**
@@ -359,7 +351,7 @@ export default class CreateAssignmentLti extends Vue {
    * back a response with no content items. This can be achieved by calling this
    * method without the option ltiLink argument.
    */
-  private async generateJWTResponse (ltiLink ?: string) {
+  private generateJWTResponse (ltiLink ?: string) {
     const reqMsg = this.ltiReqMessage
     const verificationData = reqMsg[
       'https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings'].data
@@ -398,14 +390,7 @@ export default class CreateAssignmentLti extends Vue {
     }
     jwtResponse += '}'
 
-    const assignmentJWT = await JwtUtil.encodeJWT(JSON.parse(jwtResponse), reqMsg.nonce, reqMsg.iss)
-    if (assignmentJWT  === null) {
-      throw new Error('Creating the JWT failed.')
-    }
-
-    const urlEncodedJWT = JwtUtil.createJwtFormUrlEncoded(assignmentJWT)   // URL encode JWT as jwt=Base64EncodedValue
-
-    return urlEncodedJWT
+    return JSON.parse(jwtResponse)
   }
 
   private static async ensureCourseInstructorEnrolled (ltiMsg: any, user : User, courseId: string) {

@@ -89,11 +89,8 @@ export default class JwtUtil {
 
   public static async encodeJWT (jwtData : any, nonce: string, audience ?: string) {
     let jwtResponse
-    if (!audience) {
-      audience = process.env.canvas_path
-    }
 
-    jwtData.aud = audience
+    jwtData.aud = audience || process.env.canvas_path
 
     try {
       jwtResponse = await axios.post(

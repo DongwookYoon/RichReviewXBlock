@@ -3,7 +3,6 @@ import JwtUtil from './jwt-util'
 import axios from 'axios'
 import { User } from '~/store/modules/LtiAuthStore'
 
-
 export default class ApiHelper {
   /**
    * Checks that a user exists within RichReview and creates that user
@@ -104,6 +103,35 @@ export default class ApiHelper {
   }
 
   /**
+   * Creates an assignment in Canvas.
+   * Rely on backend to proxy request to post back the
+   * lti deep link response to Canvas to create an
+   * assignment.
+   **/
+  public static async postBackDeepLink (postBackAddress: string,
+    ltiResponseMessage: any,
+    nonce?: string,
+    audience?: string) {
+    const message = ltiResponseMessage
+    if (nonce) {
+      message.nonce = nonce
+    }
+
+    message.aud = audience || process.env.canvas_path
+
+    await axios.post(`https://${process.env.backend}:3000/lti/deeplink`,
+      {
+        message,
+        postBackAddress
+      },
+      {
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      })
+  }
+
+  /**
    * Submits an assignment to LTI platform (i.e. Canvas)
    * so that it can be manually graded.
    *
@@ -115,71 +143,21 @@ export default class ApiHelper {
     courseId: string,
     clientCredentialsToken: string,
     userId: string,
-    richReviewUrl: URL) {
-    const assignmentResourceId : string = launchMessage[
-      'https://purl.imsglobal.org/spec/lti/claim/resource_link'].id
-
-    let lineItemId : string = ''
-
-    const lineItemsResp = await axios.get(
-        `${process.env.canvas_path}/api/lti/courses/${courseId}/line_items`,
-        {
-          headers: {
-            Accept: 'application/json+canvas-string-ids',
-            Authorization: `Bearer ${clientCredentialsToken}`
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
+    richReviewUrl: URL
+  ) {
+    await axios.post(`https://${process.env.backend}:3000/lti/assignment`,
+      {
+        launchMessage,
+        courseId,
+        clientCredentialsToken,
+        userId,
+        richReviewUrl: richReviewUrl.toString()
+      },
+      {
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
         })
-
-    const lineItems = lineItemsResp.data // The parsed JSON which contains array of line items
-
-    /* Find the ID of the line item for which we want to create a submission in gradebook */
-    for (const curItem of lineItems) {
-      if (curItem.resourceLinkId === assignmentResourceId) {
-        lineItemId = curItem.id
-        break
-      }
-    }
-    if (lineItemId === '') {
-      console.warn('Error. Could not find a line item to create assignment submission')
-      throw new Error('Could not find a line item to create assignment submission')
-    }
-
-    const scoreData : any = {
-      timestamp: `${new Date().toISOString()}`,
-      activityProgress: 'Submitted',
-      gradingProgress: 'PendingManual',
-      userId: `${userId}`
-    }
-    scoreData['https://canvas.instructure.com/lti/submission'] = {
-      new_submission: true,
-      submission_type: 'basic_lti_launch',
-      submission_data: `${richReviewUrl}`
-    }
-
-    // TODO Make sure this is secure. Call backend to sign.
-    const scoreJWT = await JwtUtil.encodeJWT(scoreData, launchMessage.nonce)
-    if (scoreJWT === null) {
-      throw new Error('Creating the JWT failed.')
-    }
-
-    const urlEncodedJWT = JwtUtil.createJwtFormUrlEncoded(scoreJWT)
-
-    /* Send the score resource to Canvas to indicate submission in gradebook */
-    axios.post(
-          `${process.env.canvas_path}/api/lti/courses/${courseId}/line_items/${lineItemId}/scores`,
-          urlEncodedJWT,
-          {
-            headers: {
-              Authorization: `Bearer ${clientCredentialsToken}`,
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          })
+      })
   }
 }
 

@@ -21,7 +21,7 @@ try {
 }
 
 
-const signAndEncode = function (jwtData, nonce=undefined, options=undefined)  {
+const signAndEncode = function (jwtData, options=undefined)  {
   let signOptions;
   if (options) {
     signOptions = options;
@@ -34,9 +34,7 @@ const signAndEncode = function (jwtData, nonce=undefined, options=undefined)  {
       issuer: lti_config.tool_path
     };
   }
-  if (nonce) {
-    jwtData.nonce = nonce;
-  }
+
   
   try {
     return jwt.sign(jwtData, rs256_private_key, signOptions);
@@ -59,7 +57,7 @@ const createClientAssertion = function (options = null){
     };
   }
 
-  const signed = signAndEncode({}, null, options);
+  const signed = signAndEncode({}, options);
 
   return signed;
 }

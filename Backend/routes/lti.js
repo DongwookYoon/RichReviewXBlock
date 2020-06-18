@@ -127,7 +127,10 @@ router.post('/deeplink', async function(req, res, next) {
   } catch(ex) {
     console.warn('Posting lti deep link response to Canvas failed. Reason: ' + ex);
     console.warn('Error message: ' + ex.message );
-    console.warn(ex.response);
+    console.warn(JSON.stringify(ex.response));
+    console.warn(JSON.stringify(ex.response.data));
+    console.warn(JSON.stringify(ex.response.data));
+    console.warn(JSON.stringify(ex.response.data.jwt));
     res.sendStatus(500);
   }
 

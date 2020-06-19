@@ -49,7 +49,7 @@
         method="POST"
         :action="postback_url"
       >
-        <input type="hidden" name="JWT" :value="postback_jwt">
+        <input type="hidden" name="JWT" value="test">
       </form>
     </div>
   </div>

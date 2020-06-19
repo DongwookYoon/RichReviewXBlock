@@ -437,7 +437,7 @@ export default class CreateAssignmentLti extends Vue {
     jwtResponse += '}'
 
     let j = JSON.parse(jwtResponse)
-    console.log(JSON.stringify(J))
+    console.log(JSON.stringify(j))
 
     return j
   }

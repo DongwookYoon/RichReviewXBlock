@@ -321,7 +321,6 @@ export default class CreateAssignmentLti extends Vue {
     }
     catch (e) {
       this.saved = false
-      console.warn(e)
       window.alert('Creating the assignment failed. Please try again. If this error continues,' +
       ' please contact the RichReview administrator.')
     }
@@ -386,7 +385,7 @@ export default class CreateAssignmentLti extends Vue {
     }
 
     Vue.nextTick().then(() => {
-      alert('Submitting lti response form...jwt value is: ' + JSON.stringify(this.$refs.jwt_field));
+      console.log('Submitting lti response form...jwt value is: ' + JSON.stringify(this.$refs.jwt_field));
       /* Submit the form to complete lti deep linking flow */
       (this.$refs.lti_response_form as HTMLFormElement).submit()
     })
@@ -437,7 +436,10 @@ export default class CreateAssignmentLti extends Vue {
     }
     jwtResponse += '}'
 
-    return JSON.parse(jwtResponse)
+    let j = JSON.parse(jwtResponse)
+    console.log(JSON.stringify(J))
+
+    return j
   }
 
   private static async ensureCourseInstructorEnrolled (ltiMsg: any, user : User, courseId: string) {

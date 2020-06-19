@@ -47,9 +47,9 @@
         id="lti_postback"
         ref="lti_response_form"
         method="POST"
-        :action="postbackUrl"
+        :action="postback_url"
       >
-        <input type="hidden" name="JWT" :value="postbackJwt">
+        <input type="hidden" name="JWT" :value="postback_jwt">
       </form>
     </div>
   </div>

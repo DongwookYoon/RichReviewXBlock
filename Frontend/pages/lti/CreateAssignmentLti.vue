@@ -1,4 +1,3 @@
-
 <template>
   <div v-if="success === true" id="create-assignment">
     <div id="assignment-details">
@@ -88,6 +87,7 @@ const testUser: User = {
 const DEBUG: boolean = process.env.debug_mode !== undefined &&
   process.env.debug_mode.toLowerCase().trim() === 'true'
 
+/* eslint-disable camelcase */
 @Component({
   middleware: DEBUG ? '' : 'oidc_handler', // Handle OIDC login request
 
@@ -195,8 +195,8 @@ export default class CreateAssignmentLti extends Vue {
   private ltiReqMessage ?: any
   private success !: boolean
   private courseId !: string
-  private postbackJwt : string = ''
-  private postbackUrl : string = ''
+  private postback_jwt : string = ''
+  private postback_url : string = ''
   /* End data */
 
   /* Mappings for Vuex store getters */
@@ -355,7 +355,7 @@ export default class CreateAssignmentLti extends Vue {
    *
    * See LTI spec for more details here: https://www.imsglobal.org/spec/lti-dl/v2p0#dfn-deep-linking-response-message
    */
-  private async postBackToPlatform (ltiLink ?: string) {
+  public async postBackToPlatform (ltiLink ?: string) {
     if (DEBUG) {
       (this.$refs.lti_response_form as HTMLFormElement).submit()
       return
@@ -364,11 +364,11 @@ export default class CreateAssignmentLti extends Vue {
     const jwtResponse = this.generateJWTResponse(ltiLink)
 
     /* Set form post back URL for submitting data back to Canvas */
-    this.postbackUrl = this.ltiReqMessage[
+    this.postback_url = this.ltiReqMessage[
       'https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings'].deep_link_return_url
 
     try {
-      this.postbackJwt = await ApiHelper.createDeepLinkJWT(jwtResponse,
+      this.postback_jwt = await ApiHelper.createDeepLinkJWT(jwtResponse,
         this.ltiReqMessage.nonce,
         this.ltiReqMessage.iss)
     }
@@ -376,6 +376,11 @@ export default class CreateAssignmentLti extends Vue {
       console.warn(`Creating JWT for lti deep link response failed. Reason: ${ex}`)
       throw ex
     }
+
+    console.log('Response postback jwt:' + this.postback_jwt);
+    console.log(this.$refs.lti_response_form);
+    console.log(JSON.stringify(this.$refs.lti_response_form));
+
     /* Submit the form to complete lti deep linking flow */
     (this.$refs.lti_response_form as HTMLFormElement).submit()
   }

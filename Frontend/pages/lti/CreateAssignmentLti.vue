@@ -407,17 +407,38 @@ export default class CreateAssignmentLti extends Vue {
 
     if (ltiLink !== undefined) {
       const linkItem : any = {
-        type: 'link',
-        title: 'RichReview Assignment',
+        type: 'ltiResourceLink',
+        title: 'Rich Review Assignment',
+        text: 'This is a link to an activity that will be graded',
         url: ltiLink,
+        icon: {
+          url: 'https://lti.example.com/image.jpg',
+          width: 100,
+          height: 100
+        },
+        thumbnail: {
+          url: 'https://lti.example.com/thumb.jpg',
+          width: 90,
+          height: 90
+        },
+        lineItem: {
+          scoreMaximum: 87,
+          label: 'RichReview assignment',
+          resourceId: this.assignmentId,
+          tag: 'originality'
+        },
+        available: {
+          startDateTime: '2020-02-06T20:05:02Z',
+          endDateTime: '2018-03-07T20:05:02Z'
+        },
+        submission: {
+          endDateTime: '2018-03-06T20:05:02Z'
+        },
         window: {
-          targetName: `RichReview_${this.assignmentId}`,
-          windowFeatures: 'menubar=yes,location=yes,status=yes,resizable=yes,scrollbars=no'
+          targetName: 'examplePublisherContent'
         },
         iframe: {
-          width: 800,
-          height: 600,
-          src: ltiLink
+          height: 890
         }
       }
       contentItems.push(linkItem)

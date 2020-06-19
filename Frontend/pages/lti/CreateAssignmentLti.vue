@@ -2,8 +2,13 @@
   <div v-if="success === true" id="create-assignment">
     <div id="assignment-details">
       <div id="assignment-type-section">
-        <label id="assignment-type-label" for="assignment-type">Assignment type</label>
-        <select id="assignment-type-selection" v-model="assignmentType" @change="saved = false">
+        <label id="assignment-type-label" for="assignment-type">Assignment Type</label>
+        <select
+          id="assignment-type-selection"
+          v-model="assignmentType"
+          class="assignment-info"
+          @change="saved = false"
+        >
           <option value="document_submission">
             PDF Document Submission
           </option>
@@ -11,6 +16,16 @@
             RichReview Comment Submission
           </option>
         </select>
+      </div>
+
+      <div>
+        <label id="max-score-label" for="max-score">Maximum Score</label>
+        <input
+          v-model="maxScore"
+          type="number"
+          class="assignment-info"
+          @change="saved = false"
+        >
       </div>
 
       <div v-if="assignmentType === 'comment_submission'" id="file-upload-section">
@@ -47,11 +62,12 @@
         id="lti_postback"
         ref="lti_response_form"
         method="POST"
-        :action="postback_url"
+        :action="postbackUrl"
       >
-        <input ref="jwt_field" type="hidden" name="JWT" :value="postback_jwt">
+        <input ref="jwt_field" type="hidden" name="JWT" :value="postbackJwt">
       </form>
     </div>
+  </div>
   </div>
 </template>
 
@@ -190,13 +206,16 @@ export default class CreateAssignmentLti extends Vue {
   /* Component data */
   private saved: boolean = true
   private assignmentType : string = 'document_submission'
+  private maxScore !: number
   private files : File [] = []
+
   private assignmentId ?: string
   private ltiReqMessage ?: any
   private success !: boolean
   private courseId !: string
-  private postback_jwt : string = ''
-  private postback_url : string = ''
+  private postbackJwt : string = ''
+  private postbackUrl : string = ''
+
   /* End data */
 
   /* Mappings for Vuex store getters */
@@ -356,7 +375,7 @@ export default class CreateAssignmentLti extends Vue {
    */
   public async postBackToPlatform (ltiLink ?: string) {
     if (DEBUG) {
-      this.postback_jwt = await ApiHelper.createDeepLinkJWT({ test: 'test' },
+      this.postbackJwt = await ApiHelper.createDeepLinkJWT({ test: 'test' },
         '1',
         'example.com')
 
@@ -371,11 +390,11 @@ export default class CreateAssignmentLti extends Vue {
     const jwtResponse = this.generateJWTResponse(ltiLink)
 
     /* Set form post back URL for submitting data back to Canvas */
-    this.postback_url = this.ltiReqMessage[
+    this.postbackUrl = this.ltiReqMessage[
       'https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings'].deep_link_return_url
 
     try {
-      this.postback_jwt = await ApiHelper.createDeepLinkJWT(jwtResponse,
+      this.postbackJwt = await ApiHelper.createDeepLinkJWT(jwtResponse,
         this.ltiReqMessage.nonce,
         this.ltiReqMessage.iss)
     }
@@ -401,6 +420,7 @@ export default class CreateAssignmentLti extends Vue {
     const reqMsg = this.ltiReqMessage
     const verificationData = reqMsg[
       'https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings'].data
+    const deploymentId = reqMsg['https://purl.imsglobal.org/spec/lti/claim/deployment_id']
     const contentItems : {}[] = []
 
     /* Per LTI spec, details of how to launch RR are send back in contentItems array. */
@@ -409,25 +429,27 @@ export default class CreateAssignmentLti extends Vue {
       const linkItem : any = {
         type: 'ltiResourceLink',
         title: 'RichReview Assignment',
-        text: 'This is a link to an activity that will be graded',
+        text: 'This is a link to a RichReview assignment that will be graded',
         url: ltiLink,
         lineItem: {
-          scoreMaximum: 100,
+          scoreMaximum: this.maxScore,
           label: 'RichReview Assignment',
           resourceId: this.assignmentId
         },
         window: {
-          targetName: 'examplePublisherContent'
+          targetName: `RichReview_${this.assignmentId}`,
+          windowFeatures: 'menubar=yes,location=yes,status=yes,resizable=yes,scrollbars=no'
         },
         iframe: {
-          height: 890
+          width: 800,
+          height: 600
         }
       }
       contentItems.push(linkItem)
     }
 
     let jwtResponse : string = `{
-      "https://purl.imsglobal.org/spec/lti/claim/deployment_id": "${process.env.deployment_id}",
+      "https://purl.imsglobal.org/spec/lti/claim/deployment_id": "${deploymentId}",
       "https://purl.imsglobal.org/spec/lti/claim/message_type": "LtiDeepLinkingResponse",
       "https://purl.imsglobal.org/spec/lti/claim/version": "1.3.0",
       "https://purl.imsglobal.org/spec/lti-dl/claim/content_items": ${JSON.stringify(contentItems)}
@@ -494,12 +516,6 @@ export default class CreateAssignmentLti extends Vue {
   font-size: 0.95rem;
 }
 
-#assignment-type-selection {
-  min-height: 1.2rem;
-  margin-left: 0.5rem;
-  font-size: 1rem;
-}
-
 #finish-button-section {
   margin-top: 5rem;
 }
@@ -517,6 +533,12 @@ export default class CreateAssignmentLti extends Vue {
 
 #add-file-button {
   margin-top: 1rem;
+}
+
+.assignment-info {
+  min-height: 1.2rem;
+  margin-left: 0.5rem;
+  font-size: 1rem;
 }
 
 .modal-button {

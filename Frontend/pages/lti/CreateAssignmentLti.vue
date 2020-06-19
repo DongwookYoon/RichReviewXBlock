@@ -407,17 +407,20 @@ export default class CreateAssignmentLti extends Vue {
 
     if (ltiLink !== undefined) {
       const linkItem : any = {
-        type: 'link',
+        type: 'ltiResourceLink',
         title: 'RichReview Assignment',
+        text: 'This is a link to an activity that will be graded',
         url: ltiLink,
+        lineItem: {
+          scoreMaximum: 100,
+          label: 'RichReview Assignment',
+          resourceId: this.assignmentId
+        },
         window: {
-          targetName: `RichReview_${this.assignmentId}`,
-          windowFeatures: 'menubar=yes,location=yes,status=yes,resizable=yes,scrollbars=no'
+          targetName: 'examplePublisherContent'
         },
         iframe: {
-          width: 800,
-          height: 600,
-          src: ltiLink
+          height: 890
         }
       }
       contentItems.push(linkItem)
@@ -436,7 +439,7 @@ export default class CreateAssignmentLti extends Vue {
     }
     jwtResponse += '}'
 
-    let j = JSON.parse(jwtResponse)
+    const j = JSON.parse(jwtResponse)
     console.log(JSON.stringify(j))
 
     return j

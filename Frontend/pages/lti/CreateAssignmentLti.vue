@@ -49,7 +49,7 @@
         method="POST"
         :action="postback_url"
       >
-        <input type="hidden" name="JWT" value="test">
+        <input ref="jwt_field" type="hidden" name="JWT" :value="postback_jwt">
       </form>
     </div>
   </div>
@@ -357,7 +357,15 @@ export default class CreateAssignmentLti extends Vue {
    */
   public async postBackToPlatform (ltiLink ?: string) {
     if (DEBUG) {
-      (this.$refs.lti_response_form as HTMLFormElement).submit()
+      this.postback_jwt = await ApiHelper.createDeepLinkJWT({ test: 'test' },
+        '1',
+        'example.com')
+
+      Vue.nextTick().then(() => {
+        console.log('Submitting lti response form...jwt value is: ' + JSON.stringify(this.$refs.jwt_field));
+        /* Submit the form to complete lti deep linking flow */
+        (this.$refs.lti_response_form as HTMLFormElement).submit()
+      })
       return
     }
 
@@ -377,12 +385,11 @@ export default class CreateAssignmentLti extends Vue {
       throw ex
     }
 
-    console.log('Response postback jwt:' + this.postback_jwt);
-    console.log(this.$refs.lti_response_form);
-    console.log(JSON.stringify(this.$refs.lti_response_form));
-
-    /* Submit the form to complete lti deep linking flow */
-    (this.$refs.lti_response_form as HTMLFormElement).submit()
+    Vue.nextTick().then(() => {
+      alert('Submitting lti response form...jwt value is: ' + JSON.stringify(this.$refs.jwt_field));
+      /* Submit the form to complete lti deep linking flow */
+      (this.$refs.lti_response_form as HTMLFormElement).submit()
+    })
   }
 
   /**

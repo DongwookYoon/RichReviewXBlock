@@ -377,7 +377,7 @@ export default class CreateAssignmentLti extends Vue {
       throw ex
     }
     /* Submit the form to complete lti deep linking flow */
-    (this.$refs.lti_response_form as any).$el.submit()
+    (this.$refs.lti_response_form as HTMLFormElement).submit()
   }
 
   /**

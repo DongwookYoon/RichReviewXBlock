@@ -43,6 +43,16 @@
       </button>
     </div>
 
+    <div id="lti-data">
+      <form
+        id="lti_postback"
+        ref="lti_response_form"
+        method="POST"
+        :action="postbackUrl"
+      >
+        <input type="hidden" name="JWT" :value="postbackJwt">
+      </form>
+    </div>
   </div>
 </template>
 
@@ -185,6 +195,8 @@ export default class CreateAssignmentLti extends Vue {
   private ltiReqMessage ?: any
   private success !: boolean
   private courseId !: string
+  private postbackJwt : string = ''
+  private postbackUrl : string = ''
   /* End data */
 
   /* Mappings for Vuex store getters */
@@ -192,7 +204,6 @@ export default class CreateAssignmentLti extends Vue {
   public codeToken !: ITokenInfo
   public user !: User
   /* End mapped getters */
-
   public mounted () {
     if (this.isLoggedIn === false) {
       alert('You must be logged in to Canvas to create an assignment')
@@ -298,16 +309,22 @@ export default class CreateAssignmentLti extends Vue {
             }
         )
       }// end-else
+
+      /* General format of URL should be /lti/assignment/:assignment_type/:assignment_key.
+      Note that this is sufficient for retreiving all assignment data from RR
+      backend when the user accesses assignment. */
       const ltiLink = `${process.env.prod_url}/lti/assignments/${this.assignmentType}/${this.assignmentId}`
       console.log(` Successfuly created assignment in RichReview! \nSubmission lti Link: ${ltiLink}`)
 
       await this.postBackToPlatform(ltiLink)
+      this.saved = true
     }
     catch (e) {
       this.saved = false
-      window.alert(e)
+      console.warn(e)
+      window.alert('Creating the assignment failed. Please try again. If this error continues,' +
+      ' please contact the RichReview administrator.')
     }
-
   }
 
   /**
@@ -315,43 +332,52 @@ export default class CreateAssignmentLti extends Vue {
    *  prompt user to ask if they want to cancel, as the cancel action cannot be reversed.
    */
   public cancel () : void {
-    if (this.saved === false) {
-      if (confirm('Do you want to exit this? Changes you made may not be saved.') === true) {
+    try {
+      if (this.saved === false) {
+        if (confirm('Do you want to exit this? Changes you made may not be saved.') === true) {
+          this.postBackToPlatform()
+        }
+      }
+      else {
         this.postBackToPlatform()
       }
     }
-    else {
-      this.postBackToPlatform()
+    catch (ex) {
+      console.warn('Cancelling assignment creation failed. Reason ' + ex)
+      alert('Cancelling failed. You may click the X in the top right to exit this window.')
     }
   }
   /* End component-level methods */
 
   /**
    * Finish LTI deep linking flow to send the user back to the consumer (LTI platform).
-   * Sends the required POST ltiDeepLinkResponse back to the consumer.
-   * General format of URL should be /lti/assignment/:assignment_type/:assignment_key.
-   * Note that this is sufficient for retreiving all assignment data from RR
-   * backend when the user accesses assignment.
+   * Sends the required POST ltiDeepLinkResponse back to the consumer in an HTML form.
    *
    * See LTI spec for more details here: https://www.imsglobal.org/spec/lti-dl/v2p0#dfn-deep-linking-response-message
    */
   private async postBackToPlatform (ltiLink ?: string) {
+    if (DEBUG) {
+      (this.$refs.lti_response_form as HTMLFormElement).submit()
+      return
+    }
+
     const jwtResponse = this.generateJWTResponse(ltiLink)
 
-    const postBackAddress = this.ltiReqMessage[
+    /* Set form post back URL for submitting data back to Canvas */
+    this.postbackUrl = this.ltiReqMessage[
       'https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings'].deep_link_return_url
 
     try {
-      await ApiHelper.postBackDeepLink(postBackAddress,
-        jwtResponse,
+      this.postbackJwt = await ApiHelper.createDeepLinkJWT(jwtResponse,
         this.ltiReqMessage.nonce,
         this.ltiReqMessage.iss)
-    } catch (ex) {
-      console.warn(`Postback to ${postBackAddress} failed. Reason: ${ex}`)
+    }
+    catch (ex) {
+      console.warn(`Creating JWT for lti deep link response failed. Reason: ${ex}`)
       throw ex
     }
-
-    window.location.href = postBackAddress       // Redirect back to the platform
+    /* Submit the form to complete lti deep linking flow */
+    (this.$refs.lti_response_form as any).$el.submit()
   }
 
   /**

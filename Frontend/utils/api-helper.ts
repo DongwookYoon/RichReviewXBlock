@@ -1,5 +1,4 @@
 import https from 'https'
-import JwtUtil from './jwt-util'
 import axios from 'axios'
 import { User } from '~/store/modules/LtiAuthStore'
 
@@ -11,7 +10,7 @@ export default class ApiHelper {
    */
   public static async ensureRichReviewUserExists (user : User) {
     console.log(`Ensure user ${user.id} exists in RichReview.`)
-    const loginRes : any = await axios.post(`https://${process.env.backend}:3000/lti_login`,
+    await axios.post(`https://${process.env.backend}:3000/lti_login`,
       {
         id: user.id,
         name: user.userName
@@ -103,13 +102,10 @@ export default class ApiHelper {
   }
 
   /**
-   * Creates an assignment in Canvas.
-   * Rely on backend to proxy request to post back the
-   * lti deep link response to Canvas to create an
-   * assignment.
+   *  Sign an lti response message via the RichReview backend and return the
+   *  resulting jwt.
    **/
-  public static async postBackDeepLink (postBackAddress: string,
-    ltiResponseMessage: any,
+  public static async createDeepLinkJWT (ltiResponseMessage: any,
     nonce?: string,
     audience?: string) {
     const message = ltiResponseMessage
@@ -119,16 +115,17 @@ export default class ApiHelper {
 
     message.aud = audience || process.env.canvas_path
 
-    await axios.post(`https://${process.env.backend}:3000/lti/deeplink`,
+    const res = await axios.post(`https://${process.env.backend}:3000/lti/deeplink`,
       {
-        message,
-        postBackAddress
+        message
       },
       {
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
         })
       })
+
+    return res.data.jwt
   }
 
   /**

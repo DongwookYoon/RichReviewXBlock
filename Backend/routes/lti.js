@@ -78,19 +78,15 @@ router.post('/lti_jwt/:nonce', function(req, res, next) {
 
 
 /**
- * Perform an lti deep link postback to the platform (Canvas)
- * with an lti deep link response message. The tool (client)
- * must pass the desired message and the correct deep link
- * postback URL in the post request body.
+ * Sign an lti deep link response on behalf of the client.
+ * Response has the signed JWT as a JSON object with the property 'jwt'.
  */
 router.post('/deeplink', async function(req, res, next) {
   try {
     if (!req.body.message){
       throw new Error('Required property "message" missing. Request must contain an lti response message');
     } 
-    if (!req.body.postBackAddress){
-      throw new Error('Required property "postBackAddress" missing. Request must contain a post back address.');
-    }
+    
 
     options = {
       algorithm: lti_config.jwk_alg,
@@ -104,47 +100,13 @@ router.post('/deeplink', async function(req, res, next) {
       throw new Error('Creating the JWT failed.');
     }
 
-    const urlEncodedJWT = `JWT=${encodeURIComponent(jwt)}`;
-    console.log('Postback JWT: ' +  urlEncodedJWT);
-    let submitRes = await axios.post(req.body.postBackAddress,
-      urlEncodedJWT,
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        httpsAgent: new https.Agent({
-          rejectUnauthorized: false
-        })
-      });
-
-    res.sendStatus(submitRes.status);
-    
-      
-    if (submitRes.status >= 400) {
-        console.warn('The lti deep link postback request failed. Status text: ' + submitRes.statusText);
-     }
+    res.json({jwt});
+        
 
   } catch(ex) {
     console.warn('Posting lti deep link response to Canvas failed. Reason: ' + ex);
     console.warn('Error message: ' + ex.message );
-    console.warn(ex.response);
-    try {
-       console.warn(JSON.stringify(ex.response.data));
-    } catch (innerEx) {
-      console.warn(ex.response.data);
-    }
-
-    try{
-      console.warn(JSON.stringify(ex.response.data.errors));
-    } catch (innerEx){
-      console.warn(ex.response.data.errors);
-    }
-
-    try {
-      console.warn(JSON.stringify(ex.response.data.errors.jwt));
-    } catch (innerEx){
-      console.warn(ex.response.data.errors.jwt);
-    }
+  
     res.sendStatus(500);
   }
 
@@ -279,7 +241,7 @@ router.post('/assignment', async function(req, res, next) {
 
     } catch (ex){
         console.warn('Submitting assignmetn to Canvas failed. Reason: ' +ex );
-        res.sendStatus(500)
+        res.sendStatus(500);
     }
   });
 

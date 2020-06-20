@@ -112,7 +112,7 @@
   },
 
   {
-    "path": "/lti/assignments/:assignment_type/:assignment_key",
+    "path": "/lti/assignments",
     "component":  "./pages/lti/AssignmentLti.vue"
   },
 

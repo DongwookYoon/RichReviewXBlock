@@ -460,22 +460,22 @@ export default class CreateAssignmentLti extends Vue {
         iframe: {
           width: 800,
           height: 600
+        },
+        custom: {
+          assignment_type: this.assignmentType,
+          assignment_id: this.assignmentId
         }
       }
       contentItems.push(linkItem)
     }
 
-    const assignmentData = {
-      assignment_type: this.assignmentType,
-      assignment_id: this.assignmentId
-    }
 
     let jwtResponse : string = `{
       "https://purl.imsglobal.org/spec/lti/claim/deployment_id": "${deploymentId}",
       "https://purl.imsglobal.org/spec/lti/claim/message_type": "LtiDeepLinkingResponse",
       "https://purl.imsglobal.org/spec/lti/claim/version": "1.3.0",
       "https://purl.imsglobal.org/spec/lti-dl/claim/content_items": ${JSON.stringify(contentItems)},
-      "custom": ${JSON.stringify(assignmentData)}
+      "
     `
 
     /* Only add 'data' claim if it was included in original message */

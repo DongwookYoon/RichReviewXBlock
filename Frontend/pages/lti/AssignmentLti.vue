@@ -149,8 +149,10 @@ const testDataStudent = {
     courseId = launchMessage[
       'https://purl.imsglobal.org/spec/lti/claim/context'].id
 
-    const assignmentType : string = launchMessage.custom.assignment_type
-    const assignmentId : string = launchMessage.custom.assignment_id
+    const assignmentType : string = launchMessage[
+      'https://purl.imsglobal.org/spec/lti/claim/custom'].assignment_type
+    const assignmentId : string = launchMessage[
+      'https://purl.imsglobal.org/spec/lti/claim/custom'].assignment_id
 
     try {
       await ApiHelper.ensureUserEnrolled(courseId,

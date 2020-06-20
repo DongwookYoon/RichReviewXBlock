@@ -74,7 +74,6 @@
       </form>
     </div>
   </div>
-  </div>
 </template>
 
 <script lang = "ts">
@@ -457,8 +456,7 @@ export default class CreateAssignmentLti extends Vue {
           resourceId: this.assignmentId
         },
         window: {
-          targetName: `RichReview_${this.assignmentId}`,
-          windowFeatures: 'menubar=yes,location=yes,status=yes,resizable=yes,scrollbars=no'
+          targetName: 'examplePublisherContent'
         },
         iframe: {
           width: 800,

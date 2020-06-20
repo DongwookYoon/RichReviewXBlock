@@ -149,8 +149,8 @@ const testDataStudent = {
     courseId = launchMessage[
       'https://purl.imsglobal.org/spec/lti/claim/context'].id
 
-    const assignmentType : string = context.params.assignment_type
-    const assignmentId : string = context.params.assignment_key
+    const assignmentType : string = launchMessage.custom.assignment_type
+    const assignmentId : string = launchMessage.custom.assignment_id
 
     try {
       await ApiHelper.ensureUserEnrolled(courseId,

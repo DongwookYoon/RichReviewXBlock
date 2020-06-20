@@ -345,6 +345,7 @@ export default class CreateAssignmentLti extends Vue {
     }
     catch (e) {
       this.saved = false
+      console.warn('Creating assignment failed. Reason: ' + e)
       window.alert('Creating the assignment failed. Please try again. If this error continues,' +
       ' please contact the RichReview administrator.')
     }

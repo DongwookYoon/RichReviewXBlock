@@ -133,7 +133,8 @@ const testDataStudent = {
         the data required to perform the launch is contained within the id_token jwt obtained
         from OIDC authentication. */
       jwt = context.req.body.id_token as string
-      ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt, process.env.canvas_public_key_set_url as string)
+      ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt,
+        process.env.canvas_public_key_set_url as string)
     }
     catch (ex) {
       console.warn('Error occurred while getting ltiLaunchMessage from jwt. Reason: ' + ex)

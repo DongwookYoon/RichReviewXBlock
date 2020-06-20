@@ -17,8 +17,8 @@ const oidc_handler: Middleware = async ({ store, req }) => {
     client (user agent) to the LTI platform Authentication Endpoint
 
     Note that URL encoded request data has been pre-processed by body-parser in
-    Express Server middleware before being handled by this middleware module.
-    Therefore, expected data format for body is JSON. */
+    Express Server middleware (legacy) before being handled by this middleware module.
+    Therefore, data is available as JSON object in req.body. */
   if (process.server) {
     const loginData = req.body
     store.dispatch('LtiAuthStore/updateOidcState', loginData.state as string)

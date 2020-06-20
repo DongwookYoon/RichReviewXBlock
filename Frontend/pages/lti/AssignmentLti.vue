@@ -130,7 +130,8 @@ const testDataStudent = {
 
     try {
       /* As per IMS Security Framework Spec (https://www.imsglobal.org/spec/security/v1p0/),
-        the data required to perform the launch is contained within the id_token jwt */
+        the data required to perform the launch is contained within the id_token jwt obtained
+        from OIDC authentication. */
       jwt = context.req.body.id_token as string
       ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt, process.env.canvas_public_key_set_url as string)
     }

@@ -56,10 +56,7 @@
 
     <div id="finish-button-section">
       <button id="save-button" class="modal-button" value="Save" @click="save">
-        Ok
-      </button>
-      <button id="cancel-button" class="modal-button" value="Cancel" @click="cancel">
-        Cancel
+        Save
       </button>
     </div>
 

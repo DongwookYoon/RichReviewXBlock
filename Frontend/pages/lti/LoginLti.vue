@@ -87,6 +87,8 @@ export default class LoginLti extends Vue {
     }
     else {
       console.warn(`Invalid ${this.state ? 'state' : 'authRedirectUrl'} for OIDC login`)
+      alert('Accessing RichReview failed. Please try again. If this issue continues, contact ' +
+      ' the RichReview system administrator.')
       window.location.replace('/')
     }
   }

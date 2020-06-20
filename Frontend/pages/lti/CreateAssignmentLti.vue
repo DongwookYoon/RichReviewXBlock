@@ -396,9 +396,8 @@ export default class CreateAssignmentLti extends Vue {
         'example.com')
 
       Vue.nextTick().then(() => {
-        console.log('Submitting lti response form...jwt value is: ' + JSON.stringify(this.$refs.jwt_field));
-        /* Submit the form to complete lti deep linking flow */
-        (this.$refs.lti_response_form as HTMLFormElement).submit()
+        console.log('>DEBUG: Max score value: ' + this.maxScore)
+        console.log('>DEBUG: lti response form would have JWT: ' + JSON.stringify(this.$refs.jwt_field))
       })
       return
     }
@@ -419,9 +418,11 @@ export default class CreateAssignmentLti extends Vue {
       throw ex
     }
 
+    /* Submit the form to complete lti deep linking flow. It is very important to
+       wait for Vue next tick. Otherwise, the reactive form data in the jwt_field
+       field may not yet be updated to the latest value. */
     Vue.nextTick().then(() => {
       console.log('Submitting lti response form...jwt value is: ' + JSON.stringify(this.$refs.jwt_field));
-      /* Submit the form to complete lti deep linking flow */
       (this.$refs.lti_response_form as HTMLFormElement).submit()
     })
   }
@@ -453,7 +454,8 @@ export default class CreateAssignmentLti extends Vue {
           resourceId: this.assignmentId
         },
         window: {
-          targetName: 'examplePublisherContent'
+          targetName: `RichReview_${this.assignmentId}`,
+          windowFeatures: 'menubar=yes,location=yes,status=yes,resizable=yes,scrollbars=no'
         },
         iframe: {
           width: 800,

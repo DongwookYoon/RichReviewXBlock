@@ -392,6 +392,7 @@ export default class CreateAssignmentLti extends Vue {
    */
   public async postBackToPlatform (ltiLink ?: string) {
     if (DEBUG) {
+      let jwtResponse = this.generateJWTContents(ltiLink)
       this.postbackJwt = await ApiHelper.createDeepLinkJWT({ test: 'test' },
         '1',
         'example.com')
@@ -475,8 +476,7 @@ export default class CreateAssignmentLti extends Vue {
       "https://purl.imsglobal.org/spec/lti/claim/deployment_id": "${deploymentId}",
       "https://purl.imsglobal.org/spec/lti/claim/message_type": "LtiDeepLinkingResponse",
       "https://purl.imsglobal.org/spec/lti/claim/version": "1.3.0",
-      "https://purl.imsglobal.org/spec/lti-dl/claim/content_items": ${JSON.stringify(contentItems)},
-      "
+      "https://purl.imsglobal.org/spec/lti-dl/claim/content_items": ${JSON.stringify(contentItems)}
     `
 
     /* Only add 'data' claim if it was included in original message */

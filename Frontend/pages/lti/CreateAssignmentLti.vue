@@ -1,8 +1,24 @@
 <template>
   <div v-if="success === true" id="create-assignment">
     <div id="assignment-details">
+      <div>
+        <label id="max-score-label" class="assignment-info-label" for="max-score">Maximum Score</label>
+        <input
+          id="max-score"
+          ref="max_score_input"
+          v-model="maxScore"
+          required
+          min="0.0"
+          placeholder="0.0"
+          type="number"
+          class="assignment-info"
+          @change="saved = false"
+          @input="$event.target.checkValidity()"
+        >
+      </div>
+
       <div id="assignment-type-section">
-        <label id="assignment-type-label" for="assignment-type">Assignment Type</label>
+        <label id="assignment-info-label" class="assignment-info-label" for="assignment-type">Assignment Type</label>
         <select
           id="assignment-type-selection"
           v-model="assignmentType"
@@ -16,16 +32,6 @@
             RichReview Comment Submission
           </option>
         </select>
-      </div>
-
-      <div>
-        <label id="max-score-label" for="max-score">Maximum Score</label>
-        <input
-          v-model="maxScore"
-          type="number"
-          class="assignment-info"
-          @change="saved = false"
-        >
       </div>
 
       <div v-if="assignmentType === 'comment_submission'" id="file-upload-section">
@@ -206,7 +212,7 @@ export default class CreateAssignmentLti extends Vue {
   /* Component data */
   private saved: boolean = true
   private assignmentType : string = 'document_submission'
-  private maxScore !: number
+  private maxScore : number = 0.0
   private files : File [] = []
 
   private assignmentId ?: string
@@ -254,6 +260,9 @@ export default class CreateAssignmentLti extends Vue {
   }
 
   public async save () {
+    if (this.validateInput() === false) {
+      return
+    }
     this.saved = true
     const courseId : string = this.courseId
 
@@ -367,6 +376,17 @@ export default class CreateAssignmentLti extends Vue {
   }
   /* End component-level methods */
 
+  public validateInput () : boolean {
+    for (const ref in this.$refs) {
+      const curElem = this.$refs[ref] as any
+      if (curElem.checkValidity && curElem.checkValidity() === false) {
+        return false
+      }
+    }
+
+    return true
+  }
+
   /**
    * Finish LTI deep linking flow to send the user back to the consumer (LTI platform).
    * Sends the required POST ltiDeepLinkResponse back to the consumer in an HTML form.
@@ -461,10 +481,7 @@ export default class CreateAssignmentLti extends Vue {
     }
     jwtResponse += '}'
 
-    const j = JSON.parse(jwtResponse)
-    console.log(JSON.stringify(j))
-
-    return j
+    return JSON.parse(jwtResponse)
   }
 
   private static async ensureCourseInstructorEnrolled (ltiMsg: any, user : User, courseId: string) {
@@ -511,11 +528,6 @@ export default class CreateAssignmentLti extends Vue {
   min-height: 100vh;
 }
 
-#assignment-type-label {
-  font-weight: bold;
-  font-size: 0.95rem;
-}
-
 #finish-button-section {
   margin-top: 5rem;
 }
@@ -535,10 +547,26 @@ export default class CreateAssignmentLti extends Vue {
   margin-top: 1rem;
 }
 
+#max-score {
+  margin-left: 1.1rem;
+}
+
 .assignment-info {
   min-height: 1.2rem;
   margin-left: 0.5rem;
+  margin-top: 0.8rem;
   font-size: 1rem;
+}
+
+.assignment-info:invalid {
+  border: solid 1px red;
+  border-radius: 3px;
+  box-shadow: 0px 0px 5px red;
+}
+
+.assignment-info-label {
+  font-weight: bold;
+  font-size: 0.95rem;
 }
 
 .modal-button {

@@ -337,7 +337,9 @@ export default class CreateAssignmentLti extends Vue {
       /* General format of URL should be /lti/assignment/:assignment_type/:assignment_key.
       Note that this is sufficient for retreiving all assignment data from RR
       backend when the user accesses assignment. */
-      const ltiLink = `${process.env.prod_url}/lti/assignments` // /${this.assignmentType}/${this.assignmentId}`
+      const ltiLink = `${process.env.prod_url}/lti/assignments?assignment_id=${
+        encodeURIComponent(this.assignmentId as string)}`
+
       console.log(` Successfuly created assignment in RichReview! \nSubmission lti Link: ${ltiLink}`)
 
       await this.postBackToPlatform(ltiLink)
@@ -462,11 +464,8 @@ export default class CreateAssignmentLti extends Vue {
         iframe: {
           width: 800,
           height: 600
-        },
-        custom: {
-          assignment_type: this.assignmentType,
-          assignment_id: this.assignmentId
         }
+
       }
       contentItems.push(linkItem)
     }

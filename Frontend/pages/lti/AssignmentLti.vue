@@ -1,24 +1,29 @@
 <template>
   <div v-if="isCreated===true">
-    <!--TODO determine what data needs to be passed to components, and load it in
-      this page, instead of in the component, if possible -->
-    <p>assignment.vue test </p>
-    <p>Component: {{ curComponent }}</p>
+
+    <div v-if="debug===true">
+      <p>assignment.vue test </p>
+      <p>Component: {{ curComponent }}</p>
+    </div>
 
     <p v-if="loadSuccess === false">
       An error occurred while loading. Try to refresh the page. If this continues,
       please contact the RichReview system administrator.
     </p>
 
+    <!-- TODO Check if this is actually necessary. Does Canvas show the
+         RichReview view in speed grader, even if the assignment is not submitted??
+         If not, then this check if not necessary.
     <div
       v-if="(userRoles.includes(INSTRUCTOR) || userRoles.includes(TA))
         && submit_data.submitted === false"
     >
       <p>The student has not yet submitted this assignment.</p>
     </div>
+    -->
 
-    <!--Else if user role is student then  -->
-    <div v-else-if="userRoles.includes(STUDENT) && submit_data.submitted === false">
+    <!--if user role is student then  -->
+    <div v-if="userRoles.includes(STUDENT) && submit_data.submitted === false">
       <!-- If assignment type is document_submission then -->
       <DocumentSubmitter
         v-if="assignmentType==='document_submission'"
@@ -66,14 +71,8 @@ import ApiHelper from '~/utils/api-helper'
 import { User, ITokenInfo } from '~/store/modules/LtiAuthStore'
 import Roles from '~/utils/roles'
 
-export class SubmitData {
-  viewerLink : string = ''
-  accessCode ?: string | null
-  docID ?: string | null
-  groupID ?: string | null
-  submissionID ?: string | null
-  submitted ?: boolean
-}
+const DEBUG: boolean = process.env.debug_mode !== undefined &&
+  process.env.debug_mode.toLowerCase().trim() === 'true'
 
 const testUser : User = {
   id: 'google_109022885000538247847',
@@ -81,6 +80,7 @@ const testUser : User = {
 }
 
 const testDataStudent = {
+  loadSuccess: true,
   assignmentTitle: 'Test Assignment',
   assignmentType: 'document_submission',
   assignmentId: '1_1591495925951_87362',
@@ -88,12 +88,12 @@ const testDataStudent = {
   courseId: '1',
   submit_data: {
     viewerLink: 'access_code=542cc5809e6f3d8670f47fa722691f70c1c5cd07&docid=google_109022885000538247847_1591495925932&groupid=google_102369315136728943851_1591495926073',
-    submitted: false
+    submitted: true
   }
 }
 
 @Component({
-  middleware: 'oidc_handler', // Handle OIDC login request
+  middleware: DEBUG ? '' : 'oidc_handler', // Handle OIDC login request
 
   components: {
     DocumentSubmitter,
@@ -107,12 +107,19 @@ const testDataStudent = {
     let courseId: string = ''
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let userRoles: string[] = ['']
+    let assignmentType : string = ''
 
-    if (process.env.debug_mode &&
-      (process.env.debug_mode as string).toLowerCase() === 'true') {
+    if (!context.query.assignment_id) {
+      console.warn('No assignment id passed in query string!')
+      return { loadSuccess }
+    }
+
+    const assignmentId : string = decodeURIComponent(context.query.assignment_id as string)
+
+    if (DEBUG) {
       context.store.dispatch('LtiAuthStore/logIn', testUser)
-      courseId = testDataStudent.courseId
-      userRoles = testDataStudent.userRoles
+      testDataStudent.assignmentId = assignmentId
+      return testDataStudent
     }
 
     if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
@@ -149,11 +156,6 @@ const testDataStudent = {
     courseId = launchMessage[
       'https://purl.imsglobal.org/spec/lti/claim/context'].id
 
-    const assignmentType : string = launchMessage[
-      'https://purl.imsglobal.org/spec/lti/claim/custom'].assignment_type
-    const assignmentId : string = launchMessage[
-      'https://purl.imsglobal.org/spec/lti/claim/custom'].assignment_id
-
     try {
       await ApiHelper.ensureUserEnrolled(courseId,
         context.store.getters['LtiAuthStore/authUser'],
@@ -176,6 +178,7 @@ const testDataStudent = {
         assignmentId,
         context.store.getters['LtiAuthStore/authUser'].id)
 
+      assignmentType = assignmentData.type
       let submitted : boolean = (assignmentData.submission_status &&
                                       assignmentData.submission_status.toLowerCase() === 'submitted')
 
@@ -200,14 +203,11 @@ const testDataStudent = {
     }
     catch (e) {
       console.warn(e)
+      console.warn('Assignment data could not be loaded. ')
+      loadSuccess = false
       assignmentData = null
     }
-    finally {
-      if (assignmentData === null) {
-        console.warn('Assignment data could not be loaded. ')
-        loadSuccess = false
-      }
-    }
+
 
     if (loadSuccess === false) {
       return { loadSuccess }
@@ -240,6 +240,7 @@ export default class AssignmentLti extends Vue {
   public readonly TA : string = Roles.TA
   public readonly STUDENT : string = Roles.STUDENT
 
+  private debug: boolean = DEBUG
   private isCreated: boolean = false
   private loadSuccess: boolean = false
 
@@ -281,25 +282,26 @@ export default class AssignmentLti extends Vue {
   }
 
   public created () {
+    const query = this.$route.query
     if (this.isLoggedIn === true && this.loadSuccess) {
       console.log(`Logged in user: ${this.user.id}`)
       console.log('The viewer link: ' + this.submit_data.viewerLink)
       /* If provided, get submission params from URL query string. Otherwise,
         get them from the assignment data */
       const accessCode: string | null =
-        this.$route.query.access_code ? this.$route.query.access_code as string
+        query.access_code ? query.access_code as string
           : AssignmentLti.getQueryVariable('access_code', this.submit_data.viewerLink)
 
       const docID: string | null =
-        this.$route.query.docid ? this.$route.query.docid as string
+        query.docid ? query.docid as string
           : AssignmentLti.getQueryVariable('docid', this.submit_data.viewerLink)
 
       const groupID : string | null =
-        this.$route.query.groupid ? this.$route.query.groupid as string
+        query.groupid ? query.groupid as string
           : AssignmentLti.getQueryVariable('groupid', this.submit_data.viewerLink)
 
       const submissionID : string | null =
-        this.$route.query.submission_id ? this.$route.query.submission_id as string
+        query.submission_id ? query.submission_id as string
           : AssignmentLti.getQueryVariable('submission_id', this.submit_data.viewerLink)
 
       this.submit_data.accessCode = accessCode
@@ -344,10 +346,13 @@ export default class AssignmentLti extends Vue {
 
     const submissionId = updatedAssignmentData.grader_submission_id
     console.log(JSON.stringify(updatedAssignmentData))
-    let submissionURL = `${this.$route.path}?${updatedAssignmentData.link}`
+
+    let submissionURL = `${process.env.prod_url}${this.$route.path}?${
+      updatedAssignmentData.link}&assignment_id=${
+        encodeURIComponent(this.assignmentId)}`
 
     if (submissionId) {
-      submissionURL += `&submission_id=${submissionId}`
+      submissionURL += `&submission_id=${encodeURIComponent(submissionId)}`
     }
 
     if (process.env.debug_mode &&
@@ -408,6 +413,15 @@ export default class AssignmentLti extends Vue {
   private static async getLaunchMessage (jwtBase64 : string, keysetUrl: string) : Promise<object | null> {
     return await JwtUtil.getAndVerifyWithKeyset(jwtBase64, keysetUrl)
   }
+}
+
+export class SubmitData {
+  viewerLink : string = ''
+  accessCode ?: string | null
+  docID ?: string | null
+  groupID ?: string | null
+  submissionID ?: string | null
+  submitted ?: boolean
 }
 
 </script>

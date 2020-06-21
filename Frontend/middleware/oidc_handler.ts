@@ -32,7 +32,7 @@ const oidc_handler: Middleware = async ({ store, req }) => {
       return
     }
 
-    store.dispatch('LtiAuthStore/logIn', { id: tokenData.sub }) // JWT 'sub' claim contains unique global user id.
+    store.dispatch('LtiAuthStore/logIn', { id: tokenData.sub, userName: 'Canvas User' }) // JWT 'sub' claim contains unique global user id.
   }
 
   /* Verify the OIDC state. Invalidate login if session state doesn't match state in the Nuxt store */

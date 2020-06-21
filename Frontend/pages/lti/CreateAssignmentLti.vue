@@ -396,14 +396,11 @@ export default class CreateAssignmentLti extends Vue {
    * See LTI spec for more details here: https://www.imsglobal.org/spec/lti-dl/v2p0#dfn-deep-linking-response-message
    */
   public async postBackToPlatform (ltiLink ?: string) {
-    const jwtContents = this.generateJWTContents(ltiLink)
-
     if (DEBUG) {
       this.postbackJwt = await ApiHelper.createDeepLinkJWT({ test: 'test' },
         '1',
         'example.com')
 
-      console.log('jwtContents: ' + JSON.stringify(jwtContents))
       console.log('postbackJwt: ' + this.postbackJwt)
 
       Vue.nextTick().then(() => {
@@ -416,6 +413,8 @@ export default class CreateAssignmentLti extends Vue {
     /* Set form post back URL for submitting data back to Canvas */
     this.postbackUrl = this.ltiReqMessage[
       'https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings'].deep_link_return_url
+
+    const jwtContents = this.generateJWTContents(ltiLink)
 
     try {
       this.postbackJwt = await ApiHelper.createDeepLinkJWT(jwtContents,

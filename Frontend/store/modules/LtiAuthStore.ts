@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { IUser } from '~/model/user'
+import User, { IUser } from '~/model/user'
 
 export interface ITokenInfo {
   token: string;
@@ -21,8 +21,8 @@ const state = () => ({
 const getters = {
   oidcState: (state: any, getters: any) : string => state.oidcState,
   isLoggedIn: (state: any, getters: any) : boolean => state.userId !== null,
-  authUser: (state: any, getters: any) : IUser => {
-    return { id: state.userId, userName: state.userName }
+  authUser: (state: any, getters: any) : User => {
+    return new User(state.userId, state.userName)
   },
   codeToken: (state: any, getters: any) : ITokenInfo => state.codeToken,
   clientCredentialsToken: (state: any, getters: any) : ITokenInfo => state.clientCredentialsToken

@@ -88,7 +88,7 @@ import { ITokenInfo } from '~/store/modules/LtiAuthStore'
 const testUser = new User(
   '109022885000538247847',
   'Test Instructor',
-  [Roles.INSTRUCTOR]
+  [Roles.INSTRUCTOR, Roles.STUDENT, Roles.INSTRUCTOR]
 )
 
 const testData = {
@@ -178,6 +178,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
       context.redirect(process.env.canvas_path as string)
       return { success }
     }
+
 
     const courseId = ltiReqMessage['https://purl.imsglobal.org/spec/lti/claim/context'].id
 

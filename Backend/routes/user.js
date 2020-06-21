@@ -165,41 +165,51 @@ router.post('/:user_id', async function(req, res, next) {
     }
     
     let checked = false;
+    let is_instructor = false;
+    let is_student = false;
+
     console.log('Ensuring that user roles ' + 
     user_key + 'has these roles: ' + JSON.stringify(roles) + ' in course ' + course_key);
-
+    
     try {
+        /* Consider two possible roles mutually exclusive. Instructor role has priority. */
         for (let role of roles){
             const roleLower = role.toLowerCase();
             if (roleLower === 'instructor'){
-                if (await course_db_handler.is_user_instructor_for_course(user_key, course_key)) {
-                    console.log('User already instructor in course');
-                    res.sendStatus(200);
-                }
-                else {
-                    console.log('Adding instructor to course with course key ' + course_key);
-                    await course_db_handler.add_instructor_to_course(user_key, course_key);
-                    await user_db_handler.add_course_to_instructor(user_key, course_key);
-                    res.sendStatus(201);
-                    
-                }
-                checked = true;
+                is_instructor = true;
+                break;  
             }
             else if (roleLower === 'student') {
-                if (await course_db_handler.is_user_enrolled_in_course(user_key, course_key)) {
-                    console.log('User already enrolled in course');
-                    res.sendStatus(200);
-                }
-                else {
-                    console.log('Adding student to course with course key ' + course_key);
-                    await course_db_handler.add_student_to_course(ImportHandler, user_key, course_key);
-                    res.sendStatus(201);
-                }
-                    
-                checked = true;
+               is_student = true;                
             }
         }
-        if (checked === false) {
+
+        if (is_instructor === true) {
+            if (await course_db_handler.is_user_instructor_for_course(user_key, course_key)) {
+                console.log('User already instructor in course');
+                res.sendStatus(200);
+            }
+            else {
+                console.log('Adding instructor to course with course key ' + course_key);
+                await course_db_handler.add_instructor_to_course(user_key, course_key);
+                await user_db_handler.add_course_to_instructor(user_key, course_key);
+                res.sendStatus(201);
+            }
+        }
+
+        else if (is_student === true) {
+            if (await course_db_handler.is_user_enrolled_in_course(user_key, course_key)) {
+                console.log('User already enrolled in course');
+                res.sendStatus(200);
+            }
+            else {
+                console.log('Adding student to course with course key ' + course_key);
+                await course_db_handler.add_student_to_course(ImportHandler, user_key, course_key);
+                res.sendStatus(201);
+            }
+        }
+        
+        else {
             console.warn('No valid role for adding student or instructor. Roles are' + JSON.stringify(roles));
             res.sendStatus(501);
         }

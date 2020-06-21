@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-export class User {
-  id: string = '';
-  userName ?: string;
-}
+import { IUser } from '~/model/user'
 
 export interface ITokenInfo {
   token: string;
@@ -24,7 +21,7 @@ const state = () => ({
 const getters = {
   oidcState: (state: any, getters: any) : string => state.oidcState,
   isLoggedIn: (state: any, getters: any) : boolean => state.userId !== null,
-  authUser: (state: any, getters: any) : User => {
+  authUser: (state: any, getters: any) : IUser => {
     return { id: state.userId, userName: state.userName }
   },
   codeToken: (state: any, getters: any) : ITokenInfo => state.codeToken,
@@ -52,7 +49,7 @@ const actions = {
     commit('setClientCredentialsToken', clientCredentialToken)
   },
 
-  logIn ({ commit, state } : any, loginInfo : User) {
+  logIn ({ commit, state } : any, loginInfo : IUser) {
     console.log('logging in!! ' + JSON.stringify(loginInfo))
     commit('setLogin', loginInfo)
   },
@@ -68,7 +65,7 @@ const actions = {
 }
 
 const mutations = {
-  setLogin (state: any, authPayload : User) {
+  setLogin (state: any, authPayload : IUser) {
     state.userId = authPayload.id
     state.userName = (authPayload.userName ? authPayload.userName : null)
   },

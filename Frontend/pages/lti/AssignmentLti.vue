@@ -1,6 +1,5 @@
 <template>
   <div v-if="isCreated===true">
-
     <div v-if="debug===true">
       <p>assignment.vue test </p>
       <p>Component: {{ curComponent }}</p>
@@ -13,9 +12,9 @@
 
     <!-- TODO Check if this is actually necessary. Does Canvas show the
          RichReview view in speed grader, even if the assignment is not submitted??
-         If not, then this check if not necessary.
+         If not, then this check+view if not necessary.
     <div
-      v-if="(userRoles.includes(INSTRUCTOR) || userRoles.includes(TA))
+      v-if="(user.isInstructor() || user.isTa())
         && submit_data.submitted === false"
     >
       <p>The student has not yet submitted this assignment.</p>
@@ -23,7 +22,7 @@
     -->
 
     <!--if user role is student then  -->
-    <div v-if="userRoles.includes(STUDENT) && submit_data.submitted === false">
+    <div v-if="user.isStudent && submit_data.submitted === false">
       <!-- If assignment type is document_submission then -->
       <DocumentSubmitter
         v-if="assignmentType==='document_submission'"
@@ -45,7 +44,7 @@
       />
     </div>
 
-    <!--Otherwise assignment has been submitted, regardless of user role,
+    <!--Otherwise, regardless of user role,
         show the assignment in the RichReview viewer-->
     <RichReviewViewer
       v-else
@@ -53,7 +52,6 @@
       :submit_data="submit_data"
       :user="user"
       :course_id="courseId"
-      :user_roles="userRoles"
     />
   </div>
 </template>
@@ -68,23 +66,25 @@ import CommentSubmitter from '~/components/lti/comment_submitter.vue'
 import RichReviewViewer from '~/components/lti/richreview_viewer.vue'
 // eslint-disable-next-line camelcase
 import ApiHelper from '~/utils/api-helper'
-import { User, ITokenInfo } from '~/store/modules/LtiAuthStore'
+import { ITokenInfo } from '~/store/modules/LtiAuthStore'
+import User from '~/model/user'
 import Roles from '~/utils/roles'
 
 const DEBUG: boolean = process.env.debug_mode !== undefined &&
   process.env.debug_mode.toLowerCase().trim() === 'true'
 
-const testUser : User = {
-  id: 'google_109022885000538247847',
-  userName: 'Test Instructor'
-}
+const testUser = new User(
+  'google_109022885000538247847',
+  'Test Instructor',
+  [Roles.INSTRUCTOR]
+)
 
 const testDataStudent = {
   loadSuccess: true,
+  user: testUser,
   assignmentTitle: 'Test Assignment',
   assignmentType: 'document_submission',
   assignmentId: '1_1591495925951_87362',
-  userRoles: ['instructor'],
   courseId: '1',
   submit_data: {
     viewerLink: 'access_code=542cc5809e6f3d8670f47fa722691f70c1c5cd07&docid=google_109022885000538247847_1591495925932&groupid=google_102369315136728943851_1591495926073',
@@ -106,7 +106,6 @@ const testDataStudent = {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let courseId: string = ''
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    let userRoles: string[] = ['']
     let assignmentType : string = ''
 
     if (!context.query.assignment_id) {
@@ -150,16 +149,16 @@ const testDataStudent = {
     }
 
     const launchMessage = ltiLaunchMessage as any
-    userRoles = Roles.getUserRoles(
+    const user: User = context.store.getters['LtiAuthStore/authUser']
+
+    user.roles = Roles.getUserRoles(
       launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
 
     courseId = launchMessage[
       'https://purl.imsglobal.org/spec/lti/claim/context'].id
 
     try {
-      await ApiHelper.ensureUserEnrolled(courseId,
-        context.store.getters['LtiAuthStore/authUser'],
-        userRoles)
+      await ApiHelper.ensureUserEnrolled(courseId, user)
     }
     catch (ex) {
       console.warn('Could not verify user enrollment in course. Reason: ' + ex)
@@ -192,7 +191,7 @@ const testDataStudent = {
         }
       }
 
-      const viewerLink = userRoles.includes(Roles.STUDENT) ? assignmentData.link : assignmentData.grader_link
+      const viewerLink = assignmentData.link || assignmentData.grader_link
       // eslint-disable-next-line camelcase
       submit_data = {
         submitted,
@@ -208,19 +207,18 @@ const testDataStudent = {
       assignmentData = null
     }
 
-
     if (loadSuccess === false) {
       return { loadSuccess }
     }
 
     return {
       loadSuccess,
+      user,
       assignmentTitle: assignmentData.title,
       assignmentType,
       assignmentId,
       launchMessage,
       submit_data,
-      userRoles,
       courseId,
       assignmentData
     }
@@ -228,7 +226,6 @@ const testDataStudent = {
 
   computed: {
     ...mapGetters('LtiAuthStore', {
-      user: 'authUser',
       isLoggedIn: 'isLoggedIn',
       clientCredentialsToken: 'clientCredentialsToken'
     })
@@ -247,10 +244,10 @@ export default class AssignmentLti extends Vue {
   /* Mappings for Vuex store getters */
   public isLoggedIn !: boolean
   public clientCredentialsToken !: ITokenInfo
-  public user !: User
   /* End mapped getters */
 
   /* Component data */
+  private user !: User
   private assignmentTitle ?: string
   private assignmentType ?: string
   private assignmentId !: string
@@ -258,18 +255,17 @@ export default class AssignmentLti extends Vue {
   private launchMessage ?: any
   // eslint-disable-next-line camelcase
   private submit_data !: SubmitData
-  private userRoles !: string[]
   private courseId !: string
   /* End Component data */
 
   public get curComponent () : string {
-    if (this.userRoles.includes(this.INSTRUCTOR) ||
-        this.userRoles.includes(this.TA) ||
+    if (this.user.isInstructor ||
+        this.user.isTa ||
         this.submit_data.submitted === true) {
       return 'richreview_viewer'
     }
 
-    if (this.userRoles.includes(this.STUDENT)) {
+    if (this.user.isStudent) {
       if (this.assignmentType === 'document_submission') {
         return 'document_submitter'
       }
@@ -355,8 +351,7 @@ export default class AssignmentLti extends Vue {
       submissionURL += `&submission_id=${encodeURIComponent(submissionId)}`
     }
 
-    if (process.env.debug_mode &&
-        (process.env.debug_mode as string).toLowerCase() === 'true') {
+    if (DEBUG) {
       alert('DEBUG MODE: Got submit event from child component!')
       console.log('Submitted assignment viewer URL: ' + submissionURL)
       return

@@ -22,7 +22,7 @@ import https from 'https'
 import 'reflect-metadata' // Must import this before nuxt property decorators
 import { SubmitData } from '~/pages/lti/AssignmentLti.vue'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
-import { User } from '~/store/modules/LtiAuthStore'
+import User from '~/model/user'
 
 // eslint-disable-next-line camelcase
 
@@ -45,8 +45,7 @@ export default class RichReviewViewer extends Vue {
   @Prop({ required: true }) readonly submit_data !: SubmitData;
   @Prop({ required: true }) readonly user !: User;
   @Prop({ required: true }) readonly course_id !: string;
-  @Prop({ required: true }) readonly user_roles !: string[];
-
+  @Prop({ required: true }) readonly assignment_type !: string;
 
   mounted () {
     if (this.submit_data.submitted === false) {
@@ -63,8 +62,13 @@ export default class RichReviewViewer extends Vue {
         console.log(`${prop}: ${res[prop]}`)
       }
 
-      /* Only show RichReview UI if the assignment has been submitted */
-      if (this.submit_data.submitted === true) {
+      const instructorOrTa = this.user.isTa || this.user.isInstructor
+      /* Only show RichReview UI if the assignment has been submitted OR
+         if the user is an instructor and the assignment is a comment submission assignment.
+         In the latter case, the instructor or TA will see the document template which they
+         can modify, if desired. */
+      if ((this.submit_data.submitted === true) ||
+            (this.assignment_type === 'comment_submission' && instructorOrTa)) {
         // eslint-disable-next-line camelcase
         const r2_ctx = res.r2_ctx
         r2_ctx.auth = this.user
@@ -82,7 +86,6 @@ export default class RichReviewViewer extends Vue {
       console.warn('Loading RichReview failed. Reason: ' + reason)
     })
   }
-
 
   private getViewerData () : Promise<any> {
     return this.$axios.$get(

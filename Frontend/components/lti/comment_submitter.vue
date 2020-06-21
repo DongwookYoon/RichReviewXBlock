@@ -28,7 +28,7 @@ import axios from 'axios'
 import 'reflect-metadata' // Must import this before nuxt property decorators
 import { Component, Prop, Emit, Vue } from 'nuxt-property-decorator'
 import { SubmitData } from '~/pages/lti/AssignmentLti.vue'
-import { User } from '~/store/modules/LtiAuthStore'
+import User from '~/model/user'
 
 if (typeof window !== 'undefined') {
   require('@/static/my_viewer_helper') // Only load RR viewer helper on client.

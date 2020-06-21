@@ -1,6 +1,6 @@
 import https from 'https'
 import axios from 'axios'
-import { User } from '~/store/modules/LtiAuthStore'
+import User from '~/model/user'
 
 export default class ApiHelper {
   /**
@@ -32,7 +32,7 @@ export default class ApiHelper {
    * @param user User object representing
    * @param roles Determine roles of user within course
    */
-  public static async ensureUserEnrolled (courseId: string, user: User, roles: string[]) {
+  public static async ensureUserEnrolled (courseId: string, user: User) {
     await ApiHelper.ensureRichReviewUserExists(user)
 
     console.log('courseid' + courseId)
@@ -40,7 +40,7 @@ export default class ApiHelper {
     const userRes = await axios.post(
       `https://${process.env.backend}:3000/courses/${
       courseId}/users/${user.id}`,
-      { roles },
+      { roles: user.roles },
       {
         headers: {
           Authorization: user.id

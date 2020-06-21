@@ -79,8 +79,9 @@ import ApiHelper, { CourseData } from '~/utils/api-helper'
 import JwtUtil from '~/utils/jwt-util'
 import { Component, Vue } from 'nuxt-property-decorator'
 import { mapGetters } from 'vuex'
+import User from '~/model/user'
 import Roles from '~/utils/roles'
-import { User, ITokenInfo } from '~/store/modules/LtiAuthStore'
+import { ITokenInfo } from '~/store/modules/LtiAuthStore'
 // eslint-disable-next-line camelcase
 
 const testData = {
@@ -97,10 +98,11 @@ const testCourseData = {
   section: '0000'
 }
 
-const testUser: User = {
-  id: '109022885000538247847',
-  userName: 'Test Instructor'
-}
+const testUser = new User(
+  '109022885000538247847',
+  'Test Instructor',
+  [Roles.INSTRUCTOR]
+)
 
 const DEBUG: boolean = process.env.debug_mode !== undefined &&
   process.env.debug_mode.toLowerCase().trim() === 'true'
@@ -162,9 +164,10 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
       return { success }
     }
 
-    const userRoles = Roles.getUserRoles(ltiReqMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
+    const user : User = context.store.getters['LtiAuthStore/authUser']
+    user.roles = Roles.getUserRoles(ltiReqMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
 
-    if (userRoles.includes(Roles.INSTRUCTOR) === false) {
+    if (user.isInstructor === false) {
       console.warn('Unauthorized. Only instructors may create assignments.')
       context.redirect(process.env.canvas_path as string)
       return { success }
@@ -177,7 +180,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
 
     try {
       await CreateAssignmentLti.ensureCourseInstructorEnrolled(ltiReqMessage,
-        context.store.getters['LtiAuthStore/authUser'],
+        user,
         courseId)
 
       success = true
@@ -393,11 +396,15 @@ export default class CreateAssignmentLti extends Vue {
    * See LTI spec for more details here: https://www.imsglobal.org/spec/lti-dl/v2p0#dfn-deep-linking-response-message
    */
   public async postBackToPlatform (ltiLink ?: string) {
+    const jwtContents = this.generateJWTContents(ltiLink)
+
     if (DEBUG) {
-      let jwtResponse = this.generateJWTContents(ltiLink)
       this.postbackJwt = await ApiHelper.createDeepLinkJWT({ test: 'test' },
         '1',
         'example.com')
+
+      console.log('jwtContents: ' + JSON.stringify(jwtContents))
+      console.log('postbackJwt: ' + this.postbackJwt)
 
       Vue.nextTick().then(() => {
         console.log('>DEBUG: Max score value: ' + this.maxScore)
@@ -406,14 +413,12 @@ export default class CreateAssignmentLti extends Vue {
       return
     }
 
-    const jwtResponse = this.generateJWTContents(ltiLink)
-
     /* Set form post back URL for submitting data back to Canvas */
     this.postbackUrl = this.ltiReqMessage[
       'https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings'].deep_link_return_url
 
     try {
-      this.postbackJwt = await ApiHelper.createDeepLinkJWT(jwtResponse,
+      this.postbackJwt = await ApiHelper.createDeepLinkJWT(jwtContents,
         this.ltiReqMessage.nonce,
         this.ltiReqMessage.iss)
     }
@@ -470,7 +475,6 @@ export default class CreateAssignmentLti extends Vue {
       contentItems.push(linkItem)
     }
 
-
     let jwtResponse : string = `{
       "https://purl.imsglobal.org/spec/lti/claim/deployment_id": "${deploymentId}",
       "https://purl.imsglobal.org/spec/lti/claim/message_type": "LtiDeepLinkingResponse",
@@ -487,8 +491,6 @@ export default class CreateAssignmentLti extends Vue {
     return JSON.parse(jwtResponse)
   }
 
-
-
   private static async ensureCourseInstructorEnrolled (ltiMsg: any, user : User, courseId: string) {
     const contextPropName : string = 'https://purl.imsglobal.org/spec/lti/claim/context'
     const courseData : CourseData = {
@@ -502,8 +504,6 @@ export default class CreateAssignmentLti extends Vue {
     await CreateAssignmentLti.makeCourseAndEnrollInstructor(courseData, user)
   }
 
-
-
   private static async makeCourseAndEnrollInstructor (courseData: CourseData, user: User) {
     // Ensure that the course is created
     // eslint-disable-next-line camelcase
@@ -511,10 +511,8 @@ export default class CreateAssignmentLti extends Vue {
     await ApiHelper.ensureCourseExists(courseData, user.id)
 
     console.log(`Adding instructor ${user.id} to course if they do not exist in course.`)
-    await ApiHelper.ensureUserEnrolled(courseData.id, user, [Roles.INSTRUCTOR])
+    await ApiHelper.ensureUserEnrolled(courseData.id, user)
   }
-
-
 
   private static isInstructor (roles : string[]) : boolean {
     for (const curRole of roles) {

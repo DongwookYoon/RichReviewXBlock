@@ -21,7 +21,7 @@
     </div>
     -->
 
-    <!--if user role is student then  -->
+    <!--if user role is student AND no submission then  -->
     <div v-if="user.isStudent && submit_data.submitted === false">
       <!-- If assignment type is document_submission then -->
       <DocumentSubmitter
@@ -181,21 +181,38 @@ const testDataStudent = {
       let submitted : boolean = (assignmentData.submission_status &&
                                       assignmentData.submission_status.toLowerCase() === 'submitted')
 
-      if (submitted !== false) {
-        if (
-          context.query.access_code &&
-              context.query.docid &&
-              context.query.groupid
-        ) {
-          submitted = true
+      /* Is this view for submitted assignment, or main assignment view? */
+      const isSubmittedView: boolean = (
+        context.query.access_code !== null &&
+              context.query.docid !== null &&
+              context.query.groupid !== null
+      )
+
+      submitted = (submitted !== false && isSubmittedView === true)
+
+      /* Deciding viewer link is important, because it will determine what the
+         user sees in RichReview. For student, we want to show assignment submit
+         data from link property. For instructor, outside of grader, we
+         want template data, to be able to modify comment submission assignment
+         for all users. For instructor in grader, we want grader data */
+      let contentLink : string = ''
+      if (user.isStudent) {
+        contentLink = assignmentData.link || ''
+      }
+
+      else if (user.isTa || user.isInstructor) {
+        if (isSubmittedView) {
+          contentLink = assignmentData.grader_link || ''
+        }
+        else {
+          contentLink = assignmentData.template_link || ''
         }
       }
 
-      const viewerLink = assignmentData.link || assignmentData.grader_link
       // eslint-disable-next-line camelcase
       submit_data = {
         submitted,
-        viewerLink
+        viewerLink: contentLink
       }
 
       loadSuccess = true
@@ -282,8 +299,9 @@ export default class AssignmentLti extends Vue {
     if (this.isLoggedIn === true && this.loadSuccess) {
       console.log(`Logged in user: ${this.user.id}`)
       console.log('The viewer link: ' + this.submit_data.viewerLink)
+
       /* If provided, get submission params from URL query string. Otherwise,
-        get them from the assignment data */
+        get them from the viewer link */
       const accessCode: string | null =
         query.access_code ? query.access_code as string
           : AssignmentLti.getQueryVariable('access_code', this.submit_data.viewerLink)

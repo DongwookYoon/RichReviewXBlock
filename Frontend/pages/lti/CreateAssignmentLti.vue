@@ -285,6 +285,8 @@ export default class CreateAssignmentLti extends Vue {
       count_toward_final_grade: 0
     }
     /* Create a record of the assignment record in RichReview first */
+     console.log('Submitting the assignment as user with id ' + this.user.id)
+
     try {
       if (this.assignmentType === 'comment_submission') {
         if (this.files.length === 0) {
@@ -513,15 +515,6 @@ export default class CreateAssignmentLti extends Vue {
     await ApiHelper.ensureUserEnrolled(courseData.id, user)
   }
 
-  private static isInstructor (roles : string[]) : boolean {
-    for (const curRole of roles) {
-      if (curRole.toLowerCase().includes('instructor')) {
-        return true
-      }
-    }
-
-    return false
-  }
 }
 
 </script>

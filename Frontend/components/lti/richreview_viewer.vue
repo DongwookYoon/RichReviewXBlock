@@ -71,7 +71,7 @@ export default class RichReviewViewer extends Vue {
             (this.assignment_type === 'comment_submission' && instructorOrTa)) {
         // eslint-disable-next-line camelcase
         const r2_ctx = res.r2_ctx
-        r2_ctx.auth = this.user
+        r2_ctx.auth = { id: this.user.id, name: this.user.userName }
         // eslint-disable-next-line camelcase
         const cdn_endpoint = res.cdn_endpoint
 

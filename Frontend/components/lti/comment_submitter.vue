@@ -87,7 +87,7 @@ export default class CommentSubmitter extends Vue {
     ).then((res) => {
       // eslint-disable-next-line camelcase
       const r2_ctx = res.data.r2_ctx
-      r2_ctx.auth = this.user
+      r2_ctx.auth = { id: this.user.id, name: this.user.userName }
       // eslint-disable-next-line camelcase
       const cdn_endpoint = res.data.cdn_endpoint
 

@@ -166,7 +166,7 @@ router.post('/:user_id', async function(req, res, next) {
     
     let checked = false;
     console.log('Ensuring that user roles ' + 
-    user_key + '  has these roles: ' + JSON.stringify(roles) + 'in course ' + course_key);
+    user_key + 'has these roles: ' + JSON.stringify(roles) + ' in course ' + course_key);
 
     try {
         for (let role of roles){

@@ -84,10 +84,18 @@ import Roles from '~/utils/roles'
 import { ITokenInfo } from '~/store/modules/LtiAuthStore'
 // eslint-disable-next-line camelcase
 
+
+const testUser = new User(
+  '109022885000538247847',
+  'Test Instructor',
+  [Roles.INSTRUCTOR]
+)
+
 const testData = {
   assignmentId: `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`,
   success: true,
-  courseId: `test_2`
+  courseId: `test_2`,
+  user: testUser
 }
 
 const testCourseData = {
@@ -98,11 +106,7 @@ const testCourseData = {
   section: '0000'
 }
 
-const testUser = new User(
-  '109022885000538247847',
-  'Test Instructor',
-  [Roles.INSTRUCTOR]
-)
+
 
 const DEBUG: boolean = process.env.debug_mode !== undefined &&
   process.env.debug_mode.toLowerCase().trim() === 'true'
@@ -167,6 +171,8 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
     const user : User = context.store.getters['LtiAuthStore/authUser']
     user.roles = Roles.getUserRoles(ltiReqMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
 
+    console.log(`User roles for ${user.id} are: ${user.roles}`)
+
     if (user.isInstructor === false) {
       console.warn('Unauthorized. Only instructors may create assignments.')
       context.redirect(process.env.canvas_path as string)
@@ -187,6 +193,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
 
       return {
         ltiReqMessage,
+        user,
         assignmentId,
         courseId,
         success
@@ -200,7 +207,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
 
   computed: {
     ...mapGetters('LtiAuthStore', {
-      user: 'authUser',
+      authUser: 'authUser',
       isLoggedIn: 'isLoggedIn',
       codeToken: 'codeToken'
     })
@@ -214,6 +221,7 @@ export default class CreateAssignmentLti extends Vue {
   private maxScore : number = 0.0
   private files : File [] = []
 
+  private user !: User
   private assignmentId ?: string
   private ltiReqMessage ?: any
   private success !: boolean
@@ -226,7 +234,7 @@ export default class CreateAssignmentLti extends Vue {
   /* Mappings for Vuex store getters */
   public isLoggedIn !: boolean
   public codeToken !: ITokenInfo
-  public user !: User
+
   /* End mapped getters */
   public mounted () {
     if (this.isLoggedIn === false) {

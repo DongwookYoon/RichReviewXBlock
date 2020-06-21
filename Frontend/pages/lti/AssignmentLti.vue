@@ -51,6 +51,7 @@
       class="rich-review-view"
       :submit_data="submit_data"
       :user="user"
+      :assignment_type="assignmentType"
       :course_id="courseId"
     />
   </div>

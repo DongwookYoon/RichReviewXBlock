@@ -103,6 +103,7 @@ const testDataStudent = {
   },
 
   async asyncData (context) {
+    console.log('asyncData!')
     let loadSuccess: boolean = false
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let courseId: string = ''
@@ -117,18 +118,23 @@ const testDataStudent = {
     const assignmentId : string = decodeURIComponent(context.query.assignment_id as string)
 
     if (DEBUG) {
+      console.log('Running in DEBUG mode')
       context.store.dispatch('LtiAuthStore/logIn', testUser)
       testDataStudent.assignmentId = assignmentId
       return testDataStudent
     }
 
     if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
+      console.warn('User is not logged in! This means OIDC login failed.')
       return {
         loadSuccess
       }
     }
 
+    const user: User = context.store.getters['LtiAuthStore/authUser']
+
     if (process.server === false) {
+      console.log(`Logged in user is: ${user}`)
       return
     }
 
@@ -149,8 +155,9 @@ const testDataStudent = {
       return { loadSuccess }
     }
 
+    console.log(`LTI Launch Message is:  ${JSON.stringify(ltiLaunchMessage)}`)
+
     const launchMessage = ltiLaunchMessage as any
-    const user: User = context.store.getters['LtiAuthStore/authUser']
 
     user.roles = Roles.getUserRoles(
       launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
@@ -159,6 +166,7 @@ const testDataStudent = {
       'https://purl.imsglobal.org/spec/lti/claim/context'].id
 
     try {
+      console.log(`Ensuring that the user ${user} is enrolled in course ${courseId} with roles ${user.roles}`)
       await ApiHelper.ensureUserEnrolled(courseId, user)
     }
     catch (ex) {
@@ -215,6 +223,8 @@ const testDataStudent = {
         submitted,
         viewerLink: contentLink
       }
+
+      console.log(`Assignment submission info: ${JSON.stringify(submit_data)}`)
 
       loadSuccess = true
     }
@@ -296,6 +306,7 @@ export default class AssignmentLti extends Vue {
   }
 
   public created () {
+    console.log('Created!')
     const query = this.$route.query
     if (this.isLoggedIn === true && this.loadSuccess) {
       console.log(`Logged in user: ${this.user.id}`)

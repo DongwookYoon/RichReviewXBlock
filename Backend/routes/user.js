@@ -209,7 +209,7 @@ router.post('/:user_id', async function(req, res, next) {
         else if (!is_student && !is_instructor) {
             console.warn('No valid role for adding student or instructor. Roles are' + JSON.stringify(roles));
             res.sendStatus(501);
-            return;
+            return
         }
 
         if (created) {

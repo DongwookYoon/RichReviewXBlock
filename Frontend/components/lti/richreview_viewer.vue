@@ -1,5 +1,14 @@
 <template>
-  <div v-if="submit_data.submitted===true">
+  <div
+    v-if="(submit_data.submitted===true) || is_template"
+  >
+    <div v-if="is_template">
+      <p>
+        RichReview comment submission assignment. Edit the document template here to
+        change what all students will see. Student submissions can be viewed in SpeedGrader.
+      </p>
+    </div>
+
     <no-ssr>
       <body>
         <div class="content_body">
@@ -43,15 +52,18 @@ if (typeof window !== 'undefined') {
 })
 export default class RichReviewViewer extends Vue {
   @Prop({ required: true }) readonly submit_data !: SubmitData;
-  @Prop({ required: true }) readonly user !: User;
+  @Prop({ required: true }) readonly user_data !: User;
   @Prop({ required: true }) readonly course_id !: string;
   @Prop({ required: true }) readonly assignment_type !: string;
+  @Prop({ required: true }) readonly is_template !: boolean;
+
+  private user !: User
+
+  created () {
+    this.user = User.parse(this.user_data)
+  }
 
   mounted () {
-    if (this.submit_data.submitted === false) {
-      return
-    }
-
     this.getViewerData().then((res) => {
       console.log('Getting assignment data for instructor or student.')
       console.log('Course id: ' + this.course_id)
@@ -63,12 +75,13 @@ export default class RichReviewViewer extends Vue {
       }
 
       const instructorOrTa = this.user.isTa || this.user.isInstructor
+
       /* Only show RichReview UI if the assignment has been submitted OR
          if the user is an instructor and the assignment is a comment submission assignment.
          In the latter case, the instructor or TA will see the document template which they
          can modify, if desired. */
       if ((this.submit_data.submitted === true) ||
-            (this.assignment_type === 'comment_submission' && instructorOrTa)) {
+            (this.is_template && instructorOrTa)) {
         // eslint-disable-next-line camelcase
         const r2_ctx = res.r2_ctx
         r2_ctx.auth = { id: this.user.id, name: this.user.userName }
@@ -88,6 +101,7 @@ export default class RichReviewViewer extends Vue {
   }
 
   private getViewerData () : Promise<any> {
+    console.log('hii')
     return this.$axios.$get(
         `https://${process.env.backend}:3000/courses/${
           this.course_id

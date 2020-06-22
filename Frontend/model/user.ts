@@ -23,7 +23,7 @@ export default class User implements IUser {
       return false
     }
 
-    return this.roles?.includes(Roles.INSTRUCTOR)
+    return this.roles.includes(Roles.INSTRUCTOR)
   }
 
   get isTa () : boolean {
@@ -31,7 +31,7 @@ export default class User implements IUser {
       return false
     }
 
-    return this.roles?.includes(Roles.TA)
+    return this.roles.includes(Roles.TA)
   }
 
   get isStudent () : boolean {
@@ -39,6 +39,10 @@ export default class User implements IUser {
       return false
     }
 
-    return this.roles?.includes(Roles.STUDENT)
+    return this.roles.includes(Roles.STUDENT)
+  }
+
+  public static parse (userData: IUser) : User {
+    return new User(userData.id, userData.userName || '', userData.roles)
   }
 }

@@ -40,18 +40,14 @@
     <!--Otherwise, regardless of user role,
         show the assignment in the RichReview viewer-->
     <div v-else>
-      <div v-if="user.isInstructor && assignmentType === 'comment_submission'">
-        <p>
-          RichReview comment submission assignment. Edit the document template here to
-          change what all students will see. Student submissions can be viewed in SpeedGrader.
-        </p>
-      </div>
+
       <RichReviewViewer
         class="rich-review-view"
         :submit_data="submit_data"
-        :user="user"
+        :user_data="user"
         :assignment_type="assignmentType"
         :course_id="courseId"
+        :is_template="isTemplate"
       />
     </div>
   </div>
@@ -68,7 +64,7 @@ import RichReviewViewer from '~/components/lti/richreview_viewer.vue'
 // eslint-disable-next-line camelcase
 import ApiHelper from '~/utils/api-helper'
 import { ITokenInfo } from '~/store/modules/LtiAuthStore'
-import User from '~/model/user'
+import User, { IUser } from '~/model/user'
 import Roles from '~/utils/roles'
 
 const DEBUG: boolean = process.env.debug_mode !== undefined &&
@@ -117,7 +113,6 @@ const testDataStudent = {
     if (DEBUG) {
       console.log('Running in DEBUG mode')
       context.store.dispatch('LtiAuthStore/logIn', testUser)
-      assignmentId = testDataStudent.assignmentId
       courseId = testDataStudent.courseId
       // return testDataStudent
     }
@@ -129,7 +124,8 @@ const testDataStudent = {
       }
     }
 
-    user = context.store.getters['LtiAuthStore/authUser']
+    // eslint-disable-next-line prefer-const
+    user = User.parse(context.store.getters['LtiAuthStore/authUser'])
 
     if (DEBUG === false) {
       let jwt : string
@@ -176,27 +172,28 @@ const testDataStudent = {
     let assignmentData = null
     // eslint-disable-next-line camelcase
     let submit_data : SubmitData | null = null
+    let isSubmittedView: boolean = false
+    let isTemplate: boolean = false
+    let submitted: boolean = false
 
     try {
       assignmentData = await ApiHelper.getAssignmentData(courseId,
         assignmentId,
         context.store.getters['LtiAuthStore/authUser'].id)
 
-      assignmentType = assignmentData.type
+      assignmentType = assignmentData.assignment.type
 
-      console.log('ttyyype ' + assignmentType)
-
-      let submitted : boolean = (assignmentData.submission_status !== undefined &&
+      const markedSubmitted : boolean = (assignmentData.submission_status !== undefined &&
                                       assignmentData.submission_status.toLowerCase() === 'submitted')
 
       /* Is this view for submitted assignment, or main assignment view? */
-      const isSubmittedView: boolean = (
+      isSubmittedView = (
         context.query.access_code !== undefined &&
               context.query.docid !== undefined &&
               context.query.groupid !== undefined)
 
-
-      submitted = (submitted !== false && isSubmittedView === true)
+      isTemplate = ((isSubmittedView === false) && (user.isInstructor || user.isTa))
+      submitted = (markedSubmitted !== false && isSubmittedView === true)
 
       /* Deciding viewer link is important, because it will determine what the
          user sees in RichReview. For student, we want to show assignment submit
@@ -241,11 +238,12 @@ const testDataStudent = {
     return {
       loadSuccess,
       user,
-      assignmentTitle: assignmentData.title,
+      assignmentTitle: assignmentData.assignment.title,
       assignmentType,
       assignmentId,
       launchMessage,
       submit_data,
+      isTemplate,
       courseId,
       assignmentData
     }
@@ -282,6 +280,7 @@ export default class AssignmentLti extends Vue {
   private launchMessage ?: any
   // eslint-disable-next-line camelcase
   private submit_data !: SubmitData
+  private isTemplate !: boolean
   private courseId !: string
   /* End Component data */
 
@@ -310,6 +309,7 @@ export default class AssignmentLti extends Vue {
     if (this.isLoggedIn === true && this.loadSuccess) {
       console.log(`Logged in user: ${this.user.id}`)
       console.log('The viewer link: ' + this.submit_data.viewerLink)
+
 
       /* If provided, get submission params from URL query string. Otherwise,
         get them from the viewer link */
@@ -340,6 +340,7 @@ export default class AssignmentLti extends Vue {
 
   public mounted () {
     console.log(JSON.stringify(this.assignmentData))
+    console.log(this.assignmentData.assignment.title)
     console.log('Assignment submitted?: ' + this.submit_data.submitted)
     if (this.isLoggedIn === false) {
       console.warn('OIDC login failed')

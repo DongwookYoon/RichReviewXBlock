@@ -98,7 +98,7 @@ export default class ApiHelper {
     }
 
     console.log(JSON.stringify(resp.data))
-    return resp.data.assignment
+    return resp.data
   }
 
   /**

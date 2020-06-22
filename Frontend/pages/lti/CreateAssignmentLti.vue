@@ -290,7 +290,7 @@ export default class CreateAssignmentLti extends Vue {
       count_toward_final_grade: 0
     }
     /* Create a record of the assignment record in RichReview first */
-    console.log('Creatings the assignment as user with id ' + this.user.id)
+    console.log('Creating the assignment as user with id ' + this.user.id)
 
     try {
       if (this.assignmentType === 'comment_submission') {
@@ -590,7 +590,7 @@ export default class CreateAssignmentLti extends Vue {
 }
 
 .file {
-  margin: 0;
+  margin: 0.5rem 0;
 }
 
 .doc-file-input {

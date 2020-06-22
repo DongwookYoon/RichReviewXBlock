@@ -50,7 +50,7 @@ const actions = {
     commit('setClientCredentialsToken', clientCredentialToken)
   },
 
-  logIn ({ commit, state } : any, loginInfo : IUser) {
+  logIn ({ commit, state } : any, loginInfo : User) {
     console.log('logging in!! ' + JSON.stringify(loginInfo))
     commit('setLogin', loginInfo)
   },
@@ -66,7 +66,7 @@ const actions = {
 }
 
 const mutations = {
-  setLogin (state: any, authPayload : IUser) {
+  setLogin (state: any, authPayload : User) {
     state.userId = authPayload.id
     state.userName = (authPayload.userName ? authPayload.userName : null)
     state.userRoles = (authPayload.roles ? authPayload.roles : null)

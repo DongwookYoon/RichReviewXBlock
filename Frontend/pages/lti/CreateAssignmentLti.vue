@@ -84,7 +84,6 @@ import Roles from '~/utils/roles'
 import { ITokenInfo } from '~/store/modules/LtiAuthStore'
 // eslint-disable-next-line camelcase
 
-
 const testUser = new User(
   '109022885000538247847',
   'Test Instructor',
@@ -92,7 +91,7 @@ const testUser = new User(
 )
 
 const testData = {
-  assignmentId: `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`,
+  assignmentId: `1592790355002_84952`,
   success: true,
   courseId: `test_2`,
   user: testUser
@@ -105,8 +104,6 @@ const testCourseData = {
   number: '0000',
   section: '0000'
 }
-
-
 
 const DEBUG: boolean = process.env.debug_mode !== undefined &&
   process.env.debug_mode.toLowerCase().trim() === 'true'
@@ -178,7 +175,6 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
       context.redirect(process.env.canvas_path as string)
       return { success }
     }
-
 
     const courseId = ltiReqMessage['https://purl.imsglobal.org/spec/lti/claim/context'].id
 
@@ -294,7 +290,7 @@ export default class CreateAssignmentLti extends Vue {
       count_toward_final_grade: 0
     }
     /* Create a record of the assignment record in RichReview first */
-     console.log('Creatings the assignment as user with id ' + this.user.id)
+    console.log('Creatings the assignment as user with id ' + this.user.id)
 
     try {
       if (this.assignmentType === 'comment_submission') {
@@ -523,7 +519,6 @@ export default class CreateAssignmentLti extends Vue {
     console.log(`Adding instructor ${user.id} to course if they do not exist in course.`)
     await ApiHelper.ensureUserEnrolled(courseData.id, user)
   }
-
 }
 
 </script>

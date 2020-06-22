@@ -10,17 +10,6 @@
       please contact the RichReview system administrator.
     </p>
 
-    <!-- TODO Check if this is actually necessary. Does Canvas show the
-         RichReview view in speed grader, even if the assignment is not submitted??
-         If not, then this check+view if not necessary.
-    <div
-      v-if="(user.isInstructor() || user.isTa())
-        && submit_data.submitted === false"
-    >
-      <p>The student has not yet submitted this assignment.</p>
-    </div>
-    -->
-
     <!--if user role is student AND no submission then  -->
     <div v-if="user.isStudent && submit_data.submitted === false">
       <!-- If assignment type is document_submission then -->
@@ -44,16 +33,27 @@
       />
     </div>
 
+    <div v-else-if="user.isInstructor && assignmentType === 'document_submission'">
+      <p>RichReview document submission assignment. Student submissions can be viewed in SpeedGrader.</p>
+    </div>
+
     <!--Otherwise, regardless of user role,
         show the assignment in the RichReview viewer-->
-    <RichReviewViewer
-      v-else
-      class="rich-review-view"
-      :submit_data="submit_data"
-      :user="user"
-      :assignment_type="assignmentType"
-      :course_id="courseId"
-    />
+    <div v-else>
+      <div v-if="user.isInstructor && assignmentType === 'comment_submission'">
+        <p>
+          RichReview comment submission assignment. Edit the document template here to
+          change what all students will see. Student submissions can be viewed in SpeedGrader.
+        </p>
+      </div>
+      <RichReviewViewer
+        class="rich-review-view"
+        :submit_data="submit_data"
+        :user="user"
+        :assignment_type="assignmentType"
+        :course_id="courseId"
+      />
+    </div>
   </div>
 </template>
 
@@ -85,12 +85,8 @@ const testDataStudent = {
   user: testUser,
   assignmentTitle: 'Test Assignment',
   assignmentType: 'document_submission',
-  assignmentId: '1_1591495925951_87362',
-  courseId: '1',
-  submit_data: {
-    viewerLink: 'access_code=542cc5809e6f3d8670f47fa722691f70c1c5cd07&docid=google_109022885000538247847_1591495925932&groupid=google_102369315136728943851_1591495926073',
-    submitted: true
-  }
+  assignmentId: '1592790355002_84952',
+  courseId: 'test_2'
 }
 
 @Component({
@@ -105,23 +101,25 @@ const testDataStudent = {
   async asyncData (context) {
     console.log('asyncData!')
     let loadSuccess: boolean = false
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    let courseId: string = ''
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    let assignmentType : string = ''
 
     if (!context.query.assignment_id) {
       console.warn('No assignment id passed in query string!')
       return { loadSuccess }
     }
 
-    const assignmentId : string = decodeURIComponent(context.query.assignment_id as string)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    let courseId: string = ''
+    let assignmentType : string = ''
+    let launchMessage : any = {}
+    let user: User
+    let assignmentId : string = decodeURIComponent(context.query.assignment_id as string)
 
     if (DEBUG) {
       console.log('Running in DEBUG mode')
       context.store.dispatch('LtiAuthStore/logIn', testUser)
-      testDataStudent.assignmentId = assignmentId
-      return testDataStudent
+      assignmentId = testDataStudent.assignmentId
+      courseId = testDataStudent.courseId
+      // return testDataStudent
     }
 
     if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
@@ -131,42 +129,39 @@ const testDataStudent = {
       }
     }
 
-    const user: User = context.store.getters['LtiAuthStore/authUser']
+    user = context.store.getters['LtiAuthStore/authUser']
 
-    if (process.server === false) {
-      console.log(`Logged in user is: ${user}`)
-      return
-    }
+    if (DEBUG === false) {
+      let jwt : string
+      let ltiLaunchMessage : object | null = null
 
-    let jwt : string
-    let ltiLaunchMessage : object | null = null
-
-    try {
+      try {
       /* As per IMS Security Framework Spec (https://www.imsglobal.org/spec/security/v1p0/),
         the data required to perform the launch is contained within the id_token jwt obtained
         from OIDC authentication. */
-      jwt = context.req.body.id_token as string
-      ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt,
+        jwt = context.req.body.id_token as string
+        ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt,
         process.env.canvas_public_key_set_url as string)
-    }
-    catch (ex) {
-      console.warn('Error occurred while getting ltiLaunchMessage from jwt. Reason: ' + ex)
-      ltiLaunchMessage = null
-      return { loadSuccess }
-    }
+      }
+      catch (ex) {
+        console.warn('Error occurred while getting ltiLaunchMessage from jwt. Reason: ' + ex)
+        ltiLaunchMessage = null
+        return { loadSuccess }
+      }
 
-    console.log(`LTI Launch Message is:  ${JSON.stringify(ltiLaunchMessage)}`)
+      console.log(`LTI Launch Message is:  ${JSON.stringify(ltiLaunchMessage)}`)
 
-    const launchMessage = ltiLaunchMessage as any
+      launchMessage = ltiLaunchMessage as any
+      user.roles = Roles.getUserRoles(
+        launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
 
-    user.roles = Roles.getUserRoles(
-      launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
-
-    courseId = launchMessage[
-      'https://purl.imsglobal.org/spec/lti/claim/context'].id
+      courseId = launchMessage[
+        'https://purl.imsglobal.org/spec/lti/claim/context'].id
+    } // End-else
 
     try {
-      console.log(`Ensuring that the user ${user} is enrolled in course ${courseId} with roles ${user.roles}`)
+      console.log(`Ensuring that the user ${JSON.stringify(user)} is enrolled in course ${
+        courseId} with roles ${user.roles}`)
       await ApiHelper.ensureUserEnrolled(courseId, user)
     }
     catch (ex) {
@@ -176,6 +171,7 @@ const testDataStudent = {
         loadSuccess
       }
     }
+
     // eslint-disable-next-line camelcase
     let assignmentData = null
     // eslint-disable-next-line camelcase
@@ -187,15 +183,18 @@ const testDataStudent = {
         context.store.getters['LtiAuthStore/authUser'].id)
 
       assignmentType = assignmentData.type
-      let submitted : boolean = (assignmentData.submission_status &&
+
+      console.log('ttyyype ' + assignmentType)
+
+      let submitted : boolean = (assignmentData.submission_status !== undefined &&
                                       assignmentData.submission_status.toLowerCase() === 'submitted')
 
       /* Is this view for submitted assignment, or main assignment view? */
       const isSubmittedView: boolean = (
-        context.query.access_code !== null &&
-              context.query.docid !== null &&
-              context.query.groupid !== null
-      )
+        context.query.access_code !== undefined &&
+              context.query.docid !== undefined &&
+              context.query.groupid !== undefined)
+
 
       submitted = (submitted !== false && isSubmittedView === true)
 

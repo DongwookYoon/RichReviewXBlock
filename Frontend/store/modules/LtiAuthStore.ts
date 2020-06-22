@@ -13,6 +13,7 @@ const TOKEN_LIFETIME: number = 3600
 const state = () => ({
   userId: null,
   userName: null,
+  userRoles: null,
   codeToken: null,
   clientCredentialsToken: null,
   oidcStateData: null
@@ -22,7 +23,7 @@ const getters = {
   oidcState: (state: any, getters: any) : string => state.oidcState,
   isLoggedIn: (state: any, getters: any) : boolean => state.userId !== null,
   authUser: (state: any, getters: any) : User => {
-    return new User(state.userId, state.userName)
+    return new User(state.userId, state.userName || '', state.userRoles || [])
   },
   codeToken: (state: any, getters: any) : ITokenInfo => state.codeToken,
   clientCredentialsToken: (state: any, getters: any) : ITokenInfo => state.clientCredentialsToken
@@ -68,6 +69,7 @@ const mutations = {
   setLogin (state: any, authPayload : IUser) {
     state.userId = authPayload.id
     state.userName = (authPayload.userName ? authPayload.userName : null)
+    state.userRoles = (authPayload.roles ? authPayload.roles : null)
   },
 
   clearLogin (state: any) {

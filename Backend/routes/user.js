@@ -172,11 +172,13 @@ router.post('/:user_id', async function(req, res, next) {
     user_key + 'has these roles: ' + JSON.stringify(roles) + ' in course ' + course_key);
     
     try {
-        /* Consider two possible roles  */
+        /* Consider two possible roles that are mutually exclusive. Give priority
+           to instructor role.  */
         for (let role of roles){
             const roleLower = role.toLowerCase();
             if (roleLower === 'instructor'){
                 is_instructor = true;
+                break;
             }
             else if (roleLower === 'student') {
                is_student = true;                
@@ -195,7 +197,7 @@ router.post('/:user_id', async function(req, res, next) {
             }
         }
 
-        if (is_student === true) {
+        else if (is_student === true) {
             if (await course_db_handler.is_user_enrolled_in_course(user_key, course_key)) {
                 console.log('User already enrolled in course');
             }

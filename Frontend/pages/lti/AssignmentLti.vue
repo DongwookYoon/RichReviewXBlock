@@ -124,9 +124,19 @@ const testDataStudent = {
       }
     }
 
+    user = User.parse(context.store.getters['LtiAuthStore/authUser'])
+
     if (DEBUG === false) {
       // eslint-disable-next-line prefer-const
-      user = User.parse(context.store.getters['LtiAuthStore/authUser'])
+
+      if (!process.server) {
+        loadSuccess = true
+        return {
+          user,
+          loadSuccess
+        }
+      }
+
       let jwt : string
       let ltiLaunchMessage : any = null
 
@@ -145,10 +155,6 @@ const testDataStudent = {
         console.warn('Error occurred while getting ltiLaunchMessage from jwt. Reason: ' + ex)
         ltiLaunchMessage = null
         return { loadSuccess }
-      }
-
-      if (!process.server) {
-        return
       }
 
       launchMessage = ltiLaunchMessage as any
@@ -251,6 +257,13 @@ const testDataStudent = {
     }
   },
 
+  fetch ({ redirect, store }) {
+    if (store.getters['LtiAuthStore/isLoggedIn'] === false) {
+      console.warn('User is not logged in to Canvas. Redirecting to Canvas login page...')
+      redirect(process.env.canvas_path as string)
+    }
+  },
+
   computed: {
     ...mapGetters('LtiAuthStore', {
       isLoggedIn: 'isLoggedIn',
@@ -319,7 +332,7 @@ export default class AssignmentLti extends Vue {
 
   public created () {
     const query = this.$route.query
-    if (this.isLoggedIn === true && this.loadSuccess) {
+    if (this.loadSuccess) {
       this.user = User.parse(this.user)
 
       console.log(`Logged in user: ${JSON.stringify(this.user)}`)
@@ -356,12 +369,7 @@ export default class AssignmentLti extends Vue {
   public mounted () {
     console.log(JSON.stringify(this.assignmentData))
 
-    if (this.isLoggedIn === false) {
-      console.warn('OIDC login failed')
-      alert('You must be logged in to Canvas to view this assignment.')
-      window.location.replace(process.env.canvas_path as string)
-    }
-    else if (this.loadSuccess === false) {
+    if (this.loadSuccess === false) {
       alert('An error occurred while loading. Please try to refresh the page.\n' +
         'If this error persists, contact the RichReview system administrator for assistance.')
     }

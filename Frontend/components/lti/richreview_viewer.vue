@@ -131,7 +131,9 @@ p {
   margin: 0;
 }
 
-
+.template-description p{
+  font-size: 1.2rem
+}
 
 #r2_app_page,
 #r2_app_container {

@@ -481,6 +481,8 @@ export default class AssignmentLti extends Vue {
     margin: 1rem 1rem 1rem 2rem;
   }
 
-
+  .instructor-doc-submission-view p {
+    font-size: 1.1rem;
+  }
 
 </style>

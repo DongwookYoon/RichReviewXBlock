@@ -33,6 +33,9 @@ export default class ApiHelper {
    * @param roles Determine roles of user within course
    */
   public static async ensureUserEnrolled (courseId: string, user: User) {
+    console.log(`Ensuring that the user ${JSON.stringify(user)} is enrolled in course ${
+      courseId} with roles ${user.roles}`)
+
     await ApiHelper.ensureRichReviewUserExists(user)
 
     console.log('courseid' + courseId)

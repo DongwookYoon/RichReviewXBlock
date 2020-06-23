@@ -36,7 +36,8 @@
       />
     </div>
 
-    <div v-else-if="isUserInstructor && assignmentType === 'document_submission'">
+    <div v-else-if="isUserInstructor && assignmentType === 'document_submission'"
+     class = "instructor-doc-submission-view">
       <p>RichReview document submission assignment. Student submissions can be viewed in SpeedGrader.</p>
     </div>
 
@@ -475,5 +476,11 @@ export default class AssignmentLti extends Vue {
   .rich-review-view {
     margin: 0
   }
+
+  .instructor-doc-submission-view {
+    margin: 1rem 1rem 1rem 2rem;
+  }
+
+
 
 </style>

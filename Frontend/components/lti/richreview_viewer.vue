@@ -2,7 +2,7 @@
   <div
     v-if="(submit_data.submitted===true) || is_template"
   >
-    <div v-if="is_template">
+    <div v-if="is_template" class="template-description">
       <p>
         RichReview comment submission assignment. Edit the document template here to
         change what all students will see. Student submissions can be viewed in SpeedGrader.
@@ -101,7 +101,6 @@ export default class RichReviewViewer extends Vue {
   }
 
   private getViewerData () : Promise<any> {
-    console.log('hii')
     return this.$axios.$get(
         `https://${process.env.backend}:3000/courses/${
           this.course_id
@@ -123,127 +122,21 @@ export default class RichReviewViewer extends Vue {
 <style scoped>
 @import 'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/css/bootstrap.min.css';
 
-.due-div {
-    display: flex;
-    position: absolute;
-    color: white;
-    height: 4em;
-    font-size: 2vh;
-    width: 20%;
-    left: 12%;
-    line-height: 1em;
-    margin-top: 0.2%;
+
+body {
+  overflow: hidden;
 }
 
 p {
   margin: 0;
 }
 
-#top-bar {
-  display: flex;
-  flex-flow: row wrap;
 
-  justify-content: space-between;
-  align-items: center;
-  background-color: #0c2343;
-  width: 100%;
-  max-width: 100%;
-  min-height: 5vh;
-}
-
-#assignment-title,
-#prev-arrow,
-#next-arrow,
-#mark-input,
-#slash,
-#points {
-  color: white;
-  font-size: 1rem;
-}
-
-#assignment-title-div,
-#points-div,
-#student-div {
-  display: flex;
-}
-
-#assignment-title-div {
-  flex: 0.5 1 25%;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-#points-div {
-   flex: 1 1 15%;
-   justify-content: center;
-}
-
-#hidden {
-  min-height: 2vh;
-  margin-right: 0.5vw;
-}
-
-#hidden-label {
-  min-height: 2vh;
-  font-size: 0.8rem;
-  color: white;
-  margin: 0.25rem 3vw auto 0;
-  line-height: 0.75rem;
-
-}
-
-#student-div {
-    flex: 1 1.25 25%;
-    justify-content: flex-end;
-    min-height: 3vh;
-    margin: 0 1vw 0 10vw;
-}
-
-#mark-input {
-  height: 1.2rem;
-  width: 2rem;
-  text-align: right;
-  margin: auto 1vw auto 0;
-  color: #0c2343;
-}
-
-#slash {
-  margin-right: 1vw;
-}
-
-#prev-arrow,
-#student-select {
-  margin-right: 2vw;
-}
-
-#prev-arrow,
-#next-arrow {
-  cursor: pointer;
-}
-
-#student-select {
-  color: #0c2343;
-  font-size: 0.9rem;
-  cursor: pointer;
-  max-height: 1.5rem;
-}
-
-body {
-  overflow: hidden;
-}
 
 #r2_app_page,
 #r2_app_container {
   max-height: 95vh;
 }
 
-#no-submission-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  margin-right: -50%;
-  transform: translate(-50%, -50%);
-  font-size: 2vh;
-}
+
 </style>

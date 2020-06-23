@@ -16,11 +16,13 @@
     "build-optimized": "NUXT_OPTIMIZE=true nuxt build",
     "build-optimized-win": "set NUXT_OPTIMIZE=true && nuxt build",
     "start": "NODE_ENV=production nuxt start",
+    "start-local": "nuxt start -p 8001",
     "generate": "nuxt generate",
     "lint": "eslint --ext .js,.vue --ignore-path .gitignore .",
     "precommit": "npm run lint"
   },
   "dependencies": {
+    "@nuxt/devalue": "^1.2.4",
     "@nuxt/http": "^0.5.2",
     "@nuxtjs/auth": "^4.5.3",
     "@nuxtjs/axios": "^5.4.1",

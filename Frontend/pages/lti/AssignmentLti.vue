@@ -64,8 +64,9 @@ import RichReviewViewer from '~/components/lti/richreview_viewer.vue'
 // eslint-disable-next-line camelcase
 import ApiHelper from '~/utils/api-helper'
 import { ITokenInfo } from '~/store/modules/LtiAuthStore'
-import User, { IUser } from '~/model/user'
+import User from '~/model/user'
 import Roles from '~/utils/roles'
+import SubmitData from '~/model/submit-data'
 
 const DEBUG: boolean = process.env.debug_mode !== undefined &&
   process.env.debug_mode.toLowerCase().trim() === 'true'
@@ -86,7 +87,7 @@ const testDataStudent = {
 }
 
 @Component({
-  middleware: DEBUG ? '' : 'oidc_handler', // Handle OIDC login request
+  middleware: DEBUG ? '' : 'oidc_handler',                 // Handle OIDC login request
 
   components: {
     DocumentSubmitter,
@@ -460,15 +461,6 @@ export default class AssignmentLti extends Vue {
   private static async getLaunchMessage (jwtBase64 : string, keysetUrl: string) : Promise<object | null> {
     return await JwtUtil.getAndVerifyWithKeyset(jwtBase64, keysetUrl)
   }
-}
-
-export class SubmitData {
-  viewerLink : string = ''
-  accessCode ?: string | null
-  docID ?: string | null
-  groupID ?: string | null
-  submissionID ?: string | null
-  submitted ?: boolean
 }
 
 </script>

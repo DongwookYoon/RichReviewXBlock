@@ -29,9 +29,9 @@
 <script lang="ts">
 import https from 'https'
 import 'reflect-metadata' // Must import this before nuxt property decorators
-import { SubmitData } from '~/pages/lti/AssignmentLti.vue'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import User from '~/model/user'
+import SubmitData from '~/model/submit-data'
 
 // eslint-disable-next-line camelcase
 

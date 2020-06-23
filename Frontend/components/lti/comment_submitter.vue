@@ -27,7 +27,7 @@ import https from 'https'
 import axios from 'axios'
 import 'reflect-metadata' // Must import this before nuxt property decorators
 import { Component, Prop, Emit, Vue } from 'nuxt-property-decorator'
-import { SubmitData } from '~/pages/lti/AssignmentLti.vue'
+import SubmitData from '~/model/submit-data'
 import User from '~/model/user'
 
 if (typeof window !== 'undefined') {

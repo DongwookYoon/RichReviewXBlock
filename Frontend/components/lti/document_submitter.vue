@@ -40,7 +40,6 @@ export default class DocumentSubmitter extends Vue {
 
   private files : File[] = [];
 
-
   @Emit('submit-assignment')
   public submitSuccess () {
     console.log('Assignment successfully submitted to RichReview!')

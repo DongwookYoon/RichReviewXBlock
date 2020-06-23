@@ -86,7 +86,7 @@ const testDataStudent = {
 }
 
 @Component({
-  middleware: DEBUG ? '' : 'oidc_handler', // Handle OIDC login request
+  // middleware: DEBUG ? '' : 'oidc_handler', // Handle OIDC login request
 
   components: {
     DocumentSubmitter,
@@ -96,6 +96,7 @@ const testDataStudent = {
 
   async asyncData (context) {
     console.log('asyncData!')
+    console.warn('asyncData!?')
     let loadSuccess: boolean = false
 
     if (!context.query.assignment_id) {
@@ -117,14 +118,13 @@ const testDataStudent = {
       courseId = testDataStudent.courseId
     }
 
-    if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
-      console.warn('User is not logged in! This means OIDC login failed.')
-      return {
-        loadSuccess
-      }
-    }
+    //if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
+    //  console.warn('User is not logged in! This means OIDC login failed.')
+    //  return {
+    //    loadSuccess
+    //  }
+    //}
 
-    user = User.parse(context.store.getters['LtiAuthStore/authUser'])
 
     if (DEBUG === false) {
       // eslint-disable-next-line prefer-const
@@ -157,13 +157,19 @@ const testDataStudent = {
         return { loadSuccess }
       }
 
+      user = new User(ltiLaunchMessage.sub as string, 'Canvas User')
+
       launchMessage = ltiLaunchMessage as any
       user.roles = Roles.getUserRoles(
         launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
 
+      context.store.dispatch('LtiAuthStore/logIn', user)
+
       courseId = launchMessage[
         'https://purl.imsglobal.org/spec/lti/claim/context'].id
     } // End-if
+
+    user = User.parse(user)
 
     try {
       await ApiHelper.ensureUserEnrolled(courseId, user)

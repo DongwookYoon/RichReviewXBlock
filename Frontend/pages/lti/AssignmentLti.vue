@@ -11,7 +11,10 @@
     </p>
 
     <!--if user role is student AND no submission then  -->
-    <div v-if="user.isStudent && submit_data.submitted === false">
+    <div
+      v-if="isUserStudent && !isUserInstructor
+        && submit_data.submitted === false"
+    >
       <!-- If assignment type is document_submission then -->
       <DocumentSubmitter
         v-if="assignmentType==='document_submission'"
@@ -33,14 +36,11 @@
       />
     </div>
 
-    <div v-else-if="user.isInstructor && assignmentType === 'document_submission'">
+    <div v-else-if="isUserInstructor && assignmentType === 'document_submission'">
       <p>RichReview document submission assignment. Student submissions can be viewed in SpeedGrader.</p>
     </div>
 
-    <!--Otherwise, regardless of user role,
-        show the assignment in the RichReview viewer-->
     <div v-else>
-
       <RichReviewViewer
         class="rich-review-view"
         :submit_data="submit_data"
@@ -86,7 +86,7 @@ const testDataStudent = {
 }
 
 @Component({
-  middleware: DEBUG ? '' : 'oidc_handler', // Handle OIDC login request
+  // middleware: DEBUG ? '' : 'oidc_handler', // Handle OIDC login request
 
   components: {
     DocumentSubmitter,
@@ -98,6 +98,13 @@ const testDataStudent = {
     console.log('asyncData!')
     let loadSuccess: boolean = false
 
+    // if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
+    //   console.warn('User is not logged in! This means OIDC login failed.')
+    //  return {
+    //    loadSuccess
+    //  }
+    // }
+
     if (!context.query.assignment_id) {
       console.warn('No assignment id passed in query string!')
       return { loadSuccess }
@@ -108,52 +115,59 @@ const testDataStudent = {
     let assignmentType : string = ''
     let launchMessage : any = {}
     let user: User
-    let assignmentId : string = decodeURIComponent(context.query.assignment_id as string)
+    const assignmentId : string = decodeURIComponent(context.query.assignment_id as string)
 
     if (DEBUG) {
       console.log('Running in DEBUG mode')
       context.store.dispatch('LtiAuthStore/logIn', testUser)
       courseId = testDataStudent.courseId
-      // return testDataStudent
     }
 
-    if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
-      console.warn('User is not logged in! This means OIDC login failed.')
-      return {
-        loadSuccess
-      }
+    // eslint-disable-next-line prefer-const
+
+    //  else {
+    let jwt : string
+    let ltiLaunchMessage : any = null
+
+    try {
+      /* As per IMS Security Framework Spec (https://www.imsglobal.org/spec/security/v1p0/),
+        the data required to perform the launch is contained within the id_token jwt obtained
+        from OIDC authentication. */
+      // jwt = context.req.body.id_token as string
+
+      // DEBUG
+      jwt = `eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjIwMjAtMDUtMDFUMDA6MDA6MDFaIn0.eyJodHRwczovL3B1cmwuaW1zZ2xvYmFsLm9yZy9zcGVjL2x0aS9jbGFpbS9tZXNzYWdlX3R5cGUiOiJMdGlSZXNvdXJjZUxpbmtSZXF1ZXN0IiwiaHR0cHM6Ly9wdXJsLmltc2dsb2JhbC5vcmcvc3BlYy9sdGkvY2xhaW0vdmVyc2lvbiI6IjEuMy4wIiwiaHR0cHM6Ly9wdXJsLmltc2dsb2JhbC5vcmcvc3BlYy9sdGkvY2xhaW0vcmVzb3VyY2VfbGluayI6eyJpZCI6IjIwMTg5MWM3LTk0OTctNDIyYi1iYjFhLTExZjBiYTBjZWQ5YiIsImRlc2NyaXB0aW9uIjoiXHUwMDNjcFx1MDAzZVRlc3QgTFRJXHUwMDNjL3BcdTAwM2UiLCJ0aXRsZSI6IlRlc3QgTFRJIEFzc2lnbm1lbnQgVXBkYXRlZCIsInZhbGlkYXRpb25fY29udGV4dCI6bnVsbCwiZXJyb3JzIjp7ImVycm9ycyI6e319fSwiaHR0cHM6Ly9wdXJsLmltc2dsb2JhbC5vcmcvc3BlYy9sdGktYWdzL2NsYWltL2VuZHBvaW50Ijp7InNjb3BlIjpbImh0dHBzOi8vcHVybC5pbXNnbG9iYWwub3JnL3NwZWMvbHRpLWFncy9zY29wZS9zY29yZSIsImh0dHBzOi8vcHVybC5pbXNnbG9iYWwub3JnL3NwZWMvbHRpLWFncy9zY29wZS9yZXN1bHQucmVhZG9ubHkiLCJodHRwczovL3B1cmwuaW1zZ2xvYmFsLm9yZy9zcGVjL2x0aS1hZ3Mvc2NvcGUvbGluZWl0ZW0ucmVhZG9ubHkiLCJodHRwczovL3B1cmwuaW1zZ2xvYmFsLm9yZy9zcGVjL2x0aS1hZ3Mvc2NvcGUvbGluZWl0ZW0iXSwibGluZWl0ZW1zIjoiaHR0cHM6Ly9jYW52YXMudWJjLmNhL2FwaS9sdGkvY291cnNlcy81MTk2NS9saW5lX2l0ZW1zIiwibGluZWl0ZW0iOiJodHRwczovL2NhbnZhcy51YmMuY2EvYXBpL2x0aS9jb3Vyc2VzLzUxOTY1L2xpbmVfaXRlbXMvNiIsInZhbGlkYXRpb25fY29udGV4dCI6bnVsbCwiZXJyb3JzIjp7ImVycm9ycyI6e319fSwiYXVkIjoiMTEyMjQwMDAwMDAwMDAwMDc3IiwiYXpwIjoiMTEyMjQwMDAwMDAwMDAwMDc3IiwiaHR0cHM6Ly9wdXJsLmltc2dsb2JhbC5vcmcvc3BlYy9sdGkvY2xhaW0vZGVwbG95bWVudF9pZCI6IjEyMjc3OmY3Njg4YmE1OTFjZmNlMzdiM2JjYWNkNjEzNzBkNmRjNTkxY2Y1NDMiLCJleHAiOjE1OTI4ODQwMTQsImlhdCI6MTU5Mjg4MDQxNCwiaXNzIjoiaHR0cHM6Ly9jYW52YXMuaW5zdHJ1Y3R1cmUuY29tIiwibm9uY2UiOiI1MTQ2ZDk3OC1iZmQzLTRlMDYtYjQzZC01ZWQwNmVmYzA3MTAiLCJzdWIiOiI0ZmY2YmZkMy1iM2MyLTQ4NTUtOGRhYS01ZGQ3NjhiYzJlNDciLCJodHRwczovL3B1cmwuaW1zZ2xvYmFsLm9yZy9zcGVjL2x0aS9jbGFpbS90YXJnZXRfbGlua191cmkiOiJodHRwczovL3JpY2hyZXZpZXcubmV0L2x0aS9hc3NpZ25tZW50cz9hc3NpZ25tZW50X2lkPTE1OTI4NjU0MzY4NjVfNjE3MCIsImh0dHBzOi8vcHVybC5pbXNnbG9iYWwub3JnL3NwZWMvbHRpL2NsYWltL2NvbnRleHQiOnsiaWQiOiJmNzY4OGJhNTkxY2ZjZTM3YjNiY2FjZDYxMzcwZDZkYzU5MWNmNTQzIiwibGFiZWwiOiJTQi5PbG9mZkJpZXJtYW5uJ3NTYW5kYm94IiwidGl0bGUiOiJPbG9mZiBCaWVybWFubidzIFNhbmRib3giLCJ0eXBlIjpbImh0dHA6Ly9wdXJsLmltc2dsb2JhbC5vcmcvdm9jYWIvbGlzL3YyL2NvdXJzZSNDb3Vyc2VPZmZlcmluZyJdLCJ2YWxpZGF0aW9uX2NvbnRleHQiOm51bGwsImVycm9ycyI6eyJlcnJvcnMiOnt9fX0sImh0dHBzOi8vcHVybC5pbXNnbG9iYWwub3JnL3NwZWMvbHRpL2NsYWltL3Rvb2xfcGxhdGZvcm0iOnsiZ3VpZCI6IldpWUVLWkpJWW96SjYwanRPTmo5WEpkRndweHRNQVkwNzVsTFQ0cGo6Y2FudmFzLWxtcyIsIm5hbWUiOiJUaGUgVW5pdmVyc2l0eSBvZiBCcml0aXNoIENvbHVtYmlhIiwidmVyc2lvbiI6ImNsb3VkIiwicHJvZHVjdF9mYW1pbHlfY29kZSI6ImNhbnZhcyIsInZhbGlkYXRpb25fY29udGV4dCI6bnVsbCwiZXJyb3JzIjp7ImVycm9ycyI6e319fSwiaHR0cHM6Ly9wdXJsLmltc2dsb2JhbC5vcmcvc3BlYy9sdGkvY2xhaW0vbGF1bmNoX3ByZXNlbnRhdGlvbiI6eyJkb2N1bWVudF90YXJnZXQiOiJpZnJhbWUiLCJoZWlnaHQiOm51bGwsIndpZHRoIjpudWxsLCJyZXR1cm5fdXJsIjoiaHR0cHM6Ly9jYW52YXMudWJjLmNhL2NvdXJzZXMvNTE5NjUvZXh0ZXJuYWxfY29udGVudC9zdWNjZXNzL2V4dGVybmFsX3Rvb2xfcmVkaXJlY3QiLCJsb2NhbGUiOiJlbi1DQSIsInZhbGlkYXRpb25fY29udGV4dCI6bnVsbCwiZXJyb3JzIjp7ImVycm9ycyI6e319fSwibG9jYWxlIjoiZW4tQ0EiLCJodHRwczovL3B1cmwuaW1zZ2xvYmFsLm9yZy9zcGVjL2x0aS9jbGFpbS9yb2xlcyI6WyJodHRwOi8vcHVybC5pbXNnbG9iYWwub3JnL3ZvY2FiL2xpcy92Mi9pbnN0aXR1dGlvbi9wZXJzb24jSW5zdHJ1Y3RvciIsImh0dHA6Ly9wdXJsLmltc2dsb2JhbC5vcmcvdm9jYWIvbGlzL3YyL2luc3RpdHV0aW9uL3BlcnNvbiNTdHVkZW50IiwiaHR0cDovL3B1cmwuaW1zZ2xvYmFsLm9yZy92b2NhYi9saXMvdjIvbWVtYmVyc2hpcCNJbnN0cnVjdG9yIiwiaHR0cDovL3B1cmwuaW1zZ2xvYmFsLm9yZy92b2NhYi9saXMvdjIvc3lzdGVtL3BlcnNvbiNVc2VyIl0sImh0dHBzOi8vcHVybC5pbXNnbG9iYWwub3JnL3NwZWMvbHRpL2NsYWltL2N1c3RvbSI6e30sImVycm9ycyI6eyJlcnJvcnMiOnt9fX0.lXcvinxdTkR-u1mRIWsln7Tk50J_q4_yx8nfj6AV4gL2oGP26EKDgAo40bITtgJUK0psL_4zPjgMO19vgMdG0DPo6BkUvO6l784IURDDDVKi0cGbAlB_Iif_W20wgNKtx1JaD9SYtK_0T32vLg0hSD9bAHapS4T-chNYZQnmg0gFoJeJSfpNZLvEBwFczFB1wGc44g3MKVaBx4_nEBVII40HWVEQttU1nxLN75l0ZceQBDd5Uzwgl30VHNaqS8tCGBP92RWYVJNF8Y8rHQr-6u1yVWQHZxU3SWGcNTpq_RJBsqPeLyVLmpHQA9e1M3tIi_qDb3UbiOoMRP-z50fOLg`
+      // END DEBUG
+
+      ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt,
+        process.env.canvas_public_key_set_url as string)
+
+      console.log(`LTI Launch Message is:  ${JSON.stringify(ltiLaunchMessage)}`)
     }
+    catch (ex) {
+      console.warn('Error occurred while getting ltiLaunchMessage from jwt. Reason: ' + ex)
+      ltiLaunchMessage = null
+      return { loadSuccess }
+    }
+
+    // DEBUG
+    context.store.dispatch('LtiAuthStore/logIn', new User(ltiLaunchMessage.sub as string, 'Canvas User'))
+    // END DEBUG
 
     // eslint-disable-next-line prefer-const
     user = User.parse(context.store.getters['LtiAuthStore/authUser'])
 
-    if (DEBUG === false) {
-      let jwt : string
-      let ltiLaunchMessage : object | null = null
+    if (!process.server) {
+      return
+    }
 
-      try {
-      /* As per IMS Security Framework Spec (https://www.imsglobal.org/spec/security/v1p0/),
-        the data required to perform the launch is contained within the id_token jwt obtained
-        from OIDC authentication. */
-        jwt = context.req.body.id_token as string
-        ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt,
-        process.env.canvas_public_key_set_url as string)
-      }
-      catch (ex) {
-        console.warn('Error occurred while getting ltiLaunchMessage from jwt. Reason: ' + ex)
-        ltiLaunchMessage = null
-        return { loadSuccess }
-      }
+    launchMessage = ltiLaunchMessage as any
+    user.roles = Roles.getUserRoles(
+      launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
 
-      console.log(`LTI Launch Message is:  ${JSON.stringify(ltiLaunchMessage)}`)
-
-      launchMessage = ltiLaunchMessage as any
-      user.roles = Roles.getUserRoles(
-        launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
-
-      courseId = launchMessage[
-        'https://purl.imsglobal.org/spec/lti/claim/context'].id
-    } // End-else
+    courseId = launchMessage[
+      'https://purl.imsglobal.org/spec/lti/claim/context'].id
+// } // End-else
 
     try {
       console.log(`Ensuring that the user ${JSON.stringify(user)} is enrolled in course ${
@@ -303,13 +317,26 @@ export default class AssignmentLti extends Vue {
     return 'default'
   }
 
+  get isUserStudent () : boolean {
+    return this.user.isStudent
+  }
+
+  get isUserTa () : boolean {
+    return this.user.isTa
+  }
+
+  get isUserInstructor () : boolean {
+    return this.user.isInstructor
+  }
+
+
   public created () {
-    console.log('Created!')
     const query = this.$route.query
     if (this.isLoggedIn === true && this.loadSuccess) {
-      console.log(`Logged in user: ${this.user.id}`)
-      console.log('The viewer link: ' + this.submit_data.viewerLink)
+      this.user = User.parse(this.user)
 
+      console.log(`Logged in user: ${JSON.stringify(this.user)}`)
+      console.log('The viewer link: ' + this.submit_data.viewerLink)
 
       /* If provided, get submission params from URL query string. Otherwise,
         get them from the viewer link */
@@ -335,13 +362,13 @@ export default class AssignmentLti extends Vue {
       this.submit_data.submissionID = submissionID
 
       this.isCreated = true
+      console.log('Created!')
     }
   }
 
   public mounted () {
     console.log(JSON.stringify(this.assignmentData))
-    console.log(this.assignmentData.assignment.title)
-    console.log('Assignment submitted?: ' + this.submit_data.submitted)
+
     if (this.isLoggedIn === false) {
       console.warn('OIDC login failed')
       alert('You must be logged in to Canvas to view this assignment.')

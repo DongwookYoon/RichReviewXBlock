@@ -145,7 +145,7 @@ export default class DocumentSubmitter extends Vue {
 
 #add-file-button {
   margin-top: 1rem;
-  font-size: 0.9rem;
+  font-size: 1.2rem;
 }
 
 .assignment-button {
@@ -176,7 +176,7 @@ export default class DocumentSubmitter extends Vue {
 
 #submit-button{
   margin-top: 8rem;
-  font-size: 1rem;
+  font-size: 1.2rem;
 }
 
 </style>

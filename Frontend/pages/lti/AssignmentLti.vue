@@ -36,8 +36,10 @@
       />
     </div>
 
-    <div v-else-if="isUserInstructor && assignmentType === 'document_submission'"
-     class = "instructor-doc-submission-view">
+    <div
+      v-else-if="isUserInstructor && assignmentType === 'document_submission'"
+      class="instructor-doc-submission-view"
+    >
       <p>RichReview document submission assignment. Student submissions can be viewed in SpeedGrader.</p>
     </div>
 
@@ -88,7 +90,7 @@ const testDataStudent = {
 }
 
 @Component({
-  middleware: DEBUG ? '' : 'oidc_handler',                 // Handle OIDC login request
+  middleware: DEBUG ? '' : 'oidc_handler', // Handle OIDC login request
 
   components: {
     DocumentSubmitter,

@@ -176,7 +176,7 @@ export default class DocumentSubmitter extends Vue {
 
 #submit-button{
   margin-top: 8rem;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
 }
 
 </style>

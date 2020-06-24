@@ -52,6 +52,7 @@ export default class CommentSubmitter extends Vue {
   @Prop({ required: true }) readonly user !: User
   @Prop({ required: true }) readonly submit_data !: SubmitData
   @Prop({ required: true }) readonly course_id !: string
+  @Prop({ required: true }) readonly assignment_id !: string
 
   private showSubmitButton : boolean = false;
 
@@ -118,7 +119,7 @@ export default class CommentSubmitter extends Vue {
       await this.$axios.$post(
           `https://${process.env.backend}:3000/courses/${
             this.course_id}/assignments/${
-            this.$route.params.assignment_key}/comment_submissions`,
+            this.assignment_id}/comment_submissions`,
           {
             access_code: this.submit_data.accessCode,
             docid: this.submit_data.docID,

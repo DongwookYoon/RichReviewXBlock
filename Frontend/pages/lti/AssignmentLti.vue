@@ -21,6 +21,8 @@
         class="document-submitter"
         :user_id="user.id"
         :course_id="courseId"
+        :assignment_id="assignmentId"
+
         @submit-assignment="handleSubmit"
       />
 
@@ -32,6 +34,8 @@
         :user="user"
         :submit_data="submit_data"
         :course_id="courseId"
+        :assignment_id="assignmentId"
+
         @submit-assignment="handleSubmit"
       />
     </div>

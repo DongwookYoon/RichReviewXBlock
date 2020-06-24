@@ -37,6 +37,7 @@ import { Component, Prop, Emit, Vue } from 'nuxt-property-decorator'
 export default class DocumentSubmitter extends Vue {
   @Prop({ required: true }) readonly user_id !: string;
   @Prop({ required: true }) readonly course_id !: string;
+  @Prop({ required: true }) readonly assignment_id !: string
 
   private files : File[] = [];
 
@@ -67,7 +68,7 @@ export default class DocumentSubmitter extends Vue {
       await this.$axios.$post(
           `https://${process.env.backend}:3000/courses/${
             this.course_id}/assignments/${
-            this.$route.params.assignment_key}/document_submissions`,
+            this.assignment_id}/document_submissions`,
           formData,
           {
             headers: {

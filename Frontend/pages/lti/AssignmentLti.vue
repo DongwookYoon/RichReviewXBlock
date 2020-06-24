@@ -489,7 +489,7 @@ export default class AssignmentLti extends Vue {
   }
 
   .instructor-doc-submission-view p {
-    font-size: 1.1rem;
+    font-size: 1.4rem;
   }
 
 </style>

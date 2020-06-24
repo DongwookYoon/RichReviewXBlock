@@ -207,17 +207,22 @@ const testDataStudent = {
       isTemplate = ((isSubmittedView === false) && (user.isInstructor || user.isTa))
       submitted = (markedSubmitted !== false && isSubmittedView === true)
 
-      /* Deciding viewer link is important, because it will determine what the
-         user sees in RichReview. For student, we want to show assignment submit
-         data from link property. For instructor, outside of grader, we
-         want template data, to be able to modify comment submission assignment
-         for all users. For instructor in grader, we want grader data */
+      /* Deciding content link is important, because it will determine the
+         user role in the RichReview document. For instructors and TAs in grader,
+         we want grader data for a specific submission. For instructors and TAs
+         outside of grader, we want template data, to be able to modify comment
+         submission assignment for all users.
+
+         Note that due to Canvas role handling, student, TA, instructor roles
+         are NOT mutually exclusive */
       let contentLink : string = ''
-      if (user.isStudent) {
+      const isTaOrInstructor : boolean = (user.isInstructor || user.isTa)
+
+      if (user.isStudent && !isTaOrInstructor) {
         contentLink = assignmentData.link || ''
       }
 
-      else if (user.isTa || user.isInstructor) {
+      else if (isTaOrInstructor) {
         if (isSubmittedView) {
           contentLink = assignmentData.grader_link || ''
         }

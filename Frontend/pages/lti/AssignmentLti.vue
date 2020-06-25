@@ -388,18 +388,18 @@ export default class AssignmentLti extends Vue {
     }
   }
 
-  public async handleSubmit  () {
+  public async handleSubmit () {
     try {
       await this.submitAssignment()
-    }catch (ex) {
+    }
+    catch (ex) {
       console.log('Submitting the assignment failed. Reason: ' + ex)
-      alert ('Could not submit the assignment. If this error continues, ' +
+      alert('Could not submit the assignment. If this error continues, ' +
       'please contact the system administrator.')
       return
     }
 
-    alert ('Assignment submitted!')
-
+    alert('Assignment submitted!')
   }
 
   private async submitAssignment () {
@@ -452,6 +452,7 @@ export default class AssignmentLti extends Vue {
     catch (e) {
       console.warn('Canvas submission failed. Reason: ' + e)
       throw e
+    }
   }
 
   private async updateClientCredentials () {
@@ -460,7 +461,6 @@ export default class AssignmentLti extends Vue {
 
     this.$store.dispatch('updateClientCredentialsToken', clientToken)
   }
-
 
   private static getQueryVariable (variable : string, route : string) : string | null {
     const vars : string[] = route.split('&')

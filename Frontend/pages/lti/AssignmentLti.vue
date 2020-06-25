@@ -399,10 +399,7 @@ export default class AssignmentLti extends Vue {
     }
     catch (e) {
       console.warn('Getting updated assignment data on submit failed. Reason: ' + e)
-      alert(`
-          Error. Could not submit assignment to Canvas.
-          Contact the system adminstrator for assistance if this continues.`)
-      return
+      throw e
     }
 
     const submissionId = updatedAssignmentData.grader_submission_id
@@ -427,8 +424,7 @@ export default class AssignmentLti extends Vue {
     }
     catch (ex) {
       console.warn('OAuth client credential grant for assignment submission failed. Reason: ' + ex)
-      alert('Could not submit assignment. Please try again.')
-      return
+      throw ex
     }
 
     try {
@@ -440,6 +436,7 @@ export default class AssignmentLti extends Vue {
         new URL(submissionURL))
     }
     catch (e) {
+      console.warn('Canvas submission failed. Reason: ' + e)
       alert(`
             Error. Could not submit assignment to Canvas.
             Contact the system adminstrator for assistance if this continues.`)
@@ -447,14 +444,12 @@ export default class AssignmentLti extends Vue {
   }
 
   private async updateClientCredentials () {
-    const authHandler : ClientAuth = new ClientAuth(process.env.canvas_client_id as string,
-      process.env.canvas_path as string)
-
     // Get a client credential token with scopes required for the LTI grader services
-    const clientToken = await authHandler.getGradeServicesToken()
+    const clientToken = await ClientAuth.getGradeServicesToken()
 
     this.$store.dispatch('updateClientCredentialsToken', clientToken)
   }
+
 
   private static getQueryVariable (variable : string, route : string) : string | null {
     const vars : string[] = route.split('&')

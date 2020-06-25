@@ -120,7 +120,7 @@ router.post('/deeplink', async function(req, res, next) {
  */
 router.get('/grading_services_token', async function(req, res, next) {
   try{
-    const oauthPath = `${lti_config.platform_path}/login/oauth2/auth`;
+    const oauthPath = lti_config.auth_token_url;
     const assertionJWT = jwtUtil.createClientAssertion();
 
     if (assertionJWT === null) {
@@ -132,6 +132,8 @@ router.get('/grading_services_token', async function(req, res, next) {
       client_assertion: assertionJWT,
       scope: 'https://purl.imsglobal.org/spec/lti-ags/scope/lineitem https://purl.imsglobal.org/spec/lti-ags/scope/score'
     };
+
+    console.log('The client assertion: ' + assertionJWT);
 
     /* Get JSON response with token */
     const tokenResp = await axios.post(oauthPath, requestData, {
@@ -236,11 +238,11 @@ router.post('/assignment', async function(req, res, next) {
             })
           });
     
-    console.log('LTI Assignment submission (pending manual grading) created in Canvas.');
+    console.log('Success! LTI Assignment submission (pending manual grading) created in Canvas.');
     res.sendStatus(201);
 
     } catch (ex){
-        console.warn('Submitting assignmetn to Canvas failed. Reason: ' +ex );
+        console.warn('Submitting assignment to Canvas failed. Reason: ' +ex );
         res.sendStatus(500);
     }
   });

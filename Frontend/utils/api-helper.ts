@@ -100,7 +100,6 @@ export default class ApiHelper {
         assignmentId} and course id ${courseId}`)
     }
 
-    console.log(JSON.stringify(resp.data))
     return resp.data
   }
 

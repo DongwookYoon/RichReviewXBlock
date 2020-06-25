@@ -50,7 +50,7 @@ const createClientAssertion = function (options = null){
     options = {
       algorithm: lti_config.jwk_alg,
       expiresIn: 300,                       // Number of seconds for 5 minutes expiration time
-      audience: lti_config.platform_path + '/login/oauth2/auth',
+      audience: lti_config.auth_token_url,
       issuer: lti_config.tool_path,
       subject: lti_config.canvas_client_id,
       jwtid: `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`

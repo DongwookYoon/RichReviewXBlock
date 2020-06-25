@@ -2,19 +2,12 @@ import https from 'https'
 import axios from 'axios'
 
 export default class ClientAuth {
-  private domain: string
-  private toolUrl: string
-
-  constructor (ltiDomain: string, toolUrl: string) {
-    this.domain = ltiDomain
-    this.toolUrl = toolUrl
-  }
 
   /**
    * Obtain token which gives app access to Canvas Advantage Grading Services
    * line items and score to support assignment submission
    */
-  public async getGradeServicesToken () : Promise<string> {
+  public static async getGradeServicesToken () : Promise<string> {
     const tokenResp = await axios.get(
       `https://${process.env.backend}:3000/lti/grading_services_token`,
       {

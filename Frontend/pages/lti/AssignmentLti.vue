@@ -388,7 +388,21 @@ export default class AssignmentLti extends Vue {
     }
   }
 
-  public async handleSubmit () {
+  public async handleSubmit  () {
+    try {
+      await this.submitAssignment()
+    }catch (ex) {
+      console.log('Submitting the assignment failed. Reason: ' + ex)
+      alert ('Could not submit the assignment. If this error continues, ' +
+      'please contact the system administrator.')
+      return
+    }
+
+    alert ('Assignment submitted!')
+
+  }
+
+  private async submitAssignment () {
     const courseId : string = this.courseId
     let updatedAssignmentData
 
@@ -437,10 +451,7 @@ export default class AssignmentLti extends Vue {
     }
     catch (e) {
       console.warn('Canvas submission failed. Reason: ' + e)
-      alert(`
-            Error. Could not submit assignment to Canvas.
-            Contact the system adminstrator for assistance if this continues.`)
-    }
+      throw e
   }
 
   private async updateClientCredentials () {

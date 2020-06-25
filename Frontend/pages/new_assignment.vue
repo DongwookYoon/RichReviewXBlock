@@ -494,15 +494,15 @@ hr {
 }
 
 #points-div {
-  margin-left: 10vw;
+  margin-left: 9.6rem;
 }
 
 #weight-div {
-  margin-left: 9.75vw;
+  margin-left: 9.2rem;
 }
 
 #type-div {
-  margin-left: 4.9vw;
+  margin-left: 5.5rem;
   margin-bottom: 1vh;
 }
 

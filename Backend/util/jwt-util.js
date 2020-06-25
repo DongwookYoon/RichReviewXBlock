@@ -57,6 +57,8 @@ const createClientAssertion = function (options = null){
     };
   }
 
+  console.log(JSON.stringify(options))
+
   const signed = signAndEncode({}, options);
 
   return signed;

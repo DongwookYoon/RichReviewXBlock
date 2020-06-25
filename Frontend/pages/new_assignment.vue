@@ -1,3 +1,4 @@
+/* eslint-disable vue/html-self-closing */
 <template>
   <div id="new-assignment">
     <loading :active.sync="loading"
@@ -117,6 +118,7 @@
               v-model="assignment_data.available_date"
               type="datetime"
               use12-hour
+              @input='updateAvailableSet'
             ></datetime>
             <p
               v-if="assignment_data.available_date !== ''"
@@ -133,6 +135,7 @@
               v-model="assignment_data.until_date"
               type="datetime"
               use12-hour
+              @input='updateUntilSet'
             ></datetime>
             <p
               v-if="assignment_data.until_date !== ''"
@@ -140,6 +143,33 @@
               @click="clear_until_date"
             >
               X
+            </p>
+            <div id="until-info">
+              <p v-if="untilSet===false">
+                By default, Students will be allowed to view this assignment as long as they are enrolled,
+                starting from from the "available date", if any.
+                Set an "until" date to change that (optional).
+              </p>
+              <p v-else-if="daysAvailableAfterDue > 0">
+                Students will be allowed to view this assignment for <b>{{ daysAvailableAfterDue }} day<span
+                v-if="daysAvailableAfterDue > 1">s</span>
+                </b> after the due date.
+                <span v-if="daysAvailableAfterDue <= 7" class="until-warning">
+                  This date is close to the due date.
+                </span>
+              </p>
+              <p v-else-if="daysAvailableAfterDue < 0" class="until-warning">
+                - Invalid date range. The "until" date must be the same as or after the due date.
+              </p>
+              <p v-else-if="assignment_data.due_date !== ''" class="until-warning">
+                - Students will not be able to view the assignment after the due date. It is recommended
+                to set an "until" date several days after the due date.
+              </p>
+
+              <p v-if="untilSet && timeAvailable < 0" class="until-warning">
+                - The "available" date and time must be before the "until" date and time.
+              </p>
+            </div>
             </p>
           </div>
         </div>
@@ -224,7 +254,9 @@ export default {
       },
       files: [],
       changesSaved: false,
-      loading: false
+      loading: false,
+      untilSet: false,
+      availableSet: false
     }
   },
   async asyncData(context) {
@@ -283,25 +315,55 @@ export default {
       instructing: enrolment_res.data.teaching
     }
   },
-  fetch({ store, redirect }) {
+  fetch ({ store, redirect }) {
     if (!store.state.authUser) {
       return redirect('/edu/login')
     }
   },
+  computed: {
+    daysAvailableAfterDue () {
+      if (!this.untilSet) {
+        return Number.MAX_SAFE_INTEGER
+      }
+
+      const until = new Date(this.assignment_data.until_date)
+      const due = new Date(this.assignment_data.due_date)
+      const dif = until - due
+
+      return Math.round(dif / 86400000)
+    },
+    timeAvailable () {
+      const until = new Date(this.assignment_data.until_date)
+      const available = new Date(this.assignment_data.available_date)
+
+      return until - available
+    },
+    availableDueDifference () {
+      if (this.assignment_data.due_date === '' && this.availableSet)
+        return Number.MAX_SAFE_INTEGER
+
+      const available = new Date(this.assignment_data.available_date)
+      const due = new Date(this.assignment_data.due_date)
+      return due - available
+    }
+
+  },
   methods: {
-    go_to_course() {
+    go_to_course () {
       this.$router.push(`/edu/courses/${this.$route.params.course_id}/`)
     },
-    clear_due_date() {
+    clear_due_date () {
       this.assignment_data.due_date = ''
     },
-    clear_available_date() {
+    clear_available_date () {
       this.assignment_data.available_date = ''
+      this.availableSet = false
     },
-    clear_until_date() {
+    clear_until_date () {
       this.assignment_data.until_date = ''
+      this.untilSet = false
     },
-    async save() {
+    async save () {
       if (
         this.assignment_data.group_assignment &&
         this.assignment_data.course_group_set === 'default'
@@ -309,6 +371,35 @@ export default {
         alert('A group assignment requires a group set')
         return
       }
+
+      if (this.availableSet) {
+        if (this.timeAvailable < 0) {
+          alert('The "available from" date must be before the "until" date.')
+          return
+        }
+        if (this.assignment_data.due_date !== '' && this.availableDueDifference <= 0) {
+          alert ('The "due" date and time must be after the "available from" date and time.')
+          return
+        }
+      }
+
+
+      if (this.daysAvailableAfterDue < 0) {
+        alert('Invalid "until" date. This date should be the same or later than the due date.')
+        return
+      }
+
+      if (this.daysAvailableAfterDue <= 7) {
+        if (this.daysAvailableAfterDue === 0 &&
+          !confirm(`This assignment will not be visible to students after the due date. Is this acceptable?`)) {
+          return
+        }
+        else if (!confirm(`This assignment will only be visible to students for ${
+          this.daysAvailableAfterDue} days(s) after the due date. Is this acceptable?`)) {
+          return
+        }
+      }
+
       this.changesSaved = true
       try {
         if (this.assignment_data.type === 'comment_submission') {
@@ -368,19 +459,31 @@ export default {
         window.alert(e.response.data.message)
       }
     },
-    addFiles() {
+    addFiles () {
       this.$refs.files.click()
     },
-    removeFile(key) {
+    removeFile (key) {
       this.files.splice(key, 1)
     },
-    handleFileUpload() {
+    handleFileUpload () {
       const uploadedFiles = this.$refs.files.files
 
       for (let i = 0; i < uploadedFiles.length; i++) {
         this.files.push(uploadedFiles[i])
       }
+    },
+    updateUntilSet () {
+      const until = this.assignment_data.until_date
+      // eslint-disable-next-line no-unneeded-ternary
+      this.untilSet = (until && until !== '') ? true : false
+    },
+
+    updateAvailableSet () {
+      const available = this.assignment_data.available_date
+      // eslint-disable-next-line no-unneeded-ternary
+      this.availableSet = (available && available !== '') ? true : false
     }
+
   },
   beforeRouteLeave(to, from, next) {
     if (!this.changesSaved) {
@@ -579,8 +682,7 @@ hr {
 #save-button,
 #cancel-button {
   border-radius: 0.5vh;
-  padding-left: 1vw;
-  padding-right: 1vw;
+  padding: 0.25vw 1vw;
   cursor: pointer;
 }
 
@@ -596,5 +698,14 @@ hr {
 
 #cancel-button {
   margin-right: 0.5vw;
+}
+
+#until-info {
+  margin-left: 2rem;
+}
+
+.until-warning {
+  color: red;
+  font-weight: bold;
 }
 </style>

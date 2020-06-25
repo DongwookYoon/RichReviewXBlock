@@ -78,14 +78,14 @@ const mutations = {
   },
 
   setClientCredentialsToken (state: any, token: string) {
-    state.codeToken = {
+    state.clientCredentialsToken = {
       token,
       creationTime: new Date()
     }
   },
 
   setOAuthData (state: any, payload : ITokenInfo) {
-    state.clientCredentialsToken = {
+    state.codeToken = {
       token: payload.token,
       name: payload.name,
       creationTime: new Date()

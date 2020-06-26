@@ -175,8 +175,8 @@ router.post('/assignment', async function(req, res, next) {
           })
         });
     } catch (ex) {
-      console.warn(`Getting line items from Canvas for the course ${courseId} failed. Reason: ${
-        ex}. The response from Canvas is ${JSON.stringify(lineItemResp.data)}` );
+      console.warn(`Getting line items from Canvas for the course ${courseId} failed.`)
+      console.warn(`The response was: ${lineItemsResp ? JSON.stringify(lineItemsResp.data) : 'No response'}`); 
         res.sendStatus(500);
         return;
     }

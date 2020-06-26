@@ -157,47 +157,10 @@ router.post('/assignment', async function(req, res, next) {
   const userId = req.body.userId;
   const richReviewUrl = req.body.richReviewUrl;
   
-  const assignmentResourceId = launchMessage[
-    'https://purl.imsglobal.org/spec/lti/claim/resource_link'].id;
-
-  let lineItemId = '';
-  let lineItemsResp;
+  const lineItemUrl = launchMessage[
+    "https://purl.imsglobal.org/spec/lti-ags/claim/endpoint"].lineitem;
+  
   try {
-   lineItemsResp = await axios.get(
-        `${lti_config.platform_path}/api/lti/courses/${courseId}/line_items`,
-        {
-          headers: {
-            Accept: 'application/json+canvas-string-ids',
-            Authorization: `Bearer ${clientCredentialsToken}`
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        });
-    } catch (ex) {
-      console.warn(`Getting line items from Canvas for the course ${courseId} failed. Reason: ${ex}`)
-      console.warn(`Bearer token is ${clientCredentialsToken}`)
-      console.warn(`The response was: ${lineItemsResp ? JSON.stringify(lineItemsResp.data) : 'No response'}`); 
-        res.sendStatus(500);
-        return;
-    }
-    const lineItems = lineItemsResp.data; // The parsed JSON which contains array of line items
-
-    /* Find the ID of the line item for which we want to create a submission in gradebook */
-    for (const curItem of lineItems) {
-      if (curItem.resourceLinkId === assignmentResourceId) {
-        lineItemId = curItem.id;
-        break;
-      }
-    }
-    if (lineItemId === '') {
-      console.warn(
-        'Error. Could not find a line item to create assignment submission for resourceId ' + assignmentResourceId);
-      res.sendStatus(500);
-      return;
-    }
-
-    try {
       const scoreData = {
         timestamp: `${new Date().toISOString()}`,
         activityProgress: 'Submitted',
@@ -223,8 +186,7 @@ router.post('/assignment', async function(req, res, next) {
       const urlEncodedJWT = `JWT=${encodeURIComponent(scoreJWT)}`;
 
       /* Send the score resource to Canvas to indicate submission in gradebook */
-      const submitResp = axios.post(
-            `${lti_config.platform_path}/api/lti/courses/${courseId}/line_items/${lineItemId}/scores`,
+      const submitResp = axios.post(`${lineItemUrl}/scores`,
             urlEncodedJWT,
             {
               headers: {

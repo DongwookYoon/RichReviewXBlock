@@ -100,7 +100,7 @@ export default {
     },
     getRowTooltipMessage (is_active) {
       if (is_active === false) {
-        return 'This assignment is closed and can no longer be viewed.'
+        return 'The instructor has closed this assignment and it can no longer be viewed.'
       }
       return ''
     }

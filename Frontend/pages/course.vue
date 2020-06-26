@@ -216,8 +216,7 @@ table {
   background-color: #0c2343;
   font-size: 1rem;
   color: white;
-  padding-left: 0.5vw;
-  padding-right: 0.5vw;
+  padding: 0 0.9vh 0.7vh 0.9vh;
   border-radius: 0.5vh;
   cursor: pointer;
 }

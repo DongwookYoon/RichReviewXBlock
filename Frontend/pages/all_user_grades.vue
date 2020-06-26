@@ -20,8 +20,9 @@
             <tr
               v-for="g in grades"
               :key="g.key"
-              class="grade-row"
-              @click="go_to_assignment(g.course_id, g.assignment_id)"
+              :class="{'grade-row': true, 'inactive-assignment': !g.is_active}"
+              :title="getRowTooltipMessage(g.is_active)"
+              @click="go_to_assignment(g.course_id, g.assignment_id, g.is_active)"
             >
               <td class="grade-assignment">{{ g.assignment }}</td>
               <td class="grade-status">{{ g.submission_status }}</td>
@@ -89,10 +90,19 @@ export default {
     }
   },
   methods: {
-    go_to_assignment(course_id, assignment_id) {
+    go_to_assignment(course_id, assignment_id, is_active) {
+      if (is_active === false) {
+        return
+      }
       this.$router.push(
         `/edu/courses/${course_id}/assignments/${assignment_id}`
       )
+    },
+    getRowTooltipMessage (is_active) {
+      if (is_active === false) {
+        return 'This assignment is closed and can no longer be viewed.'
+      }
+      return ''
     }
   }
 }
@@ -131,6 +141,15 @@ hr {
 
 .grade-row:hover {
   background-color: #f5f5f5;
+}
+
+.inactive-assignment{
+  opacity: 0.8;
+  cursor: default !important;
+}
+
+.inactive-assignment:hover{
+  background-color: rgba(252, 228, 228, 0.589);
 }
 
 #all-grades-header {
@@ -184,4 +203,7 @@ hr {
 .grade-mark {
   padding-right: 10vw;
 }
+
+
+
 </style>

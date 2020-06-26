@@ -444,7 +444,7 @@ export default class AssignmentLti extends Vue {
     try {
       await ApiHelper.submitAssignmentToCanvas(
         this.launchMessage,
-        this.courseId,
+        courseId,
         this.clientCredentialsToken.token,
         this.user.id,
         new URL(submissionURL))

@@ -151,20 +151,19 @@ router.get('/grading_services_token', async function(req, res, next) {
  * Submits an assignment to the platform (Canvas).
  */
 router.post('/assignment', async function(req, res, next) {
+  const launchMessage = req.body.launchMessage;
+  const courseId = req.body.courseId;
+  const clientCredentialsToken = req.body.clientCredentialsToken;
+  const userId = req.body.userId;
+  const richReviewUrl = req.body.richReviewUrl;
+  
+  const assignmentResourceId = launchMessage[
+    'https://purl.imsglobal.org/spec/lti/claim/resource_link'].id;
 
+  let lineItemId = '';
+  let lineItemsResp;
   try {
-    const launchMessage = req.body.launchMessage;
-    const courseId = req.body.courseId;
-    const clientCredentialsToken = req.body.clientCredentialsToken;
-    const userId = req.body.userId;
-    const richReviewUrl = req.body.richReviewUrl;
-    
-    const assignmentResourceId = launchMessage[
-      'https://purl.imsglobal.org/spec/lti/claim/resource_link'].id;
-
-    let lineItemId = '';
-
-    const lineItemsResp = await axios.get(
+   lineItemsResp = await axios.get(
         `${lti_config.platform_path}/api/lti/courses/${courseId}/line_items`,
         {
           headers: {

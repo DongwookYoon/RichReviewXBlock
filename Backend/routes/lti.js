@@ -175,7 +175,12 @@ router.post('/assignment', async function(req, res, next) {
             rejectUnauthorized: false
           })
         });
-
+    } catch (ex) {
+      console.warn(`Getting line items from Canvas for the course ${courseId} failed. Reason: ${
+        ex}. The response from Canvas is ${JSON.stringify(lineItemResp.data)}` );
+        res.sendStatus(500);
+        return;
+    }
     const lineItems = lineItemsResp.data; // The parsed JSON which contains array of line items
 
     /* Find the ID of the line item for which we want to create a submission in gradebook */
@@ -186,56 +191,61 @@ router.post('/assignment', async function(req, res, next) {
       }
     }
     if (lineItemId === '') {
-      console.warn('Error. Could not find a line item to create assignment submission');
-      throw new Error('Could not find a line item to create assignment submission');
+      console.warn(
+        'Error. Could not find a line item to create assignment submission for resourceId ' + assignmentResourceId);
+      res.sendStatus(500);
+      return;
     }
 
-    const scoreData = {
-      timestamp: `${new Date().toISOString()}`,
-      activityProgress: 'Submitted',
-      gradingProgress: 'PendingManual',
-      userId: `${userId}`,
-    };
-    scoreData['https://canvas.instructure.com/lti/submission'] = {
-      new_submission: true,
-      submission_type: 'basic_lti_launch',
-      submission_data: `${richReviewUrl}`
-    };
+    try {
+      const scoreData = {
+        timestamp: `${new Date().toISOString()}`,
+        activityProgress: 'Submitted',
+        gradingProgress: 'PendingManual',
+        userId: `${userId}`,
+      };
+      scoreData['https://canvas.instructure.com/lti/submission'] = {
+        new_submission: true,
+        submission_type: 'basic_lti_launch',
+        submission_data: `${richReviewUrl}`
+      };
 
-    if (launchMessage.nonce){
-      scoreData.nonce = launchMessage.nonce;
-    }
+      if (launchMessage.nonce){
+        scoreData.nonce = launchMessage.nonce;
+      }
 
-    //  Call backend to sign JWT.
-    const scoreJWT = jwtUtil.signAndEncode(scoreData);
-    if (scoreJWT === null) {
-      throw new Error('Creating the JWT failed.');
-    }
+      //  Call backend to sign JWT.
+      const scoreJWT = jwtUtil.signAndEncode(scoreData);
+      if (scoreJWT === null) {
+        throw new Error('Creating the JWT failed.');
+      }
 
-    const urlEncodedJWT = `JWT=${encodeURIComponent(scoreJWT)}`;
+      const urlEncodedJWT = `JWT=${encodeURIComponent(scoreJWT)}`;
 
-    /* Send the score resource to Canvas to indicate submission in gradebook */
-    axios.post(
-          `${lti_config.platform_path}/api/lti/courses/${courseId}/line_items/${lineItemId}/scores`,
-          urlEncodedJWT,
-          {
-            headers: {
-              Authorization: `Bearer ${clientCredentialsToken}`,
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          });
-    
-    console.log('Success! LTI Assignment submission (pending manual grading) created in Canvas.');
-    res.sendStatus(201);
+      /* Send the score resource to Canvas to indicate submission in gradebook */
+      const submitResp = axios.post(
+            `${lti_config.platform_path}/api/lti/courses/${courseId}/line_items/${lineItemId}/scores`,
+            urlEncodedJWT,
+            {
+              headers: {
+                Authorization: `Bearer ${clientCredentialsToken}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              httpsAgent: new https.Agent({
+                rejectUnauthorized: false
+              })
+            });
+      
+      console.log('Success! LTI Assignment submission (pending manual grading) created in Canvas.');
+      res.sendStatus(201);
 
     } catch (ex){
-        console.warn('Submitting assignment to Canvas failed. Reason: ' +ex );
+      console.warn(`Getting line items from Canvas for the course ${courseId} failed. Reason: ${
+        ex}. The response from Canvas is ${JSON.stringify(submitResp.data)}` );
         res.sendStatus(500);
-    }
-  });
+        return;
+      }
+});
 
 
 

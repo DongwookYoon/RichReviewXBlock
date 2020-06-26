@@ -1,8 +1,8 @@
 import https from 'https'
 import axios from 'axios'
+import { ITokenInfo } from '~/store/modules/LtiAuthStore'
 
 export default class ClientAuth {
-
   /**
    * Obtain token which gives app access to Canvas Advantage Grading Services
    * line items and score to support assignment submission
@@ -17,6 +17,24 @@ export default class ClientAuth {
       })
 
     return tokenResp.data.access_token
+  }
+
+  /**
+   * Checks to determine if a given token is expired. Expiration
+   * is calculated using the configured token duration in config.
+   * @param token ITokenInfo containing token value and creation time.
+   */
+  public static isTokenValid (token : ITokenInfo) : boolean {
+    if (!token.creationTime) {
+      return false
+    }
+
+    const duration : number = parseInt(process.env.canvas_token_duration as string)
+    const now : Date = new Date()
+    const created : Date = token.creationTime
+    const dif = (now.getTime() - created.getTime()) / 1000
+
+    return (dif < duration)
   }
 
   /**
@@ -46,5 +64,4 @@ export default class ClientAuth {
 
     return tokenResp.data.auth_info
   }
-
 }

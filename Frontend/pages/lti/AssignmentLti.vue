@@ -62,7 +62,7 @@
 
 <script lang="ts">
 import { Component, Vue } from 'nuxt-property-decorator'
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 import JwtUtil from '~/utils/jwt-util'
 import ClientAuth from '~/utils/client-auth'
 import DocumentSubmitter from '~/components/lti/document_submitter.vue'
@@ -81,7 +81,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
 const testUser = new User(
   'google_109022885000538247847',
   'Test Instructor',
-  [Roles.INSTRUCTOR]
+  [Roles.STUDENT]
 )
 
 const testDataStudent = {
@@ -427,18 +427,18 @@ export default class AssignmentLti extends Vue {
       submissionURL += `&submission_id=${encodeURIComponent(submissionId)}`
     }
 
-    if (DEBUG) {
-      alert('DEBUG MODE: Got submit event from child component!')
-      console.log('Submitted assignment viewer URL: ' + submissionURL)
-      return
-    }
-
     try {
       await this.updateClientCredentials() // Update client credentials token in store
     }
     catch (ex) {
       console.warn('OAuth client credential grant for assignment submission failed. Reason: ' + ex)
       throw ex
+    }
+
+    if (DEBUG) {
+      alert('DEBUG MODE: Got submit event from child component!')
+      console.log('Submitted assignment viewer URL: ' + submissionURL)
+      return
     }
 
     try {
@@ -456,10 +456,13 @@ export default class AssignmentLti extends Vue {
   }
 
   private async updateClientCredentials () {
-    // Get a client credential token with scopes required for the LTI grader services
-    const clientToken = await ClientAuth.getGradeServicesToken()
-
-    this.$store.dispatch('updateClientCredentialsToken', clientToken)
+    /* Get a client credential token with scopes required for the LTI grader services
+       if there is no token in store or the existing token is no longer valid */
+    if (!this.clientCredentialsToken ||
+      ClientAuth.isTokenValid(this.clientCredentialsToken) === false) {
+      const clientToken = await ClientAuth.getGradeServicesToken()
+      this.$store.dispatch('LtiAuthStore/updateClientCredentialsToken', clientToken)
+    }
   }
 
   private static getQueryVariable (variable : string, route : string) : string | null {

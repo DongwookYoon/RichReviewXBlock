@@ -87,6 +87,7 @@ export default class JwtUtil {
     }
   }
 
+  /*
   public static async encodeJWT (jwtData : any, nonce: string, audience ?: string) {
     let jwtResponse
 
@@ -112,6 +113,7 @@ export default class JwtUtil {
 
     return jwtResponse.data.jwt
   }
+  */
 
   public static createJwtFormUrlEncoded (jwtDataBase64 : string) : string {
     return `JWT=${encodeURIComponent(jwtDataBase64)}`

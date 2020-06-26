@@ -176,6 +176,7 @@ router.post('/assignment', async function(req, res, next) {
         });
     } catch (ex) {
       console.warn(`Getting line items from Canvas for the course ${courseId} failed. Reason: ${ex}`)
+      connsole.warn(`Bearer token is ${clientCredentialsToken}`)
       console.warn(`The response was: ${lineItemsResp ? JSON.stringify(lineItemsResp.data) : 'No response'}`); 
         res.sendStatus(500);
         return;

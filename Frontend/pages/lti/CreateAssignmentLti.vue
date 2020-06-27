@@ -1,6 +1,7 @@
 <template>
   <div v-if="success === true" id="create-assignment">
     <div id="assignment-details">
+      <!--
       <div>
         <label id="max-score-label" class="assignment-info-label" for="max-score">Maximum Score</label>
         <input
@@ -16,6 +17,7 @@
           @input="$event.target.checkValidity()"
         >
       </div>
+      -->
 
       <div id="assignment-type-section">
         <label id="assignment-info-label" class="assignment-info-label" for="assignment-type">Assignment Type</label>
@@ -464,7 +466,7 @@ export default class CreateAssignmentLti extends Vue {
         text: 'This is a link to a RichReview assignment that will be graded',
         url: ltiLink,
         lineItem: {
-          scoreMaximum: this.maxScore,
+          scoreMaximum: 1000,
           label: 'RichReview Assignment',
           resourceId: this.assignmentId
         },

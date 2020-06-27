@@ -177,15 +177,15 @@ router.post('/assignment', async function(req, res, next) {
         scoreData.nonce = launchMessage.nonce;
       }
 
-      //  Call backend to sign JWT.
-      const scoreJWT = jwtUtil.signAndEncode(scoreData);
+     const scoreJWT = jwtUtil.signAndEncode(scoreData);
       if (scoreJWT === null) {
         throw new Error('Creating the JWT failed.');
       }
 
       const urlEncodedJWT = `JWT=${encodeURIComponent(scoreJWT)}`;
 
-      /* Send the score resource to Canvas to indicate submission in gradebook */
+      /* Send the score resource to Canvas to create new
+         unmarked submission in gradebook. */
       const submitResp = axios.post(`${lineItemUrl}/scores`,
             urlEncodedJWT,
             {
@@ -198,7 +198,7 @@ router.post('/assignment', async function(req, res, next) {
               })
             });
       
-      console.log('Success! LTI Assignment submission (pending manual grading) created in Canvas.');
+      console.log('Success! LTI Assignment submission created in Canvas. Status: pending instructor manual grading.');
       res.sendStatus(201);
 
     } catch (ex){

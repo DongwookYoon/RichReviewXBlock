@@ -186,7 +186,7 @@ router.post('/assignment', async function(req, res, next) {
       
       console.log('Submitting score JWT: ' + scoreJWT);
       console.log('Client credentials token is: ' + clientCredentialsToken);
-      console.log('POST URL is: ' + `${lineItemUrl}/scores`)
+      console.log('POST URL is: ' + `${lineItemUrl}/scores`);
 
       /* Send the score resource to Canvas to create new
          unmarked submission in gradebook. */
@@ -203,8 +203,12 @@ router.post('/assignment', async function(req, res, next) {
             });
       
       if(submitResp.status > 203) {
-        throw new Error(`Response code from Canvas API was ${submitResp.status}`);
+        console.warn(`Submitting assignment in course ${courseId} failed. Reason: ${
+          ex}. The response from Canvas is ${JSON.stringify(submitResp.data)}` );
+          res.sendStatus(500);
+          return;
       }
+      
 
       console.log('Success! LTI Assignment submission created in Canvas. Status: pending instructor manual grading.');
       res.sendStatus(201);

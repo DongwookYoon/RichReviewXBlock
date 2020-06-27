@@ -346,6 +346,13 @@ table {
   padding-right: 1rem;
 }
 
+.inactive-assignment:hover {
+  background-color: rgba(252, 228, 228, 0.589);
+}
 
+.inactive-assignment {
+  cursor: default;
+  opacity: 0.5;
+}
 
 </style>

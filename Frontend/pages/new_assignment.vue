@@ -1,8 +1,11 @@
+/* eslint-disable vue/html-self-closing */
 <template>
   <div id="new-assignment">
-    <loading :active.sync="loading"
-             :is-full-page="true"
-             color="#0c2343"></loading>
+    <loading
+      :active.sync="loading"
+      :is-full-page="true"
+      color="#0c2343"
+    />
     <dashboard-sidebar :name="name" :enrolments="enrolments" :taing="taing" :instructing="instructing" />
     <course-sidebar :name="name" />
     <div id="content">
@@ -13,29 +16,33 @@
             id="title"
             v-model="assignment_data.title"
             placeholder="Assignment Name"
-          />
+          >
         </div>
         <div id="description-div">
           <textarea
             id="description"
             v-model="assignment_data.description"
             placeholder="Description"
-          ></textarea>
+          />
         </div>
         <div id="points-div">
           <label id="points-label">Points</label>
-          <input id="points" v-model="assignment_data.points" placeholder="0" />
+          <input id="points" v-model="assignment_data.points" placeholder="0">
         </div>
         <div id="weight-div">
           <label id="weight-label">Weight</label>
-          <input id="weight" v-model="assignment_data.weight" placeholder="0" />
+          <input id="weight" v-model="assignment_data.weight" placeholder="0">
           <label id="weight-label2">% of final grade</label>
         </div>
         <div id="type-div">
           <label id="type-label">Assignment type</label>
           <select id="type" v-model="assignment_data.type">
-            <option value="document_submission">Document Submission</option>
-            <option value="comment_submission">Comment Submission</option>
+            <option value="document_submission">
+              Document Submission
+            </option>
+            <option value="comment_submission">
+              Comment Submission
+            </option>
           </select>
         </div>
         <div id="count-towards-final-div">
@@ -43,27 +50,27 @@
             id="count-towards-final"
             v-model="assignment_data.count_toward_final_grade"
             type="checkbox"
-          />
-          <label id="count-towards-final-label"
-            >Count this assignment towards the final grade</label
           >
+          <label
+            id="count-towards-final-label"
+          >Count this assignment towards the final grade</label>
         </div>
         <div id="multiple-submissions-div">
           <input
             id="multiple-submissions"
             v-model="assignment_data.allow_multiple_submissions"
             type="checkbox"
-          />
-          <label id="multiple-submissions-label"
-            >Allow multiple submissions</label
           >
+          <label
+            id="multiple-submissions-label"
+          >Allow multiple submissions</label>
         </div>
         <div id="late-submissions-div">
           <input
             id="late-submissions"
             v-model="assignment_data.allow_late_submissions"
             type="checkbox"
-          />
+          >
           <label id="late-submissions-label">Allow late submissions</label>
         </div>
         <div id="group-assignment-div">
@@ -71,7 +78,7 @@
             id="group-assignment"
             v-model="assignment_data.group_assignment"
             type="checkbox"
-          />
+          >
           <label id="group-assignment-label">Group assignment</label>
         </div>
         <div v-if="assignment_data.group_assignment" id="course-group-set-div">
@@ -89,7 +96,7 @@
           </select>
         </div>
         <div id="hidden-div">
-          <input id="hidden" v-model="assignment_data.hidden" type="checkbox" />
+          <input id="hidden" v-model="assignment_data.hidden" type="checkbox">
           <label id="hidden-label">Hidden</label>
         </div>
         <div id="due-date-div">
@@ -100,7 +107,7 @@
             type="datetime"
             use12-hour
             title="Due Date"
-          ></datetime>
+          />
           <p
             v-if="assignment_data.due_date !== ''"
             id="clear-due-date"
@@ -117,7 +124,8 @@
               v-model="assignment_data.available_date"
               type="datetime"
               use12-hour
-            ></datetime>
+              @input="updateAvailableSet"
+            />
             <p
               v-if="assignment_data.available_date !== ''"
               id="clear-available-date"
@@ -133,7 +141,8 @@
               v-model="assignment_data.until_date"
               type="datetime"
               use12-hour
-            ></datetime>
+              @input="updateUntilSet"
+            />
             <p
               v-if="assignment_data.until_date !== ''"
               id="clear-until-date"
@@ -141,40 +150,76 @@
             >
               X
             </p>
+            <div id="until-info">
+              <p v-if="untilSet===false">
+                By default, Students will be allowed to view this assignment as long as they are enrolled,
+                starting from from the "available date", if any.
+                Set an "until" date to change that.
+              </p>
+              <p v-else-if="daysAvailableAfterDue > 0">
+                Students will be allowed to view this assignment for <b>{{ daysAvailableAfterDue }} day<span
+                  v-if="daysAvailableAfterDue > 1"
+                >s</span>
+                </b> after the due date.
+                <span v-if="daysAvailableAfterDue <= 7" class="until-warning">
+                  This date is close to the due date.
+                </span>
+              </p>
+              <p v-else-if="daysAvailableAfterDue < 0" class="until-warning">
+                - Invalid date range. The "until" date must be the same as or after the due date.
+              </p>
+              <p v-else-if="assignment_data.due_date !== ''" class="until-warning">
+                - Students will not be able to view the assignment after the due date. It is recommended
+                to set an "until" date several days after the due date.
+              </p>
+
+              <p v-if="untilSet && timeAvailable < 0" class="until-warning">
+                - The "available" date and time must be before the "until" date and time.
+              </p>
+            </div>
+            </p>
           </div>
         </div>
-        <hr id="button-hr" />
+        <hr id="button-hr">
         <div id="button-div">
           <p id="cancel-button" @click="go_to_course">
             Cancel
           </p>
-          <p id="save-button" @click="save()">Save</p>
+          <p id="save-button" @click="save()">
+            Save
+          </p>
         </div>
       </div>
     </div>
     <div v-if="assignment_data.type === 'comment_submission'" id="files-div">
       <div class="large-12 medium-12 small-12 cell">
         <label id="files-label">Files </label>
-        <hr id="files-hr" />
+        <hr id="files-hr">
         <input
           id="files"
           ref="files"
           type="file"
           multiple
           @change="handleFileUpload()"
-        />
+        >
       </div>
       <div class="large-12 medium-12 small-12 cell">
         <div v-for="(file, key) in files" :key="key" class="file-listing">
-          <p class="file">{{ file.name }}</p>
-          <p class="remove-file" @click="removeFile(key)">Remove</p>
+          <p class="file">
+            {{ file.name }}
+          </p>
+          <p class="remove-file" @click="removeFile(key)">
+            Remove
+          </p>
         </div>
       </div>
-      <br />
+      <br>
       <div class="large-12 medium-12 small-12 cell">
-        <p id="add-files-button" @click="addFiles()">Add Files</p>
+        <p id="add-files-button" @click="addFiles()">
+          Add Files
+        </p>
       </div>
-      <br />
+      <br>
     </div>
     <Footer />
   </div>
@@ -189,8 +234,8 @@ import axios from 'axios'
 import Footer from '../components/footer'
 import CourseSidebar from '../components/course_sidebar'
 import NavBar from '../components/nav_bar'
-import Loading from 'vue-loading-overlay';
-import 'vue-loading-overlay/dist/vue-loading.css';
+import Loading from 'vue-loading-overlay'
+import 'vue-loading-overlay/dist/vue-loading.css'
 import DashboardSidebar from '../components/dashboard_sidebar'
 
 export default {
@@ -203,32 +248,15 @@ export default {
     Loading,
     'dashboard-sidebar': DashboardSidebar
   },
-  data: function() {
-    return {
-      assignment_data: {
-        title: '',
-        description: '',
-        points: 0,
-        weight: 0,
-        display_grade_as: 'Points',
-        count_toward_final_grade: true,
-        allow_multiple_submissions: true,
-        allow_late_submissions: false,
-        group_assignment: false,
-        hidden: false,
-        due_date: '',
-        available_date: '',
-        until_date: '',
-        type: 'document_submission',
-        course_group_set: 'default'
-      },
-      files: [],
-      changesSaved: false,
-      loading: false
+  fetch ({ store, redirect }) {
+    if (!store.state.authUser) {
+      return redirect('/edu/login')
     }
   },
-  async asyncData(context) {
-    if (!context.store.state.authUser) return
+  async asyncData (context) {
+    if (!context.store.state.authUser) {
+      return
+    }
 
     const permission_res = await axios.get(
       `https://${process.env.backend}:3000/courses/${
@@ -276,39 +304,87 @@ export default {
     return {
       permissions: permission_res.data.permissions,
       course: course_res.data.course.title,
-      course_group_sets: course_group_sets,
+      course_group_sets,
       name: course_res.data.user_name || '',
       enrolments: enrolment_res.data.enrolments,
       taing: enrolment_res.data.taing,
       instructing: enrolment_res.data.teaching
     }
   },
-  fetch({ store, redirect }) {
-    if (!store.state.authUser) {
-      return redirect('/edu/login')
+  data () {
+    return {
+      assignment_data: {
+        title: '',
+        description: '',
+        points: 0,
+        weight: 0,
+        display_grade_as: 'Points',
+        count_toward_final_grade: true,
+        allow_multiple_submissions: true,
+        allow_late_submissions: false,
+        group_assignment: false,
+        hidden: false,
+        due_date: '',
+        available_date: '',
+        until_date: '',
+        type: 'document_submission',
+        course_group_set: 'default'
+      },
+      files: [],
+      changesSaved: false,
+      loading: false,
+      untilSet: false,
+      availableSet: false
     }
   },
+  computed: {
+    daysAvailableAfterDue () {
+      if (!this.untilSet) {
+        return Number.MAX_SAFE_INTEGER
+      }
+
+      const until = new Date(this.assignment_data.until_date)
+      const due = new Date(this.assignment_data.due_date)
+      const dif = until - due
+
+      return Math.round(dif / 86400000)
+    },
+    timeAvailable () {
+      const until = new Date(this.assignment_data.until_date)
+      const available = new Date(this.assignment_data.available_date)
+
+      return until - available
+    },
+    availableDueDifference () {
+      if (this.assignment_data.due_date === '' && this.availableSet) {
+        return Number.MAX_SAFE_INTEGER
+      }
+
+      const available = new Date(this.assignment_data.available_date)
+      const due = new Date(this.assignment_data.due_date)
+      return due - available
+    }
+
+  },
   methods: {
-    go_to_course() {
+    go_to_course () {
       this.$router.push(`/edu/courses/${this.$route.params.course_id}/`)
     },
-    clear_due_date() {
+    clear_due_date () {
       this.assignment_data.due_date = ''
     },
-    clear_available_date() {
+    clear_available_date () {
       this.assignment_data.available_date = ''
+      this.availableSet = false
     },
-    clear_until_date() {
+    clear_until_date () {
       this.assignment_data.until_date = ''
+      this.untilSet = false
     },
-    async save() {
-      if (
-        this.assignment_data.group_assignment &&
-        this.assignment_data.course_group_set === 'default'
-      ) {
-        alert('A group assignment requires a group set')
+    async save () {
+      if (this.validateDateInput() === false)
         return
-      }
+
       this.changesSaved = true
       try {
         if (this.assignment_data.type === 'comment_submission') {
@@ -345,7 +421,8 @@ export default {
             }
           )
           this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
-        } else {
+        }
+        else {
           this.loading = true
           await axios.post(
             `https://${process.env.backend}:3000/courses/${
@@ -363,30 +440,83 @@ export default {
           )
           this.$router.push(`/edu/courses/${this.$route.params.course_id}`)
         }
-      } catch (e) {
+      }
+      catch (e) {
         this.loading = false
         window.alert(e.response.data.message)
       }
     },
-    addFiles() {
+    addFiles () {
       this.$refs.files.click()
     },
-    removeFile(key) {
+    removeFile (key) {
       this.files.splice(key, 1)
     },
-    handleFileUpload() {
+    handleFileUpload () {
       const uploadedFiles = this.$refs.files.files
 
       for (let i = 0; i < uploadedFiles.length; i++) {
         this.files.push(uploadedFiles[i])
       }
+    },
+    updateUntilSet () {
+      const until = this.assignment_data.until_date
+      // eslint-disable-next-line no-unneeded-ternary
+      this.untilSet = (until && until !== '') ? true : false
+    },
+
+    updateAvailableSet () {
+      const available = this.assignment_data.available_date
+      // eslint-disable-next-line no-unneeded-ternary
+      this.availableSet = (available && available !== '') ? true : false
+    },
+
+    validateDateInput () {
+      if (
+        this.assignment_data.group_assignment &&
+        this.assignment_data.course_group_set === 'default'
+      ) {
+        alert('A group assignment requires a group set')
+        return false
+      }
+
+      if (this.availableSet) {
+        if (this.timeAvailable < 0) {
+          alert('The "available from" date must be before the "until" date.')
+          return false
+        }
+        if (this.assignment_data.due_date !== '' && this.availableDueDifference <= 0) {
+          alert('The "due" date and time must be after the "available from" date and time.')
+          return false
+        }
+      }
+
+      if (this.daysAvailableAfterDue < 0) {
+        alert('Invalid "until" date. This date should be the same or later than the due date.')
+        return false
+      }
+
+      if (this.daysAvailableAfterDue <= 7) {
+        if (this.daysAvailableAfterDue === 0) {
+          if (!confirm(`This assignment will not be visible to students after the due date. Is this acceptable?`)) {
+            return false
+          }
+        }
+        else if (!confirm(`This assignment will only be visible to students for ${
+          this.daysAvailableAfterDue} days(s) after the due date. Is this acceptable?`)) {
+          return false
+        }
+      }
+      return true
     }
+
   },
-  beforeRouteLeave(to, from, next) {
+  beforeRouteLeave (to, from, next) {
     if (!this.changesSaved) {
       if (confirm('Leave Page? Changes you made may not be saved.')) {
         return next()
-      } else {
+      }
+      else {
         return next(false)
       }
     }
@@ -494,15 +624,15 @@ hr {
 }
 
 #points-div {
-  margin-left: 10vw;
+  margin-left: 9.6rem;
 }
 
 #weight-div {
-  margin-left: 9.75vw;
+  margin-left: 9.2rem;
 }
 
 #type-div {
-  margin-left: 4.9vw;
+  margin-left: 5.5rem;
   margin-bottom: 1vh;
 }
 
@@ -579,8 +709,7 @@ hr {
 #save-button,
 #cancel-button {
   border-radius: 0.5vh;
-  padding-left: 1vw;
-  padding-right: 1vw;
+  padding: 0.25vw 1vw;
   cursor: pointer;
 }
 
@@ -596,5 +725,14 @@ hr {
 
 #cancel-button {
   margin-right: 0.5vw;
+}
+
+#until-info {
+  margin-left: 2rem;
+}
+
+.until-warning {
+  color: red;
+  font-weight: bold;
 }
 </style>

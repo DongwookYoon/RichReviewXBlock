@@ -630,8 +630,12 @@ class AssignmentDatabaseHandler {
                 let submitter_exists = await submitter_db_handler.does_user_have_submitter(import_handler, user_key, assignment_key);
                 if (submitter_exists) {
                     let assignment_data = await this.get_assignment_data(user_key, assignment_key);
-
+                    
                     if (await AssignmentDatabaseHandler.user_has_permission_to_view(import_handler, user_key, assignment_data)) {
+                        let is_active = true
+                        if (assignment_data['until_date'] && assignment_data['until_date'] !== '') {
+                            is_active = (Date.now() < Date.parse(assignment_data['until_date'])) ? true : false
+                        }
                         assignments.push({
                             course_id: enrolment['id'],
                             assignment_id: assignment_data['id'],
@@ -639,7 +643,8 @@ class AssignmentDatabaseHandler {
                             title: assignment_data['title'],
                             due: assignment_data['due_date'],
                             group_assignment: assignment_data['group_assignment'],
-                            role: 'Student'
+                            role: 'Student',
+                            is_active
                         })
                     }
                 }
@@ -658,7 +663,8 @@ class AssignmentDatabaseHandler {
                         title: assignment_data['title'],
                         due: assignment_data['due_date'],
                         group_assignment: assignment_data['group_assignment'],
-                        role: 'Ta'
+                        role: 'Ta',
+                        is_active: true
                     })
                 }
             }
@@ -676,7 +682,8 @@ class AssignmentDatabaseHandler {
                         title: assignment_data['title'],
                         due: assignment_data['due_date'],
                         group_assignment: assignment_data['group_assignment'],
-                        role: 'Instructor'
+                        role: 'Instructor',
+                        is_active: true
                     })
                 }
             }
@@ -758,7 +765,8 @@ class AssignmentDatabaseHandler {
             if (submitter_exists) {
                 let assignment_data = await this.get_assignment_data(user_key, assignment_key);
 
-                if (assignment_data && (await AssignmentDatabaseHandler.user_has_permission_to_view(import_handler, user_key, assignment_data))) {
+                if (assignment_data && 
+                    (await AssignmentDatabaseHandler.user_has_permission_to_view(import_handler, user_key, assignment_data))) {
                     let submission_key = await this.get_users_submission_key(import_handler, user_key, assignment_key);
                     let submission_data = await submission_db_handler.get_submission_data(submission_key);
                     let submission_status = await submission_db_handler.get_submission_status(submission_key);
@@ -769,6 +777,11 @@ class AssignmentDatabaseHandler {
                     assignment_data['late'] = late.is_late(assignment_data, submission_data, submitter_data['course_group'] === '' ?
                         submitter_data['members'][0] :
                         submitter_data['course_group']);
+                    
+                    let is_active = true
+                    if (assignment_data['until_date'] && assignment_data['until_date'] !== '') {
+                        is_active = (Date.now() < Date.parse(assignment_data['until_date'])) ? true : false
+                    }
 
                     assignment_data = {
                         id: assignment_data.id,
@@ -776,7 +789,8 @@ class AssignmentDatabaseHandler {
                         group_assignment: assignment_data.group_assignment,
                         due_date: assignment_data.due_date,
                         submission: assignment_data.submission,
-                        late: assignment_data.late
+                        late: assignment_data.late,
+                        is_active
                     };
 
                     assignments.push(assignment_data);
@@ -798,7 +812,8 @@ class AssignmentDatabaseHandler {
                 title: assignment.title,
                 hidden: assignment.hidden,
                 group_assignment: assignment.group_assignment,
-                due_date: assignment.due_date
+                due_date: assignment.due_date,
+                is_active: true
             }
         });
 
@@ -1189,11 +1204,13 @@ class AssignmentDatabaseHandler {
              return false;
         }
 
+        /*
          if (assignment_data['until_date'] !== 'Invalid Date' &&
                  Date.parse(assignment_data['until_date']) < Date.now()) {
                  console.log('User does not have permission to view assignment after assignment is closed');
              return false;
         }
+        */
         return true;
     }
 

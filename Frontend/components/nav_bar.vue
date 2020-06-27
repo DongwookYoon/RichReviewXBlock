@@ -201,6 +201,7 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 15vw;
+  padding-bottom: 0.25rem;
 }
 
 #nav-bar-div {

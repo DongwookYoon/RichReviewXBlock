@@ -1,15 +1,15 @@
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
-let rs256_private_key
-let lti_config
+let rs256_private_key;
+let lti_config;
 
 try {
   rs256_private_key  = fs.readFileSync(
     path.join(__dirname, '..', 'ssl/lti_private.key'), 'utf-8');
   console.log('Successfully read lti private key. ');
 } catch (fsEx) {
-  console.warn('Reading lti private key failed. Reason: ' + fsEx)
+  console.warn('Reading lti private key failed. Reason: ' + fsEx);
 }
 
 try {
@@ -62,7 +62,7 @@ const createClientAssertion = function (options = null){
   const signed = signAndEncode({}, options);
 
   return signed;
-}
+};
 
 
 module.exports = {

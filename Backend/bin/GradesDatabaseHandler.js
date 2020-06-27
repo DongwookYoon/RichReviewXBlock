@@ -49,6 +49,11 @@ class GradesDatabaseHandler {
                 let course_key = KeyDictionary.key_dictionary['course'] + course_id;
                 let course_data = await course_db_handler.get_course_data(course_key);
 
+                let is_active = true
+                if (assignment_data['until_date'] && assignment_data['until_date'] !== '') {
+                    is_active = (Date.now() < Date.parse(assignment_data['until_date'])) ? true : false
+                }
+
                 if (!assignment_data['hidden']) {
                     grades.push({
                         course_id: course_id,
@@ -58,7 +63,8 @@ class GradesDatabaseHandler {
                         submission_status: submission_data['submission_status'],
                         mark: submission_data['mark'],
                         points: assignment_data['points'],
-                        late: late.is_late(assignment_data, submission_data)
+                        late: late.is_late(assignment_data, submission_data),
+                        is_active
                     })
                 }
             } catch (e) {

@@ -44,8 +44,9 @@
               <tr
                 v-for="a in assignments"
                 :key="a.key"
-                class="assignment-row"
-                @click="go_to_assignment(a.id)"
+                :class="{'assignment-row': true, 'inactive-assignment': !a.is_active}"
+                :title="getRowTooltipMessage(a.is_active)"
+                @click="go_to_assignment(a.id, a.is_active)"
               >
                 <td class="assignment-title">{{ a.title }}</td>
                 <td v-if="permissions === 'student'" class="assignment-status">
@@ -148,10 +149,19 @@ export default {
         `/edu/courses/${this.$route.params.course_id}/deleted-assignments`
       )
     },
-    go_to_assignment(id) {
+    go_to_assignment(id, is_active) {
+      if (is_active === false) {
+        return
+      }
       this.$router.push(
         `/edu/courses/${this.$route.params.course_id}/assignments/${id}`
       )
+    },
+    getRowTooltipMessage (is_active) {
+      if (is_active === false) {
+        return 'The instructor has closed this assignment and it can no longer be viewed.'
+      }
+      return ''
     }
   }
 }
@@ -206,8 +216,7 @@ table {
   background-color: #0c2343;
   font-size: 1rem;
   color: white;
-  padding-left: 0.5vw;
-  padding-right: 0.5vw;
+  padding: 0 0.9vh 0.7vh 0.9vh;
   border-radius: 0.5vh;
   cursor: pointer;
 }
@@ -274,5 +283,14 @@ table {
 
 .assignment-due {
   text-align: center;
+}
+
+.inactive-assignment:hover {
+  background-color: rgba(252, 228, 228, 0.589);
+}
+
+.inactive-assignment {
+  cursor: default;
+  opacity: 0.5;
 }
 </style>

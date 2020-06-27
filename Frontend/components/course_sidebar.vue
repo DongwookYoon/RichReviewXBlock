@@ -166,6 +166,7 @@ p {
 #header-people,
 #header-grades {
   font-size: 1rem;
+  padding-bottom: 0.25rem;
   text-align: center;
 }
 

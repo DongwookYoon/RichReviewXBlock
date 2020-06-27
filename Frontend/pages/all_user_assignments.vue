@@ -21,8 +21,9 @@
             <tr
               v-for="a in assignments"
               :key="a.key"
-              class="assignment-row"
-              @click="go_to_assignment(a.course_id, a.assignment_id)"
+              :title="getRowTooltipMessage(a.is_active)"
+              :class="{'assignment-row': true, 'inactive-assignment': !a.is_active}"
+              @click="go_to_assignment(a.course_id, a.assignment_id, a.is_active)"
             >
               <td class="assignment-title">{{ a.title }}</td>
               <td class="assignment-group">
@@ -96,11 +97,23 @@ export default {
     }
   },
   methods: {
-    go_to_assignment(course_id, assignment_id) {
+    go_to_assignment(course_id, assignment_id, is_active) {
+      if (is_active === false) {
+        return
+      }
+
       this.$router.push(
         `/edu/courses/${course_id}/assignments/${assignment_id}`
       )
+    },
+    getRowTooltipMessage (is_active) {
+      if (is_active === false) {
+        return 'The instructor has closed this assignment and it can no longer be viewed.'
+      }
+      return ''
     }
+
+
   }
 }
 </script>
@@ -128,6 +141,10 @@ hr {
 
 .assignment-row:hover {
   background-color: #f5f5f5;
+}
+
+.inactive-assignment:hover {
+  background-color: rgba(252, 228, 228, 0.589);
 }
 
 #content {
@@ -181,6 +198,11 @@ hr {
 
 .assignment-row {
   cursor: pointer;
+}
+
+.inactive-assignment{
+  opacity: 0.5;
+  cursor: default !important;
 }
 
 .assignment-title {

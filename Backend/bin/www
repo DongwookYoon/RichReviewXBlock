@@ -8,14 +8,12 @@ var app = require('../app');
 var debug = require('debug')('backend:server');
 var http = require('https');
 var fs = require('fs');
-const env = require('../env');
 const path = require('path');
 
 /**
  * Get port from environment and store in Express.
  */
 
-var host = (env.node_config && env.node_config.ENV === 'production') ? 'richreview.net' : 'localhost';
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 console.log(`Bound to port ${port}`);
@@ -33,7 +31,7 @@ var server = http.createServer(options, app);
 /**
  * Listen on provided port, on all network interfaces.
  */
-server.listen(port, host);
+server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
 

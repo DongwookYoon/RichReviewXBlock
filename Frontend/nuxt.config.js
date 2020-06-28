@@ -30,14 +30,14 @@ const config = {
   },
 
   env: {
-    debug_mode: 'false',
+    debug_mode: 'true',
     prod_url: 'https://richreview.net',
     default_canvas: 'canvas.instructure.com',
     canvas_oidc_endpoint: 'https://canvas.ubc.ca/api/lti/authorize_redirect',
     canvas_oauth_endpoint: 'https://canvas.ubc.ca/login/oauth2/auth',
     canvas_client_id: '112240000000000077',
     canvas_public_key_set_url: 'https://canvas.ubc.ca/api/lti/security/jwks',
-    canvas_path: 'https://canvas.ubc.ca', // Path to institution's Canvas deployment
+    canvas_path: 'https://canvas.ubc.ca',                            // Path to institution's Canvas deployment
     canvas_host: 'canvas.ubc.ca',
     canvas_token_duration: 3600,
     deployment_id: '12277:f7688ba591cfce37b3bcacd61370d6dc591cf543', // TODO Update this to support multiple deployment id's

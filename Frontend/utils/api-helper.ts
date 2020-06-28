@@ -108,6 +108,8 @@ export default class ApiHelper {
    *  resulting jwt.
    **/
   public static async createDeepLinkJWT (ltiResponseMessage: any,
+    userId: string,
+    courseId: string,
     nonce?: string,
     audience?: string) {
     const message = ltiResponseMessage
@@ -119,9 +121,12 @@ export default class ApiHelper {
 
     const res = await axios.post(`https://${process.env.backend}:3000/lti/deeplink`,
       {
-        message
-      },
-      {
+        message,
+        courseId
+      }, {
+        headers: {
+          Authorization: userId
+        },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
         })
@@ -140,7 +145,6 @@ export default class ApiHelper {
    */
   public static async submitAssignmentToCanvas (launchMessage: any,
     courseId: string,
-    clientCredentialsToken: string,
     userId: string,
     richReviewUrl: URL
   ) {
@@ -148,11 +152,13 @@ export default class ApiHelper {
       {
         launchMessage,
         courseId,
-        clientCredentialsToken,
         userId,
         richReviewUrl: richReviewUrl.toString()
       },
       {
+        headers: {
+          Authorization: userId
+        },
         httpsAgent: new https.Agent({
           rejectUnauthorized: false
         })

@@ -280,7 +280,6 @@ const testDataStudent = {
   computed: {
     ...mapGetters('LtiAuthStore', {
       isLoggedIn: 'isLoggedIn',
-      clientCredentialsToken: 'clientCredentialsToken'
     })
   }
 
@@ -296,7 +295,6 @@ export default class AssignmentLti extends Vue {
 
   /* Mappings for Vuex store getters */
   public isLoggedIn !: boolean
-  public clientCredentialsToken !: ITokenInfo
   /* End mapped getters */
 
   /* Component data */
@@ -427,41 +425,22 @@ export default class AssignmentLti extends Vue {
       submissionURL += `&submission_id=${encodeURIComponent(submissionId)}`
     }
 
-    try {
-      await this.updateClientCredentials() // Update client credentials token in store
-    }
-    catch (ex) {
-      console.warn('OAuth client credential grant for assignment submission failed. Reason: ' + ex)
-      throw ex
-    }
-
     if (DEBUG) {
       alert('DEBUG MODE: Got submit event from child component!')
       console.log('Submitted assignment viewer URL: ' + submissionURL)
-      return
+      // return
     }
 
     try {
       await ApiHelper.submitAssignmentToCanvas(
         this.launchMessage,
         courseId,
-        this.clientCredentialsToken.token,
         this.user.id,
         new URL(submissionURL))
     }
     catch (e) {
       console.warn('Canvas submission failed. Reason: ' + e)
       throw e
-    }
-  }
-
-  private async updateClientCredentials () {
-    /* Get a client credential token with scopes required for the LTI grader services
-       if there is no token in store or the existing token is no longer valid */
-    if (!this.clientCredentialsToken ||
-      ClientAuth.isTokenValid(this.clientCredentialsToken) === false) {
-      const clientToken = await ClientAuth.getGradeServicesToken()
-      this.$store.dispatch('LtiAuthStore/updateClientCredentialsToken', clientToken)
     }
   }
 

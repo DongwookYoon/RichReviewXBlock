@@ -1,6 +1,7 @@
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+
 let rs256_private_key;
 let lti_config;
 
@@ -57,12 +58,14 @@ const createClientAssertion = function (options = null){
     };
   }
 
-  console.log(JSON.stringify(options))
-
   const signed = signAndEncode({}, options);
 
   return signed;
 };
+
+
+
+
 
 
 module.exports = {

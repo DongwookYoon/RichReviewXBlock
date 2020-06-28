@@ -1,23 +1,6 @@
 <template>
   <div v-if="success === true" id="create-assignment">
     <div id="assignment-details">
-      <!--
-      <div>
-        <label id="max-score-label" class="assignment-info-label" for="max-score">Maximum Score</label>
-        <input
-          id="max-score"
-          ref="max_score_input"
-          v-model="maxScore"
-          required
-          min="0.0"
-          placeholder="0.0"
-          type="number"
-          class="assignment-info"
-          @change="saved = false"
-          @input="$event.target.checkValidity()"
-        >
-      </div>
-      -->
 
       <div id="assignment-type-section">
         <label id="assignment-info-label" class="assignment-info-label" for="assignment-type">Assignment Type</label>
@@ -217,7 +200,6 @@ export default class CreateAssignmentLti extends Vue {
   /* Component data */
   private saved: boolean = true
   private assignmentType : string = 'document_submission'
-  private maxScore : number = 0.0
   private files : File [] = []
 
   private user !: User
@@ -407,13 +389,15 @@ export default class CreateAssignmentLti extends Vue {
   public async postBackToPlatform (ltiLink ?: string) {
     if (DEBUG) {
       this.postbackJwt = await ApiHelper.createDeepLinkJWT({ test: 'test' },
+        this.user.id,
+        this.courseId,
         '1',
         'example.com')
 
       console.log('postbackJwt: ' + this.postbackJwt)
+      alert('>DEBUG: Successfully created assignment!')
 
       Vue.nextTick().then(() => {
-        console.log('>DEBUG: Max score value: ' + this.maxScore)
         console.log('>DEBUG: lti response form would have JWT: ' + JSON.stringify(this.$refs.jwt_field))
       })
       return
@@ -427,6 +411,8 @@ export default class CreateAssignmentLti extends Vue {
 
     try {
       this.postbackJwt = await ApiHelper.createDeepLinkJWT(jwtContents,
+        this.user.id,
+        this.courseId,
         this.ltiReqMessage.nonce,
         this.ltiReqMessage.iss)
     }
@@ -439,7 +425,6 @@ export default class CreateAssignmentLti extends Vue {
        wait for Vue next tick. Otherwise, the reactive form data in the jwt_field
        field may not yet be updated to the latest value. */
     Vue.nextTick().then(() => {
-      console.log('Submitting lti response form...jwt value is: ' + JSON.stringify(this.$refs.jwt_field));
       (this.$refs.lti_response_form as HTMLFormElement).submit()
     })
   }

@@ -37,7 +37,7 @@ router.get('/', async function(req, res, next) {
         res.end(JSON.stringify(data));
     } catch (e) {
         console.log(e);
-        res.status(500).send({
+        res.status(500).json({
             message: e.message
         });
     }
@@ -154,6 +154,12 @@ router.post('/:user_id', async function(req, res, next) {
     let course_db_handler = await ImportHandler.course_db_handler;
     let user_db_handler = await ImportHandler.user_db_handler;
 
+    if(user_db_handler.user_exists(req.params.user_id) === false) {
+        res.sendStatus(401);
+        console.warn(`User ${req.params.user_id} does not exist.`);
+        return;
+    }
+
     const course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
     const user_key = KeyDictionary.key_dictionary['user'] + req.params.user_id;
     const roles = req.body.roles;
@@ -211,14 +217,14 @@ router.post('/:user_id', async function(req, res, next) {
         else if (!is_student && !is_instructor) {
             console.warn('No valid role for adding student or instructor. Roles are' + JSON.stringify(roles));
             res.sendStatus(501);
-            return
+            return;
         }
 
         if (created) {
-            res.send(201);
+            res.sendStatus(201);
         }
         else {
-            res.send(200);
+            res.sendStatus(200);
         }
 
     } catch (ex) {

@@ -1,9 +1,10 @@
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const lti_config = require('../bin/LtiConfig');
 
 let rs256_private_key;
-let lti_config;
+
 
 try {
   rs256_private_key  = fs.readFileSync(
@@ -13,13 +14,7 @@ try {
   console.warn('Reading lti private key failed. Reason: ' + fsEx);
 }
 
-try {
-   lti_config = JSON.parse(
-    fs.readFileSync(path.join(__dirname, '..', 'ssl/lti.json'), 'utf-8'));
-   console.log(`Successfully read lti.json config file`);
-} catch(ex) {
-  console.warn('Failed to read lti.json config file. Reason: ' + ex);
-}
+
 
 
 const signAndEncode = function (jwtData, options=undefined)  {
@@ -62,9 +57,6 @@ const createClientAssertion = function (options = null){
 
   return signed;
 };
-
-
-
 
 
 

@@ -62,15 +62,13 @@
 
 <script lang="ts">
 import { Component, Vue } from 'nuxt-property-decorator'
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters } from 'vuex'
 import JwtUtil from '~/utils/jwt-util'
-import ClientAuth from '~/utils/client-auth'
 import DocumentSubmitter from '~/components/lti/document_submitter.vue'
 import CommentSubmitter from '~/components/lti/comment_submitter.vue'
 import RichReviewViewer from '~/components/lti/richreview_viewer.vue'
 // eslint-disable-next-line camelcase
 import ApiHelper from '~/utils/api-helper'
-import { ITokenInfo } from '~/store/modules/LtiAuthStore'
 import User from '~/model/user'
 import Roles from '~/utils/roles'
 import SubmitData from '~/model/submit-data'
@@ -174,7 +172,7 @@ const testDataStudent = {
     } // End-if
 
     try {
-      await ApiHelper.ensureUserEnrolled(courseId, user)
+      await ApiHelper.ensureUserEnrolled(courseId, user, context.$axios)
     }
     catch (ex) {
       console.warn('Could not verify user enrollment in course. Reason: ' + ex)
@@ -195,7 +193,8 @@ const testDataStudent = {
     try {
       assignmentData = await ApiHelper.getAssignmentData(courseId,
         assignmentId,
-        context.store.getters['LtiAuthStore/authUser'].id)
+        context.store.getters['LtiAuthStore/authUser'].id,
+        context.$axios)
 
       assignmentType = assignmentData.assignment.type
 
@@ -279,7 +278,7 @@ const testDataStudent = {
 
   computed: {
     ...mapGetters('LtiAuthStore', {
-      isLoggedIn: 'isLoggedIn',
+      isLoggedIn: 'isLoggedIn'
     })
   }
 
@@ -407,7 +406,8 @@ export default class AssignmentLti extends Vue {
     try {
       updatedAssignmentData = await ApiHelper.getAssignmentData(courseId,
         this.assignmentId,
-        this.user.id as string)
+        this.user.id as string,
+        this.$axios)
     }
     catch (e) {
       console.warn('Getting updated assignment data on submit failed. Reason: ' + e)
@@ -436,7 +436,8 @@ export default class AssignmentLti extends Vue {
         this.launchMessage,
         courseId,
         this.user.id,
-        new URL(submissionURL))
+        new URL(submissionURL),
+        this.$axios)
     }
     catch (e) {
       console.warn('Canvas submission failed. Reason: ' + e)

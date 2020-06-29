@@ -1,6 +1,31 @@
 const axios = require('axios');
 const https = require('https');
 const jwtUtil = require('./jwt-util');
+var lti_config = require('../bin/LtiConfig');
+
+
+
+
+verifyRRApiKey = function(target) {
+  return (target === lti_config.rr_api_key);
+};
+
+
+const assertAuthorizedClient = function (req, res, next) {
+  if (!req.header('x-api-key')) {
+    console.warn('No API key in request! Required header X-API-KEY is missing!');
+    res.sendStatus(400);
+    return;
+  }
+  if (verifyRRApiKey(req.header('x-api-key')) === false) {
+    console.warn('Invalid RichReview API key received in X-API-KEY header');
+    res.sendStatus(403);
+    return;
+  }
+  
+  next();
+};
+
 
 const getClientCredentialToken = async function(authTokenUrl) {
     const assertionJWT = jwtUtil.createClientAssertion();
@@ -31,7 +56,13 @@ const getClientCredentialToken = async function(authTokenUrl) {
     }
 
     return tokenResp.data.access_token;
-    
 };
 
-module.exports.getClientCredentialToken = getClientCredentialToken;
+
+
+module.exports = {
+  getClientCredentialToken,
+  assertAuthorizedClient,
+  verifyRRApiKey
+};
+

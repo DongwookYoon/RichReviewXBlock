@@ -1,6 +1,6 @@
 import https from 'https'
-import axios from 'axios'
 import User from '~/model/user'
+import { NuxtAxiosInstance } from '@nuxtjs/axios'
 
 export default class ApiHelper {
   /**
@@ -8,9 +8,9 @@ export default class ApiHelper {
    * if it does not exist.
    * @param user User with id to check
    */
-  public static async ensureRichReviewUserExists (user : User) {
+  public static async ensureRichReviewUserExists (user : User, $axios: NuxtAxiosInstance) {
     console.log(`Ensure user ${user.id} exists in RichReview.`)
-    await axios.post(`https://${process.env.backend}:3000/lti_login`,
+    await $axios.post(`/rr-api/lti_login`,
       {
         id: user.id,
         name: user.userName
@@ -32,16 +32,16 @@ export default class ApiHelper {
    * @param user User object representing
    * @param roles Determine roles of user within course
    */
-  public static async ensureUserEnrolled (courseId: string, user: User) {
+  public static async ensureUserEnrolled (courseId: string, user: User, $axios: NuxtAxiosInstance) {
     console.log(`Ensuring that the user ${JSON.stringify(user)} is enrolled in course ${
       courseId} with roles ${user.roles}`)
 
-    await ApiHelper.ensureRichReviewUserExists(user)
+    await ApiHelper.ensureRichReviewUserExists(user, $axios)
 
     console.log('courseid' + courseId)
     /* Ensure user is enrolled in course */
-    const userRes = await axios.post(
-      `https://${process.env.backend}:3000/courses/${
+    const userRes = await $axios.post(
+      `/rr-api/courses/${
       courseId}/users/${user.id}`,
       { roles: user.roles },
       {
@@ -58,10 +58,10 @@ export default class ApiHelper {
     }
   }
 
-  public static async ensureCourseExists (courseData: CourseData, userId: string) {
+  public static async ensureCourseExists (courseData: CourseData, userId: string, $axios: NuxtAxiosInstance) {
     // eslint-disable-next-line camelcase
-    const course_res = await axios.post(
-      `https://${process.env.backend}:3000/courses/${courseData.id}`,
+    const course_res = await $axios.post(
+      `/rr-api/courses/${courseData.id}`,
       courseData, {
         headers: {
           Authorization: userId
@@ -82,8 +82,8 @@ export default class ApiHelper {
    * @param assignmentId
    * @param userId
    */
-  public static async getAssignmentData (courseId: string, assignmentId: string, userId: string) {
-    const resp = await await axios.get(`https://${process.env.backend}:3000/courses/${courseId
+  public static async getAssignmentData (courseId: string, assignmentId: string, userId: string, $axios: NuxtAxiosInstance) {
+    const resp = await $axios.get(`/rr-api/courses/${courseId
         }/assignments/${assignmentId}`,
     {
       headers: {
@@ -110,6 +110,7 @@ export default class ApiHelper {
   public static async createDeepLinkJWT (ltiResponseMessage: any,
     userId: string,
     courseId: string,
+    $axios: NuxtAxiosInstance,
     nonce?: string,
     audience?: string) {
     const message = ltiResponseMessage
@@ -119,7 +120,7 @@ export default class ApiHelper {
 
     message.aud = audience || process.env.canvas_path
 
-    const res = await axios.post(`https://${process.env.backend}:3000/lti/deeplink`,
+    const res = await $axios.post(`/rr-api/lti/deeplink`,
       {
         message,
         courseId
@@ -146,9 +147,10 @@ export default class ApiHelper {
   public static async submitAssignmentToCanvas (launchMessage: any,
     courseId: string,
     userId: string,
-    richReviewUrl: URL
+    richReviewUrl: URL,
+    $axios: NuxtAxiosInstance
   ) {
-    await axios.post(`https://${process.env.backend}:3000/lti/assignment`,
+    await $axios.post(`/rr-api/lti/assignment`,
       {
         launchMessage,
         courseId,

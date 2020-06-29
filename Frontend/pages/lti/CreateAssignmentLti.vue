@@ -1,7 +1,6 @@
 <template>
   <div v-if="success === true" id="create-assignment">
     <div id="assignment-details">
-
       <div id="assignment-type-section">
         <label id="assignment-info-label" class="assignment-info-label" for="assignment-type">Assignment Type</label>
         <select
@@ -67,6 +66,7 @@ import { mapGetters } from 'vuex'
 import User from '~/model/user'
 import Roles from '~/utils/roles'
 import { ITokenInfo } from '~/store/modules/LtiAuthStore'
+import { NuxtAxiosInstance } from '@nuxtjs/axios'
 // eslint-disable-next-line camelcase
 
 const testUser = new User(
@@ -104,7 +104,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
         }\n Test course: ${JSON.stringify(testCourseData)}`)
 
       context.store.dispatch('LtiAuthStore/logIn', testUser)
-      await CreateAssignmentLti.makeCourseAndEnrollInstructor(testCourseData, testUser)
+      await CreateAssignmentLti.makeCourseAndEnrollInstructor(testCourseData, testUser, context.$axios)
 
       return testData
     }
@@ -169,7 +169,8 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
     try {
       await CreateAssignmentLti.ensureCourseInstructorEnrolled(ltiReqMessage,
         user,
-        courseId)
+        courseId,
+        context.$axios)
 
       success = true
 
@@ -184,6 +185,13 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
     catch (ex) {
       console.warn('Failed to add instructor in RichReview record of course. Reason: ' + ex)
       return { success }
+    }
+  },
+
+  fetch ({ redirect, store }) {
+    if (store.getters['LtiAuthStore/isLoggedIn'] === false) {
+      console.warn('User is not logged in to Canvas. Redirecting to Canvas login page...')
+      redirect(process.env.canvas_path as string)
     }
   },
 
@@ -391,6 +399,7 @@ export default class CreateAssignmentLti extends Vue {
       this.postbackJwt = await ApiHelper.createDeepLinkJWT({ test: 'test' },
         this.user.id,
         this.courseId,
+        this.$axios,
         '1',
         'example.com')
 
@@ -413,8 +422,9 @@ export default class CreateAssignmentLti extends Vue {
       this.postbackJwt = await ApiHelper.createDeepLinkJWT(jwtContents,
         this.user.id,
         this.courseId,
-        this.ltiReqMessage.nonce,
-        this.ltiReqMessage.iss)
+        this.$axios,
+        this.ltiReqMessage.nonce as string,
+        this.ltiReqMessage.iss as string)
     }
     catch (ex) {
       console.warn(`Creating JWT for lti deep link response failed. Reason: ${ex}`)
@@ -484,7 +494,7 @@ export default class CreateAssignmentLti extends Vue {
     return JSON.parse(jwtResponse)
   }
 
-  private static async ensureCourseInstructorEnrolled (ltiMsg: any, user : User, courseId: string) {
+  private static async ensureCourseInstructorEnrolled (ltiMsg: any, user : User, courseId: string, $axios: NuxtAxiosInstance) {
     const contextPropName : string = 'https://purl.imsglobal.org/spec/lti/claim/context'
     const courseData : CourseData = {
       id: courseId,
@@ -494,17 +504,17 @@ export default class CreateAssignmentLti extends Vue {
       section: ''
     }
 
-    await CreateAssignmentLti.makeCourseAndEnrollInstructor(courseData, user)
+    await CreateAssignmentLti.makeCourseAndEnrollInstructor(courseData, user, $axios)
   }
 
-  private static async makeCourseAndEnrollInstructor (courseData: CourseData, user: User) {
+  private static async makeCourseAndEnrollInstructor (courseData: CourseData, user: User, $axios: NuxtAxiosInstance) {
     // Ensure that the course is created
     // eslint-disable-next-line camelcase
     console.log(`Creating course with id ${courseData.id} if it does not exist`)
-    await ApiHelper.ensureCourseExists(courseData, user.id)
+    await ApiHelper.ensureCourseExists(courseData, user.id, $axios)
 
     console.log(`Adding instructor ${user.id} to course if they do not exist in course.`)
-    await ApiHelper.ensureUserEnrolled(courseData.id, user)
+    await ApiHelper.ensureUserEnrolled(courseData.id, user, $axios)
   }
 }
 

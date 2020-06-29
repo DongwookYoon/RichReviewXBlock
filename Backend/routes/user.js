@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router({mergeParams: true});
+var authUtil = require('../util/auth-util');
 
 const KeyDictionary = require('../bin/KeyDictionary');
 const ImportHandler = require("../bin/ImportHandler");
@@ -21,9 +22,9 @@ router.get('/', async function(req, res, next) {
             ImportHandler,
             course_key);
 
-        users['students'] = users['students'].map(user => { return { name: user.name }});
-        users['tas'] = users['tas'].map(user => { return { name: user.name }});
-        users['instructors'] = users['instructors'].map(user => { return { name: user.name }});
+        users['students'] = users['students'].map(user => { return { name: user.name };});
+        users['tas'] = users['tas'].map(user => { return { name: user.name };});
+        users['instructors'] = users['instructors'].map(user => { return { name: user.name };});
 
         let groups = (await course_group_db_handler.get_all_course_groups(ImportHandler, course_key)).active_course_groups;
         let permissions = await user_db_handler.get_user_course_permissions(user_key, course_key);
@@ -65,7 +66,7 @@ router.get('/unassigned', async function(req, res, next) {
 
         const all_students = await Promise.all(course_data['active_students'].map(async (student) => {
             let user_data = await user_db_handler.get_user_data(student);
-            return { key: student, name: user_data['display_name'] || 'UBC User' }
+            return { key: student, name: user_data['display_name'] || 'UBC User' };
         }));
 
         let data = {
@@ -146,11 +147,25 @@ router.post('/', function(req, res, next) {
 
 
 /*
- ** POST to a user. Enroll the user in the course,
+ ** POST to a course user. Enroll the user in the course,
  *  if they are not already enrolled. This handles
  *  both instructors and students.
+ * 
+ *  This op is protected by API key.
  */
 router.post('/:user_id', async function(req, res, next) {
+
+    if (!req.headers['x-api-key']) {
+        console.warn('No API key in request! Required header X-API-KEY is missing!');
+        res.sendStatus(400);
+        return;
+      }
+      if (authUtil.verifyRRApiKey(req.headers['x-api-key']) === false) {
+        console.warn('Could not enroll user. Invalid RichReview API key received in X-API-KEY header.');
+        res.sendStatus(403);
+        return;
+      }
+
     let course_db_handler = await ImportHandler.course_db_handler;
     let user_db_handler = await ImportHandler.user_db_handler;
 
@@ -166,7 +181,7 @@ router.post('/:user_id', async function(req, res, next) {
 
     if (!roles || roles.length === 0){
         res.sendStatus(501);
-        console.warn('Error. Req must include data for user roles in course')
+        console.warn('Error. Req must include data for user roles in course');
         return;
     }
     
@@ -228,7 +243,7 @@ router.post('/:user_id', async function(req, res, next) {
         }
 
     } catch (ex) {
-        console.warn(ex)
+        console.warn(ex);
         res.sendStatus(501);
     }
 

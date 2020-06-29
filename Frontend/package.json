@@ -27,6 +27,7 @@
     "@nuxtjs/auth": "^4.5.3",
     "@nuxtjs/axios": "^5.4.1",
     "@nuxtjs/eslint-config-typescript": "^2.0.0",
+    "@nuxtjs/proxy": "^2.0.0",
     "@nuxtjs/router": "^1.3.2",
     "@nuxtjs/router-extras": "^1.1.0",
     "@nuxtjs/vuetify": "^0.5.6",

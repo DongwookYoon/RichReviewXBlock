@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var authUtil = require('../util/auth-util');
 const KeyDictionary = require("../bin/KeyDictionary");
 let ImportHandler = require('../bin/ImportHandler');
 
@@ -123,14 +124,25 @@ router.post('/', function(req, res, next) {
 
 
 /*
- ** POST to a course. Create a course with the
- *  specified id, if the course does not already exist.
+ ** POST to a course. Create a course with the specified id, if the course 
+ *  does not already exist. Note that this op is protected by API key.
  */
 router.post('/:course_id', async function(req, res, next) {
+    if (!req.headers['x-api-key']) {
+        console.warn('No API key in request! Required header X-API-KEY is missing!');
+        res.sendStatus(400);
+        return;
+      }
+      if (authUtil.verifyRRApiKey(req.headers['x-api-key']) === false) {
+        console.warn('Could not create course. Invalid RichReview API key received in X-API-KEY header.');
+        res.sendStatus(403);
+        return;
+      }
+    
     let course_db_handler = await ImportHandler.course_db_handler;
 
     const course_key = KeyDictionary.key_dictionary['course'] + req.params.course_id;
-    let courseData 
+    let courseData; 
     try {
         courseData = await course_db_handler.get_course_data(course_key);
     } catch(ex) {
@@ -138,12 +150,12 @@ router.post('/:course_id', async function(req, res, next) {
         courseData = null;
     }
     if (courseData === null) {
-         console.log('Creating course with id ' + course_key)
+         console.log('Creating course with id ' + course_key);
          await course_db_handler.create_course(course_key, req.body);
          res.sendStatus(201);
     }
     else {
-        console.log('Course already exists for id ' + course_key)
+        console.log('Course already exists for id ' + course_key);
         res.sendStatus(200);
     }
 });

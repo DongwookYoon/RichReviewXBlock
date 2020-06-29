@@ -22,7 +22,7 @@ import oidcUtil from '~/utils/oidc-util'
  *  in JSON format.
  */
 @Component({
-  asyncData ({ query, redirect, req, res }) {
+  asyncData ({ query, redirect, req }) {
     if (!process.server) {
       return
     }

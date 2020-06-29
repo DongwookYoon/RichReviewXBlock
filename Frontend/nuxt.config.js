@@ -3,9 +3,13 @@ import path from 'path'
 import pkg from './package'
 import * as certs from './ssl/certs'
 
-const optimizeBuild = (process.env.NUXT_OPTIMIZE !== undefined) && process.env.NUXT_OPTIMIZE.trim().toUpperCase() === 'TRUE'
+require('dotenv').config() // IMPORTANT: Required to securely get RichReview API key without exposing it on client side.
 
+const optimizeBuild = (process.env.NUXT_OPTIMIZE !== undefined) &&
+  process.env.NUXT_OPTIMIZE.trim().toUpperCase() === 'TRUE'
 const customRoutes = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'routes.json'), 'utf8'))
+const backendHost = process.env.NODE_ENV !== 'production' ? 'localhost' : 'richreview.net'
+
 
 const config = {
   mode: 'universal',
@@ -29,15 +33,16 @@ const config = {
     host: certs.host // default: localhost
   },
 
+  // All environment vars here WILL be exposed on client side via process.env
   env: {
-    debug_mode: 'true',
+    debug_mode: 'false',
     prod_url: 'https://richreview.net',
     default_canvas: 'canvas.instructure.com',
     canvas_oidc_endpoint: 'https://canvas.ubc.ca/api/lti/authorize_redirect',
     canvas_oauth_endpoint: 'https://canvas.ubc.ca/login/oauth2/auth',
     canvas_client_id: '112240000000000077',
     canvas_public_key_set_url: 'https://canvas.ubc.ca/api/lti/security/jwks',
-    canvas_path: 'https://canvas.ubc.ca',                            // Path to institution's Canvas deployment
+    canvas_path: 'https://canvas.ubc.ca', // Path to institution's Canvas deployment
     canvas_host: 'canvas.ubc.ca',
     canvas_token_duration: 3600,
     deployment_id: '12277:f7688ba591cfce37b3bcacd61370d6dc591cf543', // TODO Update this to support multiple deployment id's
@@ -49,8 +54,7 @@ const config = {
       n: '7HL1kCH7YDeRW2XWm6zHcTmrkD0Y02khq2K1C9aAfvPSAXLHiaTtz5E2eO3A2CSFES7nTvNDKlDrV9aql1v6FOacraVhUMa-yP-UVilJM6K-FBjrOGj7txnPOeK7kJMz_dynR0VwZd-wfQ1UQmSGcDhGRGjaiZ3paml02vN1sQDGXDjnCv0bW8uTFirtdg6l1pYW1gHOUpydEDsL86y7Klmb7KNiGmlbe4cQUm18aRHkKS-tiW4eQgWHoqMCzrrchrx280HpBB01DNQmtJ_P6Z70yVc0PM4UjYFBvEBIAJCRcK9tT7yE7F-YJeDrAHCCO4AElPIE2dkDRRFHGZS3EOaQcaN-yQN0B_hazbsv98rYbm4FpXBU-IMjzIdjB5PXmOnSePxU8rWvze9xAiwU_qIqzr6ObsYzNbO_FC0YaDPvShWYziEE871SwhH-ghE0fLFEmJ928lu3PIGYpzd0xMgzcsP95P1L9YguSgxdMjNnDjvu-inqSHecI6ywZdB6D6pQzEsIpniCi_znYznLCVLuZ0CeGLSUFdQ-8DbV8SAcPqaVH0aUBf_VEaBEQNDYAsegGjQ71fyRR4o2UxrpxsjXDmw6Q7MpLA9CkTyi_DRhSNqRKreq5v25tTGahQEhEjAltLlrxv_RnhC-sLNCCEfNPX93F11NT3_TIxl-3Ec',
       use: 'sig'
     },
-    backend:
-      process.env.NODE_ENV !== 'production' ? 'localhost' : 'richreview.net'
+    backend: backendHost
   },
 
   /*
@@ -99,6 +103,7 @@ const config = {
   modules: [
     // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
+    '@nuxtjs/proxy',
     // '@nuxtjs/auth',
     // '@nuxtjs/router'
     '~/modules/LoadServerMiddleware'
@@ -113,34 +118,55 @@ const config = {
    ** Axios module configuration
    */
   axios: {
-    // See https://github.com/nuxt-community/axios-module#options
+    proxy: true
   },
 
-  /*
-   ** Auth module configuration
-   */
-  // auth: {
-  //   // Options
-  //   redirect: {
-  //     login: '/education/login',
-  //     logout: '/education',
-  //     callback: '/education/login',
-  //     home: '/education/authentication'
-  //   },
-  //   strategies: {
-  //     google: {
-  //       client_id:
-  //         '1038882230851-in5k8etr5gsjh52o38qo1rg5m4rge7hb.apps.googleusercontent.com'
-  //     }
-  //   }
-  // },
+  /* This proxies all requests to /rr-api routes to port 3000 on the RichReview backend
+     and securely sends RichReview API Key without exposing it on the client side */
+  proxy: {
+    '/rr-api/': {
+      target: `https://${backendHost}:3000`,
+      pathRewrite: { '^/rr-api': '' },
+      headers: { 'X-API-KEY': process.env.RR_API_KEY },
+      logLevel: 'debug',
+      secure: false
+    }
+    /*
+    '/rr-api/courses/:course_id/users/:user_id': {
+      target: `https://${
 
-  // /*
-  //  ** Globally enable auth
-  //  */
-  // router: {
-  //   middleware: ['auth']
-  // },
+      }:3000/courses/:course_id/users/:user_id`,
+      pathRewrite: { '^/rr-api/': '' },
+      headers: { 'X-API-KEY': process.env.RR_API_KEY },
+      logLevel: 'debug'
+    },
+    '/rr-api/courses/:course_id': {
+      target: `https://${
+        process.env.NODE_ENV !== 'production' ? 'localhost' : 'richreview.net'
+      }:3000/courses/:course_id`,
+      pathRewrite: { '^/rr-api/': '' },
+      headers: { 'X-API-KEY': process.env.RR_API_KEY },
+      logLevel: 'debug'
+    },
+    '/rr-api/lti/deeplink': {
+      target: `https://${
+        process.env.NODE_ENV !== 'production' ? 'localhost' : 'richreview.net'
+      }:3000/lti/deeplink`,
+      pathRewrite: { '^/rr-api/': '' },
+      headers: { 'X-API-KEY': process.env.RR_API_KEY },
+      logLevel: 'debug'
+    },
+    '/rr-api/lti/assignment': {
+      target: `https://${
+        process.env.NODE_ENV !== 'production' ? 'localhost' : 'richreview.net'
+      }:3000/lti/assignment`,
+      pathRewrite: { '^/rr-api/': '' },
+      headers: { 'X-API-KEY': process.env.RR_API_KEY },
+      logLevel: 'debug'
+    }
+    */
+
+  },
 
   /*
    ** Build configuration
@@ -161,6 +187,7 @@ const config = {
     /*
      ** You can extend webpack config here.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     extend (config, ctx) {
       // Run ESLint on save
       // if (ctx.isDev && ctx.isClient) {

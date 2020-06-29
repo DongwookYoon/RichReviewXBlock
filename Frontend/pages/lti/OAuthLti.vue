@@ -25,7 +25,6 @@ import { ITokenInfo } from '~/store/modules/LtiAuthStore'
 export default class OAuthLti extends Vue {
   private authFailed ?: boolean = false
 
-
   public addTokenToStore !: (tokenInfo: ITokenInfo) => void // Mapped to updatePlatformAuth action in LtiAuthStore
 
   public mounted () {
@@ -55,7 +54,7 @@ export default class OAuthLti extends Vue {
               encodeURIComponent(oauthRedirect)}&scope=${
                 encodeURIComponent('scope=/auth/userinfo')}`
 
-      window.sessionStorage.setItem(stateKey, redirectUri)          //Store redirect URI in session storage
+      window.sessionStorage.setItem(stateKey, redirectUri) // Store redirect URI in session storage
 
       console.log('Rich Review is requesting OAuth token for: ' + redirectUri)
       console.log('Redirecting to Canvas OAuth endpoint with URL ' + platformOauthUrl)

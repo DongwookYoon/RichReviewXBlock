@@ -1,6 +1,4 @@
 var express = require('express');
-var fs = require('fs');
-var path = require('path');
 var router = express.Router({mergeParams: true});
 var jwtUtil = require('../util/jwt-util');
 var authUtil = require('../util/auth-util');
@@ -8,23 +6,18 @@ var axios = require('axios');
 var https = require('https');
 var ImportHandler = require('../bin/ImportHandler');
 var KeyDictionary = require('../bin/KeyDictionary');
-var lti_config;
+var lti_config = require('../bin/LtiConfig');
 
-try {
-  lti_config = JSON.parse(
-   fs.readFileSync(path.join(__dirname, '..', 'ssl/lti.json'), 'utf-8'));
-  console.log(`Successfully read lti.json config file`);
-} catch(ex) {
- console.warn('Failed to read lti.json config file. Reason: ' + ex);
-}
 
+
+router.use('/', authUtil.assertAuthorizedClient);
 
 
 /* Get an oauth access token from the lti endpoint using a 
    code provided by the client. Note that the approach
    used here is to sign the*/
 router.post('/oauth_code_token', async function(req, res, next) {
-  res.sendStatus(501);
+  res.sendStatus(410);
   /*
   const code = req.body.code;
   const client_id = req.body.clientId;
@@ -140,7 +133,12 @@ router.post('/assignment', async function(req, res, next) {
     if (!req.body.launchMessage){
       throw new Error('Required property "launchMessage" missing. Request must contain an lti response message');
     }
-    
+   
+    if (!req.body.launchMessage["https://purl.imsglobal.org/spec/lti-ags/claim/endpoint"] || 
+          !req.body.launchMessage["https://purl.imsglobal.org/spec/lti-ags/claim/endpoint"].lineitem) {
+      throw new Error('Invalid lti launch message recieved in request');
+    }
+
     if (!req.body.courseId){
       throw new Error('Required property "courseId" missing. Request must contain a course id.');
     }
@@ -163,10 +161,9 @@ router.post('/assignment', async function(req, res, next) {
   const userId = req.headers.authorization;
   const richReviewUrl = req.body.richReviewUrl;
   
-  //const lineItemUrl = launchMessage[
-  //  "https://purl.imsglobal.org/spec/lti-ags/claim/endpoint"].lineitem;
+  const lineItemUrl = launchMessage[
+  "https://purl.imsglobal.org/spec/lti-ags/claim/endpoint"].lineitem;
   
-  const lineItemUrl = `https://canvas.ubc.ca/api/lti/courses/51965/line_items/15` // DEBUG!!
 
   let clientCredentialsToken;
 

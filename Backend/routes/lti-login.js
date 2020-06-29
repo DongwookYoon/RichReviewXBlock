@@ -1,6 +1,12 @@
 var express = require('express');
 var router = express.Router({mergeParams: true});
+var authUtil = require('../util/auth-util');
 const ImportHandler = require("../bin/ImportHandler");
+
+
+router.use('/', (req, res, next) => {
+    authUtil.assertAuthorizedClient(req, res, next);
+}); 
 
 
 /*

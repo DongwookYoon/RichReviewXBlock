@@ -51,7 +51,7 @@ const actions = {
   },
 
   logIn ({ commit, state } : any, loginInfo : User) {
-    console.log('logging in!! ' + JSON.stringify(loginInfo))
+    console.log('Logging in! ')
     commit('setLogin', loginInfo)
   },
 

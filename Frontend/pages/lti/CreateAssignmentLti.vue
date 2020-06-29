@@ -153,8 +153,6 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
     const user : User = context.store.getters['LtiAuthStore/authUser']
     user.roles = Roles.getUserRoles(ltiReqMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
 
-    console.log(`User roles for ${user.id} are: ${user.roles}`)
-
     if (user.isInstructor === false) {
       console.warn('Unauthorized. Only instructors may create assignments.')
       context.redirect(process.env.canvas_path as string)
@@ -281,8 +279,7 @@ export default class CreateAssignmentLti extends Vue {
       allow_multiple_submissions: false,
       count_toward_final_grade: 0
     }
-    /* Create a record of the assignment record in RichReview first */
-    console.log('Creating the assignment as user with id ' + this.user.id)
+
 
     try {
       if (this.assignmentType === 'comment_submission') {
@@ -513,7 +510,7 @@ export default class CreateAssignmentLti extends Vue {
     console.log(`Creating course with id ${courseData.id} if it does not exist`)
     await ApiHelper.ensureCourseExists(courseData, user.id, $axios)
 
-    console.log(`Adding instructor ${user.id} to course if they do not exist in course.`)
+    console.log(`Adding instructor to course if they do not exist in course.`)
     await ApiHelper.ensureUserEnrolled(courseData.id, user, $axios)
   }
 }

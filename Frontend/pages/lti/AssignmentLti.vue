@@ -101,7 +101,6 @@ const testDataStudent = {
   },
 
   async asyncData (context) {
-    console.log('asyncData!')
     let loadSuccess: boolean = false
 
     if (!context.query.assignment_id) {
@@ -240,8 +239,6 @@ const testDataStudent = {
         viewerLink: contentLink
       }
 
-      console.log(`Assignment submission info: ${JSON.stringify(submit_data)}`)
-
       loadSuccess = true
     }
     catch (e) {
@@ -345,9 +342,6 @@ export default class AssignmentLti extends Vue {
     if (this.loadSuccess) {
       this.user = User.parse(this.user)
 
-      console.log(`Logged in user: ${JSON.stringify(this.user)}`)
-      console.log('The viewer link: ' + this.submit_data.viewerLink)
-
       /* If provided, get submission params from URL query string. Otherwise,
         get them from the viewer link */
       const accessCode: string | null =
@@ -372,13 +366,10 @@ export default class AssignmentLti extends Vue {
       this.submit_data.submissionID = submissionID
 
       this.isCreated = true
-      console.log('Created!')
     }
   }
 
   public mounted () {
-    console.log(JSON.stringify(this.assignmentData))
-
     if (this.loadSuccess === false) {
       alert('An error occurred while loading. Please try to refresh the page.\n' +
         'If this error persists, contact the RichReview system administrator for assistance.')
@@ -415,7 +406,6 @@ export default class AssignmentLti extends Vue {
     }
 
     const submissionId = updatedAssignmentData.grader_submission_id
-    console.log(JSON.stringify(updatedAssignmentData))
 
     let submissionURL = `${process.env.prod_url}${this.$route.path}?${
       updatedAssignmentData.link}&assignment_id=${

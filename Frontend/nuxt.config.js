@@ -131,40 +131,6 @@ const config = {
       logLevel: 'debug',
       secure: false
     }
-    /*
-    '/rr-api/courses/:course_id/users/:user_id': {
-      target: `https://${
-
-      }:3000/courses/:course_id/users/:user_id`,
-      pathRewrite: { '^/rr-api/': '' },
-      headers: { 'X-API-KEY': process.env.RR_API_KEY },
-      logLevel: 'debug'
-    },
-    '/rr-api/courses/:course_id': {
-      target: `https://${
-        process.env.NODE_ENV !== 'production' ? 'localhost' : 'richreview.net'
-      }:3000/courses/:course_id`,
-      pathRewrite: { '^/rr-api/': '' },
-      headers: { 'X-API-KEY': process.env.RR_API_KEY },
-      logLevel: 'debug'
-    },
-    '/rr-api/lti/deeplink': {
-      target: `https://${
-        process.env.NODE_ENV !== 'production' ? 'localhost' : 'richreview.net'
-      }:3000/lti/deeplink`,
-      pathRewrite: { '^/rr-api/': '' },
-      headers: { 'X-API-KEY': process.env.RR_API_KEY },
-      logLevel: 'debug'
-    },
-    '/rr-api/lti/assignment': {
-      target: `https://${
-        process.env.NODE_ENV !== 'production' ? 'localhost' : 'richreview.net'
-      }:3000/lti/assignment`,
-      pathRewrite: { '^/rr-api/': '' },
-      headers: { 'X-API-KEY': process.env.RR_API_KEY },
-      logLevel: 'debug'
-    }
-    */
 
   },
 

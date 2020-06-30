@@ -468,7 +468,7 @@ export default class CreateAssignmentLti extends Vue {
         },
         iframe: {
           width: 800,
-          height: 600
+          height: 2056
         }
 
       }

@@ -168,9 +168,9 @@ p {
 }
 
 #submit-button {
-  font-size: 1rem;
+  font-size: 1.5rem;
   text-align: center;
-  margin: 0.25rem 1rem;
+  margin: 0.25rem 2rem;
 }
 
 body {

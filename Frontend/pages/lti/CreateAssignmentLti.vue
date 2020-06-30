@@ -467,8 +467,8 @@ export default class CreateAssignmentLti extends Vue {
           windowFeatures: 'menubar=yes,location=yes,status=yes,resizable=yes,scrollbars=no'
         },
         iframe: {
-          width: 800,
-          height: 2056
+          width: '800px',
+          height: '2056px'
         }
 
       }

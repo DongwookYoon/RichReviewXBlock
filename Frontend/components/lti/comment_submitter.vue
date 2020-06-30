@@ -159,6 +159,7 @@ p {
   justify-content: space-between;
   align-content: center;
   background-color: #0c2343;
+  padding: 0.1rem;
  }
 
 #assignment-title {
@@ -168,9 +169,9 @@ p {
 }
 
 #submit-button {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   text-align: center;
-  margin: 0.25rem 2rem;
+  margin: 0.1rem 2rem;
 }
 
 body {

@@ -3,7 +3,10 @@ import path from 'path'
 import pkg from './package'
 import * as certs from './ssl/certs'
 
-require('dotenv').config() // IMPORTANT: Required to securely get RichReview API key without exposing it on client side.
+/* IMPORTANT: Required to securely get RichReview API key from .env without exposing it on client side. The Nuxt
+  dotenv module is not viable, since this will expose .env values on the client side within process.env and
+  in the Nuxt context. This would break security. */
+require('dotenv').config()
 
 const optimizeBuild = (process.env.NUXT_OPTIMIZE !== undefined) &&
   process.env.NUXT_OPTIMIZE.trim().toUpperCase() === 'TRUE'
@@ -33,7 +36,7 @@ const config = {
     host: certs.host // default: localhost
   },
 
-  // All environment vars here WILL be exposed on client side via process.env
+  // All environment vars here WILL be exposed on client side via process.env.
   env: {
     debug_mode: 'false',
     prod_url: 'https://richreview.net',
@@ -98,7 +101,8 @@ const config = {
 
   buildModules: ['@nuxt/typescript-build'],
   /*
-   ** Nuxt.js modules
+   ** Nuxt.js modules DO NOT use dotenv, as this
+   *  would break API key security!
    */
   modules: [
     // Doc: https://axios.nuxtjs.org/usage

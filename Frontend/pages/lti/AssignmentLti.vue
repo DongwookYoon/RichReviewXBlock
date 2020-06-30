@@ -374,9 +374,6 @@ export default class AssignmentLti extends Vue {
       alert('An error occurred while loading. Please try to refresh the page.\n' +
         'If this error persists, contact the RichReview system administrator for assistance.')
     }
-    else {
-      window.parent.document.getElementById('tool_content').height = '5000px'
-    }
   }
 
   public async handleSubmit () {

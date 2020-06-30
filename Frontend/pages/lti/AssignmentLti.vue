@@ -375,7 +375,7 @@ export default class AssignmentLti extends Vue {
         'If this error persists, contact the RichReview system administrator for assistance.')
     }
     else {
-      window.parent.document.getElementById('tool_content').height = '5000px'
+      (window.parent.document as any).getElementById('tool_content').height = '5000px'
     }
   }
 

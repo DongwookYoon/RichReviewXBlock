@@ -131,7 +131,7 @@ const testDataStudent = {
 
     user = User.parse(context.store.getters['LtiAuthStore/authUser'])
 
-    if (DEBUG === false) {
+    if (!DEBUG) {
       // eslint-disable-next-line prefer-const
 
       if (!process.server) {
@@ -369,11 +369,33 @@ export default class AssignmentLti extends Vue {
     }
   }
 
+  public beforeMount () {
+    window.addEventListener('beforeunload', this.refreshSafely)
+  }
+
   public mounted () {
     if (this.loadSuccess === false) {
       alert('An error occurred while loading. Please try to refresh the page.\n' +
         'If this error persists, contact the RichReview system administrator for assistance.')
     }
+  }
+
+  /**
+   * On LTI launch in external page mode, if the user refreshes the page
+   * this will destroy context and force re-processing of lti launch message.
+   * But there will be no lti launch message present, as refresh is simply a
+   * new GET request to the current page at the top of the history stack. To get
+   * around this, re-initiate lti launch whenever user refreshes by going
+   * to previous state in history stack.
+   */
+  public refreshSafely (event: Event) {
+    // Break out of event handler context
+    window.setTimeout(function () {
+      window.history.back()
+    }, 0)
+    event.preventDefault()
+    window.removeEventListener('beforeunload', this.refreshSafely) // Prevent infinite loop on unload.
+    event.returnValue = false
   }
 
   public async handleSubmit () {

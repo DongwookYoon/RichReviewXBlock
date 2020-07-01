@@ -131,22 +131,9 @@ const testDataStudent = {
 
     user = User.parse(context.store.getters['LtiAuthStore/authUser'])
 
-    if (DEBUG === false) {
+    if (!DEBUG) {
       if (!process.server) {
         loadSuccess = true
-        /* This is required to make sure that LTI launch is repeated whenever the user
-           refreshes the page in full screen mode. Otherwise, the browser will try to
-           load RR directly, which will fail, as authentication flow must be initiated
-           by Canvas. Note that replaceState() is not required in iframe mode and it is
-           intended to fail; replaceState() is expected to throw an exception in iframe */
-        try {
-          window.history.replaceState({},
-            'RichReview',
-            '/lti/login')
-        }
-        catch (ex) {
-          console.log('Running in iframe mode. No need to call replaceState()')
-        }
         return {
           user,
           loadSuccess
@@ -349,6 +336,21 @@ export default class AssignmentLti extends Vue {
   }
 
   public created () {
+    /* This is required to make sure that LTI launch is repeated whenever the user
+       refreshes the page in full screen mode. Otherwise, the browser will try to
+       load RR directly, which will fail, as authentication flow must be initiated
+       by Canvas. Note that replaceState() is not required in iframe mode and it is
+       intended to fail; replaceState() is expected to throw an exception in iframe */
+    if (!DEBUG) {
+      try {
+        window.history.replaceState({},
+          'RichReview',
+          '/lti/login')
+      }
+      catch (ex) {
+        console.log('Running in iframe mode. No need to call replaceState()')
+      }
+    }
     const query = this.$route.query
     if (this.loadSuccess) {
       this.user = User.parse(this.user)

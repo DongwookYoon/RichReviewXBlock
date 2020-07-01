@@ -53,7 +53,11 @@ import oidcUtil from '~/utils/oidc-util'
       redirect('/')
     }
 
-    if (oidcUtil.verifyRequest(iss, login_hint, target_link_uri) === false) {
+    if (!iss || !login_hint || !target_link_uri) {
+      return {}
+    }
+
+    else if (oidcUtil.verifyRequest(iss, login_hint, target_link_uri) === false) {
       console.warn('Error. Invalid OIDC third-party login request. ')
       redirect('/')
     }
@@ -76,12 +80,21 @@ export default class LoginLti extends Vue {
   private state ?: string
 
   public mounted () {
-    console.log('mounted')
     if (this.state && this.authRedirectUrl) {
       window.sessionStorage.setItem('rr_oidc_state', this.state)
+      window.sessionStorage.setItem('rr_auth_redirect_url', this.authRedirectUrl)
       console.log('OIDC login succeeded. Redirecting to: ' + this.authRedirectUrl)
       window.location.replace(this.authRedirectUrl)
+      return
     }
+
+    /* Handle case where page is reloaded or user navigates back to page */
+    const prevAuthUrl : string | null = window.sessionStorage.getItem('rr_auth_redirect_url')
+    if (prevAuthUrl) {
+      console.log('OIDC login succeeded. Redirecting to: ' + this.authRedirectUrl)
+      window.location.replace(prevAuthUrl)
+    }
+
     else {
       console.warn(`Invalid ${this.state ? 'state' : 'authRedirectUrl'} for OIDC login`)
       alert('Accessing RichReview failed. Please try again. If this issue continues, contact ' +

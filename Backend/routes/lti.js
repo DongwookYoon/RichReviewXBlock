@@ -129,7 +129,7 @@ router.get('/grading_services_token', async function(req, res, next) {
  * Submits an assignment to the platform (Canvas).
  */
 router.post('/assignment', async function(req, res, next) {
-  try {
+ try {
     if (!req.body.launchMessage){
       throw new Error('Required property "launchMessage" missing. Request must contain an lti response message');
     }
@@ -154,18 +154,17 @@ router.post('/assignment', async function(req, res, next) {
     console.warn('Bad request. Reason: ' +ex);
     res.status(400).json(ex.message);
     return;
-  }
+ }
 
-  const launchMessage = req.body.launchMessage;
-  const courseId = req.body.courseId;
-  const userId = req.headers.authorization;
-  const richReviewUrl = req.body.richReviewUrl;
+ const launchMessage = req.body.launchMessage;
+ const courseId = req.body.courseId;
+ const userId = req.headers.authorization;
+ const richReviewUrl = req.body.richReviewUrl;
   
-  const lineItemUrl = launchMessage[
+ const lineItemUrl = launchMessage[
   "https://purl.imsglobal.org/spec/lti-ags/claim/endpoint"].lineitem;
   
-
-  let clientCredentialsToken;
+ let clientCredentialsToken;
 
  const course_db_handler = await ImportHandler.course_db_handler;
  const rr_user_key = KeyDictionary.key_dictionary['user'] + req.headers.authorization;
@@ -202,7 +201,7 @@ router.post('/assignment', async function(req, res, next) {
         scoreData.nonce = launchMessage.nonce;
       }
 
-            
+
       console.log('Submitting score data: ' + JSON.stringify(scoreData));
       console.log('Client credentials token is: ' + clientCredentialsToken);
       console.log('POST URL is: ' + `${lineItemUrl}/scores`);
@@ -214,7 +213,7 @@ router.post('/assignment', async function(req, res, next) {
           {
             headers: {
               Authorization: `Bearer ${clientCredentialsToken}`,
-              'Content-Type': 'application/vnd.ims.lis.v1.score+json'
+              'Content-Type': 'application/json'
            },
            httpsAgent: new https.Agent({
               rejectUnauthorized: false

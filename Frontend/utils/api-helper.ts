@@ -144,7 +144,7 @@ export default class ApiHelper {
    * state of 'pendingManual', so no grade is yet assigned. This
    * allows instructors to grade it manually.
    */
-  public static async submitAssignmentToCanvas (launchMessage: any,
+  public static async submitAssignmentToPlatform (launchMessage: any,
     courseId: string,
     userId: string,
     richReviewUrl: URL,

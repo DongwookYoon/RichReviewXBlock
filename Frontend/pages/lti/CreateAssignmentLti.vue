@@ -93,11 +93,20 @@ const testCourseData = {
 const DEBUG: boolean = process.env.debug_mode !== undefined &&
   process.env.debug_mode.toLowerCase().trim() === 'true'
 
+const REDIRECT_HOST: string = DEBUG ? 'https://localhost:8001' : `${process.env.prod_url}`
+
 /* eslint-disable camelcase */
 @Component({
   middleware: DEBUG ? '' : 'oidc_handler', // Handle OIDC login request
 
   async asyncData (context) {
+    /* Support a 307 redirect to submit view for grader or student submission review,
+       which preserves request body. */
+    if (context.query.submit_view &&
+      context.query.submit_view.toString().toLowerCase() === 'true') {
+      context.redirect(307, `${REDIRECT_HOST}/lti/assignments`, context.query)
+    }
+
     if (DEBUG === true) {
       console.log(`Running in DEBUG mode.\n Test data: ${
         JSON.stringify(testData)
@@ -387,7 +396,6 @@ export default class CreateAssignmentLti extends Vue {
         '1',
         'example.com')
 
-      console.log('postbackJwt: ' + this.postbackJwt)
       alert('>DEBUG: Successfully created assignment!')
 
       Vue.nextTick().then(() => {

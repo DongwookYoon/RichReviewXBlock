@@ -61,6 +61,8 @@
 </template>
 
 <script lang="ts">
+/* eslint-disable no-multiple-empty-lines */
+
 import { Component, Vue } from 'nuxt-property-decorator'
 import { mapGetters } from 'vuex'
 import JwtUtil from '~/utils/jwt-util'
@@ -269,7 +271,7 @@ const testDataStudent = {
   fetch ({ redirect, store }) {
     if (store.getters['LtiAuthStore/isLoggedIn'] === false) {
       console.warn('User is not logged in to Canvas. Redirecting to Canvas login page...')
-      redirect(process.env.canvas_path as string)
+      // redirect(process.env.canvas_path as string)   // TODO enable this
     }
   },
 
@@ -306,6 +308,8 @@ export default class AssignmentLti extends Vue {
   private courseId !: string
   /* End Component data */
 
+
+
   public get curComponent () : string {
     if (this.user.isInstructor ||
         this.user.isTa ||
@@ -336,6 +340,8 @@ export default class AssignmentLti extends Vue {
   get isUserInstructor () : boolean {
     return this.user.isInstructor
   }
+
+
 
   public created () {
     const query = this.$route.query
@@ -380,6 +386,7 @@ export default class AssignmentLti extends Vue {
     }
   }
 
+
   /**
    * On LTI launch in external page mode, if the user refreshes the page
    * this will destroy context and force re-processing of lti launch message.
@@ -398,6 +405,7 @@ export default class AssignmentLti extends Vue {
     event.returnValue = false
   }
 
+
   public async handleSubmit () {
     try {
       await this.submitAssignment()
@@ -411,6 +419,7 @@ export default class AssignmentLti extends Vue {
 
     alert('Assignment submitted!')
   }
+
 
   private async submitAssignment () {
     const courseId : string = this.courseId
@@ -429,9 +438,11 @@ export default class AssignmentLti extends Vue {
 
     const submissionId = updatedAssignmentData.grader_submission_id
 
-    let submissionURL = `${process.env.prod_url}${this.$route.path}?${
+    /* Force a redirect through /lti/create_assignment by setting submit_view=true
+       This is required, as Canvas only supports one launch URL. */
+    let submissionURL = `${process.env.prod_url}/lti/create_assignment?${
       updatedAssignmentData.link}&assignment_id=${
-        encodeURIComponent(this.assignmentId)}`
+        encodeURIComponent(this.assignmentId)}&submit_view=true`
 
     if (submissionId) {
       submissionURL += `&submission_id=${encodeURIComponent(submissionId)}`
@@ -440,11 +451,11 @@ export default class AssignmentLti extends Vue {
     if (DEBUG) {
       alert('DEBUG MODE: Got submit event from child component!')
       console.log('Submitted assignment viewer URL: ' + submissionURL)
-      // return
+      return
     }
 
     try {
-      await ApiHelper.submitAssignmentToCanvas(
+      await ApiHelper.submitAssignmentToPlatform(
         this.launchMessage,
         courseId,
         this.user.id,
@@ -456,6 +467,7 @@ export default class AssignmentLti extends Vue {
       throw e
     }
   }
+
 
   private static getQueryVariable (variable : string, route : string) : string | null {
     const vars : string[] = route.split('&')
@@ -470,13 +482,13 @@ export default class AssignmentLti extends Vue {
 
   /**
    * Decode and verify jwt. Need to verify using the platform's (Canvas) public keyset.
-   */
+   **/
   private static async getLaunchMessage (jwtBase64 : string, keysetUrl: string) : Promise<object | null> {
     return await JwtUtil.getAndVerifyWithKeyset(jwtBase64, keysetUrl)
   }
 }
-
 </script>
+
 
 <style scoped>
   @import url('@/static/nuxt_static_viewer/stylesheets/lti_style.css');

@@ -38,7 +38,7 @@ const config = {
 
   // All environment vars here WILL be exposed on client side via process.env.
   env: {
-    debug_mode: 'false',
+    debug_mode: 'true',
     prod_url: 'https://richreview.net',
     default_canvas: 'canvas.instructure.com',
     canvas_oidc_endpoint: 'https://canvas.ubc.ca/api/lti/authorize_redirect',

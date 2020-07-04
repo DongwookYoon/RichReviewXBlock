@@ -45,7 +45,7 @@ import oidcUtil from '~/utils/oidc-util'
       iss = reqBody.iss
       login_hint = reqBody.login_hint
       target_link_uri = reqBody.target_link_uri
-      lti_message_hint = reqBody.lti_message_hint
+      lti_message_hint = reqBody.lti_message_hint || null
     }
 
     else {

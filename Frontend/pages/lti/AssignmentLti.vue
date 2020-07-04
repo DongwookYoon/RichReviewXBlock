@@ -77,8 +77,8 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
   process.env.debug_mode.toLowerCase().trim() === 'true'
 
 const testUser = new User(
-  'google_109022885000538247847',
-  'Test Instructor',
+  'lti_6635500053824643',
+  'Test Student',
   [Roles.STUDENT]
 )
 
@@ -201,10 +201,10 @@ const testDataStudent = {
                                       assignmentData.submission_status.toLowerCase() === 'submitted')
 
       /* Is this view for submitted assignment, or main assignment view? */
-      isSubmittedView = (
-        context.query.access_code !== undefined &&
+      isSubmittedView = ((markedSubmitted === true) ||
+        (context.query.access_code !== undefined &&
               context.query.docid !== undefined &&
-              context.query.groupid !== undefined)
+              context.query.groupid !== undefined))
 
       isTemplate = ((isSubmittedView === false) && (user.isInstructor || user.isTa))
       submitted = (markedSubmitted !== false && isSubmittedView === true)

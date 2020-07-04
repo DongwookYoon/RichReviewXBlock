@@ -76,7 +76,7 @@ const testUser = new User(
 )
 
 const testData = {
-  assignmentId: `1592790355002_84952`,
+  assignmentId: `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`,
   success: true,
   courseId: `test_2`,
   user: testUser
@@ -115,18 +115,6 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
       console.warn('Error. Platform user is expected to be authenticated before accessing this page.')
       return { }
     }
-
-    /* // OAuth authorization token NOT required for lti deep linking
-    if (context.store.getters['LtiAuthStore/codeToken'] === null) {
-      console.log('No valid OAuth code token. Redirecting to OAuth handler...')
-
-      const redirectUri: string = encodeURIComponent(`https://${
-        process.env.backend}${context.route.fullPath}`)
-
-      context.redirect(`/lti/oauth?redirect_uri=${redirectUri}`)
-      return { }
-    }
-    */
 
     if (process.server === false) {
       return
@@ -279,7 +267,6 @@ export default class CreateAssignmentLti extends Vue {
       allow_multiple_submissions: false,
       count_toward_final_grade: 0
     }
-
 
     try {
       if (this.assignmentType === 'comment_submission') {

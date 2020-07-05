@@ -419,7 +419,7 @@ export default class AssignmentLti extends Vue {
 
     alert('Assignment submitted!')
     window.removeEventListener('beforeunload', this.refreshSafely)
-    this.$router.go(0)            // Reload the page after submit
+    this.$router.go(0) // Reload the page after submit
   }
 
 
@@ -440,9 +440,9 @@ export default class AssignmentLti extends Vue {
 
     const submissionId = updatedAssignmentData.grader_submission_id
 
-    /* Force a redirect through /lti/create_assignment by setting submit_view=true
-       This is required, as Canvas only supports one launch URL. */
-    let submissionURL = `${process.env.prod_url}/lti/create_assignment?${
+    /* Force a redirect to assignment through /lti/launch by setting
+       submit_view=trueThis is required, as Canvas only supports one launch URL. */
+    let submissionURL = `${process.env.prod_url}/lti/launch?${
       updatedAssignmentData.link}&assignment_id=${
         encodeURIComponent(this.assignmentId)}&submit_view=true`
 

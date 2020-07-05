@@ -105,15 +105,19 @@
     "path": "/ubc-pilot",
     "component":  "./pages/ubc_pilot.vue"
   },
+  {
+    "path": "/lti/launch",
+    "component": "./pages/lti/LaunchLti.vue"
+  },
 
   {
     "path": "/lti/create_assignment",
-    "component":  "./pages/lti/CreateAssignmentLti.vue"
+    "component": "./pages/lti/CreateAssignmentLti.vue"
   },
 
   {
     "path": "/lti/assignments",
-    "component":  "./pages/lti/AssignmentLti.vue"
+    "component": "./pages/lti/AssignmentLti.vue"
   },
 
   {

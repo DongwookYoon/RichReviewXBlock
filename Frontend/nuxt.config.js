@@ -36,9 +36,12 @@ const config = {
     host: certs.host // default: localhost
   },
 
-  // All environment vars here WILL be exposed on client side via process.env.
+  /**
+   * All environment vars here WILL be exposed on client side via process.env.
+   * DO NOT add api key or privates keys here!!!
+   **/
   env: {
-    debug_mode: 'false',
+    debug_mode: 'true',
     prod_url: 'https://richreview.net',
     default_canvas: 'canvas.instructure.com',
     canvas_oidc_endpoint: 'https://canvas.ubc.ca/api/lti/authorize_redirect',
@@ -100,6 +103,7 @@ const config = {
   }],
 
   buildModules: ['@nuxt/typescript-build'],
+
   /*
    ** Nuxt.js modules DO NOT use dotenv, as this
    *  would break API key security!
@@ -108,16 +112,25 @@ const config = {
     // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
     '@nuxtjs/proxy',
-    // '@nuxtjs/auth',
-    // '@nuxtjs/router'
     '~/modules/LoadServerMiddleware'
   ],
 
+  /**
+   * Overrides the default Nuxt routing scheme by destructuring
+   * the contents of routes.json that was loaded and parsed into 'customRoutes'.
+   *
+   * Note that the "preferred" way to extend the router is to use @nuxtjs/router
+   * module and to then create a router.js file. However, this breaks
+   * compatibility with the RichReview legacy system and must not be used
+   * in this case.
+   * @see https://nuxtjs.org/api/configuration-router#extendroutes
+   */
   router: {
     extendRoutes (routes) {
       routes.push(...customRoutes)
     }
   },
+
   /*
    ** Axios module configuration
    */
@@ -125,8 +138,10 @@ const config = {
     proxy: true
   },
 
-  /* This proxies all requests to /rr-api routes to port 3000 on the RichReview backend
-     and securely sends RichReview API Key without exposing it on the client side */
+  /**
+   * This proxies all requests to /rr-api routes to port 3000 on the RichReview backend
+   * and securely sends RichReview API Key without exposing it on the client side.
+  **/
   proxy: {
     '/rr-api/': {
       target: `https://${backendHost}:3000`,

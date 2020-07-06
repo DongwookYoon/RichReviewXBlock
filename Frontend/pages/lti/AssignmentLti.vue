@@ -419,7 +419,7 @@ export default class AssignmentLti extends Vue {
 
     alert('Assignment submitted!')
     window.removeEventListener('beforeunload', this.refreshSafely)
-    this.$router.go(0) // Reload the page after submit
+    window.history.back() // Relaunch after submit.
   }
 
 

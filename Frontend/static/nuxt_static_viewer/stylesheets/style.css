@@ -4,7 +4,7 @@ body {
 
 #r2_app_container {
   overflow: scroll;
-  #position: absolute;
+  /*#position: absolute; */
 }
 
 #r2_app_container i {
@@ -729,6 +729,8 @@ a:active {
 
 #dashboard > #browse_row > #dashboard_users {
   float: left;
+  max-width: 50%;
+  padding-left: 1%;
 }
 
 #dashboard > #browse_row > div > .dashboard-title {
@@ -754,9 +756,11 @@ a:active {
 }
 
 #dashboard-comment-history {
-  width: 61vw;
+  max-width: 80%;
   overflow-y: hidden;
+
   margin-top: 9px
+
 }
 
 .dashboard-btn > a,

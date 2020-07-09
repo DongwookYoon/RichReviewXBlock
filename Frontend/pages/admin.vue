@@ -89,8 +89,12 @@ export default {
       return s.substr(1, s.length-2).replace(/crs:/g, '').trim()
     }
     for(let u of res_user_data.data.user_data){
-      u.teaching = format_user_array_string(u.teaching);
-      u.enrolments = format_user_array_string(u.enrolments);
+      try {
+        u.teaching = format_user_array_string(u.teaching);
+        u.enrolments = format_user_array_string(u.enrolments);
+      } catch (ex) {
+        console.warn(ex)
+      }
     }
 
     //get course data

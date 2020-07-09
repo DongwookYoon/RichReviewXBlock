@@ -138,7 +138,7 @@ p {
 
 #r2_app_page,
 #r2_app_container {
-  max-height: 95vh;
+  max-height: 93vh;
 }
 
 

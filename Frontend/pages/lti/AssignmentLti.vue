@@ -418,7 +418,7 @@ export default class AssignmentLti extends Vue {
     }
 
     alert('Assignment submitted!')
-    window.removeEventListener('beforeunload', this.refreshSafely)
+    window.removeEventListener('beforeunload', this.refreshSafely) // Prevent infinite 'recursion'
     window.history.back() // Relaunch after submit.
   }
 

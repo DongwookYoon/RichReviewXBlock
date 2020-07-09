@@ -757,8 +757,8 @@ a:active {
 
 #dashboard-comment-history {
   max-width: 80%;
-  overflow-y: hidden;
-
+  overflow-y: auto;
+  overflow-x: auto !important;
   margin-top: 9px
 
 }

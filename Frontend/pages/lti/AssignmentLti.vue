@@ -10,7 +10,7 @@
       please contact the RichReview system administrator.
     </p>
 
-    <!--if user role is student AND no submission then  -->
+    <!--if user role is student AND NOT an instructor AND no submission then  -->
     <div
       v-if="isUserStudent && !isUserInstructor
         && submit_data.submitted === false"
@@ -40,13 +40,16 @@
       />
     </div>
 
+    <!-- Instructor viewing document submission assignment NOT in grading view -->
     <div
-      v-else-if="isUserInstructor && assignmentType === 'document_submission'"
+      v-else-if="assignmentType === 'document_submission' && isTemplate === true "
       class="instructor-doc-submission-view"
     >
       <p>RichReview document submission assignment. Student submissions can be viewed in SpeedGrader.</p>
     </div>
 
+    <!--RichReview viewer which handles comment submission template and grader view for an instructor OR TA,
+       and student assignment review after submission for a student-->
     <div v-else>
       <RichReviewViewer
         class="rich-review-view"

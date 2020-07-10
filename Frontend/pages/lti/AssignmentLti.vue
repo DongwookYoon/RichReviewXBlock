@@ -212,7 +212,7 @@ const testDataStudent = {
               context.query.groupid !== undefined))
 
       isTemplate = ((isSubmittedView === false) && (user.isInstructor || user.isTa))
-      submitted = (markedSubmitted !== false && isSubmittedView === true)
+      submitted = (markedSubmitted !== false || isSubmittedView === true)
 
       /* Deciding content link is important, because it will determine the
          user role in the RichReview document. For instructors and TAs in grader,

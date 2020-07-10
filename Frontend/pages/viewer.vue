@@ -129,7 +129,7 @@ p {
 
 #assignment-title {
   color: white;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   margin-left: 1vw;
 }
 

@@ -4,7 +4,7 @@ body {
 
 #r2_app_container {
   overflow: scroll;
-  /*#position: absolute; */
+  #position: absolute;
 }
 
 #r2_app_container i {

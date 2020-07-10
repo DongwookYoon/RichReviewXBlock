@@ -82,9 +82,9 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
   process.env.debug_mode.toLowerCase().trim() === 'true'
 
 const testUser = new User(
-  'lti_6635500053824643',
+  '109022885000538247847',
   'Test Student',
-  [Roles.STUDENT]
+  [Roles.INSTRUCTOR]
 )
 
 const testDataStudent = {
@@ -422,7 +422,7 @@ export default class AssignmentLti extends Vue {
 
     alert('Assignment submitted!')
     window.removeEventListener('beforeunload', this.refreshSafely) // Prevent infinite 'recursion'
-    window.history.back() // Relaunch after submit.
+    // window.history.back() // Relaunch after submit.
   }
 
 
@@ -444,7 +444,7 @@ export default class AssignmentLti extends Vue {
     const submissionId = updatedAssignmentData.grader_submission_id
 
     /* Force a redirect to assignment through /lti/launch by setting
-       submit_view=trueThis is required, as Canvas only supports one launch URL. */
+       submit_view=true. This is required, as Canvas only supports one launch URL. */
     let submissionURL = `${process.env.prod_url}/lti/launch?${
       updatedAssignmentData.link}&assignment_id=${
         encodeURIComponent(this.assignmentId)}&submit_view=true`

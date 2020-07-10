@@ -21,7 +21,7 @@
       </div>
       <div v-if="new Date(due_date) < new Date(submission_data.submission_time)" class="due-div">
         <p>
-          This assignment is past due. 
+          This assignment is past due.
           <br>
           It is {{daysSince}} day(s) late.
         </p>
@@ -80,9 +80,9 @@ export default {
   },
   computed: {
     daysSince(){
-      const date1 = new Date(this.due_date) 
+      const date1 = new Date(this.due_date)
       const date2 = new Date(this.submission_data.submission_time)
-      const Difference_In_Time = date2.getTime() - date1.getTime() 
+      const Difference_In_Time = date2.getTime() - date1.getTime()
       return Math.floor(Difference_In_Time / (1000 * 3600 * 24))
     }
   },
@@ -322,10 +322,10 @@ p {
   margin: 0;
 }
 
-#top-bar {  
+#top-bar {
   display: flex;
   flex-flow: row wrap;
-  
+
   justify-content: space-between;
   align-items: center;
   background-color: #0c2343;
@@ -334,6 +334,7 @@ p {
   min-height: 5vh;
 }
 
+
 #assignment-title,
 #prev-arrow,
 #next-arrow,
@@ -341,8 +342,10 @@ p {
 #slash,
 #points {
   color: white;
-  font-size: 1rem;
+  font-size: 1.5rem;
 }
+
+
 
 #assignment-title-div,
 #points-div,
@@ -369,11 +372,11 @@ p {
 
 #hidden-label {
   min-height: 2vh;
-  font-size: 0.8rem;
+  font-size: 1.2rem;
   color: white;
-  margin: 0.25rem 3vw auto 0;
+  margin: 0.75rem 3vw auto 0;
   line-height: 0.75rem;
-  
+
 }
 
 #student-div {
@@ -384,8 +387,8 @@ p {
 }
 
 #mark-input {
-  height: 1.2rem;
-  width: 2rem;
+  height: 1.8rem;
+  width: 2.9rem;
   text-align: right;
   margin: auto 1vw auto 0;
   color: #0c2343;
@@ -407,9 +410,9 @@ p {
 
 #student-select {
   color: #0c2343;
-  font-size: 0.9rem;
+  font-size: 1.2rem;
   cursor: pointer;
-  max-height: 1.5rem;
+  max-height: 2rem;
 }
 
 body {

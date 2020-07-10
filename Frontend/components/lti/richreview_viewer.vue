@@ -65,14 +65,6 @@ export default class RichReviewViewer extends Vue {
 
   mounted () {
     this.getViewerData().then((res) => {
-      console.log('Getting assignment data for instructor or student.')
-      console.log('Course id: ' + this.course_id)
-      console.log('Group ID: ' + this.submit_data.groupID)
-      console.log('User id: ' + this.user.id)
-      console.log(`Assignment response: ${res}`)
-      for (const prop in res) {
-        console.log(`${prop}: ${res[prop]}`)
-      }
 
       const instructorOrTa = this.user.isTa || this.user.isInstructor
 

@@ -73,6 +73,7 @@ export default class RichReviewViewer extends Vue {
       for (const prop in res) {
         console.log(`${prop}: ${res[prop]}`)
       }
+      console.log('Submit data: ' + JSON.stringify(this.submit_data))
 
       const instructorOrTa = this.user.isTa || this.user.isInstructor
 

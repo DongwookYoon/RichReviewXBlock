@@ -21,7 +21,7 @@
       </div>
       <div v-if="new Date(due_date) < new Date(submission_data.submission_time)" class="due-div">
         <p>
-          This assignment is past due. 
+          This assignment is past due.
           <br>
           It is {{daysSince}} day(s) late.
         </p>
@@ -80,9 +80,9 @@ export default {
   },
   computed: {
     daysSince(){
-      const date1 = new Date(this.due_date) 
+      const date1 = new Date(this.due_date)
       const date2 = new Date(this.submission_data.submission_time)
-      const Difference_In_Time = date2.getTime() - date1.getTime() 
+      const Difference_In_Time = date2.getTime() - date1.getTime()
       return Math.floor(Difference_In_Time / (1000 * 3600 * 24))
     }
   },
@@ -322,10 +322,10 @@ p {
   margin: 0;
 }
 
-#top-bar {  
+#top-bar {
   display: flex;
   flex-flow: row wrap;
-  
+
   justify-content: space-between;
   align-items: center;
   background-color: #0c2343;
@@ -373,7 +373,7 @@ p {
   color: white;
   margin: 0.25rem 3vw auto 0;
   line-height: 0.75rem;
-  
+
 }
 
 #student-div {

@@ -93,7 +93,7 @@ export default class RichReviewViewer extends Vue {
   }
 
   get isGraderView () {
-    return !(this.is_template === true || this.user.isStudent === true)
+    return (this.is_template === false && (this.user.isInstructor || this.user.isTa))
   }
 
   get viewerStyle () {

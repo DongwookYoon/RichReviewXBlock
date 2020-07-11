@@ -5,7 +5,7 @@
     <div v-if="is_template" class="template-description">
       <p>
         RichReview comment submission assignment. Edit the document template here to
-        change what all students will see. Student submissions can be viewed in SpeedGrader.
+        change what all students will see.
       </p>
     </div>
 

@@ -15,7 +15,7 @@
           <!--In template or student views, we want to avoid creating double scrollbars.
               Therefore, limit viewer height in those cases.-->
           <base href="/lti">
-          <div id="r2_app_page" align="'center" :style="viewerStyle">
+          <div id="r2_app_page" align="center" :style="viewerStyle">
             <div id="r2_app_container" align="left" :style="viewerStyle" />
           </div>
         </div>
@@ -100,7 +100,7 @@ export default class RichReviewViewer extends Vue {
     const height = this.isGraderView ? '100vh' : '94vh'
 
     return {
-      height
+      'max-height': height
     }
   }
 

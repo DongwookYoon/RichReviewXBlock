@@ -421,13 +421,8 @@ export default class AssignmentLti extends Vue {
     }
 
     alert('Assignment submitted!')
-<<<<<<< HEAD
-    window.removeEventListener('beforeunload', this.refreshSafely) // Prevent infinite 'recursion'
-    // window.history.back() // Relaunch after submit.
-=======
     window.removeEventListener('beforeunload', this.refreshSafely)
     window.history.back() // Relaunch after submit.
->>>>>>> parent of 9a5102da... Reduce app page height to avoid extra scrollbars in iframe
   }
 
 

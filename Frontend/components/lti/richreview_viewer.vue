@@ -12,10 +12,11 @@
     <no-ssr>
       <body>
         <div class="content_body">
-          <!--TODO Check that base is correct -->
+          <!--In template or student views, we want to avoid creating double scrollbars.
+              Therefore, limit viewer height in those cases.-->
           <base href="/lti">
-          <div id="r2_app_page" align="'center">
-            <div id="r2_app_container" align="left" />
+          <div id="r2_app_page" align="'center" :style="viewerStyle">
+            <div id="r2_app_container" align="left" :style="viewerStyle" />
           </div>
         </div>
       </body>
@@ -65,7 +66,6 @@ export default class RichReviewViewer extends Vue {
 
   mounted () {
     this.getViewerData().then((res) => {
-
       const instructorOrTa = this.user.isTa || this.user.isInstructor
 
       /* Only show RichReview UI if the assignment has been submitted OR
@@ -92,6 +92,18 @@ export default class RichReviewViewer extends Vue {
     })
   }
 
+  get isGraderView () {
+    return !(this.is_template === true || this.user.isStudent === true)
+  }
+
+  get viewerStyle () {
+    const height = this.isGraderView ? '100vh' : '94vh'
+
+    return {
+      height
+    }
+  }
+
   private getViewerData () : Promise<any> {
     return this.$axios.$get(
         `https://${process.env.backend}:3000/courses/${
@@ -114,7 +126,6 @@ export default class RichReviewViewer extends Vue {
 <style scoped>
 @import 'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/css/bootstrap.min.css';
 
-
 body {
   overflow: hidden;
 }
@@ -127,11 +138,5 @@ p {
   font-size: 1.4rem;
   margin: 1rem 2rem;
 }
-
-#r2_app_page,
-#r2_app_container {
-  height: 100vh;
-}
-
 
 </style>

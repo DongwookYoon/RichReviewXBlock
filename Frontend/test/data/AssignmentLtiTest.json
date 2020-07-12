@@ -5,10 +5,9 @@
     "roles": ["student"]
   },
   "testDataStudent": {
-    "loadSuccess": true,
     "assignmentTitle": "Test Assignment",
     "assignmentType": "document_submission",
-    "assignmentId": "lti",
+    "assignmentId": "_",
     "courseId": "lti_test"
   }
 

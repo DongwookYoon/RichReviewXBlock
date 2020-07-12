@@ -65,7 +65,8 @@
 
 <script lang="ts">
 /* eslint-disable no-multiple-empty-lines */
-
+import * as fs from 'fs'
+import * as path from 'path'
 import { Component, Vue } from 'nuxt-property-decorator'
 import { mapGetters } from 'vuex'
 import JwtUtil from '~/utils/jwt-util'
@@ -108,9 +109,10 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
 
     if (DEBUG) {
       console.log('Running in DEBUG mode')
-      context.store.dispatch('LtiAuthStore/logIn', testUser)
+      const testData = AssignmentLti.loadTestData()
+      context.store.dispatch('LtiAuthStore/logIn', testData.testUser)
       user = User.parse(context.store.getters['LtiAuthStore/authUser'])
-      courseId = testDataStudent.courseId
+      courseId = testData.testDataStudent.courseId
     }
 
     if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
@@ -260,7 +262,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
   fetch ({ redirect, store }) {
     if (store.getters['LtiAuthStore/isLoggedIn'] === false) {
       console.warn('User is not logged in to Canvas. Redirecting to Canvas login page...')
-      redirect(process.env.canvas_path as string)   // TODO enable this
+      redirect(process.env.canvas_path as string)
     }
   },
 
@@ -477,6 +479,14 @@ export default class AssignmentLti extends Vue {
   private static async getLaunchMessage (jwtBase64 : string, keysetUrl: string) : Promise<object | null> {
     return await JwtUtil.getAndVerifyWithKeyset(jwtBase64, keysetUrl)
   }
+
+  private static loadTestData () {
+    const testJson = path.resolve('test/data/AssignmentLtiTest.json')
+    const testData = fs.readFileSync(testJson, 'utf8')
+    console.log('Loaded test data: ' + testData)
+    return JSON.parse(testData)
+  }
+
 }
 </script>
 

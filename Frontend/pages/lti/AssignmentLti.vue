@@ -81,20 +81,6 @@ import SubmitData from '~/model/submit-data'
 const DEBUG: boolean = process.env.debug_mode !== undefined &&
   process.env.debug_mode.toLowerCase().trim() === 'true'
 
-const testUser = new User(
-  '109022885000538247847',
-  'Test Student',
-  [Roles.INSTRUCTOR]
-)
-
-const testDataStudent = {
-  loadSuccess: true,
-  user: testUser,
-  assignmentTitle: 'Test Assignment',
-  assignmentType: 'document_submission',
-  assignmentId: '1592790355002_84952',
-  courseId: 'test_2'
-}
 
 @Component({
   middleware: DEBUG ? '' : 'oidc_handler', // Handle OIDC login request

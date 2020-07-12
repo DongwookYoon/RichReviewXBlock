@@ -59,6 +59,8 @@
 
 <script lang = "ts">
 import * as https from 'https'
+import * as fs from 'fs'
+import * as path from 'path'
 import ApiHelper, { CourseData } from '~/utils/api-helper'
 import JwtUtil from '~/utils/jwt-util'
 import { Component, Vue } from 'nuxt-property-decorator'
@@ -69,30 +71,8 @@ import { ITokenInfo } from '~/store/modules/LtiAuthStore'
 import { NuxtAxiosInstance } from '@nuxtjs/axios'
 // eslint-disable-next-line camelcase
 
-const testUser = new User(
-  '109022885000538247847',
-  'Test Instructor',
-  [Roles.INSTRUCTOR, Roles.STUDENT, Roles.INSTRUCTOR]
-)
-
-const testData = {
-  assignmentId: `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`,
-  success: true,
-  courseId: `test_2`,
-  user: testUser
-}
-
-const testCourseData = {
-  id: testData.courseId,
-  title: 'Test Course',
-  dept: 'Test Department',
-  number: '0000',
-  section: '0000'
-}
-
 const DEBUG: boolean = process.env.debug_mode !== undefined &&
   process.env.debug_mode.toLowerCase().trim() === 'true'
-
 
 /* eslint-disable camelcase */
 @Component({
@@ -100,14 +80,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
 
   async asyncData (context) {
     if (DEBUG === true) {
-      console.log(`Running in DEBUG mode.\n Test data: ${
-        JSON.stringify(testData)
-        }\n Test course: ${JSON.stringify(testCourseData)}`)
-
-      context.store.dispatch('LtiAuthStore/logIn', testUser)
-      await CreateAssignmentLti.makeCourseAndEnrollInstructor(testCourseData, testUser, context.$axios)
-
-      return testData
+      return await CreateAssignmentLti.setupTest(context)
     }
 
     /* Expect that middleware will handle login before this point. So
@@ -335,6 +308,7 @@ export default class CreateAssignmentLti extends Vue {
     catch (e) {
       this.saved = false
       console.warn('Creating assignment failed. Reason: ' + e)
+      console.warn(JSON.stringify(this.user))
       window.alert('Creating the assignment failed. Please try again. If this error continues,' +
       ' please contact the RichReview administrator.')
     }
@@ -499,6 +473,24 @@ export default class CreateAssignmentLti extends Vue {
 
     console.log(`Adding instructor to course if they do not exist in course.`)
     await ApiHelper.ensureUserEnrolled(courseData.id, user, $axios)
+  }
+
+  private static async setupTest (context: any) {
+    const testJson = path.resolve('test/data/CreateAssignmentLtiTest.json')
+    const testData = JSON.parse(fs.readFileSync(testJson, 'utf8'))
+    console.log(`Running in DEBUG mode.\n Test data: ${
+        JSON.stringify(testData)
+        }\n Test course: ${JSON.stringify(testData.testCourseData)}`)
+
+    context.store.dispatch('LtiAuthStore/logIn', testData.testUser as User)
+    await CreateAssignmentLti.makeCourseAndEnrollInstructor(
+      testData.testCourseData, testData.testUser, context.$axios)
+
+    testData.testAssignment.assignmentId = `${Date.now()}_${Math.floor((Math.random() * 100000) + 1)}`
+
+    testData.testAssignment.user = testData.testUser
+
+    return testData.testAssignment
   }
 }
 

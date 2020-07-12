@@ -1,0 +1,15 @@
+{
+  "testUser": {
+    "id": "109022885000538247847",
+    "userName": "Test Student",
+    "roles": ["student"]
+  },
+  "testDataStudent": {
+    "loadSuccess": true,
+    "assignmentTitle": "Test Assignment",
+    "assignmentType": "document_submission",
+    "assignmentId": "lti",
+    "courseId": "lti_test"
+  }
+
+}

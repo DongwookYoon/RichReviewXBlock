@@ -30,6 +30,11 @@ if (process.client) {
 export default {
   name: 'Viewer',
   head: {
+    link: [
+      {
+        type: 'text/css', rel: 'stylesheet', href: 'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/css/bootstrap.min.css'
+      }
+    ],
     script: [
       {
         src:

@@ -1,0 +1,21 @@
+{
+  "testUser": {
+    "id": "109022885000538247846",
+    "userName": "Test Instructor",
+    "roles": ["instructor"]
+  },
+
+  "testAssignment": {
+    "assignmentId": "_",
+    "success": true,
+    "courseId": "lti_test"
+  },
+
+  "testCourseData": {
+    "id": "lti_test",
+    "title": "Test Course",
+    "dept": "Test Department",
+    "number": "0000",
+    "section": "0000"
+  }
+}

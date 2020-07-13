@@ -342,7 +342,7 @@ p {
 #slash,
 #points {
   color: white;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
 }
 
 
@@ -368,13 +368,14 @@ p {
 #hidden {
   min-height: 2vh;
   margin-right: 0.5vw;
+  margin-top: 0.5rem;
 }
 
 #hidden-label {
   min-height: 2vh;
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: white;
-  margin: 0.75rem 3vw auto 0;
+  margin: 0.5rem 3vw auto 0;
   line-height: 0.75rem;
 
 }
@@ -387,8 +388,8 @@ p {
 }
 
 #mark-input {
-  height: 1.8rem;
-  width: 2.9rem;
+  height: 1.4rem;
+  width: 2rem;
   text-align: right;
   margin: auto 1vw auto 0;
   color: #0c2343;
@@ -410,7 +411,7 @@ p {
 
 #student-select {
   color: #0c2343;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   cursor: pointer;
   max-height: 2rem;
 }

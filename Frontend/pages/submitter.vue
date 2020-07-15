@@ -162,6 +162,7 @@ p {
 }
 
 #top-bar {
+  max-height: 2vh;
   display: flex;
   flex-flow: row wrap;
   justify-content: space-between;
@@ -171,14 +172,14 @@ p {
 
 #assignment-title {
   color: white;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   margin-left: 1vw;
 }
 
 #submit-button {
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   text-align: center;
-  margin: 0.25rem 1rem;
+  margin: 0.25rem 0.5rem;
 }
 
 

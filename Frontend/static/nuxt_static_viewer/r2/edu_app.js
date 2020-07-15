@@ -481,7 +481,7 @@
       }
 
       r2.modalWindowLoading.hideModalWindow()
-      r2.modalWindowIntro.Init()
+      // r2.modalWindowIntro.Init() /* Tutorial/intro is commented out for now, as this feature will be updated or removed. */
       r2.log.Log_Simple('DoneLoading')
 
       r2.scoreIndicator.init()

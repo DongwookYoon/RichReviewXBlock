@@ -115,14 +115,13 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
       courseId = testData.testDataStudent.courseId
     }
 
-    if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
-      console.warn('User is not logged in! This means OIDC login failed.')
-      return {
-        loadSuccess
-      }
+    /* Do NOT continue loading data if user is not logged in */
+    if (context.store.getters['LtiAuthStore/isLoggedIn'] === true) {
+      user = User.parse(context.store.getters['LtiAuthStore/authUser'])
     }
-
-    user = User.parse(context.store.getters['LtiAuthStore/authUser'])
+    else {
+      return
+    }
 
     let jwt : string = ''
     let ltiLaunchMessage : any = null
@@ -269,7 +268,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
   },
 
   fetch ({ redirect, store }) {
-    if (store.getters['LtiAuthStore/isLoggedIn'] === false) {
+    if (process.client && store.getters['LtiAuthStore/isLoggedIn'] === false) {
       console.warn('User is not logged in to Canvas. Redirecting to Canvas login page...')
       redirect(process.env.canvas_path as string)
     }

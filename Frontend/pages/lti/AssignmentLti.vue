@@ -122,7 +122,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
       if (!process.server) {
         if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
           console.warn('User is not logged in! This means OIDC login failed. Redirecting to establish OIDC login')
-          window.location.assign(window.sessionStorage.getItem('rr_auth_redirect_url'))
+          window.location.assign(window.sessionStorage.getItem('rr_auth_redirect_url') as string)
         }
 
         user = User.parse(context.store.getters['LtiAuthStore/authUser'])
@@ -131,6 +131,10 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
           user,
           loadSuccess
         }
+      }
+      else if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
+        console.log('User is not authenticated with server.')
+        return
       }
 
       let jwt : string

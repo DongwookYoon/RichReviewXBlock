@@ -120,6 +120,11 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
       // eslint-disable-next-line prefer-const
 
       if (!process.server) {
+        if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
+          console.warn('User is not logged in! This means OIDC login failed. Redirecting to establish OIDC login')
+          window.location.assign(window.sessionStorage.getItem('rr_auth_redirect_url') as string)
+        }
+
         user = User.parse(context.store.getters['LtiAuthStore/authUser'])
         loadSuccess = true
         return {
@@ -370,10 +375,7 @@ export default class AssignmentLti extends Vue {
   }
 
   public mounted () {
-    if (this.$store.getters['LtiAuthStore/isLoggedIn'] === false) {
-      console.warn('User is not logged in! This means OIDC login failed. Redirecting to establish OIDC login')
-      window.location.assign(window.sessionStorage.getItem('rr_auth_redirect_url') as string)
-    }
+    console.log(document.referrer)
     if (this.loadSuccess === false) {
       alert('An error occurred while loading. Please try to refresh the page.\n' +
         'If this error persists, contact the RichReview system administrator for assistance.')

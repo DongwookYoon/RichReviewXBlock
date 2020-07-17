@@ -81,7 +81,7 @@ export default class LoginLti extends Vue {
       window.sessionStorage.setItem('rr_oidc_state', this.state)
       window.sessionStorage.setItem('rr_auth_redirect_uri', this.authRedirectUrl)
       console.log('OIDC login succeeded. Redirecting to: ' + this.authRedirectUrl)
-      window.location.assign(this.authRedirectUrl)
+      window.location.replace(this.authRedirectUrl)
     }
     else {
       console.warn(`Invalid ${this.state ? 'state' : 'authRedirectUrl'} for OIDC login`)

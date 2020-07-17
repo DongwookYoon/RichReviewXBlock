@@ -306,7 +306,7 @@ export default class AssignmentLti extends Vue {
   private submit_data !: SubmitData
   private isTemplate !: boolean
   private courseId !: string
-  private idToken : string
+  private idToken !: string
   /* End Component data */
 
 

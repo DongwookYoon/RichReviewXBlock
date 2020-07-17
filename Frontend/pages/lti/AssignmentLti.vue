@@ -124,25 +124,33 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
 
     user = User.parse(context.store.getters['LtiAuthStore/authUser'])
 
+    let jwt : string
+    let ltiLaunchMessage : any = null
+
     if (!DEBUG) {
       // eslint-disable-next-line prefer-const
-
-      if (!process.server) {
-        loadSuccess = true
-        return {
-          user,
-          loadSuccess
-        }
-      }
-
-      let jwt : string
-      let ltiLaunchMessage : any = null
-
       try {
       /* As per IMS Security Framework Spec (https://www.imsglobal.org/spec/security/v1p0/),
         the data required to perform the launch is contained within the id_token jwt obtained
         from OIDC authentication. */
-        jwt = context.req.body.id_token as string
+        if (process.server === true) {
+          if (!context.req.body.id_token) {
+            return
+          }
+          else {
+            jwt = context.req.body.id_token as string
+          }
+        }
+        else {
+          const sessionData : any = window.sessionStorage.getItem('rr_active_session_data')
+          if (!sessionData) {
+            console.warn('No login session created yet.')
+            return
+          }
+          else {
+            jwt = sessionData
+          }
+        }
 
         ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt,
         process.env.canvas_public_key_set_url as string)
@@ -255,7 +263,8 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
       submit_data,
       isTemplate,
       courseId,
-      assignmentData
+      assignmentData,
+      idToken: jwt
     }
   },
 
@@ -297,6 +306,7 @@ export default class AssignmentLti extends Vue {
   private submit_data !: SubmitData
   private isTemplate !: boolean
   private courseId !: string
+  private idToken : string
   /* End Component data */
 
 
@@ -337,6 +347,7 @@ export default class AssignmentLti extends Vue {
   public created () {
     const query = this.$route.query
     if (this.loadSuccess) {
+      window.sessionStorage.setItem('rr_active_session_data', this.idToken)
       this.user = User.parse(this.user)
 
       /* If provided, get submission params from URL query string. Otherwise,
@@ -371,7 +382,7 @@ export default class AssignmentLti extends Vue {
   }
 
   public mounted () {
-    console.log(document.referrer)
+
     if (this.loadSuccess === false) {
       alert('An error occurred while loading. Please try to refresh the page.\n' +
         'If this error persists, contact the RichReview system administrator for assistance.')
@@ -468,10 +479,7 @@ export default class AssignmentLti extends Vue {
     if (window.history.length > 1) {
       window.history.back()
     }
-    else {
-      /* Fallback for Chrome or any other browser that destroys history on redirect */
-      window.close()
-    }
+
   }
 
 

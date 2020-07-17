@@ -347,7 +347,6 @@ export default class AssignmentLti extends Vue {
   public created () {
     const query = this.$route.query
     if (this.loadSuccess) {
-      window.sessionStorage.setItem('rr_active_session_data', this.idToken)
       this.user = User.parse(this.user)
 
       /* If provided, get submission params from URL query string. Otherwise,
@@ -382,11 +381,11 @@ export default class AssignmentLti extends Vue {
   }
 
   public mounted () {
-
     if (this.loadSuccess === false) {
       alert('An error occurred while loading. Please try to refresh the page.\n' +
         'If this error persists, contact the RichReview system administrator for assistance.')
     }
+    window.sessionStorage.setItem('rr_active_session_data', this.idToken)
   }
 
 

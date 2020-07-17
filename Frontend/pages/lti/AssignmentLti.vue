@@ -371,6 +371,7 @@ export default class AssignmentLti extends Vue {
   }
 
   public mounted () {
+    console.log(document.referrer)
     if (this.loadSuccess === false) {
       alert('An error occurred while loading. Please try to refresh the page.\n' +
         'If this error persists, contact the RichReview system administrator for assistance.')
@@ -467,7 +468,8 @@ export default class AssignmentLti extends Vue {
       window.history.back()
     }
     else {
-      console.log(document.referrer)
+      /* Fallback for Chrome or any other browser that destroys history on redirect */
+      window.close()
     }
   }
 

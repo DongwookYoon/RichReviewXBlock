@@ -51,10 +51,12 @@ const oidc_handler: Middleware = async ({ store, req }) => {
     const state : string | null = window.sessionStorage.getItem('rr_oidc_state')
     const activeSessionData : string | null = window.sessionStorage.getItem('rr_active_session_data')
 
+    console.log('active session data: ' + activeSessionData)
     /* Existing session */
     if (activeSessionData !== null) {
       const tokenData : any = await JwtUtil.getAndVerifyWithKeyset(activeSessionData as string,
         process.env.canvas_public_key_set_url as string)
+        console.log('Got token data: ' + tokenData)
 
       if (tokenData === null) {
         console.warn('Invalid login session.')

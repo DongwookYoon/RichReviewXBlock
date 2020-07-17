@@ -148,6 +148,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
           }
           else {
             jwt = sessionData
+            console.log('Got session data java: ' + jwt)
           }
         }
 

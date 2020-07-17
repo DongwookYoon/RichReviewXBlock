@@ -27,6 +27,11 @@ const oidc_handler: Middleware = async ({ store, req }) => {
 
     try {
       console.log('Processing OIDC login response from Canvas...')
+      if (!loginData.id_token) {
+        console.warn('No id token in request body')
+        return
+      }
+
       tokenData = await JwtUtil.getAndVerifyWithKeyset(loginData.id_token as string,
         process.env.canvas_public_key_set_url as string)
 

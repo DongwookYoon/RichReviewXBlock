@@ -137,6 +137,8 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
         return
       }
 
+      user = User.parse(context.store.getters['LtiAuthStore/authUser'])
+
       let jwt : string
       let ltiLaunchMessage : any = null
 

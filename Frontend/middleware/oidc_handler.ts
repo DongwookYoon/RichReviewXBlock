@@ -23,15 +23,22 @@ const oidc_handler: Middleware = async ({ store, req }) => {
     const loginData = req.body
     store.dispatch('LtiAuthStore/updateOidcState', loginData.state as string)
 
-    console.log('Processing OIDC login response from Canvas...')
-    const tokenData : any = await JwtUtil.getAndVerifyWithKeyset(loginData.id_token as string,
-      process.env.canvas_public_key_set_url as string)
+    let tokenData : any
 
-    if (tokenData === null) {
-      console.warn('Invalid request from authorization endpoint.')
-      return
+    try {
+      console.log('Processing OIDC login response from Canvas...')
+      tokenData = await JwtUtil.getAndVerifyWithKeyset(loginData.id_token as string,
+        process.env.canvas_public_key_set_url as string)
+
+      if (tokenData === null) {
+        console.warn('Invalid request from authorization endpoint.')
+        return
+      }
+      store.dispatch('LtiAuthStore/logIn', { id: tokenData.sub, userName: 'Canvas User' }) // JWT 'sub' claim contains unique global user id.
     }
-    store.dispatch('LtiAuthStore/logIn', { id: tokenData.sub, userName: 'Canvas User' }) // JWT 'sub' claim contains unique global user id.
+    catch (ex) {
+      console.log(ex)
+    }
   }
 
   /* Verify the OIDC state. Invalidate login if session state doesn't match state in the Nuxt store */

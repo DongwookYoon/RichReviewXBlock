@@ -462,7 +462,7 @@ export default class AssignmentLti extends Vue {
   }
 
   public static relaunch () {
-    const authUrl : string = window.sessionStorage.getItem('rr_auth_redirect_uri')
+    const authUrl : string = window.sessionStorage.getItem('rr_auth_redirect_uri') as string
     window.location.replace(authUrl)
   }
 

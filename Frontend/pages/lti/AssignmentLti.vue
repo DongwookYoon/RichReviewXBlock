@@ -467,7 +467,7 @@ export default class AssignmentLti extends Vue {
       window.history.back()
     }
     else {
-      window.close()
+      console.log(document.referrer)
     }
   }
 

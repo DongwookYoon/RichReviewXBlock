@@ -101,6 +101,8 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    let jwt : string = ''
+    let ltiLaunchMessage : any = null
     let courseId: string = ''
     let assignmentType : string = ''
     let launchMessage : any = {}
@@ -115,6 +117,25 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
       courseId = testData.testDataStudent.courseId
     }
 
+    if (process.client) {
+      const activeSessionData : string | null = window.sessionStorage.getItem('rr_active_session_data')
+
+      console.log('active session data: ' + activeSessionData)
+      /* Existing session */
+      if (activeSessionData !== null) {
+        const tokenData : any = await JwtUtil.getAndVerifyWithKeyset(activeSessionData as string,
+          process.env.canvas_public_key_set_url as string)
+        console.log('Got token data: ' + tokenData)
+
+        if (tokenData === null) {
+          console.warn('Invalid login session.')
+          return
+        }
+
+        context.store.dispatch('LtiAuthStore/logIn', { id: tokenData.sub, userName: 'Canvas User' }) // JWT 'sub' claim contains unique global user id.
+      }
+    }
+
     /* Do NOT continue loading data if user is not logged in */
     if (context.store.getters['LtiAuthStore/isLoggedIn'] === true) {
       user = User.parse(context.store.getters['LtiAuthStore/authUser'])
@@ -123,8 +144,6 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
       return
     }
 
-    let jwt : string = ''
-    let ltiLaunchMessage : any = null
 
     if (!DEBUG) {
       // eslint-disable-next-line prefer-const
@@ -478,7 +497,6 @@ export default class AssignmentLti extends Vue {
     if (window.history.length > 1) {
       window.history.back()
     }
-
   }
 
 
@@ -506,7 +524,6 @@ export default class AssignmentLti extends Vue {
     console.log('Loaded test data: ' + testData)
     return JSON.parse(testData)
   }
-
 }
 </script>
 

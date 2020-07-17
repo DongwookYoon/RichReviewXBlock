@@ -395,7 +395,6 @@ export default class AssignmentLti extends Vue {
     event.preventDefault()
     window.removeEventListener('beforeunload', this.refreshSafely) // Prevent infinite loop on unload.
     event.returnValue = false
-    return false
   }
 
 
@@ -470,8 +469,7 @@ export default class AssignmentLti extends Vue {
     }
     else {
       /* Fallback for Chrome or any other browser that destroys history on redirect */
-      window.location.href = document.referrer
-      return false
+      window.close()
     }
   }
 

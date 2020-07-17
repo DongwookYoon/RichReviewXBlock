@@ -21,6 +21,11 @@ const oidc_handler: Middleware = async ({ store, req }) => {
     Therefore, data is available as JSON object in req.body. */
   if (process.server) {
     const loginData = req.body
+
+    if (!req.body.id_token) {
+      return
+    }
+
     store.dispatch('LtiAuthStore/updateOidcState', loginData.state as string)
 
     console.log('Processing OIDC login response from Canvas...')

@@ -470,7 +470,7 @@ export default class AssignmentLti extends Vue {
     }
     else {
       /* Fallback for Chrome or any other browser that destroys history on redirect */
-      window.close()
+      //window.close()
     }
   }
 

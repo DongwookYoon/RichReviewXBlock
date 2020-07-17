@@ -389,7 +389,7 @@ export default class AssignmentLti extends Vue {
   public refreshSafely (event: Event) {
     // Break out of event handler context
     window.setTimeout(function () {
-      window.history.back()
+      AssignmentLti.relaunch()
     }, 0)
     event.preventDefault()
     window.removeEventListener('beforeunload', this.refreshSafely) // Prevent infinite loop on unload.
@@ -410,7 +410,8 @@ export default class AssignmentLti extends Vue {
 
     alert('Assignment submitted!')
     window.removeEventListener('beforeunload', this.refreshSafely)
-    window.history.back() // Relaunch after submit.
+
+    AssignmentLti.relaunch()
   }
 
 
@@ -458,6 +459,15 @@ export default class AssignmentLti extends Vue {
     catch (e) {
       console.warn('Canvas submission failed. Reason: ' + e)
       throw e
+    }
+  }
+
+  public static relaunch () {
+    if (window.history.length > 1) {
+      window.history.back()
+    }
+    else {
+      document.location.href = document.referrer
     }
   }
 

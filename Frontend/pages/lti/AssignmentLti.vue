@@ -394,7 +394,7 @@ export default class AssignmentLti extends Vue {
     }, 0)
     event.preventDefault()
     window.removeEventListener('beforeunload', this.refreshSafely) // Prevent infinite loop on unload.
-    event.returnValue = false
+    return ''
   }
 
 

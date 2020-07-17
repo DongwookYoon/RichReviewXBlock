@@ -390,10 +390,11 @@ export default class AssignmentLti extends Vue {
   public refreshSafely (event: Event) {
     // Break out of event handler context
     window.setTimeout(function () {
-      return AssignmentLti.relaunch()
+      AssignmentLti.relaunch()
     }, 0)
     event.preventDefault()
     window.removeEventListener('beforeunload', this.refreshSafely) // Prevent infinite loop on unload.
+    event.returnValue = false
     return false
   }
 

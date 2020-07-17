@@ -115,19 +115,17 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
       courseId = testData.testDataStudent.courseId
     }
 
-    if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
-      console.warn('User is not logged in! This means OIDC login failed.')
-      return {
-        loadSuccess
-      }
-    }
-
-    user = User.parse(context.store.getters['LtiAuthStore/authUser'])
 
     if (!DEBUG) {
       // eslint-disable-next-line prefer-const
 
       if (!process.server) {
+        if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
+          console.warn('User is not logged in! This means OIDC login failed. Redirecting to establish OIDC login')
+          window.location.assign(window.sessionStorage.getItem('rr_auth_redirect_url'))
+        }
+
+        user = User.parse(context.store.getters['LtiAuthStore/authUser'])
         loadSuccess = true
         return {
           user,

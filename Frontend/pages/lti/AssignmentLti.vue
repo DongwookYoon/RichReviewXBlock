@@ -269,7 +269,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
   },
 
   fetch ({ redirect, store }) {
-    if (store.getters['LtiAuthStore/isLoggedIn'] === false) {
+    if (process.client && store.getters['LtiAuthStore/isLoggedIn'] === false) {
       console.warn('User is not logged in to Canvas. Redirecting to Canvas login page...')
       redirect(process.env.canvas_path as string)
     }

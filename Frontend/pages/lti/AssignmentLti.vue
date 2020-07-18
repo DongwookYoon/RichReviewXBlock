@@ -150,7 +150,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
         const req : any = context.req as any
         /* On ititial launch, the jwt will be available on req during SSR */
         if (req && req.body.id_token) {
-          jwt = req.id_token
+          jwt = req.body.id_token
           console.log('Initial LTI launch. Reading id_token from request: ' + jwt)
         }
 

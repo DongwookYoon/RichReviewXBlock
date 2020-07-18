@@ -103,8 +103,10 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let courseId: string = ''
     let assignmentType : string = ''
-    let launchMessage : any = {}
     let user: User = new User('', '')
+    let jwt : string | null = ''
+    let ltiLaunchMessage : any = null
+    let launchMessage : any = null
     const assignmentId : string = decodeURIComponent(context.query.assignment_id as string)
 
     if (DEBUG) {
@@ -117,21 +119,25 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
 
 
     if (!DEBUG) {
-      // eslint-disable-next-line prefer-const
-
-      if (!process.server) {
+      /* Client side login check */
+      if (process.client === true) {
+        console.log('Calling asyncData() on client side....')
         if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
-          console.warn('User is not logged in! This means OIDC login failed. Redirecting to establish OIDC login')
-          window.location.assign(window.sessionStorage.getItem('rr_auth_redirect_url') as string)
+          console.warn('Error. No user login on client.')
+          loadSuccess = false
+          return {
+            loadSuccess
+          }
         }
 
-        user = User.parse(context.store.getters['LtiAuthStore/authUser'])
-        loadSuccess = true
-        return {
-          user,
-          loadSuccess
+        console.log('Reading session token for existing login...')
+        jwt = window.sessionStorage.getItem('rr_session_token') // Get token from existing OIDC login
+
+        if (jwt === null) {
+          return
         }
       }
+      /* Server-side login check */
       else if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
         console.log('User is not authenticated with server.')
         return
@@ -139,23 +145,23 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
 
       user = User.parse(context.store.getters['LtiAuthStore/authUser'])
 
-      let jwt : string
-      let ltiLaunchMessage : any = null
 
       try {
-      /* As per IMS Security Framework Spec (https://www.imsglobal.org/spec/security/v1p0/),
+        const req : any = context.req as any
+        /* On ititial launch, the jwt will be available on req during SSR */
+        if (req && req.id_token) {
+          console.log('Initial LTI launch. Reading id_token from request ')
+          jwt = req.id_token
+        }
+
+        /* As per IMS Security Framework Spec (https://www.imsglobal.org/spec/security/v1p0/),
         the data required to perform the launch is contained within the id_token jwt obtained
         from OIDC authentication. */
-        jwt = context.req.body.id_token as string
-
-        ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt,
+        ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt as string,
         process.env.canvas_public_key_set_url as string)
-
-        console.log(`LTI Launch Message is:  ${JSON.stringify(ltiLaunchMessage)}`)
       }
       catch (ex) {
         console.warn('Error occurred while getting ltiLaunchMessage from jwt. Reason: ' + ex)
-        ltiLaunchMessage = null
         return { loadSuccess }
       }
 
@@ -173,9 +179,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
     catch (ex) {
       console.warn('Could not verify user enrollment in course. Reason: ' + ex)
       loadSuccess = false
-      return {
-        loadSuccess
-      }
+      return { loadSuccess }
     }
 
     // eslint-disable-next-line camelcase
@@ -259,7 +263,8 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
       submit_data,
       isTemplate,
       courseId,
-      assignmentData
+      assignmentData,
+      idToken: jwt
     }
   },
 
@@ -301,8 +306,8 @@ export default class AssignmentLti extends Vue {
   private submit_data !: SubmitData
   private isTemplate !: boolean
   private courseId !: string
+  private idToken !: string
   /* End Component data */
-
 
 
   public get curComponent () : string {
@@ -370,36 +375,15 @@ export default class AssignmentLti extends Vue {
     }
   }
 
-  public beforeMount () {
-    window.addEventListener('beforeunload', this.refreshSafely)
-  }
-
   public mounted () {
-    console.log(document.referrer)
     if (this.loadSuccess === false) {
       alert('An error occurred while loading. Please try to refresh the page.\n' +
         'If this error persists, contact the RichReview system administrator for assistance.')
     }
-  }
-
-
-  /**
-   * On LTI launch in external page mode, if the user refreshes the page
-   * this will destroy context and force re-processing of lti launch message.
-   * But there will be no lti launch message present, as refresh is simply a
-   * new GET request to the current page at the top of the history stack. To get
-   * around this, re-initiate lti launch whenever user refreshes by going
-   * to previous state in history stack.
-   */
-  public refreshSafely (event: Event) {
-    // Break out of event handler context
-    window.setTimeout(function () {
-      AssignmentLti.relaunch()
-    }, 0)
-    event.preventDefault()
-    window.removeEventListener('beforeunload', this.refreshSafely) // Prevent infinite loop on unload.
-    event.returnValue = false
-    return ''
+    else {
+      window.sessionStorage.setItem('rr_session_token', this.idToken as string)
+      console.log('Set the session token to: ' + this.idToken)
+    }
   }
 
 
@@ -415,7 +399,6 @@ export default class AssignmentLti extends Vue {
     }
 
     alert('Assignment submitted!')
-    window.removeEventListener('beforeunload', this.refreshSafely)
 
     AssignmentLti.relaunch()
   }
@@ -474,7 +457,7 @@ export default class AssignmentLti extends Vue {
     }
     else {
       /* Fallback for Chrome or any other browser that destroys history on redirect */
-      //window.close()
+      window.close()
     }
   }
 
@@ -503,7 +486,6 @@ export default class AssignmentLti extends Vue {
     console.log('Loaded test data: ' + testData)
     return JSON.parse(testData)
   }
-
 }
 </script>
 

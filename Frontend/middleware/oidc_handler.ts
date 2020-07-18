@@ -43,10 +43,23 @@ const oidc_handler: Middleware = async ({ store, req }) => {
   /* Verify the OIDC state. Invalidate login if session state doesn't match state in the Nuxt store */
   else if (process.client) {
     const state : string | null = window.sessionStorage.getItem('rr_oidc_state')
+    const sessionJwt : string | null = window.sessionStorage.getItem('rr_session_token')
 
     if (state === null || state !== store.getters['LtiAuthStore/oidcState']) {
       store.dispatch('LtiAuthStore/logout')
       console.warn('Invalid OIDC state. Logging out.')
+    }
+
+    if (sessionJwt !== null) {
+      const tokenData : any = await JwtUtil.getAndVerifyWithKeyset(sessionJwt as string,
+        process.env.canvas_public_key_set_url as string)
+
+      if (tokenData === null) {
+        console.warn('OIDC login failed. Invalid session token.')
+        return
+      }
+
+      store.dispatch('LtiAuthStore/logIn', { id: tokenData.sub, userName: 'Canvas User' }) // JWT 'sub' claim contains unique global user id.
     }
   }
 }

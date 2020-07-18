@@ -149,10 +149,11 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
       try {
         const req : any = context.req as any
         /* On ititial launch, the jwt will be available on req during SSR */
-        if (req && req.id_token) {
-          console.log('Initial LTI launch. Reading id_token from request ')
+        if (req && req.body.id_token) {
           jwt = req.id_token
+          console.log('Initial LTI launch. Reading id_token from request: ' + jwt)
         }
+
 
         /* As per IMS Security Framework Spec (https://www.imsglobal.org/spec/security/v1p0/),
         the data required to perform the launch is contained within the id_token jwt obtained

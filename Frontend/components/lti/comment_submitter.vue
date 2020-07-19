@@ -31,6 +31,7 @@ import SubmitData from '~/model/submit-data'
 import User from '~/model/user'
 
 if (typeof window !== 'undefined') {
+  // console.log('Loading my viewer helper')
   require('@/static/my_viewer_helper') // Only load RR viewer helper on client.
 }
 
@@ -67,37 +68,8 @@ export default class CommentSubmitter extends Vue {
   }
 
   mounted () {
-    console.log('User id : ' + this.user.id)
-    console.log('group id : ' + this.submit_data.groupID)
-    console.log('Course id : ' + this.course_id)
-    // Note updated changed backend so that it is possible to get the data
-    // for the document based only on group id. It is simple to include the group id and
-    // other data in the launch URL
-    axios.get(
-      `https://${process.env.backend}:3000/courses/${
-        this.course_id
-      }/groups/${this.submit_data.groupID}`,
-      {
-        headers: {
-          Authorization: this.user.id
-        },
-        httpsAgent: new https.Agent({
-          rejectUnauthorized: false
-        })
-      }
-    ).then((res) => {
-      // eslint-disable-next-line camelcase
-      const r2_ctx = res.data.r2_ctx
-      r2_ctx.auth = { id: this.user.id, name: this.user.userName }
-      // eslint-disable-next-line camelcase
-      const cdn_endpoint = res.data.cdn_endpoint
-
-      loadRichReview(
-        encodeURIComponent(JSON.stringify(r2_ctx)),
-        res.data.env,
-        cdn_endpoint,
-        true
-      )
+    window.addEventListener('load', () => {
+      this.initRichReview()
     })
   }
 
@@ -142,6 +114,38 @@ export default class CommentSubmitter extends Vue {
     }
 
     this.submitSuccess()
+  }
+
+  private initRichReview () {
+    // Note updated changed backend so that it is possible to get the data
+    // for the document based only on group id. It is simple to include the group id and
+    // other data in the launch URL
+    axios.get(
+      `https://${process.env.backend}:3000/courses/${
+        this.course_id
+      }/groups/${this.submit_data.groupID}`,
+      {
+        headers: {
+          Authorization: this.user.id
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    ).then((res) => {
+      // eslint-disable-next-line camelcase
+      const r2_ctx = res.data.r2_ctx
+      r2_ctx.auth = { id: this.user.id, name: this.user.userName }
+      // eslint-disable-next-line camelcase
+      const cdn_endpoint = res.data.cdn_endpoint
+
+      loadRichReview(
+        encodeURIComponent(JSON.stringify(r2_ctx)),
+        res.data.env,
+        cdn_endpoint,
+        true
+      )
+    })
   }
 }
 </script>

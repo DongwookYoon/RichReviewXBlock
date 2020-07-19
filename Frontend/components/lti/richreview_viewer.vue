@@ -65,30 +65,8 @@ export default class RichReviewViewer extends Vue {
   }
 
   mounted () {
-    this.getViewerData().then((res) => {
-      const instructorOrTa = this.user.isTa || this.user.isInstructor
-
-      /* Only show RichReview UI if the assignment has been submitted OR
-         if the user is an instructor and the assignment is a comment submission assignment.
-         In the latter case, the instructor or TA will see the document template which they
-         can modify, if desired. */
-      if ((this.submit_data.submitted === true) ||
-            (this.is_template && instructorOrTa)) {
-        // eslint-disable-next-line camelcase
-        const r2_ctx = res.r2_ctx
-        r2_ctx.auth = { id: this.user.id, name: this.user.userName }
-        // eslint-disable-next-line camelcase
-        const cdn_endpoint = res.cdn_endpoint
-
-        loadRichReview(
-          encodeURIComponent(JSON.stringify(r2_ctx)),
-          res.env,
-          cdn_endpoint,
-          true
-        )
-      }
-    }).catch((reason) => {
-      console.warn('Loading RichReview failed. Reason: ' + reason)
+    window.addEventListener('load', () => {
+      this.initRichReview()
     })
   }
 
@@ -118,6 +96,34 @@ export default class RichReviewViewer extends Vue {
           })
         }
     )
+  }
+
+  private initRichReview () {
+    this.getViewerData().then((res) => {
+      const instructorOrTa = this.user.isTa || this.user.isInstructor
+
+      /* Only show RichReview UI if the assignment has been submitted OR
+         if the user is an instructor and the assignment is a comment submission assignment.
+         In the latter case, the instructor or TA will see the document template which they
+         can modify, if desired. */
+      if ((this.submit_data.submitted === true) ||
+            (this.is_template && instructorOrTa)) {
+        // eslint-disable-next-line camelcase
+        const r2_ctx = res.r2_ctx
+        r2_ctx.auth = { id: this.user.id, name: this.user.userName }
+        // eslint-disable-next-line camelcase
+        const cdn_endpoint = res.cdn_endpoint
+
+        loadRichReview(
+          encodeURIComponent(JSON.stringify(r2_ctx)),
+          res.env,
+          cdn_endpoint,
+          true
+        )
+      }
+    }).catch((reason) => {
+      console.warn('Loading RichReview failed. Reason: ' + reason)
+    })
   }
 }
 

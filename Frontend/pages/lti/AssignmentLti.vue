@@ -93,67 +93,334 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
   },
 
   async asyncData (context) {
-    let loadSuccess: boolean = false
+    let testData
+    if (DEBUG === true) {
+      console.log('Running in DEBUG mode')
+      testData = AssignmentLti.loadTestData()
+      context.store.dispatch('LtiAuthStore/logIn', testData.testUser)
+    }
+
+    const loadSuccess: boolean = false
+
+    /* Server-side login check */
+    if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
+      return
+    }
 
     if (!context.query.assignment_id) {
       console.warn('No assignment id passed in query string!')
       return { loadSuccess }
     }
 
+    let jwt : string = ''
+
+    if (!DEBUG) {
+      const req : any = context.req as any
+
+      /* On ititial launch, the jwt will be available on req during SSR */
+      if (req && req.body.id_token) {
+        jwt = req.body.id_token
+        console.log('Initial LTI launch. Reading id_token from request: ' + jwt)
+      }
+      else {
+        console.log('Not an LTI launch. Must rehydrate data on client side...')
+        return
+      }
+    }
+
+    return await AssignmentLti.initAssignment(jwt, context, DEBUG ? testData.testDataStudent.courseId : undefined)
+  },
+
+  computed: {
+    ...mapGetters('LtiAuthStore', {
+      isLoggedIn: 'isLoggedIn'
+    })
+  }
+
+})
+export default class AssignmentLti extends Vue {
+  public readonly INSTRUCTOR : string = Roles.INSTRUCTOR
+  public readonly TA : string = Roles.TA
+  public readonly STUDENT : string = Roles.STUDENT
+
+  private debug: boolean = DEBUG
+  private isCreated: boolean = false
+  private loadSuccess: boolean = false
+
+  /* Mappings for Vuex store getters */
+  public isLoggedIn !: boolean
+  /* End mapped getters */
+
+  /* Component data */
+  private user !: User
+  private assignmentTitle ?: string
+  private assignmentType ?: string
+  private assignmentId !: string
+  private assignmentData : any
+  private launchMessage ?: any
+  // eslint-disable-next-line camelcase
+  private submit_data !: SubmitData
+  private isTemplate !: boolean
+  private courseId !: string
+  private idToken: string | null = null
+  /* End Component data */
+
+
+  public get curComponent () : string {
+    if (this.user.isInstructor ||
+        this.user.isTa ||
+        this.submit_data.submitted === true) {
+      return 'richreview_viewer'
+    }
+
+    if (this.user.isStudent) {
+      if (this.assignmentType === 'document_submission') {
+        return 'document_submitter'
+      }
+      else if (this.assignmentType === 'comment_submission') {
+        return 'comment_submitter'
+      }
+    }
+
+    return 'default'
+  }
+
+  get isUserStudent () : boolean {
+    return this.user.isStudent
+  }
+
+  get isUserTa () : boolean {
+    return this.user.isTa
+  }
+
+  get isUserInstructor () : boolean {
+    return this.user.isInstructor
+  }
+
+
+  public mounted () {
+    let loadedOnServer: boolean = true
+
+    if (this.idToken === null && !DEBUG) {
+      loadedOnServer = false
+      this.idToken = window.sessionStorage.getItem('rr_session_token') // Get token from existing OIDC login
+
+      if (this.idToken === null) {
+        console.warn('Could not rehydrate data on client side. No session token.')
+        this.loadSuccess = false
+        return
+      }
+      else {
+        this.loginClient(this.idToken)
+      }
+    }
+
+    if (this.isLoggedIn === false) {
+      window.alert('User is not logged in to Canvas. Redirecting to Canvas login page...')
+      // window.location.replace(process.env.canvas_path as string)
+    }
+
+    /* We need to rehydrate data on client refresh in this case */
+    if (loadedOnServer === false) {
+      AssignmentLti.initAssignment(this.idToken, this.$nuxt.context).then((data) => {
+        console.log('Rehydrated on client side.')
+        this.rehydrate(data)
+        this.initSubmitData()
+        this.isCreated = true
+      }).catch((err) => {
+        console.warn('Could not initialize assignment data on client side. Reason: ' + err)
+      }).finally(() => {
+        if (this.loadSuccess === false) {
+          alert('An error occurred while loading. Please try to refresh the page.\n' +
+                'If this error persists, contact the RichReview system administrator for assistance.')
+        }
+      })
+    }
+
+    else if (this.loadSuccess === false) {
+      alert('An error occurred while loading. Please try to refresh the page.\n' +
+        'If this error persists, contact the RichReview system administrator for assistance.')
+    }
+    /* Data has already been loaded on server side in this case, so we only need to
+       init the submit data and store the session token in session storage */
+    else {
+      this.initSubmitData()
+      window.sessionStorage.setItem('rr_session_token', this.idToken as string)
+      console.log('Set the session token to: ' + this.idToken)
+
+      this.isCreated = true
+    }
+  }
+
+
+  public async handleSubmit () {
+    try {
+      await this.submitAssignment()
+    }
+    catch (ex) {
+      console.log('Submitting the assignment failed. Reason: ' + ex)
+      alert('Could not submit the assignment. If this error continues, ' +
+      'please contact the system administrator.')
+      return
+    }
+
+    alert('Assignment submitted!')
+
+    AssignmentLti.relaunch()
+  }
+
+  private rehydrate ({
+    loadSuccess,
+    user,
+    assignmentTitle,
+    assignmentType,
+    assignmentId,
+    launchMessage,
+    // eslint-disable-next-line camelcase
+    submit_data,
+    isTemplate,
+    courseId,
+    assignmentData,
+    idToken
+  }: IAssignmentLtiData) {
+    this.loadSuccess = loadSuccess
+    this.user = user as User
+    this.assignmentTitle = assignmentTitle
+    this.assignmentType = assignmentType
+    this.assignmentId = assignmentId as string
+    this.launchMessage = launchMessage
+    // eslint-disable-next-line camelcase
+    this.submit_data = submit_data as SubmitData
+    this.isTemplate = isTemplate as boolean
+    this.courseId = courseId as string
+    this.assignmentData = assignmentData
+    this.idToken = idToken as string
+  }
+
+  private async submitAssignment () {
+    const courseId : string = this.courseId
+    let updatedAssignmentData
+
+    try {
+      updatedAssignmentData = await ApiHelper.getAssignmentData(courseId,
+        this.assignmentId,
+        this.user.id as string,
+        this.$axios)
+    }
+    catch (e) {
+      console.warn('Getting updated assignment data on submit failed. Reason: ' + e)
+      throw e
+    }
+
+    const submissionId = updatedAssignmentData.grader_submission_id
+
+    /* Force a redirect to assignment through /lti/launch by setting
+       submit_view=true. This is required, as Canvas only supports one launch URL. */
+    let submissionURL = `${process.env.prod_url}/lti/launch?${
+      updatedAssignmentData.link}&assignment_id=${
+        encodeURIComponent(this.assignmentId)}&submit_view=true`
+
+    if (submissionId) {
+      submissionURL += `&submission_id=${encodeURIComponent(submissionId)}`
+    }
+
+    if (DEBUG) {
+      alert('DEBUG MODE: Got submit event from child component!')
+      console.log('Submitted assignment viewer URL: ' + submissionURL)
+      return
+    }
+
+    try {
+      await ApiHelper.submitAssignmentToPlatform(
+        this.launchMessage,
+        courseId,
+        this.user.id,
+        new URL(submissionURL),
+        this.$axios)
+    }
+    catch (e) {
+      console.warn('Canvas submission failed. Reason: ' + e)
+      throw e
+    }
+  }
+
+
+  public static relaunch () {
+    if (window.history.length > 1) {
+      window.history.back()
+    }
+    else {
+      /* Fallback for Chrome or any other browser that destroys history on redirect */
+      window.close()
+    }
+  }
+
+  private initSubmitData () {
+    const query = this.$route.query
+    this.user = User.parse(this.user)
+
+    /* If provided, get submission params from URL query string. Otherwise,
+        get them from the viewer link */
+    const accessCode: string | null =
+        query.access_code ? query.access_code as string
+          : AssignmentLti.getQueryVariable('access_code', this.submit_data.viewerLink)
+
+    const docID: string | null =
+        query.docid ? query.docid as string
+          : AssignmentLti.getQueryVariable('docid', this.submit_data.viewerLink)
+
+    const groupID : string | null =
+        query.groupid ? query.groupid as string
+          : AssignmentLti.getQueryVariable('groupid', this.submit_data.viewerLink)
+
+    const submissionID : string | null =
+        query.submission_id ? query.submission_id as string
+          : AssignmentLti.getQueryVariable('submission_id', this.submit_data.viewerLink)
+
+    this.submit_data.accessCode = accessCode
+    this.submit_data.docID = docID
+    this.submit_data.groupID = groupID
+    this.submit_data.submissionID = submissionID
+  }
+
+  private loginClient (sessionJwt: string | null) {
+    if (sessionJwt !== null) {
+      const tokenData : any = JwtUtil.getAndVerifyWithKeyset(sessionJwt as string,
+        process.env.canvas_public_key_set_url as string).then(() => {
+        if (tokenData === null) {
+          console.warn('OIDC login failed. Invalid session token.')
+          return
+        }
+
+        this.$store.dispatch('LtiAuthStore/logIn', { id: tokenData.sub, userName: 'Canvas User' }) // JWT 'sub' claim contains unique global user id.
+      })
+    }
+    else {
+      console.warn('Could not login client, as no valid session token was found.')
+    }
+  }
+
+
+  private static async initAssignment (jwt: string | null, context: any, debugCourseId ?: String): Promise<IAssignmentLtiData> {
+    let loadSuccess: boolean = false
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let courseId: string = ''
     let assignmentType : string = ''
-    let user: User = new User('', '')
-    let jwt : string | null = ''
     let ltiLaunchMessage : any = null
     let launchMessage : any = null
+    const user: User = User.parse(context.store.getters['LtiAuthStore/authUser'])
     const assignmentId : string = decodeURIComponent(context.query.assignment_id as string)
 
+
     if (DEBUG) {
-      console.log('Running in DEBUG mode')
-      const testData = AssignmentLti.loadTestData()
-      context.store.dispatch('LtiAuthStore/logIn', testData.testUser)
-      user = User.parse(context.store.getters['LtiAuthStore/authUser'])
-      courseId = testData.testDataStudent.courseId
+      courseId = debugCourseId as string
     }
 
-
-    if (!DEBUG) {
-      /* Client side login check */
-      if (process.client === true) {
-        console.log('Calling asyncData() on client side....')
-        if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
-          console.warn('Error. No user login on client.')
-          loadSuccess = false
-          return {
-            loadSuccess
-          }
-        }
-
-        console.log('Reading session token for existing login...')
-        jwt = window.sessionStorage.getItem('rr_session_token') // Get token from existing OIDC login
-
-        if (jwt === null) {
-          return
-        }
-      }
-      /* Server-side login check */
-      else if (context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
-        console.log('User is not authenticated with server.')
-        return
-      }
-
-      user = User.parse(context.store.getters['LtiAuthStore/authUser'])
-
-
+    else {
       try {
-        const req : any = context.req as any
-        /* On ititial launch, the jwt will be available on req during SSR */
-        if (req && req.body.id_token) {
-          jwt = req.body.id_token
-          console.log('Initial LTI launch. Reading id_token from request: ' + jwt)
+        if (!jwt) {
+          throw new Error('Cannot initialise assignment data. The jwt was not provided.')
         }
-
 
         /* As per IMS Security Framework Spec (https://www.imsglobal.org/spec/security/v1p0/),
         the data required to perform the launch is contained within the id_token jwt obtained
@@ -172,7 +439,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
 
       courseId = launchMessage[
         'https://purl.imsglobal.org/spec/lti/claim/context'].id
-    } // End-if
+    } // End-else
 
     try {
       await ApiHelper.ensureUserEnrolled(courseId, user, context.$axios)
@@ -197,6 +464,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
         context.store.getters['LtiAuthStore/authUser'].id,
         context.$axios)
 
+      console.log(assignmentData)
       assignmentType = assignmentData.assignment.type
 
       const markedSubmitted : boolean = (assignmentData.submission_status !== undefined &&
@@ -267,201 +535,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
       assignmentData,
       idToken: jwt
     }
-  },
-
-  fetch ({ redirect, store }) {
-    if (process.client && store.getters['LtiAuthStore/isLoggedIn'] === false) {
-      console.warn('User is not logged in to Canvas. Redirecting to Canvas login page...')
-      redirect(process.env.canvas_path as string)
-    }
-  },
-
-  computed: {
-    ...mapGetters('LtiAuthStore', {
-      isLoggedIn: 'isLoggedIn'
-    })
   }
-
-})
-export default class AssignmentLti extends Vue {
-  public readonly INSTRUCTOR : string = Roles.INSTRUCTOR
-  public readonly TA : string = Roles.TA
-  public readonly STUDENT : string = Roles.STUDENT
-
-  private debug: boolean = DEBUG
-  private isCreated: boolean = false
-  private loadSuccess: boolean = false
-
-  /* Mappings for Vuex store getters */
-  public isLoggedIn !: boolean
-  /* End mapped getters */
-
-  /* Component data */
-  private user !: User
-  private assignmentTitle ?: string
-  private assignmentType ?: string
-  private assignmentId !: string
-  private assignmentData : any
-  private launchMessage ?: any
-  // eslint-disable-next-line camelcase
-  private submit_data !: SubmitData
-  private isTemplate !: boolean
-  private courseId !: string
-  private idToken !: string
-  /* End Component data */
-
-
-  public get curComponent () : string {
-    if (this.user.isInstructor ||
-        this.user.isTa ||
-        this.submit_data.submitted === true) {
-      return 'richreview_viewer'
-    }
-
-    if (this.user.isStudent) {
-      if (this.assignmentType === 'document_submission') {
-        return 'document_submitter'
-      }
-      else if (this.assignmentType === 'comment_submission') {
-        return 'comment_submitter'
-      }
-    }
-
-    return 'default'
-  }
-
-  get isUserStudent () : boolean {
-    return this.user.isStudent
-  }
-
-  get isUserTa () : boolean {
-    return this.user.isTa
-  }
-
-  get isUserInstructor () : boolean {
-    return this.user.isInstructor
-  }
-
-
-
-  public created () {
-    const query = this.$route.query
-    if (this.loadSuccess) {
-      this.user = User.parse(this.user)
-
-      /* If provided, get submission params from URL query string. Otherwise,
-        get them from the viewer link */
-      const accessCode: string | null =
-        query.access_code ? query.access_code as string
-          : AssignmentLti.getQueryVariable('access_code', this.submit_data.viewerLink)
-
-      const docID: string | null =
-        query.docid ? query.docid as string
-          : AssignmentLti.getQueryVariable('docid', this.submit_data.viewerLink)
-
-      const groupID : string | null =
-        query.groupid ? query.groupid as string
-          : AssignmentLti.getQueryVariable('groupid', this.submit_data.viewerLink)
-
-      const submissionID : string | null =
-        query.submission_id ? query.submission_id as string
-          : AssignmentLti.getQueryVariable('submission_id', this.submit_data.viewerLink)
-
-      this.submit_data.accessCode = accessCode
-      this.submit_data.docID = docID
-      this.submit_data.groupID = groupID
-      this.submit_data.submissionID = submissionID
-
-      this.isCreated = true
-    }
-  }
-
-  public mounted () {
-    if (this.loadSuccess === false) {
-      alert('An error occurred while loading. Please try to refresh the page.\n' +
-        'If this error persists, contact the RichReview system administrator for assistance.')
-    }
-    else {
-      window.sessionStorage.setItem('rr_session_token', this.idToken as string)
-      console.log('Set the session token to: ' + this.idToken)
-    }
-  }
-
-
-  public async handleSubmit () {
-    try {
-      await this.submitAssignment()
-    }
-    catch (ex) {
-      console.log('Submitting the assignment failed. Reason: ' + ex)
-      alert('Could not submit the assignment. If this error continues, ' +
-      'please contact the system administrator.')
-      return
-    }
-
-    alert('Assignment submitted!')
-
-    AssignmentLti.relaunch()
-  }
-
-
-  private async submitAssignment () {
-    const courseId : string = this.courseId
-    let updatedAssignmentData
-
-    try {
-      updatedAssignmentData = await ApiHelper.getAssignmentData(courseId,
-        this.assignmentId,
-        this.user.id as string,
-        this.$axios)
-    }
-    catch (e) {
-      console.warn('Getting updated assignment data on submit failed. Reason: ' + e)
-      throw e
-    }
-
-    const submissionId = updatedAssignmentData.grader_submission_id
-
-    /* Force a redirect to assignment through /lti/launch by setting
-       submit_view=true. This is required, as Canvas only supports one launch URL. */
-    let submissionURL = `${process.env.prod_url}/lti/launch?${
-      updatedAssignmentData.link}&assignment_id=${
-        encodeURIComponent(this.assignmentId)}&submit_view=true`
-
-    if (submissionId) {
-      submissionURL += `&submission_id=${encodeURIComponent(submissionId)}`
-    }
-
-    if (DEBUG) {
-      alert('DEBUG MODE: Got submit event from child component!')
-      console.log('Submitted assignment viewer URL: ' + submissionURL)
-      return
-    }
-
-    try {
-      await ApiHelper.submitAssignmentToPlatform(
-        this.launchMessage,
-        courseId,
-        this.user.id,
-        new URL(submissionURL),
-        this.$axios)
-    }
-    catch (e) {
-      console.warn('Canvas submission failed. Reason: ' + e)
-      throw e
-    }
-  }
-
-  public static relaunch () {
-    if (window.history.length > 1) {
-      window.history.back()
-    }
-    else {
-      /* Fallback for Chrome or any other browser that destroys history on redirect */
-      window.close()
-    }
-  }
-
 
   private static getQueryVariable (variable : string, route : string) : string | null {
     const vars : string[] = route.split('&')
@@ -487,6 +561,21 @@ export default class AssignmentLti extends Vue {
     console.log('Loaded test data: ' + testData)
     return JSON.parse(testData)
   }
+}
+
+interface IAssignmentLtiData {
+    loadSuccess: boolean
+    user ?: User
+    assignmentTitle ?: string
+    assignmentType ?: string
+    assignmentId ?: string
+    launchMessage ?: any
+    // eslint-disable-next-line camelcase
+    submit_data ?: SubmitData | null
+    isTemplate ?: boolean
+    courseId ?: string
+    assignmentData ?: any
+    idToken ?: string | null
 }
 </script>
 

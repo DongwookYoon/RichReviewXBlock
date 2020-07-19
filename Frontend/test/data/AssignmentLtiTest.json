@@ -1,7 +1,7 @@
 {
   "testUser": {
-    "id": "109022885000538247847",
-    "userName": "Test Student",
+    "id": "lti_test_student_109022885000538247847",
+    "userName": "LTI Test Student",
     "roles": ["student"]
   },
   "testDataStudent": {

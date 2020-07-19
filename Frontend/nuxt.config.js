@@ -151,7 +151,7 @@ const config = {
       secure: false
     },
     '/canvas-jwk-keyset/': {
-      target: `${process.env.canvas_public_key_set_url}`,
+      target: 'https://canvas.ubc.ca/api/lti/security/jwks',
       pathRewrite: { '^/canvas-jwk-keyset/': '' },
       logLevel: 'debug',
       secure: false

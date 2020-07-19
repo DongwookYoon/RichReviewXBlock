@@ -4,9 +4,6 @@ import JwtUtil from '~/utils/jwt-util'
 // eslint-disable-next-line camelcase
 const oidc_handler: Middleware = async ({ store, req, $axios }) => {
 
-  console.warn('pliiimmm!' + await JwtUtil.getPublicPemFromJwkKeyset('2020-07-01T00:00:03Z', '/canvas-jwk-keyset/', $axios))
-
-
   /* If user already logged in, simply return */
   if (store.getters['LtiAuthStore/isLoggedIn'] === true) {
     console.log('Already logged in')

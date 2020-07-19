@@ -78,6 +78,8 @@ import ApiHelper from '~/utils/api-helper'
 import User from '~/model/user'
 import Roles from '~/utils/roles'
 import SubmitData from '~/model/submit-data'
+import { NuxtAxiosInstance } from '@nuxtjs/axios';
+import axios from 'axios';
 
 const DEBUG: boolean = process.env.debug_mode !== undefined &&
   process.env.debug_mode.toLowerCase().trim() === 'true'
@@ -385,8 +387,9 @@ export default class AssignmentLti extends Vue {
 
   private loginClient (sessionJwt: string | null) {
     if (sessionJwt !== null) {
+      /* Note proxy path is used to prevent issue with cross-origin request */
       const tokenData : any = JwtUtil.getAndVerifyWithKeyset(sessionJwt as string,
-        process.env.canvas_public_key_set_url as string).then(() => {
+        '/canvas-jwk-keyset/', this.$axios).then(() => {
         if (tokenData === null) {
           console.warn('OIDC login failed. Invalid session token.')
           return
@@ -426,7 +429,8 @@ export default class AssignmentLti extends Vue {
         the data required to perform the launch is contained within the id_token jwt obtained
         from OIDC authentication. */
         ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt as string,
-        process.env.canvas_public_key_set_url as string)
+        '/canvas-jwk-keyset/' as string,
+        context.$axios)
       }
       catch (ex) {
         console.warn('Error occurred while getting ltiLaunchMessage from jwt. Reason: ' + ex)
@@ -551,8 +555,8 @@ export default class AssignmentLti extends Vue {
   /**
    * Decode and verify jwt. Need to verify using the platform's (Canvas) public keyset.
    **/
-  private static async getLaunchMessage (jwtBase64 : string, keysetUrl: string) : Promise<object | null> {
-    return await JwtUtil.getAndVerifyWithKeyset(jwtBase64, keysetUrl)
+  private static async getLaunchMessage (jwtBase64 : string, keysetUrl: string, axiosInstance: NuxtAxiosInstance) : Promise<object | null> {
+    return await JwtUtil.getAndVerifyWithKeyset(jwtBase64, keysetUrl, axiosInstance)
   }
 
   private static loadTestData () {

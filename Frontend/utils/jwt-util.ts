@@ -2,7 +2,7 @@ import * as https from 'https'
 import jwt from 'jsonwebtoken'
 // eslint-disable-next-line camelcase
 import jwk_to_pem from 'jwk-to-pem'
-import axios from 'axios'
+import { NuxtAxiosInstance } from '@nuxtjs/axios'
 
 export default class JwtUtil {
   /**
@@ -12,14 +12,14 @@ export default class JwtUtil {
      * @param jwtBase64 JWT signed by the owner of the public key set.
      * @param keysetUrl Path for JWK public key set provided by JWT signer.
      */
-  public static async getAndVerifyWithKeyset (jwtBase64 : string, keysetUrl: string) {
+  public static async getAndVerifyWithKeyset (jwtBase64 : string, keysetUrl: string, axios : NuxtAxiosInstance) {
     const kid = JwtUtil.getMessageKid(jwtBase64)
 
     if (kid === null) {
       throw new Error(`Getting launch message failed. Reason: kid is null`)
     }
 
-    const pem : string | null = await JwtUtil.getPublicPemFromJwkKeyset(kid as string, keysetUrl)
+    const pem : string | null = await JwtUtil.getPublicPemFromJwkKeyset(kid as string, keysetUrl, axios)
     if (pem === null) {
       throw new Error('Getting public key pem failed')
     }
@@ -28,7 +28,7 @@ export default class JwtUtil {
     return JwtUtil.verifyAndDecode(jwtBase64, pem)
   }
 
-  public static async getPublicPemFromJwkKeyset (kid : string, keysetPath: string) {
+  public static async getPublicPemFromJwkKeyset (kid : string, keysetPath: string, axios : NuxtAxiosInstance) {
     console.log('Getting public JWK...')
     let resp
     try {

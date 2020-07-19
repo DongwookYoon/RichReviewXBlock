@@ -149,8 +149,13 @@ const config = {
       headers: { 'X-API-KEY': process.env.RR_API_KEY },
       logLevel: 'debug',
       secure: false
+    },
+    '/canvas-jwk-keyset/': {
+      target: `${process.env.canvas_public_key_set_url}`,
+      pathRewrite: { '^/canvas-jwk-keyset/': '' },
+      logLevel: 'debug',
+      secure: false
     }
-
   },
 
   /*

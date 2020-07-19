@@ -2,7 +2,7 @@ import { Middleware } from '@nuxt/types'
 import JwtUtil from '~/utils/jwt-util'
 
 // eslint-disable-next-line camelcase
-const oidc_handler: Middleware = async ({ store, req }) => {
+const oidc_handler: Middleware = async ({ store, req, $axios }) => {
   /* If user already logged in, simply return */
   if (store.getters['LtiAuthStore/isLoggedIn'] === true) {
     console.log('Already logged in')
@@ -30,7 +30,8 @@ const oidc_handler: Middleware = async ({ store, req }) => {
 
     console.log('Processing OIDC login response from Canvas...')
     const tokenData : any = await JwtUtil.getAndVerifyWithKeyset(loginData.id_token as string,
-      process.env.canvas_public_key_set_url as string)
+      '/canvas-jwk-keyset/',
+      $axios)
 
     if (tokenData === null) {
       console.warn('OIDC login failed. Invalid request from authorization endpoint.')

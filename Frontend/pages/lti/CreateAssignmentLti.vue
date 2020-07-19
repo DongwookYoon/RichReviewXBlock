@@ -103,7 +103,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
     const jwt : string = (context.req.body).id_token as string
 
     try {
-      ltiReqMessage = await JwtUtil.getAndVerifyWithKeyset(jwt, process.env.canvas_public_key_set_url as string)
+      ltiReqMessage = await JwtUtil.getAndVerifyWithKeyset(jwt, '/canvas-jwk-keyset/', this.$axios)
     }
     catch (ex) {
       console.warn(`Invalid ltiDeepLinkRequest. Could not validate jwt.  ${jwt}

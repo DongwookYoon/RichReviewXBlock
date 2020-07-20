@@ -67,6 +67,7 @@
 /* eslint-disable no-multiple-empty-lines */
 import * as fs from 'fs'
 import * as path from 'path'
+import { Context } from 'vm'
 import { Component, Vue } from 'nuxt-property-decorator'
 import { mapGetters } from 'vuex'
 import JwtUtil from '~/utils/jwt-util'
@@ -79,7 +80,6 @@ import User from '~/model/user'
 import Roles from '~/utils/roles'
 import SubmitData from '~/model/submit-data'
 import { NuxtAxiosInstance } from '@nuxtjs/axios'
-import axios from 'axios'
 
 const DEBUG: boolean = process.env.debug_mode !== undefined &&
   process.env.debug_mode.toLowerCase().trim() === 'true'
@@ -122,7 +122,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
       /* On ititial launch, the jwt will be available on req during SSR */
       if (req && req.body.id_token) {
         jwt = req.body.id_token
-        console.log('Initial LTI launch. Reading id_token from request: ' + jwt)
+        console.log('Initial LTI launch.')
       }
       else {
         console.log('Not an LTI launch. Must rehydrate data on client side...')
@@ -131,6 +131,15 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
     }
 
     return await AssignmentLti.initAssignment(jwt, context, DEBUG ? testData.testDataStudent.courseId : undefined)
+  },
+
+  fetch (context) {
+    /* Expect that OIDC login will be complete on initial LTI launch */
+    if (context.req && context.req.body.id_token &&
+        context.store.getters['LtiAuthStore/isLoggedIn'] === false) {
+      console.warn('Invalid lti launch. OIDC authentication failed. Redirecting to provider login page.')
+      context.redirect(process.env.canvas_path as string)
+    }
   },
 
   computed: {
@@ -203,16 +212,19 @@ export default class AssignmentLti extends Vue {
   public mounted () {
     if (this.idToken === null && !DEBUG) {
       this.idToken = window.sessionStorage.getItem('rr_session_token') // Get token from existing OIDC login
-
+      /* Case where there is no existing session token */
       if (this.idToken === null) {
-        console.warn('Could not rehydrate data on client side. No session token.')
+        console.warn('Could not rehydrate store on client side. No session token.')
         this.loadSuccess = false
+        window.alert('You must be logged in to Canvas to view this assignment. Please log in and try accessing the assignment again.')
+        window.location.replace(process.env.canvas_path as string)
       }
       else {
         this.initClient().then(() => {
+          /* Case where there is a session token but login has failed. Typically occurs if session has expired */
           if (this.isLoggedIn === false) {
-            window.alert('User is not logged in to Canvas. Redirecting to Canvas login page...')
-            // window.location.replace(process.env.canvas_path as string)
+            window.alert('You must be logged in to Canvas to view this assignment. Please log in and try accessing the assignment again.')
+            window.location.replace(process.env.canvas_path as string)
           }
           this.isCreated = true
         })
@@ -280,9 +292,11 @@ export default class AssignmentLti extends Vue {
     this.idToken = idToken as string
   }
 
-
+  /**
+   * Verifies OIDC session token and rehydrates store data on client.
+   */
   private async initClient () {
-    /* We need to rehydrate data on client refresh in this case */
+
     await this.loginClient(this.idToken)
 
     if (this.isLoggedIn) {

@@ -47,7 +47,8 @@ export default class CommentSubmitter extends Vue {
 
   private showSubmitButton : boolean = false;
 
-  mounted () {
+  beforeMount () {
+    console.log('Before Mount')
     window.addEventListener('load', () => {
       console.log('Initialising RichReview on client side.')
       this.initRichReview()

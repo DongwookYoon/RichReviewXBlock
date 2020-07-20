@@ -54,7 +54,8 @@ export default class RichReviewViewer extends Vue {
     this.user = User.parse(this.user_data)
   }
 
-  mounted () {
+  beforeMount () {
+    console.log('Before Mount')
     window.addEventListener('load', () => {
       console.log('Initialising RichReview on client side.')
       this.initRichReview()

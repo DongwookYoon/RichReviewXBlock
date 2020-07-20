@@ -214,6 +214,7 @@ export default class AssignmentLti extends Vue {
             window.alert('User is not logged in to Canvas. Redirecting to Canvas login page...')
             // window.location.replace(process.env.canvas_path as string)
           }
+          this.isCreated = true
         })
       }
     }
@@ -289,7 +290,6 @@ export default class AssignmentLti extends Vue {
       console.log('Rehydrated on client side.')
       this.rehydrate(data)
       this.initSubmitData()
-      this.isCreated = true
 
       if (this.loadSuccess === false) {
         alert('An error occurred while loading. Please try to refresh the page.\n' +

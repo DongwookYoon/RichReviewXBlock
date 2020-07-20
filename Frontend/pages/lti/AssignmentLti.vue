@@ -1,64 +1,66 @@
 <template>
-  <div v-if="isCreated===true">
-    <div v-if="debug===true">
-      <p>assignment.vue test </p>
-      <p>Component: {{ curComponent }}</p>
-    </div>
-
+  <div>
     <p v-if="loadSuccess === false">
       An error occurred while loading. Try to refresh the page. If this continues,
       please contact the RichReview system administrator.
     </p>
 
-    <!--if user role is student AND NOT an instructor AND no submission then  -->
-    <div
-      v-if="isUserStudent && !isUserInstructor
-        && submit_data.submitted === false"
-    >
-      <!-- If assignment type is document_submission then -->
-      <DocumentSubmitter
-        v-if="assignmentType==='document_submission'"
-        class="document-submitter"
-        :user_id="user.id"
-        :course_id="courseId"
-        :assignment_id="assignmentId"
+    <div v-if="isCreated===true">
+      <div v-if="debug===true">
+        <p>assignment.vue test </p>
+        <p>Component: {{ curComponent }}</p>
+      </div>
 
-        @submit-assignment="handleSubmit"
-      />
+      <!--if user role is student AND NOT an instructor AND no submission then  -->
+      <div
+        v-if="isUserStudent && !isUserInstructor
+          && submit_data.submitted === false"
+      >
+        <!-- If assignment type is document_submission then -->
+        <DocumentSubmitter
+          v-if="assignmentType==='document_submission'"
+          class="document-submitter"
+          :user_id="user.id"
+          :course_id="courseId"
+          :assignment_id="assignmentId"
 
-      <!--else if assignment_type is comment_submission then -->
-      <CommentSubmitter
-        v-else-if="assignmentType==='comment_submission'"
-        class="rich-review-view"
-        :title="assignmentTitle"
-        :user="user"
-        :submit_data="submit_data"
-        :course_id="courseId"
-        :assignment_id="assignmentId"
+          @submit-assignment="handleSubmit"
+        />
 
-        @submit-assignment="handleSubmit"
-      />
-    </div>
+        <!--else if assignment_type is comment_submission then -->
+        <CommentSubmitter
+          v-else-if="assignmentType==='comment_submission'"
+          class="rich-review-view"
+          :title="assignmentTitle"
+          :user="user"
+          :submit_data="submit_data"
+          :course_id="courseId"
+          :assignment_id="assignmentId"
 
-    <!-- Instructor viewing document submission assignment NOT in grading view -->
-    <div
-      v-else-if="assignmentType === 'document_submission' && isTemplate === true "
-      class="instructor-doc-submission-view"
-    >
-      <p>RichReview document submission assignment. Student submissions can be viewed in SpeedGrader.</p>
-    </div>
+          @submit-assignment="handleSubmit"
+        />
+      </div>
 
-    <!--RichReview viewer which handles comment submission template and grader view for an instructor OR TA,
+      <!-- Instructor viewing document submission assignment NOT in grading view -->
+      <div
+        v-else-if="assignmentType === 'document_submission' && isTemplate === true "
+        class="instructor-doc-submission-view"
+      >
+        <p>RichReview document submission assignment. Student submissions can be viewed in SpeedGrader.</p>
+      </div>
+
+      <!--RichReview viewer which handles comment submission template and grader view for an instructor OR TA,
        and student assignment review after submission for a student-->
-    <div v-else>
-      <RichReviewViewer
-        class="rich-review-view"
-        :submit_data="submit_data"
-        :user_data="user"
-        :assignment_type="assignmentType"
-        :course_id="courseId"
-        :is_template="isTemplate"
-      />
+      <div v-else>
+        <RichReviewViewer
+          class="rich-review-view"
+          :submit_data="submit_data"
+          :user_data="user"
+          :assignment_type="assignmentType"
+          :course_id="courseId"
+          :is_template="isTemplate"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -67,7 +69,6 @@
 /* eslint-disable no-multiple-empty-lines */
 import * as fs from 'fs'
 import * as path from 'path'
-import { Context } from 'vm'
 import { Component, Vue } from 'nuxt-property-decorator'
 import { mapGetters } from 'vuex'
 import JwtUtil from '~/utils/jwt-util'
@@ -156,7 +157,7 @@ export default class AssignmentLti extends Vue {
 
   private debug: boolean = DEBUG
   private isCreated: boolean = false
-  private loadSuccess: boolean = false
+  private loadSuccess : boolean = false
 
   /* Mappings for Vuex store getters */
   public isLoggedIn !: boolean
@@ -296,7 +297,6 @@ export default class AssignmentLti extends Vue {
    * Verifies OIDC session token and rehydrates store data on client.
    */
   private async initClient () {
-
     await this.loginClient(this.idToken)
 
     if (this.isLoggedIn) {
@@ -479,7 +479,6 @@ export default class AssignmentLti extends Vue {
         context.store.getters['LtiAuthStore/authUser'].id,
         context.$axios)
 
-      console.log(assignmentData)
       assignmentType = assignmentData.assignment.type
 
       const markedSubmitted : boolean = (assignmentData.submission_status !== undefined &&

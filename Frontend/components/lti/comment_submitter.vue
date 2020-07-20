@@ -30,7 +30,7 @@ import { Component, Prop, Emit, Vue } from 'nuxt-property-decorator'
 import SubmitData from '~/model/submit-data'
 import User from '~/model/user'
 
-if (typeof window !== 'undefined') {
+if (process.client) {
   // console.log('Loading my viewer helper')
   require('@/static/my_viewer_helper') // Only load RR viewer helper on client.
 }

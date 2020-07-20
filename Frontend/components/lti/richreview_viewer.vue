@@ -36,7 +36,7 @@ import SubmitData from '~/model/submit-data'
 
 // eslint-disable-next-line camelcase
 
-if (typeof window !== 'undefined') {
+if (process.client) {
   require('@/static/my_viewer_helper') // Only load RR viewer helper on client.
 }
 /* eslint-disable camelcase */

@@ -79,7 +79,7 @@ import User from '~/model/user'
 import Roles from '~/utils/roles'
 import SubmitData from '~/model/submit-data'
 import { NuxtAxiosInstance } from '@nuxtjs/axios';
-
+import axios from 'axios';
 
 const DEBUG: boolean = process.env.debug_mode !== undefined &&
   process.env.debug_mode.toLowerCase().trim() === 'true'
@@ -388,16 +388,14 @@ export default class AssignmentLti extends Vue {
   private loginClient (sessionJwt: string | null) {
     if (sessionJwt !== null) {
       /* Note proxy path is used to prevent issue with cross-origin request */
-      JwtUtil.getAndVerifyWithKeyset(sessionJwt as string,
-        '/canvas-jwk-keyset/', this.$axios).then((tokenData: any) => {
+      const tokenData : any = JwtUtil.getAndVerifyWithKeyset(sessionJwt as string,
+        '/canvas-jwk-keyset/', this.$axios).then(() => {
         if (tokenData === null) {
           console.warn('OIDC login failed. Invalid session token.')
           return
         }
 
         this.$store.dispatch('LtiAuthStore/logIn', { id: tokenData.sub, userName: 'Canvas User' }) // JWT 'sub' claim contains unique global user id.
-      }).catch((reason: any) => {
-        console.warn('Client-side OIDC session verification failed. Reason: ' + reason)
       })
     }
     else {

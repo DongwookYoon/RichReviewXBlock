@@ -78,8 +78,8 @@ import ApiHelper from '~/utils/api-helper'
 import User from '~/model/user'
 import Roles from '~/utils/roles'
 import SubmitData from '~/model/submit-data'
-import { NuxtAxiosInstance } from '@nuxtjs/axios';
-import axios from 'axios';
+import { NuxtAxiosInstance } from '@nuxtjs/axios'
+import axios from 'axios'
 
 const DEBUG: boolean = process.env.debug_mode !== undefined &&
   process.env.debug_mode.toLowerCase().trim() === 'true'
@@ -201,48 +201,28 @@ export default class AssignmentLti extends Vue {
 
 
   public mounted () {
-    let loadedOnServer: boolean = true
-
     if (this.idToken === null && !DEBUG) {
-      loadedOnServer = false
       this.idToken = window.sessionStorage.getItem('rr_session_token') // Get token from existing OIDC login
 
       if (this.idToken === null) {
         console.warn('Could not rehydrate data on client side. No session token.')
         this.loadSuccess = false
-        return
       }
       else {
-        this.loginClient(this.idToken)
+        this.initClient().then(() => {
+          if (this.isLoggedIn === false) {
+            window.alert('User is not logged in to Canvas. Redirecting to Canvas login page...')
+            // window.location.replace(process.env.canvas_path as string)
+          }
+        })
       }
-    }
-
-    if (this.isLoggedIn === false) {
-      window.alert('User is not logged in to Canvas. Redirecting to Canvas login page...')
-      // window.location.replace(process.env.canvas_path as string)
-    }
-
-    /* We need to rehydrate data on client refresh in this case */
-    if (loadedOnServer === false) {
-      AssignmentLti.initAssignment(this.idToken, this.$nuxt.context).then((data) => {
-        console.log('Rehydrated on client side.')
-        this.rehydrate(data)
-        this.initSubmitData()
-        this.isCreated = true
-      }).catch((err) => {
-        console.warn('Could not initialize assignment data on client side. Reason: ' + err)
-      }).finally(() => {
-        if (this.loadSuccess === false) {
-          alert('An error occurred while loading. Please try to refresh the page.\n' +
-                'If this error persists, contact the RichReview system administrator for assistance.')
-        }
-      })
     }
 
     else if (this.loadSuccess === false) {
       alert('An error occurred while loading. Please try to refresh the page.\n' +
         'If this error persists, contact the RichReview system administrator for assistance.')
     }
+
     /* Data has already been loaded on server side in this case, so we only need to
        init the submit data and store the session token in session storage */
     else {
@@ -297,6 +277,25 @@ export default class AssignmentLti extends Vue {
     this.courseId = courseId as string
     this.assignmentData = assignmentData
     this.idToken = idToken as string
+  }
+
+
+  private async initClient () {
+    /* We need to rehydrate data on client refresh in this case */
+    await this.loginClient(this.idToken)
+
+    if (this.isLoggedIn) {
+      const data: IAssignmentLtiData = await AssignmentLti.initAssignment(this.idToken, this.$nuxt.context)
+      console.log('Rehydrated on client side.')
+      this.rehydrate(data)
+      this.initSubmitData()
+      this.isCreated = true
+
+      if (this.loadSuccess === false) {
+        alert('An error occurred while loading. Please try to refresh the page.\n' +
+                'If this error persists, contact the RichReview system administrator for assistance.')
+      }
+    }
   }
 
   private async submitAssignment () {
@@ -385,18 +384,16 @@ export default class AssignmentLti extends Vue {
     this.submit_data.submissionID = submissionID
   }
 
-  private loginClient (sessionJwt: string | null) {
+  private async loginClient (sessionJwt: string | null) {
     if (sessionJwt !== null) {
       /* Note proxy path is used to prevent issue with cross-origin request */
-      const tokenData : any = JwtUtil.getAndVerifyWithKeyset(sessionJwt as string,
-        '/canvas-jwk-keyset/', this.$axios).then(() => {
-        if (tokenData === null) {
-          console.warn('OIDC login failed. Invalid session token.')
-          return
-        }
-
-        this.$store.dispatch('LtiAuthStore/logIn', { id: tokenData.sub, userName: 'Canvas User' }) // JWT 'sub' claim contains unique global user id.
-      })
+      const tokenData : any = await JwtUtil.getAndVerifyWithKeyset(sessionJwt as string,
+        '/canvas-jwk-keyset/', this.$axios)
+      if (tokenData === null) {
+        console.warn('OIDC login failed. Invalid session token.')
+        return
+      }
+      this.$store.dispatch('LtiAuthStore/logIn', { id: tokenData.sub, userName: 'Canvas User' }) // JWT 'sub' claim contains unique global user id.
     }
     else {
       console.warn('Could not login client, as no valid session token was found.')

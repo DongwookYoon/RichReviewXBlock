@@ -49,17 +49,17 @@ export default class RichReviewViewer extends Vue {
   @Prop({ required: true }) readonly is_template !: boolean;
 
   private user !: User
+  private rrInitialised : boolean = false
 
   created () {
     this.user = User.parse(this.user_data)
   }
 
-  beforeMount () {
-    console.log('Before Mount')
-    window.addEventListener('load', () => {
-      console.log('Initialising RichReview on client side.')
+  updated () {
+    console.log('updated hook fired')
+    if (this.rrInitialised === false) {
       this.initRichReview()
-    })
+    }
   }
 
   get isGraderView () {
@@ -91,6 +91,11 @@ export default class RichReviewViewer extends Vue {
   }
 
   private initRichReview () {
+    if (!loadRichReview) {
+      console.warn('loadRichReview() is not loaded')
+      return
+    }
+
     this.getViewerData().then((res) => {
       const instructorOrTa = this.user.isTa || this.user.isInstructor
 
@@ -113,6 +118,8 @@ export default class RichReviewViewer extends Vue {
           cdn_endpoint,
           true
         )
+
+        this.rrInitialised = true
 
         this.$forceUpdate()
       }

@@ -45,14 +45,15 @@ export default class CommentSubmitter extends Vue {
   @Prop({ required: true }) readonly course_id !: string
   @Prop({ required: true }) readonly assignment_id !: string
 
-  private showSubmitButton : boolean = false;
+  private showSubmitButton : boolean = false
+  private rrInitialised : boolean = false
 
-  beforeMount () {
-    console.log('Before Mount')
-    window.addEventListener('load', () => {
-      console.log('Initialising RichReview on client side.')
+
+  updated () {
+    console.log('updated hook fired')
+    if (this.rrInitialised === false) {
       this.initRichReview()
-    })
+    }
   }
 
   public async handleSubmit () {
@@ -99,6 +100,10 @@ export default class CommentSubmitter extends Vue {
   }
 
   private initRichReview () {
+    if (!loadRichReview) {
+      console.warn('loadRichReview() is not loaded')
+      return
+    }
     // Note updated changed backend so that it is possible to get the data
     // for the document based only on group id. It is simple to include the group id and
     // other data in the launch URL
@@ -121,14 +126,14 @@ export default class CommentSubmitter extends Vue {
       // eslint-disable-next-line camelcase
       const cdn_endpoint = res.data.cdn_endpoint
 
-      console.log(loadRichReview)
-
-      loadRichReview(
+     loadRichReview(
         encodeURIComponent(JSON.stringify(r2_ctx)),
         res.data.env,
         cdn_endpoint,
         true
       )
+
+      this.rrInitialised = true
 
       this.$forceUpdate()
     })

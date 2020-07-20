@@ -37,17 +37,7 @@ if (process.client) {
 
 /* eslint-disable camelcase */
 
-@Component({
-  head: {
-    script: [
-      {
-        src:
-          'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/js/bootstrap.min.js'
-      },
-      { src: '/my_viewer_helper.js', mode: 'client', body: true }
-    ]
-  }
-})
+@Component
 export default class CommentSubmitter extends Vue {
   @Prop({ required: true }) readonly title !: string
   @Prop({ required: true }) readonly user !: User
@@ -57,19 +47,12 @@ export default class CommentSubmitter extends Vue {
 
   private showSubmitButton : boolean = false;
 
-  head = {
-    script: [
-      {
-        src:
-          'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/js/bootstrap.min.js'
-      },
-      { src: '/my_viewer_helper.js', mode: 'client', body: true }
-    ]
-  }
-
   mounted () {
-    window.addEventListener('load', () => {
-      this.initRichReview()
+    document.addEventListener('readystatechange', () => {
+      if (document.readyState === 'complete') {
+        console.log(document.scripts)
+        this.initRichReview()
+      }
     })
   }
 

@@ -87,6 +87,15 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
 
 
 @Component({
+  head: {
+    script: [
+      {
+        src:
+          'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/js/bootstrap.min.js'
+      },
+      { src: '/my_viewer_helper.js', mode: 'client', body: true }
+    ]
+  },
   middleware: DEBUG ? '' : 'oidc_handler', // Handle OIDC login request
 
   components: {

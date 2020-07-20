@@ -40,17 +40,7 @@ if (process.client) {
   require('@/static/my_viewer_helper') // Only load RR viewer helper on client.
 }
 /* eslint-disable camelcase */
-@Component({
-  head: {
-    script: [
-      {
-        src:
-          'https://richreview2ca.azureedge.net/lib/bootstrap-3.2.0-dist/js/bootstrap.min.js'
-      },
-      { src: '/my_viewer_helper.js', mode: 'client', body: true }
-    ]
-  }
-})
+@Component
 export default class RichReviewViewer extends Vue {
   @Prop({ required: true }) readonly submit_data !: SubmitData;
   @Prop({ required: true }) readonly user_data !: User;
@@ -65,8 +55,10 @@ export default class RichReviewViewer extends Vue {
   }
 
   mounted () {
-    window.addEventListener('load', () => {
-      this.initRichReview()
+    document.addEventListener('readystatechange', () => {
+      if (document.readyState === 'complete') {
+        this.initRichReview()
+      }
     })
   }
 

@@ -50,7 +50,7 @@ export default class CommentSubmitter extends Vue {
   mounted () {
     document.addEventListener('readystatechange', () => {
       if (document.readyState === 'complete') {
-        console.log(document.scripts)
+        console.log('Initialising RichReview on client side.')
         this.initRichReview()
       }
     })
@@ -122,12 +122,16 @@ export default class CommentSubmitter extends Vue {
       // eslint-disable-next-line camelcase
       const cdn_endpoint = res.data.cdn_endpoint
 
+      console.log(loadRichReview)
+
       loadRichReview(
         encodeURIComponent(JSON.stringify(r2_ctx)),
         res.data.env,
         cdn_endpoint,
         true
       )
+
+      this.$forceUpdate()
     })
   }
 }

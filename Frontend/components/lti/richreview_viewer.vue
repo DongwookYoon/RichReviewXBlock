@@ -57,6 +57,7 @@ export default class RichReviewViewer extends Vue {
   mounted () {
     document.addEventListener('readystatechange', () => {
       if (document.readyState === 'complete') {
+        console.log('Initialising RichReview on client side.')
         this.initRichReview()
       }
     })
@@ -106,12 +107,15 @@ export default class RichReviewViewer extends Vue {
         // eslint-disable-next-line camelcase
         const cdn_endpoint = res.cdn_endpoint
 
+        console.log(loadRichReview)
         loadRichReview(
           encodeURIComponent(JSON.stringify(r2_ctx)),
           res.env,
           cdn_endpoint,
           true
         )
+
+        this.$forceUpdate()
       }
     }).catch((reason) => {
       console.warn('Loading RichReview failed. Reason: ' + reason)

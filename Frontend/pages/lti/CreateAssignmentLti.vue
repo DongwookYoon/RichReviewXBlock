@@ -245,7 +245,7 @@ export default class CreateAssignmentLti extends Vue {
       until_date,
       type: this.assignmentType,
       group_assignment: false,
-      allow_multiple_submissions: false,
+      allow_multiple_submissions: true,
       count_toward_final_grade: 0
     }
 

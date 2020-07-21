@@ -9,11 +9,14 @@
           class="assignment-info"
           @change="saved = false"
         >
-          <option value="document_submission">
-            PDF Document Submission
+          <option value="document_submission"
+            title="Students submit PDF documents. Instructors annotate students' document submissions.">
+            Student Document Submission
           </option>
-          <option value="comment_submission">
-            RichReview Comment Submission
+          <option value="comment_submission"
+            title="Students submit annotations on a copy of the PDF document template that the instructor uploads here.
+            Instructors can comment on student submissions with further annotations.">
+            Student Annotation Submission
           </option>
         </select>
       </div>

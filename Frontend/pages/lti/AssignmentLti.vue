@@ -606,10 +606,6 @@ interface IAssignmentLtiData {
     margin: 0
   }
 
-  .instructor-doc-submission-view {
-    margin: 1rem 1rem 1rem 2rem;
-  }
-
   .instructor-doc-submission-view p {
     font-size: 1.4rem;
   }

@@ -2,19 +2,19 @@
   <div
     v-if="(submit_data.submitted===true) || is_template"
   >
-    <div v-if="is_template===true" class="template-description">
+    <!-- Instructor viewing document submission assignment NOT in grading view -->
+    <div
+      v-if="assignment_type === 'document_submission' && is_template === true "
+      class="template-description"
+    >
+      <p>RichReview document submission assignment. Student submissions can be viewed in SpeedGrader.</p>
+    </div>
+
+    <div v-else-if="is_template===true" class="template-description">
       <p>
         RichReview annotation submission assignment. Edit the document template here to
         change what all students will see.
       </p>
-    </div>
-
-    <!-- Instructor viewing document submission assignment NOT in grading view -->
-    <div
-      v-else-if="assignmentType === 'document_submission' && is_template === true "
-      class="instructor-doc-submission-view"
-    >
-      <p>RichReview document submission assignment. Student submissions can be viewed in SpeedGrader.</p>
     </div>
 
     <no-ssr>

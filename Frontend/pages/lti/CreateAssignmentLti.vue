@@ -9,13 +9,17 @@
           class="assignment-info"
           @change="saved = false"
         >
-          <option value="document_submission"
-            title="Students submit PDF documents. Instructors annotate students' document submissions.">
+          <option
+            value="document_submission"
+            title="Students submit PDF documents. Instructors annotate students' document submissions."
+          >
             Student Document Submission
           </option>
-          <option value="comment_submission"
+          <option
+            value="comment_submission"
             title="Students submit annotations on a copy of the PDF document template that the instructor uploads here.
-            Instructors can comment on student submissions with further annotations.">
+            Instructors can comment on student submissions with further annotations."
+          >
             Student Annotation Submission
           </option>
         </select>
@@ -358,18 +362,6 @@ export default class CreateAssignmentLti extends Vue {
    */
   public async postBackToPlatform (ltiLink ?: string) {
     if (DEBUG) {
-      this.postbackJwt = await ApiHelper.createDeepLinkJWT({ test: 'test' },
-        this.user.id,
-        this.courseId,
-        this.$axios,
-        '1',
-        'example.com')
-
-      alert('>DEBUG: Successfully created assignment!')
-
-      Vue.nextTick().then(() => {
-        console.log('>DEBUG: lti response form would have JWT: ' + JSON.stringify(this.$refs.jwt_field))
-      })
       return
     }
 
@@ -476,6 +468,21 @@ export default class CreateAssignmentLti extends Vue {
 
     console.log(`Adding instructor to course if they do not exist in course.`)
     await ApiHelper.ensureUserEnrolled(courseData.id, user, $axios)
+  }
+
+  private async doTestSubmission () {
+    this.postbackJwt = await ApiHelper.createDeepLinkJWT({ test: 'test' },
+      this.user.id,
+      this.courseId,
+      this.$axios,
+      '1',
+      'example.com')
+
+    alert('>DEBUG: Successfully created assignment!')
+
+    Vue.nextTick().then(() => {
+      console.log('>DEBUG: lti response form would have JWT: ' + JSON.stringify(this.$refs.jwt_field))
+    })
   }
 
   private static async setupTest (context: any) {

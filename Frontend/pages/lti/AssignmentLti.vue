@@ -247,6 +247,12 @@ export default class AssignmentLti extends Vue {
 
       this.isCreated = true
     }
+
+    /* Add warning if users try to leave page without submitting when they have not yet submitted.
+    Most browsers will only show a generic warning, however. */
+    if (this.submit_data.submitted === false) {
+      window.addEventListener('beforeunload', () => 'You have not yet submitted the assignment. Do you want to exit?')
+    }
   }
 
 

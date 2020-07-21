@@ -11,14 +11,14 @@
         >
           <option
             value="document_submission"
-            title="Students submit PDF documents. Instructors annotate students' document submissions."
+            title="Students submit PDF documents. Instructors can annotate students' document submissions to give feedback."
           >
             Student Document Submission
           </option>
           <option
             value="comment_submission"
-            title="Students submit annotations on a copy of the PDF document template that the instructor uploads here.
-            Instructors can comment on student submissions with further annotations."
+            title="Students annotate a copy of the PDF document template that the instructor uploads here.
+Instructors can also annotate student submissions to give feedback."
           >
             Student Annotation Submission
           </option>

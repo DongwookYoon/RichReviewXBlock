@@ -361,7 +361,8 @@ export default class CreateAssignmentLti extends Vue {
    * See LTI spec for more details here: https://www.imsglobal.org/spec/lti-dl/v2p0#dfn-deep-linking-response-message
    */
   public async postBackToPlatform (ltiLink ?: string) {
-    if (DEBUG) {
+    if (DEBUG === true) {
+      await this.createTestResponse()
       return
     }
 
@@ -470,7 +471,7 @@ export default class CreateAssignmentLti extends Vue {
     await ApiHelper.ensureUserEnrolled(courseData.id, user, $axios)
   }
 
-  private async doTestSubmission () {
+  private async createTestResponse () {
     this.postbackJwt = await ApiHelper.createDeepLinkJWT({ test: 'test' },
       this.user.id,
       this.courseId,

@@ -560,10 +560,10 @@ export default class CreateAssignmentLti extends Vue {
   color: white;
   background-color: #0c2343;
   border-radius: 0.2rem;
-  width: 5rem;
+  min-width: 5rem;
   text-align: center;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1rem;
   padding:0.1rem;
 }
 

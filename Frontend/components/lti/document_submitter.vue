@@ -19,9 +19,17 @@
       </button>
     </div>
 
-    <div>
+    <div id="task-end-buttons">
       <button v-if="files.length > 0" id="submit-button" class="assignment-button" @click="submitAssignment()">
         Submit
+      </button>
+      <button
+        v-if="show_cancel_button === true"
+        id="cancel-button"
+        class="assignment-button"
+        @click="cancel"
+      >
+        Cancel
       </button>
     </div>
   </div>
@@ -38,12 +46,18 @@ export default class DocumentSubmitter extends Vue {
   @Prop({ required: true }) readonly user_id !: string;
   @Prop({ required: true }) readonly course_id !: string;
   @Prop({ required: true }) readonly assignment_id !: string
+  @Prop({ required: false }) readonly show_cancel_button !: boolean
 
   private files : File[] = [];
 
   @Emit('submit-assignment')
   public submitSuccess () {
     console.log('Assignment successfully submitted to RichReview!')
+  }
+
+  @Emit('cancel-submit')
+  public cancel () {
+    console.log('User cancelled submission.')
   }
 
   private async submitAssignment () {
@@ -149,6 +163,15 @@ export default class DocumentSubmitter extends Vue {
   font-size: 1.2rem;
 }
 
+#cancel-button {
+  background: darkred;
+  margin-left: 2rem;
+}
+
+#task-end-buttons {
+  margin-top: 8rem;
+}
+
 .assignment-button {
   color: white;
   background-color: #0c2343;
@@ -157,7 +180,7 @@ export default class DocumentSubmitter extends Vue {
   min-height: 1rem;
   text-align: center;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 1.3rem;
   padding:0.1 0.2rem;
 }
 
@@ -173,11 +196,6 @@ export default class DocumentSubmitter extends Vue {
 
 .file-input {
   display: none;
-}
-
-#submit-button{
-  margin-top: 8rem;
-  font-size: 1.4rem;
 }
 
 </style>

@@ -11,25 +11,45 @@
         <p>Component: {{ curComponent }}</p>
       </div>
 
-      <!--if user role is student AND NOT an instructor AND no submission then  -->
-      <div
-        v-if="isUserStudent && !isUserInstructor
-          && submit_data.submitted === false"
+      <!--This button to open/close a new submission will only shown if the
+          student has already submitted this assignment once and it is a
+          document submission assignment.-->
+      <button
+        v-if="assignmentType==='document_submission' &&
+          submit_data.submitted === true"
+        id="submit-button"
+        :class="{
+          new_submission_open: addingSubmission,
+          new_submission_button: true
+        }"
+        @click="addingSubmission = !addingSubmission"
       >
-        <!-- If assignment type is document_submission then -->
+        New Submission
+      </button>
+
+      <!--if user role is student AND NOT an instructor AND no submission or it is
+      an additional submission for an already submitted assignment  -->
+      <div
+        v-if="isUserStudent && !isUserInstructor &&
+          (submit_data.submitted === false || addingSubmission === true)"
+      >
+        <!-- If assignment type is document_submission and not submitted OR
+        there yis an additional submission being created then -->
         <DocumentSubmitter
           v-if="assignmentType==='document_submission'"
           class="document-submitter"
           :user_id="user.id"
           :course_id="courseId"
           :assignment_id="assignmentId"
-
+          :show_cancel_button="addingSubmission"
+          @cancel-submit="addingSubmission = !addingSubmission"
           @submit-assignment="handleSubmit"
         />
 
         <!--else if assignment_type is comment_submission then -->
         <CommentSubmitter
-          v-else-if="assignmentType==='comment_submission'"
+          v-else-if="assignmentType==='comment_submission' &&
+            submit_data.submitted === false"
           class="rich-review-view"
           :title="assignmentTitle"
           :user="user"
@@ -176,6 +196,7 @@ export default class AssignmentLti extends Vue {
   private isTemplate !: boolean
   private courseId !: string
   private idToken: string | null = null
+  private addingSubmission: boolean = false
   /* End Component data */
 
   /* Computed properties */
@@ -614,8 +635,23 @@ interface IAssignmentLtiData {
 <style scoped>
   @import url('@/static/nuxt_static_viewer/stylesheets/lti_style.css');
 
-  .document-submitter {
+  .document-submitter, .new_submission_button {
     margin: 1.5rem 2%;
+  }
+
+  .new_submission_button {
+    color: white;
+    background-color: #0c2343;
+    border-radius: 0.2rem;
+    min-width: 5rem;
+    text-align: center;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding:0.1rem;
+  }
+
+  .new_submission_open {
+    display: none
   }
 
   .rich-review-view {

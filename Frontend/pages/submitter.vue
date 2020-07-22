@@ -162,7 +162,7 @@ p {
 }
 
 #top-bar {
-  max-height: 2vh;
+  min-height: 5vh;
   display: flex;
   flex-flow: row wrap;
   justify-content: space-between;
@@ -177,9 +177,9 @@ p {
 }
 
 #submit-button {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   text-align: center;
-  margin: 0.25rem 0.5rem;
+  margin: 0.25rem 5rem;
 }
 
 

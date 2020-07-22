@@ -178,7 +178,7 @@ export default class AssignmentLti extends Vue {
   private idToken: string | null = null
   /* End Component data */
 
-
+  /* Computed properties */
   public get curComponent () : string {
     if (this.user.isInstructor ||
         this.user.isTa ||
@@ -209,6 +209,7 @@ export default class AssignmentLti extends Vue {
   get isUserInstructor () : boolean {
     return this.user.isInstructor
   }
+  /* End computed properties */
 
 
   public mounted () {
@@ -248,10 +249,10 @@ export default class AssignmentLti extends Vue {
       this.isCreated = true
     }
 
-    /* Add warning if users try to leave page without submitting when they have not yet submitted.
+    /* Add warning if students try to leave page without submitting when they have not yet submitted.
     Most browsers will only show a generic warning, however. */
-    if (this.submit_data.submitted === false) {
-      window.addEventListener('beforeunload', () => 'You have not yet submitted the assignment. Do you want to exit?')
+    if (!this.isUserTa && !this.isUserInstructor && this.submit_data.submitted === false) {
+      window.addEventListener('beforeunload', this.showLeaveWarning)
     }
   }
 
@@ -266,10 +267,18 @@ export default class AssignmentLti extends Vue {
       'please contact the system administrator.')
       return
     }
-
+    /* We don't want to show the warning message for route leave,
+       as assignment is already succesfully submitted by this point */
+    window.removeEventListener('beforeunload', this.showLeaveWarning)
     alert('Assignment submitted!')
 
     AssignmentLti.relaunch()
+  }
+
+
+  public showLeaveWarning (ev: BeforeUnloadEvent) {
+    ev.returnValue = 'You have not yet submitted the assignment. Do you want to exit?'
+    return 'You have not yet submitted the assignment. Do you want to exit?'
   }
 
   private rehydrate ({
@@ -299,6 +308,7 @@ export default class AssignmentLti extends Vue {
     this.assignmentData = assignmentData
     this.idToken = idToken as string
   }
+
 
   /**
    * Verifies OIDC session token and rehydrates store data on client.

@@ -180,7 +180,7 @@ export default class DocumentSubmitter extends Vue {
   min-height: 1rem;
   text-align: center;
   cursor: pointer;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   padding:0.1 0.2rem;
 }
 

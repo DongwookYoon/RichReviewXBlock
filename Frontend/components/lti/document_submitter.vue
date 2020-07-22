@@ -165,7 +165,10 @@ export default class DocumentSubmitter extends Vue {
 
 #cancel-button {
   background: darkred;
-  margin-left: 2rem;
+}
+
+#submit-button {
+  margin-right: 7.5rem;
 }
 
 #task-end-buttons {

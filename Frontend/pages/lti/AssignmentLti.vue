@@ -647,7 +647,7 @@ interface IAssignmentLtiData {
     text-align: center;
     cursor: pointer;
     font-size: 1.3rem;
-    padding:0.1rem 0.2rem;
+    padding: .25rem .3rem .1rem .3rem
   }
 
   .new_submission_open {

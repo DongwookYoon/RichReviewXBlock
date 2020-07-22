@@ -42,7 +42,7 @@
           :course_id="courseId"
           :assignment_id="assignmentId"
           :show_cancel_button="addingSubmission"
-          @cancel-submit="addingSubmission = !addingSubmission"
+          @cancel-submit="addingSubmission = false"
           @submit-assignment="handleSubmit"
         />
 

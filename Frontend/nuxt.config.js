@@ -41,7 +41,7 @@ const config = {
    * DO NOT add api key or privates keys here!!!
    **/
   env: {
-    debug_mode: 'true',
+    debug_mode: 'false',
     prod_url: 'https://richreview.net',
     default_canvas: 'canvas.instructure.com',
     canvas_oidc_endpoint: 'https://canvas.ubc.ca/api/lti/authorize_redirect',

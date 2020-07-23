@@ -18,6 +18,7 @@
         v-if="assignmentType==='document_submission' &&
           submit_data.submitted === true"
         id="submit-button"
+        title="Create a new submission that will replace your existing submission."
         :class="{
           new_submission_open: addingSubmission,
           new_submission_button: true
@@ -41,7 +42,7 @@
           :user_id="user.id"
           :course_id="courseId"
           :assignment_id="assignmentId"
-          :show_cancel_button="addingSubmission"
+          :is_adding_submission="addingSubmission"
           @cancel-submit="addingSubmission = false"
           @submit-assignment="handleSubmit"
         />

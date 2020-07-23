@@ -20,13 +20,20 @@
     </div>
 
     <div id="task-end-buttons">
-      <button v-if="files.length > 0" id="submit-button" class="assignment-button" @click="submitAssignment()">
+      <button
+        v-if="files.length > 0"
+        id="submit-button"
+        class="assignment-button"
+        :title="submitTooltip"
+        @click="submitAssignment()"
+      >
         Submit
       </button>
       <button
-        v-if="show_cancel_button === true"
+        v-if="is_adding_submission === true"
         id="cancel-button"
         class="assignment-button"
+        title="Cancel and revert to your existing submission."
         @click="cancel"
       >
         Cancel
@@ -46,9 +53,16 @@ export default class DocumentSubmitter extends Vue {
   @Prop({ required: true }) readonly user_id !: string;
   @Prop({ required: true }) readonly course_id !: string;
   @Prop({ required: true }) readonly assignment_id !: string
-  @Prop({ required: false }) readonly show_cancel_button !: boolean
+  @Prop({ required: false }) readonly is_adding_submission !: boolean
 
   private files : File[] = [];
+
+  public get submitTooltip (): string {
+    if (this.is_adding_submission === true) {
+      return 'Replace your existing submission.'
+    }
+    return 'Submit this document.'
+  }
 
   @Emit('submit-assignment')
   public submitSuccess () {
@@ -65,9 +79,12 @@ export default class DocumentSubmitter extends Vue {
       alert('One or more files is required for a submission.')
       return
     }
-    if (confirm('Are you sure you want to submit this assignment?') === false) {
+    const confirmMessage: string = `Are you sure you want to submit this assignment? ${
+      this.is_adding_submission === true ? 'This will replace your existing submission.' : ''}`
+    if (confirm(confirmMessage) === false) {
       return
     }
+
     const formData = new FormData()
     for (let i = 0; i < this.files.length; i++) {
       const file = this.files[i]

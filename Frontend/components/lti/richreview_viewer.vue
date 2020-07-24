@@ -1,6 +1,6 @@
 <template>
   <div v-if="mutedStudentView" class="template-description">
-    <p>The instructor has not yet made comments available for this assignment.</p>
+      <p>The instructor has not yet made comments available for this assignment.</p>
   </div>
 
   <div
@@ -25,21 +25,22 @@
     <div v-if="isGraderView" id="mute-panel">
       <button
         v-if="!muted"
-        id="mute-all-button"
         title="Mute all instructor comments for this assignment. Students will not see comments in RichReview."
+        id="mute-all-button"
         @click="muteAllSubmissions"
       >
         Mute Comments
       </button>
       <button
         v-if="muted===true"
-        id="unmute-all-button"
         title="Unmute all instructor comments for this assignment. Students will see comments in RichReview."
+        id="unmute-all-button"
         @click="unmuteAllSubmissions"
       >
         Unmute Comments
       </button>
     </div>
+
 
     <no-ssr>
       <body>
@@ -47,14 +48,12 @@
           <!--In template or student views, we want to avoid creating double scrollbars.
               Therefore, limit viewer height in those cases.-->
           <base href="/lti">
-          <div id="r2_app_page" align="center" />
-          <div id="r2_app_container" align="left" />
+          <div id="r2_app_page" align="center" :style="viewerStyle">
+            <div id="r2_app_container" align="left" :style="viewerStyle" />
+          </div>
         </div>
       </body>
     </no-ssr>
-  </div>
-  </body>
-  </no-ssr>
   </div>
 
   <div v-else class="template-description">
@@ -102,9 +101,16 @@ export default class RichReviewViewer extends Vue {
     return (this.is_template === false && (this.user.isInstructor || this.user.isTa))
   }
 
+  get viewerStyle () {
+    const height = '92.5vh'
+
+    return {
+      'max-height': height
+    }
+  }
 
   get mutedStudentView () {
-    if ((this.user.isInstructor || this.user.isTa)) {
+    if ( (this.user.isInstructor || this.user.isTa) ) {
       return false
     }
 
@@ -195,10 +201,6 @@ body {
   overflow: hidden;
 }
 
-#r2_app_page, #r2_app_container {
-  max-height: 92.5vh;
-}
-
 p {
   margin: 0;
 }
@@ -216,7 +218,7 @@ p {
 #unmute-all-button
 {
   font-size: 1.2rem;
-  background-color: #caced4;
+  background-color: #0c2343;
   border-radius: 0.5vh;
   color: white;
   padding-right: 0.5rem;

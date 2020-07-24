@@ -210,7 +210,7 @@ p {
 }
 
 .template-description p{
-  font-size: 1.4rem;
+  font-size: 1.55rem;
   margin: 1rem 2rem;
 }
 
@@ -221,7 +221,7 @@ p {
 #mute-all-button,
 #unmute-all-button
 {
-  font-size: 1rem;
+  font-size: 1.2rem;
   background-color: #0c2343;
   border-radius: 0.5vh;
   color: white;

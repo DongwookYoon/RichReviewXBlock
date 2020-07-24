@@ -3,7 +3,6 @@ import JwtUtil from '~/utils/jwt-util'
 
 // eslint-disable-next-line camelcase
 const oidc_handler: Middleware = async ({ store, req, $axios }) => {
-
   /* If user already logged in, simply return */
   if (store.getters['LtiAuthStore/isLoggedIn'] === true) {
     console.log('Already logged in')
@@ -39,7 +38,13 @@ const oidc_handler: Middleware = async ({ store, req, $axios }) => {
       return
     }
 
-    store.dispatch('LtiAuthStore/logIn', { id: tokenData.sub, userName: 'Canvas User' }) // JWT 'sub' claim contains unique global user id.
+    let userName: string = 'Canvas User'
+    const customData: any = tokenData['https://purl.imsglobal.org/spec/lti/claim/custom']
+    if (customData && customData.user_name) {
+      userName = tokenData['https://purl.imsglobal.org/spec/lti/claim/custom'].user_name
+    }
+
+    store.dispatch('LtiAuthStore/logIn', { id: tokenData.sub, userName }) // JWT 'sub' claim contains unique global user id.
   }
 
   /* Verify the OIDC state. Invalidate login if session state doesn't match state in the Nuxt store */

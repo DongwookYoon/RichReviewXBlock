@@ -1,6 +1,10 @@
 <template>
+  <div v-if="mutedStudentView" class="template-description">
+      <p>The instructor has not yet made comments available for this assignment.</p>
+  </div>
+
   <div
-    v-if="(submit_data.submitted===true) || is_template"
+    v-else-if="(submit_data.submitted===true) || is_template"
   >
     <!-- Instructor viewing document submission assignment NOT in grading view -->
     <div
@@ -56,7 +60,7 @@
     </no-ssr>
   </div>
 
-  <div v-else>
+  <div v-else class="template-description">
     <p>This assignment has not yet been submitted.</p>
   </div>
 </template>
@@ -107,6 +111,18 @@ export default class RichReviewViewer extends Vue {
     return {
       'max-height': height
     }
+  }
+
+  get mutedStudentView () {
+    if (this.user.isInstructor || this.user.isTa) {
+      return false
+    }
+
+    if (this.submit_data.submitted === true && this.muted === true) {
+      return true
+    }
+
+    return false
   }
 
   public async unmuteAllSubmissions () {

@@ -11,7 +11,7 @@
     </div>
 
     <!-- Show buttons to mute all instructor comments in grader and template views -->
-    <div v-if="isGraderView || is_template" id="mute-panel">
+    <div v-if="isGraderView" id="mute-panel">
       <p>
         <b>Muted: </b> {{ muted ? 'Yes': 'No' }}
       </p>

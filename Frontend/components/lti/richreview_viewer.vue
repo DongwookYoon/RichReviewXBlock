@@ -13,17 +13,25 @@
     <!-- Show buttons to mute all instructor comments in grader and template views -->
     <div v-if="isGraderView || is_template" id="mute-panel">
       <p>
-        <b>Muted: </b> {{muted ? 'Yes': 'No'}}
+        <b>Muted: </b> {{ muted ? 'Yes': 'No' }}
       </p>
 
-      <button v-if="!muted" id="mute-all-button" @click="muteAllSubmissions">
-        Mute All
+      <button
+        v-if="!muted"
+        title="Mute all instructor comments for this assignment."
+        id="mute-all-button"
+        @click="muteAllSubmissions"
+      >
+        Mute Comments
       </button>
-      <button v-if="muted===true" id="unmute-all-button" @click="unmuteAllSubmissions">
-        Unmute All
+      <button
+        v-if="muted===true"
+        title="Unmute all instructor comments for this assignment."
+        id="unmute-all-button"
+        @click="unmuteAllSubmissions"
+      >
+        Unmute Comments
       </button>
-
-
     </div>
 
     <div v-else-if="is_template===true" class="template-description">
@@ -108,7 +116,7 @@ export default class RichReviewViewer extends Vue {
 
     this.muted = false
 
-    alert ('All instructor comments for this assignment are unmuted.')
+    alert('All instructor comments for this assignment are unmuted.')
   }
 
   public async muteAllSubmissions () {
@@ -140,7 +148,7 @@ export default class RichReviewViewer extends Vue {
         this.muted = res.muted
       }
 
-      console.log('Is muted? ' + this.muted)
+      console.log('Is muted? ' + res.muted)
       /* Only show RichReview UI if the assignment has been submitted OR
          if the user is an instructor and the assignment is a comment submission assignment.
          In the latter case, the instructor or TA will see the document template which they
@@ -154,14 +162,14 @@ export default class RichReviewViewer extends Vue {
         // eslint-disable-next-line camelcase
         const cdn_endpoint = res.cdn_endpoint
 
+        console.log(res)
+
         loadRichReview(
           encodeURIComponent(JSON.stringify(r2_ctx)),
           res.env,
           cdn_endpoint,
           true
         )
-
-        console.log(res)
 
         this.rrInitialised = true
 

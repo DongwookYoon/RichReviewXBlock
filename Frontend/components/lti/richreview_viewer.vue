@@ -114,7 +114,7 @@ export default class RichReviewViewer extends Vue {
   }
 
   get mutedStudentView () {
-    if (this.user.isInstructor || this.user.isTa) {
+    if ( (this.user.isInstructor || this.user.isTa) ) {
       return false
     }
 
@@ -161,11 +161,9 @@ export default class RichReviewViewer extends Vue {
     ).then((res) => {
       const instructorOrTa = this.user.isTa || this.user.isInstructor
 
-      if (this.isGraderView || this.is_template) {
-        this.muted = res.muted
-      }
+      this.muted = res.muted
 
-      console.log('Is muted? ' + res.muted)
+      console.log('Is muted? ' + this.muted)
       /* Only show RichReview UI if the assignment has been submitted OR
          if the user is an instructor and the assignment is a comment submission assignment.
          In the latter case, the instructor or TA will see the document template which they

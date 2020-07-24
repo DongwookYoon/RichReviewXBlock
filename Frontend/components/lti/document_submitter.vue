@@ -61,7 +61,7 @@ export default class DocumentSubmitter extends Vue {
     if (this.is_adding_submission === true) {
       return 'Replace your existing submission.'
     }
-    return 'Submit this document.'
+    return 'Submit this assignment.'
   }
 
   @Emit('submit-assignment')

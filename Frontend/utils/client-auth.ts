@@ -45,7 +45,6 @@ export default class ClientAuth {
    *  server during the initial authorization request.
    */
   public static async getDeepLinkingToken (code : string, redirectUri: string, clientId: string) {
-    // const scope = 'https://purl.imsglobal.org/spec/lti-dl/scope/ltideeplinkingresponse'
     const tokenResp = await axios.post(
       `https://${process.env.backend}:3000/api/jwt/oauth_code_token`,
       {

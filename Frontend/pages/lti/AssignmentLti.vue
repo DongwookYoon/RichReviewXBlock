@@ -15,7 +15,8 @@
           student has already submitted this assignment once and it is a
           document submission assignment.-->
       <button
-        v-if="assignmentType==='document_submission' &&
+        v-if=" isUserStudent && !isUserInstructor &&
+          assignmentType==='document_submission' &&
           submit_data.submitted === true"
         id="submit-button"
         title="Create a new submission that will replace your existing submission."

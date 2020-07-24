@@ -11,11 +11,19 @@
     </div>
 
     <!-- Show buttons to mute all instructor comments in grader and template views -->
-    <div v-if="isGraderView || is_template" id="muted-div">
-
-      <p v-if="muted === true" id="muted">
-        Instructor comments for this assignment are muted.
+    <div v-if="isGraderView || is_template" id="mute-panel">
+      <p>
+        <b>Muted: </b> {{muted ? 'Yes': 'No'}}
       </p>
+
+      <button v-if="!muted" id="mute-all-button" @click="muteAllSubmissions">
+        Mute All
+      </button>
+      <button v-if="muted===true" id="unmute-all-button" @click="unmuteAllSubmissions">
+        Unmute All
+      </button>
+
+
     </div>
 
     <div v-else-if="is_template===true" class="template-description">
@@ -92,6 +100,28 @@ export default class RichReviewViewer extends Vue {
     }
   }
 
+  public async unmuteAllSubmissions () {
+    await ApiHelper.unmuteAllSubmissions(this.course_id,
+      this.assignment_id,
+      this.user.id,
+      this.$axios)
+
+    this.muted = false
+
+    alert ('All instructor comments for this assignment are unmuted.')
+  }
+
+  public async muteAllSubmissions () {
+    await ApiHelper.muteAllSubmissions(this.course_id,
+      this.assignment_id,
+      this.user.id,
+      this.$axios)
+
+    this.muted = true
+
+    alert('All instructor comments for this assignment are muted.')
+  }
+
   private initRichReview () {
     if (!loadRichReview) {
       console.warn('loadRichReview() is not loaded')
@@ -103,17 +133,11 @@ export default class RichReviewViewer extends Vue {
       this.submit_data.groupID as string,
       this.user_data.id,
       this.$axios
-    ).then(async (res) => {
+    ).then((res) => {
       const instructorOrTa = this.user.isTa || this.user.isInstructor
 
       if (this.isGraderView || this.is_template) {
-        this.muted = await ApiHelper.isMuted(
-          this.course_id,
-          this.assignment_id,
-          this.user.id,
-          this.submit_data.submissionID as string,
-          this.$axios
-        )
+        this.muted = res.muted
       }
 
       console.log('Is muted? ' + this.muted)
@@ -136,6 +160,8 @@ export default class RichReviewViewer extends Vue {
           cdn_endpoint,
           true
         )
+
+        console.log(res)
 
         this.rrInitialised = true
 
@@ -163,6 +189,28 @@ p {
 .template-description p{
   font-size: 1.4rem;
   margin: 1rem 2rem;
+}
+
+#mute-panel {
+  margin: 1rem;
+}
+
+#mute-all-button,
+#unmute-all-button
+{
+  font-size: 1rem;
+  background-color: #0c2343;
+  border-radius: 0.5vh;
+  color: white;
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
+  margin: 0.5rem 0;
+}
+#mute-all-button {
+  background-color: rgb(224, 23, 0);
+}
+#unmute-all-button {
+  background-color: rgb(50, 197, 28)
 }
 
 </style>

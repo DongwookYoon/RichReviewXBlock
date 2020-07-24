@@ -3,32 +3,62 @@ import User from '~/model/user'
 import { NuxtAxiosInstance } from '@nuxtjs/axios'
 
 export default class ApiHelper {
+
   /**
-   * Determines if a particular assignment in a course has instructor comments muted.
-   *
+   * Mute all submissions for a given assignment.
+   * @param courseId
+   * @param assignmentId
+   * @param userId
+   * @param $axios
    */
-  public static async isMuted (courseId: string,
+  static async muteAllSubmissions (courseId: string,
     assignmentId: string,
     userId: string,
-    submissionId: string,
-    $axios: NuxtAxiosInstance) : Promise<boolean> {
-    const graderData: any = await $axios.$get(
-          `https://${process.env.backend}:3000/courses/${
-           courseId
-        }/assignments/${assignmentId}/grader/${
-          submissionId
-        }`,
-          {
-            headers: {
-              Authorization: userId
-            },
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false
-            })
-          }
+    $axios: NuxtAxiosInstance) {
+    await $axios.$post(
+        `https://${process.env.backend}:3000/courses/${
+          courseId
+          }/assignments/${assignmentId}/mute_all`,
+        {},
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: userId
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
     )
+  }
 
-    return (graderData.muted === true)
+
+  /**
+   * Unmute all submissions for a given assignment.
+   * @param courseId
+   * @param assignmentId
+   * @param userId
+   * @param $axios
+   */
+  static async unmuteAllSubmissions (courseId: string,
+    assignmentId: string,
+    userId: string,
+    $axios: NuxtAxiosInstance) {
+    await $axios.$post(
+        `https://${process.env.backend}:3000/courses/${
+          courseId
+          }/assignments/${assignmentId}/unmute_all`,
+        {},
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: userId
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+    )
   }
 
 

@@ -41,7 +41,7 @@ const oidc_handler: Middleware = async ({ store, req, $axios }) => {
     let userName: string = 'Canvas User'
     const customData: any = tokenData['https://purl.imsglobal.org/spec/lti/claim/custom']
     if (customData && customData.user_name) {
-      userName = tokenData['https://purl.imsglobal.org/spec/lti/claim/custom'].user_name
+      userName = tokenData['https://purl.imsglobal.org/spec/lti/claim/custom'].user_name as string
     }
 
     store.dispatch('LtiAuthStore/logIn', { id: tokenData.sub, userName }) // JWT 'sub' claim contains unique global user id.

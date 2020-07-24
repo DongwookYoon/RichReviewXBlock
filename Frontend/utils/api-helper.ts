@@ -3,6 +3,84 @@ import User from '~/model/user'
 import { NuxtAxiosInstance } from '@nuxtjs/axios'
 
 export default class ApiHelper {
+
+  /**
+   * Mute all submissions for a given assignment.
+   * @param courseId
+   * @param assignmentId
+   * @param userId
+   * @param $axios
+   */
+  static async muteAllSubmissions (courseId: string,
+    assignmentId: string,
+    userId: string,
+    $axios: NuxtAxiosInstance) {
+    await $axios.$post(
+        `https://${process.env.backend}:3000/courses/${
+          courseId
+          }/assignments/${assignmentId}/mute_all`,
+        {},
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: userId
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+    )
+  }
+
+
+  /**
+   * Unmute all submissions for a given assignment.
+   * @param courseId
+   * @param assignmentId
+   * @param userId
+   * @param $axios
+   */
+  static async unmuteAllSubmissions (courseId: string,
+    assignmentId: string,
+    userId: string,
+    $axios: NuxtAxiosInstance) {
+    await $axios.$post(
+        `https://${process.env.backend}:3000/courses/${
+          courseId
+          }/assignments/${assignmentId}/unmute_all`,
+        {},
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: userId
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+    )
+  }
+
+
+  public static async getViewerData (courseId: string,
+    groupId: string,
+    userId: string,
+    $axios: NuxtAxiosInstance) : Promise<any> {
+    return await $axios.$get(
+        `https://${process.env.backend}:3000/courses/${
+          courseId
+        }/groups/${groupId}`,
+        {
+          headers: {
+            Authorization: userId
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+    )
+  }
+
   /**
    * Checks that a user exists within RichReview and creates that user
    * if it does not exist.

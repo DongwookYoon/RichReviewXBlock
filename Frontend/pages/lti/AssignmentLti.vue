@@ -15,7 +15,8 @@
           student has already submitted this assignment once and it is a
           document submission assignment.-->
       <button
-        v-if="assignmentType==='document_submission' &&
+        v-if=" isUserStudent && !isUserInstructor &&
+          assignmentType==='document_submission' &&
           submit_data.submitted === true"
         id="submit-button"
         title="Create a new submission that will replace your existing submission."
@@ -71,6 +72,7 @@
           :user_data="user"
           :assignment_type="assignmentType"
           :course_id="courseId"
+          :assignment_id="assignmentId"
           :is_template="isTemplate"
         />
       </div>
@@ -276,6 +278,8 @@ export default class AssignmentLti extends Vue {
     if (!this.isUserTa && !this.isUserInstructor && this.submit_data.submitted === false) {
       window.addEventListener('beforeunload', this.showLeaveWarning)
     }
+
+    console.log(this.assignmentData)
   }
 
 
@@ -429,12 +433,14 @@ export default class AssignmentLti extends Vue {
 
     const submissionID : string | null =
         query.submission_id ? query.submission_id as string
-          : AssignmentLti.getQueryVariable('submission_id', this.submit_data.viewerLink)
+          : this.assignmentData.grader_submission_id
 
     this.submit_data.accessCode = accessCode
     this.submit_data.docID = docID
     this.submit_data.groupID = groupID
     this.submit_data.submissionID = submissionID
+
+    console.log(JSON.stringify(this.submit_data))
   }
 
   private async loginClient (sessionJwt: string | null) {

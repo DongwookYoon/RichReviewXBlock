@@ -10,6 +10,30 @@
       <p>RichReview document submission assignment. Student submissions can be viewed in SpeedGrader.</p>
     </div>
 
+    <!-- Show buttons to mute all instructor comments in grader and template views -->
+    <div v-if="isGraderView || is_template" id="mute-panel">
+      <p>
+        <b>Muted: </b> {{ muted ? 'Yes': 'No' }}
+      </p>
+
+      <button
+        v-if="!muted"
+        title="Mute all instructor comments for this assignment."
+        id="mute-all-button"
+        @click="muteAllSubmissions"
+      >
+        Mute Comments
+      </button>
+      <button
+        v-if="muted===true"
+        title="Unmute all instructor comments for this assignment."
+        id="unmute-all-button"
+        @click="unmuteAllSubmissions"
+      >
+        Unmute Comments
+      </button>
+    </div>
+
     <div v-else-if="is_template===true" class="template-description">
       <p>
         RichReview annotation submission assignment. Edit the document template here to
@@ -30,17 +54,18 @@
       </body>
     </no-ssr>
   </div>
+
   <div v-else>
     <p>This assignment has not yet been submitted.</p>
   </div>
 </template>
 
 <script lang="ts">
-import https from 'https'
 import 'reflect-metadata' // Must import this before nuxt property decorators
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import User from '~/model/user'
 import SubmitData from '~/model/submit-data'
+import ApiHelper from '~/utils/api-helper'
 
 // eslint-disable-next-line camelcase
 
@@ -54,17 +79,18 @@ export default class RichReviewViewer extends Vue {
   @Prop({ required: true }) readonly user_data !: User;
   @Prop({ required: true }) readonly course_id !: string;
   @Prop({ required: true }) readonly assignment_type !: string;
+  @Prop({ required: true }) readonly assignment_id !: string;
   @Prop({ required: true }) readonly is_template !: boolean;
 
   private user !: User
   private rrInitialised : boolean = false
+  private muted: boolean = false
 
   created () {
     this.user = User.parse(this.user_data)
   }
 
   updated () {
-    console.log('updated hook fired')
     if (this.rrInitialised === false) {
       this.initRichReview()
     }
@@ -82,20 +108,26 @@ export default class RichReviewViewer extends Vue {
     }
   }
 
-  private getViewerData () : Promise<any> {
-    return this.$axios.$get(
-        `https://${process.env.backend}:3000/courses/${
-          this.course_id
-        }/groups/${this.submit_data.groupID}`,
-        {
-          headers: {
-            Authorization: this.user.id
-          },
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false
-          })
-        }
-    )
+  public async unmuteAllSubmissions () {
+    await ApiHelper.unmuteAllSubmissions(this.course_id,
+      this.assignment_id,
+      this.user.id,
+      this.$axios)
+
+    this.muted = false
+
+    alert('All instructor comments for this assignment are unmuted.')
+  }
+
+  public async muteAllSubmissions () {
+    await ApiHelper.muteAllSubmissions(this.course_id,
+      this.assignment_id,
+      this.user.id,
+      this.$axios)
+
+    this.muted = true
+
+    alert('All instructor comments for this assignment are muted.')
   }
 
   private initRichReview () {
@@ -104,13 +136,24 @@ export default class RichReviewViewer extends Vue {
       return
     }
 
-    this.getViewerData().then((res) => {
+    ApiHelper.getViewerData(
+      this.course_id,
+      this.submit_data.groupID as string,
+      this.user_data.id,
+      this.$axios
+    ).then((res) => {
       const instructorOrTa = this.user.isTa || this.user.isInstructor
 
+      if (this.isGraderView || this.is_template) {
+        this.muted = res.muted
+      }
+
+      console.log('Is muted? ' + res.muted)
       /* Only show RichReview UI if the assignment has been submitted OR
          if the user is an instructor and the assignment is a comment submission assignment.
          In the latter case, the instructor or TA will see the document template which they
          can modify, if desired. */
+
       if ((this.submit_data.submitted === true) ||
             (this.is_template && instructorOrTa)) {
         // eslint-disable-next-line camelcase
@@ -119,7 +162,8 @@ export default class RichReviewViewer extends Vue {
         // eslint-disable-next-line camelcase
         const cdn_endpoint = res.cdn_endpoint
 
-        console.log(loadRichReview)
+        console.log(res)
+
         loadRichReview(
           encodeURIComponent(JSON.stringify(r2_ctx)),
           res.env,
@@ -153,6 +197,28 @@ p {
 .template-description p{
   font-size: 1.4rem;
   margin: 1rem 2rem;
+}
+
+#mute-panel {
+  margin: 1rem;
+}
+
+#mute-all-button,
+#unmute-all-button
+{
+  font-size: 1rem;
+  background-color: #0c2343;
+  border-radius: 0.5vh;
+  color: white;
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
+  margin: 0.5rem 0;
+}
+#mute-all-button {
+  background-color: rgb(224, 23, 0);
+}
+#unmute-all-button {
+  background-color: rgb(50, 197, 28)
 }
 
 </style>

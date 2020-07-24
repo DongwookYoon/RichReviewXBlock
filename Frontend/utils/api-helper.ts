@@ -4,6 +4,54 @@ import { NuxtAxiosInstance } from '@nuxtjs/axios'
 
 export default class ApiHelper {
   /**
+   * Determines if a particular assignment in a course has instructor comments muted.
+   *
+   */
+  public static async isMuted (courseId: string,
+    assignmentId: string,
+    userId: string,
+    submissionId: string,
+    $axios: NuxtAxiosInstance) : Promise<boolean> {
+    const graderData: any = await $axios.$get(
+          `https://${process.env.backend}:3000/courses/${
+           courseId
+        }/assignments/${assignmentId}/grader/${
+          submissionId
+        }`,
+          {
+            headers: {
+              Authorization: userId
+            },
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false
+            })
+          }
+    )
+
+    return (graderData.muted === true)
+  }
+
+
+  public static async getViewerData (courseId: string,
+    groupId: string,
+    userId: string,
+    $axios: NuxtAxiosInstance) : Promise<any> {
+    return await $axios.$get(
+        `https://${process.env.backend}:3000/courses/${
+          courseId
+        }/groups/${groupId}`,
+        {
+          headers: {
+            Authorization: userId
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+    )
+  }
+
+  /**
    * Checks that a user exists within RichReview and creates that user
    * if it does not exist.
    * @param user User with id to check

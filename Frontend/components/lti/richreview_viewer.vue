@@ -10,6 +10,13 @@
       <p>RichReview document submission assignment. Student submissions can be viewed in SpeedGrader.</p>
     </div>
 
+    <div v-else-if="is_template===true" class="template-description">
+      <p>
+        RichReview annotation submission assignment. Edit the document template here to
+        change what all students will see.
+      </p>
+    </div>
+
     <!-- Show buttons to mute all instructor comments in grader and template views -->
     <div v-if="isGraderView" id="mute-panel">
       <p>
@@ -34,12 +41,6 @@
       </button>
     </div>
 
-    <div v-if="is_template===true" class="template-description">
-      <p>
-        RichReview annotation submission assignment. Edit the document template here to
-        change what all students will see.
-      </p>
-    </div>
 
     <no-ssr>
       <body>

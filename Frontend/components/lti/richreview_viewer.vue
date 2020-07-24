@@ -34,7 +34,7 @@
       </button>
     </div>
 
-    <div v-else-if="is_template===true" class="template-description">
+    <div v-if="is_template===true" class="template-description">
       <p>
         RichReview annotation submission assignment. Edit the document template here to
         change what all students will see.

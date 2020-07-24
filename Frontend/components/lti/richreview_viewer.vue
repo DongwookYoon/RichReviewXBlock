@@ -23,13 +23,9 @@
 
     <!-- Show buttons to mute all instructor comments in grader and template views -->
     <div v-if="isGraderView" id="mute-panel">
-      <p>
-        <b>Muted: </b> {{ muted ? 'Yes': 'No' }}
-      </p>
-
       <button
         v-if="!muted"
-        title="Mute all instructor comments for this assignment."
+        title="Mute all instructor comments for this assignment. Students will not see comments in RichReview."
         id="mute-all-button"
         @click="muteAllSubmissions"
       >
@@ -37,7 +33,7 @@
       </button>
       <button
         v-if="muted===true"
-        title="Unmute all instructor comments for this assignment."
+        title="Unmute all instructor comments for this assignment. Students will see comments in RichReview."
         id="unmute-all-button"
         @click="unmuteAllSubmissions"
       >

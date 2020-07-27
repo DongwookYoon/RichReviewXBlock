@@ -15,10 +15,8 @@
           student has already submitted this assignment once and it is a
           document submission assignment.-->
       <button
-        v-if=" isUserStudent && !isUserInstructor &&
-          assignmentType==='document_submission' &&
-          submit_data.submitted === true"
-        id="submit-button"
+        v-if="showNewSubmissionButton"
+        id="new-submission-button"
         title="Create a new submission that will replace your existing submission."
         :class="{
           new_submission_open: addingSubmission,
@@ -29,14 +27,45 @@
         New Submission
       </button>
 
+      <div v-if="isTemplate === true">
+        <button
+          v-if="assignmentType==='comment_submission'"
+          id="toggle-template-button"
+          title="{{ !templateOpen ? 'Open the document template to edit what all students will see.' : '' }}"
+          :class="{
+            template_open: templateOpen,
+            template_toggle_button: true
+          }"
+          @click="templateOpen = !templateOpen"
+        >
+          {{ templateOpen ? 'Close Template' : 'Open Template' }}
+        </button>
+
+        <SubmissionsDashboard />
+      </div>
+
+      <!--RichReview viewer which provides template or grader view for an instructor OR TA,
+       and student assignment review after submission for a student -->
+      <div v-if="showViewer">
+        <RichReviewViewer
+          class="rich-review-view"
+          :submit_data="submit_data"
+          :user_data="user"
+          :assignment_type="assignmentType"
+          :course_id="courseId"
+          :assignment_id="assignmentId"
+          :is_template="isTemplate"
+        />
+      </div>
+
       <!--if user role is student AND NOT an instructor AND no submission or it is
       an additional submission for an already submitted assignment  -->
       <div
-        v-if="isUserStudent && !isUserInstructor &&
+        v-else-if="isUserStudent && !isUserInstructor &&
           (submit_data.submitted === false || addingSubmission === true)"
       >
         <!-- If assignment type is document_submission and not submitted OR
-        there yis an additional submission being created then -->
+        there is an additional submission being created then -->
         <DocumentSubmitter
           v-if="assignmentType==='document_submission'"
           class="document-submitter"
@@ -62,21 +91,9 @@
           @submit-assignment="handleSubmit"
         />
       </div>
-
-      <!--RichReview viewer which handles comment submission template and grader view for an instructor OR TA,
-       and student assignment review after submission for a student-->
-      <div v-else>
-        <RichReviewViewer
-          class="rich-review-view"
-          :submit_data="submit_data"
-          :user_data="user"
-          :assignment_type="assignmentType"
-          :course_id="courseId"
-          :assignment_id="assignmentId"
-          :is_template="isTemplate"
-        />
-      </div>
     </div>
+  </div>
+  </div>
   </div>
 </template>
 
@@ -90,6 +107,7 @@ import JwtUtil from '~/utils/jwt-util'
 import DocumentSubmitter from '~/components/lti/document_submitter.vue'
 import CommentSubmitter from '~/components/lti/comment_submitter.vue'
 import RichReviewViewer from '~/components/lti/richreview_viewer.vue'
+import SubmissionsDashboard from '~/components/lti/submissions_dashboard.vue'
 // eslint-disable-next-line camelcase
 import ApiHelper from '~/utils/api-helper'
 import User from '~/model/user'
@@ -116,7 +134,8 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
   components: {
     DocumentSubmitter,
     CommentSubmitter,
-    RichReviewViewer
+    RichReviewViewer,
+    SubmissionsDashboard
   },
 
   async asyncData (context) {
@@ -200,6 +219,7 @@ export default class AssignmentLti extends Vue {
   private courseId !: string
   private idToken: string | null = null
   private addingSubmission: boolean = false
+  private templateOpen: boolean = false
   /* End Component data */
 
   /* Computed properties */
@@ -232,6 +252,34 @@ export default class AssignmentLti extends Vue {
 
   get isUserInstructor () : boolean {
     return this.user.isInstructor
+  }
+
+  get showNewSubmissionButton () : boolean {
+    if (this.isUserStudent && !this.isUserInstructor &&
+          this.assignmentType === 'document_submission' &&
+          this.submit_data.submitted === true) {
+      return true
+    }
+
+    return false
+  }
+
+  get showViewer () : boolean {
+    /* Template view where instructor has opened templated */
+    if (this.isTemplate === true && this.templateOpen === true) {
+      return true
+    }
+    /* Instructor grader view */
+    if (this.isUserInstructor === true && !this.isTemplate) {
+      return true
+    }
+    /* Student assignment review */
+    if (this.isUserStudent && (!this.isUserTa || !this.isUserInstructor) &&
+      this.submit_data.submitted === true) {
+      return true
+    }
+
+    return false
   }
   /* End computed properties */
 
@@ -646,7 +694,7 @@ interface IAssignmentLtiData {
     margin: 1.5rem 2%;
   }
 
-  .new_submission_button {
+  .new_submission_button, .template_toggle_button {
     color: white;
     background-color: #0c2343;
     border-radius: 0.2rem;
@@ -655,6 +703,10 @@ interface IAssignmentLtiData {
     cursor: pointer;
     font-size: 1.3rem;
     padding: .25rem .3rem .1rem .3rem
+  }
+
+  .template_open {
+    background: darkred;
   }
 
   .new_submission_open {

@@ -6,41 +6,6 @@
   <div
     v-else-if="(submit_data.submitted===true) || is_template"
   >
-    <!-- Instructor viewing document submission assignment NOT in grading view -->
-    <div
-      v-if="assignment_type === 'document_submission' && is_template === true "
-      class="template-description"
-    >
-      <p>RichReview document submission assignment. Student submissions can be viewed in SpeedGrader.</p>
-    </div>
-
-    <div v-else-if="is_template===true" class="template-description">
-      <p>
-        RichReview annotation submission assignment. Edit the document template here to
-        change what all students will see.
-      </p>
-    </div>
-
-    <!-- Show buttons to mute all instructor comments in grader and template views -->
-    <div v-if="isGraderView" id="mute-panel">
-      <button
-        v-if="!muted"
-        title="Mute all instructor comments for this assignment. Students will not see comments in RichReview."
-        id="mute-all-button"
-        @click="muteAllSubmissions"
-      >
-        Mute Comments
-      </button>
-      <button
-        v-if="muted===true"
-        title="Unmute all instructor comments for this assignment. Students will see comments in RichReview."
-        id="unmute-all-button"
-        @click="unmuteAllSubmissions"
-      >
-        Unmute Comments
-      </button>
-    </div>
-
 
     <no-ssr>
       <body>

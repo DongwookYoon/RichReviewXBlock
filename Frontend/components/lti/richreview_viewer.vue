@@ -48,6 +48,7 @@ export default class RichReviewViewer extends Vue {
   @Prop({ required: true }) readonly assignment_id !: string;
   @Prop({ required: true }) readonly is_template !: boolean;
 
+
   private user !: User
   private rrInitialised : boolean = false
   private muted: boolean = false
@@ -86,27 +87,6 @@ export default class RichReviewViewer extends Vue {
     return false
   }
 
-  public async unmuteAllSubmissions () {
-    await ApiHelper.unmuteAllSubmissions(this.course_id,
-      this.assignment_id,
-      this.user.id,
-      this.$axios)
-
-    this.muted = false
-
-    alert('All instructor comments for this assignment are unmuted.')
-  }
-
-  public async muteAllSubmissions () {
-    await ApiHelper.muteAllSubmissions(this.course_id,
-      this.assignment_id,
-      this.user.id,
-      this.$axios)
-
-    this.muted = true
-
-    alert('All instructor comments for this assignment are muted.')
-  }
 
   private initRichReview () {
     if (!loadRichReview) {

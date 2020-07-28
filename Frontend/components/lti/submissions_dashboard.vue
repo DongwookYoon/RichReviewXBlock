@@ -1,9 +1,9 @@
 /* eslint-disable camelcase */
 <template>
   <div id="content">
-    <div v-if="isGraderView" id="mute-panel">
+    <div id="mute-panel" v-if="anySubmitted">
       <button
-        v-if="!muted"
+        v-if="!allMuted"
         id="mute-all-button"
         title="Mute all instructor comments for this assignment. Students will not see comments in RichReview."
         @click="muteAllSubmissions"
@@ -11,7 +11,7 @@
         Mute Comments
       </button>
       <button
-        v-if="muted===true"
+        v-if="allMuted===true"
         id="unmute-all-button"
         title="Unmute all instructor comments for this assignment. Students will see comments in RichReview."
         @click="unmuteAllSubmissions"
@@ -67,15 +67,15 @@
           <td class="mute">
             <no-ssr placeholder="Loading...">
               <ToggleButton
-                v-if="!(s.submission_status === 'Not Submitted')"
-                :value="s.muted"
+                v-if="isSubmitted(s)"
+                :value="isMuted(s)"
                 :sync="true"
                 :labels="{checked: 'Muted', unchecked: 'Unmuted'}"
                 :width="90"
                 :height="27"
                 :font-size="13"
                 :color="{checked: '#e01700', unchecked: '#32c51c'}"
-                @change="s.muted ? unmuteSubmission(s.submission_id, index) : muteSubmission(s.submission_id, index)"
+                @change="s.muted === true ? unmuteSubmission(s.submission_id, index) : muteSubmission(s.submission_id, index)"
               />
             </no-ssr>
           </td>
@@ -83,12 +83,9 @@
       </tbody>
     </table>
   </div>
-
-  </div>
 </template>
 
 <script lang="ts">
-import https from 'https'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import User from '~/model/user'
 import ApiHelper from '~/utils/api-helper'
@@ -99,7 +96,7 @@ export default class SubmissionsDashboard extends Vue {
   @Prop({ required: true }) readonly user_data !: User;
   @Prop({ required: true }) readonly assignment_id !: string;
   @Prop({ required: true }) readonly course_id !: string;
-  @Prop({ required: true }) readonly is_template !: boolean;
+  @Prop({ required: true }) readonly group_id !: string;
 
   private user !: User
   private submissions: [] = []
@@ -107,25 +104,32 @@ export default class SubmissionsDashboard extends Vue {
   created () {
     this.user = User.parse(this.user_data)
 
-    ApiHelper.getAllSubmissions(this.course_id,
-      this.assignment_id,
-      this.user.id,
-      this.$axios).then((data: any) => {
-      this.submissions = data.submissions
-    }).catch((err: any) => {
-      console.warn('Error loading submissions dashboard. Reason: ' + err)
+    this.loadSubmissions().then((submissions) => {
+      this.submissions = submissions as any
+
+      console.log(submissions)
     })
   }
 
-  //TODO Update this to get the correct path to a submission for lti assignments. ****
+  // TODO Update this to get the correct path to a submission for lti assignments. ****
   goToSubmission (submissionId: string, link: string) {
     if (link !== '') {
       window.open(
-          `/edu/courses/${this.$route.params.course_id}/assignments/${
-            this.$route.params.assignment_id
-          }/submissions/${submissionId}/grader?${link}`
+          `/lti/assignments?${link
+            }&assignment_id=${
+              encodeURIComponent(this.assignment_id)
+          }&submission_id=${
+            encodeURIComponent(submissionId)
+          }`
       )
     }
+  }
+
+  async loadSubmissions () {
+    return await ApiHelper.getAllSubmissions(this.course_id,
+      this.assignment_id,
+      this.user.id,
+      this.$axios)
   }
 
   async muteAllSubmissions () {
@@ -181,12 +185,48 @@ export default class SubmissionsDashboard extends Vue {
     const target = this.submissions[index] as any
     target.muted = false
   }
+
+  isMuted (s: any): boolean {
+    if (s.muted === true) {
+      return true
+    }
+    return false
+  }
+
+  isSubmitted (s: any): boolean {
+    const status: string = (s.submission_status as string).toUpperCase()
+
+    if (status === 'NOT SUBMITTED') {
+      return false
+    }
+
+    return true
+  }
+
+  get allMuted (): boolean {
+    for (const sub of this.submissions) {
+      if ((sub as any).muted !== true) {
+        return false
+      }
+    }
+    return true
+  }
+
+  get anySubmitted (): boolean {
+    for (const sub of this.submissions) {
+      if (this.isSubmitted(sub)) {
+        return true
+      }
+    }
+    return false
+  }
+
 }
 
 </script>
 
 <style scoped>
-@import '../node_modules/bootstrap/dist/css/bootstrap.css';
+@import '~/node_modules/bootstrap/dist/css/bootstrap.css';
 
 p {
   margin: 0;

@@ -155,26 +155,6 @@ p {
   margin: 1rem 2rem;
 }
 
-#mute-panel {
-  margin: .25rem 1rem;
-}
 
-#mute-all-button,
-#unmute-all-button
-{
-  font-size: 1.2rem;
-  background-color: #0c2343;
-  border-radius: 0.5vh;
-  color: white;
-  padding-right: 0.5rem;
-  padding-left: 0.5rem;
-  margin: 0.5rem 0;
-}
-#mute-all-button {
-  background-color: rgb(224, 23, 0);
-}
-#unmute-all-button {
-  background-color: rgb(50, 197, 28)
-}
 
 </style>

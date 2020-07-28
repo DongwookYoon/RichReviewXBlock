@@ -31,7 +31,7 @@
         <button
           v-if="assignmentType==='comment_submission'"
           id="toggle-template-button"
-          title="{{ !templateOpen ? 'Open the document template to edit what all students will see.' : '' }}"
+          title="The document template allows the instructor to change what all students will see."
           :class="{
             template_open: templateOpen,
             template_toggle_button: true
@@ -41,7 +41,12 @@
           {{ templateOpen ? 'Close Template' : 'Open Template' }}
         </button>
 
-        <SubmissionsDashboard />
+        <SubmissionsDashboard
+          :user_data="user"
+          :course_id="courseId"
+          :assignment_id="assignmentId"
+          :group_id="submit_data.groupID"
+        />
       </div>
 
       <!--RichReview viewer which provides template or grader view for an instructor OR TA,

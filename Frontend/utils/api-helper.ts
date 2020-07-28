@@ -7,7 +7,7 @@ export default class ApiHelper {
     assignmentId: string,
     userId: string,
     $axios: NuxtAxiosInstance) {
-    await $axios.$get(
+    const response = await $axios.$get(
         `https://${process.env.backend}:3000/courses/${
           courseId
         }/assignments/${assignmentId}/submissions`,
@@ -20,6 +20,23 @@ export default class ApiHelper {
           })
         }
     )
+
+    return response.submissions
+  }
+
+
+  static async isAssignmentMuted (courseId: string,
+    groupId: string,
+    userId: string,
+    $axios: NuxtAxiosInstance
+  ) {
+    const res = await ApiHelper.getViewerData(courseId,
+      groupId,
+      userId,
+      $axios
+    )
+
+    return res.muted
   }
 
   /**

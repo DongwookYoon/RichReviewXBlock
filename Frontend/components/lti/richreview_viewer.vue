@@ -107,8 +107,6 @@ export default class RichReviewViewer extends Vue {
 
       this.muted = res.muted
 
-      console.log(res)
-
       console.log('Is muted? ' + this.muted)
       /* Only show RichReview UI if the assignment has been submitted OR
          if the user is an instructor and the assignment is a comment submission assignment.
@@ -122,8 +120,6 @@ export default class RichReviewViewer extends Vue {
         r2_ctx.auth = { id: this.user.id, name: this.user.userName }
         // eslint-disable-next-line camelcase
         const cdn_endpoint = res.cdn_endpoint
-
-        console.log(res)
 
         loadRichReview(
           encodeURIComponent(JSON.stringify(r2_ctx)),

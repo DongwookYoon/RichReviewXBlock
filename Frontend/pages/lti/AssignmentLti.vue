@@ -334,7 +334,6 @@ export default class AssignmentLti extends Vue {
       window.addEventListener('beforeunload', this.showLeaveWarning)
     }
 
-    console.log(this.assignmentData)
   }
 
 
@@ -495,7 +494,6 @@ export default class AssignmentLti extends Vue {
     this.submit_data.groupID = groupID
     this.submit_data.submissionID = submissionID
 
-    console.log(JSON.stringify(this.submit_data))
   }
 
   private async loginClient (sessionJwt: string | null) {

@@ -3,6 +3,93 @@ import User from '~/model/user'
 import { NuxtAxiosInstance } from '@nuxtjs/axios'
 
 export default class ApiHelper {
+  static async getAllSubmissions (courseId: string,
+    assignmentId: string,
+    userId: string,
+    $axios: NuxtAxiosInstance) {
+    const response = await $axios.$get(
+        `https://${process.env.backend}:3000/courses/${
+          courseId
+        }/assignments/${assignmentId}/submissions`,
+        {
+          headers: {
+            Authorization: userId
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+          })
+        }
+    )
+
+    return response.submissions
+  }
+
+
+  static async isAssignmentMuted (courseId: string,
+    groupId: string,
+    userId: string,
+    $axios: NuxtAxiosInstance
+  ) {
+    const res = await ApiHelper.getViewerData(courseId,
+      groupId,
+      userId,
+      $axios
+    )
+
+    return res.muted
+  }
+
+  /**
+   * Mutes the submission of the specified assignment with a matching
+   * submissionId
+   * @param courseId
+   * @param assignmentId
+   * @param submissionId
+   * @param userId
+   * @param $axios
+   */
+  static async muteSubmission (courseId: string,
+    assignmentId: string,
+    submissionId: string,
+    userId: string,
+    $axios: NuxtAxiosInstance) {
+    await $axios.$post(
+      `https://${process.env.backend}:3000/courses/${
+        courseId}/assignments/${assignmentId}/mute/${submissionId}`,
+      {},
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: userId
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+  }
+
+  static async unmuteSubmission (courseId: string,
+    assignmentId: string,
+    submissionId: string,
+    userId: string,
+    $axios: NuxtAxiosInstance) {
+    await $axios.$post(
+      `https://${process.env.backend}:3000/courses/${
+        courseId
+        }/assignments/${assignmentId}/unmute/${submissionId}`,
+      {},
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: userId
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
+    )
+  }
 
   /**
    * Mute all submissions for a given assignment.
@@ -32,7 +119,6 @@ export default class ApiHelper {
     )
   }
 
-
   /**
    * Unmute all submissions for a given assignment.
    * @param courseId
@@ -60,7 +146,6 @@ export default class ApiHelper {
         }
     )
   }
-
 
   public static async getViewerData (courseId: string,
     groupId: string,

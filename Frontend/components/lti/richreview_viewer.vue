@@ -1,63 +1,33 @@
 <template>
-  <div v-if="mutedStudentView" class="template-description">
+  <div id="richreview_viewer">
+    <div v-if="mutedStudentView" class="template-description">
       <p>The instructor has not yet made comments available for this assignment.</p>
-  </div>
+    </div>
 
-  <div
-    v-else-if="(submit_data.submitted===true) || is_template"
-  >
-    <!-- Instructor viewing document submission assignment NOT in grading view -->
+    <div v-if="is_template===true" class="template-description">
+      <p>Edit the document template below to change what all students will see.</p>
+    </div>
+
     <div
-      v-if="assignment_type === 'document_submission' && is_template === true "
-      class="template-description"
+      v-if="(submit_data.submitted===true) || is_template"
     >
-      <p>RichReview document submission assignment. Student submissions can be viewed in SpeedGrader.</p>
-    </div>
-
-    <div v-else-if="is_template===true" class="template-description">
-      <p>
-        RichReview annotation submission assignment. Edit the document template here to
-        change what all students will see.
-      </p>
-    </div>
-
-    <!-- Show buttons to mute all instructor comments in grader and template views -->
-    <div v-if="isGraderView" id="mute-panel">
-      <button
-        v-if="!muted"
-        title="Mute all instructor comments for this assignment. Students will not see comments in RichReview."
-        id="mute-all-button"
-        @click="muteAllSubmissions"
-      >
-        Mute Comments
-      </button>
-      <button
-        v-if="muted===true"
-        title="Unmute all instructor comments for this assignment. Students will see comments in RichReview."
-        id="unmute-all-button"
-        @click="unmuteAllSubmissions"
-      >
-        Unmute Comments
-      </button>
-    </div>
-
-
-    <no-ssr>
-      <body>
-        <div class="content_body">
-          <!--In template or student views, we want to avoid creating double scrollbars.
-              Therefore, limit viewer height in those cases.-->
-          <base href="/lti">
-          <div id="r2_app_page" align="center" :style="viewerStyle">
-            <div id="r2_app_container" align="left" :style="viewerStyle" />
+      <no-ssr>
+        <body>
+          <div class="content_body">
+            <!--In template or student views, we want to avoid creating double scrollbars.
+                Therefore, limit viewer height in those cases.-->
+            <base href="/lti">
+            <div id="r2_app_page" align="center" :style="viewerStyle">
+              <div id="r2_app_container" align="left" :style="viewerStyle" />
+            </div>
           </div>
-        </div>
-      </body>
-    </no-ssr>
-  </div>
+        </body>
+      </no-ssr>
+    </div>
 
-  <div v-else class="template-description">
-    <p>This assignment has not yet been submitted.</p>
+    <div v-else class="template-description">
+      <p>This assignment has not yet been submitted.</p>
+    </div>
   </div>
 </template>
 
@@ -110,7 +80,7 @@ export default class RichReviewViewer extends Vue {
   }
 
   get mutedStudentView () {
-    if ( (this.user.isInstructor || this.user.isTa) ) {
+    if ((this.user.isInstructor || this.user.isTa)) {
       return false
     }
 
@@ -119,28 +89,6 @@ export default class RichReviewViewer extends Vue {
     }
 
     return false
-  }
-
-  public async unmuteAllSubmissions () {
-    await ApiHelper.unmuteAllSubmissions(this.course_id,
-      this.assignment_id,
-      this.user.id,
-      this.$axios)
-
-    this.muted = false
-
-    alert('All instructor comments for this assignment are unmuted.')
-  }
-
-  public async muteAllSubmissions () {
-    await ApiHelper.muteAllSubmissions(this.course_id,
-      this.assignment_id,
-      this.user.id,
-      this.$axios)
-
-    this.muted = true
-
-    alert('All instructor comments for this assignment are muted.')
   }
 
   private initRichReview () {
@@ -172,8 +120,6 @@ export default class RichReviewViewer extends Vue {
         r2_ctx.auth = { id: this.user.id, name: this.user.userName }
         // eslint-disable-next-line camelcase
         const cdn_endpoint = res.cdn_endpoint
-
-        console.log(res)
 
         loadRichReview(
           encodeURIComponent(JSON.stringify(r2_ctx)),
@@ -208,28 +154,6 @@ p {
 .template-description p{
   font-size: 1.55rem;
   margin: 1rem 2rem;
-}
-
-#mute-panel {
-  margin: .25rem 1rem;
-}
-
-#mute-all-button,
-#unmute-all-button
-{
-  font-size: 1.2rem;
-  background-color: #0c2343;
-  border-radius: 0.5vh;
-  color: white;
-  padding-right: 0.5rem;
-  padding-left: 0.5rem;
-  margin: 0.5rem 0;
-}
-#mute-all-button {
-  background-color: rgb(224, 23, 0);
-}
-#unmute-all-button {
-  background-color: rgb(50, 197, 28)
 }
 
 </style>

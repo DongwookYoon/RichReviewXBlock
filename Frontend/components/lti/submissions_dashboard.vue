@@ -291,7 +291,7 @@ table {
 }
 
 #submissions-table {
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: #0c2343;
 }
 

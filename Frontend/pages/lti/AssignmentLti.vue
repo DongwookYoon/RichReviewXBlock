@@ -96,11 +96,7 @@
           :is_template="isTemplate"
         />
       </div>
-
-
     </div>
-  </div>
-  </div>
   </div>
 </template>
 
@@ -227,6 +223,7 @@ export default class AssignmentLti extends Vue {
   private idToken: string | null = null
   private addingSubmission: boolean = false
   private templateOpen: boolean = false
+  private isMuted: boolean = false
   /* End Component data */
 
   /* Computed properties */
@@ -257,11 +254,16 @@ export default class AssignmentLti extends Vue {
     return this.user.isTa
   }
 
-  get isUserInstructor () : boolean {
+  get isUserInstructor (): boolean {
     return this.user.isInstructor
   }
 
-  get showNewSubmissionButton () : boolean {
+  get showNewSubmissionButton (): boolean {
+    if (this.isMuted === true) {
+      return false
+    }
+
+
     if (this.isUserStudent && !this.isUserInstructor &&
           this.assignmentType === 'document_submission' &&
           this.submit_data.submitted === true) {
@@ -269,6 +271,7 @@ export default class AssignmentLti extends Vue {
     }
 
     return false
+
   }
 
   get showViewer () : boolean {
@@ -288,7 +291,9 @@ export default class AssignmentLti extends Vue {
 
     return false
   }
+
   /* End computed properties */
+
 
 
   public mounted () {
@@ -333,7 +338,6 @@ export default class AssignmentLti extends Vue {
     if (!this.isUserTa && !this.isUserInstructor && this.submit_data.submitted === false) {
       window.addEventListener('beforeunload', this.showLeaveWarning)
     }
-
   }
 
 
@@ -494,6 +498,9 @@ export default class AssignmentLti extends Vue {
     this.submit_data.groupID = groupID
     this.submit_data.submissionID = submissionID
 
+    this.getMuteStatus().then((muteStatus: boolean) => {
+      this.isMuted = muteStatus
+    })
   }
 
   private async loginClient (sessionJwt: string | null) {
@@ -648,6 +655,22 @@ export default class AssignmentLti extends Vue {
       idToken: jwt
     }
   }
+
+  private async getMuteStatus () {
+    try {
+      const muted: boolean = await ApiHelper.isAssignmentMuted(this.courseId,
+        this.submit_data.groupID as string,
+        this.user.id,
+        this.$axios)
+      return muted
+    }
+    catch (ex) {
+      console.warn('Could not get mute status for this assignment. Reason: ' + ex)
+    }
+    return false
+  }
+
+
 
   private static getQueryVariable (variable : string, route : string) : string | null {
     const vars : string[] = route.split('&')

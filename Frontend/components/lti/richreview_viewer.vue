@@ -110,11 +110,15 @@ export default class RichReviewViewer extends Vue {
       this.muted = res.muted
 
       console.log('Is muted? ' + this.muted)
+      /* Do not show viewer for muted assignment for students */
+      if (this.muted === true && !instructorOrTa) {
+        return
+      }
+
       /* Only show RichReview UI if the assignment has been submitted OR
          if the user is an instructor and the assignment is a comment submission assignment.
          In the latter case, the instructor or TA will see the document template which they
          can modify, if desired. */
-
       if ((this.submit_data.submitted === true) ||
             (this.is_template && instructorOrTa)) {
         // eslint-disable-next-line camelcase

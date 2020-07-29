@@ -49,24 +49,10 @@
         />
       </div>
 
-      <!--RichReview viewer which provides template or grader view for an instructor OR TA,
-       and student assignment review after submission for a student -->
-      <div v-if="showViewer">
-        <RichReviewViewer
-          class="rich-review-view"
-          :submit_data="submit_data"
-          :user_data="user"
-          :assignment_type="assignmentType"
-          :course_id="courseId"
-          :assignment_id="assignmentId"
-          :is_template="isTemplate"
-        />
-      </div>
-
       <!--if user role is student AND NOT an instructor AND no submission or it is
       an additional submission for an already submitted assignment  -->
       <div
-        v-else-if="isUserStudent && !isUserInstructor &&
+        v-if="isUserStudent && !isUserInstructor &&
           (submit_data.submitted === false || addingSubmission === true)"
       >
         <!-- If assignment type is document_submission and not submitted OR
@@ -96,6 +82,22 @@
           @submit-assignment="handleSubmit"
         />
       </div>
+
+      <!--RichReview viewer which provides template or grader view for an instructor OR TA,
+       and student assignment review after submission for a student -->
+      <div v-else-if="showViewer">
+        <RichReviewViewer
+          class="rich-review-view"
+          :submit_data="submit_data"
+          :user_data="user"
+          :assignment_type="assignmentType"
+          :course_id="courseId"
+          :assignment_id="assignmentId"
+          :is_template="isTemplate"
+        />
+      </div>
+
+
     </div>
   </div>
   </div>

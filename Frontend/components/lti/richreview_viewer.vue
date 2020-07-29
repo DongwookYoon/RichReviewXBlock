@@ -1,28 +1,34 @@
 <template>
-  <div v-if="mutedStudentView" class="template-description">
-      <p>The instructor has not yet made comments available for this assignment.</p>
-  </div>
+  <div id="richreview_viewer">
+    <div v-if="mutedStudentView" class="template-description">
+        <p>The instructor has not yet made comments available for this assignment.</p>
+    </div>
 
-  <div
-    v-else-if="(submit_data.submitted===true) || is_template"
-  >
+    <div v-if="is_template===true">
+      <p>Edit the document template below to change what all students will see.</p>
+    </div>
 
-    <no-ssr>
-      <body>
-        <div class="content_body">
-          <!--In template or student views, we want to avoid creating double scrollbars.
-              Therefore, limit viewer height in those cases.-->
-          <base href="/lti">
-          <div id="r2_app_page" align="center" :style="viewerStyle">
-            <div id="r2_app_container" align="left" :style="viewerStyle" />
+    <div
+      v-else-if="(submit_data.submitted===true) || is_template"
+    >
+
+      <no-ssr>
+        <body>
+          <div class="content_body">
+            <!--In template or student views, we want to avoid creating double scrollbars.
+                Therefore, limit viewer height in those cases.-->
+            <base href="/lti">
+            <div id="r2_app_page" align="center" :style="viewerStyle">
+              <div id="r2_app_container" align="left" :style="viewerStyle" />
+            </div>
           </div>
-        </div>
-      </body>
-    </no-ssr>
-  </div>
+        </body>
+      </no-ssr>
+    </div>
 
-  <div v-else class="template-description">
-    <p>This assignment has not yet been submitted.</p>
+    <div v-else class="template-description">
+      <p>This assignment has not yet been submitted.</p>
+    </div>
   </div>
 </template>
 

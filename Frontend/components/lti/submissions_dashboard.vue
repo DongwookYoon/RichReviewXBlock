@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 <template>
   <div id="content">
-    <div id="mute-panel" v-if="anySubmitted">
+    <div v-if="anySubmitted" id="mute-panel">
       <button
         v-if="!allMuted"
         id="mute-all-button"
@@ -77,6 +77,7 @@
                 :color="{checked: '#e01700', unchecked: '#32c51c'}"
                 @change="s.muted === true ? unmuteSubmission(s.submission_id, index) : muteSubmission(s.submission_id, index)"
               />
+              <span v-else>-</span>
             </no-ssr>
           </td>
         </tr>
@@ -203,15 +204,24 @@ export default class SubmissionsDashboard extends Vue {
     return true
   }
 
+  /**
+   * Are all possible submissions muted? Since it is not possible
+   * to mute if the student has not submitted the assignment,
+   * unsubmitted assignments will be ignored.
+   */
   get allMuted (): boolean {
     for (const sub of this.submissions) {
-      if ((sub as any).muted !== true) {
+      const s: any = sub as any
+      if (this.isSubmitted(s) && s.muted !== true) {
         return false
       }
     }
     return true
   }
 
+  /**
+   * Check if there are any assignments submitted whatsoever.
+   */
   get anySubmitted (): boolean {
     for (const sub of this.submissions) {
       if (this.isSubmitted(sub)) {
@@ -220,7 +230,6 @@ export default class SubmissionsDashboard extends Vue {
     }
     return false
   }
-
 }
 
 </script>
@@ -246,36 +255,22 @@ table {
 }
 
 #mute-all-button,
-#unmute-all-button,
-.mute-button,
-.unmute-button,
-.grader-button {
-  font-size: 1rem;
+#unmute-all-button
+{
+  font-size: 1.05rem;
   background-color: #0c2343;
   border-radius: 0.5vh;
   color: white;
   padding-right: 0.5rem;
   padding-left: 0.5rem;
   margin-bottom: 1rem;
+  border-radius: 5px;
 }
 #mute-all-button {
   background-color: rgb(224, 23, 0);
 }
 #unmute-all-button {
   background-color: rgb(50, 197, 28)
-}
-#mute-all-button,
-#unmute-all-button {
-  border-radius: 10px;
-}
-.mute-button {
-  background-color: #e01700;
-  color: white;
-}
-
-.unmute-button {
-  background-color: #32c51c;
-  color: white;
 }
 
 .submission-row:hover {

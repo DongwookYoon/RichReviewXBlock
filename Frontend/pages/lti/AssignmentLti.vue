@@ -271,7 +271,6 @@ export default class AssignmentLti extends Vue {
     }
 
     return false
-
   }
 
   get showViewer () : boolean {
@@ -326,11 +325,9 @@ export default class AssignmentLti extends Vue {
     /* Data has already been loaded on server side in this case, so we only need to
        init the submit data and store the session token in session storage */
     else {
-      this.initSubmitData()
-      window.sessionStorage.setItem('rr_session_token', this.idToken as string)
-      console.log('Set the session token to: ' + this.idToken)
-
-      this.isCreated = true
+      this.initSubmitData().then(() => {
+        window.sessionStorage.setItem('rr_session_token', this.idToken as string)
+      })
     }
 
     /* Add warning if students try to leave page without submitting when they have not yet submitted.
@@ -404,7 +401,7 @@ export default class AssignmentLti extends Vue {
       const data: IAssignmentLtiData = await AssignmentLti.initAssignment(this.idToken, this.$nuxt.context)
       console.log('Rehydrated on client side.')
       this.rehydrate(data)
-      this.initSubmitData()
+      await this.initSubmitData()
 
       if (this.loadSuccess === false) {
         alert('An error occurred while loading. Please try to refresh the page.\n' +
@@ -471,7 +468,7 @@ export default class AssignmentLti extends Vue {
     }
   }
 
-  private initSubmitData () {
+  private async initSubmitData () {
     const query = this.$route.query
     this.user = User.parse(this.user)
 
@@ -498,9 +495,7 @@ export default class AssignmentLti extends Vue {
     this.submit_data.groupID = groupID
     this.submit_data.submissionID = submissionID
 
-    this.getMuteStatus().then((muteStatus: boolean) => {
-      this.isMuted = muteStatus
-    })
+    this.isMuted = await this.getMuteStatus()
   }
 
   private async loginClient (sessionJwt: string | null) {

@@ -78,7 +78,6 @@
           :submit_data="submit_data"
           :course_id="courseId"
           :assignment_id="assignmentId"
-
           @submit-assignment="handleSubmit"
         />
       </div>
@@ -94,6 +93,7 @@
           :course_id="courseId"
           :assignment_id="assignmentId"
           :is_template="isTemplate"
+          :is_muted="isMuted"
         />
       </div>
     </div>
@@ -327,6 +327,7 @@ export default class AssignmentLti extends Vue {
     else {
       this.initSubmitData().then(() => {
         window.sessionStorage.setItem('rr_session_token', this.idToken as string)
+        this.isCreated = true
       })
     }
 
@@ -654,6 +655,7 @@ export default class AssignmentLti extends Vue {
   private async getMuteStatus () {
     try {
       const muted: boolean = await ApiHelper.isAssignmentMuted(this.courseId,
+        this.assignmentId,
         this.submit_data.groupID as string,
         this.user.id,
         this.$axios)

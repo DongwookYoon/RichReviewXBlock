@@ -54,10 +54,10 @@ export default class RichReviewViewer extends Vue {
   @Prop({ required: true }) readonly assignment_type !: string;
   @Prop({ required: true }) readonly assignment_id !: string;
   @Prop({ required: true }) readonly is_template !: boolean;
+  @Prop({ required: false }) readonly is_muted !: boolean;
 
   private user !: User
   private rrInitialised : boolean = false
-  private muted: boolean = false
 
   created () {
     this.user = User.parse(this.user_data)
@@ -86,7 +86,7 @@ export default class RichReviewViewer extends Vue {
       return false
     }
 
-    if (this.submit_data.submitted === true && this.muted === true) {
+    if (this.submit_data.submitted === true && this.is_muted === true) {
       return true
     }
 
@@ -98,6 +98,13 @@ export default class RichReviewViewer extends Vue {
       console.warn('loadRichReview() is not loaded')
       return
     }
+    console.log('Is muted? ' + this.is_muted)
+
+    const instructorOrTa = this.user.isTa || this.user.isInstructor
+    /* Do not show viewer for muted assignment for students */
+    if (this.is_muted === true && !instructorOrTa) {
+      return
+    }
 
     ApiHelper.getViewerData(
       this.course_id,
@@ -105,16 +112,6 @@ export default class RichReviewViewer extends Vue {
       this.user_data.id,
       this.$axios
     ).then((res) => {
-      const instructorOrTa = this.user.isTa || this.user.isInstructor
-
-      this.muted = res.muted
-
-      console.log('Is muted? ' + this.muted)
-      /* Do not show viewer for muted assignment for students */
-      if (this.muted === true && !instructorOrTa) {
-        return
-      }
-
       /* Only show RichReview UI if the assignment has been submitted OR
          if the user is an instructor and the assignment is a comment submission assignment.
          In the latter case, the instructor or TA will see the document template which they

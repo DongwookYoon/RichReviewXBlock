@@ -24,19 +24,29 @@ export default class ApiHelper {
     return response.submissions
   }
 
-
   static async isAssignmentMuted (courseId: string,
+    assignmentId: string,
     groupId: string,
     userId: string,
     $axios: NuxtAxiosInstance
   ) {
-    const res = await ApiHelper.getViewerData(courseId,
-      groupId,
-      userId,
-      $axios
+    const res = await $axios.$get(
+      `https://${process.env.backend}:3000/courses/${
+        courseId
+      }/assignments/${
+        assignmentId
+        }/comment_submissions/${groupId}`,
+      {
+        headers: {
+          Authorization: userId
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      }
     )
 
-    return res.muted
+    return (res.muted === true) as boolean
   }
 
   /**

@@ -203,3 +203,4 @@ Caching with terser-webpack-plugin and cache-loader ${config.build.cache ? 'enab
 Intermediate caching with hard-source-webpack-plugin: ${config.build.hardSource ? 'enabled' : 'disabled'}\n`)
 
 export default config
+

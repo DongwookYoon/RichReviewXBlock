@@ -1,12 +1,12 @@
 {
   "testUser": {
-    "id": "lti_test_instructor_109022885000538247846",
+    "id": "lti_test_student_109022885000538247846",
     "userName": "LTI Test Student",
-    "roles": ["instructor"]
+    "roles": ["student"]
   },
   "testDataStudent": {
     "assignmentTitle": "Test Assignment",
-    "assignmentType": "document_submission",
+    "assignmentType": "comment_submission",
     "assignmentId": "_",
     "courseId": "lti_test"
   }

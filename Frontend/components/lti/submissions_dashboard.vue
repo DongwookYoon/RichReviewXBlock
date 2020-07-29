@@ -1,6 +1,8 @@
 /* eslint-disable camelcase */
 <template>
   <div id="content">
+    <h2>All Submissions </h2>
+
     <div v-if="anySubmitted" id="mute-panel">
       <button
         v-if="!allMuted"

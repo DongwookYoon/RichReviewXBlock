@@ -27,7 +27,14 @@
         New Submission
       </button>
 
-      <div v-if="isTemplate === true">
+      <div v-if="isTemplate === true" id="template-container">
+        <SubmissionsDashboard
+          id="submission-dashboard"
+          :user_data="user"
+          :course_id="courseId"
+          :assignment_id="assignmentId"
+          :group_id="submit_data.groupID"
+        />
         <button
           v-if="assignmentType==='comment_submission'"
           id="toggle-template-button"
@@ -38,15 +45,8 @@
           }"
           @click="templateOpen = !templateOpen"
         >
-          {{ templateOpen ? 'Close Template' : 'Open Template' }}
+          {{ templateOpen ? 'Close Template' : 'Show Template' }}
         </button>
-
-        <SubmissionsDashboard
-          :user_data="user"
-          :course_id="courseId"
-          :assignment_id="assignmentId"
-          :group_id="submit_data.groupID"
-        />
       </div>
 
       <!--if user role is student AND NOT an instructor AND no submission or it is
@@ -697,6 +697,14 @@ interface IAssignmentLtiData {
 <style scoped>
   @import url('@/static/nuxt_static_viewer/stylesheets/lti_style.css');
 
+  #submission-dashboard {
+    margin-bottom: 5rem;
+  }
+
+  #template-container {
+    margin: 2rem
+  }
+
   .document-submitter, .new_submission_button {
     margin: 1.5rem 2%;
   }
@@ -708,7 +716,7 @@ interface IAssignmentLtiData {
     min-width: 5rem;
     text-align: center;
     cursor: pointer;
-    font-size: 1.3rem;
+    font-size: 1.25rem;
     padding: .25rem .3rem .1rem .3rem
   }
 

@@ -1,17 +1,16 @@
 <template>
   <div id="richreview_viewer">
     <div v-if="mutedStudentView" class="template-description">
-        <p>The instructor has not yet made comments available for this assignment.</p>
+      <p>The instructor has not yet made comments available for this assignment.</p>
     </div>
 
-    <div v-if="is_template===true">
+    <div v-if="is_template===true" class="template-description">
       <p>Edit the document template below to change what all students will see.</p>
     </div>
 
     <div
-      v-else-if="(submit_data.submitted===true) || is_template"
+      v-if="(submit_data.submitted===true) || is_template"
     >
-
       <no-ssr>
         <body>
           <div class="content_body">
@@ -54,7 +53,6 @@ export default class RichReviewViewer extends Vue {
   @Prop({ required: true }) readonly assignment_id !: string;
   @Prop({ required: true }) readonly is_template !: boolean;
 
-
   private user !: User
   private rrInitialised : boolean = false
   private muted: boolean = false
@@ -82,7 +80,7 @@ export default class RichReviewViewer extends Vue {
   }
 
   get mutedStudentView () {
-    if ( (this.user.isInstructor || this.user.isTa) ) {
+    if ((this.user.isInstructor || this.user.isTa)) {
       return false
     }
 
@@ -92,7 +90,6 @@ export default class RichReviewViewer extends Vue {
 
     return false
   }
-
 
   private initRichReview () {
     if (!loadRichReview) {
@@ -109,6 +106,8 @@ export default class RichReviewViewer extends Vue {
       const instructorOrTa = this.user.isTa || this.user.isInstructor
 
       this.muted = res.muted
+
+      console.log(res)
 
       console.log('Is muted? ' + this.muted)
       /* Only show RichReview UI if the assignment has been submitted OR
@@ -160,7 +159,5 @@ p {
   font-size: 1.55rem;
   margin: 1rem 2rem;
 }
-
-
 
 </style>

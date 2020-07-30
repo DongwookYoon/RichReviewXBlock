@@ -6,11 +6,6 @@
     </p>
 
     <div v-if="isCreated===true">
-      <div v-if="debug===true">
-        <p>assignment.vue test </p>
-        <p>Component: {{ curComponent }}</p>
-      </div>
-
       <!--This button to open/close a new submission will only shown if the
           student has already submitted this assignment once and it is a
           document submission assignment.-->
@@ -29,6 +24,7 @@
 
       <div v-if="isTemplate === true" id="template-container">
         <SubmissionsDashboard
+          v-if="!templateOpen"
           id="submission-dashboard"
           :user_data="user"
           :course_id="courseId"
@@ -720,7 +716,7 @@ interface IAssignmentLtiData {
   }
 
   #template-container {
-    margin: 2rem
+    margin: 1rem
   }
 
   .document-submitter, .new_submission_button {

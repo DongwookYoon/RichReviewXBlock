@@ -5,10 +5,6 @@
     </div>
 
     <div v-else>
-      <div v-if="is_template===true" class="template-description">
-        <p>Edit the document template below to change what all students will see.</p>
-      </div>
-
       <div
         v-if="(submit_data.submitted===true) || is_template"
       >
@@ -132,7 +128,6 @@ export default class RichReviewViewer extends Vue {
         )
 
         this.rrInitialised = true
-
         this.$forceUpdate()
       }
     }).catch((reason) => {

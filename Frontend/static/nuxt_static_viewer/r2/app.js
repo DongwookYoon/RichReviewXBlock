@@ -1,3 +1,6 @@
+
+ /* eslint-disable */
+
 /**
  * Created by Dongwook on 10/18/2014.
  */

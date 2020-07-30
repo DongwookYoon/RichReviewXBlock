@@ -2,6 +2,8 @@
  * Created by dongwookyoon on 6/2/15.
  */
 
+/* eslint-disable */
+
 /** @namespace r2 */
 (function(r2){
 
@@ -208,7 +210,7 @@
             r2.booklet.goToAbsPage(searchresult["page_n"]);
         }
         r2App.pieceSelector.set(searchresult["piece"]);
-        
+
         return r2.dom_model.focusCtrl.focusAnnot(annotid);
     };
 

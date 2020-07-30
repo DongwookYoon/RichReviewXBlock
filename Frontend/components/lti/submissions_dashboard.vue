@@ -259,13 +259,13 @@ table {
 #mute-all-button,
 #unmute-all-button
 {
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   background-color: #0c2343;
   border-radius: 0.5vh;
   color: white;
   padding-right: 0.5rem;
   padding-left: 0.5rem;
-  margin-bottom: 1rem;
+  margin: 1rem 0;
   border-radius: 5px;
 }
 #mute-all-button {
@@ -296,11 +296,11 @@ table {
 }
 
 #submissions-header {
-  font-size: 1.35rem;
+  font-size: 1.45rem;
 }
 
 .submissions-body {
-  font-size: 1.3rem;
+  font-size: 1.4rem;
 }
 
 #name-header,

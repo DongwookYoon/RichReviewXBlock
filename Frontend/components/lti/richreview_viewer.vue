@@ -1,7 +1,7 @@
 <template>
   <div id="richreview_viewer">
     <div v-if="mutedStudentView" class="template-description">
-      <p>The instructor has not yet made comments available for this assignment.</p>
+      <p>The instructor has not yet made feedback available for this assignment.</p>
     </div>
 
     <div v-else>

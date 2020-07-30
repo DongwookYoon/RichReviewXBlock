@@ -1237,7 +1237,13 @@ class AssignmentDatabaseHandler {
 
 
 
-
+    /**
+     * Call RichReview API to mute all assignments.
+     * @param {*} import_handler 
+     * @param {*} user_key 
+     * @param {*} course_key 
+     * @param {*} assignment_key 
+     */
     async mute_all_submissions (import_handler, user_key, course_key, assignment_key) {
         let group_db_handler = await import_handler.group_db_handler;
 
@@ -1250,7 +1256,7 @@ class AssignmentDatabaseHandler {
         }
     }
 
-
+    
     async unmute_all_submissions (import_handler, user_key, course_key, assignment_key) {
         let group_db_handler = await import_handler.group_db_handler;
 

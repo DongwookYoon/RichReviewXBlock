@@ -296,11 +296,11 @@ table {
 }
 
 #submissions-header {
-  font-size: 1.25rem;
+  font-size: 1.35rem;
 }
 
 .submissions-body {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
 }
 
 #name-header,
@@ -311,7 +311,7 @@ table {
 
 #status-header,
 .submission-status {
-  width: 10vw;
+  width: 15vw;
   padding-right: 2rem;
 }
 
@@ -324,14 +324,14 @@ table {
 
 #submission-time-header,
 .submission-time {
-  width: 15vw;
+  width: 20vw;
   text-align: center;
   padding-right: 2rem;
 }
 
 #muted-header,
 .mute {
-  width: 12vw;
+  width: 15vw;
   text-align: center;
   padding-right: 1rem;
 }

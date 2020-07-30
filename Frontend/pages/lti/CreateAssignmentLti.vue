@@ -563,7 +563,7 @@ export default class CreateAssignmentLti extends Vue {
   min-width: 5rem;
   text-align: center;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.9rem;
   padding:0.1rem;
 }
 

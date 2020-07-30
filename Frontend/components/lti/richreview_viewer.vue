@@ -155,7 +155,7 @@ p {
 }
 
 .template-description p{
-  font-size: 1.55rem;
+  font-size: 1.65rem;
   margin: 1rem 2rem;
 }
 

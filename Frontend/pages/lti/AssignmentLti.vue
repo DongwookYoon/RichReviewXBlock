@@ -720,7 +720,7 @@ interface IAssignmentLtiData {
   }
 
   .document-submitter, .new_submission_button {
-    margin: 1.5rem 2%;
+    margin: .75rem 2%;
   }
 
   .new_submission_button, .template_toggle_button {

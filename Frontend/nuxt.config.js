@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import fs from 'fs'
 import path from 'path'
 import pkg from './package'
@@ -12,7 +14,6 @@ const optimizeBuild = (process.env.NUXT_OPTIMIZE !== undefined) &&
   process.env.NUXT_OPTIMIZE.trim().toUpperCase() === 'TRUE'
 const customRoutes = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'routes.json'), 'utf8'))
 const backendHost = process.env.NODE_ENV !== 'production' ? 'localhost' : 'richreview.net'
-
 
 const config = {
   mode: 'universal',

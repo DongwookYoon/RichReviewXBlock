@@ -8,7 +8,7 @@ export default class ApiHelper {
     userId: string,
     $axios: NuxtAxiosInstance) {
     const response = await $axios.$get(
-        `https://${process.env.backend}:3000/courses/${
+        `rr-api/courses/${
           courseId
         }/assignments/${assignmentId}/submissions`,
         {
@@ -31,7 +31,7 @@ export default class ApiHelper {
     $axios: NuxtAxiosInstance
   ) {
     const res = await $axios.$get(
-      `https://${process.env.backend}:3000/courses/${
+      `rr-api/courses/${
         courseId
       }/assignments/${
         assignmentId
@@ -64,7 +64,7 @@ export default class ApiHelper {
     userId: string,
     $axios: NuxtAxiosInstance) {
     await $axios.$post(
-      `https://${process.env.backend}:3000/courses/${
+      `rr-api/courses/${
         courseId}/assignments/${assignmentId}/mute/${submissionId}`,
       {},
       {
@@ -85,7 +85,7 @@ export default class ApiHelper {
     userId: string,
     $axios: NuxtAxiosInstance) {
     await $axios.$post(
-      `https://${process.env.backend}:3000/courses/${
+      `rr-api/courses/${
         courseId
         }/assignments/${assignmentId}/unmute/${submissionId}`,
       {},
@@ -113,7 +113,7 @@ export default class ApiHelper {
     userId: string,
     $axios: NuxtAxiosInstance) {
     await $axios.$post(
-        `https://${process.env.backend}:3000/courses/${
+        `rr-api/courses/${
           courseId
           }/assignments/${assignmentId}/mute_all`,
         {},
@@ -141,7 +141,7 @@ export default class ApiHelper {
     userId: string,
     $axios: NuxtAxiosInstance) {
     await $axios.$post(
-        `https://${process.env.backend}:3000/courses/${
+        `rr-api/courses/${
           courseId
           }/assignments/${assignmentId}/unmute_all`,
         {},
@@ -162,7 +162,7 @@ export default class ApiHelper {
     userId: string,
     $axios: NuxtAxiosInstance) : Promise<any> {
     return await $axios.$get(
-        `https://${process.env.backend}:3000/courses/${
+        `rr-api/courses/${
           courseId
         }/groups/${groupId}`,
         {
@@ -339,6 +339,8 @@ export default class ApiHelper {
         })
       })
   }
+
+
 }
 
 export interface CourseData {

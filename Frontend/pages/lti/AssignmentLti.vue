@@ -716,7 +716,7 @@ interface IAssignmentLtiData {
   }
 
   #template-container {
-    margin: 1rem
+    margin: 0.25rem
   }
 
   .document-submitter, .new_submission_button {

@@ -7,7 +7,7 @@
 
     <div v-if="isCreated===true">
       <div v-if="gradeData.isGraded && gradeData.grade" id="student-grade">
-        <p><strong>Grade</strong> {{ gradeData.grade }}</p>
+        <p><strong>Grade</strong>{{ gradeData.grade }}</p>
       </div>
       <!--The button to open/close a new submission -->
       <button
@@ -548,15 +548,21 @@ export default class AssignmentLti extends Vue {
         courseId = launchMessage[
           'https://purl.imsglobal.org/spec/lti/claim/context'].id
 
+      }
+      catch (ex) {
+        console.warn('Error occurred while getting launch data from Canvas. Reason: ' + ex)
+        return { loadSuccess }
+      }
+
+      try {
         gradeData = await ApiHelper.getGradeFromPlatform(courseId,
           user.id,
           new URL(launchMessage[
             'https://purl.imsglobal.org/spec/lti-ags/claim/endpoint'].lineitem),
           context.$axios)
-      }
-      catch (ex) {
-        console.warn('Error occurred while getting launch data from Canvas. Reason: ' + ex)
-        return { loadSuccess }
+      } catch (ex) {
+        console.warn('Could not get grade data for this assignment. Setting it as ungraded.')
+        gradeData = { isGraded: false }
       }
     } // End-else
 

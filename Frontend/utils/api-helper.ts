@@ -344,30 +344,29 @@ export default class ApiHelper {
     userId: string,
     lineitemUrl: URL,
     $axios: NuxtAxiosInstance): Promise<GradeData> {
-    const resp = await $axios.$get(`/rr-api/lti/courses/${
-        courseId}/grade?lineitem_url=${
-          encodeURIComponent(lineitemUrl.toString())}`,
-    {
-      headers: {
-        Authorization: userId
-      },
-      httpsAgent: new https.Agent({
-        rejectUnauthorized: false
+    let resp
+    try {
+      resp = await $axios.$get(`/rr-api/lti/courses/${
+          courseId}/grade?lineitem_url=${
+            encodeURIComponent(lineitemUrl.toString())}`,
+      {
+        headers: {
+          Authorization: userId
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
       })
-    })
-
-    if (resp.status === 404 || resp.status === 410) {
-      return { isGraded: false }
     }
-    else if (resp.status !== 200) {
+    catch (ex) {
       console.warn(JSON.stringify(resp))
       throw new Error(`Could not get result data for resource ${
-        lineitemUrl.toString()} and course id ${courseId}`)
+          lineitemUrl.toString()} and course id ${courseId}`)
     }
 
     const gradeData: GradeData = {
-      isGraded: resp.data.isGraded as boolean,
-      grade: resp.data.resultScore
+      isGraded: resp.isGraded as boolean,
+      grade: resp.resultScore
     }
 
     return gradeData

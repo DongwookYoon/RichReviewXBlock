@@ -344,8 +344,6 @@ export default class ApiHelper {
     userId: string,
     lineitemUrl: URL,
     $axios: NuxtAxiosInstance): Promise<GradeData> {
-    let resp
-    try {
     const resp = await $axios.$get(`/rr-api/lti/courses/${
         courseId}/grade?lineitem_url=${
           encodeURIComponent(lineitemUrl.toString())}`,
@@ -358,7 +356,10 @@ export default class ApiHelper {
       })
     })
 
-    if (resp.status !== 200) {
+    if (resp.status === 404 || resp.status === 410) {
+      return { isGraded: false }
+    }
+    else if (resp.status !== 200) {
       throw new Error(`Could not get result data for resource ${
         lineitemUrl.toString()} and course id ${courseId}`)
     }

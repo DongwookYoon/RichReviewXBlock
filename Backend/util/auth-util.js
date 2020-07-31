@@ -55,6 +55,8 @@ const getClientCredentialToken = async function(authTokenUrl) {
         tokenResp} with payload: ${JSON.stringify(tokenResp.data || {})} `);
     }
 
+    console.log('Got OAuth Client Credentials Token: ' + tokenResp.data.access_token);
+
     return tokenResp.data.access_token;
 };
 

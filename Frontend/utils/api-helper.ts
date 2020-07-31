@@ -183,7 +183,7 @@ export default class ApiHelper {
    */
   public static async ensureRichReviewUserExists (user : User, $axios: NuxtAxiosInstance) {
     console.log(`Ensure user ${user.id} exists in RichReview.`)
-    await $axios.post(`/rr-api/lti_login`,
+    await $axios.$post(`/rr-api/lti_login`,
       {
         id: user.id,
         name: user.userName
@@ -213,7 +213,7 @@ export default class ApiHelper {
 
     console.log('courseid' + courseId)
     /* Ensure user is enrolled in course */
-    const userRes = await $axios.post(
+    const userRes = await $axios.$post(
       `/rr-api/courses/${
       courseId}/users/${user.id}`,
       { roles: user.roles },
@@ -233,7 +233,7 @@ export default class ApiHelper {
 
   public static async ensureCourseExists (courseData: CourseData, userId: string, $axios: NuxtAxiosInstance) {
     // eslint-disable-next-line camelcase
-    const course_res = await $axios.post(
+    const course_res = await $axios.$post(
       `/rr-api/courses/${courseData.id}`,
       courseData, {
         headers: {
@@ -256,7 +256,7 @@ export default class ApiHelper {
    * @param userId
    */
   public static async getAssignmentData (courseId: string, assignmentId: string, userId: string, $axios: NuxtAxiosInstance) {
-    const resp = await $axios.get(`/rr-api/courses/${courseId
+    const resp = await $axios.$get(`/rr-api/courses/${courseId
         }/assignments/${assignmentId}`,
     {
       headers: {
@@ -293,7 +293,7 @@ export default class ApiHelper {
 
     message.aud = audience || process.env.canvas_path
 
-    const res = await $axios.post(`/rr-api/lti/deeplink`,
+    const res = await $axios.$post(`/rr-api/lti/deeplink`,
       {
         message,
         courseId
@@ -323,7 +323,7 @@ export default class ApiHelper {
     richReviewUrl: URL,
     $axios: NuxtAxiosInstance
   ) {
-    await $axios.post(`/rr-api/lti/assignment`,
+    await $axios.$post(`/rr-api/lti/assignment`,
       {
         launchMessage,
         courseId,
@@ -340,11 +340,44 @@ export default class ApiHelper {
       })
   }
 
+  public static async getGradeFromPlatform (courseId: string,
+    userId: string,
+    lineitemUrl: URL,
+    $axios: NuxtAxiosInstance): Promise<GradeData> {
+    const resp = await $axios.$get(`/rr-api/lti/courses/${
+        courseId}/grade?lineitem_url=${
+          encodeURIComponent(lineitemUrl.toString())}`,
+    {
+      headers: {
+        Authorization: userId
+      },
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: false
+      })
+    })
 
+    if (resp.status !== 200) {
+      throw new Error(`Could not get result data for resource ${
+        lineitemUrl.toString()} and course id ${courseId}`)
+    }
+
+    const gradeData: GradeData = {
+      isGraded: resp.data.isGraded as boolean,
+      grade: resp.data.resultScore
+    }
+
+    return gradeData
+  }
+}
+
+export interface GradeData {
+  isGraded: boolean
+  grade ?: number
+  max ?: number
 }
 
 export interface CourseData {
-  id: string,
+  id: string
   title: string
   dept: string
   number: string

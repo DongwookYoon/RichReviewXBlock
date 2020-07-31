@@ -1,8 +1,8 @@
 <template>
   <div>
     <div id="top-bar">
-      <p id="assignment-title">
-        {{ title }}
+      <p id="app-title">
+        RichReview
       </p>
       <button id="submit-button" @click="handleSubmit">
         Submit
@@ -39,7 +39,6 @@ if (process.client) {
 
 @Component
 export default class CommentSubmitter extends Vue {
-  @Prop({ required: true }) readonly title !: string
   @Prop({ required: true }) readonly user !: User
   @Prop({ required: true }) readonly submit_data !: SubmitData
   @Prop({ required: true }) readonly course_id !: string
@@ -157,7 +156,7 @@ p {
   padding: 0.1rem;
  }
 
-#assignment-title {
+#app-title {
   color: white;
   font-size: 1.5rem;
   margin-left: 1vw;

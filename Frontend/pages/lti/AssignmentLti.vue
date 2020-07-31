@@ -6,9 +6,7 @@
     </p>
 
     <div v-if="isCreated===true">
-      <!--This button to open/close a new submission will only shown if the
-          student has already submitted this assignment once and it is a
-          document submission assignment.-->
+      <!--The button to open/close a new submission -->
       <button
         v-if="showNewSubmissionButton"
         id="new-submission-button"
@@ -69,7 +67,6 @@
           v-else-if="assignmentType==='comment_submission' &&
             submit_data.submitted === false"
           class="rich-review-view"
-          :title="assignmentTitle"
           :user="user"
           :submit_data="submit_data"
           :course_id="courseId"
@@ -108,7 +105,7 @@ import CommentSubmitter from '~/components/lti/comment_submitter.vue'
 import RichReviewViewer from '~/components/lti/richreview_viewer.vue'
 import SubmissionsDashboard from '~/components/lti/submissions_dashboard.vue'
 // eslint-disable-next-line camelcase
-import ApiHelper from '~/utils/api-helper'
+import ApiHelper, { GradeData } from '~/utils/api-helper'
 import User from '~/model/user'
 import Roles from '~/utils/roles'
 import SubmitData from '~/model/submit-data'
@@ -207,7 +204,6 @@ export default class AssignmentLti extends Vue {
 
   /* Component data */
   private user !: User
-  private assignmentTitle ?: string
   private assignmentType ?: string
   private assignmentId !: string
   private assignmentData : any
@@ -215,6 +211,7 @@ export default class AssignmentLti extends Vue {
   // eslint-disable-next-line camelcase
   private submit_data !: SubmitData
   private isTemplate !: boolean
+  private isGraded !: boolean
   private courseId !: string
   private idToken: string | null = null
   private addingSubmission: boolean = false
@@ -255,10 +252,10 @@ export default class AssignmentLti extends Vue {
   }
 
   get showNewSubmissionButton (): boolean {
-    if (this.isMuted === true) {
+    /* Button not shown for muted assignments or submissions already graded */
+    if (this.isMuted === true || this.isGraded === true) {
       return false
     }
-
 
     if (this.isUserStudent && !this.isUserInstructor &&
           this.assignmentType === 'document_submission' &&
@@ -362,26 +359,26 @@ export default class AssignmentLti extends Vue {
   private rehydrate ({
     loadSuccess,
     user,
-    assignmentTitle,
     assignmentType,
     assignmentId,
     launchMessage,
     // eslint-disable-next-line camelcase
     submit_data,
     isTemplate,
+    isGraded,
     courseId,
     assignmentData,
     idToken
   }: IAssignmentLtiData) {
     this.loadSuccess = loadSuccess
     this.user = user as User
-    this.assignmentTitle = assignmentTitle
     this.assignmentType = assignmentType
     this.assignmentId = assignmentId as string
     this.launchMessage = launchMessage
     // eslint-disable-next-line camelcase
     this.submit_data = submit_data as SubmitData
     this.isTemplate = isTemplate as boolean
+    this.isGraded = isGraded as boolean
     this.courseId = courseId as string
     this.assignmentData = assignmentData
     this.idToken = idToken as string
@@ -519,6 +516,7 @@ export default class AssignmentLti extends Vue {
     let assignmentType : string = ''
     let ltiLaunchMessage : any = null
     let launchMessage : any = null
+    let isGraded: boolean = false
     const user: User = User.parse(context.store.getters['LtiAuthStore/authUser'])
     const assignmentId : string = decodeURIComponent(context.query.assignment_id as string)
 
@@ -539,18 +537,26 @@ export default class AssignmentLti extends Vue {
         ltiLaunchMessage = await AssignmentLti.getLaunchMessage(jwt as string,
         '/canvas-jwk-keyset/' as string,
         context.$axios)
+
+        launchMessage = ltiLaunchMessage as any
+        user.roles = Roles.getUserRoles(
+          launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
+
+        courseId = launchMessage[
+          'https://purl.imsglobal.org/spec/lti/claim/context'].id
+
+        const gradeData: GradeData = await ApiHelper.getGradeFromPlatform(courseId,
+          user.id,
+          new URL(launchMessage[
+            'https://purl.imsglobal.org/spec/lti-ags/claim/endpoint'].lineitem),
+          context.$axios)
+
+        isGraded = gradeData.isGraded
       }
       catch (ex) {
-        console.warn('Error occurred while getting ltiLaunchMessage from jwt. Reason: ' + ex)
+        console.warn('Error occurred while getting launch data from Canvas. Reason: ' + ex)
         return { loadSuccess }
       }
-
-      launchMessage = ltiLaunchMessage as any
-      user.roles = Roles.getUserRoles(
-        launchMessage['https://purl.imsglobal.org/spec/lti/claim/roles'])
-
-      courseId = launchMessage[
-        'https://purl.imsglobal.org/spec/lti/claim/context'].id
     } // End-else
 
     try {
@@ -636,12 +642,12 @@ export default class AssignmentLti extends Vue {
     return {
       loadSuccess,
       user,
-      assignmentTitle: assignmentData.assignment.title,
       assignmentType,
       assignmentId,
       launchMessage,
       submit_data,
       isTemplate,
+      isGraded,
       courseId,
       assignmentData,
       idToken: jwt
@@ -694,13 +700,13 @@ export default class AssignmentLti extends Vue {
 interface IAssignmentLtiData {
     loadSuccess: boolean
     user ?: User
-    assignmentTitle ?: string
     assignmentType ?: string
     assignmentId ?: string
     launchMessage ?: any
     // eslint-disable-next-line camelcase
     submit_data ?: SubmitData | null
     isTemplate ?: boolean
+    isGraded ?: boolean
     courseId ?: string
     assignmentData ?: any
     idToken ?: string | null

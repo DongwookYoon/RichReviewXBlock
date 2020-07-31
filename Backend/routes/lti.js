@@ -9,8 +9,8 @@ var KeyDictionary = require('../bin/KeyDictionary');
 var lti_config = require('../bin/LtiConfig');
 
 
-
-router.use('/', authUtil.assertAuthorizedClient);
+/* All requests to this API must have valid API key */
+// router.use('/', authUtil.assertAuthorizedClient);
 
 
 /* Get an oauth access token from the lti endpoint using a 
@@ -200,11 +200,7 @@ router.post('/assignment', async function(req, res, next) {
       if (launchMessage.nonce){
         scoreData.nonce = launchMessage.nonce;
       }
-
-
-      console.log('Submitting score data: ' + JSON.stringify(scoreData));
-      console.log('Client credentials token is: ' + clientCredentialsToken);
-      console.log('POST URL is: ' + `${lineItemUrl}/scores`);
+      
 
       /* Send the score resource to Canvas to create new
          unmarked submission in gradebook. */
@@ -239,7 +235,116 @@ router.post('/assignment', async function(req, res, next) {
       res.sendStatus(201);
 });
 
+/**
+ * Submits an assignment to the platform (Canvas).
+ */
+router.get('/courses/:course_id/grade', async function(req, res, next) {
+  const lineitem_url = req.query.lineitem_url;
+  const course_id = req.params.course_id;
+  
+  try {
+    if(!lineitem_url) {
+      throw new Error('Request must contain lineitem_url query parameter.')
+    }
 
+    if (!req.headers.authorization) {
+      throw new Error('Required header "Authorization" missing from request!');
+   }
+ } catch (ex) {
+    console.warn('Bad request. Reason: ' +ex);
+    res.status(400).json(ex.message);
+    return;
+  }
+  
+  const results_url = `${lineitem_url}/results`;
+  const user_id = req.headers.authorization;
+  const rr_user_key = KeyDictionary.key_dictionary['user'] + user_id;
+  const rr_course_key = KeyDictionary.key_dictionary['course'] + course_id;
+  const course_db_handler = await ImportHandler.course_db_handler;
+  
+
+ try {
+    clientCredentialsToken = await authUtil.getClientCredentialToken(lti_config.auth_token_url);
+  } catch (ex) {
+    console.warn('Could not get client credentials token. Reason: ' +ex);
+    res.sendStatus('500');
+    return;
+  }
+
+  let results;
+  try {
+    const isStudent = await course_db_handler.is_user_enrolled_in_course(rr_user_key, rr_course_key);
+    let isInstructor = false;
+
+    if (!isStudent) {
+      isInstructor = await course_db_handler.is_user_instructor_for_course(rr_user_key, rr_course_key);
+    }
+    if (!isStudent && !isInstructor) {
+      console.warn(`User ${user_key} is not a student or an instructor in ${
+        course_key} and is not authorized to access Canvas result data.`);
+      res.sendStatus(401);
+      return;
+    }
+    
+      const resultsResp = await axios.get(`${results_url}`,
+          {
+            headers: {
+              Authorization: `Bearer ${clientCredentialsToken}`,
+              Accept: 'application/json'
+            },
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false
+            })
+          });
+        
+      if (!resultsResp) {
+          throw new Error(`Getting assignment results from Canvas failed.`);
+      }
+      if(resultsResp.status > 203) {
+          throw new Error(`The response from Canvas is ${resultsResp.status} ${
+            JSON.stringify(resultsResp.data)}`);
+      }
+
+      results = resultsResp.data; 
+          
+    } catch (ex){
+      console.warn(`Getting results resource ${results_url} for lti course ${course_id} failed. Reason: ${ex}.`);
+        res.sendStatus(500);
+        return;
+      }
+    
+    if (!results || results.length === 0) {
+        console.warn(`No results found for ${results_url} in course ${course_id}`);
+        res.sendStatus(410);
+    }
+    else {
+      let curResult = null;
+      let gradeInfo = null;
+
+      for (let i = 0; i < results.length; i++) {
+        curResult = results[i];
+        console.log(curResult);
+        if (curResult && 
+          curResult.userId && curResult.userId === user_id) {
+            gradeInfo = {
+              isGraded: (curResult.resultScore ? true : false),
+              grade: curResult.resultScore
+            };
+            break;
+        }
+      }
+
+      if (gradeInfo === null) {
+        console.warn(`No result found for ${results_url} in course ${course_id} with user id ${user_id}`);
+        res.sendStatus(410);
+      }
+      else {
+        res.status(200).json(gradeInfo);
+      }
+    }
+    
+
+});
 
 
 module.exports = router;

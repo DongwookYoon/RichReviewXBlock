@@ -343,7 +343,7 @@ router.get('/courses/:course_id/grade', async function(req, res, next) {
           isGraded: false,
           message 
         };
-        console.warn(info);
+        console.warn(message);
         res.status(404).json(gradeInfo);
       }
       else {
@@ -351,7 +351,6 @@ router.get('/courses/:course_id/grade', async function(req, res, next) {
       }
     }
     
-
 });
 
 

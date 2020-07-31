@@ -316,7 +316,7 @@ router.get('/courses/:course_id/grade', async function(req, res, next) {
     if (!results || results.length === 0) {
         let message = `No results found for ${results_url} in course ${course_id}`;
         console.warn(message);
-        res.status(404).json({
+        res.status(200).json({
           isGraded: false,
           message
         });
@@ -344,7 +344,7 @@ router.get('/courses/:course_id/grade', async function(req, res, next) {
           message 
         };
         console.warn(message);
-        res.status(404).json(gradeInfo);
+        res.status(200).json(gradeInfo);
       }
       else {
         res.status(200).json(gradeInfo);

@@ -360,6 +360,7 @@ export default class ApiHelper {
       return { isGraded: false }
     }
     else if (resp.status !== 200) {
+      console.warn(resp)
       throw new Error(`Could not get result data for resource ${
         lineitemUrl.toString()} and course id ${courseId}`)
     }

@@ -369,7 +369,7 @@ export default class ApiHelper {
       grade: resp.resultScore
     }
 
-    console.log('Go grade data: ' + gradeData)
+    console.log('Got grade data: ' + JSON.stringify(gradeData))
 
     return gradeData
   }

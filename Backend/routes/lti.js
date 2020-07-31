@@ -10,7 +10,7 @@ var lti_config = require('../bin/LtiConfig');
 
 
 /* All requests to this API must have valid API key */
-// router.use('/', authUtil.assertAuthorizedClient);
+router.use('/', authUtil.assertAuthorizedClient);
 
 
 /* Get an oauth access token from the lti endpoint using a 

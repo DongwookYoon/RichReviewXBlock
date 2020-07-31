@@ -233,7 +233,7 @@ export default class ApiHelper {
 
   public static async ensureCourseExists (courseData: CourseData, userId: string, $axios: NuxtAxiosInstance) {
     // eslint-disable-next-line camelcase
-    const course_res = await $axios.$post(
+    const course_res = await $axios.post(
       `/rr-api/courses/${courseData.id}`,
       courseData, {
         headers: {
@@ -256,7 +256,7 @@ export default class ApiHelper {
    * @param userId
    */
   public static async getAssignmentData (courseId: string, assignmentId: string, userId: string, $axios: NuxtAxiosInstance) {
-    const resp = await $axios.$get(`/rr-api/courses/${courseId
+    const resp = await $axios.get(`/rr-api/courses/${courseId
         }/assignments/${assignmentId}`,
     {
       headers: {
@@ -293,7 +293,7 @@ export default class ApiHelper {
 
     message.aud = audience || process.env.canvas_path
 
-    const res = await $axios.$post(`/rr-api/lti/deeplink`,
+    const res = await $axios.post(`/rr-api/lti/deeplink`,
       {
         message,
         courseId
@@ -361,7 +361,7 @@ export default class ApiHelper {
     catch (ex) {
       console.warn(JSON.stringify(resp))
       throw new Error(`Could not get result data for resource ${
-          lineitemUrl.toString()} and course id ${courseId}`)
+          lineitemUrl.toString()} and course id ${courseId}. Reason: ${ex}`)
     }
 
     const gradeData: GradeData = {

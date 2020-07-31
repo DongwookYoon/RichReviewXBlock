@@ -6,8 +6,8 @@
     </p>
 
     <div v-if="isCreated===true">
-      <div v-if="gradeData.isGraded && gradeData.grade">
-        <p><strong>Grade: {{gradeData.grade }}</strong></p>
+      <div v-if="gradeData.isGraded && gradeData.grade" id="student-grade">
+        <p><strong>Grade</strong>  { {gradeData.grade} }</p>
       </div>
       <!--The button to open/close a new submission -->
       <button
@@ -730,6 +730,10 @@ interface IAssignmentLtiData {
 
   .document-submitter, .new_submission_button {
     margin: .75rem 2%;
+  }
+
+  #student-grade {
+    font-size: 1.45rem;
   }
 
   .new_submission_button, .template_toggle_button {

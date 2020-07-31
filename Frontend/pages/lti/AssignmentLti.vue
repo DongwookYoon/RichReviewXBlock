@@ -7,7 +7,7 @@
 
     <div v-if="isCreated===true">
       <div v-if="gradeData.isGraded && gradeData.grade">
-        <p><strong>Grade: {{ gradeData.grade }}</strong></p>
+        <p><strong>Grade: {{gradeData.grade }}</strong></p>
       </div>
       <!--The button to open/close a new submission -->
       <button

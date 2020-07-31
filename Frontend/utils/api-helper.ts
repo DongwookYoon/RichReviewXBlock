@@ -366,7 +366,7 @@ export default class ApiHelper {
 
     const gradeData: GradeData = {
       isGraded: resp.isGraded as boolean,
-      grade: resp.resultScore
+      grade: resp.grade
     }
 
     console.log('Got grade data: ' + JSON.stringify(gradeData))

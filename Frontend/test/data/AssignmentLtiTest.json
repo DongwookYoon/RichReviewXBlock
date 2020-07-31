@@ -8,7 +8,9 @@
     "assignmentTitle": "Test Assignment",
     "assignmentType": "comment_submission",
     "assignmentId": "_",
-    "courseId": "lti_test"
+    "courseId": "lti_test",
+    "grade": 75,
+    "isGraded": true
   }
 
 }

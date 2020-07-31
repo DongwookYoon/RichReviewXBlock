@@ -356,7 +356,10 @@ export default class ApiHelper {
       })
     })
 
-    if (resp.status !== 200) {
+    if (resp.status === 404 || resp.status === 410) {
+      return { isGraded: false }
+    }
+    else if (resp.status !== 200) {
       throw new Error(`Could not get result data for resource ${
         lineitemUrl.toString()} and course id ${courseId}`)
     }

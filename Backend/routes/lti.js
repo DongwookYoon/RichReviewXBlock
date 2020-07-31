@@ -314,8 +314,12 @@ router.get('/courses/:course_id/grade', async function(req, res, next) {
       }
     
     if (!results || results.length === 0) {
-        console.warn(`No results found for ${results_url} in course ${course_id}`);
-        res.sendStatus(410);
+        let message = `No results found for ${results_url} in course ${course_id}`;
+        console.warn(message);
+        res.status(404).json({
+          isGraded: false,
+          message
+        });
     }
     else {
       let curResult = null;
@@ -323,7 +327,6 @@ router.get('/courses/:course_id/grade', async function(req, res, next) {
 
       for (let i = 0; i < results.length; i++) {
         curResult = results[i];
-        console.log(curResult);
         if (curResult && 
           curResult.userId && curResult.userId === user_id) {
             gradeInfo = {
@@ -335,8 +338,13 @@ router.get('/courses/:course_id/grade', async function(req, res, next) {
       }
 
       if (gradeInfo === null) {
-        console.warn(`No result found for ${results_url} in course ${course_id} with user id ${user_id}`);
-        res.sendStatus(410);
+        let message = `No result found for ${results_url} in course ${course_id} with user id ${user_id}`;
+        gradeInfo = { 
+          isGraded: false,
+          message 
+        };
+        console.warn(info);
+        res.status(404).json(gradeInfo);
       }
       else {
         res.status(200).json(gradeInfo);

@@ -6,6 +6,9 @@
     </p>
 
     <div v-if="isCreated===true">
+      <div v-if="gradeData.isGraded && gradeData.grade">
+        <p><strong>Grade: {{ gradeData.grade }}</strong></p>
+      </div>
       <!--The button to open/close a new submission -->
       <button
         v-if="showNewSubmissionButton"
@@ -211,7 +214,7 @@ export default class AssignmentLti extends Vue {
   // eslint-disable-next-line camelcase
   private submit_data !: SubmitData
   private isTemplate !: boolean
-  private isGraded !: boolean
+  private gradeData !: GradeData
   private courseId !: string
   private idToken: string | null = null
   private addingSubmission: boolean = false
@@ -253,7 +256,7 @@ export default class AssignmentLti extends Vue {
 
   get showNewSubmissionButton (): boolean {
     /* Button not shown for muted assignments or submissions already graded */
-    if (this.isMuted === true || this.isGraded === true) {
+    if (this.isMuted === true || this.gradeData.isGraded === true) {
       return false
     }
 
@@ -365,7 +368,7 @@ export default class AssignmentLti extends Vue {
     // eslint-disable-next-line camelcase
     submit_data,
     isTemplate,
-    isGraded,
+    gradeData,
     courseId,
     assignmentData,
     idToken
@@ -378,7 +381,7 @@ export default class AssignmentLti extends Vue {
     // eslint-disable-next-line camelcase
     this.submit_data = submit_data as SubmitData
     this.isTemplate = isTemplate as boolean
-    this.isGraded = isGraded as boolean
+    this.gradeData = gradeData as GradeData
     this.courseId = courseId as string
     this.assignmentData = assignmentData
     this.idToken = idToken as string
@@ -516,7 +519,7 @@ export default class AssignmentLti extends Vue {
     let assignmentType : string = ''
     let ltiLaunchMessage : any = null
     let launchMessage : any = null
-    let isGraded: boolean = false
+    let gradeData !: GradeData
     const user: User = User.parse(context.store.getters['LtiAuthStore/authUser'])
     const assignmentId : string = decodeURIComponent(context.query.assignment_id as string)
 
@@ -545,13 +548,11 @@ export default class AssignmentLti extends Vue {
         courseId = launchMessage[
           'https://purl.imsglobal.org/spec/lti/claim/context'].id
 
-        const gradeData: GradeData = await ApiHelper.getGradeFromPlatform(courseId,
+        gradeData = await ApiHelper.getGradeFromPlatform(courseId,
           user.id,
           new URL(launchMessage[
             'https://purl.imsglobal.org/spec/lti-ags/claim/endpoint'].lineitem),
           context.$axios)
-
-        isGraded = gradeData.isGraded
       }
       catch (ex) {
         console.warn('Error occurred while getting launch data from Canvas. Reason: ' + ex)
@@ -639,6 +640,8 @@ export default class AssignmentLti extends Vue {
       return { loadSuccess }
     }
 
+
+
     return {
       loadSuccess,
       user,
@@ -647,7 +650,7 @@ export default class AssignmentLti extends Vue {
       launchMessage,
       submit_data,
       isTemplate,
-      isGraded,
+      gradeData,
       courseId,
       assignmentData,
       idToken: jwt
@@ -706,7 +709,7 @@ interface IAssignmentLtiData {
     // eslint-disable-next-line camelcase
     submit_data ?: SubmitData | null
     isTemplate ?: boolean
-    isGraded ?: boolean
+    gradeData ?: GradeData
     courseId ?: string
     assignmentData ?: any
     idToken ?: string | null

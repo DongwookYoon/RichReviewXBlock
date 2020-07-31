@@ -369,6 +369,8 @@ export default class ApiHelper {
       grade: resp.resultScore
     }
 
+    console.log('Go grade data: ' + gradeData)
+
     return gradeData
   }
 }

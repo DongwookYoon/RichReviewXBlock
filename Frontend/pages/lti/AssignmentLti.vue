@@ -733,7 +733,11 @@ interface IAssignmentLtiData {
   }
 
   #student-grade {
-    font-size: 1.45rem;
+    font-size: 1.55rem;
+  }
+
+  #student-grade p {
+    margin-bottom: 0.75em;
   }
 
   .new_submission_button, .template_toggle_button {

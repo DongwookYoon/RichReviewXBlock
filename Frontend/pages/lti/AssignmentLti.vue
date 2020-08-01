@@ -49,7 +49,7 @@
       <!--if user role is student AND NOT an instructor AND no submission or it is
       an additional submission for an already submitted assignment  -->
       <div
-        v-if="isUserStudent && !isUserInstructor &&
+        v-if="isUserStudent && !isUserInstructorOrTa &&
           (submit_data.submitted === false || addingSubmission === true)"
       >
         <!-- If assignment type is document_submission and not submitted OR
@@ -246,13 +246,10 @@ export default class AssignmentLti extends Vue {
     return this.user.isStudent
   }
 
-  get isUserTa () : boolean {
-    return this.user.isTa
+  get isUserInstructorOrTa (): boolean {
+    return this.user.isInstructor || this.user.isTa
   }
 
-  get isUserInstructor (): boolean {
-    return this.user.isInstructor
-  }
 
   get showNewSubmissionButton (): boolean {
     /* Button not shown for muted assignments or submissions already graded */
@@ -260,7 +257,7 @@ export default class AssignmentLti extends Vue {
       return false
     }
 
-    if (this.isUserStudent && !this.isUserInstructor &&
+    if (this.isUserStudent && !this.isUserInstructorOrTa &&
           this.assignmentType === 'document_submission' &&
           this.submit_data.submitted === true) {
       return true
@@ -275,11 +272,11 @@ export default class AssignmentLti extends Vue {
       return true
     }
     /* Instructor grader view */
-    if (this.isUserInstructor === true && !this.isTemplate) {
+    if (this.isUserInstructorOrTa === true && !this.isTemplate) {
       return true
     }
     /* Student assignment review */
-    if (this.isUserStudent && (!this.isUserTa || !this.isUserInstructor) &&
+    if (this.isUserStudent && (!this.isUserInstructorOrTa) &&
       this.submit_data.submitted === true) {
       return true
     }
@@ -329,7 +326,7 @@ export default class AssignmentLti extends Vue {
 
     /* Add warning if students try to leave page without submitting when they have not yet submitted.
     Most browsers will only show a generic warning, however. */
-    if (!this.isUserTa && !this.isUserInstructor && this.submit_data.submitted === false) {
+    if (!this.isUserInstructorOrTa && this.submit_data.submitted === false) {
       window.addEventListener('beforeunload', this.showLeaveWarning)
     }
   }
@@ -547,7 +544,6 @@ export default class AssignmentLti extends Vue {
 
         courseId = launchMessage[
           'https://purl.imsglobal.org/spec/lti/claim/context'].id
-
       }
       catch (ex) {
         console.warn('Error occurred while getting launch data from Canvas. Reason: ' + ex)
@@ -560,7 +556,8 @@ export default class AssignmentLti extends Vue {
           new URL(launchMessage[
             'https://purl.imsglobal.org/spec/lti-ags/claim/endpoint'].lineitem),
           context.$axios)
-      } catch (ex) {
+      }
+      catch (ex) {
         console.warn('Could not get grade data for this assignment. Setting it as ungraded.')
         gradeData = { isGraded: false }
       }

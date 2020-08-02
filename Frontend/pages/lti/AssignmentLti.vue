@@ -173,7 +173,7 @@ const DEBUG: boolean = process.env.debug_mode !== undefined &&
       }
     }
 
-    return await AssignmentLti.initAssignment(jwt, context, DEBUG ? testData.testDataStudent.courseId : undefined)
+    return await AssignmentLti.initAssignment(jwt, context, DEBUG ? testData : undefined)
   },
 
   fetch (context) {
@@ -197,7 +197,6 @@ export default class AssignmentLti extends Vue {
   public readonly TA : string = Roles.TA
   public readonly STUDENT : string = Roles.STUDENT
 
-  private debug: boolean = DEBUG
   private isCreated: boolean = false
   private loadSuccess : boolean = false
 
@@ -253,7 +252,8 @@ export default class AssignmentLti extends Vue {
 
   get showNewSubmissionButton (): boolean {
     /* Button not shown for muted assignments or submissions already graded */
-    if (this.isMuted === true || this.gradeData.isGraded === true) {
+    if (this.isMuted === true ||
+        !this.gradeData.isGraded === true) {
       return false
     }
 
@@ -392,7 +392,7 @@ export default class AssignmentLti extends Vue {
     await this.loginClient(this.idToken)
 
     if (this.isLoggedIn) {
-      const data: IAssignmentLtiData = await AssignmentLti.initAssignment(this.idToken, this.$nuxt.context)
+      const data: IAssignmentLtiData = await AssignmentLti.initAssignment(this.idToken as string, this.$nuxt.context)
       console.log('Rehydrated on client side.')
       this.rehydrate(data)
       await this.initSubmitData()
@@ -509,7 +509,7 @@ export default class AssignmentLti extends Vue {
   }
 
 
-  private static async initAssignment (jwt: string | null, context: any, debugCourseId ?: String): Promise<IAssignmentLtiData> {
+  private static async initAssignment (jwt: string, context: any, testData ?: any): Promise<IAssignmentLtiData> {
     let loadSuccess: boolean = false
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let courseId: string = ''
@@ -522,7 +522,8 @@ export default class AssignmentLti extends Vue {
 
 
     if (DEBUG) {
-      courseId = debugCourseId as string
+      courseId = testData.testDataStudent.courseId as string
+      gradeData = testData.testDataStudent.gradeData as GradeData
     }
 
     else {

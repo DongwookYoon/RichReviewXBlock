@@ -1,16 +1,18 @@
 {
   "testUser": {
-    "id": "lti_test_instructor_109022885000538247846",
-    "userName": "LTI Test Instructor",
-    "roles": ["instructor"]
+    "id": "lti_test_student_109022885000538247846",
+    "userName": "LTI Test Student",
+    "roles": ["student"]
   },
   "testDataStudent": {
     "assignmentTitle": "Test Assignment",
     "assignmentType": "comment_submission",
     "assignmentId": "_",
     "courseId": "lti_test",
-    "grade": 75,
-    "isGraded": true
+    "gradeData": {
+      "grade": 75,
+      "isGraded": true
+    }
   }
 
 }

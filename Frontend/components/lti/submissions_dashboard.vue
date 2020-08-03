@@ -3,25 +3,6 @@
   <div id="content">
     <h2>All Submissions </h2>
 
-    <div v-if="anySubmitted" id="mute-panel">
-      <button
-        v-if="!allMuted"
-        id="mute-all-button"
-        title="Mute all instructor comments for this assignment. Students will not see comments in RichReview."
-        @click="muteAllSubmissions"
-      >
-        Mute All
-      </button>
-      <button
-        v-if="allMuted===true"
-        id="unmute-all-button"
-        title="Unmute all instructor comments for this assignment. Students will see comments in RichReview."
-        @click="unmuteAllSubmissions"
-      >
-        Unmute All
-      </button>
-    </div>
-
     <table id="submissions-table">
       <thead id="submissions-header">
         <tr>
@@ -41,6 +22,24 @@
           </th>
           <th id="muted-header">
             Muted
+            <span v-if="anySubmitted" id="mute-panel">
+              <button
+                v-if="!allMuted"
+                id="mute-all-button"
+                title="Mute all instructor comments for this assignment. Students will not see comments in RichReview."
+                @click="muteAllSubmissions"
+              >
+                Mute All
+              </button>
+              <button
+                v-if="allMuted===true"
+                id="unmute-all-button"
+                title="Unmute all instructor comments for this assignment. Students will see comments in RichReview."
+                @click="unmuteAllSubmissions"
+              >
+                Unmute All
+              </button>
+            </span>
           </th>
         </tr>
       </thead>
@@ -244,8 +243,7 @@ p {
 }
 
 td {
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  padding: 0.5rem 0.5rem 0.5rem 0;
 }
 
 thead {
@@ -259,13 +257,12 @@ table {
 #mute-all-button,
 #unmute-all-button
 {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   background-color: #0c2343;
   border-radius: 0.5vh;
   color: white;
-  padding-right: 0.5rem;
-  padding-left: 0.5rem;
-  margin: 1rem 0;
+  padding: 0 0.5rem;
+  margin: 1rem 0 1rem 5.5rem;
   border-radius: 5px;
 }
 #mute-all-button {
@@ -303,45 +300,33 @@ table {
   font-size: 1.4rem;
 }
 
-#name-header,
-.submission-name {
+#name-header, .submission-name {
   width: 20vw;
-  padding-right: 1rem;
+  min-width: 12rem;
 }
 
-#status-header,
-.submission-status {
-  width: 15vw;
+#name-header, .submission-name {
+  width: 14vw;
   padding-right: 2rem;
 }
 
-#mark-header,
-.submission-mark {
-  width: 6vw;
-  text-align: center;
-  padding-right: 2rem;
+#status-header, .submission-status {
+  width: 11rem;
+  padding-right: 3rem;
 }
 
-#submission-time-header,
-.submission-time {
-  width: 20vw;
-  text-align: center;
-  padding-right: 2rem;
+#submission-time-header, .submission-time {
+  width: 17rem;
+  padding-right: 3rem;
 }
 
 #muted-header,
 .mute {
-  width: 15vw;
-  text-align: center;
-  padding-right: 1rem;
+  min-width: 25rem;
+  width: 25vw;
+  text-align: left;
 }
 
-#grader-header,
-.grader {
-  width: 7vw;
-  text-align: center;
-  padding-right: 1rem;
-}
 
 .inactive-assignment:hover {
   background-color: rgba(252, 228, 228, 0.589);
@@ -350,5 +335,14 @@ table {
 .inactive-assignment {
   cursor: default;
   opacity: 0.5;
+}
+
+@media only screen and (max-width: 780px) {
+
+  #mute-all-button,
+  #unmute-all-button
+  {
+    margin: 1rem 0 1rem 3rem;
+  }
 }
 </style>

@@ -252,9 +252,11 @@ export default class AssignmentLti extends Vue {
 
   get showNewSubmissionButton (): boolean {
     console.log(this.gradeData)
-    /* Button not shown for muted assignments or submissions already graded */
+    /* Button not shown for muted assignments or submissions already graded
+       or if no grade data is available. */
     if (this.isMuted === true ||
-        this.gradeData.isGraded === true) {
+        this.gradeData.isGraded === true ||
+          this.gradeData.error === true) {
       return false
     }
 
@@ -566,8 +568,8 @@ export default class AssignmentLti extends Vue {
           context.$axios)
       }
       catch (ex) {
-        console.warn('Could not get grade data for this assignment. Setting it as ungraded.')
-        gradeData = { isGraded: false }
+        console.warn('Could not get grade data for this assignment. Setting it as ungraded. Reason ' + ex)
+        gradeData = { isGraded: false, error: true }
       }
     } // End-else
 

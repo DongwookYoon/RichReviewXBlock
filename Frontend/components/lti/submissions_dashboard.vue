@@ -345,7 +345,7 @@ table {
 }
 
 .mute.no_submit {
-  text-align: center;
+  padding-left: 4rem;
 }
 
 #muted-header.nothing_submitted,

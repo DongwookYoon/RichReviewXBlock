@@ -323,7 +323,6 @@ table {
 #muted-header,
 .mute {
   min-width: 25rem;
-  width: 25vw;
   text-align: left;
 }
 

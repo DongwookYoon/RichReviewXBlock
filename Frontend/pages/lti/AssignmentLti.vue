@@ -6,7 +6,7 @@
     </p>
 
     <div v-if="isCreated===true">
-      <div v-if="gradeData.isGraded && gradeData.grade" id="student-grade">
+      <div v-if="showGrade" id="student-grade">
         <p><strong>Grade</strong>{{ gradeData.grade }}</p>
       </div>
       <!--The button to open/close a new submission -->
@@ -264,6 +264,12 @@ export default class AssignmentLti extends Vue {
     }
 
     return false
+  }
+
+  get showGrade () : boolean {
+    return (this.gradeData.isGraded &&
+              this.gradeData.grade &&
+                !this.isUserInstructorOrTa) as boolean
   }
 
   get showViewer () : boolean {

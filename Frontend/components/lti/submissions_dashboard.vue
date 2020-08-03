@@ -10,7 +10,7 @@
         title="Mute all instructor comments for this assignment. Students will not see comments in RichReview."
         @click="muteAllSubmissions"
       >
-        Mute Comments
+        Mute All
       </button>
       <button
         v-if="allMuted===true"
@@ -18,7 +18,7 @@
         title="Unmute all instructor comments for this assignment. Students will see comments in RichReview."
         @click="unmuteAllSubmissions"
       >
-        Unmute Comments
+        Unmute All
       </button>
     </div>
 

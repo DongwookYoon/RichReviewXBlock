@@ -253,7 +253,7 @@ export default class AssignmentLti extends Vue {
   get showNewSubmissionButton (): boolean {
     /* Button not shown for muted assignments or submissions already graded */
     if (this.isMuted === true ||
-        !this.gradeData.isGraded === true) {
+        this.gradeData.isGraded === true) {
       return false
     }
 

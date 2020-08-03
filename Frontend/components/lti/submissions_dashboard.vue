@@ -17,10 +17,16 @@
             Mark
           </th>
           -->
-          <th id="submission-time-header">
+          <th
+            id="submission-time-header"
+            :class="{ 'nothing_submitted': !anySubmitted }"
+          >
             Submission Time
           </th>
-          <th id="muted-header">
+          <th
+            id="muted-header"
+            :class="{ 'nothing_submitted': !anySubmitted }"
+          >
             Muted
             <span v-if="anySubmitted" id="mute-panel">
               <button
@@ -60,12 +66,21 @@
             {{ s.mark === '' ? '-' : s.mark }}/{{ s.points }}
           </td>
           -->
-          <td class="submission-time">
+          <td
+            :class="{
+              'submission-time': true,
+              'nothing_submitted': !anySubmitted }"
+          >
             {{
               s.submission_time !== '' ? format_date(s.submission_time) : '-'
             }}
           </td>
-          <td class="mute">
+          <td
+            :class=" {
+              'mute': true,
+              'no_submit': !isSubmitted(s) && anySubmitted === true,
+              'nothing_submitted': anySubmitted === false}"
+          >
             <no-ssr placeholder="Loading...">
               <ToggleButton
                 v-if="isSubmitted(s)"
@@ -78,7 +93,7 @@
                 :color="{checked: '#e01700', unchecked: '#32c51c'}"
                 @change="s.muted === true ? unmuteSubmission(s.submission_id, index) : muteSubmission(s.submission_id, index)"
               />
-              <span v-else>-</span>
+              <span v-else class="no-submit">-</span>
             </no-ssr>
           </td>
         </tr>
@@ -301,31 +316,43 @@ table {
 }
 
 #name-header, .submission-name {
-  width: 20vw;
-  min-width: 12rem;
-}
-
-#name-header, .submission-name {
+  min-width: 17rem;
   width: 14vw;
-  padding-right: 2rem;
+  padding-right: 4rem;
 }
 
 #status-header, .submission-status {
-  width: 11rem;
-  padding-right: 3rem;
+  width: 12rem;
+  padding-right: 2rem;
 }
 
 #submission-time-header, .submission-time {
-  width: 17rem;
-  padding-right: 3rem;
+  width: 18rem;
+  padding-right: 5rem;
+  text-align: center;
+}
+
+#submission-time-header.nothing_submitted,
+.submission-time.nothing_submitted{
+  width: 15rem;
+  padding-right: 0;
 }
 
 #muted-header,
 .mute {
-  min-width: 25rem;
+  min-width: 15rem;
   text-align: left;
 }
 
+.mute.no_submit {
+  text-align: center;
+}
+
+#muted-header.nothing_submitted,
+.mute.nothing_submitted {
+  width: 5rem;
+  text-align: center;
+}
 
 .inactive-assignment:hover {
   background-color: rgba(252, 228, 228, 0.589);

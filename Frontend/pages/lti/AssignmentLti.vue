@@ -270,9 +270,10 @@ export default class AssignmentLti extends Vue {
   }
 
   get showGrade () : boolean {
-    return (this.gradeData.isGraded &&
-              this.gradeData.grade &&
-                !this.isUserInstructorOrTa) as boolean
+    return (!this.isUserInstructorOrTa &&
+              this.gradeData.isGraded &&
+                this.gradeData.grade &&
+                  !this.isMuted) as boolean
   }
 
   get showViewer () : boolean {

@@ -730,11 +730,11 @@ a:active {
 #dashboard > #browse_row {
   display: flex;
   flex-flow: row wrap;
-  align-items: center;
-  justify-content: space-evenly;
+  align-items: start;
+  justify-content: space-between;
 }
 #dashboard > #browse_row > #dashboard_users {
-  flex: 0.5 1 5rem;
+  flex: 0.5 0.1 15rem;
   min-width: 5rem;
   padding-left: 1%;
 }
@@ -1462,10 +1462,12 @@ div.tooltip_audio_waveform div.arrow_up {
 #student_grade {
   flex: 0.1 1 5rem;
   padding-top: 1rem;
+  margin-left: 1rem;
   min-width: 5rem;
   min-width: 3rem;
   display: inline-block;
-  font-size: 1.4rem;
+  color: rgb(45, 59, 69);
+  font-size: 1.5rem;
 }
 
 #student_grade p {

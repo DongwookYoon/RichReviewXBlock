@@ -606,6 +606,9 @@
         </p>`)
         gradeContainer.show()
       }
+      else {
+        pub.hideGrade()
+      }
     }
 
     return pub

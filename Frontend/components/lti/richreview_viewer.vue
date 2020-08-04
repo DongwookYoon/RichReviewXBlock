@@ -72,8 +72,7 @@ export default class RichReviewViewer extends Vue {
   }
 
   get viewerStyle () {
-    const height = this.isGraderView ? '100vh' : '98vh'
-
+    const height = this.isGraderView ? '100vh' : '93vh'
     return {
       'max-height': height
     }

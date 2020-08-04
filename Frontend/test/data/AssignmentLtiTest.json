@@ -11,7 +11,7 @@
     "courseId": "lti_test",
     "gradeData": {
       "grade": 75,
-      "isGraded": true
+      "isGraded": false
     }
   }
 

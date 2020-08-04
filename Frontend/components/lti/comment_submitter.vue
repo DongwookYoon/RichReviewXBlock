@@ -163,7 +163,8 @@ p {
 }
 
 #submit-button {
-  font-size: 1.4rem;
+  font-size: 1.45rem;
+  font-weight: bold;
   text-align: center;
   margin: 0.1rem 2rem;
 }
@@ -174,6 +175,6 @@ body {
 
 #r2_app_page,
 #r2_app_container {
-  max-height: 93vh;
+  max-height: 95vh;
 }
 </style>

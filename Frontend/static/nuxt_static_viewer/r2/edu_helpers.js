@@ -3,11 +3,11 @@
  */
 
 /** @namespace r2 */
-;(function(r2) {
+;(function (r2) {
   'use strict'
 
   /** Html Template Class */
-  r2.HtmlTemplate = (function() {
+  r2.HtmlTemplate = (function () {
     const pub = {}
 
     const l = []
@@ -19,11 +19,11 @@
       'onscrbtns'
     ]
 
-    pub.initHT = function() {
+    pub.initHT = function () {
       let p = Promise.resolve()
-      l.forEach(function(template) {
-        p = p.then(function() {
-          return pub.loadOnce(template).then(function(resp) {
+      l.forEach(function (template) {
+        p = p.then(function () {
+          return pub.loadOnce(template).then(function (resp) {
             return $('#' + template).html(resp)
           })
         })
@@ -31,17 +31,18 @@
       return p
     }
 
-    pub.add = function(name) {
+    pub.add = function (name) {
       l.push(name)
     }
 
-    pub.loadOnce = function(name) {
-      if (!r2.ctx.text_only || TEXTONLY_TEMPLATE.indexOf(name) < 0) {
+    pub.loadOnce = function (name) {
+      if (!r2.ctx.text_only || !TEXTONLY_TEMPLATE.includes(name)) {
         return r2.util.getUrlData(
           r2.CDN_SUBURL + '/html_templates/' + name + '.html',
           ''
         )
-      } else {
+      }
+      else {
         return r2.util.getUrlData(
           r2.CDN_SUBURL + '/html_templates/' + name + '_textonly.html',
           ''
@@ -55,13 +56,13 @@
   r2.HtmlTemplate.add('r2_app_container')
 
   /** Modal-Window-Loading */
-  r2.modalWindowLoading = (function() {
+  r2.modalWindowLoading = (function () {
     const pub = {}
 
     r2.HtmlTemplate.add('modal-window-loading')
 
     let $dom
-    pub.showModalWindow = function() {
+    pub.showModalWindow = function () {
       $dom = $('#modal-window-loading')
       $dom.dialog({
         resizable: false,
@@ -72,27 +73,27 @@
       $('#progress-bar-loading-pdf').progressbar({ value: 0 })
     }
 
-    pub.hideModalWindow = function() {
+    pub.hideModalWindow = function () {
       $dom.dialog('close')
     }
 
-    pub.setDocProgress = function(progress) {
+    pub.setDocProgress = function (progress) {
       $('#progress-bar-loading-doc').progressbar({ value: progress })
     }
 
-    pub.setPdfProgress = function(progress) {
+    pub.setPdfProgress = function (progress) {
       $('#progress-bar-loading-pdf').progressbar({ value: progress })
     }
 
-    pub.bgnDownloadingMetafile = function() {
+    pub.bgnDownloadingMetafile = function () {
       $('#progress-downmeta').toggleClass('animated', true)
     }
 
-    pub.endDownloadingMetafile = function() {
+    pub.endDownloadingMetafile = function () {
       $('#progress-downmeta').toggleClass('animated', false)
     }
 
-    pub.bgnDownloadingPdf = function() {
+    pub.bgnDownloadingPdf = function () {
       $('#progress-downpdf').toggleClass('animated', true)
     }
 
@@ -100,17 +101,17 @@
   })()
 
   /** Cover message */
-  r2.coverMsg = (function() {
+  r2.coverMsg = (function () {
     const pub = {}
 
     let $dom = null
     const $panels = {}
 
-    const setDoms = function() {
+    const setDoms = function () {
       $dom = $('#cover_msg')
     }
 
-    var tmr = null;
+    let tmr = null
 
     /* z-idx
             10 - fatal error
@@ -119,43 +120,45 @@
             7 - white page
         */
 
-    pub.showUnsupportedBrowser = function() {
+    pub.showUnsupportedBrowser = function () {
       show(10, 'browser_unsupported')
     }
 
-    pub.showMobileWarning = function() {
+    pub.showMobileWarning = function () {
       show(9, 'mobile_warning')
     }
 
-    pub.showSpeechSynthFailed = function() {
+    pub.showSpeechSynthFailed = function () {
       return showBrowserTemplateName('speechsynthfailed')
     }
 
-    pub.showMicSetup = function() {
+    pub.showMicSetup = function () {
       return showBrowserTemplateName('micsetup')
     }
 
-    pub.showMicFailed = function() {
+    pub.showMicFailed = function () {
       return showBrowserTemplateName('micfailed')
     }
 
-    pub.hideMicSetup = function() {
+    pub.hideMicSetup = function () {
       hideBrowserTemplateName('micsetup')
     }
 
-    pub.setTimerShowMicSetup = function(){
-      tmr = setTimeout (function(){return showBrowserTemplateName('micsetup')}, 500)
-      return Promise.resolve();
-    };
+    pub.setTimerShowMicSetup = function () {
+      tmr = setTimeout(function () {
+        return showBrowserTemplateName('micsetup')
+      }, 500)
+      return Promise.resolve()
+    }
 
-    pub.clearTimerShowMicSetup = function(){
-      clearTimeout(tmr);
-      return Promise.resolve();
-    };
+    pub.clearTimerShowMicSetup = function () {
+      clearTimeout(tmr)
+      return Promise.resolve()
+    }
 
-    pub.done = function() {}
+    pub.done = function () {}
 
-    pub.hide = function(template_name) {
+    pub.hide = function (template_name) {
       if ($dom === null) {
         setDoms()
       }
@@ -166,35 +169,39 @@
       }
     }
 
-    function showBrowserTemplateName(template_name) {
+    function showBrowserTemplateName (template_name) {
       if (r2.EnvironmentDetector.browser.chrome) {
         return show(8, 'chrome_' + template_name)
-      } else if (r2.EnvironmentDetector.browser.firefox) {
+      }
+      else if (r2.EnvironmentDetector.browser.firefox) {
         return show(8, 'firefox_' + template_name)
-      } else if (r2.EnvironmentDetector.browser.msedge) {
+      }
+      else if (r2.EnvironmentDetector.browser.msedge) {
         return show(8, 'msedge_' + template_name)
       }
       return Promise.resolve()
     }
 
-    function hideBrowserTemplateName(template_name) {
+    function hideBrowserTemplateName (template_name) {
       if (r2.EnvironmentDetector.browser.chrome) {
         pub.hide('chrome_' + template_name)
-      } else if (r2.EnvironmentDetector.browser.firefox) {
+      }
+      else if (r2.EnvironmentDetector.browser.firefox) {
         pub.hide('firefox_' + template_name)
-      } else if (r2.EnvironmentDetector.browser.msedge) {
+      }
+      else if (r2.EnvironmentDetector.browser.msedge) {
         pub.hide('msedge_' + template_name)
       }
     }
 
-    function show(z_idx, template_name) {
+    function show (z_idx, template_name) {
       setDoms()
       if ($panels.hasOwnProperty(z_idx)) {
         $panels[z_idx].remove()
         delete $panels[z_idx]
       }
       return r2.HtmlTemplate.loadOnce('cover_msg/' + template_name)
-        .then(function(html) {
+        .then(function (html) {
           if (!r2.ctx.lti) {
             html = html.replace('from the edX.org', 'by refreshing the page')
           }
@@ -220,7 +227,7 @@
   })()
 
   /** CheatSheet */
-  r2.cheatSheet = (function() {
+  r2.cheatSheet = (function () {
     const pub = {}
 
     let ondisplay = false
@@ -229,18 +236,18 @@
 
     r2.HtmlTemplate.add('cheatsheet')
 
-    pub.Init = function() {
+    pub.Init = function () {
       $cheatsheet = $('#cheatsheet')
       $btn_cheatsheet = $('#btn-cheatsheet')
 
       pub.AddItem(
         'Turning views',
-        ": Press '<'/'>' button on the top menu.",
+        ': Press \'<\'/\'>\' button on the top menu.',
         'nav_pageturn'
       )
       pub.AddItem(
         'Zooming in/out',
-        ": Press '+'/'-' Buttons on the top menu.",
+        ': Press \'+\'/\'-\' Buttons on the top menu.',
         'nav_zooming'
       )
       if (!r2.ctx.text_only) {
@@ -273,7 +280,7 @@
       )
 
       $cheatsheet.find('.item').hover(
-        function() {
+        function () {
           $(this)
             .find('.item-gif')
             .css('display', 'inline')
@@ -284,7 +291,7 @@
                      $(this).attr("src", newsrc);
                      }); */
         },
-        function() {
+        function () {
           $(this)
             .find('.item-gif')
             .css('display', 'none')
@@ -292,16 +299,16 @@
         }
       )
       $cheatsheet.hover(
-        function() {
+        function () {
           return false
         },
-        function() {}
+        function () {}
       )
       $btn_cheatsheet.hover(
-        function() {
+        function () {
           $cheatsheet.css('display', 'block')
         },
-        function() {
+        function () {
           if (!ondisplay) {
             $cheatsheet.css('display', 'none')
           }
@@ -309,7 +316,7 @@
       )
     }
 
-    pub.AddItem = function(name, description, gif) {
+    pub.AddItem = function (name, description, gif) {
       const item = document.createElement('div')
       $(item).toggleClass('item', true)
       $cheatsheet.append(item)
@@ -332,21 +339,22 @@
       }
     }
 
-    pub.BtnClick = function() {
+    pub.BtnClick = function () {
       ondisplay = !ondisplay
       if (ondisplay) {
         $btn_cheatsheet.toggleClass('btn-primary', false)
         $btn_cheatsheet.toggleClass('btn-info', true)
         $cheatsheet.toggleClass('anchored', true)
         $cheatsheet.css('display', 'block')
-      } else {
+      }
+      else {
         $btn_cheatsheet.toggleClass('btn-primary', true)
         $btn_cheatsheet.toggleClass('btn-info', false)
         $cheatsheet.toggleClass('anchored', false)
       }
     }
 
-    pub.Dismiss = function() {
+    pub.Dismiss = function () {
       ondisplay = false
       $cheatsheet.css('display', 'none')
       $btn_cheatsheet.toggleClass('btn-primary', true)
@@ -357,30 +365,30 @@
     return pub
   })()
 
-  r2.modalWindowIntro = (function() {
+  r2.modalWindowIntro = (function () {
     const pub = {}
 
     r2.HtmlTemplate.add('modal-window-intro-video')
 
-    pub.Init = function() {
+    pub.Init = function () {
       if (r2.util.getCookie('r2_intro_video_never_show_again') == '') {
         // ToDo bootstrap fix
         $('#modal-window-intro-video').modal('show')
       }
-      $('#modal-window-intro-video').on('hidden.bs.modal', function() {
+      $('#modal-window-intro-video').on('hidden.bs.modal', function () {
         $('#modal-window-intro-video')
           .find('video')[0]
           .pause()
       })
     }
-    pub.Dismiss = function(never_show_again) {
+    pub.Dismiss = function (never_show_again) {
       if (never_show_again) {
         r2.util.setCookie('r2_intro_video_never_show_again', true, 7) // never show the window for 7days
       }
       // ToDo bootstrap fix
       $('#modal-window-intro-video').modal('hide')
     }
-    pub.show = function() {
+    pub.show = function () {
       r2.log.Log_Simple('TutorialVideo')
       $('#modal-window-intro-video').modal('show')
       r2.util.resetCookie('r2_intro_video_never_show_again')
@@ -389,10 +397,10 @@
     return pub
   })()
 
-  r2.commentHistory = (function() {
+  r2.commentHistory = (function () {
     const pub = {}
 
-    function addItem(userid, type, annotid, cmd) {
+    function addItem (userid, type, annotid, cmd) {
       const container = $('#dashboard-comment-history')[0]
       const $a = $(document.createElement('a'))
       $a.attr('userid', userid)
@@ -410,13 +418,13 @@
       )
       $a.append($i)
       $i.hover(
-        function() {
+        function () {
           $i.css(
             'color',
             r2.userGroup.GetUser(userid).color_meta_comment_list_hover
           )
         },
-        function() {
+        function () {
           $i.css(
             'color',
             r2.userGroup.GetUser(userid).color_meta_comment_list_normal
@@ -428,17 +436,17 @@
         $a.attr('aria-label', 'audio comment')
         $i.toggleClass('fa-volume-up')
         $(container).prepend($a)
-        $a.click(function() {
+        $a.click(function () {
           if (r2.commentHistory.scrollToComment($a, annotid)) {
-              r2App.cur_annot_id = annotid
-              r2.rich_audio.play(r2App.cur_annot_id, -1)
-              if ($a.hasClass('accessed') === false) {
-                $a.addClass('accessed')
-                storeAccessedStatus(cmd)
-              }
+            r2App.cur_annot_id = annotid
+            r2.rich_audio.play(r2App.cur_annot_id, -1)
+            if ($a.hasClass('accessed') === false) {
+              $a.addClass('accessed')
+              storeAccessedStatus(cmd)
+            }
           }
           else {
-            console.warn('Scroll to comment failed for ' + annotid);
+            console.warn('Scroll to comment failed for ' + annotid)
           }
         })
       }
@@ -446,23 +454,23 @@
         $a.attr('aria-label', 'text comment')
         $i.toggleClass('fa-edit')
         $(container).prepend($a)
-        $a.click(function() {
+        $a.click(function () {
           if (r2.commentHistory.scrollToComment($a, annotid)) {
             r2.log.Log_CommentHistory('text', annotid)
             if ($a.hasClass('accessed') === false) {
-                $a.addClass('accessed')
-                storeAccessedStatus(cmd)
+              $a.addClass('accessed')
+              storeAccessedStatus(cmd)
             }
           }
           else {
-            console.warn('Scroll to comment failed for ' + annotid);
+            console.warn('Scroll to comment failed for ' + annotid)
           }
         })
       }
     }
 
-    function removeItem(userid, annotid) {
-      localStorage.removeItem(annotid);                               //Remove key-value pair from local storage
+    function removeItem (userid, annotid) {
+      localStorage.removeItem(annotid) // Remove key-value pair from local storage
       const container = $('#dashboard-comment-history')[0]
       for (let i = 0; i < container.childNodes.length; ++i) {
         if (
@@ -476,110 +484,140 @@
       }
     }
 
-    function storeAccessedStatus(cmd) {
-      let historyCmd = JSON.parse(JSON.stringify(cmd));
-      historyCmd.time = new Date().toISOString();
-      historyCmd.op = 'FlagAccessedComment';
-      //console.log(`uploading history cmd with op: ` + historyCmd.op + ' \nand aid ' + historyCmd.data.aid);
-      r2Sync.uploader.pushCmd(historyCmd);
+    function storeAccessedStatus (cmd) {
+      const historyCmd = JSON.parse(JSON.stringify(cmd))
+      historyCmd.time = new Date().toISOString()
+      historyCmd.op = 'FlagAccessedComment'
+      // console.log(`uploading history cmd with op: ` + historyCmd.op + ' \nand aid ' + historyCmd.data.aid);
+      r2Sync.uploader.pushCmd(historyCmd)
     }
 
     let $highlight_a = null
     let $highlight_piecegroup = null
-    function highlight($a, $piece_group) {
-      if ($highlight_a) $highlight_a.removeClass('highlight')
+    function highlight ($a, $piece_group) {
+      if ($highlight_a) {
+        $highlight_a.removeClass('highlight')
+      }
       $a.addClass('highlight')
       $highlight_a = $a
 
-      if ($highlight_piecegroup) $highlight_piecegroup.removeClass('highlight')
+      if ($highlight_piecegroup) {
+        $highlight_piecegroup.removeClass('highlight')
+      }
       $piece_group.addClass('highlight')
       $highlight_piecegroup = $piece_group
     }
 
-    pub.clearCommentHistory = function() {
+    pub.clearCommentHistory = function () {
       const container = $('#dashboard-comment-history')[0]
       for (let i = 0; i < container.childNodes.length; ++i) {
         container.removeChild(container.childNodes[i])
       }
     }
 
-
-    pub.scrollToComment = function($a, annotid) {
-      let searchResult = r2App.doc.SearchPieceByAnnotId(annotid)
-      if(!searchResult) {
-        return false;
+    pub.scrollToComment = function ($a, annotid) {
+      const searchResult = r2App.doc.SearchPieceByAnnotId(annotid)
+      if (!searchResult) {
+        return false
       }
 
-      let $piece_group = r2.turnPageAndSetFocus(searchResult, annotid);
-      highlight($a, $piece_group);
+      const $piece_group = r2.turnPageAndSetFocus(searchResult, annotid)
+      highlight($a, $piece_group)
 
-      let piece = searchResult["piece"];
-      let left = piece.pos.x;
-      let top = piece.pos.y;
+      const piece = searchResult.piece
+      let left = piece.pos.x
+      let top = piece.pos.y
 
-      /*If we don't have coordinates set on the piece */
+      /* If we don't have coordinates set on the piece */
       if (left == 0 && top == 0) {
-        let dashboard_height = r2.resizeWindow();
-        let pieceGroup = $($piece_group[0]);
-        let offset = pieceGroup.offset();
-        let height = pieceGroup.height();
+        const dashboard_height = r2.resizeWindow()
+        const pieceGroup = $($piece_group[0])
+        const offset = pieceGroup.offset()
+        const height = pieceGroup.height()
 
-        left = (offset.left + pieceGroup.clientWidth / 2.0);
-        top = offset.top - dashboard_height - height;
+        left = (offset.left + pieceGroup.clientWidth / 2.0)
+        top = offset.top - dashboard_height - height
       }
       else {
-        left = (left + searchResult["piece"].GetContentSize().x / 2.0) * r2.dom.getCanvasWidth();
-        top *= r2.dom.getCanvasWidth();
+        left = (left + searchResult.piece.GetContentSize().x / 2.0) * r2.dom.getCanvasWidth()
+        top *= r2.dom.getCanvasWidth()
       }
 
-      r2.dom.setScroll(left, top);
-      return true;
+      r2.dom.setScroll(left, top)
+      return true
     }
 
-
-    pub.consumeCmd = function(cmd) {
-      /*Add comment to UI */
+    pub.consumeCmd = function (cmd) {
+      /* Add comment to UI */
       if (cmd.op == 'CreateComment') {
         if (cmd.type == 'CommentAudio') {
-          addItem(cmd.user, 'audio', cmd.data.aid, cmd);
+          addItem(cmd.user, 'audio', cmd.data.aid, cmd)
         }
-        if ( (cmd.type == 'CommentText') &&  (cmd.data.isprivate == false ||
-            (cmd.data.isprivate && cmd.user == r2.userGroup.cur_user.name)) ) {
-            addItem(cmd.user, 'text', cmd.data.aid, cmd);
+        if ((cmd.type == 'CommentText') && (cmd.data.isprivate == false ||
+            (cmd.data.isprivate && cmd.user == r2.userGroup.cur_user.name))) {
+          addItem(cmd.user, 'text', cmd.data.aid, cmd)
         }
         if (cmd.type == 'CommentNewSpeak') {
-          addItem(cmd.user, 'audio', cmd.data.aid, cmd);
+          addItem(cmd.user, 'audio', cmd.data.aid, cmd)
         }
       }
-      /*Delete comment */
+      /* Delete comment */
       else if (cmd.op == 'DeleteComment') {
         if (cmd.target.type == 'PieceKeyboard') {
-          removeItem(cmd.user, cmd.target.aid);
+          removeItem(cmd.user, cmd.target.aid)
         }
         if (cmd.target.type == 'CommentAudio') {
-          removeItem(cmd.user, cmd.target.aid);
+          removeItem(cmd.user, cmd.target.aid)
         }
         if (cmd.target.type == 'PieceNewSpeak') {
-          removeItem(cmd.user, cmd.target.aid);
+          removeItem(cmd.user, cmd.target.aid)
         }
       }
-      /*Mark comment as accessed in comment history UI*/
-      else if (cmd.op == 'FlagAccessedComment')
-      {
-        $(`a[annotid="${cmd.data.aid}"]`).addClass('accessed');
+      /* Mark comment as accessed in comment history UI */
+      else if (cmd.op == 'FlagAccessedComment') {
+        $(`a[annotid="${cmd.data.aid}"]`).addClass('accessed')
       }
     }
 
-    return pub;
+    return pub
+  })()
+
+  /** Logic for displaying student grade in RR UI */
+  r2.studentGrade = (function () {
+    const pub = {}
+
+    const gradeData = r2.ctx.grade_data
+
+    pub.showGrade = function () {
+      $('#student_grade').show()
+    }
+
+    pub.hideGrade = function () {
+      $('#student_grade').hide()
+    }
+
+    pub.init = function () {
+      const gradeContainer = $('#student_grade')
+
+      if (gradeData && gradeData.isGraded === true) {
+        gradeContainer.append(`
+        <p>
+          <strong>Grade</strong>${gradeData.grade}
+        </p>`)
+        gradeContainer.show()
+      }
+    }
+
+    return pub
   })()
 
   /** Logger */
-  r2.log = (function() {
+  r2.log = (function () {
     const pub = {}
     const log_q = []
     let upload_q = []
 
-    const getLogTemplate = function(op) {
+    const getLogTemplate = function (op) {
       const log = {}
       log.op = op
       log.event_time = new Date(r2App.cur_time).toISOString()
@@ -590,17 +628,17 @@
       return log
     }
 
-    pub.Log_Simple = function(op) {
+    pub.Log_Simple = function (op) {
       log_q.push(getLogTemplate(op))
     }
 
-    pub.Log_SpeechSynth = function(s) {
+    pub.Log_SpeechSynth = function (s) {
       const log = getLogTemplate('SpeechSynth')
       log.s = s
       log_q.push(log)
     }
 
-    pub.Log_Nav = function(input) {
+    pub.Log_Nav = function (input) {
       const log = getLogTemplate('Nav')
       log.viewpos = new Vec2()
       log.viewscale = new Vec2(r2.viewCtrl.scale)
@@ -608,51 +646,51 @@
       log.input = input
       log_q.push(log)
     }
-    pub.Log_AudioPlay = function(type, annotId, pbtime) {
+    pub.Log_AudioPlay = function (type, annotId, pbtime) {
       const log = getLogTemplate('AudioPlay')
       log.type = type
       log.annotId = annotId
       log.time = pbtime
       log_q.push(log)
     }
-    pub.Log_AudioStop = function(type, annotId, pbtime) {
+    pub.Log_AudioStop = function (type, annotId, pbtime) {
       const log = getLogTemplate('AudioStop')
       log.type = type
       log.annotId = annotId
       log.time = pbtime
       log_q.push(log)
     }
-    pub.Log_CommentHistory = function(type, annotId) {
+    pub.Log_CommentHistory = function (type, annotId) {
       const log = getLogTemplate('CommentHistory')
       log.type = type
       log.annotId = annotId
       log_q.push(log)
     }
-    pub.Log_Collapse = function(what) {
+    pub.Log_Collapse = function (what) {
       const log = getLogTemplate('Collapse')
       log.what = what
       log_q.push(log)
     }
-    pub.Log_Expand = function(what) {
+    pub.Log_Expand = function (what) {
       const log = getLogTemplate('Expand')
       log.what = what
       log_q.push(log)
     }
 
-    pub.SyncLog = function(what) {
-      $.get('synclog?what=' + what).fail(function(err) {
+    pub.SyncLog = function (what) {
+      $.get('synclog?what=' + what).fail(function (err) {
         console.error(err)
       })
     }
 
-    const upload = function(logs) {
+    const upload = function (logs) {
       return r2.util.postWebAppLogs({
         group_n: r2.ctx.groupid,
         logs: JSON.stringify(logs)
       })
     }
 
-    const removeDuplicatesInQ = function() {
+    const removeDuplicatesInQ = function () {
       let n_wheel = 0
       let n, i
       for (i = 0; i < log_q.length; ++i) {
@@ -673,7 +711,7 @@
       }
     }
 
-    const uploadReady = function(delayed) {
+    const uploadReady = function (delayed) {
       if (
         log_q.length === 0 || // when there's nothing to upload, or
         upload_q.length !== 0
@@ -685,17 +723,19 @@
       if (!delayed) {
         // upload right away
         return true
-      } else if (
+      }
+      else if (
         Date.now() - new Date(log_q[0].event_time).getTime() >
         r2Const.INTERVAL_LOGPOST
       ) {
         return true
-      } else {
+      }
+      else {
         return false
       }
     }
 
-    pub.Consume = function(delayed) {
+    pub.Consume = function (delayed) {
       if (uploadReady(delayed)) {
         removeDuplicatesInQ()
 
@@ -709,10 +749,10 @@
             r2Const.INTERVAL_LOGRETRY,
             r2Const.N_LOGRETRY
           )
-          .then(function() {
+          .then(function () {
             upload_q = []
           })
-          .catch(function(err) {
+          .catch(function (err) {
             console.error(err, err.stack)
             err.custom_msg =
               'We failed to sync data with legacy. Please check your internet connection and retry, otherwise you may lose your comments.'
@@ -721,12 +761,11 @@
       }
     }
 
-
     return pub
   })()
 
   /** user group */
-  r2.userGroup = (function() {
+  r2.userGroup = (function () {
     const pub = {}
 
     let users = {}
@@ -734,23 +773,23 @@
     pub.cur_user = null
 
     const user_colors = [
-      [56, 172, 84],   // 0 Green
-      [255, 165, 0],   // 1 Orange
-      [229, 64, 40],   // 2 Blue
-      [149, 3, 255],   // 3 Indigo
+      [56, 172, 84], // 0 Green
+      [255, 165, 0], // 1 Orange
+      [229, 64, 40], // 2 Blue
+      [149, 3, 255], // 3 Indigo
       [218, 112, 214], // 4 Lavender
       [102, 205, 170], // 5 Aqua
-      [255, 215, 0],   // 6 Gold
-      [165, 42, 42],   // 7 Brown
-      [128, 128, 0],   // 8 Olive
-      [50, 205, 50],   // 9 Lime
-      [0, 191, 255]    // 10 LightBlue
+      [255, 215, 0], // 6 Gold
+      [165, 42, 42], // 7 Brown
+      [128, 128, 0], // 8 Olive
+      [50, 205, 50], // 9 Lime
+      [0, 191, 255] // 10 LightBlue
     ]
     const user_color_legacy = [51, 172, 227] // blue
     const user_color_anonymous = [50, 50, 50] // gray
     const user_color_instructor = [187, 62, 82] // red
 
-    const R2User = function(_name, nick, email, _color, isguest, n, type) {
+    const R2User = function (_name, nick, email, _color, isguest, n, type) {
       this.name = _name
       this.nick = nick
       this.email = email
@@ -758,20 +797,20 @@
       this.type = type
       this.n = n
 
-      this.color_normal = _color.map(function(v) {
+      this.color_normal = _color.map(function (v) {
         return v / 255
       })
-      this.color_dark = _color.map(function(v) {
+      this.color_dark = _color.map(function (v) {
         return v / 400
       })
-      this.color_light = _color.map(function(v) {
+      this.color_light = _color.map(function (v) {
         return (v + (255 - v) / 1.5) / 255
       })
 
       /**
        * @returns {string}
        */
-      this.GetHtmlColor = function(_c, _alpha) {
+      this.GetHtmlColor = function (_c, _alpha) {
         return (
           'rgba(' +
           Math.floor(_c[0] * 255.0) +
@@ -838,16 +877,16 @@
       /**
        * @returns {string}
        */
-      this.GetAnnotPrivateSpotlightId = function() {
+      this.GetAnnotPrivateSpotlightId = function () {
         return 'private_highlight_' + this.name
       }
 
-      this.GetAnnotStaticInkId = function() {
+      this.GetAnnotStaticInkId = function () {
         return 'static_ink_' + this.name
       }
     }
 
-    pub.Set = function(groupdata) {
+    pub.Set = function (groupdata) {
       if (groupdata == null) {
         throw new Error('Cannot load the group data from the legacy.')
       }
@@ -874,14 +913,15 @@
       )
 
       if (groupdata.users) {
-        groupdata.users.forEach(function(user) {
+        groupdata.users.forEach(function (user) {
           pub.AddUser(user.id, user.nick_name || user.display_name, user.email, user.type)
         })
       }
 
       if (pub.cur_user === null && groupdata.self === '') {
         pub.SetCurUser('anonymous')
-      } else if (groupdata.self) {
+      }
+      else if (groupdata.self) {
         pub.AddUser(
           groupdata.self.id,
           groupdata.self.nick,
@@ -900,14 +940,14 @@
       return Promise.resolve()
     }
 
-    pub.GetUser = function(name) {
+    pub.GetUser = function (name) {
       return users[name]
     }
 
     /**
      * @returns {boolean}
      */
-    pub.IsValidMember = function(name) {
+    pub.IsValidMember = function (name) {
       return (
         users.hasOwnProperty(name) &&
         (!users[name].isguest ||
@@ -915,7 +955,7 @@
       )
     }
 
-    pub.AddUser = function(name, nick, email, type) {
+    pub.AddUser = function (name, nick, email, type) {
       let color
       let isguest
       switch (type) {
@@ -969,7 +1009,7 @@
       }
     }
 
-    pub.Clear = function() {
+    pub.Clear = function () {
       users = []
       pub.cur_user = null
       $('#dashboard_users')
@@ -977,7 +1017,7 @@
         .remove()
     }
 
-    pub.SetCurUser = function(name) {
+    pub.SetCurUser = function (name) {
       pub.cur_user = users[name]
       r2App.annotStaticInkMgr.setCurUser(pub.cur_user)
     }
@@ -985,7 +1025,7 @@
     /**
      * @returns {number}
      */
-    pub.GetCurMemberUsersNum = function() {
+    pub.GetCurMemberUsersNum = function () {
       let n = 0
       for (const name in users) {
         if (users.hasOwnProperty(name)) {
@@ -1002,13 +1042,13 @@
       return n
     }
 
-    pub.GetCurStudentMemberUsersNum = function() {
+    pub.GetCurStudentMemberUsersNum = function () {
       let n = 0
       for (const name in users) {
         if (users.hasOwnProperty(name)) {
           const user = users[name]
           if (
-              !user.isguest &&
+            !user.isguest &&
               user.name != r2Const.LEGACY_USERNAME &&
               user.name != 'anonymous' &&
               user.type == 'student'
@@ -1024,7 +1064,7 @@
   })()
 
   /** FPS counter */
-  function FpsCounter() {
+  function FpsCounter () {
     /**
      * How to use:
      * fpsCounter.Tick(function(avg){document.getElementById('fps').innerHTML = 'fps : ' + parseInt(avg);});
@@ -1035,11 +1075,12 @@
     let fps = 0
     const fpsq = []
 
-    this.Tick = function(cbDisplay) {
+    this.Tick = function (cbDisplay) {
       if (lastRenderCalledTime == null) {
         lastRenderCalledTime = Date.now()
         fps = 0
-      } else {
+      }
+      else {
         const delta = (new Date().getTime() - lastRenderCalledTime) / 1000
         lastRenderCalledTime = Date.now()
         fps = 1 / delta
@@ -1050,7 +1091,7 @@
           fpsq.shift()
         }
         const avg =
-          fpsq.reduce(function(a, b) {
+          fpsq.reduce(function (a, b) {
             return a + b
           }) / fpsq.length
         cbDisplay(avg)
@@ -1060,14 +1101,14 @@
   }
 
   /** Booklet */
-  r2.booklet = (function() {
+  r2.booklet = (function () {
     const pub = {}
     const groups = []
 
     let $booklet_nav
     let cur_groupn = 0
 
-    pub.initBooklet = function() {
+    pub.initBooklet = function () {
       $booklet_nav = $('#booklet_nav')
 
       const bookletjs = getBookletData()
@@ -1082,8 +1123,8 @@
         const $div = $(document.createElement('div'))
         group.$btn = makeBookletBtn(createElementA())
         group.$title = makeBookletTitle(createElementA())
-        const func_select = (function(_i) {
-          return function() {
+        const func_select = (function (_i) {
+          return function () {
             gelectGroup(_i)
           }
         })(i)
@@ -1107,14 +1148,13 @@
       gelectGroup(0)
     }
 
-    pub.goToAbsPage = function(n, booklet_n) {
+    pub.goToAbsPage = function (n, booklet_n) {
       if (typeof booklet_n === 'undefined') {
         for (let i = 0; i < groups.length; ++i) {
           if (groups[i].page_range[0] <= n && groups[i].page_range[1] >= n) {
             booklet_n = i
           }
         }
-
       }
       if (typeof booklet_n !== 'undefined') {
         if (booklet_n < groups.length) {
@@ -1126,24 +1166,24 @@
       }
     }
 
-    pub.goToFirstPage = function() {
+    pub.goToFirstPage = function () {
       return goToPage(0)
     }
 
-    pub.goToPrevPage = function() {
+    pub.goToPrevPage = function () {
       return goToPage(groups[cur_groupn].cur_pagen - 1)
     }
 
-    pub.goToNextPage = function() {
+    pub.goToNextPage = function () {
       return goToPage(groups[cur_groupn].cur_pagen + 1)
     }
 
-    pub.goToLastPage = function() {
+    pub.goToLastPage = function () {
       const group = groups[cur_groupn]
       return goToPage(group.page_range[1] - group.page_range[0])
     }
 
-    var getBookletData = function() {
+    var getBookletData = function () {
       // some hardcoded pieces for experiments
       let bookletjs
       if (
@@ -1160,7 +1200,8 @@
           { pages: [56, 83], title: '8. Breaking Rules for Good' },
           { pages: [84, 96], title: 'Conclusion' }
         ]
-      } else if (r2.ctx.pdfid == 'e5b3a37e184244f319b4393eae6059fb46f76953') {
+      }
+      else if (r2.ctx.pdfid == 'e5b3a37e184244f319b4393eae6059fb46f76953') {
         bookletjs = [
           { pages: [0, 0], title: 'General Discussion' },
           {
@@ -1176,7 +1217,8 @@
             title: 'Breakdown, Obsolescence and Reuse [Jackson and Kang]'
           }
         ]
-      } else {
+      }
+      else {
         bookletjs = [
           { pages: [0, r2App.doc.GetNumPages() - 1], title: 'Document' }
         ]
@@ -1184,21 +1226,21 @@
       return bookletjs
     }
 
-    const getPageCount = function() {
+    const getPageCount = function () {
       const range = groups[cur_groupn].page_range
       return range[1] - range[0] + 1
     }
 
-    const getCurPdfPageN = function() {
+    const getCurPdfPageN = function () {
       const group = groups[cur_groupn]
       return group.page_range[0] + group.cur_pagen
     }
 
-    const getCurPageN = function() {
+    const getCurPageN = function () {
       return groups[cur_groupn].cur_pagen
     }
 
-    var goToPage = function(n) {
+    var goToPage = function (n) {
       const group = groups[cur_groupn]
       if (n >= 0 && n <= group.page_range[1] - group.page_range[0]) {
         groups[cur_groupn].cur_pagen = n
@@ -1208,25 +1250,25 @@
       return false
     }
 
-    function gelectGroup(i) {
+    function gelectGroup (i) {
       groups[cur_groupn].$btn.toggleClass('btn-primary', false)
       cur_groupn = i
       groups[cur_groupn].$btn.toggleClass('btn-primary', true)
       SetPdfPageN(getCurPdfPageN())
     }
 
-    function SetPdfPageN(n) {
-      //r2.log.Log_Nav('SetPdfPageN_' + n)
-      /*This causes comment history replay to fail after page turn if a comment
+    function SetPdfPageN (n) {
+      // r2.log.Log_Nav('SetPdfPageN_' + n)
+      /* This causes comment history replay to fail after page turn if a comment
         is already playing, i.e. r2App.mode == r2App.AppModeEnum.REPLAYING */
-      //if (r2App.mode == r2App.AppModeEnum.REPLAYING) {
+      // if (r2App.mode == r2App.AppModeEnum.REPLAYING) {
       //  r2.log.Log_AudioStop(
       //    'SetPdfPageN',
       //    r2.audioPlayer.getCurAudioFileId(),
       //    r2.audioPlayer.getPlaybackTime()
       //  )
-        //r2.rich_audio.stop()
-      //}
+      // r2.rich_audio.stop()
+      // }
 
       r2.dom_model.setCurPage(n)
       r2App.pieceSelector.reset()
@@ -1238,11 +1280,10 @@
       r2App.invalidate_page_layout = true
 
       updatePageNavBar()
-      r2App.cur_page.refreshPageSpotlightWidth();         //Calc spotlight width for this page
-
+      r2App.cur_page.refreshPageSpotlightWidth() // Calc spotlight width for this page
     }
 
-    function updatePageNavBar() {
+    function updatePageNavBar () {
       const cur_page = getCurPageN()
       const page_count = getPageCount()
       $('#page_nav_input').val(cur_page + 1)
@@ -1253,21 +1294,21 @@
       $('#page_nav_last').toggleClass('disabled', cur_page == page_count - 1)
     }
 
-    function showTitles() {
+    function showTitles () {
       $booklet_nav.toggleClass('opened', true)
-      groups.forEach(function(group) {
+      groups.forEach(function (group) {
         group.$title.show()
       })
     }
 
-    function hideTitles() {
+    function hideTitles () {
       $booklet_nav.toggleClass('opened', false)
-      groups.forEach(function(group) {
+      groups.forEach(function (group) {
         group.$title.hide()
       })
     }
 
-    function createElementA() {
+    function createElementA () {
       const $a = $(document.createElement('a'))
       $a.toggleClass('btn', true)
       $a.toggleClass('btn-default', true)
@@ -1275,7 +1316,7 @@
       return $a
     }
 
-    function makeBookletBtn($a) {
+    function makeBookletBtn ($a) {
       $a.toggleClass('booklet-btn', true)
       const $i = $(document.createElement('a'))
       $i.toggleClass('fa', true)
@@ -1284,7 +1325,7 @@
       return $a
     }
 
-    function makeBookletTitle($a) {
+    function makeBookletTitle ($a) {
       $a.toggleClass('booklet-title', true)
       return $a
     }
@@ -1293,7 +1334,7 @@
   })()
 
   /** PDF Render Manager */
-  r2.pdfRenderer = (function() {
+  r2.pdfRenderer = (function () {
     const pub = {}
 
     let canvs = [] // {dom:, ctx:, t:, npage:}
@@ -1301,17 +1342,17 @@
     const npage_render = { now: -1, next: -1 }
     let now_rendering = -1
 
-    pub.initPdfRenderer = function(pdf_doc) {
-      return getPdfPages(pdf_doc).then(function(pdf_pages) {
-        return new Promise(function(resolve, reject) {
+    pub.initPdfRenderer = function (pdf_doc) {
+      return getPdfPages(pdf_doc).then(function (pdf_pages) {
+        return new Promise(function (resolve, reject) {
           try {
             let canv_w = 0
             let canv_h = 0
 
-            pages = $.map($(new Array(pdf_pages.length)), function(val, i) {
+            pages = $.map($(new Array(pdf_pages.length)), function (val, i) {
               const pdf = pdf_pages[i]
               const page = {
-                pdf: pdf,
+                pdf,
                 viewport: pdf.getViewport(
                   r2.viewCtrl.page_width_noscale /
                     (pdf.pageInfo.view[2] - pdf.pageInfo.view[0])
@@ -1332,7 +1373,7 @@
 
             canvs = $.map(
               $(new Array(Math.min(r2Const.MAX_CANVS_N, pages.length))),
-              function(val, i) {
+              function (val, i) {
                 const dom = document.createElement('canvas')
                 const ctx = dom.getContext('2d')
                 dom.width = canv_w
@@ -1341,22 +1382,23 @@
                 ctx.scale(r2.viewCtrl.hdpi_ratio.sx, r2.viewCtrl.hdpi_ratio.sy)
 
                 return {
-                  dom: dom,
-                  ctx: ctx,
+                  dom,
+                  ctx,
                   t: new Date().getTime(),
                   npage: -1
                 }
               }
             )
             resolve(pdf_doc)
-          } catch (err) {
+          }
+          catch (err) {
             reject(err)
           }
         }) // return Promise end
       })
     }
 
-    function getPdfPages(pdf_doc) {
+    function getPdfPages (pdf_doc) {
       const promises = []
       for (let i = 0; i < pdf_doc.numPages; ++i) {
         promises.push(pdf_doc.getPage(i + 1))
@@ -1364,50 +1406,53 @@
       return Promise.all(promises)
     }
 
-    pub.getCanvas = function(n_page) {
+    pub.getCanvas = function (n_page) {
       const n_canv = pages[n_page].ncanv
       if (n_canv !== -1) {
         canvs[n_canv].t = new Date().getTime()
         renderNextPage(n_page)
         return canvs[n_canv].dom
-      } else {
+      }
+      else {
         render_q.pushFront(n_page)
         runRender()
-          .then(function() {
+          .then(function () {
             return renderNextPage(n_page)
           })
-          .catch(function(err) {
+          .catch(function (err) {
             console.error(err)
           })
         return null
       }
 
       // push next page if available
-      function renderNextPage(_n_page) {
+      function renderNextPage (_n_page) {
         if (_n_page + 1 < pages.length && pages[_n_page + 1].ncanv === -1) {
           render_q.pushFront(_n_page + 1)
           return runRender()
-        } else {
+        }
+        else {
           return Promise.resolve()
         }
       }
     }
 
-    function runRender() {
+    function runRender () {
       if (now_rendering === -1) {
         now_rendering = render_q.popFront()
-        return runRenderPage(now_rendering).then(function() {
+        return runRenderPage(now_rendering).then(function () {
           now_rendering = -1
           if (!render_q.isEmpty()) {
             return runRender()
           }
         })
-      } else {
+      }
+      else {
         return Promise.resolve()
       }
     }
 
-    function runRenderPage(n_page) {
+    function runRenderPage (n_page) {
       const n_canv = getAvailableCanv()
 
       canvs[n_canv].npage = n_page
@@ -1424,32 +1469,32 @@
         canvs[n_canv].dom.width / r2.viewCtrl.hdpi_ratio.sx,
         canvs[n_canv].dom.height / r2.viewCtrl.hdpi_ratio.sy
       )
-      return pages[n_page].pdf.render(ctx).then(function() {
+      return pages[n_page].pdf.render(ctx).then(function () {
         spinner.hide()
         r2App.invalidate_static_scene = true
         return null
       })
     }
 
-    var render_q = (function() {
+    var render_q = (function () {
       const pub_q = {}
 
       const q = []
 
-      pub_q.pushFront = function(v) {
+      pub_q.pushFront = function (v) {
         removeDup(v)
         q.unshift(v)
       }
 
-      pub_q.popFront = function() {
+      pub_q.popFront = function () {
         return q.shift()
       }
 
-      pub_q.isEmpty = function() {
+      pub_q.isEmpty = function () {
         return q.length === 0
       }
 
-      var removeDup = function(v) {
+      var removeDup = function (v) {
         const i = q.indexOf(v)
         if (i != -1) {
           q.splice(i, 1)
@@ -1459,7 +1504,7 @@
       return pub_q
     })()
 
-    function renderPage(n_page) {
+    function renderPage (n_page) {
       npage_render.now = n_page
       const n_canv = getAvailableCanv()
 
@@ -1477,24 +1522,26 @@
         canvs[n_canv].dom.width / r2.viewCtrl.hdpi_ratio.sx,
         canvs[n_canv].dom.height / r2.viewCtrl.hdpi_ratio.sy
       )
-      pages[n_page].pdf.render(ctx).then(function() {
+      pages[n_page].pdf.render(ctx).then(function () {
         spinner.hide()
         if (npage_render.next != -1) {
           const n = npage_render.next
           npage_render.next = -1
           renderPage(n)
-        } else {
+        }
+        else {
           npage_render.now = -1
         }
         r2App.invalidate_static_scene = true
       })
     }
 
-    function getAvailableCanv() {
-      function getCurRenderingCanv() {
+    function getAvailableCanv () {
+      function getCurRenderingCanv () {
         if (npage_render.now == -1) {
           return -1
-        } else {
+        }
+        else {
           return pages[npage_render.now].ncanv
         }
       }
@@ -1516,10 +1563,10 @@
       return min_i
     }
 
-    var spinner = (function() {
+    var spinner = (function () {
       const pub_sp = {}
 
-      pub_sp.show = function() {
+      pub_sp.show = function () {
         const app_container_size = r2.viewCtrl.getAppContainerSize()
         const $ri = $('#rendering_spinner')
         const $ri_w = 25
@@ -1529,7 +1576,7 @@
         $ri.toggleClass('animated', 'true')
       }
 
-      pub_sp.hide = function() {
+      pub_sp.hide = function () {
         const $ri = $('#rendering_spinner')
         $ri.toggleClass('animated', 'false')
         $ri.css('display', 'none')
@@ -1542,7 +1589,7 @@
   })()
 
   /** Prerenders Spotlights  */
-  r2.spotlightRenderer = (function() {
+  r2.spotlightRenderer = (function () {
     const pub = {}
 
     let canv
@@ -1550,7 +1597,7 @@
     let _original_canv_width_stored = 0
     let _ratio_stored = 0
 
-    pub.setCanvCtx = function(original_canv_width, ratio) {
+    pub.setCanvCtx = function (original_canv_width, ratio) {
       if (
         _original_canv_width_stored != original_canv_width ||
         _ratio_stored != ratio
@@ -1562,28 +1609,29 @@
         canv.width = original_canv_width / 4
         canv.height = canv.width * ratio
         canv_ctx = canv.getContext('2d')
-      } else {
+      }
+      else {
         canv_ctx.clearRect(0, 0, canv.width, canv.height)
       }
     }
 
-    pub.getCanvCtx = function() {
+    pub.getCanvCtx = function () {
       return canv_ctx
     }
 
-    pub.getCanv = function() {
+    pub.getCanv = function () {
       return canv
     }
 
-    pub.getCanvWidth = function() {
+    pub.getCanvWidth = function () {
       return canv.width
     }
 
-    pub.getCanvRatio = function() {
+    pub.getCanvRatio = function () {
       return canv.height / canv.width
     }
 
-    pub.getRenderHeight = function(original_size_y, page_width) {
+    pub.getRenderHeight = function (original_size_y, page_width) {
       return (Math.floor((original_size_y * page_width) / 4) * 4) / page_width
     }
 
@@ -1591,7 +1639,7 @@
   })()
 
   /** Prerenders Inks  */
-  r2.InkRenderer = (function() {
+  r2.InkRenderer = (function () {
     const pub = {}
 
     let canv
@@ -1599,7 +1647,7 @@
     let _original_canv_width_stored = 0
     let _ratio_stored = 0
 
-    pub.setCanvCtx = function(original_canv_width, ratio) {
+    pub.setCanvCtx = function (original_canv_width, ratio) {
       if (
         _original_canv_width_stored != original_canv_width ||
         _ratio_stored != ratio
@@ -1611,40 +1659,41 @@
         canv.width = original_canv_width / 4
         canv.height = canv.width * ratio
         canv_ctx = canv.getContext('2d')
-      } else {
+      }
+      else {
         canv_ctx.clearRect(0, 0, canv.width, canv.height)
       }
     }
 
-    pub.getCanvCtx = function() {
+    pub.getCanvCtx = function () {
       return canv_ctx
     }
 
-    pub.getCanv = function() {
+    pub.getCanv = function () {
       return canv
     }
 
-    pub.getCanvWidth = function() {
+    pub.getCanvWidth = function () {
       return canv.width
     }
 
-    pub.getCanvRatio = function() {
+    pub.getCanvRatio = function () {
       return canv.height / canv.width
     }
 
-    pub.getRenderHeight = function(original_size_y, page_width) {
+    pub.getRenderHeight = function (original_size_y, page_width) {
       return (Math.floor((original_size_y * page_width) / 4) * 4) / page_width
     }
 
     return pub
   })()
 
-  r2.radialMenu = (function() {
+  r2.radialMenu = (function () {
     const pub = {}
 
     const menus = []
 
-    pub.create = function(rm_id, rm_size, btn_center_fa_font, btn_alt, cb) {
+    pub.create = function (rm_id, rm_size, btn_center_fa_font, btn_alt, cb) {
       const $menu = $(document.createElement('div'))
       $menu.addClass('rm_menu')
       $menu.attr('id', rm_id)
@@ -1676,7 +1725,7 @@
       return $menu
     }
 
-    pub.addBtnCircular = function($menu, fa_font, alt, cb) {
+    pub.addBtnCircular = function ($menu, fa_font, alt, cb) {
       const $btn = $(document.createElement('a'))
       $btn.addClass('rm_btn')
       $btn.attr('href', 'javascript:void(0);')
@@ -1691,11 +1740,11 @@
       setBtnRadialPos($menu)
     }
 
-    pub.finishInit = function($menu, normal, selected) {
-      const setColorNormal = function() {
+    pub.finishInit = function ($menu, normal, selected) {
+      const setColorNormal = function () {
         $(this).css('background', normal)
       }
-      const setColorSelected = function() {
+      const setColorSelected = function () {
         $(this).css('background', selected)
       }
 
@@ -1706,7 +1755,7 @@
       $menu.find('.rm_btn').blur(setColorNormal)
     }
 
-    pub.changeCenterIcon = function(rm_id, fa_font) {
+    pub.changeCenterIcon = function (rm_id, fa_font) {
       const $icon = $('#' + rm_id)
         .find('.rm_btn_center')
         .find('i')
@@ -1716,15 +1765,15 @@
       $icon[0].fa_font = fa_font
     }
 
-    pub.getPrevRmBtn = function($rm_btn) {
+    pub.getPrevRmBtn = function ($rm_btn) {
       return getRmBtnOffset($rm_btn, -1)
     }
 
-    pub.getNextRmBtn = function($rm_btn) {
+    pub.getNextRmBtn = function ($rm_btn) {
       return getRmBtnOffset($rm_btn, +1)
     }
 
-    pub.bgnLoading = function(rm_id) {
+    pub.bgnLoading = function (rm_id) {
       const $icon = $('#' + rm_id)
         .find('.rm_btn_center')
         .find('i')
@@ -1733,7 +1782,7 @@
       $icon.toggleClass('fa-spin', true)
     }
 
-    pub.endLoading = function(rm_id) {
+    pub.endLoading = function (rm_id) {
       const $icon = $('#' + rm_id)
         .find('.rm_btn_center')
         .find('i')
@@ -1742,7 +1791,7 @@
       $icon.toggleClass('fa-spin', false)
     }
 
-    var getRmBtnOffset = function($rm_btn, offset) {
+    var getRmBtnOffset = function ($rm_btn, offset) {
       const $l = $rm_btn.parents('.rm_menu').find('.rm_btn')
       for (let i = 0, l = $l.length; i < l; ++i) {
         if ($rm_btn[0] === $l[i]) {
@@ -1752,7 +1801,7 @@
       return null
     }
 
-    var createIcon = function(fa_font) {
+    var createIcon = function (fa_font) {
       const $icon = $(document.createElement('i'))
       $icon
         .addClass('fa')
@@ -1762,10 +1811,10 @@
       return $icon
     }
 
-    var setBtnRadialPos = function($menu) {
+    var setBtnRadialPos = function ($menu) {
       const items = $menu.find('.rm_btn_raidial a')
       const l = items.length
-      items.each(function(i) {
+      items.each(function (i) {
         $(this)
           .first()
           .css(
@@ -1787,11 +1836,11 @@
       })
 
       $menu
-        .on('mouseenter', function(e) {
+        .on('mouseenter', function (e) {
           r2.input.inMenu()
           $menu.toggleClass('open', true)
         })
-        .on('mouseleave', function(e) {
+        .on('mouseleave', function (e) {
           r2.input.outMenu()
           $menu.toggleClass('open', false)
           $menu.find('.rm_btn').blur()
@@ -1799,22 +1848,22 @@
 
       $menu
         .find('.rm_btn')
-        .on('focus', function(e) {
+        .on('focus', function (e) {
           updateMenuOpenStatus($menu)
         })
-        .on('blur', function(e) {
+        .on('blur', function (e) {
           updateMenuOpenStatus($menu)
         })
     }
 
-    var updateMenuOpenStatus = function($menu) {
-      setTimeout(function() {
+    var updateMenuOpenStatus = function ($menu) {
+      setTimeout(function () {
         $menu.toggleClass('open', $menu.find(':focus').length !== 0)
       }, 10)
     }
 
-    var closeRadialMenuAndRun = function($menu, cb) {
-      return function() {
+    var closeRadialMenuAndRun = function ($menu, cb) {
+      return function () {
         r2.input.outMenu()
         $menu.toggleClass('open', false)
         cb()
@@ -1824,7 +1873,7 @@
     return pub
   })()
 
-  r2.viewCtrl = (function() {
+  r2.viewCtrl = (function () {
     const pub = {}
 
     pub.scale = 1
@@ -1842,7 +1891,7 @@
       scaled: false
     }
 
-    pub.resizeView = function(_app_container_size, view_ratio, page_margins) {
+    pub.resizeView = function (_app_container_size, view_ratio, page_margins) {
       pub.hdpi_ratio = r2.util.getOutputScale(r2.canv_ctx)
 
       r2.viewCtrl.page_margins = page_margins
@@ -1869,28 +1918,28 @@
             console.log("page_size", pub.page_size_scaled.x, pub.page_size_scaled.y); */
     }
 
-    pub.getAppContainerSize = function() {
+    pub.getAppContainerSize = function () {
       return app_container_size
     }
 
-    pub.setToFocus = function(p) {}
+    pub.setToFocus = function (p) {}
 
-    pub.mapDocToDom = function(p) {
+    pub.mapDocToDom = function (p) {
       return new Vec2(
         pub.scale * (p.x * pub.page_width_noscale + pub.page_margins.left),
         pub.scale * (p.y * pub.page_width_noscale)
       )
     }
 
-    pub.mapDocToDomScale = function(s) {
+    pub.mapDocToDomScale = function (s) {
       return s * pub.scale * pub.page_width_noscale
     }
 
-    pub.mapDomToDocScale = function(s) {
+    pub.mapDomToDocScale = function (s) {
       return s / (pub.page_width_noscale * pub.scale)
     }
 
-    pub.mapBrowserToScr = function(p) {
+    pub.mapBrowserToScr = function (p) {
       const page_offset = r2.dom.getPageOffset()
       return new Vec2(
         (p.x - page_offset.x) / pub.page_width_noscale / pub.scale,
@@ -1898,18 +1947,18 @@
       )
     }
 
-    pub.mapScrToDoc = function(p) {
+    pub.mapScrToDoc = function (p) {
       return p // .divide(pub.scale, true);
     }
 
-    pub.mapDocToScr = function(p) {
+    pub.mapDocToScr = function (p) {
       return p // .multiply(pub.scale, true);
     }
 
     return pub
   })()
 
-  r2.dom = (function() {
+  r2.dom = (function () {
     const pub = {}
 
     // dom object cache
@@ -1928,7 +1977,7 @@
     const page_offset = new Vec2(0, 0)
     let dashboard_height = 0
 
-    pub.initDom = function() {
+    pub.initDom = function () {
       dashboard = document.getElementById('dashboard')
       dashboard_users = document.getElementById('dashboard_users')
       browse_comments = document.getElementById('browse_comments')
@@ -1940,11 +1989,11 @@
       annot_canvas = document.getElementById('r2_annot_canvas')
       overlay_container = document.getElementById('overlay_container')
 
-      $(view).scroll(function() {
+      $(view).scroll(function () {
         updateScroll()
       })
       if (r2.scroll_wrapper) {
-        $(r2.scroll_wrapper).scroll(function() {
+        $(r2.scroll_wrapper).scroll(function () {
           updateScroll()
         })
       }
@@ -1958,7 +2007,7 @@
      * Adopt HTML DOM size to the giveen setting
      * @returns {Vec2}
      */
-    pub.resizeDom = function(
+    pub.resizeDom = function (
       scale,
       app_container_size,
       page_size,
@@ -1993,85 +2042,85 @@
 
       updateScroll()
 
-      return dashboard_height;
+      return dashboard_height
     }
 
-    pub.calcAppContainerSize = function() {
+    pub.calcAppContainerSize = function () {
       return Vec2(getDomWidth(app_container), getDomheight(app_container))
     }
 
-    pub.getPageCanvCtx = function() {
+    pub.getPageCanvCtx = function () {
       return page_canvas.getContext('2d')
     }
 
-    pub.getAnnotCanvCtx = function() {
+    pub.getAnnotCanvCtx = function () {
       return annot_canvas.getContext('2d')
     }
 
-    pub.appendToPageDom = function(dom_obj) {
+    pub.appendToPageDom = function (dom_obj) {
       content.appendChild(dom_obj)
     }
 
-    pub.removeFromPageDom = function(dom_obj) {
+    pub.removeFromPageDom = function (dom_obj) {
       content.removeChild(dom_obj)
     }
 
-    pub.onMouseEventHandlers = function(dn, mv, up) {
+    pub.onMouseEventHandlers = function (dn, mv, up) {
       $(content).on('mousedown', dn)
       $(content).on('mousemove', mv)
       $(content).on('mouseup', up)
     }
 
-    pub.offMouseEventHandlers = function(dn, mv, up) {
+    pub.offMouseEventHandlers = function (dn, mv, up) {
       $(content).off('mousedown', dn)
       $(content).off('mousemove', mv)
       $(content).off('mouseup', up)
     }
 
-    pub.onTouchEventHandlers = function(dn, mv, up) {
+    pub.onTouchEventHandlers = function (dn, mv, up) {
       content.addEventListener('touchstart', dn, false)
       content.addEventListener('touchmove', mv, false)
       content.addEventListener('touchend', up, false)
     }
 
-    pub.offTouchEventHandlers = function(dn, mv, up) {
+    pub.offTouchEventHandlers = function (dn, mv, up) {
       content.removeEventListener('touchstart', dn, false)
       content.removeEventListener('touchmove', mv, false)
       content.removeEventListener('touchend', up, false)
     }
 
-    pub.setContextMenuEvent = function(func) {
+    pub.setContextMenuEvent = function (func) {
       $(content).on('contextmenu', func)
     }
 
-    pub.enableRecordingIndicators = function() {
+    pub.enableRecordingIndicators = function () {
       $('#recording_indicator').css('display', 'block')
       $(view).toggleClass('recording', true)
     }
 
-    pub.disableRecordingIndicators = function() {
+    pub.disableRecordingIndicators = function () {
       $('#recording_indicator').css('display', 'none')
       $(view).toggleClass('recording', false)
     }
 
-    pub.getPageOffset = function() {
+    pub.getPageOffset = function () {
       return page_offset
     }
 
-    pub.resetScroll = function() {
+    pub.resetScroll = function () {
       $(view).scrollTop(0)
     }
 
-    pub.setScroll = function(x, y) {
-      $(view).scrollLeft(x);
-      $(view).scrollTop(y);
+    pub.setScroll = function (x, y) {
+      $(view).scrollLeft(x)
+      $(view).scrollTop(y)
     }
 
-    pub.getScroll = function() {
+    pub.getScroll = function () {
       return new Vec2($(view).scrollLeft(), $(view).scrollTop())
     }
 
-    pub.getPosAndWidthInPage = function(dom) {
+    pub.getPosAndWidthInPage = function (dom) {
       const rect = dom.getBoundingClientRect()
       const rtn = [
         (rect.left - page_offset.x) / page_canvas.dom_width,
@@ -2082,25 +2131,25 @@
       return rtn
     }
 
-    pub.getCanvasWidth = function() {
+    pub.getCanvasWidth = function () {
       return page_canvas.dom_width
     }
 
-    pub.getCanvasHeight = function() {
-      return page_canvas.height;
-    };
+    pub.getCanvasHeight = function () {
+      return page_canvas.height
+    }
 
     /** helper */
-    function getDomWidth(dom) {
+    function getDomWidth (dom) {
       return dom.getBoundingClientRect().width
     }
 
     /** helper */
-    function getDomheight(dom) {
+    function getDomheight (dom) {
       return dom.getBoundingClientRect().height
     }
 
-    function updateScroll() {
+    function updateScroll () {
       page_offset.x =
         $(content).offset().left +
         r2.viewCtrl.page_margins.left * r2.viewCtrl.scale
@@ -2115,22 +2164,22 @@
   })()
 
   /* upload timer */
-  r2.CmdTimedUploader = function() {
+  r2.CmdTimedUploader = function () {
     this._time_interval = 0
     this._time_last_modified = 0
     this._modified = false
     this._cmds_to_upload = []
   }
-  r2.CmdTimedUploader.prototype.init = function(time_interval) {
+  r2.CmdTimedUploader.prototype.init = function (time_interval) {
     this._time_interval = time_interval
   }
-  r2.CmdTimedUploader.prototype.addCmd = function(cmd) {
+  r2.CmdTimedUploader.prototype.addCmd = function (cmd) {
     this._cmds_to_upload.push(cmd)
     this._modified = true
     this._time_last_modified = r2App.cur_time
   }
 
-  r2.CmdTimedUploader.prototype.getCmdsToUpload = function() {
+  r2.CmdTimedUploader.prototype.getCmdsToUpload = function () {
     if (
       this._modified &&
       r2App.cur_time - this._time_last_modified > this._time_interval
@@ -2141,46 +2190,47 @@
       this._modified = false
 
       return { time: this._time_last_modified, cmds: rtn }
-    } else {
+    }
+    else {
       return null
     }
   }
-  r2.CmdTimedUploader.prototype.checkCmdToUploadExist = function() {
+  r2.CmdTimedUploader.prototype.checkCmdToUploadExist = function () {
     return this._cmds_to_upload.length !== 0
   }
 
-  r2.pieceHashId = (function() {
+  r2.pieceHashId = (function () {
     const pub = {}
 
-    pub.voice = function(annot_id, i) {
+    pub.voice = function (annot_id, i) {
       return Sha1.hash(annot_id + ' PieceAudio ' + i)
     }
 
-    pub.text = function(npage, nrgn, npt) {
+    pub.text = function (npage, nrgn, npt) {
       return Sha1.hash('P' + npage + '_R' + nrgn + '_L' + npt)
     }
 
-    pub.teared = function(annotid) {
+    pub.teared = function (annotid) {
       return Sha1.hash(annotid + ' PieceTeared 0')
     }
 
-    pub.keyboard = function(annotid) {
+    pub.keyboard = function (annotid) {
       return Sha1.hash(annotid + ' PieceKeyboard 0')
     }
 
     return pub
   })()
 
-  r2.EnvironmentDetector = (function() {
+  r2.EnvironmentDetector = (function () {
     const pub = {}
 
     pub.is_mobile = false
-    pub.is_mac = navigator.platform.indexOf('Mac') > -1
+    pub.is_mac = navigator.platform.includes('Mac')
 
     pub.browser = { chrome: false, firefox: false, msedge: false, etc: false }
 
-    pub.init = function() {
-      return new Promise(function(resolve, reject) {
+    pub.init = function () {
+      return new Promise(function (resolve, reject) {
         pub.browser.chrome = !!bowser.chrome
         pub.browser.firefox = !!bowser.firefox
         pub.browser.msedge = !!bowser.msedge
@@ -2207,7 +2257,8 @@
           r2.coverMsg.showUnsupportedBrowser()
           console.error('Unsupported browser.')
           resolve()
-        } else {
+        }
+        else {
           if (pub.is_mobile) {
             r2.coverMsg.showMobileWarning()
           }
@@ -2218,10 +2269,10 @@
     return pub
   })()
 
-  r2.gestureSynthesizer = (function() {
+  r2.gestureSynthesizer = (function () {
     const pub = {}
 
-    pub.run = function(target_annot_id, talkens) {
+    pub.run = function (target_annot_id, talkens) {
       /*
              // data description
              You can use it like...
@@ -2245,17 +2296,17 @@
              )
              */
 
-      talkens.forEach(function(talken) {
+      talkens.forEach(function (talken) {
         talken.base_bgn *= 1000
         talken.base_end *= 1000
         talken.new_bgn *= 1000
         talken.new_end *= 1000
       })
 
-      const getGestureChops = function(talken) {
+      const getGestureChops = function (talken) {
         const rtn = []
         if (talken.base_annotid) {
-          r2App.annots[talken.base_annotid]._spotlights.forEach(function(
+          r2App.annots[talken.base_annotid]._spotlights.forEach(function (
             spotlight,
             idx
           ) {
@@ -2288,10 +2339,10 @@
 
       const gesture_ids_to_check = new Set()
       const gesture_stack = []
-      talkens.forEach(function(talken) {
+      talkens.forEach(function (talken) {
         const stk = {}
         const chops = getGestureChops(talken)
-        chops.forEach(function(chop) {
+        chops.forEach(function (chop) {
           stk[chop.gesture_id] = chop.t_ratio
           gesture_ids_to_check.add(chop.gesture_id)
         })
@@ -2299,15 +2350,16 @@
       })
 
       r2App.annots[target_annot_id]._spotlights = []
-      gesture_ids_to_check.forEach(function(gesture_id) {
+      gesture_ids_to_check.forEach(function (gesture_id) {
         let last_t_ratio_bgn = Number.MAX_VALUE
         const streak_talken_idxs = []
-        gesture_stack.forEach(function(stk, idx) {
+        gesture_stack.forEach(function (stk, idx) {
           if (stk.hasOwnProperty(gesture_id)) {
             if (last_t_ratio_bgn > stk[gesture_id][0]) {
               // streak broken
               streak_talken_idxs.push([idx, idx])
-            } else {
+            }
+            else {
               // streak continues
               streak_talken_idxs[streak_talken_idxs.length - 1][1] = idx
             }
@@ -2315,7 +2367,7 @@
           }
         })
 
-        streak_talken_idxs.forEach(function(streak_talken_idx) {
+        streak_talken_idxs.forEach(function (streak_talken_idx) {
           const gidsplit = gesture_id.split('___')
           const base_annotid = gidsplit[0]
           const spotlight_idx = parseInt(gidsplit[1])
@@ -2346,7 +2398,7 @@
 
       r2App.invalidate_page_layout = true
 
-      return new Promise(function(resolve, reject) {
+      return new Promise(function (resolve, reject) {
         resolve()
       })
     }
@@ -2354,7 +2406,7 @@
     return pub
   })()
 
-  r2.tooltip = function($parent, init_text, pos, cb_done, cb_cancel) {
+  r2.tooltip = function ($parent, init_text, pos, cb_done, cb_cancel) {
     const $tooltip = $(document.createElement('div'))
     $tooltip.addClass('simplespeech_tooltip')
     $tooltip.addClass('text_selectable')
@@ -2376,56 +2428,60 @@
 
     $tooltip
       .find('.tooltip_input')[0]
-      .addEventListener('keyup', function(event) {
+      .addEventListener('keyup', function (event) {
         if (event.which === r2.keyboard.CONST.KEY_ENTER) {
           event.preventDefault()
-        } else if (event.which === r2.keyboard.CONST.KEY_ESC) {
+        }
+        else if (event.which === r2.keyboard.CONST.KEY_ESC) {
           $tooltip_input.blur()
           event.preventDefault()
-        } else {
+        }
+        else {
           // centerDiv();
         }
       })
     $tooltip
       .find('.tooltip_input')[0]
-      .addEventListener('keydown', function(event) {
+      .addEventListener('keydown', function (event) {
         if (event.which === r2.keyboard.CONST.KEY_ENTER) {
           done_by_enter = true
           $tooltip_input.blur()
           event.preventDefault()
-        } else if (event.which === r2.keyboard.CONST.KEY_ESC) {
+        }
+        else if (event.which === r2.keyboard.CONST.KEY_ESC) {
           event.preventDefault()
         }
       })
     $tooltip
       .find('.tooltip_input')[0]
-      .addEventListener('input', function(event) {
+      .addEventListener('input', function (event) {
         centerDiv()
       })
 
     $tooltip
       .find('.tooltip_input')[0]
-      .addEventListener('blur', function(event) {
+      .addEventListener('blur', function (event) {
         done()
       })
 
-    var centerDiv = function() {
+    var centerDiv = function () {
       $tooltip.css(
         'margin-left',
         -$tooltip[0].getBoundingClientRect().width / 2 + 'px'
       )
     }
 
-    var done = function() {
+    var done = function () {
       if (done_by_enter) {
         cb_done($tooltip_input.text())
-      } else {
+      }
+      else {
         cb_cancel()
       }
       $tooltip.remove()
     }
 
-    this.focus = function() {
+    this.focus = function () {
       $tooltip_input.focus()
       const sel = window.getSelection()
       const range = document.createRange()
@@ -2435,7 +2491,7 @@
       sel.addRange(range)
     }
 
-    this.selectAll = function() {
+    this.selectAll = function () {
       $tooltip_input.focus()
       const sel = window.getSelection()
       const range = document.createRange()
@@ -2444,7 +2500,7 @@
       sel.addRange(range)
     }
 
-    this.setText = function(text) {
+    this.setText = function (text) {
       $tooltip_input.text(text)
       centerDiv()
     }
@@ -2452,7 +2508,7 @@
     this.setText(init_text)
   }
 
-  r2.tooltipAudioWaveform = (function() {
+  r2.tooltipAudioWaveform = (function () {
     const pub_ta = {}
 
     const CONST = {
@@ -2478,19 +2534,19 @@
     const ctx = canv.getContext('2d')
     $tooltip.append($(canv))
 
-    pub_ta.show = function() {
+    pub_ta.show = function () {
       is_display = true
       $timer_text.text('0:00')
       t_timer_bgn = new Date().getTime()
       $('#recording_indicator').append($tooltip)
     }
 
-    pub_ta.dismiss = function() {
+    pub_ta.dismiss = function () {
       is_display = false
       $tooltip.remove()
     }
 
-    pub_ta.updateTimerStr = function() {
+    pub_ta.updateTimerStr = function () {
       if (!is_display) {
         return
       }
@@ -2506,7 +2562,7 @@
       }
     }
 
-    pub_ta.drawDynamic = function() {
+    pub_ta.drawDynamic = function () {
       if (is_display) {
         const l = r2.audioRecorder.getRecorder().getPower()
         const power = []
@@ -2521,7 +2577,7 @@
 
         let min = 0.0
         let max = 0.2
-        power.forEach(function(v) {
+        power.forEach(function (v) {
           min = Math.min(min, v)
           max = Math.max(max, v)
         })
@@ -2551,19 +2607,19 @@
     return pub_ta
   })()
 
-  r2.scoreIndicator = (function() {
+  r2.scoreIndicator = (function () {
     const pub = {}
 
     let $div = null
 
-    pub.init = function() {
+    pub.init = function () {
       $div = $('#score_indicator')
       if (r2.ctx.lti) {
         $div.css('display', 'block')
       }
     }
 
-    pub.show = function() {
+    pub.show = function () {
       if (!r2.ctx.lti) {
         return
       }
@@ -2575,7 +2631,8 @@
       if (status.ncomments < 3 || status.nreplies < 3) {
         $div.children('#goal').css('display', 'block')
         $div.children('#goal').text(str.goal)
-      } else {
+      }
+      else {
         $div.children('#goal').css('display', 'none')
       }
 
@@ -2583,12 +2640,12 @@
       setTimeout(pub.hide, 5000)
     }
 
-    pub.hide = function() {
+    pub.hide = function () {
       $div.toggleClass('show', false)
     }
 
-    function getStatus() {
-      function isMine(obj) {
+    function getStatus () {
+      function isMine (obj) {
         if (obj.getUsername) {
           if (obj.getUsername() === r2.userGroup.cur_user.name) {
             return true
@@ -2596,7 +2653,7 @@
         }
         return false
       }
-      function isReply(obj) {
+      function isReply (obj) {
         const parent = obj.GetParent()
         return parent && parent.getUsername
       }
@@ -2629,7 +2686,7 @@
       return status
     }
 
-    function constructStr(ncomments, nreplies) {
+    function constructStr (ncomments, nreplies) {
       const s = {
         score: 'Current score: ',
         goal: 'To earn the full score, '
@@ -2637,7 +2694,7 @@
 
       const score = (ncomments >= 3 ? 1 : 0) + (nreplies >= 3 ? 1 : 0)
 
-      function getStrDetailComment() {
+      function getStrDetailComment () {
         return (
           'make ' +
           (3 - ncomments) +
@@ -2645,7 +2702,7 @@
           (ncomments <= 1 ? 's' : '')
         )
       }
-      function getStrDetailReply() {
+      function getStrDetailReply () {
         return (
           'reply to ' +
           (3 - nreplies) +
@@ -2657,9 +2714,11 @@
       if (ncomments < 3 || nreplies < 3) {
         if (ncomments < 3 && nreplies < 3) {
           s.goal += getStrDetailComment() + ' and ' + getStrDetailReply() + '.'
-        } else if (ncomments < 3) {
+        }
+        else if (ncomments < 3) {
           s.goal += getStrDetailComment() + '.'
-        } else {
+        }
+        else {
           // nreplies<3
           const sd = getStrDetailReply()
           s.goal += sd + '.'
@@ -2673,13 +2732,13 @@
     return pub
   })()
 
-  r2.prerecordedComments = (function() {
+  r2.prerecordedComments = (function () {
     const pub = {}
 
-    pub.init = function() {
+    pub.init = function () {
       if (r2.ctx.lti) {
         return getCmds()
-          .then(function(data_str) {
+          .then(function (data_str) {
             const objs = JSON.parse(data_str)
             const cmds = []
             for (let i = 0; i < objs.length; ++i) {
@@ -2687,20 +2746,21 @@
             }
             return r2Sync.downloader
               .processPrerecordedCommands(cmds)
-              .catch(function(err) {
+              .catch(function (err) {
                 console.error('prerecordedComments')
                 console.error(err)
               })
           })
-          .catch(function(err) {
+          .catch(function (err) {
             console.log('no prerecorded comments')
           })
-      } else {
+      }
+      else {
         return Promise.resolve()
       }
     }
 
-    function getCmds() {
+    function getCmds () {
       return r2.util.getUrlData(
         r2.CDN_URL + '/prerecorded_comments/' + r2.ctx.docid + '.json'
       )

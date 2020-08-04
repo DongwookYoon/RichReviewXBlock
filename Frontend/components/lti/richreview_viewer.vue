@@ -31,10 +31,11 @@
 
 <script lang="ts">
 import 'reflect-metadata' // Must import this before nuxt property decorators
+import ApiHelper from '../../utils/api-helper'
+import GradeData from '~/model/grade-data'
 import { Component, Prop, Vue } from 'nuxt-property-decorator'
 import User from '~/model/user'
 import SubmitData from '~/model/submit-data'
-import ApiHelper from '~/utils/api-helper'
 
 // eslint-disable-next-line camelcase
 
@@ -45,6 +46,7 @@ if (process.client) {
 @Component
 export default class RichReviewViewer extends Vue {
   @Prop({ required: true }) readonly submit_data !: SubmitData;
+  @Prop({ required: true }) readonly grade_data !: GradeData;
   @Prop({ required: true }) readonly user_data !: User;
   @Prop({ required: true }) readonly course_id !: string;
   @Prop({ required: true }) readonly assignment_type !: string;
@@ -70,7 +72,7 @@ export default class RichReviewViewer extends Vue {
   }
 
   get viewerStyle () {
-    const height = this.isGraderView ? '100vh' : '92.5vh'
+    const height = this.isGraderView ? '100vh' : '98vh'
 
     return {
       'max-height': height
@@ -87,6 +89,13 @@ export default class RichReviewViewer extends Vue {
     }
 
     return false
+  }
+
+  get showGrade () : boolean {
+    return (!(this.user.isInstructor || this.user.isTa) &&
+              this.grade_data.isGraded &&
+                this.grade_data.grade &&
+                  !this.is_muted) as boolean
   }
 
   private initRichReview () {
@@ -117,6 +126,7 @@ export default class RichReviewViewer extends Vue {
         // eslint-disable-next-line camelcase
         const r2_ctx = res.r2_ctx
         r2_ctx.auth = { id: this.user.id, name: this.user.userName }
+        r2_ctx.grade_data = this.grade_data
         // eslint-disable-next-line camelcase
         const cdn_endpoint = res.cdn_endpoint
 

@@ -1,7 +1,6 @@
 /**
  * Created by Dongwook on 10/18/2014.
  */
-
 /** @namespace r2 */
 ;(function(r2) {
   'use strict'
@@ -486,6 +485,7 @@
 
       r2.scoreIndicator.init()
       r2.pageNumBox.init()
+      r2.studentGrade.init()
     }
 
     /** init system */

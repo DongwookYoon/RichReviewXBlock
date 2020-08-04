@@ -68,7 +68,7 @@ Instructors can also annotate student submissions to give feedback."
 import * as https from 'https'
 import * as fs from 'fs'
 import * as path from 'path'
-import ApiHelper, { CourseData } from '~/utils/api-helper'
+import ApiHelper, { ICourseData } from '~/utils/api-helper'
 import JwtUtil from '~/utils/jwt-util'
 import { Component, Vue } from 'nuxt-property-decorator'
 import { mapGetters } from 'vuex'
@@ -450,7 +450,7 @@ export default class CreateAssignmentLti extends Vue {
 
   private static async ensureCourseInstructorEnrolled (ltiMsg: any, user : User, courseId: string, $axios: NuxtAxiosInstance) {
     const contextPropName : string = 'https://purl.imsglobal.org/spec/lti/claim/context'
-    const courseData : CourseData = {
+    const courseData : ICourseData = {
       id: courseId,
       title: ltiMsg[contextPropName].title || '',
       dept: '',
@@ -461,7 +461,7 @@ export default class CreateAssignmentLti extends Vue {
     await CreateAssignmentLti.makeCourseAndEnrollInstructor(courseData, user, $axios)
   }
 
-  private static async makeCourseAndEnrollInstructor (courseData: CourseData, user: User, $axios: NuxtAxiosInstance) {
+  private static async makeCourseAndEnrollInstructor (courseData: ICourseData, user: User, $axios: NuxtAxiosInstance) {
     // Ensure that the course is created
     // eslint-disable-next-line camelcase
     console.log(`Creating course with id ${courseData.id} if it does not exist`)

@@ -6,9 +6,6 @@
     </p>
 
     <div v-if="isCreated===true">
-      <div v-if="showGrade" id="student-grade">
-        <p><strong>Grade</strong>{{ gradeData.grade }}</p>
-      </div>
       <!--The button to open/close a new submission -->
       <button
         v-if="showNewSubmissionButton"
@@ -84,6 +81,7 @@
         <RichReviewViewer
           class="rich-review-view"
           :submit_data="submit_data"
+          :grade_data="gradeData"
           :user_data="user"
           :assignment_type="assignmentType"
           :course_id="courseId"
@@ -108,7 +106,8 @@ import CommentSubmitter from '~/components/lti/comment_submitter.vue'
 import RichReviewViewer from '~/components/lti/richreview_viewer.vue'
 import SubmissionsDashboard from '~/components/lti/submissions_dashboard.vue'
 // eslint-disable-next-line camelcase
-import ApiHelper, { GradeData } from '~/utils/api-helper'
+import ApiHelper from '~/utils/api-helper'
+import GradeData from '~/model/grade-data'
 import User from '~/model/user'
 import Roles from '~/utils/roles'
 import SubmitData from '~/model/submit-data'
@@ -267,13 +266,6 @@ export default class AssignmentLti extends Vue {
     }
 
     return false
-  }
-
-  get showGrade () : boolean {
-    return (!this.isUserInstructorOrTa &&
-              this.gradeData.isGraded &&
-                this.gradeData.grade &&
-                  !this.isMuted) as boolean
   }
 
   get showViewer () : boolean {
@@ -744,20 +736,6 @@ interface IAssignmentLtiData {
 
   .document-submitter, .new_submission_button {
     margin: .75rem 2%;
-  }
-
-  #student-grade {
-    font-size: 1.55rem;
-  }
-
-  #student-grade p {
-    margin-bottom: 0.75em;
-    color: rgb(45, 59, 69);
-  }
-
-  #student-grade p strong {
-    padding-right: 1rem;
-    font-weight: medium;
   }
 
   .new_submission_button, .template_toggle_button {

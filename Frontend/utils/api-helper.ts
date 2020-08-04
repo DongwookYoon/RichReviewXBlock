@@ -1,6 +1,7 @@
 import https from 'https'
 import User from '~/model/user'
 import { NuxtAxiosInstance } from '@nuxtjs/axios'
+import GradeData from '~/model/grade-data'
 
 export default class ApiHelper {
   static async getAllSubmissions (courseId: string,
@@ -231,7 +232,7 @@ export default class ApiHelper {
     }
   }
 
-  public static async ensureCourseExists (courseData: CourseData, userId: string, $axios: NuxtAxiosInstance) {
+  public static async ensureCourseExists (courseData: ICourseData, userId: string, $axios: NuxtAxiosInstance) {
     // eslint-disable-next-line camelcase
     const course_res = await $axios.post(
       `/rr-api/courses/${courseData.id}`,
@@ -375,14 +376,7 @@ export default class ApiHelper {
   }
 }
 
-export interface GradeData {
-  isGraded: boolean
-  grade ?: number
-  max ?: number
-  error ?: boolean
-}
-
-export interface CourseData {
+export interface ICourseData {
   id: string
   title: string
   dept: string

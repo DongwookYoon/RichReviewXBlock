@@ -727,9 +727,15 @@ a:active {
   width: 100%; height:auto; text-align:center; display: block;
 }
 
+#dashboard > #browse_row {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: space-evenly;
+}
 #dashboard > #browse_row > #dashboard_users {
-  float: left;
-  max-width: 50%;
+  flex: 0.5 1 5rem;
+  min-width: 5rem;
   padding-left: 1%;
 }
 
@@ -747,7 +753,8 @@ a:active {
 }
 
 #dashboard > #browse_row > #browse_comments {
-  float: left;
+  flex: 1 1 5rem;
+  margin-right: 1rem;
 }
 
 
@@ -756,7 +763,8 @@ a:active {
 }
 
 #dashboard-comment-history {
-  max-width: 80%;
+  display: inline-block;
+  max-width: 100%;
   overflow-y: auto;
   overflow-x: auto !important;
   margin-top: 9px
@@ -1450,6 +1458,20 @@ div.tooltip_audio_waveform div.arrow_up {
   text-align: justify;
 }
 
-.btn_ubc{
 
+#student_grade {
+  flex: 0.1 1 5rem;
+  padding-top: 1rem;
+  min-width: 5rem;
+  min-width: 3rem;
+  display: inline-block;
+  font-size: 1.4rem;
+}
+
+#student_grade p {
+  margin-bottom: 0.75em;
+}
+
+#student_grade p strong {
+  padding-right: 1rem;
 }

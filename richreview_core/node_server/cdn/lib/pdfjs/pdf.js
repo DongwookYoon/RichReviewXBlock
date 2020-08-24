@@ -1825,8 +1825,6 @@ PDFJS.getDocument = function getDocument(src,
                                          progressCallback) {
   var task = new PDFDocumentLoadingTask();
 
-  console.log('Another possible output')
-
   // Support of the obsolete arguments (for compatibility with API v1.0)
   if (pdfDataRangeTransport) {
     if (!(pdfDataRangeTransport instanceof PDFDataRangeTransport)) {

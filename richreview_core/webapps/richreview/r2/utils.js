@@ -228,10 +228,8 @@
             ).then(
                 function(pdf_data){
                     return new Promise(function(resolve, reject) {
-                        PDFJS.getDocument({
-                            data: new Uint8Array(pdf_data),
-                            disableFontFace: false
-                          }).then(
+                        PDFJS.getDocument(new Uint8Array(pdf_data), null, null)
+                            .then(
                             function (_pdf) {
                                 resolve(_pdf);
                             }

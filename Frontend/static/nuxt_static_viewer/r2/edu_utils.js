@@ -3,7 +3,6 @@
  * Created by Dongwook on 10/18/2014.
  */
 
-
 /** @namespace r2 */
 ;(function(r2) {
   'use strict'
@@ -261,7 +260,6 @@
     }
 
     pub.getPdf = function(path) {
-      console.log('Getting!!!')
       r2.modalWindowLoading.bgnDownloadingPdf()
       return pub
         .getUrlData(path, 'arraybuffer', function(progress) {
@@ -269,10 +267,7 @@
         })
         .then(function(pdf_data) {
           return new Promise(function(resolve, reject) {
-            PDFJS.getDocument({
-              data: new Uint8Array(pdf_data),
-              disableFontFace: false
-            })
+            PDFJS.getDocument(new Uint8Array(pdf_data), null, null)
               .then(function(_pdf) {
                 resolve(_pdf)
               })

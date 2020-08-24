@@ -13,12 +13,9 @@ var lti_config = require('../bin/LtiConfig');
 router.use('/', authUtil.assertAuthorizedClient);
 
 
-/** Get an oauth access token from the lti endpoint using a 
- *  code provided by the client. Currently not needed
- * 
- * @obsolete 
- **/
-
+/* Get an oauth access token from the lti endpoint using a 
+   code provided by the client. Note that the approach
+   used here is to sign the*/
 router.post('/oauth_code_token', async function(req, res, next) {
   res.sendStatus(410);
   /*

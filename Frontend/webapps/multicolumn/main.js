@@ -344,7 +344,7 @@
         }
 
         function getPdf(pdf_url){
-           return Pla.util.getUrlData(
+            return Pla.util.getUrlData(
                 pdf_url,
                 "arraybuffer",
                 null

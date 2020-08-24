@@ -53,7 +53,10 @@ class MuplaHandler {
     async get_pdf_data (pdf_path) {
 
         let buffer = new Uint8Array(fs.readFileSync(pdf_path));
-        let pdf_data = await pdfjsLib.getDocument(buffer);
+        let pdf_data = await pdfjsLib.getDocument({
+            data: buffer,
+            disableFontFace: false
+          });
         return pdf_data;
     }
 

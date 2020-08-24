@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * Created by Dongwook on 10/18/2014.
  */
@@ -228,7 +229,10 @@
       ).then(
         function(pdf_data){
           return new Promise(function(resolve, reject) {
-            PDFJS.getDocument(new Uint8Array(pdf_data), null, null)
+              PDFJS.getDocument({
+                data: new Uint8Array(pdf_data),
+                disableFontFace: false
+              })
               .then(
                 function (_pdf) {
                   resolve(_pdf);

@@ -15,7 +15,7 @@
     "mkdirp": "^0.5.1",
     "mocha": "^5.2.0",
     "moment": "^2.22.2",
-    "nodemailer": "^4.6.7",
+    "nodemailer": "^6.4.16",
     "redis": "^2.8.0"
   }
 }

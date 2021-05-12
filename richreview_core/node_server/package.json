@@ -28,7 +28,7 @@
     "mysql": "^2.15.0",
     "nconf": "^0.10.0",
     "node-uuid": "^1.4.8",
-    "nodemailer": "^4.6.4",
+    "nodemailer": "^6.4.16",
     "oauth-1.0a": "^2.2.4",
     "passport": "^0.4.0",
     "passport-google-oauth2": "^0.1.6",
